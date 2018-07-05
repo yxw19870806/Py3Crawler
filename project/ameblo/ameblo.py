@@ -55,28 +55,39 @@ def get_one_page_blog(account_name, page_count):
             for blog_url_index in range(0, len(blog_list_selector)):
                 blog_id_list.append(tool.find_sub_string(blog_list_selector.eq(blog_url_index).attr("href"), "entry-", ".html"))
     if len(blog_id_list) == 0:
-        raise crawler.CrawlerException("页面匹配日志id失败\n%s" % blog_pagination_response_content)
+        if page_count == 1:
+            raise crawler.CrawlerException("页面匹配日志id失败\n%s" % blog_pagination_response_content)
+        else:
+            log.error(account_name + " 新的分页页面")
+            result["is_over"] = True
+            return result
     result["blog_id_list"] = list(map(str, blog_id_list))
     # 判断是不是最后一页
-    # 有页数选择的页面样式
-    if blog_pagination_response_content.find('<div class="page topPaging">') >= 0:
-        paging_data = tool.find_sub_string(blog_pagination_response_content, '<div class="page topPaging">', "</div>")
-        last_page = re.findall('/page-(\d*).html#main" class="lastPage"', paging_data)
-        if len(last_page) == 1:
-            result["is_over"] = page_count >= int(last_page[0])
-        page_count_find = re.findall("<a [^>]*?>(\d*)</a>", paging_data)
-        if len(page_count_find) > 0:
-            result["is_over"] = page_count >= max(list(map(int, page_count_find)))
-    # 只有下一页和上一页按钮的样式
-    elif blog_pagination_response_content.find('<a class="skinSimpleBtn pagingPrev"') >= 0:  # 有上一页按钮
-        if blog_pagination_response_content.find('<a class="skinSimpleBtn pagingNext"') == -1:  # 但没有下一页按钮
-            result["is_over"] = True
-    # 另一种只有下一页和上一页按钮的样式
-    elif blog_pagination_response_content.find('class="skin-pagingPrev skin-btnPaging ga-pagingTopPrevTop') >= 0:  # 有上一页按钮
-        if blog_pagination_response_content.find('class="skin-pagingNext skin-btnPaging ga-pagingTopNextTop') == -1:  # 但没有下一页按钮
-            result["is_over"] = True
-    else:
-        result["is_over"] = True
+    # https://ameblo.jp/48orii48
+    if pq(blog_pagination_response_content).find("div.page").length > 0:
+        pagination_selector = pq(blog_pagination_response_content).find("div.page").eq(0).find("a")
+        find_page_count_list = []
+        for pagination_index in range(0, pagination_selector):
+            temp_page_count = tool.find_sub_string(pagination_selector.eq(pagination_index).attr("href"), "/page-", ".html")
+            if crawler.is_integer(temp_page_count):
+                find_page_count_list.append(int(temp_page_count))
+        if len(find_page_count_list) == 0:
+            raise crawler.CrawlerException("页面截取分页信息失败\n%s" % blog_pagination_response_content)
+        result["is_over"] = page_count >= max(find_page_count_list)
+    # https://ameblo.jp/18prokonan/
+    elif pq(blog_pagination_response_content).find("div.pagingArea").length > 0:
+        if pq(blog_pagination_response_content).find("div.pagingArea a.pagingNext").length == 0:
+            if pq(blog_pagination_response_content).find("div.pagingArea a.pagingPrev").length == 0:
+                raise crawler.CrawlerException("页面截取分页信息div.pagingArea失败\n%s" % blog_pagination_response_content)
+            else:
+                result["is_over"] = True
+    # https://ameblo.jp/1108ayanyan
+    elif pq(blog_pagination_response_content).find("ul.skin-paging").length > 0:
+        if pq(blog_pagination_response_content).find("ul.skin-paging a.skin-pagingNext") == 0:
+            if pq(blog_pagination_response_content).find("div.pagingArea a.skin-pagingPrev").length == 0:
+                raise crawler.CrawlerException("页面截取分页信息ul.skin-paging失败\n%s" % blog_pagination_response_content)
+            else:
+                result["is_over"] = True
     return result
 
 
