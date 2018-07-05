@@ -221,8 +221,6 @@ def write_file(msg, file_path, append_type=WRITE_FILE_TYPE_APPEND):
     else:
         return False
     with open(file_path, open_type) as file_handle:
-        if isinstance(msg, str):
-            msg = msg.encode("UTF-8")
         file_handle.write(msg + "\n")
 
 
