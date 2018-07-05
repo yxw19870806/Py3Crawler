@@ -105,8 +105,9 @@ def follow(account_id):
     }
     follow_response = net.http_request(follow_api_url, method="POST", fields=follow_post_data, cookies_list=COOKIE_INFO, header_list=header_list)
     if follow_response.status == net.HTTP_RETURN_CODE_SUCCEED:
+        follow_response_content = follow_response.data.decode()
         # 0 未登录，11 关注成功，12 已关注
-        if crawler.is_integer(follow_response.data) and int(follow_response.data) in [11, 12]:
+        if crawler.is_integer(follow_response_content) and int(follow_response_content) in [11, 12]:
             return True
     return False
 
@@ -121,7 +122,8 @@ def unfollow(account_id):
     }
     unfollow_response = net.http_request(unfollow_api_url, method="POST", fields=unfollow_post_data, cookies_list=COOKIE_INFO, header_list=header_list)
     if unfollow_response.status == net.HTTP_RETURN_CODE_SUCCEED:
-        if crawler.is_integer(unfollow_response.data) and int(unfollow_response.data) == 1:
+        unfollow_response_content = unfollow_response.data.decode()
+        if crawler.is_integer(unfollow_response_content) and int(unfollow_response_content) == 1:
             return True
     return False
 
@@ -138,16 +140,17 @@ def get_one_page_album(account_id, page_count):
     }
     if album_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(album_pagination_response.status))
-    if page_count == 1 and album_pagination_response.data.decode().find("<h2>用户不存在</h2>") >= 0:
+    album_pagination_content = album_pagination_response.data.decode()
+    if page_count == 1 and album_pagination_content.find("<h2>用户不存在</h2>") >= 0:
         raise crawler.CrawlerException("账号不存在")
     # 没有作品
-    if album_pagination_response.data.decode().find("<h2>尚未发布作品</h2>") >= 0:
+    if album_pagination_content.find("<h2>尚未发布作品</h2>") >= 0:
         result["is_over"] = True
         return result
     # 获取作品信息
-    if pq(album_pagination_response.data.decode("UTF-8")).find("ul.gridList").length == 0:
-        raise crawler.CrawlerException("页面截取作品列表失败\n%s" % album_pagination_response.data)
-    album_list_selector = pq(album_pagination_response.data.decode("UTF-8")).find("ul.gridList li.js-smallCards")
+    if pq(album_pagination_content).find("ul.gridList").length == 0:
+        raise crawler.CrawlerException("页面截取作品列表失败\n%s" % album_pagination_content)
+    album_list_selector = pq(album_pagination_content).find("ul.gridList li.js-smallCards")
     for album_index in range(0, album_list_selector.length):
         album_selector = album_list_selector.eq(album_index)
         # 获取作品id
@@ -159,7 +162,7 @@ def get_one_page_album(account_id, page_count):
             raise crawler.CrawlerException("作品地址 %s 截取作品id失败\n%s" % (album_url, album_selector.html()))
         result["album_id_list"].append(album_id)
     # 判断是不是最后一页
-    last_pagination_selector = pq(album_pagination_response.data).find("ul.pager li:last a")
+    last_pagination_selector = pq(album_pagination_content).find("ul.pager li:last a")
     if last_pagination_selector.length == 1:
         max_page_count = int(last_pagination_selector.attr("href").strip().split("&p=")[-1])
         result["is_over"] = page_count >= max_page_count
