@@ -17,10 +17,8 @@ from common import path
 
 # if sys.stdout.encoding != "UTF-8":
 #     raise Exception("项目编码必须是UTF-8，请在IDE中修改相关设置")
-if sys.version_info < (2, 7, 12):
-    raise Exception("python版本过低，请访问官网 https://www.python.org/downloads/ 更新")
-elif sys.version_info >= (3,):
-    raise Exception("仅支持python2.X，请访问官网 https://www.python.org/downloads/ 安装最新的python2")
+if sys.version_info < (3,):
+    raise Exception("仅支持python3.X，请访问官网 https://www.python.org/downloads/ 安装最新的python3")
 if getattr(sys, "frozen", False):
     IS_EXECUTABLE = True
 else:
