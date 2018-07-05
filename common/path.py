@@ -15,14 +15,6 @@ RETURN_FILE_LIST_ASC = 1
 RETURN_FILE_LIST_DESC = 2
 
 
-def change_path_encoding(file_path):
-    """Decode file path to unicode, and return the real path"""
-    if not isinstance(file_path, str):
-        file_path = str(file_path)
-        file_path = str(file_path, "UTF-8")
-    return os.path.abspath(file_path)
-
-
 def create_dir(dir_path, create_mode=CREATE_DIR_MODE_IGNORE_IF_EXIST):
     """Create directory
 
@@ -34,7 +26,6 @@ def create_dir(dir_path, create_mode=CREATE_DIR_MODE_IGNORE_IF_EXIST):
         True    create succeed
         False   create failed（include file_path is a file, not a directory）
     """
-    dir_path = change_path_encoding(dir_path)
     if create_mode not in [CREATE_DIR_MODE_IGNORE_IF_EXIST, CREATE_DIR_MODE_DELETE_IF_EXIST]:
         create_mode = CREATE_DIR_MODE_IGNORE_IF_EXIST
     # 目录存在
@@ -58,7 +49,6 @@ def create_dir(dir_path, create_mode=CREATE_DIR_MODE_IGNORE_IF_EXIST):
 
 def delete_dir_or_file(dir_path):
     """Delete file or directory（include subdirectory or files）"""
-    dir_path = change_path_encoding(dir_path)
     if not os.path.exists(dir_path):
         return True
     if os.path.isdir(dir_path):
@@ -69,7 +59,6 @@ def delete_dir_or_file(dir_path):
 
 def delete_null_dir(dir_path):
     """Delete all empty subdirectory"""
-    dir_path = change_path_encoding(dir_path)
     if os.path.isdir(dir_path):
         for file_name in os.listdir(dir_path):
             sub_path = os.path.join(dir_path, file_name)
@@ -90,7 +79,6 @@ def get_dir_files_name(dir_path, order=None):
     :return:
         list of files list(unicode)
     """
-    dir_path = change_path_encoding(dir_path)
     if not os.path.exists(dir_path):
         return []
     if not os.path.isdir(dir_path):
@@ -108,8 +96,6 @@ def get_dir_files_name(dir_path, order=None):
 
 def copy_file(source_file_path, destination_file_path):
     """Copy File from source directory to destination directory"""
-    source_file_path = change_path_encoding(source_file_path)
-    destination_file_path = change_path_encoding(destination_file_path)
     # 源文件未存在 或者 目标文件已存在
     if not os.path.exists(source_file_path) or os.path.exists(destination_file_path):
         return False
@@ -124,8 +110,6 @@ def copy_file(source_file_path, destination_file_path):
 
 def copy_directory(source_dir_path, destination_dir_path):
     """Copy directory from source path to destination path"""
-    source_dir_path = change_path_encoding(source_dir_path)
-    destination_dir_path = change_path_encoding(destination_dir_path)
     # 源文件未存在 或者 目标文件已存在
     if not os.path.exists(source_dir_path) or os.path.exists(destination_dir_path):
         return False
@@ -140,8 +124,6 @@ def copy_directory(source_dir_path, destination_dir_path):
 
 def move_file(source_path, destination_path):
     """Move/Rename file from source path to destination path"""
-    source_path = change_path_encoding(source_path)
-    destination_path = change_path_encoding(destination_path)
     if not os.path.exists(source_path) or os.path.exists(destination_path):
         return False
     if not create_dir(os.path.dirname(destination_path)):

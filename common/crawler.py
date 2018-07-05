@@ -346,7 +346,7 @@ class CrawlerException(SystemExit):
 def read_config(config_path):
     """Read config file"""
     config = {}
-    with codecs.open(path.change_path_encoding(config_path), encoding="UTF-8-SIG") as file_handle:
+    with codecs.open(config_path, encoding="UTF-8-SIG") as file_handle:
         config_file = configparser.SafeConfigParser()
         config_file.readfp(file_handle)
         for key, value in config_file.items("setting"):
@@ -425,7 +425,7 @@ def sort_file(source_path, destination_path, start_count, file_name_length):
 # default_value_list 每一位的默认值
 def read_save_data(save_data_path, key_index=0, default_value_list=[], check_duplicate_index=True):
     result_list = {}
-    if not os.path.exists(path.change_path_encoding(save_data_path)):
+    if not os.path.exists(save_data_path):
         return result_list
     for single_save_data in tool.read_file(save_data_path, tool.READ_FILE_TYPE_LINE):
         single_save_data = single_save_data.replace("\n", "").replace("\r", "")
