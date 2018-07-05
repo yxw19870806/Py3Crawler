@@ -48,7 +48,7 @@ def get_album_page(album_id):
             raise crawler.CrawlerException("第%s页 " % page_count + crawler.request_failre(album_pagination_response.status))
         # 判断图集是否已经被删除
         if page_count == 1:
-            result["is_delete"] = album_pagination_response.data.find("<title>该页面未找到-宅男女神</title>") >= 0
+            result["is_delete"] = album_pagination_response.data.decode().find("<title>该页面未找到-宅男女神</title>") >= 0
             if result["is_delete"]:
                 return result
             # 获取图集图片总数

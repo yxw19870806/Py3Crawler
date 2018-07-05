@@ -81,7 +81,7 @@ def get_article_page(article_url):
     if article_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(article_response.status))
     # 判断是否需要购买
-    result["is_pay"] = article_response.data.find("购买继续阅读") >= 0
+    result["is_pay"] = article_response.data.decode().find("购买继续阅读") >= 0
     article_id = tool.find_sub_string(article_url, "http://weibo.com/ttarticle/p/show?id=", "&mod=zwenzhang")
     if article_id:
         article_type = "t"

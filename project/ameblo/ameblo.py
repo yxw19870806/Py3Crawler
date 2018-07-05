@@ -58,7 +58,7 @@ def get_one_page_blog(account_name, page_count):
     result["blog_id_list"] = list(map(str, blog_id_list))
     # 判断是不是最后一页
     # 有页数选择的页面样式
-    if blog_pagination_response.data.find('<div class="page topPaging">') >= 0:
+    if blog_pagination_response.data.decode().find('<div class="page topPaging">') >= 0:
         paging_data = tool.find_sub_string(blog_pagination_response.data, '<div class="page topPaging">', "</div>")
         last_page = re.findall('/page-(\d*).html#main" class="lastPage"', paging_data)
         if len(last_page) == 1:
@@ -67,12 +67,12 @@ def get_one_page_blog(account_name, page_count):
         if len(page_count_find) > 0:
             result["is_over"] = page_count >= max(list(map(int, page_count_find)))
     # 只有下一页和上一页按钮的样式
-    elif blog_pagination_response.data.find('<a class="skinSimpleBtn pagingPrev"') >= 0:  # 有上一页按钮
-        if blog_pagination_response.data.find('<a class="skinSimpleBtn pagingNext"') == -1:  # 但没有下一页按钮
+    elif blog_pagination_response.data.decode().find('<a class="skinSimpleBtn pagingPrev"') >= 0:  # 有上一页按钮
+        if blog_pagination_response.data.decode().find('<a class="skinSimpleBtn pagingNext"') == -1:  # 但没有下一页按钮
             result["is_over"] = True
     # 另一种只有下一页和上一页按钮的样式
-    elif blog_pagination_response.data.find('class="skin-pagingPrev skin-btnPaging ga-pagingTopPrevTop') >= 0:  # 有上一页按钮
-        if blog_pagination_response.data.find('class="skin-pagingNext skin-btnPaging ga-pagingTopNextTop') == -1:  # 但没有下一页按钮
+    elif blog_pagination_response.data.decode().find('class="skin-pagingPrev skin-btnPaging ga-pagingTopPrevTop') >= 0:  # 有上一页按钮
+        if blog_pagination_response.data.decode().find('class="skin-pagingNext skin-btnPaging ga-pagingTopNextTop') == -1:  # 但没有下一页按钮
             result["is_over"] = True
     else:
         result["is_over"] = True
@@ -89,7 +89,7 @@ def get_blog_page(account_name, blog_id):
     if blog_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(blog_response.status))
     # todo 登录cookies
-    if blog_response.data.find('<h1 data-uranus-component="amemberLoginHeading">この記事はアメンバーさん限定です。</h1>') >= 0:
+    if blog_response.data.decode().find('<h1 data-uranus-component="amemberLoginHeading">この記事はアメンバーさん限定です。</h1>') >= 0:
         raise crawler.CrawlerException("日志只限会员访问")
     # 截取日志正文部分（有多种页面模板）
     article_class_list = ["subContentsInner", "articleText", "skin-entryInner"]

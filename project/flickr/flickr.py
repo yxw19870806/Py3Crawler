@@ -26,7 +26,7 @@ def check_login():
     index_url = "https://www.flickr.com/"
     index_response = net.http_request(index_url, method="GET", cookies_list=COOKIE_INFO)
     if index_response.status == net.HTTP_RETURN_CODE_SUCCEED:
-        return index_response.data.find('data-track="gnYouMainClick"') >= 0
+        return index_response.data.decode().find('data-track="gnYouMainClick"') >= 0
     IS_LOGIN = False
     return False
 

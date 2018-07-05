@@ -31,7 +31,7 @@ def get_album_page(page_count):
     }
     if album_response.status == net.HTTP_RETURN_CODE_SUCCEED:
         # 获取相册标题
-        result["is_over"] = album_response.data.find("<p>视频正在审核中<br><b>精彩需要耐心等待</b></p>") >= 0
+        result["is_over"] = album_response.data.decode().find("<p>视频正在审核中<br><b>精彩需要耐心等待</b></p>") >= 0
         if result["is_over"]:
             return result
         # 获取相册标题
