@@ -88,7 +88,7 @@ def get_discount_game_list():
                         temp_id_list = temp_id_list.split(",")
                         app_id += temp_id_list
                 else:
-                    output.print_msg("bundle_info not found\n%s" % game_selector.html().encode("UTF-8"))
+                    output.print_msg("bundle_info not found\n%s" % game_selector.html())
             elif package_id is not None:
                 prime_id = package_id
                 game_type = "package"
@@ -103,11 +103,11 @@ def get_discount_game_list():
                 continue
             app_id_list.append(prime_id)
             # discount
-            discount = list(filter(str.isdigit, game_selector.find(".search_discount span").text().encode("UTF-8")))
+            discount = list(filter(str.isdigit, game_selector.find(".search_discount span").text()))
             # old price
-            old_price = list(filter(str.isdigit, game_selector.find(".search_price span strike").text().encode("UTF-8")))
+            old_price = list(filter(str.isdigit, game_selector.find(".search_price span strike").text()))
             # now price
-            now_price = list(filter(str.isdigit, game_selector.find(".search_price").remove("span").text().encode("UTF-8")))
+            now_price = list(filter(str.isdigit, game_selector.find(".search_price").remove("span").text()))
             # 如果没有取到，给个默认值
             if not crawler.is_integer(old_price):
                 old_price = 0
@@ -131,7 +131,7 @@ def get_discount_game_list():
         pagination_html = search_result_selector.find(".search_pagination .search_pagination_right").html()
         if pagination_html is None:
             break
-        page_count_find = re.findall("<a [\s|\S]*?>([\d]*)</a>", pagination_html.encode("UTF-8"))
+        page_count_find = re.findall("<a [\s|\S]*?>([\d]*)</a>", pagination_html)
         if len(page_count_find) > 0:
             total_page_count = max(list(map(int, page_count_find)))
             if page_count < total_page_count:
@@ -177,7 +177,7 @@ def get_self_account_badges(account_id):
     # 徽章div
     badges_selector = pq(badges_index_response.data).find(".maincontent .badges_sheet .badge_row")
     for index in range(0, badges_selector.length):
-        badge_html = badges_selector.eq(index).html().encode("UTF-8")
+        badge_html = badges_selector.eq(index).html()
         # 已经掉落全部卡牌的徽章
         if badge_html.find("无剩余卡牌掉落") >= 0:
             # 徽章详细信息页面地址
@@ -204,7 +204,6 @@ def get_self_account_badge_card(badge_detail_url):
         badge_level_html = badge_selector.find(".badge_info_description div").eq(1).text()
         if not badge_level_html:
             raise crawler.CrawlerException("页面截取徽章等级信息失败\n%s" % badge_detail_response.data)
-        badge_level_html = badge_level_html.encode("UTF-8")
         badge_level_find = re.findall("(\d*) 级,", badge_level_html)
         if len(badge_level_find) != 1:
             raise crawler.CrawlerException("徽章等级信息徽章等级失败\n%s" % badge_level_html)
@@ -245,7 +244,7 @@ def get_market_game_trade_card_price(game_id):
     card_selector = pq(market_search_response.json_data["results_html"]).find(".market_listing_row_link")
     for index in range(0, card_selector.length):
         card_name = card_selector.eq(index).find(".market_listing_item_name").text()
-        card_min_price = card_selector.eq(index).find("span.normal_price span.normal_price").text().encode("UTF-8").replace("¥ ", "")
+        card_min_price = card_selector.eq(index).find("span.normal_price span.normal_price").text().replace("¥ ", "")
         market_item_list[card_name] = card_min_price
     # {'Pamu': '1.77', 'Fumi (Trading Card)': '2.14', 'Mio (Trading Card)': '1.33', 'Bonnibel (Trading Card)': '1.49', 'Groupshot': '1.87', 'Q-Piddy': '1.35', 'Elle (Trading Card)': '1.19', 'Quill': '1.50', 'Iro (Trading Card)': '1.42', 'Bearverly (Trading Card)': '1.27', 'Cassie (Trading Card)': '1.35'}
     return market_item_list

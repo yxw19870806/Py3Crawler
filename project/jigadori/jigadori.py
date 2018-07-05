@@ -26,7 +26,7 @@ def get_one_page_photo(page_count):
     photo_list_selector = pq(photo_pagination_response.data.decode("UTF-8")).find("#wrapper .row .photo")
     for photo_index in range(0, photo_list_selector.length):
         photo_selector = photo_list_selector.eq(photo_index)
-        photo_selector_html = photo_selector.html().encode("UTF-8")
+        photo_selector_html = photo_selector.html()
         result_photo_info = {
             "account_name": "",  # twitter账号
             "image_url_list": [],  # 图片地址

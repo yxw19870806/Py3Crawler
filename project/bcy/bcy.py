@@ -153,10 +153,10 @@ def get_one_page_album(account_id, page_count):
         # 获取作品id
         album_url = album_selector.find("a.posr").attr("href")
         if not album_url:
-            raise crawler.CrawlerException("作品信息截取作品地址失败\n%s" % album_selector.html().encode("UTF-8"))
+            raise crawler.CrawlerException("作品信息截取作品地址失败\n%s" % album_selector.html())
         album_id = str(album_url).split("/")[-1]
         if not crawler.is_integer(album_id):
-            raise crawler.CrawlerException("作品地址 %s 截取作品id失败\n%s" % (album_url, album_selector.html().encode("UTF-8")))
+            raise crawler.CrawlerException("作品地址 %s 截取作品id失败\n%s" % (album_url, album_selector.html()))
         result["album_id_list"].append(album_id)
     # 判断是不是最后一页
     last_pagination_selector = pq(album_pagination_response.data).find("ul.pager li:last a")
@@ -195,7 +195,7 @@ def get_album_page(album_id):
 
     # 是不是有报错信息
     if not is_skip:
-        error_message = pq(album_response.data.decode("UTF-8")).find("span.l-detail-no-right-to-see__text").text().encode("UTF-8")
+        error_message = pq(album_response.data.decode("UTF-8")).find("span.l-detail-no-right-to-see__text").text()
         # https://bcy.net/item/detail/5969608017174355726
         if error_message == "该作品已被作者设置为只有粉丝可见":
             result["is_only_follower"] = True
@@ -215,7 +215,7 @@ def get_album_page(album_id):
         # 获取作品id
         image_url = image_selector.attr("src")
         if not image_url:
-            raise crawler.CrawlerException("图片信息截取图片地址失败\n%s" % image_selector.html().encode("UTF-8"))
+            raise crawler.CrawlerException("图片信息截取图片地址失败\n%s" % image_selector.html())
         result["image_url_list"].append(str(image_url))
 
     if not is_skip and len(result["image_url_list"]) == 0:

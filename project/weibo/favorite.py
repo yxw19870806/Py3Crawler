@@ -54,7 +54,7 @@ def get_one_page_favorite(page_count):
         # 解析日志id
         blog_id = feed_selector.attr("mid")
         if not crawler.is_integer(blog_id):
-            raise crawler.CrawlerException("收藏信息解析微博id失败\n%s" % feed_selector.html().encode("UTF-8"))
+            raise crawler.CrawlerException("收藏信息解析微博id失败\n%s" % feed_selector.html())
         result_blog_info["blog_id"] = str(blog_id)
         # WB_text       微博文本
         # WB_media_wrap 微博媒体（图片）
@@ -79,7 +79,7 @@ def get_one_page_favorite(page_count):
     # 最后一条feed是分页信息
     page_selector = children_selector.eq(children_selector.length - 1)
     # 判断是不是最后一页
-    page_count_find = re.findall("第(\d*)页",  page_selector.html().encode("UTF-8"))
+    page_count_find = re.findall("第(\d*)页",  page_selector.html())
     if len(page_count_find) > 0:
         page_count_find = list(map(int, page_count_find))
         result["is_over"] = page_count >= max(page_count_find)

@@ -58,13 +58,13 @@ def get_one_page_account(page_count):
         account_name = account_selector.find(".profile-name").eq(0).text()
         if not account_name:
             account_name = ""
-            # raise robot.CrawlerException("成员信息截取成员名字失败\n\%s" % account_selector.html().encode("UTF-8"))
+            # raise robot.CrawlerException("成员信息截取成员名字失败\n\%s" % account_selector.html())
         else:
-            account_name = account_name.strip().encode("UTF-8")
+            account_name = account_name.strip()
         # 获取twitter账号
         account_id = account_selector.find(".screen-name a").text()
         if not account_id:
-            raise crawler.CrawlerException("成员信息截取twitter账号失败\n\%s" % account_selector.html().encode("UTF-8"))
+            raise crawler.CrawlerException("成员信息截取twitter账号失败\n\%s" % account_selector.html())
         account_id = account_id.strip().replace("@", "")
         pagination_account_list[account_id] = account_name
     return pagination_account_list
