@@ -7,7 +7,7 @@ email: hikaru870806@hotmail.com
 """
 import urllib.request, urllib.parse, urllib.error
 from common import output, crawler
-from . import steamCommon
+from game.steam import steamCommon
 
 MIN_CARD_PRICE = 0  # 最低卡牌价格
 MAX_CARD_PRICE = 99  # 最高卡牌价格

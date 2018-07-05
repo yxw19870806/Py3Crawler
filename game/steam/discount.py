@@ -10,7 +10,7 @@ import os
 import time
 import datetime
 from common import *
-from . import steamCommon
+from game.steam import steamCommon
 
 API_UPDATE_TIME_WEEKDAY = 2  # 每周优惠更新时间（周几）
 API_UPDATE_TIME_HOUR = 1  # 每周优惠更新时间（几点）

@@ -6,7 +6,7 @@ email: hikaru870806@hotmail.com
 如有问题或建议请联系
 """
 from common import output, crawler
-from . import steamCommon
+from game.steam import steamCommon
 
 CHECK_DUPLICATE_BACKGROUND = True
 CHECK_DUPLICATE_EMOTICON = True
