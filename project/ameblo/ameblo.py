@@ -43,23 +43,24 @@ def get_one_page_blog(account_name, page_count):
         raise crawler.CrawlerException("账号不存在")
     elif blog_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(blog_pagination_response.status))
+    blog_pagination_response_content = blog_pagination_response.data.decode()
     # 获取日志id
-    blog_id_list = re.findall('data-unique-entry-id="([\d]*)"', blog_pagination_response.data)
+    blog_id_list = re.findall('data-unique-entry-id="([\d]*)"', blog_pagination_response_content)
     # 另一种页面格式
     if len(blog_id_list) == 0:
         # goto-risako
-        blog_list_selector = pq(blog_pagination_response.data).find('#main li a.skin-titleLink')
+        blog_list_selector = pq(blog_pagination_response_content).find('#main li a.skin-titleLink')
         if blog_list_selector.length > 0:
             blog_id_list = []
             for blog_url_index in range(0, len(blog_list_selector)):
                 blog_id_list.append(tool.find_sub_string(blog_list_selector.eq(blog_url_index).attr("href"), "entry-", ".html"))
     if len(blog_id_list) == 0:
-        raise crawler.CrawlerException("页面匹配日志id失败\n%s" % blog_pagination_response.data)
+        raise crawler.CrawlerException("页面匹配日志id失败\n%s" % blog_pagination_response_content)
     result["blog_id_list"] = list(map(str, blog_id_list))
     # 判断是不是最后一页
     # 有页数选择的页面样式
-    if blog_pagination_response.data.decode().find('<div class="page topPaging">') >= 0:
-        paging_data = tool.find_sub_string(blog_pagination_response.data, '<div class="page topPaging">', "</div>")
+    if blog_pagination_response_content.find('<div class="page topPaging">') >= 0:
+        paging_data = tool.find_sub_string(blog_pagination_response_content, '<div class="page topPaging">', "</div>")
         last_page = re.findall('/page-(\d*).html#main" class="lastPage"', paging_data)
         if len(last_page) == 1:
             result["is_over"] = page_count >= int(last_page[0])
@@ -67,12 +68,12 @@ def get_one_page_blog(account_name, page_count):
         if len(page_count_find) > 0:
             result["is_over"] = page_count >= max(list(map(int, page_count_find)))
     # 只有下一页和上一页按钮的样式
-    elif blog_pagination_response.data.decode().find('<a class="skinSimpleBtn pagingPrev"') >= 0:  # 有上一页按钮
-        if blog_pagination_response.data.decode().find('<a class="skinSimpleBtn pagingNext"') == -1:  # 但没有下一页按钮
+    elif blog_pagination_response_content.find('<a class="skinSimpleBtn pagingPrev"') >= 0:  # 有上一页按钮
+        if blog_pagination_response_content.find('<a class="skinSimpleBtn pagingNext"') == -1:  # 但没有下一页按钮
             result["is_over"] = True
     # 另一种只有下一页和上一页按钮的样式
-    elif blog_pagination_response.data.decode().find('class="skin-pagingPrev skin-btnPaging ga-pagingTopPrevTop') >= 0:  # 有上一页按钮
-        if blog_pagination_response.data.decode().find('class="skin-pagingNext skin-btnPaging ga-pagingTopNextTop') == -1:  # 但没有下一页按钮
+    elif blog_pagination_response_content.find('class="skin-pagingPrev skin-btnPaging ga-pagingTopPrevTop') >= 0:  # 有上一页按钮
+        if blog_pagination_response_content.find('class="skin-pagingNext skin-btnPaging ga-pagingTopNextTop') == -1:  # 但没有下一页按钮
             result["is_over"] = True
     else:
         result["is_over"] = True
@@ -88,19 +89,20 @@ def get_blog_page(account_name, blog_id):
     }
     if blog_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(blog_response.status))
+    blog_response_content = blog_response.data.decode()
     # todo 登录cookies
-    if blog_response.data.decode().find('<h1 data-uranus-component="amemberLoginHeading">この記事はアメンバーさん限定です。</h1>') >= 0:
+    if blog_response_content.find('この記事はアメンバーさん限定です。') >= 0:
         raise crawler.CrawlerException("日志只限会员访问")
     # 截取日志正文部分（有多种页面模板）
     article_class_list = ["subContentsInner", "articleText", "skin-entryInner"]
     article_html = None
     for article_class in article_class_list:
-        article_html_selector = pq(blog_response.data).find("." + article_class)
+        article_html_selector = pq(blog_response_content).find("." + article_class)
         if article_html_selector.length > 0:
             article_html = article_html_selector.html()
             break
     if article_html is None:
-        raise crawler.CrawlerException("页面截取正文失败\n%s" % blog_response.data)
+        raise crawler.CrawlerException("页面截取正文失败\n%s" % blog_response_content)
     # 获取图片地址
     image_url_list = re.findall('<img [\S|\s]*?src="(http[^"]*)" [\S|\s]*?>', article_html)
     result["image_url_list"] = list(map(str, image_url_list))
