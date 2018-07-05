@@ -330,7 +330,7 @@ class Download(crawler.DownloadThread):
                 log.error(self.account_id + " 异常退出")
         except Exception as e:
             log.error(self.account_id + " 未知异常")
-            log.error(str(e) + "\n" + str(traceback.format_exc()))
+            log.error(str(e) + "\n" + traceback.format_exc())
 
         # 保存最后的信息
         with self.thread_lock:

@@ -163,7 +163,7 @@ class YouZi(crawler.Crawler):
                 path.delete_dir_or_file(temp_path)
         except Exception as e:
             log.error("未知异常")
-            log.error(str(e) + "\n" + str(traceback.format_exc()))
+            log.error(str(e) + "\n" + traceback.format_exc())
 
         # 重新保存存档文件
         tool.write_file(str(album_id), self.save_data_path, tool.WRITE_FILE_TYPE_REPLACE)

@@ -124,7 +124,7 @@ class YWKB(crawler.Crawler):
                 log.error("异常退出")
         except Exception as e:
             log.error("未知异常")
-            log.error(str(e) + "\n" + str(traceback.format_exc()))
+            log.error(str(e) + "\n" + traceback.format_exc())
 
         # 保存新的存档文件
         tool.write_file(str(last_image_id), self.save_data_path, tool.WRITE_FILE_TYPE_REPLACE)
