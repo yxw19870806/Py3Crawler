@@ -343,7 +343,6 @@ def save_net_file(file_url, file_path, need_content_type=False, header_list=None
         code        failure reason
         file_path   finally local file path(when need_content_type is True, will rename it)
     """
-    file_path = path.change_path_encoding(file_path)
     # 判断保存目录是否存在
     if not path.create_dir(os.path.dirname(file_path)):
         return False
@@ -430,7 +429,6 @@ def save_net_file_list(file_url_list, file_path, header_list=None, cookies_list=
         status      0 download failure, 1 download successful
         code        failure reason
     """
-    file_path = path.change_path_encoding(file_path)
     # 判断保存目录是否存在
     if not path.create_dir(os.path.dirname(file_path)):
         return False
