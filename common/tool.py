@@ -124,8 +124,8 @@ def string_to_list(source_string, first_split="\n", second_split="\t"):
 # char_lib_type 需要的字库取和， 1 - 大写字母；2 - 小写字母; 4 - 数字，默认7(1+2+4)包括全部
 def generate_random_string(string_length, char_lib_type=7):
     char_lib = {
-        1: string.lowercase,  # 小写字母
-        2: string.uppercase,  # 大写字母
+        1: string.ascii_lowercase,  # 小写字母
+        2: string.ascii_uppercase,  # 大写字母
         4: "0123456789",  # 数字
     }
     char_pool = []
