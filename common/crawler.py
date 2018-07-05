@@ -350,7 +350,7 @@ def read_config(config_path):
         config_file = configparser.SafeConfigParser()
         config_file.readfp(file_handle)
         for key, value in config_file.items("setting"):
-            config[key.encode("UTF-8")] = value.encode("UTF-8")
+            config[key] = value
     return config
 
 
