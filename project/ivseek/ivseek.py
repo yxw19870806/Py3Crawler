@@ -173,7 +173,7 @@ class IvSeek(crawler.Crawler):
                 log.error("异常退出")
         except Exception as e:
             log.error("未知异常")
-            log.error(str(e) + "\n" + str(traceback.format_exc()))
+            log.error(str(e) + "\n" + traceback.format_exc())
 
 
 if __name__ == "__main__":

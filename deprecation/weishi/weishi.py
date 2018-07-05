@@ -233,7 +233,7 @@ class Download(crawler.DownloadThread):
                     path.delete_dir_or_file(temp_path)
         except Exception as e:
             log.error(account_name + " 未知异常")
-            log.error(str(e) + "\n" + str(traceback.format_exc()))
+            log.error(str(e) + "\n" + traceback.format_exc())
 
         # 保存最后的信息
         with self.thread_lock:
