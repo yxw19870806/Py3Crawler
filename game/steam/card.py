@@ -6,7 +6,7 @@ email: hikaru870806@hotmail.com
 如有问题或建议请联系
 """
 from common import output, crawler
-from . import steamCommon
+from game.steam import steamCommon
 
 
 # 获取账号多余的交换卡

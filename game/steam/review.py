@@ -8,7 +8,7 @@ email: hikaru870806@hotmail.com
 import json
 import os
 from common import output, crawler, tool
-from . import steamCommon
+from game.steam import steamCommon
 
 REVIEW_DATA_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), "data\\review.txt"))
 
