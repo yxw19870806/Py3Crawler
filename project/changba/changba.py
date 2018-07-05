@@ -26,10 +26,11 @@ def get_account_index_page(account_id):
         raise crawler.CrawlerException("账号不存在")
     elif account_index_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(account_index_response.status))
+    account_index_response_content = account_index_response.data.decode()
     # 获取user id
-    user_id = tool.find_sub_string(account_index_response.data, "var userid = '", "'")
+    user_id = tool.find_sub_string(account_index_response_content, "var userid = '", "'")
     if not crawler.is_integer(user_id):
-        raise crawler.CrawlerException("页面截取userid失败\n%s" % account_index_response.data)
+        raise crawler.CrawlerException("页面截取userid失败\n%s" % account_index_response_content)
     result["user_id"] = str(user_id)
     return result
 
@@ -61,15 +62,15 @@ def get_one_page_audio(user_id, page_count):
             raise crawler.CrawlerException("歌曲信息'workid'字段不存在\n%s" % audio_info)
         if not crawler.is_integer(audio_info["workid"]):
             raise crawler.CrawlerException("歌曲信息'workid'字段类型不正确\n%s" % audio_info)
-        result_audio_info["audio_id"] = str(audio_info["workid"])
+        result_audio_info["audio_id"] = audio_info["workid"]
         # 获取歌曲标题
         if not crawler.check_sub_key(("songname",), audio_info):
             raise crawler.CrawlerException("歌曲信息'songname'字段不存在\n%s" % audio_info)
-        result_audio_info["audio_title"] = str(audio_info["songname"].encode("UTF-8"))
+        result_audio_info["audio_title"] = audio_info["songname"]
         # 获取歌曲key
         if not crawler.check_sub_key(("enworkid",), audio_info):
             raise crawler.CrawlerException("歌曲信息'enworkid'字段不存在\n%s" % audio_info)
-        result_audio_info["audio_key"] = str(audio_info["enworkid"])
+        result_audio_info["audio_key"] = audio_info["enworkid"]
         # 获取歌曲类型
         if not crawler.check_sub_key(("type",), audio_info):
             raise crawler.CrawlerException("歌曲信息'type'字段不存在\n%s" % audio_info)
@@ -93,14 +94,15 @@ def get_audio_play_page(audio_en_word_id, audio_type):
     audio_play_response = net.http_request(audio_play_url, method="GET")
     if audio_play_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(audio_play_response.status))
-    if audio_play_response.data.decode().find("该作品可能含有不恰当内容将不能显示。") > -1:
+    audio_play_response_content = audio_play_response.data.decode()
+    if audio_play_response_content.find("该作品可能含有不恰当内容将不能显示。") > -1:
         result["is_delete"] = True
     else:
         # 获取歌曲地址
         if audio_type == 1 or audio_type == 3:
-            audio_source_url = tool.find_sub_string(audio_play_response.data, 'var a="', '"')
+            audio_source_url = tool.find_sub_string(audio_play_response_content, 'var a="', '"')
             if not audio_source_url:
-                raise crawler.CrawlerException("页面截取歌曲原始地址失败\n%s" % audio_play_response.data)
+                raise crawler.CrawlerException("页面截取歌曲原始地址失败\n%s" % audio_play_response_content)
             # 从JS处解析的规则
             special_find = re.findall("userwork/([abc])(\d+)/(\w+)/(\w+)\.mp3", audio_source_url)
             if len(special_find) == 0:
@@ -117,12 +119,12 @@ def get_audio_play_page(audio_en_word_id, audio_type):
                 raise crawler.CrawlerException("歌曲原始地址解密歌曲地址失败\n%s" % audio_source_url)
         # MV
         else:
-            video_source_string = tool.find_sub_string(audio_play_response.data, "<script>jwplayer.utils.qn = '", "';</script>")
+            video_source_string = tool.find_sub_string(audio_play_response_content, "<script>jwplayer.utils.qn = '", "';</script>")
             if not video_source_string:
                 # 是不是使用bokecc cdn的视频
-                bokecc_param = tool.find_sub_string(audio_play_response.data, '<script src="//p.bokecc.com/player?', '"')
+                bokecc_param = tool.find_sub_string(audio_play_response_content, '<script src="//p.bokecc.com/player?', '"')
                 if not bokecc_param:
-                    raise crawler.CrawlerException("页面截取歌曲加密地址失败\n%s" % audio_play_response.data)
+                    raise crawler.CrawlerException("页面截取歌曲加密地址失败\n%s" % audio_play_response_content)
                 vid = tool.find_sub_string(bokecc_param, "vid=", "&")
                 if not vid:
                     raise crawler.CrawlerException("bokecc参数截取vid失败\n%s" % bokecc_param)
@@ -136,9 +138,10 @@ def get_audio_play_page(audio_en_word_id, audio_type):
                 bokecc_xml_response = net.http_request(bokecc_xml_url, method="GET", fields=query_data)
                 if bokecc_xml_response.status != net.HTTP_RETURN_CODE_SUCCEED:
                     raise crawler.CrawlerException("bokecc xml文件 %s 访问失败" % bokecc_xml_url)
-                audio_url_find = re.findall('playurl="([^"]*)"', bokecc_xml_response.data)
+                bokecc_xml_response_content = bokecc_xml_response.data.decode()
+                audio_url_find = re.findall('playurl="([^"]*)"', bokecc_xml_response_content)
                 if len(audio_url_find) == 0:
-                    raise crawler.CrawlerException("bokecc xml文件 %s 截取歌曲地址失败\n%s" % (bokecc_xml_url, bokecc_xml_response.data))
+                    raise crawler.CrawlerException("bokecc xml文件 %s 截取歌曲地址失败\n%s" % (bokecc_xml_url, bokecc_xml_response_content))
                 video_url = audio_url_find[-1].replace("&amp;", "&")
             else:
                 try:
