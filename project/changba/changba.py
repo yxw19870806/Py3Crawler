@@ -109,8 +109,8 @@ def get_audio_play_page(audio_en_word_id, audio_type):
                 result["audio_url"] = str(audio_source_url)
             elif len(special_find) == 1:
                 e = int(special_find[0][1], 8)
-                f = int(special_find[0][2], 16) / e / e
-                g = int(special_find[0][3], 16) / e / e
+                f = int(int(special_find[0][2], 16) / e / e)
+                g = int(int(special_find[0][3], 16) / e / e)
                 if "a" == special_find[0][0] and g % 1000 == f:
                     result["audio_url"] = "http://a%smp3.changba.com/userdata/userwork/%s/%g.mp3" % (e, f, g)
                 else:
