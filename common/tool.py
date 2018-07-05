@@ -12,7 +12,7 @@ import platform
 import random
 import string
 import sys
-from Crypto.Cipher import AES
+# from Crypto.Cipher import AES
 from common import path
 
 # if sys.stdout.encoding != "UTF-8":
@@ -233,6 +233,7 @@ AES_PRIVATE_KEY = "#@PyCrawl@#"
 
 # AES-256加密字符串
 def encrypt_string(s):
+    return s
     # generate aes key
     key = hashlib.md5(AES_PRIVATE_KEY).hexdigest()
     aes_obj = AES.new(key, AES.MODE_CBC, key[:16])
@@ -246,6 +247,7 @@ def encrypt_string(s):
 
 # AES-256解密字符串
 def decrypt_string(s):
+    return s
     # generate aes key
     key = hashlib.md5(AES_PRIVATE_KEY).hexdigest()
     aes_obj = AES.new(key, AES.MODE_CBC, key[:16])
