@@ -98,7 +98,7 @@ def get_cookie_value_from_browser(cookie_key, file_path, browser_type, target_do
                     value = win32crypt.CryptUnprotectData(cookie_info[4], None, None, None, 0)[1]
                 except:
                     return None
-                return value
+                return value.decode()
     else:
         output.print_msg("不支持的浏览器类型：" + browser_type)
         return None
@@ -175,7 +175,7 @@ def get_all_cookie_from_browser(browser_type, file_path):
                 continue
             if cookie_domain not in all_cookies:
                 all_cookies[cookie_domain] = {}
-            all_cookies[cookie_domain][cookie_key] = cookie_value
+            all_cookies[cookie_domain][cookie_key] = cookie_value.decode()
     else:
         output.print_msg("不支持的浏览器类型：" + browser_type)
         return None
