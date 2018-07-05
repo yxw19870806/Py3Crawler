@@ -226,7 +226,7 @@ def write_file(msg, file_path, append_type=WRITE_FILE_TYPE_APPEND):
         open_type = "w"
     else:
         return False
-    with open(file_path, open_type) as file_handle:
+    with open(file_path, open_type, encoding="UTF-8") as file_handle:
         file_handle.write(msg + "\n")
 
 
