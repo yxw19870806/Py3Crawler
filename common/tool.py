@@ -191,7 +191,7 @@ def read_file(file_path, read_type=READ_FILE_TYPE_FULL):
             return ""
         else:
             return []
-    with open(file_path, "r") as file_handle:
+    with open(file_path, "r", encoding="UTF-8") as file_handle:
         if read_type == 1:
             result = file_handle.read()
             if result[-1] == "\n":
