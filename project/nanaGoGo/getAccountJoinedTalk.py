@@ -37,19 +37,19 @@ def get_account_talks(account_id, account_name, talk_list):
         # 获取talk地址
         talk_url_path = talk_selector.attr("href")
         if not talk_url_path:
-            raise crawler.CrawlerException("talk信息截取talk地址失败\n%s" % talk_selector.html.encode("UTF-8"))
+            raise crawler.CrawlerException("talk信息截取talk地址失败\n%s" % talk_selector.html())
         talk_id = str(talk_url_path.replace("/", ""))
         if not talk_id:
             raise crawler.CrawlerException("talk地址截取talk id失败\n%s" % talk_url_path)
         # 获取talk名字
         talk_name = talk_selector.find(".UserTalk__talkname").text()
         if not talk_name:
-            raise crawler.CrawlerException("talk信息截取talk名字失败\n%s" % talk_selector.html.encode("UTF-8"))
-        talk_name = crawler.filter_emoji(str(talk_name.encode("UTF-8")).strip())
+            raise crawler.CrawlerException("talk信息截取talk名字失败\n%s" % talk_selector.html())
+        talk_name = crawler.filter_emoji(talk_name.strip())
         # 获取talk描述
         talk_description = crawler.filter_emoji(talk_selector.find(".UserTalk__description").text())
         if talk_description:
-            talk_description = crawler.filter_emoji(str(talk_description.encode("UTF-8")).strip())
+            talk_description = crawler.filter_emoji(talk_description.strip())
         else:
             talk_description = ""
         if talk_id in talk_list:

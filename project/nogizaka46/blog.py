@@ -44,10 +44,10 @@ def get_one_page_blog(account_id, page_count):
             # 获取日志id
             blog_url = blog_bottom_selector.eq(blog_body_index).find("a").eq(0).attr("href")
             if blog_url is None:
-                raise crawler.CrawlerException("日志内容截取日志地址失败\n%s" % blog_bottom_selector.eq(blog_body_index).html().encode("UTF-8"))
+                raise crawler.CrawlerException("日志内容截取日志地址失败\n%s" % blog_bottom_selector.eq(blog_body_index).html())
             blog_id = blog_url.split("/")[-1].split(".")[0]
             if not crawler.is_integer(blog_id):
-                raise crawler.CrawlerException("日志内容截取日志id失败\n%s" % blog_bottom_selector.eq(blog_body_index).html().encode("UTF-8"))
+                raise crawler.CrawlerException("日志内容截取日志id失败\n%s" % blog_bottom_selector.eq(blog_body_index).html())
             result_image_info["blog_id"] = str(int(blog_id))
             # 获取图片地址列表
             image_url_list = re.findall('src="(http[^"]*)"', blog_body_html)
@@ -64,10 +64,10 @@ def get_one_page_blog(account_id, page_count):
         if paginate_selector.length > 0:
             paginate_url = paginate_selector.eq(0).find("a:last").attr("href")
             if paginate_url is None:
-                raise crawler.CrawlerException("页面截取分页信息失败\n%s" % paginate_selector.html().encode("UTF-8"))
+                raise crawler.CrawlerException("页面截取分页信息失败\n%s" % paginate_selector.html())
             max_page_count = paginate_url.split("?p=")[-1]
             if not crawler.is_integer(max_page_count):
-                raise crawler.CrawlerException("分页信息解析失败\n%s" % blog_bottom_selector.html().encode("UTF-8"))
+                raise crawler.CrawlerException("分页信息解析失败\n%s" % blog_bottom_selector.html())
             result["is_over"] = page_count >= int(max_page_count)
         else:
             result["is_over"] = True

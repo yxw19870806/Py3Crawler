@@ -35,19 +35,19 @@ def get_one_page_photo(page_count):
         # 获取图片id
         image_id = photo_list_selector.eq(photo_index).find(".bizhibigwrap").attr("id")
         if not image_id:
-            raise crawler.CrawlerException("图片列表匹配图片id失败\n%s" % photo_list_selector.eq(photo_index).html().encode("UTF-8"))
+            raise crawler.CrawlerException("图片列表匹配图片id失败\n%s" % photo_list_selector.eq(photo_index).html())
         if not (image_id[0:3] == "big" and crawler.is_integer(image_id[3:])):
-            raise crawler.CrawlerException("图片列表匹配的图片id格式不正确\n%s" % photo_list_selector.eq(photo_index).html().encode("UTF-8"))
+            raise crawler.CrawlerException("图片列表匹配的图片id格式不正确\n%s" % photo_list_selector.eq(photo_index).html())
         result_image_info["image_id"] = str(image_id[3:])
         # 获取图片地址
         image_path = photo_list_selector.eq(photo_index).find(".bizhibig img").eq(1).attr("src")
         if not image_path:
-            raise crawler.CrawlerException("图片列表匹配图片地址失败\n%s" % photo_list_selector.eq(photo_index).html().encode("UTF-8"))
+            raise crawler.CrawlerException("图片列表匹配图片地址失败\n%s" % photo_list_selector.eq(photo_index).html())
         result_image_info["image_url"] = "http://kelagirls.com/" + str(image_path.encode("UTF-8"))
         # 获取模特名字
-        model_name = photo_list_selector.eq(photo_index).find(".bzwdown span").eq(0).text().encode("UTF-8")
+        model_name = photo_list_selector.eq(photo_index).find(".bzwdown span").eq(0).text()
         if not model_name:
-            raise crawler.CrawlerException("图片列表匹配模特名字失败\n%s" % photo_list_selector.eq(photo_index).html().encode("UTF-8"))
+            raise crawler.CrawlerException("图片列表匹配模特名字失败\n%s" % photo_list_selector.eq(photo_index).html())
         result_image_info["model_name"] = str(model_name)
         result["image_info_list"].append(result_image_info)
     # 判断是不是最后一页

@@ -46,7 +46,7 @@ def get_album_page(sub_path, page_count):
     if album_list_selector.length == 0:
         album_list_selector = pq(album_pagination_html).find("div.yyy li a")
     if album_list_selector.length == 0:
-        raise crawler.CrawlerException("页面截取图集列表失败\n%s" % album_pagination_html.encode("UTF-8"))
+        raise crawler.CrawlerException("页面截取图集列表失败\n%s" % album_pagination_html)
     for album_index in range(0, album_list_selector.length):
         result_album_info = {
             "album_title": "",  # 图集id
@@ -56,13 +56,13 @@ def get_album_page(sub_path, page_count):
         # 获取图集id
         album_url = album_selector.attr("href")
         if not album_url:
-            raise crawler.CrawlerException("图集列表截取图集地址失败\n%s" % album_selector.html().encode("UTF-8"))
+            raise crawler.CrawlerException("图集列表截取图集地址失败\n%s" % album_selector.html())
         album_id = album_url.split("/")[-2]
         if not crawler.is_integer(album_id):
             raise crawler.CrawlerException("图集地址截取图集id失败\n%s" % str(album_url))
         result_album_info["page_id"] = album_id
         # 获取图集标题
-        album_title = album_selector.attr("title").encode("UTF-8")
+        album_title = album_selector.attr("title")
         if len(re.findall("_共\d*张", album_title)) == 1:
             result_album_info["album_title"] = album_title[:album_title.rfind("_共")]
         else:
@@ -71,10 +71,10 @@ def get_album_page(sub_path, page_count):
     # 判断是不是最后一页
     max_page_info = pq(album_pagination_html).find("div.page a").eq(-1).text()
     if not max_page_info:
-        raise crawler.CrawlerException("总页数信息截取失败\n%s" % album_pagination_html.encode("UTF-8"))
-    max_page_count = tool.find_sub_string(max_page_info.encode("UTF-8"), "共", "页")
+        raise crawler.CrawlerException("总页数信息截取失败\n%s" % album_pagination_html)
+    max_page_count = tool.find_sub_string(max_page_info, "共", "页")
     if not crawler.is_integer(max_page_count):
-        raise crawler.CrawlerException("总页数截取失败\n%s" % max_page_info.encode("UTF-8"))
+        raise crawler.CrawlerException("总页数截取失败\n%s" % max_page_info)
     result["is_over"] = page_count >= int(max_page_count)
     return result
 
@@ -98,7 +98,7 @@ def get_album_photo(sub_path, page_id):
         # 获取图片地址
         image_list_selector = pq(photo_pagination_html).find("div.zzz li img")
         if image_list_selector.length == 0:
-            raise crawler.CrawlerException("第%s页 页面匹配图片地址失败\n%s" % (page_count, photo_pagination_html.encode("UTF-8")))
+            raise crawler.CrawlerException("第%s页 页面匹配图片地址失败\n%s" % (page_count, photo_pagination_html))
         for image_index in range(0, image_list_selector.length):
             result["image_url_list"].append("http://www.88mmw.com" + str(image_list_selector.eq(image_index).attr("src")).replace("-lp", ""))
         # 判断是不是最后一页

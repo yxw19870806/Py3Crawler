@@ -43,13 +43,13 @@ def get_one_page_audio(account_id, page_count):
         # 获取歌曲id
         audio_id = audio_selector.find(".content_wrap").attr("sound_id")
         if not crawler.is_integer(audio_id):
-            raise crawler.CrawlerException("歌曲信息匹配歌曲id失败\n%s" % audio_list_selector.html().encode("UTF-8"))
+            raise crawler.CrawlerException("歌曲信息匹配歌曲id失败\n%s" % audio_list_selector.html())
         audio_info["audio_id"] = str(audio_id)
         # 获取歌曲标题
         audio_title = audio_selector.find(".sound_title").attr("title")
         if not audio_title:
-            raise crawler.CrawlerException("歌曲信息匹配歌曲标题失败\n%s" % audio_list_selector.html().encode("UTF-8"))
-        audio_info["audio_title"] = str(audio_title.encode("UTF-8").strip())
+            raise crawler.CrawlerException("歌曲信息匹配歌曲标题失败\n%s" % audio_list_selector.html())
+        audio_info["audio_title"] = audio_title.strip()
         result["audio_info_list"].append(audio_info)
     # 判断是不是最后一页
     max_page_count = 1
@@ -60,7 +60,7 @@ def get_one_page_audio(account_id, page_count):
         if data_page is None:
             continue
         if not crawler.is_integer(data_page):
-            raise crawler.CrawlerException("分页信息匹配失败\n%s" % audio_list_selector.html().encode("UTF-8"))
+            raise crawler.CrawlerException("分页信息匹配失败\n%s" % audio_list_selector.html())
         max_page_count = max(max_page_count, int(data_page))
     result["is_over"] = page_count >= max_page_count
     return result

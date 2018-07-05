@@ -53,9 +53,9 @@ def get_album_page(album_id):
                 return result
             # 获取图集图片总数
             album_info = pq(album_pagination_response.data).find("#dinfo span").text()
-            if not album_info and album_info.encode("UTF-8").find("张照片") == -1:
+            if not album_info and album_info.find("张照片") == -1:
                 raise crawler.CrawlerException("页面截取图片总数信息失败\n%s" % album_pagination_response.data)
-            image_count = album_info.encode("UTF-8").replace("张照片", "")
+            image_count = album_info.replace("张照片", "")
             if not crawler.is_integer(image_count):
                 raise crawler.CrawlerException("页面截取图片总数失败\n%s" % album_pagination_response.data)
             image_count = int(image_count)
