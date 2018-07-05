@@ -1,0 +1,234 @@
+1.变量
+	大小写敏感
+	字母或_开头
+	后续为字母、数字或_
+
+2.字符串
+	可以用两个相同的',","""(3个双引号)包含
+		': 中间的"作为字符串内容
+		": 中间的'作为字符串内容
+		""":中间的所有特殊符号(\n,',"等)作为字符串内容
+
+3.数字类型
+	int
+	long
+	bool(True=1，False=0)
+	float
+	complex(复数)
+
+4.运算符
+	+,-,*,/,%
+		"ab"*3		"ababab"
+		"ab"+3 		invalid
+		"ab"+"cd"	"abcdc"
+		"ab"*"cd" 	invalid
+	**	a**N: a的N次方	2**3=8
+	//	a//b: a除以b后取整(去小数，非四舍五入)	5.0//2=2
+	!=,==,<,<=,>,>=
+	没有自增自减操作符: ++a=+(+a),--a=-(-a),a++和a-- error
+
+5.赋值
+	a=b=1		valid
+	a=1,b=1		invalid
+	a			invalid,声明必须赋值
+
+6.输入输出
+	print 		输出
+		a=1,b=2,c=3
+		print '%f%d%sab'%(a,b,c)=1.00000023ab
+			%f 浮点数
+			%d 整数
+			%s 字符串
+		print后自动换行，可以再输出内容后加,取消换行
+	raw_input()	输入
+
+7.列表、元祖、字典
+	列表: alist=[1, 2.0, 'a', "b", '3', True]
+	元祖: aTuple=(1, 2.0, 'a', "b", '3', True)
+	字典: aDict={1: 2.0, 'a': 'b', '3': True}
+	alist[a:b],aTyple[a:b]
+		第a个元素到第b-1个元素(从0开始数)
+		a<0或b<0则从末尾开始数第|a|,|b|个
+		b>元素个数则等于最大值
+		a为空则a=0
+		b为空则b=元素个数
+		没有:则b=0
+	元祖的元素无法被修改
+		aList[0]=5	valid
+		aTuple[0]=5	invalid
+	字典的赋值操作是传引用，对新变量的修改会影响旧变量
+
+8.if条件
+	if 条件1:
+		表达式1
+	elif 条件2:
+		表达式2
+	...
+	else:
+		表达式n
+
+9.while循环
+	while 条件:
+		表达式
+
+10.for循环
+	for value in list
+		expression
+	for key in dictionary
+		expression
+	for key, value in dictionary.iteritems()
+		expression
+	for char in string
+		expression
+
+11.range(n)
+	0,1,2,3,...,n-1
+
+12.三元操作符
+	X if CONDITION else Y
+
+13.文件操作
+	open(文件路径, access_mode = '模式')
+		模式
+			r: 读取，没有第二个参数时默认
+			w: 写入
+			a: 添加
+			+: 读写
+			b: 二进制访问
+		方法
+			readLine()
+			close
+
+14.异常
+	try:
+		表达式
+	except 错误类型, 变量名:
+		表达式
+	raise EXCEPTION_NAME, 变量名
+
+15.函数
+	def 函数名(参数1,参数2,...,参数n):
+		函数体	
+	def 函数名(x,y=5,*a,**b):
+		参数y，默认值为5
+		调用使用的第三个参数开始，非赋值的变量存放入a，带赋值的变量存放入b
+		函数名(1,2,3,4,k=1,t=2,o=3)
+			===> x=1,y=2,a=(3,4),b={'k':1,'t':2,'o':3}
+
+16.
+sys._getframe().f_code.co_name			获取代码所在的函数名
+sys._getframe().f_code.co_filename		获取代码所在的文件路径
+__file__								获取代码所在的文件路径
+os.getcwd()								获取运行目录
+
+17.
+binascii.b2a_hex(str) 字符串转为16进制
+binascii.b2a_hex(str) 16进制转为字符串
+
+18.字典排序
+{"a": 1, "d": 2, "c": 3}
+字典按照key排序（结果只要key）
+sorted(a.keys(), reverse=False) -> ["a", "c", "d"]
+字典按照value排序（结果只要value）
+sorted(a.values(), reverse=False) -> [1, 2, 3]
+
+字典按照key排序（结果只要value）
+[a[key] for key in sorted(a.keys(), reverse=False)] -> [1, 3, 2]
+字典按照value排序（结果只要key）
+[key[0] for key in sorted(a.items(), key=lambda item: item[1], reverse=False)] -> ["a", "d", "c"]
+
+字典按照key排序（结果为(key, value)）
+sorted(dic.items(), key=lambda item: item[0], reverse = False) -> [("a", 1), ("c", 3), ("d", 2)]
+字典按照value排序（结果为(key, value)）
+sorted(dic.items(), key=lambda item: item[1], reverse = False) -> [("a", 1), ("d", 2), ("c", 3)]
+
+19.http://www.lfd.uci.edu/~gohlke/pythonlibs/
+windows下常用二进制python extension package文件
+c:\python27\Scripts\pip.exe install XXX.whl
+
+20.list内元素 强制转化为str
+a = [1, 2, 3, 4, 5, "6", "a"]
+map(str, a)
+
+a = [[1, 2], [3, 4], [5, 6]]
+[map(str, key) for key in a]
+
+21.list去重
+a = [1, 2, 3, 4, 5, 5, 4, 3, 2]
+list(set(a))
+
+22.模拟鼠标点击屏幕任意坐标
+#第一种
+def click1(x,y):
+    win32api.SetCursorPos((x,y))
+    win32api.mouse_event(win32con.MOUSEEVENTF_LEFTDOWN,x,y,0,0)
+    win32api.mouse_event(win32con.MOUSEEVENTF_LEFTUP,x,y,0,0)
+#第二种
+def click2(x,y):
+    ctypes.windll.user32.SetCursorPos(x,y)
+    ctypes.windll.user32.mouse_event(2,0,0,0,0)
+    ctypes.windll.user32.mouse_event(4,0,0,0,0)
+
+23.常用路径方法
+filename = "c:\\aa.bb\\cc.dd"
+获取文件名: os.path.basename(filename) -> cc.dd
+获取路径名: os.path.dirname(filename) -> c:\aa.bb
+获取文件扩展名: os.path.splitext(filename)[1] -> dd
+
+24.常用时间方法
+时间元祖
+	长度为9，分别是：
+	tm_year		年
+	tm_mon		月，range(1, 12)
+	tm_mday		日，range(1, 31)
+	tm_hour		小时，range(0, 23)
+	tm_min		分钟，range(0, 59)
+	tm_sec		秒，range(0, 61)
+	tm_wday		周几，range(0, 6)，周一是0
+	tm_yday		一年的第几天（1-366）
+	tm_isdst	是不是夏令时，1 当前是夏令时, 0 当前不是夏令时，-1 未知
+strftime(TIME_FORMAT)
+	%y	年份（后2位）				range(00-99)
+	%Y	年份（长度为4）				range(1970-2999)
+	%m	月份（长度为2）				range(01-12)
+	%b	月份（英文缩写）			Jan，Feb，Mar，Apr，May，Jun，Jul，Aug，Sep，Oct，Nov，Dec
+	%B	月份（英文）				January，February，March，April，May，June，July，August，September，October，November，December
+	%d	每月第几天（长度为2）		range(01-31)
+	%H	小时（24小时制，长度为2）	range(00-23)
+	%I	小时（12小时制，长度为2）	range(01-12)
+	%p	上午/下午					AM，PM
+	%M	分钟（长度为2）				range(00-59)
+	%S	秒（长度为2）				range(01-61)
+	%w	周几（长度为2，周日为0）	range(0-6)
+	%a	周几（英文缩写）			Mon，Tue，Wed，Thu，Fri，Sat，Sun
+	%A	周几（英文)					Monday，Tuesday，Wednesday，Thursday，Friday，Saturday，Sunday
+	%j	一年第几天（长度为3）						range(001-366)
+	%U	一年第几周（周日为每星期第一天，长度为2）	range(00-53)
+	%W	一年第几周（周一为每星期第一天，长度为2）	range(00-53)
+	%Z	时区（可能需要编码encode()）
+	%c	本地化时间日期格式							%m/%d/%y %H:%M:%S
+	%x	本地化时间格式								%H:%M:%S
+	%X	本地化日期格式								m/%d/%y
+获取当前时间戳		time.time()，精确到0.01秒
+获取当前时间元祖	time.localtime() 系统时间，time.gmtime() UTC时间
+获取当前格式化时间	time.strftime(TIME_FORMAT)
+
+时间戳->时间元祖		time.gmtime(TIME_STAMP)
+时间戳->格式化时间		time.strftime(FORMAT, time.gmtime(TIME_STAMP))
+时间元祖->时间戳		time.mktime(TIME_TUPLE)
+时间元祖->格式化时间	time.strftime(FORMAT, TIME_TUPLE)
+格式化时间->时间戳		time.mktime(time.strptime(TIME_FORMAT_STRING, FORMAT))
+格式化时间->时间元祖	time.strptime(TIME_FORMAT_STRING, FORMAT)
+
+获取当天0点时间戳		time.mktime(time.strptime(time.strftime('%Y-%m-%d 00:00:00'), "%Y-%m-%d %H:%M:%S"))
+获取该月1日0点时间戳	time.mktime(time.strptime(time.strftime('%Y-01-01 00:00:00'), "%Y-%m-%d %H:%M:%S"))
+获取今年1月1日0点时间戳	time.mktime(time.strptime(time.strftime('%Y-%m-01 00:00:00'), "%Y-%m-%d %H:%M:%S"))
+获取一天后的时间戳		time.mktime((datetime.datetime.today() + datetime.timedelta(days=1)).timetuple())
+获取一天前的时间戳		time.mktime((datetime.datetime.today() - datetime.timedelta(days=1)).timetuple())
+
+
+25.web server
+http://www.tornadoweb.cn
+
+26. Markdown
+https://zh.wikipedia.org/zh/Markdown
