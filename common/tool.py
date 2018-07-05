@@ -30,6 +30,8 @@ READ_FILE_TYPE_LINE = 2  # 按行读取，返回list
 WRITE_FILE_TYPE_APPEND = 1  # 追加写入文件
 WRITE_FILE_TYPE_REPLACE = 2  # 覆盖写入文件
 
+BOM_SIGN = b'\xef\xbb\xbf'.decode()
+
 # 项目根目录
 PROJECT_ROOT_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 # common目录
@@ -194,11 +196,15 @@ def read_file(file_path, read_type=READ_FILE_TYPE_FULL):
     with open(file_path, "r", encoding="UTF-8") as file_handle:
         if read_type == 1:
             result = file_handle.read()
+            if result[0] == BOM_SIGN:
+                result = result[1:]
             if result[-1] == "\n":
                 result = result[:-1]
         else:
             result = []
             for line in file_handle.readlines():
+                if line[0] == BOM_SIGN:
+                    line = line[1:]
                 if line[-1] == "\n":
                     line = line[:-1]
                 if len(line) == 0:
