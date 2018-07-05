@@ -24,7 +24,7 @@ def check_login():
     index_url = "http://www.nicovideo.jp/"
     index_response = net.http_request(index_url, method="GET", cookies_list=COOKIE_INFO)
     if index_response.status == net.HTTP_RETURN_CODE_SUCCEED:
-        return index_response.data.find('<span id="siteHeaderUserNickNameContainer">') >= 0
+        return index_response.data.decode().find('<span id="siteHeaderUserNickNameContainer">') >= 0
     return False
 
 
@@ -87,7 +87,7 @@ def get_video_info(video_id):
         raise crawler.CrawlerException("视频播放页访问失败，" + crawler.request_failre(video_play_response.status))
     video_info_string = tool.find_sub_string(video_play_response.data, 'data-api-data="', '" data-environment="')
     if not video_info_string:
-        if video_play_response.data.find("<p>この動画が投稿されている公開コミュニティはありません。</p>") > 0:
+        if video_play_response.data.decode().find("<p>この動画が投稿されている公開コミュニティはありません。</p>") > 0:
             result["is_delete"] = True
             return result
         raise crawler.CrawlerException("视频信息截取失败\n%s" % video_play_response.data)

@@ -35,7 +35,7 @@ def get_one_page_photo(account_id, page_count):
         "is_over": False,  # 是不是最后一页图片
     }
     photo_pagination_response = net.http_request(photo_pagination_url, method="GET", fields=query_data, cookies_list=cookies_list, json_decode=True)
-    if photo_pagination_response.status == net.HTTP_RETURN_CODE_JSON_DECODE_ERROR and photo_pagination_response.data.find('<p class="txt M_txtb">用户不存在或者获取用户信息失败</p>') >= 0:
+    if photo_pagination_response.status == net.HTTP_RETURN_CODE_JSON_DECODE_ERROR and photo_pagination_response.data.decode().find('<p class="txt M_txtb">用户不存在或者获取用户信息失败</p>') >= 0:
         raise crawler.CrawlerException("账号不存在")
     elif photo_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(photo_pagination_response.status))
@@ -158,7 +158,7 @@ def get_video_url(video_play_url):
         video_play_response = net.http_request(video_play_url, method="GET")
         if video_play_response.status != net.HTTP_RETURN_CODE_SUCCEED:
             raise crawler.CrawlerException(crawler.request_failre(video_play_response.status))
-        if video_play_response.data.find('<p class="error-p">为建设清朗网络空间，视频正在审核中，暂时无法播放。</p>') > 0:
+        if video_play_response.data.decode().find('<p class="error-p">为建设清朗网络空间，视频正在审核中，暂时无法播放。</p>') > 0:
             video_url = ""
         else:
             video_url_find = re.findall('<meta content="([^"]*)" property="og:video:url">', video_play_response.data)

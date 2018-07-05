@@ -93,7 +93,7 @@ def get_audio_play_page(audio_en_word_id, audio_type):
     audio_play_response = net.http_request(audio_play_url, method="GET")
     if audio_play_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(audio_play_response.status))
-    if audio_play_response.data.find("该作品可能含有不恰当内容将不能显示。") > -1:
+    if audio_play_response.data.decode().find("该作品可能含有不恰当内容将不能显示。") > -1:
         result["is_delete"] = True
     else:
         # 获取歌曲地址

@@ -51,11 +51,11 @@ def get_one_page_video(account_id, token):
             raise crawler.CrawlerException("账号不存在")
         elif index_response.status != net.HTTP_RETURN_CODE_SUCCEED:
             raise crawler.CrawlerException(crawler.request_failre(index_response.status))
-        if index_response.data.find('<button id="a11y-skip-nav" class="skip-nav"') >= 0:
+        if index_response.data.decode().find('<button id="a11y-skip-nav" class="skip-nav"') >= 0:
             log.step("首页访问出现跳转，再次访问")
             return get_one_page_video(account_id, token)
         result["account_name"] = tool.find_sub_string(index_response.data, '<meta property="og:title" content="', '">').replace("- YouTube", "").strip()
-        if index_response.data.find('{"alertRenderer":{"type":"ERROR",') != -1:
+        if index_response.data.decode().find('{"alertRenderer":{"type":"ERROR",') != -1:
             reason = tool.find_sub_string(tool.find_sub_string(index_response.data, '{"alertRenderer":{"type":"ERROR",', '}],'), '{"simpleText":"', '"}')
             if reason == "This channel does not exist.":
                 raise crawler.CrawlerException("账号不存在")
@@ -132,7 +132,7 @@ def get_video_page(video_id):
     # 获取视频地址
     if video_play_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(video_play_response.status))
-    if video_play_response.data.find('"playabilityStatus":{"status":"UNPLAYABLE"') != -1 or video_play_response.data.find('"playabilityStatus":{"status":"ERROR"') != -1:
+    if video_play_response.data.decode().find('"playabilityStatus":{"status":"UNPLAYABLE"') != -1 or video_play_response.data.decode().find('"playabilityStatus":{"status":"ERROR"') != -1:
         return result
     # 没有登录，判断是否必须要登录
     if not IS_LOGIN:

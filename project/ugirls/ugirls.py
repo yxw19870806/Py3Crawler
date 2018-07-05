@@ -42,7 +42,7 @@ def get_album_page(album_id):
     }
     if album_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(album_response.status))
-    if album_response.data.find("该页面不存在,或者已经被删除!") >= 0:
+    if album_response.data.decode().find("该页面不存在,或者已经被删除!") >= 0:
         result["is_delete"] = True
         return result
     # 获取模特名字

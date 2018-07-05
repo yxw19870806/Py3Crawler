@@ -19,7 +19,7 @@ def check_login():
     index_url = "https://weibo.com/"
     index_response = net.http_request(index_url, method="GET", cookies_list=cookies_list)
     if index_response.status == net.HTTP_RETURN_CODE_SUCCEED:
-        return index_response.data.find("$CONFIG['islogin']='1';") >= 0
+        return index_response.data.decode().find("$CONFIG['islogin']='1';") >= 0
     return False
 
 

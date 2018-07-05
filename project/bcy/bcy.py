@@ -44,7 +44,7 @@ def check_login():
         home_url = "https://bcy.net/home/account"
         home_response = net.http_request(home_url, method="GET", cookies_list=COOKIE_INFO, is_auto_redirect=False)
         if home_response.status == net.HTTP_RETURN_CODE_SUCCEED:
-            if home_response.data.find('<a href="/login">登录</a>') == -1:
+            if home_response.data.decode().find('<a href="/login">登录</a>') == -1:
                 return True
     # 没有浏览器cookies，尝试读取文件
     else:
@@ -88,7 +88,7 @@ def _do_login(email, password):
     }
     login_response = net.http_request(login_url, method="POST", fields=login_post, cookies_list=COOKIE_INFO, header_list=header_list)
     if login_response.status == net.HTTP_RETURN_CODE_SUCCEED:
-        if login_response.data.find('<a href="/login">登录</a>') == -1:
+        if login_response.data.decode().find('<a href="/login">登录</a>') == -1:
             return True
     return False
 
@@ -138,10 +138,10 @@ def get_one_page_album(account_id, page_count):
     }
     if album_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(album_pagination_response.status))
-    if page_count == 1 and album_pagination_response.data.find("<h2>用户不存在</h2>") >= 0:
+    if page_count == 1 and album_pagination_response.data.decode().find("<h2>用户不存在</h2>") >= 0:
         raise crawler.CrawlerException("账号不存在")
     # 没有作品
-    if album_pagination_response.data.find("<h2>尚未发布作品</h2>") >= 0:
+    if album_pagination_response.data.decode().find("<h2>尚未发布作品</h2>") >= 0:
         result["is_over"] = True
         return result
     # 获取作品信息
@@ -183,14 +183,14 @@ def get_album_page(album_id):
     is_skip = False
     # 问题
     # https://bcy.net/item/detail/6115326868729126670
-    if pq(album_response.data).find("div.post__content.js-fullimg").length == 1 and album_response.data.find('<a href="/group/discover">问答</a>') > 0:
+    if pq(album_response.data).find("div.post__content.js-fullimg").length == 1 and album_response.data.decode().find('<a href="/group/discover">问答</a>') > 0:
         is_skip = True
     # 文章
     # https://bcy.net/item/detail/6162547130750754574
     elif pq(album_response.data).find("div.post__content h1.title.mt5").length == 1:
         is_skip = True
     # 检测作品是否被管理员锁定
-    elif album_response.data.find("<h2>问题已被锁定，无法查看回答</h2>") >= 0:
+    elif album_response.data.decode().find("<h2>问题已被锁定，无法查看回答</h2>") >= 0:
         is_skip = True
 
     # 是不是有报错信息

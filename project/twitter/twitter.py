@@ -27,7 +27,7 @@ def init_session():
     if index_page_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(index_page_response.status))
     # 没有登录状态
-    if not COOKIE_INFO or index_page_response.data.find('<div class="StaticLoggedOutHomePage-login">') >= 0:
+    if not COOKIE_INFO or index_page_response.data.decode().find('<div class="StaticLoggedOutHomePage-login">') >= 0:
         COOKIE_INFO = net.get_cookies_from_response_header(index_page_response.headers)
     init_js_url_find = re.findall('<script src="(https://abs.twimg.com/k/[^/]*/init.[^\.]*.[\w]*.js)" async></script>', index_page_response.data)
     if len(init_js_url_find) != 1:
@@ -54,11 +54,11 @@ def get_account_index_page(account_name):
     elif account_index_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(account_index_response.status))
     # 重新访问
-    if account_index_response.data.find("captureMessage( 'Failed to load source'") >= 0:
+    if account_index_response.data.decode().find("captureMessage( 'Failed to load source'") >= 0:
         return get_account_index_page(account_name)
-    if account_index_response.data.find('<div class="ProtectedTimeline">') >= 0:
+    if account_index_response.data.decode().find('<div class="ProtectedTimeline">') >= 0:
         raise crawler.CrawlerException("私密账号，需要关注才能访问")
-    if account_index_response.data.find('<a href="https://support.twitter.com/articles/15790"') >= 0:
+    if account_index_response.data.decode().find('<a href="https://support.twitter.com/articles/15790"') >= 0:
         raise crawler.CrawlerException("账号已被冻结")
     account_id = tool.find_sub_string(account_index_response.data, '<div class="ProfileNav" role="navigation" data-user-id="', '">')
     if not crawler.is_integer(account_id):

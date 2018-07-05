@@ -26,7 +26,7 @@ def get_one_page_blog(account_id, page_count):
     }
     if blog_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(blog_pagination_response.status))
-    if page_count == 1 and blog_pagination_response.data.find("抱歉，您要访问的页面不存在或被删除！") >= 0:
+    if page_count == 1 and blog_pagination_response.data.decode().find("抱歉，您要访问的页面不存在或被删除！") >= 0:
         raise crawler.CrawlerException("账号不存在")
     article_list_selector = pq(blog_pagination_response.data.decode("UTF-8")).find(".articleList .articleCell")
     if article_list_selector.length == 0:
