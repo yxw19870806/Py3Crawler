@@ -44,7 +44,7 @@ def get_account_index_page(account_id):
     account_index_response = net.http_request(account_index_url, method="GET", cookies_list=cookies_list)
     if account_index_response.status == net.HTTP_RETURN_CODE_SUCCEED:
         # 获取账号page id
-        account_page_id = tool.find_sub_string(account_index_response.data, "$CONFIG['page_id']='", "'")
+        account_page_id = tool.find_sub_string(account_index_response.data.decode(), "$CONFIG['page_id']='", "'")
         if not crawler.is_integer(account_page_id):
             raise crawler.CrawlerException("账号不存在")
         result["account_page_id"] = account_page_id
