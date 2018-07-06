@@ -107,7 +107,7 @@ def get_one_page_video(account_id, page_count):
         # 获取视频标题
         if not crawler.check_sub_key(("title",), video_info["node"]):
             raise crawler.CrawlerException("视频信息'title'字段不存在\n%s" % video_info)
-        result_video_info["video_title"] = video_info["node"]["title"].encode("UTF-8")
+        result_video_info["video_title"] = video_info["node"]["title"]
         result["video_info_list"].append(result_video_info)
     # 判断是不是最后一页
     if not crawler.check_sub_key(("pageInfo",), api_response.json_data["data"]["channel"]["channel_videos_all_videos"]):

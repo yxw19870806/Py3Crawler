@@ -54,7 +54,7 @@ def main(account_id):
                     card_read_name = card_name
                 if card_read_name in market_card_list:
                     if MIN_CARD_PRICE < float(market_card_list[card_read_name]) <= MAX_CARD_PRICE:
-                        market_link = "http://steamcommunity.com/market/listings/753/%s-%s" % (game_id, urllib.parse.quote(card_read_name.encode("UTF-8")))
+                        market_link = "http://steamcommunity.com/market/listings/753/%s-%s" % (game_id, urllib.parse.quote(card_read_name))
                         output.print_msg("card: %s, wanted %s, min price: %s, link: %s" % (card_name, wanted_card_list[card_name], market_card_list[card_read_name], market_link), False)
                 else:
                     output.print_msg("card: %s, wanted %s, not found price in market" % (card_name, wanted_card_list[card_read_name]), False)

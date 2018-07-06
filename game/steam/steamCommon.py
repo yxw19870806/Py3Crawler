@@ -301,7 +301,7 @@ def get_account_inventory(account_id):
             # 物品名字
             if not crawler.check_sub_key(("name",), item_info):
                 raise crawler.CrawlerException("物品信息'name'字段不存在\n%s" % item_info)
-            item_list[class_id]["name"] = item_info["name"].encode("UTF-8")
+            item_list[class_id]["name"] = item_info["name"]
             # 物品所在游戏app id
             if not crawler.check_sub_key(("market_fee_app",), item_info):
                 raise crawler.CrawlerException("物品信息'market_fee_app'字段不存在\n%s" % item_info)

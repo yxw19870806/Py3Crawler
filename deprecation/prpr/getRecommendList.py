@@ -80,7 +80,7 @@ def get_channel_account_from_api(channel_id):
                 raise crawler.CrawlerException("返回信息'_id'字段不存在\n%s" % account_info)
             if not crawler.check_sub_key(("nickname",), account_info):
                 raise crawler.CrawlerException("返回信息'result'字段不存在\n%s" % account_info)
-            account_list[str(account_info["_id"])] = path.filter_text(str(account_info["nickname"].encode("UTF-8")))
+            account_list[str(account_info["_id"])] = path.filter_text(account_info["nickname"])
         page_count += 1
     return account_list
 
