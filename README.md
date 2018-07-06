@@ -31,6 +31,9 @@ support multiple parameter for visit web
 # Install
 * run install/install.bat in CMD console
 
+# Notice
+* suggest IDE and Project Encoding setting with UTF-8
+
 # Support website / App
 * [Instagram](https://www.instagram.com/)
 * [Twitter](https://twitter.com/)
