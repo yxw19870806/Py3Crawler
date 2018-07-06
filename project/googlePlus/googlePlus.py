@@ -26,9 +26,10 @@ def get_one_page_blog(account_id, token):
         blog_pagination_response = net.http_request(api_url, method="POST", fields=post_data)
         if blog_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
             raise crawler.CrawlerException(crawler.request_failre(blog_pagination_response.status))
-        script_data_html = tool.find_sub_string(blog_pagination_response.data, ")]}'", None).strip()
+        blog_pagination_response_content = blog_pagination_response.data.decode()
+        script_data_html = tool.find_sub_string(blog_pagination_response_content, ")]}'", None).strip()
         if not script_data_html:
-            raise crawler.CrawlerException("页面截取日志信息失败\n%s" % blog_pagination_response.data)
+            raise crawler.CrawlerException("页面截取日志信息失败\n%s" % blog_pagination_response_content)
         script_data = tool.json_decode(script_data_html)
         if script_data is None:
             raise crawler.CrawlerException("日志信息加载失败\n%s" % script_data_html)
@@ -42,17 +43,18 @@ def get_one_page_blog(account_id, token):
             raise crawler.CrawlerException("账号不存在")
         elif blog_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
             raise crawler.CrawlerException(crawler.request_failre(blog_pagination_response.status))
-        script_data_html = tool.find_sub_string(blog_pagination_response.data, "AF_initDataCallback({key: 'ds:0'", "</script>")
+        blog_pagination_response_content = blog_pagination_response.data.decode()
+        script_data_html = tool.find_sub_string(blog_pagination_response_content, "AF_initDataCallback({key: 'ds:0'", "</script>")
         script_data_html = tool.find_sub_string(script_data_html, "return ", "}});")
         if not script_data_html:
-            raise crawler.CrawlerException("页面截取日志信息失败\n%s" % blog_pagination_response.data)
+            raise crawler.CrawlerException("页面截取日志信息失败\n%s" % blog_pagination_response_content)
         script_data = tool.json_decode(script_data_html)
         if script_data is None:
             raise crawler.CrawlerException("日志信息加载失败\n%s" % script_data_html)
     if len(script_data) != 3:
         raise crawler.CrawlerException("日志信息格式不正确\n%s" % script_data)
     # 获取下一页token
-    result["next_page_key"] = str(script_data[2])
+    result["next_page_key"] = script_data[2]
     # 获取日志信息
     if script_data[1] is not None:
         for data in script_data[1]:
@@ -67,7 +69,7 @@ def get_one_page_blog(account_id, token):
                     break
             if len(blog_data) >= 5:
                 # 获取日志id
-                result_blog_info["blog_id"] = str(blog_data[0])
+                result_blog_info["blog_id"] = blog_data[0]
                 # 获取日志发布时间
                 if not crawler.is_integer(blog_data[4]):
                     raise crawler.CrawlerException("日志时间类型不正确\n%s" % blog_data)
@@ -89,10 +91,11 @@ def get_album_page(account_id, album_id):
     album_response = net.http_request(album_url, method="GET")
     if album_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(album_response.status))
-    script_data_html = tool.find_sub_string(album_response.data, "AF_initDataCallback({key: 'ds:0'", "</script>")
+    album_response_content = album_response.data.decode()
+    script_data_html = tool.find_sub_string(album_response_content, "AF_initDataCallback({key: 'ds:0'", "</script>")
     script_data_html = tool.find_sub_string(script_data_html, "return ", "}});")
     if not script_data_html:
-        raise crawler.CrawlerException("页面截取相册信息失败\n%s" % album_response.data)
+        raise crawler.CrawlerException("页面截取相册信息失败\n%s" % album_response_content)
     script_data = tool.json_decode(script_data_html)
     if script_data is None:
         raise crawler.CrawlerException("相册信息加载失败\n%s" % script_data_html)
@@ -100,7 +103,7 @@ def get_album_page(account_id, album_id):
         user_key = script_data[4][0]
         continue_token = script_data[3]
         for data in script_data[4][1]:
-            result["image_url_list"].append(str(data[1]))
+            result["image_url_list"].append(data[1])
     except ValueError:
         raise crawler.CrawlerException("相册信息格式不正确\n%s" % script_data_html)
     # 判断是不是还有下一页
@@ -117,7 +120,7 @@ def get_album_page(account_id, album_id):
         try:
             continue_token = continue_data[0][2]["113305010"][3]
             for data in continue_data[0][2]["113305010"][4][1]:
-                result["image_url_list"].append(str(data[1]))
+                result["image_url_list"].append(data[1])
         except ValueError:
             raise crawler.CrawlerException("相册信息格式不正确\n%s" % script_data_html)
     return result
