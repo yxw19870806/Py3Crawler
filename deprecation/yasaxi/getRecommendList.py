@@ -28,7 +28,7 @@ def get_account_from_api():
             raise crawler.CrawlerException("账号信息'userId'字段不存在\n%s" % account_info)
         if not crawler.check_sub_key(("nick",), account_info):
             raise crawler.CrawlerException("账号信息'nick'字段不存在\n%s" % account_info)
-        account_list[str(account_info["userId"].encode("UTF-8"))] = str(crawler.filter_emoji(account_info["nick"]).encode("UTF-8")).strip()
+        account_list[account_info["userId"]] = crawler.filter_emoji(account_info["nick"]).strip()
     return account_list
 
 
