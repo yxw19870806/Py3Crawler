@@ -26,11 +26,12 @@ def get_one_page_blog(account_id, page_count):
     }
     if blog_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(blog_pagination_response.status))
-    if page_count == 1 and blog_pagination_response.data.decode().find("抱歉，您要访问的页面不存在或被删除！") >= 0:
+    blog_pagination_response_content = blog_pagination_response.data.deocde()
+    if page_count == 1 and blog_pagination_response_content.find("抱歉，您要访问的页面不存在或被删除！") >= 0:
         raise crawler.CrawlerException("账号不存在")
-    article_list_selector = pq(blog_pagination_response.data.decode("UTF-8")).find(".articleList .articleCell")
+    article_list_selector = pq(blog_pagination_response_content).find(".articleList .articleCell")
     if article_list_selector.length == 0:
-        raise crawler.CrawlerException("页面截取日志列表失败\n%s" % blog_pagination_response.data)
+        raise crawler.CrawlerException("页面截取日志列表失败\n%s" % blog_pagination_response_content)
     for article_index in range(article_list_selector.length):
         result_blog_info = {
             "blog_url": None,  # 日志地址
@@ -58,7 +59,7 @@ def get_one_page_blog(account_id, page_count):
             raise crawler.CrawlerException("日志时间格式不正确\n%s" % blog_time)
         result["blog_info_list"].append(result_blog_info)
     # 获取分页信息
-    pagination_html = tool.find_sub_string(blog_pagination_response.data, '<div class="SG_page">', '</div>')
+    pagination_html = tool.find_sub_string(blog_pagination_response_content, '<div class="SG_page">', '</div>')
     if not pagination_html:
         result["is_over"] = True
     else:
@@ -78,7 +79,7 @@ def get_blog_page(blog_url):
     if blog_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(blog_response.status))
     # 获取博客正文
-    article_html = tool.find_sub_string(blog_response.data, "<!-- 正文开始 -->", "<!-- 正文结束 -->")
+    article_html = tool.find_sub_string(blog_response.data.decode(), "<!-- 正文开始 -->", "<!-- 正文结束 -->")
     # 获取图片地址
     image_url_list = re.findall('real_src ="([^"]*)"', article_html)
     result["image_url_list"] = list(map(str, image_url_list))
