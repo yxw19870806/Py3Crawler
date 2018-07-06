@@ -34,9 +34,9 @@ def get_token_from_file():
 
 # 输入token并加密保存到文件中
 def set_token_to_file():
-    access_token = output.console_input("access_token: ")
-    auth_token = output.console_input("auth_token: ")
-    zhezhe_info = output.console_input("zhezhe_info: ")
+    access_token = input("access_token: ")
+    auth_token = input("auth_token: ")
+    zhezhe_info = input("zhezhe_info: ")
     account_data = {
         "access_token": access_token,
         "auth_token": auth_token,

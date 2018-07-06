@@ -130,7 +130,7 @@ class Yasaxi(crawler.Crawler):
         # 从文件中宏读取账号信息（访问token）
         if not yasaxiCommon.get_token_from_file():
             while True:
-                input_str = output.console_input("未检测到api token，是否手动输入(y)es / (N)o：").lower()
+                input_str = input("未检测到api token，是否手动输入(y)es / (N)o：").lower()
                 if input_str in ["y", "yes"]:
                     yasaxiCommon.set_token_to_file()
                     break

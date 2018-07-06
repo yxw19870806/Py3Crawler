@@ -35,7 +35,7 @@ def get_account_from_api():
 def main():
     if not yasaxiCommon.get_token_from_file():
         while True:
-            input_str = output.console_input("未检测到api token，是否手动输入(y)es / (N)o：").lower()
+            input_str = input("未检测到api token，是否手动输入(y)es / (N)o：").lower()
             if input_str in ["y", "yes"]:
                 yasaxiCommon.set_token_to_file()
                 break
