@@ -7,11 +7,11 @@ email: hikaru870806@hotmail.com
 如有问题或建议请联系
 """
 import html.parser
-import json
 import os
 import threading
 import time
 import traceback
+from pyquery import PyQuery as pq
 from common import *
 
 COOKIE_INFO = {}
@@ -24,7 +24,7 @@ def check_login():
     index_url = "http://www.nicovideo.jp/"
     index_response = net.http_request(index_url, method="GET", cookies_list=COOKIE_INFO)
     if index_response.status == net.HTTP_RETURN_CODE_SUCCEED:
-        return index_response.data.decode().find('<span id="siteHeaderUserNickNameContainer">') >= 0
+        return pq(index_response.data.decode()).find('#siteHeaderUserNickNameContainer').length > 0
     return False
 
 
@@ -43,12 +43,13 @@ def get_mylist_index(account_id):
         raise crawler.CrawlerException("账号发布视频未公开")
     elif account_index_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(account_index_response.status))
-    all_video_info = tool.find_sub_string(account_index_response.data, "Mylist.preload(%s," % account_id, ");").strip()
+    account_index_response_content = account_index_response.data.decode()
+    all_video_info = tool.find_sub_string(account_index_response_content, "Mylist.preload(%s," % account_id, ");").strip()
     if not all_video_info:
-        raise crawler.CrawlerException("截取视频列表失败\n%s" % account_index_response.data)
+        raise crawler.CrawlerException("截取视频列表失败\n%s" % account_index_response_content)
     all_video_info = tool.json_decode(all_video_info)
     if all_video_info is None:
-        raise crawler.CrawlerException("视频列表加载失败\n%s" % account_index_response.data)
+        raise crawler.CrawlerException("视频列表加载失败\n%s" % account_index_response_content)
     # 倒序排列，时间越晚的越前面
     all_video_info.reverse()
     for video_info in all_video_info:
@@ -85,16 +86,17 @@ def get_video_info(video_id):
         return result
     elif video_play_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException("视频播放页访问失败，" + crawler.request_failre(video_play_response.status))
-    video_info_string = tool.find_sub_string(video_play_response.data, 'data-api-data="', '" data-environment="')
+    video_play_response_content = video_play_response.data.decode()
+    video_info_string = tool.find_sub_string(video_play_response_content, 'data-api-data="', '" data-environment="')
     if not video_info_string:
-        if video_play_response.data.decode().find("<p>この動画が投稿されている公開コミュニティはありません。</p>") > 0:
+        if video_play_response_content.find("<p>この動画が投稿されている公開コミュニティはありません。</p>") > 0:
             result["is_delete"] = True
             return result
-        raise crawler.CrawlerException("视频信息截取失败\n%s" % video_play_response.data)
+        raise crawler.CrawlerException("视频信息截取失败\n%s" % video_play_response_content)
     video_info_string = html.parser.HTMLParser().unescape(video_info_string)
     video_info = tool.json_decode(video_info_string)
     if video_info is None:
-        raise crawler.CrawlerException("视频信息加载失败\n%s" % video_play_response.data)
+        raise crawler.CrawlerException("视频信息加载失败\n%s" % video_play_response_content)
     if not crawler.check_sub_key(("video",), video_info):
         raise crawler.CrawlerException("视频信息'video'字段不存在\n%s" % video_info)
     if not crawler.check_sub_key(("smileInfo",), video_info["video"]):
