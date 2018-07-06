@@ -22,14 +22,15 @@ def get_one_page_blog(page_count):
     blog_pagination_response = net.http_request(blog_pagination_url, method="GET")
     if blog_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(blog_pagination_response.status))
+    blog_pagination_response_content = blog_pagination_response.data.decode()
     # 检测是否是最后一页
-    result["is_over"] = blog_pagination_response.data == "記事が存在しません。"
+    result["is_over"] = blog_pagination_response_content == "記事が存在しません。"
     if result["is_over"]:
         return result
     # 获取图片名字
-    blog_html_find = re.findall("<section>([\s|\S]*?)</section>", blog_pagination_response.data)
+    blog_html_find = re.findall("<section>([\s|\S]*?)</section>", blog_pagination_response_content)
     if len(blog_html_find) == 0:
-        raise crawler.CrawlerException("页面匹配日志信息失败\n%s" % blog_pagination_response.data)
+        raise crawler.CrawlerException("页面匹配日志信息失败\n%s" % blog_pagination_response_content)
     for blog_html in blog_html_find:
         result_blog_info = {
             "blog_id": None,  # 日志id
