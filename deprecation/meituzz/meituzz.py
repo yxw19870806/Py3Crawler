@@ -29,46 +29,46 @@ def get_album_page(page_count):
         "album_title": "",  # 相册标题
         "video_url": None,  # 视频地址
     }
-    if album_response.status == net.HTTP_RETURN_CODE_SUCCEED:
-        # 获取相册标题
-        result["is_over"] = album_response.data.decode().find("<p>视频正在审核中<br><b>精彩需要耐心等待</b></p>") >= 0
-        if result["is_over"]:
-            return result
-        # 获取相册标题
-        result["album_title"] = tool.find_sub_string(album_response.data, "<title>", "</title>").replace("\n", "")
-        # 检测相册是否已被删除
-        result["is_delete"] = result["album_title"] == "作品已被删除"
-        if result["is_delete"]:
-            return result
-        # 截取key
-        key = tool.find_sub_string(album_response.data, '<input type="hidden" id="s" value="', '">')
-        if not key:
-            raise crawler.CrawlerException("页面截取媒体key失败\n%s" % album_response.data)
-        # 调用API，获取相册资源
-        media_url = "http://meituzz.com/ab/bd"
-        post_data = {"y": page_count, "s": key}
-        media_response = net.http_request(media_url, method="POST", fields=post_data, json_decode=True)
-        if media_response.status == net.HTTP_RETURN_CODE_SUCCEED:
-            if not crawler.check_sub_key(("i",), media_response.json_data) and not crawler.check_sub_key(("v",), media_response.json_data):
-                raise crawler.CrawlerException("图片相册'i'和'v'字段都不存在\n%s" % media_response.json_data)
-            # 检测是否是图片相册
-            if crawler.check_sub_key(("i",), media_response.json_data):
-                if not isinstance(media_response.json_data["i"], list):
-                    raise crawler.CrawlerException("图片相册'i'字段格式不正确\n%s" % media_response.json_data)
-                result["image_url_list"] = []
-                for image_info in media_response.json_data["i"]:
-                    if not crawler.check_sub_key(("url",), image_info):
-                        raise crawler.CrawlerException("图片相册'url'字段不存在\n%s" % media_response.json_data)
-                    result["image_url_list"].append(str(image_info["url"]))
-            # 检测是否是视频相册
-            if crawler.check_sub_key(("v",), media_response.json_data):
-                result["video_url"] = str(media_response.json_data["v"])
-        else:
-            raise crawler.CrawlerException("媒体" + crawler.request_failre(media_response.status))
-    elif album_response.status == 500:
+    if album_response.status == 500:
         result["is_delete"] = True
-    else:
+    elif album_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(album_response.status))
+    album_response_content = album_response.data.decode()
+    # 获取相册标题
+    result["is_over"] = album_response_content.find("<p>视频正在审核中<br><b>精彩需要耐心等待</b></p>") >= 0
+    if result["is_over"]:
+        return result
+    # 获取相册标题
+    result["album_title"] = tool.find_sub_string(album_response_content, "<title>", "</title>").replace("\n", "")
+    # 检测相册是否已被删除
+    result["is_delete"] = result["album_title"] == "作品已被删除"
+    if result["is_delete"]:
+        return result
+    # 截取key
+    key = tool.find_sub_string(album_response_content, '<input type="hidden" id="s" value="', '">')
+    if not key:
+        raise crawler.CrawlerException("页面截取媒体key失败\n%s" % album_response_content)
+    # 调用API，获取相册资源
+    media_url = "http://meituzz.com/ab/bd"
+    post_data = {"y": page_count, "s": key}
+    media_response = net.http_request(media_url, method="POST", fields=post_data, json_decode=True)
+    if media_response.status == net.HTTP_RETURN_CODE_SUCCEED:
+        if not crawler.check_sub_key(("i",), media_response.json_data) and not crawler.check_sub_key(("v",), media_response.json_data):
+            raise crawler.CrawlerException("图片相册'i'和'v'字段都不存在\n%s" % media_response.json_data)
+        # 检测是否是图片相册
+        if crawler.check_sub_key(("i",), media_response.json_data):
+            if not isinstance(media_response.json_data["i"], list):
+                raise crawler.CrawlerException("图片相册'i'字段格式不正确\n%s" % media_response.json_data)
+            result["image_url_list"] = []
+            for image_info in media_response.json_data["i"]:
+                if not crawler.check_sub_key(("url",), image_info):
+                    raise crawler.CrawlerException("图片相册'url'字段不存在\n%s" % media_response.json_data)
+                result["image_url_list"].append(str(image_info["url"]))
+        # 检测是否是视频相册
+        if crawler.check_sub_key(("v",), media_response.json_data):
+            result["video_url"] = str(media_response.json_data["v"])
+    else:
+        raise crawler.CrawlerException("媒体" + crawler.request_failre(media_response.status))
     return result
 
 
