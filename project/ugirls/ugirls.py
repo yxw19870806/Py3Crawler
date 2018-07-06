@@ -21,12 +21,13 @@ def get_index_page():
     }
     if index_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(index_response.status))
-    first_album_url = pq(index_response.data).find("div.magazine_list_wrap .magazine_item").eq(0).find(".magazine_item_wrap").attr("href")
+    index_response_content = index_response.data.decode()
+    first_album_url = pq(index_response_content).find("div.magazine_list_wrap .magazine_item").eq(0).find(".magazine_item_wrap").attr("href")
     if not first_album_url:
-        raise crawler.CrawlerException("页面截取最新图集地址失败\n%s" % index_response.data)
+        raise crawler.CrawlerException("页面截取最新图集地址失败\n%s" % index_response_content)
     album_id = tool.find_sub_string(first_album_url, "/Product-", ".html")
     if not crawler.is_integer(album_id):
-        raise crawler.CrawlerException("图集地址截取图集id失败\n%s" % index_response.data)
+        raise crawler.CrawlerException("图集地址截取图集id失败\n%s" % index_response_content)
     result["max_album_id"] = int(album_id)
     return result
 
@@ -42,18 +43,19 @@ def get_album_page(album_id):
     }
     if album_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(album_response.status))
-    if album_response.data.decode().find("该页面不存在,或者已经被删除!") >= 0:
+    album_response_content = album_response.data.decode()
+    if album_response_content.find("该页面不存在,或者已经被删除!") >= 0:
         result["is_delete"] = True
         return result
     # 获取模特名字
-    model_name = pq(album_response.data).find("div.ren_head div.ren_head_c a").attr("title")
+    model_name = pq(album_response_content).find("div.ren_head div.ren_head_c a").attr("title")
     if not model_name:
-        raise crawler.CrawlerException("模特信息截取模特名字失败\n%s" % album_response.data)
+        raise crawler.CrawlerException("模特信息截取模特名字失败\n%s" % album_response_content)
     result["model_name"] = model_name.encode("UTF-8").strip()
     # 获取所有图片地址
-    image_list_selector = pq(album_response.data).find("ul#myGallery li img")
+    image_list_selector = pq(album_response_content).find("ul#myGallery li img")
     if image_list_selector.length == 0:
-        raise crawler.CrawlerException("页面匹配图片地址失败\n%s" % album_response.data)
+        raise crawler.CrawlerException("页面匹配图片地址失败\n%s" % album_response_content)
     for image_index in range(0, image_list_selector.length):
         image_url = image_list_selector.eq(image_index).attr("src")
         if image_url.find("_magazine_web_m.") == -1:
