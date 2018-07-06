@@ -49,7 +49,7 @@ def get_album_page(page_count):
             # 获取相册标题
             if not crawler.check_sub_key(("title",), album_body):
                 raise crawler.CrawlerException("返回数据'title'字段不存在\n%s" % album_response.json_data)
-            result["album_title"] = str(album_body["title"].encode("UTF-8"))
+            result["album_title"] = album_body["title"]
             # 获取图片地址
             if not crawler.check_sub_key(("attr",), album_body):
                 raise crawler.CrawlerException("返回数据'attr'字段不存在\n%s" % album_response.json_data)
@@ -60,7 +60,7 @@ def get_album_page(page_count):
             for image_data in album_body["attr"]["img"]:
                 if not crawler.check_sub_key(("url",), image_data):
                     raise crawler.CrawlerException("返回数据'url'字段不存在\n%s" % album_response.json_data)
-                result["image_url_list"].append("http://www.zunguang.com/%s" % str(image_data["url"]))
+                result["image_url_list"].append("http://www.zunguang.com/%s" % image_data["url"])
     return result
 
 
