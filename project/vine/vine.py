@@ -46,7 +46,7 @@ def get_account_index_page(account_id):
         raise crawler.CrawlerException("账号详情页返回信息'posts'字段类型不正确\n%s" % account_profile_response.json_data)
     if int(account_profile_response.json_data["postCount"]) != len(account_profile_response.json_data["posts"]):
         raise crawler.CrawlerException("账号详情页视频数量解析错误\n%s" % account_profile_response.json_data)
-    result["video_id_list"] = account_profile_response.json_data["posts"]
+    result["video_id_list"] = map(str, account_profile_response.json_data["posts"])
     return result
 
 
@@ -70,7 +70,7 @@ def get_video_page(video_id):
         if not crawler.is_integer(video_page_response.json_data["postId"]):
             raise crawler.CrawlerException("返回信息'postId'字段类型不正确\n%s" % video_page_response.json_data)
         # 获取视频地址
-        result["video_url"] = video_page_response.json_data["videoUrl"]
+        result["video_url"] = str(video_page_response.json_data["videoUrl"])
         # 获取视频id（数字）
         result["video_id"] = video_page_response.json_data["postId"]
     return result
@@ -116,7 +116,7 @@ class Vine(crawler.Crawler):
 
         # 未完成的数据保存
         if len(self.account_list) > 0:
-            tool.write_file(tool.list_to_string(list(self.account_list.values())), self.temp_save_data_path)
+            tool.write_file(tool.list_to_string(self.account_list.values()), self.temp_save_data_path)
 
         # 重新排序保存存档文件
         crawler.rewrite_save_file(self.temp_save_data_path, self.save_data_path)
@@ -141,7 +141,7 @@ class Download(crawler.DownloadThread):
         # 获取账号信息，包含全部视频
         try:
             account_index_page_response = get_account_index_page(self.account_id)
-        except crawler.CrawlerException as e:
+        except crawler.CrawlerException, e:
             log.error(self.account_name + " 账号首页解析失败，原因：%s" % e.message)
             raise
 
@@ -165,7 +165,7 @@ class Download(crawler.DownloadThread):
         # 获取指定视频信息
         try:
             video_response = get_video_page(video_id)
-        except crawler.CrawlerException as e:
+        except crawler.CrawlerException, e:
             log.error(self.account_name + " 视频%s解析失败，原因：%s" % (video_id, e.message))
             raise
 
@@ -215,14 +215,14 @@ class Download(crawler.DownloadThread):
                 log.step(self.account_name + " 开始解析视频%s" % video_id)
                 self.crawl_video(video_id)
                 self.main_thread_check()  # 检测主线程运行状态
-        except SystemExit as se:
+        except SystemExit, se:
             if se.code == 0:
                 log.step(self.account_name + " 提前退出")
             else:
                 log.error(self.account_name + " 异常退出")
-        except Exception as e:
+        except Exception, e:
             log.error(self.account_name + " 未知异常")
-            log.error(str(e) + "\n" + traceback.format_exc())
+            log.error(str(e) + "\n" + str(traceback.format_exc()))
 
         # 保存最后的信息
         with self.thread_lock:

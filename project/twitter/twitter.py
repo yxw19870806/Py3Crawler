@@ -11,7 +11,7 @@ import re
 import threading
 import time
 import traceback
-import urllib.request, urllib.parse, urllib.error
+import urllib
 from common import *
 
 COOKIE_INFO = {}
@@ -26,20 +26,18 @@ def init_session():
     index_page_response = net.http_request(index_url, method="GET", cookies_list=COOKIE_INFO, header_list={"referer": "https://twitter.com"})
     if index_page_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(index_page_response.status))
-    index_page_response_content = index_page_response.data.decode()
     # 没有登录状态
-    if not COOKIE_INFO or index_page_response_content.find('<div class="StaticLoggedOutHomePage-login">') >= 0:
+    if not COOKIE_INFO or index_page_response.data.find('<div class="StaticLoggedOutHomePage-login">') >= 0:
         COOKIE_INFO = net.get_cookies_from_response_header(index_page_response.headers)
-    init_js_url_find = re.findall('<script src="(https://abs.twimg.com/k/[^/]*/init.[^\.]*.[\w]*.js)" async></script>', index_page_response_content)
+    init_js_url_find = re.findall('<script src="(https://abs.twimg.com/k/[^/]*/init.[^\.]*.[\w]*.js)" async></script>', index_page_response.data)
     if len(init_js_url_find) != 1:
-        raise crawler.CrawlerException("初始化JS地址截取失败\n%s" % index_page_response_content)
+        raise crawler.CrawlerException("初始化JS地址截取失败\n%s" % index_page_response.data)
     init_js_response = net.http_request(init_js_url_find[0], method="GET")
     if init_js_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException("初始化JS文件，" + crawler.request_failre(init_js_response.status))
-    init_js_response_content = init_js_response.data.decode()
-    authorization_string = tool.find_sub_string(init_js_response_content, '="AAAAAAAAAA', '"', )
+    authorization_string = tool.find_sub_string(init_js_response.data, '="AAAAAAAAAA', '"', )
     if not authorization_string:
-        raise crawler.CrawlerException("初始化JS中截取authorization失败\n%s" % init_js_response_content)
+        raise crawler.CrawlerException("初始化JS中截取authorization失败\n%s" % init_js_response.data)
     AUTHORIZATION = "AAAAAAAAAA" + authorization_string
 
 
@@ -55,17 +53,16 @@ def get_account_index_page(account_name):
         raise crawler.CrawlerException("账号不存在")
     elif account_index_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(account_index_response.status))
-    account_index_response_content = account_index_response.data.decode()
     # 重新访问
-    if account_index_response_content.find("captureMessage( 'Failed to load source'") >= 0:
+    if account_index_response.data.find("captureMessage( 'Failed to load source'") >= 0:
         return get_account_index_page(account_name)
-    if account_index_response_content.find('<div class="ProtectedTimeline">') >= 0:
+    if account_index_response.data.find('<div class="ProtectedTimeline">') >= 0:
         raise crawler.CrawlerException("私密账号，需要关注才能访问")
-    if account_index_response_content.find('<a href="https://support.twitter.com/articles/15790"') >= 0:
+    if account_index_response.data.find('<a href="https://support.twitter.com/articles/15790"') >= 0:
         raise crawler.CrawlerException("账号已被冻结")
-    account_id = tool.find_sub_string(account_index_response_content, '<div class="ProfileNav" role="navigation" data-user-id="', '">')
+    account_id = tool.find_sub_string(account_index_response.data, '<div class="ProfileNav" role="navigation" data-user-id="', '">')
     if not crawler.is_integer(account_id):
-        raise crawler.CrawlerException("页面截取用户id失败\n%s" % account_index_response_content)
+        raise crawler.CrawlerException("页面截取用户id失败\n%s" % account_index_response.data)
     result["account_id"] = account_id
     return result
 
@@ -100,7 +97,7 @@ def get_one_page_media(account_name, position_blog_id):
     if not crawler.is_integer(media_pagination_response.json_data["min_position"]) and media_pagination_response.json_data["min_position"] is not None:
         raise crawler.CrawlerException("返回信息'min_position'字段类型不正确\n%s" % media_pagination_response.json_data)
     # 没有任何内容
-    if int(media_pagination_response.json_data["new_latent_count"]) == 0 and not media_pagination_response.json_data["items_html"].strip():
+    if int(media_pagination_response.json_data["new_latent_count"]) == 0 and not str(media_pagination_response.json_data["items_html"]).strip():
         result["is_skip"] = True
         return result
     # tweet信息分组
@@ -109,6 +106,7 @@ def get_one_page_media(account_name, position_blog_id):
     for tweet_data in temp_tweet_data_list:
         if len(tweet_data) < 50:
             continue
+        tweet_data = tweet_data.encode("UTF-8")
         # 被圈出来的用户，追加到前面的页面中
         if tweet_data.find('<div class="account  js-actionable-user js-profile-popup-actionable') >= 0:
             tweet_data_list[-1] += tweet_data
@@ -128,15 +126,16 @@ def get_one_page_media(account_name, position_blog_id):
         blog_id = tool.find_sub_string(tweet_data, 'data-tweet-id="', '"')
         if not crawler.is_integer(blog_id):
             raise crawler.CrawlerException("tweet内容中截取tweet id失败\n%s" % tweet_data)
-        result_media_info["blog_id"] = blog_id
+        result_media_info["blog_id"] = str(blog_id)
         # 获取图片地址
-        result_media_info["image_url_list"] = re.findall('data-image-url="([^"]*)"', tweet_data)
+        image_url_list = re.findall('data-image-url="([^"]*)"', tweet_data)
+        result_media_info["image_url_list"] = map(str, image_url_list)
         # 判断是不是有视频
         result_media_info["has_video"] = tweet_data.find("PlayableMedia--video") >= 0
         result["media_info_list"].append(result_media_info)
     # 判断是不是还有下一页
     if media_pagination_response.json_data["has_more_items"]:
-        result["next_page_position"] = media_pagination_response.json_data["min_position"]
+        result["next_page_position"] = str(media_pagination_response.json_data["min_position"])
     return result
 
 
@@ -157,21 +156,20 @@ def get_video_play_page(tweet_id):
         raise crawler.CrawlerException("返回信息'track'字段不存在\n%s" % video_play_response.json_data)
     if not crawler.check_sub_key(("playbackUrl",), video_play_response.json_data["track"]):
         raise crawler.CrawlerException("返回信息'playbackUrl'字段不存在\n%s" % video_play_response.json_data["track"])
-    file_url = video_play_response.json_data["track"]["playbackUrl"]
+    file_url = str(video_play_response.json_data["track"]["playbackUrl"])
     file_type = file_url.split("?")[0].split(".")[-1]
     # m3u8文件，需要再次访问获取真实视频地址
     # https://api.twitter.com/1.1/videos/tweet/config/996368816174084097.json
     if file_type == "m3u8":
-        file_url_protocol, file_url_path = urllib.parse.splittype(file_url)
-        file_url_host = urllib.parse.splithost(file_url_path)[0]
+        file_url_protocol, file_url_path = urllib.splittype(file_url)
+        file_url_host = urllib.splithost(file_url_path)[0]
         m3u8_file_response = net.http_request(file_url, method="GET")
         # 没有权限，可能是地域限制
         if m3u8_file_response.status == 403:
             return result
         elif m3u8_file_response.status != net.HTTP_RETURN_CODE_SUCCEED:
             raise crawler.CrawlerException("m3u8文件 %s 访问失败，%s" % (file_url, crawler.request_failre(m3u8_file_response.status)))
-        m3u8_file_response_content = m3u8_file_response.data.decode()
-        include_m3u8_file_list = re.findall("(/[\S]*.m3u8)", m3u8_file_response_content)
+        include_m3u8_file_list = re.findall("(/[\S]*.m3u8)", m3u8_file_response.data)
         if len(include_m3u8_file_list) > 0:
             # 生成最高分辨率视频所在的m3u8文件地址
             file_url = "%s://%s%s" % (file_url_protocol, file_url_host, include_m3u8_file_list[-1])
@@ -179,12 +177,12 @@ def get_video_play_page(tweet_id):
             if m3u8_file_response.status != net.HTTP_RETURN_CODE_SUCCEED:
                 raise crawler.CrawlerException("最高分辨率m3u8文件 %s 访问失败，%s" % (file_url, crawler.request_failre(m3u8_file_response.status)))
         # 包含分P视频文件名的m3u8文件
-        ts_url_find = re.findall("(/[\S]*.ts)", m3u8_file_response_content)
+        ts_url_find = re.findall("(/[\S]*.ts)", m3u8_file_response.data)
         if len(ts_url_find) == 0:
-            raise crawler.CrawlerException("m3u8文件截取视频地址失败\n%s\n%s" % (file_url, m3u8_file_response_content))
+            raise crawler.CrawlerException("m3u8文件截取视频地址失败\n%s\n%s" % (file_url, m3u8_file_response.data))
         result["video_url"] = []
         for ts_file_path in ts_url_find:
-            result["video_url"].append("%s://%s%s" % (file_url_protocol, file_url_host, ts_file_path))
+            result["video_url"].append("%s://%s%s" % (file_url_protocol, file_url_host, str(ts_file_path)))
     # 直接是视频地址
     # https://api.twitter.com/1.1/videos/tweet/config/996368816174084097.json
     else:
@@ -220,9 +218,10 @@ class Twitter(crawler.Crawler):
         # 生成authorization，用于访问视频页
         try:
             init_session()
-        except crawler.CrawlerException as e:
+        except crawler.CrawlerException, e:
             log.error("生成authorization失败，原因：%s" % e.message)
             raise
+
 
     def main(self):
         # 循环下载每个id
@@ -248,7 +247,7 @@ class Twitter(crawler.Crawler):
 
         # 未完成的数据保存
         if len(self.account_list) > 0:
-            tool.write_file(tool.list_to_string(list(self.account_list.values())), self.temp_save_data_path)
+            tool.write_file(tool.list_to_string(self.account_list.values()), self.temp_save_data_path)
 
         # 重新排序保存存档文件
         crawler.rewrite_save_file(self.temp_save_data_path, self.save_data_path)
@@ -277,7 +276,7 @@ class Download(crawler.DownloadThread):
             # 获取指定时间点后的一页图片信息
             try:
                 media_pagination_response = get_one_page_media(self.account_name, position_blog_id)
-            except crawler.CrawlerException as e:
+            except crawler.CrawlerException, e:
                 log.error(self.account_name + " position %s后的一页媒体信息解析失败，原因：%s" % (position_blog_id, e.message))
                 raise
 
@@ -333,7 +332,7 @@ class Download(crawler.DownloadThread):
             # 获取视频播放地址
             try:
                 video_play_response = get_video_play_page(media_info["blog_id"])
-            except crawler.CrawlerException as e:
+            except crawler.CrawlerException, e:
                 log.error(self.account_name + " 日志%s的视频解析失败，原因：%s" % (media_info["blog_id"], e.message))
                 raise
 
@@ -371,7 +370,7 @@ class Download(crawler.DownloadThread):
         try:
             try:
                 account_index_response = get_account_index_page(self.account_name)
-            except crawler.CrawlerException as e:
+            except crawler.CrawlerException, e:
                 log.error(self.account_name + " 首页解析失败，原因：%s" % e.message)
                 raise
 
@@ -392,16 +391,16 @@ class Download(crawler.DownloadThread):
                 log.step(self.account_name + " 开始解析媒体志 %s" % media_info["blog_id"])
                 self.crawl_media(media_info)
                 self.main_thread_check()  # 检测主线程运行状态
-        except SystemExit as se:
+        except SystemExit, se:
             if se.code == 0:
                 log.step(self.account_name + " 提前退出")
             else:
                 log.error(self.account_name + " 异常退出")
             # 如果临时目录变量不为空，表示某个日志正在下载中，需要把下载了部分的内容给清理掉
             self.clean_temp_path()
-        except Exception as e:
+        except Exception, e:
             log.error(self.account_name + " 未知异常")
-            log.error(str(e) + "\n" + traceback.format_exc())
+            log.error(str(e) + "\n" + str(traceback.format_exc()))
 
         # 保存最后的信息
         with self.thread_lock:
