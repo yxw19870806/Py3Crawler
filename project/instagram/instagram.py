@@ -94,15 +94,15 @@ def get_account_index_page(account_name):
     result = {
         "account_id": None,  # account id
     }
-    if account_index_response.status == net.HTTP_RETURN_CODE_SUCCEED:
-        account_id = tool.find_sub_string(account_index_response.data, '"profilePage_', '"')
-        if not crawler.is_integer(account_id):
-            raise crawler.CrawlerException("页面截取账号id失败\n%s" % account_index_response.data)
-        result["account_id"] = account_id
-    elif account_index_response.status == 404:
+    if account_index_response.status == 404:
         raise crawler.CrawlerException("账号不存在")
-    else:
+    elif account_index_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(account_index_response.status))
+    account_index_response_content = account_index_response.data.decode()
+    account_id = tool.find_sub_string(account_index_response_content, '"profilePage_', '"')
+    if not crawler.is_integer(account_id):
+        raise crawler.CrawlerException("页面截取账号id失败\n%s" % account_index_response_content)
+    result["account_id"] = account_id
     return result
 
 
@@ -159,7 +159,7 @@ def get_one_page_media(account_id, cursor):
         if media_info["node"]["__typename"] not in ["GraphImage", "GraphSidecar", "GraphVideo"]:
             raise crawler.CrawlerException("媒体信息'__typename'取值范围不正确\n%s" % media_info)
         # 获取图片地址
-        result_media_info["image_url"] = str(media_info["node"]["display_url"])
+        result_media_info["image_url"] = media_info["node"]["display_url"]
         # 判断是不是图片/视频组
         result_media_info["is_group"] = media_info["node"]["__typename"] == "GraphSidecar"
         # 判断是否有视频
@@ -167,11 +167,11 @@ def get_one_page_media(account_id, cursor):
         # 获取图片上传时间
         result_media_info["media_time"] = int(media_info["node"]["taken_at_timestamp"])
         # 获取媒体详情界面id
-        result_media_info["page_id"] = str(media_info["node"]["shortcode"])
+        result_media_info["page_id"] = media_info["node"]["shortcode"]
         result["media_info_list"].append(result_media_info)
     # 获取下一页的指针
     if media_data["page_info"]["has_next_page"]:
-        result["next_page_cursor"] = str(media_data["page_info"]["end_cursor"])
+        result["next_page_cursor"] = media_data["page_info"]["end_cursor"]
     return result
 
 
@@ -185,9 +185,10 @@ def get_media_page(page_id):
     }
     if media_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(media_response.status))
-    media_info_html = tool.find_sub_string(media_response.data, "window._sharedData = ", ";</script>")
+    media_response_content = media_response.data.decode()
+    media_info_html = tool.find_sub_string(media_response_content, "window._sharedData = ", ";</script>")
     if not media_info_html:
-        crawler.CrawlerException("页面截取媒体信息失败\n%s" % media_response.data)
+        crawler.CrawlerException("页面截取媒体信息失败\n%s" % media_response_content)
     media_info_data = tool.json_decode(media_info_html)
     if media_info_data is None:
         raise crawler.CrawlerException("媒体信息加载失败\n%s" % media_info_html)
@@ -213,18 +214,18 @@ def get_media_page(page_id):
             if not crawler.check_sub_key(("__typename", "display_url"), edge["node"]):
                 raise crawler.CrawlerException("媒体节点'__typename'或'display_url'字段不存在\n%s" % edge)
             # 获取图片地址
-            result["image_url_list"].append(str(edge["node"]["display_url"]))
+            result["image_url_list"].append(edge["node"]["display_url"])
             # 获取视频地址
             if edge["node"]["__typename"] == "GraphVideo":
                 if not crawler.check_sub_key(("video_url",), edge["node"]):
                     raise crawler.CrawlerException("视频节点'video_url'字段不存在\n%s" % edge)
-                result["video_url_list"].append(str(edge["node"]["video_url"]))
+                result["video_url_list"].append(edge["node"]["video_url"])
     # 视频
     elif media_data["__typename"] == "GraphVideo":
         # 获取视频地址
         if not crawler.check_sub_key(("video_url",), media_data):
             raise crawler.CrawlerException("视频信息'video_url'字段不存在\n%s" % media_data)
-        result["video_url_list"].append(str(media_data["video_url"]))
+        result["video_url_list"].append(media_data["video_url"])
     else:
         raise crawler.CrawlerException("媒体信息'__typename'取值范围不正确\n%s" % media_info_data)
     return result
