@@ -116,6 +116,9 @@ def get_one_page_video(account_id, page_count):
         raise crawler.CrawlerException("返回信息'hasNextPage'字段不存在\n%s" % api_response.json_data)
     if api_response.json_data["data"]["channel"]["channel_videos_all_videos"]["pageInfo"]["hasNextPage"] is False:
         result["is_over"] = True
+    # API只能查询100页的视频，可以测试账号 usatodaysports
+    if page_count == 100:
+        result["is_over"] = True
     return result
 
 
@@ -269,7 +272,7 @@ class Download(crawler.DownloadThread):
             try:
                 blog_pagination_response = get_one_page_video(self.account_id, page_count)
             except crawler.CrawlerException as e:
-                log.error(self.account_id + " 视频列表解析失败，原因：%s" % e.message)
+                log.error(self.account_id + " 第%s页视频解析失败，原因：%s" % (page_count, e.message))
                 raise
 
             log.trace(self.account_id + " 解析的全部视频：%s" % blog_pagination_response["video_info_list"])
