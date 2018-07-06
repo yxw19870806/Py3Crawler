@@ -27,7 +27,7 @@ def get_account_index_page(account_name):
             if not account_info:
                 raise crawler.CrawlerException("页面截取账号信息失败\n%s" % account_index_response.data)
             account_info = account_info.replace(r"\n", "").replace("'", chr(1))
-            result["account_info"] = eval("u'%s'" % account_info).replace(chr(1), "'").encode("UTF-8")
+            result["account_info"] = eval("u'%s'" % account_info).replace(chr(1), "'")
         # 获取外部链接地址
         if account_index_response.data.decode().find('"external_url": null,') >= 0:
             result["external_url"] = ""

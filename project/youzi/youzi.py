@@ -52,10 +52,9 @@ def get_album_page(album_id):
         # 判断图集是否已经被删除
         if page_count == 1:
             # 获取图集标题
-            album_title = pq(album_pagination_response_content).find("h1.articleV4Tit").text()
-            if not album_title:
+            result["album_title"] = pq(album_pagination_response_content).find("h1.articleV4Tit").text()
+            if not result["album_title"]:
                 raise crawler.CrawlerException("页面截取标题失败\n%s" % album_pagination_response_content)
-            result["album_title"] = album_title.encode("UTF-8")
         # 获取图集图片地址
         image_list_selector = pq(album_pagination_response_content).find("div.articleV4Body a img")
         if image_list_selector.length == 0:

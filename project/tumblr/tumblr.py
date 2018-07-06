@@ -192,7 +192,7 @@ def get_one_page_private_blog(account_id, page_count):
         }
         if not crawler.check_sub_key(("post_url",), post_info):
             raise crawler.CrawlerException("日志信息'post_url'字段不存在\n%s" % post_info)
-        post_url_split = urllib.parse.urlsplit(post_info["post_url"].encode("UTF-8"))
+        post_url_split = urllib.parse.urlsplit(post_info["post_url"])
         result_post_info["post_url"] = post_url_split[0] + "://" + post_url_split[1] + urllib.parse.quote(post_url_split[2])
         if not crawler.check_sub_key(("type",), post_info):
             raise crawler.CrawlerException("日志信息'type'字段不存在\n%s" % post_info)
@@ -212,7 +212,7 @@ def get_one_page_private_blog(account_id, page_count):
                 if video_info["embed_code"] is False:
                     continue
                 if int(video_info["width"]) > max_width:
-                    temp_video_url = tool.find_sub_string(video_info["embed_code"].encode("UTF-8"), '<source src="', '"')
+                    temp_video_url = tool.find_sub_string(video_info["embed_code"], '<source src="', '"')
                     if temp_video_url:
                         video_url = temp_video_url
                         max_width = video_info["width"]
