@@ -43,6 +43,7 @@ support multiple parameter for visit web
 * [Dailymotion](http://www.dailymotion.com/)
 * [Youtube](https://www.youtube.com/)
 * [半次元](https://bcy.net/)
+* [World Cosplay](http://worldcosplay.net/)
 * [5sing](http://5sing.kugou.com/index.html)
 * [唱吧](http://changba.com/)
 * [全名K歌](http://kg.qq.com/)
