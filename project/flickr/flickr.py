@@ -38,7 +38,7 @@ def check_safe_search():
     setting_url = "https://www.flickr.com/account/prefs/safesearch/?from=privacy"
     setting_response = net.http_request(setting_url, method="GET", cookies_list=COOKIE_INFO, is_auto_redirect=False)
     if setting_response.status == net.HTTP_RETURN_CODE_SUCCEED:
-        if pq(setting_response.data).find("input[name='safe_search']:checked").val() == "2":
+        if pq(setting_response.data.decode()).find("input[name='safe_search']:checked").val() == "2":
             return True
     return False
 
@@ -56,25 +56,26 @@ def get_account_index_page(account_name):
         raise crawler.CrawlerException("账号不存在")
     elif account_index_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(account_index_response.status))
+    account_index_response_content = account_index_response.data.decode()
     # 获取user id
-    user_id = tool.find_sub_string(tool.find_sub_string(account_index_response.data, "Y.ClientApp.init(", "},\n"), '"nsid":"', '"')
+    user_id = tool.find_sub_string(tool.find_sub_string(account_index_response_content, "Y.ClientApp.init(", "},\n"), '"nsid":"', '"')
     if not user_id:
-        raise crawler.CrawlerException("页面截取nsid失败\n%s" % account_index_response.data)
+        raise crawler.CrawlerException("页面截取nsid失败\n%s" % account_index_response_content)
     if user_id.find("@N") == -1:
-        raise crawler.CrawlerException("页面截取的nsid格式不正确\n%s" % account_index_response.data)
+        raise crawler.CrawlerException("页面截取的nsid格式不正确\n%s" % account_index_response_content)
     result["user_id"] = user_id
     # 获取site key
-    site_key = tool.find_sub_string(account_index_response.data, 'root.YUI_config.flickr.api.site_key = "', '"')
+    site_key = tool.find_sub_string(account_index_response_content, 'root.YUI_config.flickr.api.site_key = "', '"')
     if not site_key:
-        raise crawler.CrawlerException("页面截取site key失败\n%s" % account_index_response.data)
+        raise crawler.CrawlerException("页面截取site key失败\n%s" % account_index_response_content)
     result["site_key"] = site_key
     # 获取CSRF
-    root_auth = tool.find_sub_string(account_index_response.data, "root.auth = ", "};")
+    root_auth = tool.find_sub_string(account_index_response_content, "root.auth = ", "};")
     if not site_key:
-        raise crawler.CrawlerException("页面截取root.auth失败\n%s" % account_index_response.data)
+        raise crawler.CrawlerException("页面截取root.auth失败\n%s" % account_index_response_content)
     csrf = tool.find_sub_string(root_auth, '"csrf":"', '",')
     if not csrf:
-        raise crawler.CrawlerException("页面截取csrf失败\n%s" % account_index_response.data)
+        raise crawler.CrawlerException("页面截取csrf失败\n%s" % account_index_response_content)
     result["csrf"] = csrf
     # 获取cookie_session
     if IS_LOGIN and "cookie_session" not in COOKIE_INFO:
@@ -176,9 +177,9 @@ def get_one_page_photo(user_id, page_count, api_key, csrf, request_id):
         if not max_resolution_photo_type:
             raise crawler.CrawlerException("图片信息匹配最高分辨率的图片尺寸失败\n%s" % photo_info)
         if crawler.check_sub_key(("url_" + max_resolution_photo_type + "_cdn",), photo_info):
-            result_image_info["image_url"] = str(photo_info["url_" + max_resolution_photo_type + "_cdn"])
+            result_image_info["image_url"] = photo_info["url_" + max_resolution_photo_type + "_cdn"]
         elif crawler.check_sub_key(("url_" + max_resolution_photo_type,), photo_info):
-            result_image_info["image_url"] = str(photo_info["url_" + max_resolution_photo_type])
+            result_image_info["image_url"] = photo_info["url_" + max_resolution_photo_type]
         else:
             raise crawler.CrawlerException("图片信息'url_%s_cdn'或者'url_%s_cdn'字段不存在\n%s" % (max_resolution_photo_type, max_resolution_photo_type, photo_info))
         result["image_info_list"].append(result_image_info)
