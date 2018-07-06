@@ -26,15 +26,16 @@ def get_one_page_audio(account_id, page_type, page_count):
     }
     if audio_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(audio_pagination_response.status))
-    if audio_pagination_response.data.decode().find("var OwnerNickName = '';") >= 0:
+    audio_pagination_response_content = audio_pagination_response.data.decode()
+    if audio_pagination_response_content.find("var OwnerNickName = '';") >= 0:
         raise crawler.CrawlerException("账号不存在")
     # 获取歌曲信息
     # 单首歌曲信息的格式：[歌曲id，歌曲标题]
-    audio_info_list = re.findall('<a href="http://5sing.kugou.com/' + page_type + '/([\d]*).html" [\s|\S]*? title="([^"]*)">', audio_pagination_response.data)
+    audio_info_list = re.findall('<a href="http://5sing.kugou.com/' + page_type + '/([\d]*).html" [\s|\S]*? title="([^"]*)">', audio_pagination_response_content)
     for audio_info in audio_info_list:
         result_audio_info = {
-            "audio_id": str(audio_info[0]),
-            "audio_title": str(audio_info[1]),
+            "audio_id": audio_info[0],
+            "audio_title": audio_info[1],
         }
         result["audio_info_list"].append(result_audio_info)
     return result
@@ -62,7 +63,7 @@ def get_audio_play_page(audio_id, song_type):
         raise crawler.CrawlerException("歌曲信息加载失败\n%s" % audio_info_string)
     if not crawler.check_sub_key(("file",), audio_info):
         raise crawler.CrawlerException("歌曲信息'file'字段不存在\n%s" % audio_info)
-    result["audio_url"] = str(audio_info["file"])
+    result["audio_url"] = audio_info["file"]
     return result
 
 
