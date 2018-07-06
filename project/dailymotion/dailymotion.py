@@ -14,7 +14,7 @@ import time
 import traceback
 from common import *
 
-AUTHORIZATION = None
+AUTHORIZATION = ""
 FIRST_CHOICE_RESOLUTION = 720
 
 
@@ -23,14 +23,15 @@ def init_session():
     global AUTHORIZATION
     index_url = "http://www.dailymotion.com"
     index_page_response = net.http_request(index_url, method="GET")
-    page_data = tool.find_sub_string(index_page_response.data, "var __PLAYER_CONFIG__ = ", ";\n")
     if index_page_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException("首页，" + crawler.request_failre(index_page_response.status))
+    index_page_response_content = index_page_response.data.decode()
+    page_data = tool.find_sub_string(index_page_response_content, "var __PLAYER_CONFIG__ = ", ";\n")
     if not page_data:
-        raise crawler.CrawlerException("页面信息截取失败\n%s" % index_page_response.data)
+        raise crawler.CrawlerException("页面信息截取失败\n%s" % index_page_response_content)
     page_data = tool.json_decode(page_data)
     if page_data is None:
-        raise crawler.CrawlerException("页面信息加载失败\n%s" % index_page_response.data)
+        raise crawler.CrawlerException("页面信息加载失败\n%s" % index_page_response_content)
     if not crawler.check_sub_key(("context",), page_data):
         raise crawler.CrawlerException("页面信息'context'字段不存在\n%s" % page_data)
     if not crawler.check_sub_key(("api",), page_data["context"]):
@@ -98,7 +99,7 @@ def get_one_page_video(account_id, page_count):
         # 获取视频id
         if not crawler.check_sub_key(("xid",), video_info["node"]):
             raise crawler.CrawlerException("视频信息'xid'字段不存在\n%s" % video_info)
-        result_video_info["video_id"] = str(video_info["node"]["xid"])
+        result_video_info["video_id"] = video_info["node"]["xid"]
         # 获取视频上传时间
         if not crawler.check_sub_key(("createdAt",), video_info["node"]):
             raise crawler.CrawlerException("视频信息'createdAt'字段不存在\n%s" % video_info)
@@ -129,12 +130,13 @@ def get_video_page(video_id):
     }
     if video_play_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(video_play_response.status))
-    video_data = tool.find_sub_string(video_play_response.data, "var __PLAYER_CONFIG__ = ", ";\n")
+    video_play_response_content = video_play_response.data.decode()
+    video_data = tool.find_sub_string(video_play_response_content, "var __PLAYER_CONFIG__ = ", ";\n")
     if not video_data:
-        raise crawler.CrawlerException("截取视频信息失败\n%s" % video_play_response.data)
+        raise crawler.CrawlerException("截取视频信息失败\n%s" % video_play_response_content)
     video_data = tool.json_decode(video_data)
     if video_data is None:
-        raise crawler.CrawlerException("视频信息加载失败\n%s" % video_play_response.data)
+        raise crawler.CrawlerException("视频信息加载失败\n%s" % video_play_response_content)
     if not crawler.check_sub_key(("metadata",), video_data):
         raise crawler.CrawlerException("视频信息'metadata'字段不存在\n%s" % video_data)
     # 查找最高分辨率的视频源地址
@@ -150,8 +152,8 @@ def get_video_page(video_id):
         for video_info in video_data["metadata"]["qualities"][video_resolution]:
             if not crawler.check_sub_key(("type", "url"), video_info):
                 raise crawler.CrawlerException("最高分辨率视频信息'type'或'url'字段不存在\n%s" % video_info)
-            if str(video_info["type"]) == "video/mp4":
-                resolution_to_url[int(video_resolution)] = str(video_info["url"])
+            if video_info["type"] == "video/mp4":
+                resolution_to_url[int(video_resolution)] = video_info["url"]
     if len(resolution_to_url) == 0:
         raise crawler.CrawlerException("匹配不同分辨率视频源失败\n%s" % video_data["metadata"]["qualities"])
     # 优先使用配置中的分辨率
