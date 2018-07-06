@@ -141,11 +141,12 @@ def get_video_url(video_play_url):
         cookies_list = {"SUB":  weiboCommon.COOKIE_INFO["SUB"]}
         video_play_response = net.http_request(video_play_url, method="GET", cookies_list=cookies_list)
         if video_play_response.status == net.HTTP_RETURN_CODE_SUCCEED:
-            video_url = tool.find_sub_string(video_play_response.data, "video_src=", "&")
+            video_play_response_content = video_play_response.data.decode()
+            video_url = tool.find_sub_string(video_play_response_content, "video_src=", "&")
             if not video_url:
-                video_url = tool.find_sub_string(video_play_response.data, 'flashvars="list=', '"')
+                video_url = tool.find_sub_string(video_play_response_content, 'flashvars="list=', '"')
             if not video_url:
-                raise crawler.CrawlerException("页面截取视频地址失败\n%s" % video_play_response.data)
+                raise crawler.CrawlerException("页面截取视频地址失败\n%s" % video_play_response_content)
             video_url = urllib.parse.unquote(video_url)
             if video_url.find("//") == 0:
                 video_url = "http:" + video_url
@@ -158,12 +159,13 @@ def get_video_url(video_play_url):
         video_play_response = net.http_request(video_play_url, method="GET")
         if video_play_response.status != net.HTTP_RETURN_CODE_SUCCEED:
             raise crawler.CrawlerException(crawler.request_failre(video_play_response.status))
-        if video_play_response.data.decode().find('<p class="error-p">为建设清朗网络空间，视频正在审核中，暂时无法播放。</p>') > 0:
+        video_play_response_content = video_play_response.data.decode()
+        if video_play_response_content.decode().find('<p class="error-p">为建设清朗网络空间，视频正在审核中，暂时无法播放。</p>') > 0:
             video_url = ""
         else:
-            video_url_find = re.findall('<meta content="([^"]*)" property="og:video:url">', video_play_response.data)
+            video_url_find = re.findall('<meta content="([^"]*)" property="og:video:url">', video_play_response_content)
             if len(video_url_find) != 1:
-                raise crawler.CrawlerException("页面匹配加密视频信息失败\n%s" % video_play_response.data)
+                raise crawler.CrawlerException("页面匹配加密视频信息失败\n%s" % video_play_response_content)
             video_url = meipai.decrypt_video_url(video_url_find[0])
             if video_url is None:
                 raise crawler.CrawlerException("加密视频地址解密失败\n%s" % video_url_find[0])

@@ -33,11 +33,12 @@ def get_one_page_article(page_id, page_count):
     article_pagination_response = net.http_request(preview_article_pagination_url, method="GET", fields=query_data, cookies_list=cookies_list, is_auto_redirect=False)
     if article_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(article_pagination_response.status))
+    article_pagination_response_content = article_pagination_response.data.decode()
     # 截取文章数据
-    article_list_html = tool.find_sub_string(article_pagination_response.data, '"html":"', '"})')
+    article_list_html = tool.find_sub_string(article_pagination_response_content, '"html":"', '"})')
     article_data = article_list_html.replace("\\t", "").replace("\\n", "").replace("\\r", "")
     if not article_data:
-        raise crawler.CrawlerException("页面截取文章预信息失败\n%s" % article_pagination_response.data)
+        raise crawler.CrawlerException("页面截取文章预信息失败\n%s" % article_pagination_response_content)
     # 文章分组
     preview_article_data_list = re.findall("<li([\S|\s]*?)<\\\\/li>", article_data)
     if len(preview_article_data_list) == 0:
@@ -62,7 +63,7 @@ def get_one_page_article(page_id, page_count):
         result_article_info["article_url"] = "http://weibo.com" + article_path.replace("\\/", "/").replace("&amp;", "&")
         result["article_info_list"].append(result_article_info)
     # 检测是否还有下一页
-    page_count_find = re.findall('<a[\s|\S]*?>([\d]+)<\\\\/a>', article_pagination_response.data)
+    page_count_find = re.findall('<a[\s|\S]*?>([\d]+)<\\\\/a>', article_pagination_response_content)
     result["is_over"] = page_count >= max(list(map(int, page_count_find)))
     return result
 
@@ -80,8 +81,9 @@ def get_article_page(article_url):
     }
     if article_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(article_response.status))
+    article_response_content = article_response.data.decode()
     # 判断是否需要购买
-    result["is_pay"] = article_response.data.decode().find("购买继续阅读") >= 0
+    result["is_pay"] = article_response_content.find("购买继续阅读") >= 0
     article_id = tool.find_sub_string(article_url, "http://weibo.com/ttarticle/p/show?id=", "&mod=zwenzhang")
     if article_id:
         article_type = "t"
@@ -94,26 +96,26 @@ def get_article_page(article_url):
         result["article_id"] = "p_" + article_id
     # 获取文章标题
     if article_type == "t":
-        result["article_title"] = tool.find_sub_string(article_response.data, '<div class="title" node-type="articleTitle">', "</div>")
+        result["article_title"] = tool.find_sub_string(article_response_content, '<div class="title" node-type="articleTitle">', "</div>")
     else:  # p
-        result["article_title"] = tool.find_sub_string(article_response.data, '<h1 class=\\"title\\">', "<\\/h1>")
+        result["article_title"] = tool.find_sub_string(article_response_content, '<h1 class=\\"title\\">', "<\\/h1>")
     if not result["article_title"]:
         raise crawler.CrawlerException("页面截取文章标题失败\n%s" % article_url)
     # 获取文章顶部图片地址
-    article_top_image_html = tool.find_sub_string(article_response.data, '<div class="main_toppic">', '<div class="main_editor')
+    article_top_image_html = tool.find_sub_string(article_response_content, '<div class="main_toppic">', '<div class="main_editor')
     if article_top_image_html:
         result["top_image_url"] = tool.find_sub_string(article_top_image_html, 'src="', '" />')
     # 获取文章图片地址列表
     if article_type == "t":
         # 正文到作者信息间的页面
-        article_body = tool.find_sub_string(article_response.data, '<div class="WB_editor_iframe', '<div class="artical_add_box')
+        article_body = tool.find_sub_string(article_response_content, '<div class="WB_editor_iframe', '<div class="artical_add_box')
         if not article_body:
             # 正文到打赏按钮间的页面（未登录不显示关注界面）
-            article_body = tool.find_sub_string(article_response.data, '<div class="WB_editor_iframe', '<div node-type="fanService">')
+            article_body = tool.find_sub_string(article_response_content, '<div class="WB_editor_iframe', '<div node-type="fanService">')
     else:  # p
-        article_body = tool.find_sub_string(article_response.data, '{"ns":"pl.content.longFeed.index"', "</script>").replace("\\", "")
+        article_body = tool.find_sub_string(article_response_content, '{"ns":"pl.content.longFeed.index"', "</script>").replace("\\", "")
     if not article_body:
-        raise crawler.CrawlerException("页面截取文章正文失败\n%s" % article_response.data)
+        raise crawler.CrawlerException("页面截取文章正文失败\n%s" % article_response_content)
     image_url_list = re.findall('<img[^>]* src="([^"]*)"[^>]*>', article_body)
     for image_url in image_url_list:
         # 无效地址
