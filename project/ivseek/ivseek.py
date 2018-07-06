@@ -4,6 +4,7 @@
 email: hikaru870806@hotmail.com
 如有问题或建议请联系
 """
+import os
 import re
 import traceback
 from common import *
@@ -18,9 +19,10 @@ def get_index_page():
     }
     if index_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(index_response.status))
-    archive_id_find = re.findall('<a class="no-deco" href="http://www.ivseek.com/archives/(\d*).html">', index_response.data)
+    index_response_content = index_response.data.decode()
+    archive_id_find = re.findall('<a class="no-deco" href="http://www.ivseek.com/archives/(\d*).html">', index_response_content)
     if len(archive_id_find) == 0:
-        raise crawler.CrawlerException("页面匹配视频id失败\n%s" % index_response.data)
+        raise crawler.CrawlerException("页面匹配视频id失败\n%s" % index_response_content)
     result["max_archive_id"] = max(list(map(int, archive_id_find)))
     return result
 
@@ -36,9 +38,10 @@ def get_archive_page(archive_id):
         return result
     elif archive_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(archive_response.status))
+    archive_response_content = archive_response.data.decode()
     # 获取视频地址
-    video_url_find1 = re.findall('<iframe[\s|\S]*?src="([^"]*)"', archive_response.data)
-    video_url_find2 = re.findall('<script type="\w*/javascript" src="(http[s]?://\w*.nicovideo.jp/[^"]*)"></script>', archive_response.data)
+    video_url_find1 = re.findall('<iframe[\s|\S]*?src="([^"]*)"', archive_response_content)
+    video_url_find2 = re.findall('<script type="\w*/javascript" src="(http[s]?://\w*.nicovideo.jp/[^"]*)"></script>', archive_response_content)
     video_url_find = video_url_find1 + video_url_find2
     if len(video_url_find) == 0:
         return result
@@ -59,18 +62,19 @@ def get_archive_page(archive_id):
             video_play_response = net.http_request(result_video_info["video_url"], method="GET", header_list={"accept-language": "en-US"})
             if video_play_response.status != net.HTTP_RETURN_CODE_SUCCEED:
                 raise crawler.CrawlerException("视频播放页%s，%s" % (result["video_url"], crawler.request_failre(archive_response.status)))
+            video_play_response_content = video_play_response.data.decode()
             # 账号已被删除，跳过
-            if video_play_response.data.decode().find('"reason":"This video is no longer available because the YouTube account associated with this video has been terminated."') >= 0:
+            if video_play_response_content.find('"reason":"This video is no longer available because the YouTube account associated with this video has been terminated."') >= 0:
                 continue
-            account_id = tool.find_sub_string(video_play_response.data, '"webNavigationEndpointData":{"url":"/channel/', '"')
+            account_id = tool.find_sub_string(video_play_response_content, '"webNavigationEndpointData":{"url":"/channel/', '"')
             if not account_id:
-                account_id = tool.find_sub_string(video_play_response.data, '{"webCommandMetadata":{"url":"/channel/', '"')
+                account_id = tool.find_sub_string(video_play_response_content, '{"webCommandMetadata":{"url":"/channel/', '"')
             if not account_id:
-                account_id = tool.find_sub_string(video_play_response.data, '<meta itemprop="channelId" content="', '">')
+                account_id = tool.find_sub_string(video_play_response_content, '<meta itemprop="channelId" content="', '">')
             if account_id:
                 result_video_info["account_id"] = account_id
             else:
-                log.error("视频 %s 发布账号截取失败\n%s" % (result_video_info["video_url"], video_play_response.data))
+                log.error("视频 %s 发布账号截取失败\n%s" % (result_video_info["video_url"], video_play_response_content))
         elif video_url.find(".nicovideo.jp/") >= 0:
             # https://embed.nicovideo.jp/watch/sm23008734/script?w=640&#038;h=360
             if video_url.find("embed.nicovideo.jp/watch") >= 0:
@@ -85,7 +89,7 @@ def get_archive_page(archive_id):
             video_play_response = net.http_request(result_video_info["video_url"], method="GET", header_list={"accept-language": "en-US"})
             if video_play_response.status != net.HTTP_RETURN_CODE_SUCCEED:
                 raise crawler.CrawlerException("视频播放页%s，%s" % (result["video_url"], crawler.request_failre(video_play_response.status)))
-            account_id = tool.find_sub_string(video_play_response.data, '<a href="/user/', '"')
+            account_id = tool.find_sub_string(video_play_response.data.decode(), '<a href="/user/', '"')
             if crawler.is_integer(account_id):
                 result_video_info["account_id"] = account_id
         # http://www.dailymotion.com/embed/video/x5oi0x
@@ -96,7 +100,7 @@ def get_archive_page(archive_id):
             video_play_response = net.http_request(result_video_info["video_url"], method="GET")
             if video_play_response.status != net.HTTP_RETURN_CODE_SUCCEED:
                 raise crawler.CrawlerException("视频播放页%s，%s" % (result_video_info["video_url"], crawler.request_failre(video_play_response.status)))
-            account_id = tool.find_sub_string(video_play_response.data, '"screenname":"', '"')
+            account_id = tool.find_sub_string(video_play_response.data.decode(), '"screenname":"', '"')
             if account_id:
                 result_video_info["account_id"] = account_id
         # 无效的视频地址
@@ -107,7 +111,7 @@ def get_archive_page(archive_id):
             log.error("未知视频来源" + video_url)
         result["video_info_list"].append(result_video_info)
     # 获取标题
-    title = tool.find_sub_string(archive_response.data, '<meta property="og:title" content="', '"')
+    title = tool.find_sub_string(archive_response_content, '<meta property="og:title" content="', '"')
     if not title:
         raise crawler.CrawlerException("标题截取失败")
     result["title"] = title.strip()
