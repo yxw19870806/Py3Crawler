@@ -391,7 +391,7 @@ def save_net_file(file_url, file_path, need_content_type=False, header_list=None
                 return {"status": 1, "code": 0, "file_path": file_path}
             else:
                 time.sleep(10)
-                output.print_msg("本地文件%s：%s和网络文件%s：%s不一致" % (file_path.encode("UTF-8"), content_length, str(file_url), file_size))
+                output.print_msg("本地文件%s：%s和网络文件%s：%s不一致" % (file_path.encode("UTF-8"), content_length, file_url, file_size))
         elif response.status == HTTP_RETURN_CODE_URL_INVALID:
             if create_file:
                 path.delete_dir_or_file(file_path)
