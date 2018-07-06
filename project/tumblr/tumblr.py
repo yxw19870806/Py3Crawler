@@ -443,7 +443,7 @@ class Tumblr(crawler.Crawler):
         elif not check_safe_mode():
             console_string = "账号安全模式已开启"
         while console_string:
-            input_str = output.console_input(crawler.get_time() + " %s，可能无法解析受限制的账号，继续程序(C)ontinue？或者退出程序(E)xit？:" % console_string)
+            input_str = input(crawler.get_time() + " %s，可能无法解析受限制的账号，继续程序(C)ontinue？或者退出程序(E)xit？:" % console_string)
             input_str = input_str.lower()
             if input_str in ["e", "exit"]:
                 tool.process_exit()

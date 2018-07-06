@@ -30,14 +30,6 @@ def print_msg(msg, is_time=True):
         print(msg)
 
 
-def console_input(msg):
-    """Console input"""
-    output_encoding = sys.stdout.encoding
-    if output_encoding != "UTF-8":
-        msg = msg.decode("UTF-8").encode(output_encoding)
-    return input(msg)
-
-
 def _get_time():
     """Get formatted time string(%m-%d %H:%M:%S)"""
     return time.strftime("%m-%d %H:%M:%S", time.localtime(time.time()))

@@ -60,10 +60,10 @@ def check_login():
 def login_from_console():
     # 从命令行中输入账号密码
     while True:
-        email = output.console_input(crawler.get_time() + " 请输入邮箱: ")
-        password = output.console_input(crawler.get_time() + " 请输入密码: ")
+        email = input(crawler.get_time() + " 请输入邮箱: ")
+        password = input(crawler.get_time() + " 请输入密码: ")
         while True:
-            input_str = output.console_input(crawler.get_time() + " 是否使用这些信息(Y)es或重新输入(N)o: ")
+            input_str = input(crawler.get_time() + " 是否使用这些信息(Y)es或重新输入(N)o: ")
             input_str = input_str.lower()
             if input_str in ["y", "yes"]:
                 if _do_login(email, password):
@@ -274,7 +274,7 @@ class Bcy(crawler.Crawler):
         # 未登录时提示可能无法获取粉丝指定的作品
         if not check_login():
             while True:
-                input_str = output.console_input(crawler.get_time() + " 没有检测到账号登录状态，可能无法解析那些只对粉丝开放的作品，手动输入账号密码登录(Y)es？或者跳过登录继续程序(C)ontinue？或者退出程序(E)xit？:")
+                input_str = input(crawler.get_time() + " 没有检测到账号登录状态，可能无法解析那些只对粉丝开放的作品，手动输入账号密码登录(Y)es？或者跳过登录继续程序(C)ontinue？或者退出程序(E)xit？:")
                 input_str = input_str.lower()
                 if input_str in ["y", "yes"]:
                     if login_from_console():

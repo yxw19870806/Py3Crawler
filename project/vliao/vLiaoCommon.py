@@ -32,8 +32,8 @@ def check_login():
         path.delete_dir_or_file(token_file_path)
     log.step("Please input api info")
     while True:
-        user_id = output.console_input("USER ID: ")
-        user_key = output.console_input("USER KEY; ")
+        user_id = input("USER ID: ")
+        user_key = input("USER KEY; ")
         # 验证token是否有效
         if check_token(user_id, user_key):
             USER_ID = user_id

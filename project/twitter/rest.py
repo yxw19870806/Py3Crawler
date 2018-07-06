@@ -40,8 +40,8 @@ def init():
         path.delete_dir_or_file(token_file_path)
     output.print_msg("Please input api info")
     while True:
-        api_key = output.console_input("API KEY: ")
-        api_secret = output.console_input("API SECRET; ")
+        api_key = input("API KEY: ")
+        api_secret = input("API SECRET; ")
         # 验证token是否有效
         if get_access_token(api_key, api_secret):
             # 加密保存到文件中
