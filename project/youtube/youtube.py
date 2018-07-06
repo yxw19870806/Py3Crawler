@@ -51,19 +51,20 @@ def get_one_page_video(account_id, token):
             raise crawler.CrawlerException("账号不存在")
         elif index_response.status != net.HTTP_RETURN_CODE_SUCCEED:
             raise crawler.CrawlerException(crawler.request_failre(index_response.status))
-        if index_response.data.decode().find('<button id="a11y-skip-nav" class="skip-nav"') >= 0:
+        index_response_content = index_response.data.decode()
+        if index_response_content.find('<button id="a11y-skip-nav" class="skip-nav"') >= 0:
             log.step("首页访问出现跳转，再次访问")
             return get_one_page_video(account_id, token)
-        result["account_name"] = tool.find_sub_string(index_response.data, '<meta property="og:title" content="', '">').replace("- YouTube", "").strip()
-        if index_response.data.decode().find('{"alertRenderer":{"type":"ERROR",') != -1:
-            reason = tool.find_sub_string(tool.find_sub_string(index_response.data, '{"alertRenderer":{"type":"ERROR",', '}],'), '{"simpleText":"', '"}')
+        result["account_name"] = tool.find_sub_string(index_response_content, '<meta property="og:title" content="', '">').replace("- YouTube", "").strip()
+        if index_response_content.find('{"alertRenderer":{"type":"ERROR",') != -1:
+            reason = tool.find_sub_string(tool.find_sub_string(index_response_content, '{"alertRenderer":{"type":"ERROR",', '}],'), '{"simpleText":"', '"}')
             if reason == "This channel does not exist.":
                 raise crawler.CrawlerException("账号不存在")
             else:
                 raise crawler.CrawlerException("账号无法访问，原因：%s" % reason)
-        script_data_html = tool.find_sub_string(index_response.data, 'window["ytInitialData"] =', ";\n").strip()
+        script_data_html = tool.find_sub_string(index_response_content, 'window["ytInitialData"] =', ";\n").strip()
         if not script_data_html:
-            raise crawler.CrawlerException("页面截取视频信息失败\n%s" % index_response.data)
+            raise crawler.CrawlerException("页面截取视频信息失败\n%s" % index_response_content)
         script_data = tool.json_decode(script_data_html)
         if script_data is None:
             raise crawler.CrawlerException("视频信息加载失败\n%s" % script_data_html)
@@ -132,19 +133,20 @@ def get_video_page(video_id):
     # 获取视频地址
     if video_play_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(video_play_response.status))
-    if video_play_response.data.decode().find('"playabilityStatus":{"status":"UNPLAYABLE"') != -1 or video_play_response.data.decode().find('"playabilityStatus":{"status":"ERROR"') != -1:
+    video_play_response_content = video_play_response.data.decode()
+    if video_play_response_content.find('"playabilityStatus":{"status":"UNPLAYABLE"') != -1 or video_play_response_content.find('"playabilityStatus":{"status":"ERROR"') != -1:
         return result
     # 没有登录，判断是否必须要登录
     if not IS_LOGIN:
-        need_login_reason = tool.find_sub_string(video_play_response.data, '"playabilityStatus":{"status":"LOGIN_REQUIRED","reason":"', '",')
+        need_login_reason = tool.find_sub_string(video_play_response_content, '"playabilityStatus":{"status":"LOGIN_REQUIRED","reason":"', '",')
         if need_login_reason:
             if need_login_reason == "Sign in to confirm your age":
                 raise crawler.CrawlerException("视频需要登录账号并且年龄通过检测后才能访问")
             else:
                 raise crawler.CrawlerException("视频需要登录账号才能访问，原因：%s" % need_login_reason)
-    video_info_string = tool.find_sub_string(video_play_response.data, "ytplayer.config = ", ";ytplayer.load = ").strip()
+    video_info_string = tool.find_sub_string(video_play_response_content, "ytplayer.config = ", ";ytplayer.load = ").strip()
     if not video_info_string:
-        raise crawler.CrawlerException("页面截取视频信息失败\n%s" % video_play_response.data)
+        raise crawler.CrawlerException("页面截取视频信息失败\n%s" % video_play_response_content)
     video_info_data = tool.json_decode(video_info_string)
     if video_info_data is None:
         raise crawler.CrawlerException("视频信息格式不正确\n%s" % video_info_string)
@@ -153,7 +155,7 @@ def get_video_page(video_id):
     # 获取视频标题
     if not crawler.check_sub_key(("title",), video_info_data["args"]):
         raise crawler.CrawlerException("视频信息'title'字段不存在\n%s" % video_info_data)
-    result["title"] = video_info_data["args"]["title"].encode("UTF-8")
+    result["title"] = video_info_data["args"]["title"]
     # 获取视频地址
     if not crawler.check_sub_key(("url_encoded_fmt_stream_map",), video_info_data["args"]):
         raise crawler.CrawlerException("视频信息'url_encoded_fmt_stream_map'字段不存在\n%s" % video_info_data["args"])
@@ -194,15 +196,15 @@ def get_video_page(video_id):
             elif key == "s":
                 # 解析JS文件，获取对应的加密方法
                 if len(decrypt_function_step) == 0:
-                    js_file_name = tool.find_sub_string(video_play_response.data, 'src="/yts/jsbin/player-', '/base.js"')
+                    js_file_name = tool.find_sub_string(video_play_response_content, 'src="/yts/jsbin/player-', '/base.js"')
                     if js_file_name:
                         js_file_url = "https://www.youtube.com/yts/jsbin/player-%s/base.js" % js_file_name
                     else:
-                        js_file_name = tool.find_sub_string(video_play_response.data, 'src="https://s.ytimg.com/yts/jsbin/player-', '/base.js"')
+                        js_file_name = tool.find_sub_string(video_play_response_content, 'src="https://s.ytimg.com/yts/jsbin/player-', '/base.js"')
                         if js_file_name:
                             js_file_url = "https://s.ytimg.com/yts/jsbin/player-%s/base.js" % js_file_name
                         else:
-                            raise crawler.CrawlerException("播放器JS文件地址截取失败\n%s" % video_play_response.data)
+                            raise crawler.CrawlerException("播放器JS文件地址截取失败\n%s" % video_play_response_content)
                     decrypt_function_step = get_decrypt_step(js_file_url)
                     log.trace("JS文件 %s 解析出的本地加密方法\n%s" % (js_file_url, decrypt_function_step))
                 # 生成加密字符串
@@ -234,11 +236,11 @@ def get_video_page(video_id):
         if result["video_url"] is None:
             result["video_url"] = resolution_to_url[max(resolution_to_url)]
     # 获取视频发布时间
-    video_time_string = tool.find_sub_string(video_play_response.data, '"dateText":{"simpleText":"', '"},').strip()
+    video_time_string = tool.find_sub_string(video_play_response_content, '"dateText":{"simpleText":"', '"},').strip()
     if not video_time_string:
-        video_time_string = tool.find_sub_string(video_play_response.data, '<strong class="watch-time-text">', '</strong>').strip()
+        video_time_string = tool.find_sub_string(video_play_response_content, '<strong class="watch-time-text">', '</strong>').strip()
     if not video_time_string:
-        raise crawler.CrawlerException("页面截取视频发布时间错误\n%s" % video_play_response.data)
+        raise crawler.CrawlerException("页面截取视频发布时间错误\n%s" % video_play_response_content)
     # 英语
     if video_time_string.find("Published on") >= 0 or video_time_string.find("Streamed live on") >= 0:
         video_time_string = video_time_string.replace("Published on", "").replace("Streamed live on", "").strip()
@@ -286,19 +288,20 @@ def get_decrypt_step(js_file_url):
     js_file_response = net.http_request(js_file_url, method="GET")
     if js_file_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException("播放器JS文件 %s 访问失败，原因：%s" % (js_file_url, crawler.request_failre(js_file_response.status)))
+    js_file_response_content = js_file_response.data.decode()
     # 加密方法入口
     # old k.sig?f.set("signature",k.sig):k.s&&f.set("signature",SJ(k.s));
     # new var l=k.sig;l?f.set("signature",l):k.s&&f.set("signature",CK(k.s));
-    main_function_name = tool.find_sub_string(js_file_response.data, 'var l=k.sig;l?f.set("signature",l):k.s&&f.set("signature",', "(k.s));")
+    main_function_name = tool.find_sub_string(js_file_response_content, 'var l=k.sig;l?f.set("signature",l):k.s&&f.set("signature",', "(k.s));")
     if not main_function_name:
-        main_function_name = tool.find_sub_string(js_file_response.data, 'if(k.url){f=new g.QJ(k.url);k.s&&f.set(k.sp||"signature",', "(k.s));")
+        main_function_name = tool.find_sub_string(js_file_response_content, 'if(k.url){f=new g.QJ(k.url);k.s&&f.set(k.sp||"signature",', "(k.s));")
     if not main_function_name:
-        main_function_name = tool.find_sub_string(js_file_response.data, 'c&&(b||(b="signature"),d.set(b,', "(c))")
+        main_function_name = tool.find_sub_string(js_file_response_content, 'c&&(b||(b="signature"),d.set(b,', "(c))")
     if not main_function_name:
         raise crawler.CrawlerException("播放器JS文件 %s，加密方法名截取失败" % js_file_url)
     # 加密方法体（包含子加密方法的调用参数&顺序）
     # SJ=function(a){a=a.split("");RJ.yF(a,48);RJ.It(a,31);RJ.yF(a,24);RJ.It(a,74);return a.join("")};
-    main_function_body = tool.find_sub_string(js_file_response.data, '%s=function(a){a=a.split("");' % main_function_name, 'return a.join("")};')
+    main_function_body = tool.find_sub_string(js_file_response_content, '%s=function(a){a=a.split("");' % main_function_name, 'return a.join("")};')
     if not main_function_body:
         raise crawler.CrawlerException("播放器JS文件 %s，加密方法体截取失败" % js_file_url)
     # 子加密方法所在的变量名字
@@ -318,7 +321,7 @@ def get_decrypt_step(js_file_url):
         decrypt_function_step.append([sub_decrypt_step_find[0][1], sub_decrypt_step_find[0][2]])  # 方法名，参数
     # 子加密方法所在的变量内容
     # var RJ={yF:function(a,b){var c=a[0];a[0]=a[b%a.length];a[b]=c},It:function(a){a.reverse()},yp:function(a,b){a.splice(0,b)}};
-    decrypt_function_var_body = tool.find_sub_string(js_file_response.data, "var %s={" % decrypt_function_var, "};")
+    decrypt_function_var_body = tool.find_sub_string(js_file_response_content, "var %s={" % decrypt_function_var, "};")
     if not main_function_body:
         raise crawler.CrawlerException("播放器JS文件 %s，加密子方法截取失败" % js_file_url)
     # 所有子加密方法具体内容
