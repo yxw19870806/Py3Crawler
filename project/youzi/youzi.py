@@ -21,12 +21,13 @@ def get_index_page():
     }
     if index_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(index_response.status))
-    first_album_url = pq(index_response.data).find("div.MeinvTuPianBox ul li a").eq(0).attr("href")
+    index_response_content = index_response.data.decode()
+    first_album_url = pq(index_response_content).find("div.MeinvTuPianBox ul li a").eq(0).attr("href")
     if not first_album_url:
-        raise crawler.CrawlerException("页面截取最新图集地址失败\n%s" % index_response.data)
+        raise crawler.CrawlerException("页面截取最新图集地址失败\n%s" % index_response_content)
     album_id = tool.find_sub_string(first_album_url, "/mm/", "/")
     if not crawler.is_integer(album_id):
-        raise crawler.CrawlerException("图集地址截取图集id失败\n%s" % index_response.data)
+        raise crawler.CrawlerException("图集地址截取图集id失败\n%s" % index_response_content)
     result["max_album_id"] = int(album_id)
     return result
 
@@ -45,23 +46,24 @@ def get_album_page(album_id):
         if album_pagination_response.status == 404 and page_count == 1:
             result["is_delete"] = True
             return result
-        if album_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
+        elif album_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
             raise crawler.CrawlerException("第%s页 " % page_count + crawler.request_failre(album_pagination_response.status))
+        album_pagination_response_content = album_pagination_response.data.decode()
         # 判断图集是否已经被删除
         if page_count == 1:
             # 获取图集标题
-            album_title = pq(album_pagination_response.data.decode("UTF-8")).find("h1.articleV4Tit").text()
+            album_title = pq(album_pagination_response_content).find("h1.articleV4Tit").text()
             if not album_title:
-                raise crawler.CrawlerException("页面截取标题失败\n%s" % album_pagination_response.data)
+                raise crawler.CrawlerException("页面截取标题失败\n%s" % album_pagination_response_content)
             result["album_title"] = album_title.encode("UTF-8")
         # 获取图集图片地址
-        image_list_selector = pq(album_pagination_response.data).find("div.articleV4Body a img")
+        image_list_selector = pq(album_pagination_response_content).find("div.articleV4Body a img")
         if image_list_selector.length == 0:
-            raise crawler.CrawlerException("第%s页 页面匹配图片地址失败\n%s" % (page_count, album_pagination_response.data))
+            raise crawler.CrawlerException("第%s页 页面匹配图片地址失败\n%s" % (page_count, album_pagination_response_content))
         for image_index in range(0, image_list_selector.length):
             result["image_url_list"].append(image_list_selector.eq(image_index).attr("src"))
         # 获取总页数
-        pagination_list_selector = pq(album_pagination_response.data).find("ul.articleV4Page a.page-a")
+        pagination_list_selector = pq(album_pagination_response_content).find("ul.articleV4Page a.page-a")
         if pagination_list_selector.length > 0:
             for pagination_index in range(0, pagination_list_selector.length):
                 temp_page_count = pagination_list_selector.eq(pagination_index).html()
@@ -69,7 +71,7 @@ def get_album_page(album_id):
                     max_page_count = max(int(temp_page_count), max_page_count)
         else:
             if page_count > 1:
-                raise crawler.CrawlerException("第%s页 页面匹配分页信息失败\n%s" % (page_count, album_pagination_response.data))
+                raise crawler.CrawlerException("第%s页 页面匹配分页信息失败\n%s" % (page_count, album_pagination_response_content))
         page_count += 1
     return result
 
@@ -133,7 +135,7 @@ class YouZi(crawler.Crawler):
                 if album_title:
                     album_path = os.path.join(self.image_download_path, "%05d %s" % (album_id, album_title))
                 else:
-                    album_path = os.path.join(self.image_download_path, "%05d" % (album_id))
+                    album_path = os.path.join(self.image_download_path, "%05d" % str(album_id))
                 temp_path = album_path
                 for image_url in album_response["image_url_list"]:
                     image_url = image_url.replace("//pic1.youzi4.com/", "//res.youzi4.cc/")
