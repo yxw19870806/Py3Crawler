@@ -1,7 +1,7 @@
 # -*- coding:UTF-8  -*-
 """
 克拉女神壁纸图片爬虫
-http://kelagirls.com/bizhi!findForIndexMore.action
+https://www.kelagirls.com/bizhi_findForIndexMore
 @author: hikaru
 email: hikaru870806@hotmail.com
 如有问题或建议请联系
@@ -14,7 +14,7 @@ from common import *
 
 # 获取指定一页的壁纸
 def get_one_page_photo(page_count):
-    photo_pagination_url = "http://kelagirls.com/bizhi!findForIndexMore.action"
+    photo_pagination_url = "https://www.kelagirls.com/bizhi_findForIndexMore"
     query_data = {"page": page_count}
     photo_pagination_response = net.http_request(photo_pagination_url, method="GET", fields=query_data)
     result = {
@@ -23,9 +23,10 @@ def get_one_page_photo(page_count):
     }
     if photo_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(photo_pagination_response.status))
-    photo_list_selector = pq(photo_pagination_response.data.decode("UTF-8")).find(".bizhinmore .bizhi")
+    photo_pagination_response_content = photo_pagination_response.data.decode()
+    photo_list_selector = pq(photo_pagination_response_content).find(".bizhinmore .bizhi")
     if photo_list_selector.length == 0:
-        raise crawler.CrawlerException("页面匹配图片列失败\n%s" % photo_pagination_response.data)
+        raise crawler.CrawlerException("页面匹配图片列失败\n%s" % photo_pagination_response_content)
     for photo_index in range(0, photo_list_selector.length):
         result_image_info = {
             "image_id": None,  # 图片id
@@ -51,7 +52,7 @@ def get_one_page_photo(page_count):
         result_image_info["model_name"] = model_name
         result["image_info_list"].append(result_image_info)
     # 判断是不是最后一页
-    pagination_selector = pq(photo_pagination_response.data.decode("UTF-8")).find(".pageBottom div")
+    pagination_selector = pq(photo_pagination_response_content).find(".pageBottom div")
     max_page_count = page_count
     for pagination_index in range(0, pagination_selector.length):
         if crawler.is_integer(pagination_selector.eq(pagination_index).text()):
