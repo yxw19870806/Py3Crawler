@@ -97,7 +97,7 @@ def get_one_page_media(account_name, position_blog_id):
     if not crawler.is_integer(media_pagination_response.json_data["min_position"]) and media_pagination_response.json_data["min_position"] is not None:
         raise crawler.CrawlerException("返回信息'min_position'字段类型不正确\n%s" % media_pagination_response.json_data)
     # 没有任何内容
-    if int(media_pagination_response.json_data["new_latent_count"]) == 0 and not str(media_pagination_response.json_data["items_html"]).strip():
+    if int(media_pagination_response.json_data["new_latent_count"]) == 0 and not media_pagination_response.json_data["items_html"].strip():
         result["is_skip"] = True
         return result
     # tweet信息分组
@@ -126,7 +126,7 @@ def get_one_page_media(account_name, position_blog_id):
         blog_id = tool.find_sub_string(tweet_data, 'data-tweet-id="', '"')
         if not crawler.is_integer(blog_id):
             raise crawler.CrawlerException("tweet内容中截取tweet id失败\n%s" % tweet_data)
-        result_media_info["blog_id"] = str(blog_id)
+        result_media_info["blog_id"] = blog_id
         # 获取图片地址
         image_url_list = re.findall('data-image-url="([^"]*)"', tweet_data)
         result_media_info["image_url_list"] = list(map(str, image_url_list))
@@ -135,7 +135,7 @@ def get_one_page_media(account_name, position_blog_id):
         result["media_info_list"].append(result_media_info)
     # 判断是不是还有下一页
     if media_pagination_response.json_data["has_more_items"]:
-        result["next_page_position"] = str(media_pagination_response.json_data["min_position"])
+        result["next_page_position"] = media_pagination_response.json_data["min_position"]
     return result
 
 
@@ -156,7 +156,7 @@ def get_video_play_page(tweet_id):
         raise crawler.CrawlerException("返回信息'track'字段不存在\n%s" % video_play_response.json_data)
     if not crawler.check_sub_key(("playbackUrl",), video_play_response.json_data["track"]):
         raise crawler.CrawlerException("返回信息'playbackUrl'字段不存在\n%s" % video_play_response.json_data["track"])
-    file_url = str(video_play_response.json_data["track"]["playbackUrl"])
+    file_url = video_play_response.json_data["track"]["playbackUrl"]
     file_type = file_url.split("?")[0].split(".")[-1]
     # m3u8文件，需要再次访问获取真实视频地址
     # https://api.twitter.com/1.1/videos/tweet/config/996368816174084097.json
@@ -182,7 +182,7 @@ def get_video_play_page(tweet_id):
             raise crawler.CrawlerException("m3u8文件截取视频地址失败\n%s\n%s" % (file_url, m3u8_file_response.data))
         result["video_url"] = []
         for ts_file_path in ts_url_find:
-            result["video_url"].append("%s://%s%s" % (file_url_protocol, file_url_host, str(ts_file_path)))
+            result["video_url"].append("%s://%s%s" % (file_url_protocol, file_url_host, ts_file_path))
     # 直接是视频地址
     # https://api.twitter.com/1.1/videos/tweet/config/996368816174084097.json
     else:

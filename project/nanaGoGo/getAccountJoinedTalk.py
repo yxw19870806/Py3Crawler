@@ -38,7 +38,7 @@ def get_account_talks(account_id, account_name, talk_list):
         talk_url_path = talk_selector.attr("href")
         if not talk_url_path:
             raise crawler.CrawlerException("talk信息截取talk地址失败\n%s" % talk_selector.html())
-        talk_id = str(talk_url_path.replace("/", ""))
+        talk_id = talk_url_path.replace("/", "")
         if not talk_id:
             raise crawler.CrawlerException("talk地址截取talk id失败\n%s" % talk_url_path)
         # 获取talk名字

@@ -44,7 +44,7 @@ def get_one_page_audio(account_id, page_count):
         audio_id = audio_selector.find(".content_wrap").attr("sound_id")
         if not crawler.is_integer(audio_id):
             raise crawler.CrawlerException("歌曲信息匹配歌曲id失败\n%s" % audio_list_selector.html())
-        audio_info["audio_id"] = str(audio_id)
+        audio_info["audio_id"] = audio_id
         # 获取歌曲标题
         audio_title = audio_selector.find(".sound_title").attr("title")
         if not audio_title:
@@ -77,11 +77,11 @@ def get_audio_info_page(audio_id):
     if audio_play_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(audio_play_response.status))
     if crawler.check_sub_key(("play_path_64",), audio_play_response.json_data):
-        result["audio_url"] = str(audio_play_response.json_data["play_path_64"])
+        result["audio_url"] = audio_play_response.json_data["play_path_64"]
     elif crawler.check_sub_key(("play_path_32",), audio_play_response.json_data):
-        result["audio_url"] = str(audio_play_response.json_data["play_path_32"])
+        result["audio_url"] = audio_play_response.json_data["play_path_32"]
     elif crawler.check_sub_key(("play_path",), audio_play_response.json_data):
-        result["audio_url"] = str(audio_play_response.json_data["play_path"])
+        result["audio_url"] = audio_play_response.json_data["play_path"]
     else:
         raise crawler.CrawlerException("返回信息匹配音频地址失败\n%s" % audio_play_response.data)
     return result

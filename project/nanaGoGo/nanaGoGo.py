@@ -58,7 +58,7 @@ def get_one_page_blog(account_name, target_id):
             raise crawler.CrawlerException("日志信息'postId'字段不存在\n%s" % blog_info)
         if not crawler.is_integer(blog_info["post"]["postId"]):
             raise crawler.CrawlerException("日志信息'postId'类型不正确n%s" % blog_info)
-        result_blog_info["blog_id"] = str(blog_info["post"]["postId"])
+        result_blog_info["blog_id"] = blog_info["post"]["postId"]
         # 获取日志内容
         if not crawler.check_sub_key(("body",), blog_info["post"]):
             raise crawler.CrawlerException("日志信息'body'字段不存在\n%s" % blog_info)
@@ -76,13 +76,13 @@ def get_one_page_blog(account_name, target_id):
             elif body_type == 3:  # 图片
                 if not crawler.check_sub_key(("image",), blog_body):
                     raise crawler.CrawlerException("日志信息'image'字段不存在\n%s" % blog_body)
-                result_blog_info["image_url_list"].append(str(blog_body["image"]))
+                result_blog_info["image_url_list"].append(blog_body["image"])
             elif body_type == 7:  # 转发
                 continue
             elif body_type == 8:  # video
                 if not crawler.check_sub_key(("movieUrlHq",), blog_body):
                     raise crawler.CrawlerException("日志信息'movieUrlHq'字段不存在\n%s" % blog_body)
-                result_blog_info["video_url_list"].append(str(blog_body["movieUrlHq"]))
+                result_blog_info["video_url_list"].append(blog_body["movieUrlHq"])
             else:
                 raise crawler.CrawlerException("日志信息'bodyType'字段取值不正确\n%s" % blog_body)
         result["blog_info_list"].append(result_blog_info)

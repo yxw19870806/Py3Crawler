@@ -70,7 +70,7 @@ def get_video_page(video_id):
         if not crawler.is_integer(video_page_response.json_data["postId"]):
             raise crawler.CrawlerException("返回信息'postId'字段类型不正确\n%s" % video_page_response.json_data)
         # 获取视频地址
-        result["video_url"] = str(video_page_response.json_data["videoUrl"])
+        result["video_url"] = video_page_response.json_data["videoUrl"]
         # 获取视频id（数字）
         result["video_id"] = video_page_response.json_data["postId"]
     return result

@@ -59,7 +59,7 @@ def get_album_page(album_id):
         if image_list_selector.length == 0:
             raise crawler.CrawlerException("第%s页 页面匹配图片地址失败\n%s" % (page_count, album_pagination_response.data))
         for image_index in range(0, image_list_selector.length):
-            result["image_url_list"].append(str(image_list_selector.eq(image_index).attr("src")))
+            result["image_url_list"].append(image_list_selector.eq(image_index).attr("src"))
         # 获取总页数
         pagination_list_selector = pq(album_pagination_response.data).find("ul.articleV4Page a.page-a")
         if pagination_list_selector.length > 0:

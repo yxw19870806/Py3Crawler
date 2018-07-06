@@ -33,7 +33,7 @@ def get_account_index_page(account_name):
     if album_result_selector.length == 0:
         raise crawler.CrawlerException("页面匹配相册列表失败\n%s" % account_index_html)
     for album_index in range(0, album_result_selector.length):
-        result["album_url_list"].append(str(album_result_selector.eq(album_index).find("a.detail").attr("href")))
+        result["album_url_list"].append(album_result_selector.eq(album_index).find("a.detail").attr("href"))
     return result
 
 
@@ -41,7 +41,7 @@ def get_account_index_page(account_name):
 def get_album_id(album_url):
     album_id = tool.find_sub_string(album_url, "pp/", ".html")
     if crawler.is_integer(album_id):
-        return str(album_id)
+        return album_id
     return None
 
 

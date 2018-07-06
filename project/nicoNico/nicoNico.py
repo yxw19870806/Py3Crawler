@@ -61,12 +61,12 @@ def get_mylist_index(account_id):
         # 获取视频id
         if not crawler.check_sub_key(("video_id",), video_info["item_data"]):
             raise crawler.CrawlerException("视频信息'video_id'字段不存在\n%s" % video_info)
-        video_id = str(video_info["item_data"]["video_id"])
+        video_id = video_info["item_data"]["video_id"]
         result_video_info["video_id"] = video_id.replace("sm", "")
         # 获取视频辩题
         if not crawler.check_sub_key(("title",), video_info["item_data"]):
             raise crawler.CrawlerException("视频信息'video_id'字段不存在\n%s" % video_info)
-        result_video_info["video_title"] = str(video_info["item_data"]["title"].encode("UTF-8"))
+        result_video_info["video_title"] = video_info["item_data"]["title"]
         result["video_info_list"].append(result_video_info)
     return result
 
@@ -101,7 +101,7 @@ def get_video_info(video_id):
         raise crawler.CrawlerException("视频信息'sm7647845'字段不存在\n%s" % video_info)
     if not crawler.check_sub_key(("url",), video_info["video"]["smileInfo"]):
         raise crawler.CrawlerException("视频信息'url'字段不存在\n%s" % video_info)
-    result["video_url"] = str(video_info["video"]["smileInfo"]["url"])
+    result["video_url"] = video_info["video"]["smileInfo"]["url"]
     # 返回的cookies
     set_cookie = net.get_cookies_from_response_header(video_play_response.headers)
     result["extra_cookie"] = set_cookie

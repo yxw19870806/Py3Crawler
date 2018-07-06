@@ -52,11 +52,11 @@ def get_tag_account_list(tag_id):
                 raise crawler.CrawlerException("账号信息'id'字段不存在\n%s" % account_info)
             if not crawler.is_integer(account_info["id"]):
                 raise crawler.CrawlerException("账号信息'id'字段类型不正确\n%s" % account_info)
-            account_id = str(account_info["id"])
+            account_id = account_info["id"]
             # 获取账号昵称
             if not crawler.check_sub_key(("nickname",), account_info):
                 raise crawler.CrawlerException("账号信息'title'字段不存在\n%s" % account_info)
-            account_name = str(account_info["nickname"].encode("UTF-8"))
+            account_name = account_info["nickname"]
             account_list[account_id] = account_name
 
         # 判断是不是最后一页

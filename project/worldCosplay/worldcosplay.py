@@ -54,9 +54,9 @@ def get_one_page_photo(account_id, page_count):
         result_photo_info["photo_id"] = int(photo_info["photo"]["id"])
         # 获取图片地址
         if crawler.check_sub_key(("sq300_url",), photo_info["photo"]):
-            image_url = str(photo_info["photo"]["sq300_url"])
+            image_url = photo_info["photo"]["sq300_url"]
         elif crawler.check_sub_key(("sq150_url",), photo_info["photo"]):
-            image_url = str(photo_info["photo"]["sq150_url"])
+            image_url = photo_info["photo"]["sq150_url"]
         else:
             raise crawler.CrawlerException("图片信息'sq300_url'和'sq150_url'字段不存在\n%s" % photo_info)
         if image_url.find("-350x600.") == -1:

@@ -42,12 +42,12 @@ def get_one_page_blog(account_id, page_count):
         blog_url = article_selector.find("span.atc_title a").attr("href")
         if not blog_url:
             raise crawler.CrawlerException("日志列表解析日志地址失败\n%s" % article_selector.html())
-        result_blog_info["blog_url"] = str(blog_url)
+        result_blog_info["blog_url"] = blog_url
         # 获取日志标题
         blog_title = article_selector.find("span.atc_title a").text()
         if not blog_title:
             raise crawler.CrawlerException("日志列表解析日志标题失败\n%s" % article_selector.html())
-        result_blog_info["blog_title"] = str(blog_title)
+        result_blog_info["blog_title"] = blog_title
         # 获取日志时间
         blog_time = article_selector.find("span.atc_tm").text()
         if not blog_time:

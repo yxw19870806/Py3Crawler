@@ -40,7 +40,7 @@ def get_album_page(album_id):
     for image_info in image_info_data:
         if not crawler.check_sub_key(("img",), image_info):
             raise crawler.CrawlerException("图片信息'img'字段不存在\n%s" % image_info)
-        image_url_list.append("http://img.cnu.cc/uploads/images/920/" + str(image_info["img"]))
+        image_url_list.append("http://img.cnu.cc/uploads/images/920/" + image_info["img"])
     result["image_url_list"] = image_url_list
     return result
 

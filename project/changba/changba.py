@@ -31,7 +31,7 @@ def get_account_index_page(account_id):
     user_id = tool.find_sub_string(account_index_response_content, "var userid = '", "'")
     if not crawler.is_integer(user_id):
         raise crawler.CrawlerException("页面截取userid失败\n%s" % account_index_response_content)
-    result["user_id"] = str(user_id)
+    result["user_id"] = user_id
     return result
 
 
@@ -106,7 +106,7 @@ def get_audio_play_page(audio_en_word_id, audio_type):
             # 从JS处解析的规则
             special_find = re.findall("userwork/([abc])(\d+)/(\w+)/(\w+)\.mp3", audio_source_url)
             if len(special_find) == 0:
-                result["audio_url"] = str(audio_source_url)
+                result["audio_url"] = audio_source_url
             elif len(special_find) == 1:
                 e = int(special_find[0][1], 8)
                 f = int(int(special_find[0][2], 16) / e / e)
@@ -131,7 +131,7 @@ def get_audio_play_page(audio_en_word_id, audio_type):
                 bokecc_xml_url = "https://p.bokecc.com/servlet/playinfo"
                 query_data = {
                     "vid": vid,
-                    "m": 1,
+                    "m": "1",
                     "fv": "WIN",
                     "rnd": str(int(time.time()))[-4:],
                 }
