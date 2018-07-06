@@ -47,7 +47,7 @@ def get_one_page_post(account_id, timestamp):
         }
         if not crawler.check_sub_key(("_id",), post_info):
             raise crawler.CrawlerException("作品信息'_id'字段不存在\n%s" % post_info)
-        result_post_info["post_id"] = str(post_info["_id"])
+        result_post_info["post_id"] = post_info["_id"]
         if not crawler.check_sub_key(("createdAt",), post_info):
             raise crawler.CrawlerException("作品信息'createdAt'字段不存在\n%s" % post_info)
         if not crawler.is_integer(post_info["createdAt"]):
@@ -86,14 +86,14 @@ def get_post_page(post_id):
             raise crawler.CrawlerException("返回信息'type'字段类型不正确\n%s" % media_info)
         media_type = int(media_info["type"])
         if media_type == 0:
-            result["image_url_list"].append(str(media_info["url"]))
+            result["image_url_list"].append(media_info["url"])
         elif media_type == 1:
             if media_info["url"][0] != "?":
-                result["video_url_list"].append(str(media_info["url"]))
+                result["video_url_list"].append(media_info["url"])
             else:
                 if not crawler.check_sub_key(("thum",), media_info):
                     raise crawler.CrawlerException("返回信息'thum'字段不存在\n%s" % media_info)
-                result["image_url_list"].append(str(media_info["thum"]))
+                result["image_url_list"].append(media_info["thum"]  )
         else:
             raise crawler.CrawlerException("返回信息'type'字段取值不正确\n%s" % media_info)
     return result

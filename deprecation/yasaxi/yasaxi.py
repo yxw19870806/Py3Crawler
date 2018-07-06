@@ -61,7 +61,7 @@ def get_one_page_photo(account_id, cursor):
             # 获取状态id
             if not crawler.check_sub_key(("statusId",), status_info):
                 raise crawler.CrawlerException("状态信息'statusId'字段不存在\n%s" % status_info)
-            result_status_info["id"] = str(status_info["statusId"])
+            result_status_info["id"] = status_info["statusId"]
             # 获取图片、视频地址
             if not crawler.check_sub_key(("medias",), status_info):
                 raise crawler.CrawlerException("状态信息'medias'字段不存在\n%s" % status_info)
@@ -84,16 +84,16 @@ def get_one_page_photo(account_id, cursor):
                     raise crawler.CrawlerException("媒体信息'mediaType'取值不正确\n%s" % media_info)
                 # 优先使用downloadUrl
                 if media_info["downloadUrl"]:
-                    result_status_info["image_url_list"].append(str(media_info["downloadUrl"]))
+                    result_status_info["image_url_list"].append(media_info["downloadUrl"])
                 # 前次使用downloadUrl
                 elif media_info["origin"]:
-                    result_status_info["image_url_list"].append(str(media_info["origin"]))
+                    result_status_info["image_url_list"].append(media_info["origin"])
                 else:
                     # 视频，可能只有预览图
                     if int(media_info["mediaType"]) == 2:
                         if not media_info["thumb"]:
                             raise crawler.CrawlerException("媒体信息'downloadUrl'、'origin'、'thumb'字段都没有值\n%s" % media_info)
-                        result_status_info["image_url_list"].append(str(media_info["thumb"]))
+                        result_status_info["image_url_list"].append(media_info["thumb"])
                     # 图片，不存在origin和downloadUrl，抛出异常
                     elif int(media_info["mediaType"]) == 1:
                         raise crawler.CrawlerException("媒体信息'origin'和'downloadUrl'字段都没有值\n%s" % media_info)

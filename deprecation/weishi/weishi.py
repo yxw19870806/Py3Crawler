@@ -56,7 +56,7 @@ def get_one_page_video(account_id, page_time):
         # 获取视频id
         if not crawler.check_sub_key(("id",), video_info):
             raise crawler.CrawlerException("视频信息'id'字段不存在\n%s" % video_info)
-        result_video_info["video_id"] = str(video_info["id"])
+        result_video_info["video_id"] = video_info["id"]
         # 获取分集id
         if not crawler.check_sub_key(("newvideos",), video_info):
             raise crawler.CrawlerException("视频信息'newvideos'字段不存在\n%s" % video_info)
@@ -67,7 +67,7 @@ def get_one_page_video(account_id, page_time):
         for video_part_info in video_info["newvideos"]:
             if not crawler.check_sub_key(("vid",), video_part_info):
                 raise crawler.CrawlerException("视频分集信息'vid'字段不存在\n%s" % video_info)
-            result_video_info["video_part_id_list"].append(str(video_part_info["vid"]))
+            result_video_info["video_part_id_list"].append(video_part_info["vid"])
         # 获取视频id
         if not crawler.check_sub_key(("timestamp",), video_info):
             raise crawler.CrawlerException("视频信息'timestamp'字段不存在\n%s" % video_info)
@@ -93,7 +93,7 @@ def get_video_info_page(video_vid, video_id):
         raise crawler.CrawlerException("返回信息'data'字段不存在\n%s" % video_info_response.json_data)
     if not crawler.check_sub_key(("url",), video_info_response.json_data["data"]):
         raise crawler.CrawlerException("返回信息'url'字段不存在\n%s" % video_info_response.json_data)
-    result["video_url"] = str(random.choice(video_info_response.json_data["data"]["url"]))
+    result["video_url"] = random.choice(video_info_response.json_data["data"]["url"])
     return result
 
 
