@@ -41,8 +41,9 @@ def check_safe_mode():
     account_setting_url = "https://www.tumblr.com/settings/account"
     account_setting_response = net.http_request(account_setting_url, method="GET", cookies_list=COOKIE_INFO, header_list={"User-Agent": USER_AGENT})
     if account_setting_response.status == net.HTTP_RETURN_CODE_SUCCEED:
+        account_setting_response_content = account_setting_response.data.decode()
         # 页面存在safe mode的设置，并且没有选择上
-        if pq(account_setting_response.data).find('#user_safe_mode').length == 1 and pq(account_setting_response.data).find('#user_safe_mode:checked').val() is None:
+        if pq(account_setting_response_content).find('#user_safe_mode').length == 1 and pq(account_setting_response_content).find('#user_safe_mode:checked').val() is None:
             # 访问一次safe mode的网址获取这个UA对应的cookies
             update_url = "https://www.tumblr.com/safe-mode?url=http://www.tumblr.com/"
             update_response = net.http_request(update_url, method="GET", cookies_list=COOKIE_INFO, header_list={"User-Agent": USER_AGENT})
@@ -117,7 +118,8 @@ def get_one_page_post(account_id, page_count, is_https, is_safe_mode):
         return result
     elif post_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(post_pagination_response.status))
-    page_html = tool.find_sub_string(post_pagination_response.data, '<script type="application/ld+json">', "</script>").strip()
+    post_pagination_response_content = post_pagination_response.data.decode()
+    page_html = tool.find_sub_string(post_pagination_response_content, '<script type="application/ld+json">', "</script>").strip()
     if page_html:
         page_data = tool.json_decode(page_html)
         if page_data is None:
@@ -134,7 +136,7 @@ def get_one_page_post(account_id, page_count, is_https, is_safe_mode):
             # 获取日志地址
             if not crawler.check_sub_key(("url",), post_info):
                 raise crawler.CrawlerException("日志信息'url'字段不存在\n%s" % page_data)
-            post_url_split = urllib.parse.urlsplit(post_info["url"].encode("UTF-8"))
+            post_url_split = urllib.parse.urlsplit(post_info["url"])
             result_post_info["post_url"] = post_url_split[0] + "://" + post_url_split[1] + urllib.parse.quote(post_url_split[2])
             result["post_info_list"].append(result_post_info)
     else:
@@ -250,9 +252,10 @@ def get_post_page(post_url, is_safe_mode):
         return result
     elif post_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(post_response.status))
-    post_page_head = tool.find_sub_string(post_response.data, "<head", "</head>", 3)
+    post_response_content = post_response.data.decode()
+    post_page_head = tool.find_sub_string(post_response_content, "<head", "</head>", 3)
     if not post_page_head:
-        raise crawler.CrawlerException("页面截取正文失败\n%s" % post_response.data)
+        raise crawler.CrawlerException("页面截取正文失败\n%s" % post_response_content)
     # 获取og_type（页面类型的是视频还是图片或其他）
     og_type = tool.find_sub_string(post_page_head, '<meta property="og:type" content="', '" />')
     # 视频
@@ -379,7 +382,8 @@ def get_video_play_page(account_id, post_id, is_https):
             video_play_response = net.http_request(video_play_url, method="GET")
     if video_play_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(video_play_response.status))
-    video_url_find = re.findall('<source src="(http[s]?://' + account_id + '.tumblr.com/video_file/[^"]*)" type="[^"]*"', video_play_response.data)
+    video_play_response_content = video_play_response.data.decode()
+    video_url_find = re.findall('<source src="(http[s]?://' + account_id + '.tumblr.com/video_file/[^"]*)" type="[^"]*"', video_play_response_content)
     if len(video_url_find) == 1:
         if crawler.is_integer(video_url_find[0].split("/")[-1]):
             result["video_url"] = "/".join(video_url_find[0].split("/")[:-1])
@@ -388,7 +392,7 @@ def get_video_play_page(account_id, post_id, is_https):
         # 第三方视频
         pass
     else:
-        raise crawler.CrawlerException("页面截取视频地址失败\n%s" % video_play_response.data)
+        raise crawler.CrawlerException("页面截取视频地址失败\n%s" % video_play_response_content)
     return result
 
 
