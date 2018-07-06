@@ -51,7 +51,7 @@ def get_album_page(album_id):
     model_name = pq(album_response_content).find("div.ren_head div.ren_head_c a").attr("title")
     if not model_name:
         raise crawler.CrawlerException("模特信息截取模特名字失败\n%s" % album_response_content)
-    result["model_name"] = model_name.encode("UTF-8").strip()
+    result["model_name"] = model_name.strip()
     # 获取所有图片地址
     image_list_selector = pq(album_response_content).find("ul#myGallery li img")
     if image_list_selector.length == 0:

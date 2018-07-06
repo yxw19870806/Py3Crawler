@@ -35,7 +35,7 @@ def get_comic_index_page(comic_name):
         # 获取版本名字
         if not crawler.check_sub_key(("title",), chapter_info):
             raise crawler.CrawlerException("漫画版本信息'title'字段不存在\n%s" % chapter_info)
-        version_name = chapter_info["title"].encode("UTF-8")
+        version_name = chapter_info["title"]
         # 获取版本下各个章节
         if not crawler.check_sub_key(("data",), chapter_info):
             raise crawler.CrawlerException("漫画版本信息'data'字段不存在\n%s" % chapter_info)
@@ -61,7 +61,7 @@ def get_comic_index_page(comic_name):
             # 获取章节名字
             if not crawler.check_sub_key(("chapter_name",), comic_info):
                 raise crawler.CrawlerException("漫画章节信息'chapter_name'字段不存在\n%s" % comic_info)
-            result_comic_info["chapter_name"] = comic_info["chapter_name"].encode("UTF-8")
+            result_comic_info["chapter_name"] = comic_info["chapter_name"]
             result["comic_info_list"][result_comic_info["page_id"]] = result_comic_info
     return result
 
@@ -88,7 +88,7 @@ def get_chapter_page(comic_id, page_id):
     if not isinstance(chapter_info_data["page_url"], list):
         raise crawler.CrawlerException("章节信息'id'字段类型不正确在\n%s" % chapter_info_data)
     for image_url in chapter_info_data["page_url"]:
-        result["image_url_list"].append(image_url.encode("UTF-8"))
+        result["image_url_list"].append(image_url)
     return result
 
 

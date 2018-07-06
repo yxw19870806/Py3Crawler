@@ -94,7 +94,7 @@ def get_one_page_video(account_page_id, since_id):
         raise crawler.CrawlerException("返回信息'code'字段类型不正确\n%s" % video_pagination_response.json_data)
     if int(video_pagination_response.json_data["code"]) != 100000:
         raise crawler.CrawlerException("返回信息'code'字段取值不正确\n%s" % video_pagination_response.json_data)
-    page_html = video_pagination_response.json_data["data"].encode("UTF-8")
+    page_html = video_pagination_response.json_data["data"]
     # 获取视频播放地址
     result["video_play_url_list"] = re.findall('<a target="_blank" href="([^"]*)"><div ', page_html)
     if len(result["video_play_url_list"]) == 0:
