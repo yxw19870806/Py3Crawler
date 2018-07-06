@@ -21,9 +21,10 @@ def get_index_page():
     }
     if index_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(index_response.status))
-    new_album_html = tool.find_sub_string(index_response.data, '<div class="zuixin">最新发布</div>', '<div class="zuixin">名站写真</div>')
+    index_response_content = index_response.data.decode()
+    new_album_html = tool.find_sub_string(index_response_content, '<div class="zuixin">最新发布</div>', '<div class="zuixin">名站写真</div>')
     if not new_album_html:
-        raise crawler.CrawlerException("页面截取最新发布失败\n%s" % index_response.data)
+        raise crawler.CrawlerException("页面截取最新发布失败\n%s" % index_response_content)
     album_id_find = re.findall('<a href="https://www.meitulu.com/item/(\d*).html"', new_album_html)
     if len(album_id_find) == 0:
         raise crawler.CrawlerException("最新发布匹配图集id失败\n%s" % new_album_html)
@@ -50,25 +51,26 @@ def get_album_page(album_id):
             return result
         elif album_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
             raise crawler.CrawlerException("第%s页 " % page_count + crawler.request_failre(album_pagination_response.status))
+        album_pagination_response_content = album_pagination_response.data.decode()
         if page_count == 1:
             # 获取图集标题
-            album_title = tool.find_sub_string(album_pagination_response.data, "<h1>", "</h1>")
+            album_title = tool.find_sub_string(album_pagination_response_content, "<h1>", "</h1>")
             if not album_title:
-                raise crawler.CrawlerException("标题截取失败\n%s" % album_pagination_response.data)
+                raise crawler.CrawlerException("标题截取失败\n%s" % album_pagination_response_content)
             result["album_title"] = album_title.strip()
         result["album_title"] = result["album_title"].replace("・", "")  # \u30fb
         # 获取图集图片地址
-        image_list_html = tool.find_sub_string(album_pagination_response.data, '<div class="content">', "</div>")
+        image_list_html = tool.find_sub_string(album_pagination_response_content, '<div class="content">', "</div>")
         if not image_list_html:
-            raise crawler.CrawlerException("第%s页 页面截取图片列表失败\n%s" % (page_count, album_pagination_response.data))
+            raise crawler.CrawlerException("第%s页 页面截取图片列表失败\n%s" % (page_count, album_pagination_response_content))
         image_url_list = re.findall('<img src="([^"]*)"', image_list_html)
         if len(image_url_list) == 0:
             if image_list_html.strip() != "<center></center>":
-                raise crawler.CrawlerException("第%s页 图片列表匹配图片地址失败\n%s" % (page_count, album_pagination_response.data))
+                raise crawler.CrawlerException("第%s页 图片列表匹配图片地址失败\n%s" % (page_count, album_pagination_response_content))
         else:
             result["image_url_list"] += list(map(str, image_url_list))
         # 判断是不是最后一页
-        page_count_find = re.findall('">(\d*)</a>', tool.find_sub_string(album_pagination_response.data, '<div id="pages">', "</div>"))
+        page_count_find = re.findall('">(\d*)</a>', tool.find_sub_string(album_pagination_response_content, '<div id="pages">', "</div>"))
         if len(page_count_find) > 0:
             max_page_count = max(list(map(int, page_count_find)))
         else:
