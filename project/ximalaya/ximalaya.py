@@ -83,7 +83,7 @@ def get_audio_info_page(audio_id):
     elif crawler.check_sub_key(("play_path",), audio_play_response.json_data):
         result["audio_url"] = audio_play_response.json_data["play_path"]
     else:
-        raise crawler.CrawlerException("返回信息匹配音频地址失败\n%s" % audio_play_response.data)
+        raise crawler.CrawlerException("返回信息匹配音频地址失败\n%s" % audio_play_response.json_data)
     return result
 
 
