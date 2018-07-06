@@ -81,8 +81,7 @@ def get_blog_page(blog_url):
     # 获取博客正文
     article_html = tool.find_sub_string(blog_response.data.decode(), "<!-- 正文开始 -->", "<!-- 正文结束 -->")
     # 获取图片地址
-    image_url_list = re.findall('real_src ="([^"]*)"', article_html)
-    result["image_url_list"] = list(map(str, image_url_list))
+    result["image_url_list"] = re.findall('real_src ="([^"]*)"', article_html)
     # 获取全部图片地址
     return result
 

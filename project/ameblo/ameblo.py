@@ -45,23 +45,21 @@ def get_one_page_blog(account_name, page_count):
         raise crawler.CrawlerException(crawler.request_failre(blog_pagination_response.status))
     blog_pagination_response_content = blog_pagination_response.data.decode()
     # 获取日志id
-    blog_id_list = re.findall('data-unique-entry-id="([\d]*)"', blog_pagination_response_content)
+    result["blog_id_list"] = re.findall('data-unique-entry-id="([\d]*)"', blog_pagination_response_content)
     # 另一种页面格式
-    if len(blog_id_list) == 0:
+    if len(result["blog_id_list"]) == 0:
         # goto-risako
         blog_list_selector = pq(blog_pagination_response_content).find('#main li a.skin-titleLink')
         if blog_list_selector.length > 0:
-            blog_id_list = []
-            for blog_url_index in range(0, len(blog_list_selector)):
-                blog_id_list.append(tool.find_sub_string(blog_list_selector.eq(blog_url_index).attr("href"), "entry-", ".html"))
-    if len(blog_id_list) == 0:
+            for blog_url_index in range(0, blog_list_selector.length):
+                result["blog_id_list"].append(tool.find_sub_string(blog_list_selector.eq(blog_url_index).attr("href"), "entry-", ".html"))
+    if len(result["blog_id_list"]) == 0:
         if page_count == 1:
             raise crawler.CrawlerException("页面匹配日志id失败\n%s" % blog_pagination_response_content)
         else:
             log.error(account_name + " 新的分页页面")
             result["is_over"] = True
             return result
-    result["blog_id_list"] = list(map(str, blog_id_list))
     # 判断是不是最后一页
     # https://ameblo.jp/48orii48
     if pq(blog_pagination_response_content).find("div.page").length > 0:
@@ -115,8 +113,7 @@ def get_blog_page(account_name, blog_id):
     if article_html is None:
         raise crawler.CrawlerException("页面截取正文失败\n%s" % blog_response_content)
     # 获取图片地址
-    image_url_list = re.findall('<img [\S|\s]*?src="(http[^"]*)" [\S|\s]*?>', article_html)
-    result["image_url_list"] = list(map(str, image_url_list))
+    result["image_url_list"] = re.findall('<img [\S|\s]*?src="(http[^"]*)" [\S|\s]*?>', article_html)
     return result
 
 

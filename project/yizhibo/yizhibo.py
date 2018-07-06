@@ -30,10 +30,9 @@ def get_image_index_page(account_id):
         raise crawler.CrawlerException("账号不存在")
     # 获取全部图片地址
     if image_index_response_content.find("还没有照片哦") == -1:
-        image_url_list = re.findall('<img src="([^"]*)@[^"]*" alt="" class="index_img_main">', image_index_response_content)
-        if len(image_url_list) == 0:
+        result["image_url_list"] = re.findall('<img src="([^"]*)@[^"]*" alt="" class="index_img_main">', image_index_response_content)
+        if len(result["image_url_list"]) == 0:
             raise crawler.CrawlerException("页面匹配图片地址失败\n%s" % image_index_response_content)
-        result["image_url_list"] = list(map(str, image_url_list))
     return result
 
 
@@ -74,10 +73,9 @@ def get_video_index_page(account_id):
     if video_pagination_response_content == '<script>window.location.href="/404.html";</script>':
         raise crawler.CrawlerException("账号不存在")
     if video_pagination_response_content.find("还没有直播哦") == -1:
-        video_id_list = re.findall('<div class="scid" style="display:none;">([^<]*?)</div>', video_pagination_response_content)
-        if len(video_id_list) == 0:
+        result["video_id_list"] = re.findall('<div class="scid" style="display:none;">([^<]*?)</div>', video_pagination_response_content)
+        if len(result["video_id_list"]) == 0:
             raise crawler.CrawlerException("页面匹配视频id失败\n%s" % video_pagination_response_content)
-        result["video_id_list"] = list(map(str, video_id_list))
     return result
 
 

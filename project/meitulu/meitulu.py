@@ -68,7 +68,7 @@ def get_album_page(album_id):
             if image_list_html.strip() != "<center></center>":
                 raise crawler.CrawlerException("第%s页 图片列表匹配图片地址失败\n%s" % (page_count, album_pagination_response_content))
         else:
-            result["image_url_list"] += list(map(str, image_url_list))
+            result["image_url_list"] += image_url_list
         # 判断是不是最后一页
         page_count_find = re.findall('">(\d*)</a>', tool.find_sub_string(album_pagination_response_content, '<div id="pages">', "</div>"))
         if len(page_count_find) > 0:
