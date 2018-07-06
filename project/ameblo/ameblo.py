@@ -67,7 +67,7 @@ def get_one_page_blog(account_name, page_count):
     if pq(blog_pagination_response_content).find("div.page").length > 0:
         pagination_selector = pq(blog_pagination_response_content).find("div.page").eq(0).find("a")
         find_page_count_list = []
-        for pagination_index in range(0, pagination_selector):
+        for pagination_index in range(0, pagination_selector.length):
             temp_page_count = tool.find_sub_string(pagination_selector.eq(pagination_index).attr("href"), "/page-", ".html")
             if crawler.is_integer(temp_page_count):
                 find_page_count_list.append(int(temp_page_count))
