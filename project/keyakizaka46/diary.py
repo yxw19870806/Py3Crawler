@@ -23,8 +23,8 @@ def get_one_page_blog(account_id, page_count):
     query_data = {
         "cd": "member",
         "ct": "%02d" % int(account_id),
-        "page": page_count - 1,
-        "rw": IMAGE_COUNT_PER_PAGE,
+        "page": str(page_count - 1),
+        "rw": str(IMAGE_COUNT_PER_PAGE),
     }
     blog_pagination_response = net.http_request(blog_pagination_url, method="GET", fields=query_data)
     result = {
@@ -32,12 +32,13 @@ def get_one_page_blog(account_id, page_count):
     }
     if blog_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(blog_pagination_response.status))
-    if len(tool.find_sub_string(blog_pagination_response.data, '<div class="box-profile">', "</div>").strip()) < 10:
+    blog_pagination_response_content = blog_pagination_response.data.decode()
+    if len(tool.find_sub_string(blog_pagination_response_content, '<div class="box-profile">', "</div>").strip()) < 10:
         raise crawler.CrawlerException("账号不存在")
     # 日志正文部分
-    blog_article_html = tool.find_sub_string(blog_pagination_response.data, '<div class="box-main">', '<div class="box-sideMember">')
+    blog_article_html = tool.find_sub_string(blog_pagination_response_content, '<div class="box-main">', '<div class="box-sideMember">')
     if not blog_article_html:
-        raise crawler.CrawlerException("页面正文截取失败\n%s" % blog_pagination_response.data)
+        raise crawler.CrawlerException("页面正文截取失败\n%s" % blog_pagination_response_content)
     blog_list = re.findall("<article>([\s|\S]*?)</article>", blog_article_html)
     for blog_info in blog_list:
         result_blog_info = {
