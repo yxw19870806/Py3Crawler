@@ -80,12 +80,13 @@ def get_audio_play_page(audio_key):
     }
     if audio_play_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(audio_play_response.status))
+    audio_play_response_content = audio_play_response.data.decode()
     # 获取歌曲地址
-    audio_url = tool.find_sub_string(audio_play_response.data, '"playurl":"', '"')
+    audio_url = tool.find_sub_string(audio_play_response_content, '"playurl":"', '"')
     if not audio_url:
-        audio_url = tool.find_sub_string(audio_play_response.data, '"playurl_video":"', '"')
+        audio_url = tool.find_sub_string(audio_play_response_content, '"playurl_video":"', '"')
     if not audio_url:
-        raise crawler.CrawlerException("页面截取歌曲地址失败\n%s" % audio_play_response.data)
+        raise crawler.CrawlerException("页面截取歌曲地址失败\n%s" % audio_play_response_content)
     result["audio_url"] = audio_url
     return result
 
