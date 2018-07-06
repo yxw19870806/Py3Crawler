@@ -84,7 +84,7 @@ def get_one_page_blog(account_name, page_count):
     # https://ameblo.jp/1108ayanyan
     elif pq(blog_pagination_response_content).find("ul.skin-paging").length > 0:
         if pq(blog_pagination_response_content).find("ul.skin-paging a.skin-pagingNext") == 0:
-            if pq(blog_pagination_response_content).find("div.pagingArea a.skin-pagingPrev").length == 0:
+            if pq(blog_pagination_response_content).find("ul.skin-paging a.skin-pagingPrev").length == 0:
                 raise crawler.CrawlerException("页面截取分页信息ul.skin-paging失败\n%s" % blog_pagination_response_content)
             else:
                 result["is_over"] = True
