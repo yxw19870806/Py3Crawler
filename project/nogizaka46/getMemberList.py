@@ -15,14 +15,14 @@ def get_account_from_index():
     index_url = "http://blog.nogizaka46.com/"
     index_response = net.http_request(index_url, method="GET")
     account_list = {}
-    if index_response.status == net.HTTP_RETURN_CODE_SUCCEED:
-        member_list_find = re.findall('<div class="unit"><a href="./([^"]*)"><img src="[^>]*alt="([^"]*)" />', index_response.data)
-        if len(member_list_find) == 0:
-            raise crawler.CrawlerException("页面截取成员类别失败\n%s" % index_response.data)
-        for member_info in member_list_find:
-            account_list[member_info[0]] = member_info[1].replace(" ", "")
-    else:
+    if index_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(index_response.status))
+    index_response_content = index_response.data.decode()
+    member_list_find = re.findall('<div class="unit"><a href="./([^"]*)"><img src="[^>]*alt="([^"]*)" />', index_response_content)
+    if len(member_list_find) == 0:
+        raise crawler.CrawlerException("页面截取成员类别失败\n%s" % index_response_content)
+    for member_info in member_list_find:
+        account_list[member_info[0]] = member_info[1].replace(" ", "")
     return account_list
 
 
