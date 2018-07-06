@@ -24,15 +24,16 @@ def get_album_page(album_id):
         result["is_delete"] = True
     elif album_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(album_response.status))
+    album_response_content = album_response.data.decode()
     # 获取作品标题
-    album_title = tool.find_sub_string(album_response.data, '<h2 class="work-title">', "</h2>")
+    album_title = tool.find_sub_string(album_response_content, '<h2 class="work-title">', "</h2>")
     if not album_title:
-        raise crawler.CrawlerException("页面截取作品标题失败\n%s" % album_response.data)
+        raise crawler.CrawlerException("页面截取作品标题失败\n%s" % album_response_content)
     result["album_title"] = album_title
     # 获取图片地址
-    image_info_html = tool.find_sub_string(album_response.data, '<div id="imgs_json" style="display:none">', "</div>")
+    image_info_html = tool.find_sub_string(album_response_content, '<div id="imgs_json" style="display:none">', "</div>")
     if not image_info_html:
-        raise crawler.CrawlerException("页面截取图片列表失败\n%s" % album_response.data)
+        raise crawler.CrawlerException("页面截取图片列表失败\n%s" % album_response_content)
     image_info_data = tool.json_decode(image_info_html)
     if image_info_data is None:
         raise crawler.CrawlerException("图片列表加载失败\n%s" % image_info_html)
