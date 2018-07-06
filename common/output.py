@@ -13,19 +13,10 @@ thread_lock = threading.Lock()
 
 
 def print_msg(msg, is_time=True):
-    """Console print decoded message(according to coding of sys.stdout.encoding), thread safe"""
-    try:
-        # 终端输出编码
-        output_encoding = sys.stdout.encoding
-        if output_encoding == "UTF-8":
-            msg = str(msg)
-        else:
-            msg = msg.decode("UTF-8").encode(output_encoding)
-    except UnicodeEncodeError:
-        pass
-    else:
-        if is_time:
-            msg = _get_time() + " " + msg
+    """Console print message, thread safe"""
+    msg = str(msg)
+    if is_time:
+        msg = _get_time() + " " + msg
     with thread_lock:
         print(msg)
 
