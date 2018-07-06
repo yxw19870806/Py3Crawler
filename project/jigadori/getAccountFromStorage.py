@@ -32,7 +32,7 @@ def get_account_from_storage():
     account_list = {}
     for root_path, dir_name_list, file_name_list in os.walk(FILE_STORAGE_PATH):
         for file_name in file_name_list:
-            count, account_name = file_name.split(".")[0].split("_", 1)
+            count, account_name = str(file_name).split(".")[0].split("_", 1)
             account_list[account_name] = 1
     return account_list
 
