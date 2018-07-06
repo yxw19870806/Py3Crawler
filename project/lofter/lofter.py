@@ -43,8 +43,7 @@ def get_blog_page(blog_url):
     if blog_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(blog_response.status))
     # 获取全部图片地址
-    image_url_list = re.findall('bigimgsrc="([^"]*)"', blog_response.data.decode())
-    result["image_url_list"] = list(map(str, image_url_list))
+    result["image_url_list"] = re.findall('bigimgsrc="([^"]*)"', blog_response.data.decode())
     return result
 
 

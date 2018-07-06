@@ -96,12 +96,10 @@ def get_one_page_video(account_page_id, since_id):
         raise crawler.CrawlerException("返回信息'code'字段取值不正确\n%s" % video_pagination_response.json_data)
     page_html = video_pagination_response.json_data["data"].encode("UTF-8")
     # 获取视频播放地址
-    video_play_url_list = re.findall('<a target="_blank" href="([^"]*)"><div ', page_html)
-    if len(video_play_url_list) == 0:
+    result["video_play_url_list"] = re.findall('<a target="_blank" href="([^"]*)"><div ', page_html)
+    if len(result["video_play_url_list"]) == 0:
         if since_id != INIT_SINCE_ID or page_html.find("还没有发布过视频") == -1:
             raise crawler.CrawlerException("返回信息匹配视频地址失败\n%s" % video_pagination_response.json_data)
-    else:
-        result["video_play_url_list"] = list(map(str, video_play_url_list))
     # 获取下一页视频的指针
     next_page_since_id = tool.find_sub_string(page_html, "type=video&owner_uid=&viewer_uid=&since_id=", '">')
     if next_page_since_id:

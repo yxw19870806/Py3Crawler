@@ -54,8 +54,7 @@ def get_one_page_blog(account_id, page_count):
             raise crawler.CrawlerException("日志内容截取日志id失败\n%s" % blog_bottom_selector.eq(blog_body_index).html())
         result_image_info["blog_id"] = blog_id
         # 获取图片地址列表
-        image_url_list = re.findall('src="(http[^"]*)"', blog_body_html)
-        result_image_info["image_url_list"] = list(map(str, image_url_list))
+        result_image_info["image_url_list"] = re.findall('src="(http[^"]*)"', blog_body_html)
         # 获取全部大图对应的小图
         big_image_list_find = re.findall('<a href="([^"]*)"><img[\S|\s]*? src="([^"]*)"', blog_body_html)
         big_2_small_image_lust = {}

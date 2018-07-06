@@ -56,10 +56,9 @@ def get_one_page_video(suid, page_count):
     # 获取全部视频id
     if not crawler.check_sub_key(("msg",), video_pagination_response.json_data):
         raise crawler.CrawlerException("返回信息'msg'字段不存在\n%s" % video_pagination_response.json_data)
-    video_id_list = re.findall('data-scid="([^"]*)"', video_pagination_response.json_data["msg"])
-    if not result["is_over"] and len(video_id_list) == 0:
+    result["video_id_list"] = re.findall('data-scid="([^"]*)"', video_pagination_response.json_data["msg"])
+    if not result["is_over"] and len(result["video_id_list"]) == 0:
         raise crawler.CrawlerException("页面匹配视频id失败\n%s" % video_pagination_response.json_data)
-    result["video_id_list"] = list(map(str, video_id_list))
     return result
 
 

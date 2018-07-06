@@ -46,7 +46,7 @@ def get_account_index_page(account_id):
         raise crawler.CrawlerException("账号详情页返回信息'posts'字段类型不正确\n%s" % account_profile_response.json_data)
     if int(account_profile_response.json_data["postCount"]) != len(account_profile_response.json_data["posts"]):
         raise crawler.CrawlerException("账号详情页视频数量解析错误\n%s" % account_profile_response.json_data)
-    result["video_id_list"] = list(map(str, account_profile_response.json_data["posts"]))
+    result["video_id_list"] = account_profile_response.json_data["posts"]
     return result
 
 

@@ -60,10 +60,9 @@ def get_album_page(album_url):
     if album_title:
         result["album_title"] = album_title
     # 获取图片地址
-    image_url_list = re.findall('data-lazyload-src="([^"]*)"', album_response_content)
-    if len(image_url_list) == 0:
+    result["image_url_list"] = re.findall('data-lazyload-src="([^"]*)"', album_response_content)
+    if len(result["image_url_list"]) == 0:
         raise crawler.CrawlerException("页面匹配图片地址失败\n%s" % album_response_content)
-    result["image_url_list"] = list(map(str, image_url_list))
     return result
 
 

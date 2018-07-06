@@ -131,8 +131,7 @@ def get_one_page_media(account_name, position_blog_id):
             raise crawler.CrawlerException("tweet内容中截取tweet id失败\n%s" % tweet_data)
         result_media_info["blog_id"] = blog_id
         # 获取图片地址
-        image_url_list = re.findall('data-image-url="([^"]*)"', tweet_data)
-        result_media_info["image_url_list"] = list(map(str, image_url_list))
+        result_media_info["image_url_list"] = re.findall('data-image-url="([^"]*)"', tweet_data)
         # 判断是不是有视频
         result_media_info["has_video"] = tweet_data.find("PlayableMedia--video") >= 0
         result["media_info_list"].append(result_media_info)
