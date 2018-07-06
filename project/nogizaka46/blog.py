@@ -27,54 +27,54 @@ def get_one_page_blog(account_id, page_count):
         "blog_info_list": [],  # 全部图片信息
         "is_over": False,  # 是不是最后一页日志
     }
-    if blog_pagination_response.status == net.HTTP_RETURN_CODE_SUCCEED:
-        blog_body_selector = pq(blog_pagination_response.data).find("div#sheet div.entrybody")
-        blog_bottom_selector = pq(blog_pagination_response.data).find("div#sheet div.entrybottom")
-        if blog_body_selector.length == 0 or blog_bottom_selector.length == 0:
-            raise crawler.CrawlerException("页面截取正文失败\n%s" % blog_pagination_response.data)
-        if blog_body_selector.length != blog_bottom_selector.length:
-            raise crawler.CrawlerException("页面截取正文数量不匹配\n%s" % blog_pagination_response.data)
-        for blog_body_index in range(0, blog_body_selector.length):
-            result_image_info = {
-                "big_2_small_image_list": {},  # 全部含有大图的图片
-                "blog_id": None,  # 日志id
-                "image_url_list": [],  # 全部图片地址
-            }
-            blog_body_html = blog_body_selector.eq(blog_body_index).html()
-            # 获取日志id
-            blog_url = blog_bottom_selector.eq(blog_body_index).find("a").eq(0).attr("href")
-            if blog_url is None:
-                raise crawler.CrawlerException("日志内容截取日志地址失败\n%s" % blog_bottom_selector.eq(blog_body_index).html())
-            blog_id = blog_url.split("/")[-1].split(".")[0]
-            if not crawler.is_integer(blog_id):
-                raise crawler.CrawlerException("日志内容截取日志id失败\n%s" % blog_bottom_selector.eq(blog_body_index).html())
-            result_image_info["blog_id"] = blog_id
-            # 获取图片地址列表
-            image_url_list = re.findall('src="(http[^"]*)"', blog_body_html)
-            result_image_info["image_url_list"] = list(map(str, image_url_list))
-            # 获取全部大图对应的小图
-            big_image_list_find = re.findall('<a href="([^"]*)"><img[\S|\s]*? src="([^"]*)"', blog_body_html)
-            big_2_small_image_lust = {}
-            for big_image_url, small_image_url in big_image_list_find:
-                big_2_small_image_lust[small_image_url] = big_image_url
-            result_image_info["big_2_small_image_lust"] = big_2_small_image_lust
-            result["blog_info_list"].append(result_image_info)
-        # 判断是不是最后一页
-        paginate_selector = pq(blog_pagination_response.data).find("div#sheet div.paginate")
-        if paginate_selector.length > 0:
-            paginate_url = paginate_selector.eq(0).find("a:last").attr("href")
-            if paginate_url is None:
-                raise crawler.CrawlerException("页面截取分页信息失败\n%s" % paginate_selector.html())
-            max_page_count = paginate_url.split("?p=")[-1]
-            if not crawler.is_integer(max_page_count):
-                raise crawler.CrawlerException("分页信息解析失败\n%s" % blog_bottom_selector.html())
-            result["is_over"] = page_count >= int(max_page_count)
-        else:
-            result["is_over"] = True
-    elif blog_pagination_response.status == 404:
+    if blog_pagination_response.status == 404:
         raise crawler.CrawlerException("账号不存在")
-    else:
+    elif blog_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(blog_pagination_response.status))
+    blog_pagination_response_content = blog_pagination_response.data.decode()
+    blog_body_selector = pq(blog_pagination_response_content).find("div#sheet div.entrybody")
+    blog_bottom_selector = pq(blog_pagination_response_content).find("div#sheet div.entrybottom")
+    if blog_body_selector.length == 0 or blog_bottom_selector.length == 0:
+        raise crawler.CrawlerException("页面截取正文失败\n%s" % blog_pagination_response_content)
+    if blog_body_selector.length != blog_bottom_selector.length:
+        raise crawler.CrawlerException("页面截取正文数量不匹配\n%s" % blog_pagination_response_content)
+    for blog_body_index in range(0, blog_body_selector.length):
+        result_image_info = {
+            "big_2_small_image_list": {},  # 全部含有大图的图片
+            "blog_id": None,  # 日志id
+            "image_url_list": [],  # 全部图片地址
+        }
+        blog_body_html = blog_body_selector.eq(blog_body_index).html()
+        # 获取日志id
+        blog_url = blog_bottom_selector.eq(blog_body_index).find("a").eq(0).attr("href")
+        if blog_url is None:
+            raise crawler.CrawlerException("日志内容截取日志地址失败\n%s" % blog_bottom_selector.eq(blog_body_index).html())
+        blog_id = blog_url.split("/")[-1].split(".")[0]
+        if not crawler.is_integer(blog_id):
+            raise crawler.CrawlerException("日志内容截取日志id失败\n%s" % blog_bottom_selector.eq(blog_body_index).html())
+        result_image_info["blog_id"] = blog_id
+        # 获取图片地址列表
+        image_url_list = re.findall('src="(http[^"]*)"', blog_body_html)
+        result_image_info["image_url_list"] = list(map(str, image_url_list))
+        # 获取全部大图对应的小图
+        big_image_list_find = re.findall('<a href="([^"]*)"><img[\S|\s]*? src="([^"]*)"', blog_body_html)
+        big_2_small_image_lust = {}
+        for big_image_url, small_image_url in big_image_list_find:
+            big_2_small_image_lust[small_image_url] = big_image_url
+        result_image_info["big_2_small_image_lust"] = big_2_small_image_lust
+        result["blog_info_list"].append(result_image_info)
+    # 判断是不是最后一页
+    paginate_selector = pq(blog_pagination_response_content).find("div#sheet div.paginate")
+    if paginate_selector.length > 0:
+        paginate_url = paginate_selector.eq(0).find("a:last").attr("href")
+        if paginate_url is None:
+            raise crawler.CrawlerException("页面截取分页信息失败\n%s" % paginate_selector.html())
+        max_page_count = paginate_url.split("?p=")[-1]
+        if not crawler.is_integer(max_page_count):
+            raise crawler.CrawlerException("分页信息解析失败\n%s" % blog_bottom_selector.html())
+        result["is_over"] = page_count >= int(max_page_count)
+    else:
+        result["is_over"] = True
     return result
 
 
