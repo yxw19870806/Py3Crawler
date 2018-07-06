@@ -63,10 +63,10 @@ def get_album_page(page_count):
             for image_info in media_response.json_data["i"]:
                 if not crawler.check_sub_key(("url",), image_info):
                     raise crawler.CrawlerException("图片相册'url'字段不存在\n%s" % media_response.json_data)
-                result["image_url_list"].append(str(image_info["url"]))
+                result["image_url_list"].append(image_info["url"])
         # 检测是否是视频相册
         if crawler.check_sub_key(("v",), media_response.json_data):
-            result["video_url"] = str(media_response.json_data["v"])
+            result["video_url"] = media_response.json_data["v"]
     else:
         raise crawler.CrawlerException("媒体" + crawler.request_failre(media_response.status))
     return result

@@ -135,7 +135,7 @@ def get_one_page_post(account_id, page_count, is_https, is_safe_mode):
             if not crawler.check_sub_key(("url",), post_info):
                 raise crawler.CrawlerException("日志信息'url'字段不存在\n%s" % page_data)
             post_url_split = urllib.parse.urlsplit(post_info["url"].encode("UTF-8"))
-            result_post_info["post_url"] = str(post_url_split[0] + "://" + post_url_split[1] + urllib.parse.quote(post_url_split[2]))
+            result_post_info["post_url"] = post_url_split[0] + "://" + post_url_split[1] + urllib.parse.quote(post_url_split[2])
             result["post_info_list"].append(result_post_info)
     else:
         result["is_over"] = True
@@ -223,7 +223,7 @@ def get_one_page_private_blog(account_id, page_count):
                     raise crawler.CrawlerException("图片信息'original_size'字段不存在\n%s" % photo_info)
                 if not crawler.check_sub_key(("url",), photo_info["original_size"]):
                     raise crawler.CrawlerException("图片信息'url'字段不存在\n%s" % photo_info)
-                result_post_info["image_url_list"].append(str(photo_info["original_size"]["url"]))
+                result_post_info["image_url_list"].append(photo_info["original_size"]["url"])
         result["post_info_list"].append(result_post_info)
     if len(post_pagination_response.json_data["response"]["posts"]) < EACH_PAGE_COUNT:
         result["is_over"] = True
@@ -274,9 +274,9 @@ def get_post_page(post_url, is_safe_mode):
                 if not crawler.check_sub_key(("@list",), script_data["image"]):
                     raise crawler.CrawlerException("页面脚本数据'@list'字段不存在\n%s" % script_data)
                 for image_url in script_data["image"]["@list"]:
-                    result["image_url_list"].append(str(image_url))
+                    result["image_url_list"].append(image_url)
             elif isinstance(script_data["image"], str) or isinstance(script_data["image"], str):
-                result["image_url_list"].append(str(script_data["image"]))
+                result["image_url_list"].append(script_data["image"])
             else:
                 raise crawler.CrawlerException("页面脚本数据'image'字段类型错误\n%s" % script_data)
     else:

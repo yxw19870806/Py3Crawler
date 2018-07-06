@@ -33,7 +33,7 @@ def get_member_from_talk(talk_id):
     for member_info in talk_data["page:talk:service:entity:talkMembers"]["members"]:
         if not crawler.check_sub_key(("userId", "name"), member_info):
             raise crawler.CrawlerException("参与者信息'userId'或'name'字段不存在\n%s" % talk_data)
-        account_list[str(member_info["userId"])] = str(member_info["name"].encode("UTF-8")).replace(" ", "")
+        account_list[member_info["userId"]] = member_info["name"].replace(" ", "")
     return account_list
 
 

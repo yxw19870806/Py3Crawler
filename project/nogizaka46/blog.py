@@ -48,7 +48,7 @@ def get_one_page_blog(account_id, page_count):
             blog_id = blog_url.split("/")[-1].split(".")[0]
             if not crawler.is_integer(blog_id):
                 raise crawler.CrawlerException("日志内容截取日志id失败\n%s" % blog_bottom_selector.eq(blog_body_index).html())
-            result_image_info["blog_id"] = str(int(blog_id))
+            result_image_info["blog_id"] = blog_id
             # 获取图片地址列表
             image_url_list = re.findall('src="(http[^"]*)"', blog_body_html)
             result_image_info["image_url_list"] = list(map(str, image_url_list))
@@ -56,7 +56,7 @@ def get_one_page_blog(account_id, page_count):
             big_image_list_find = re.findall('<a href="([^"]*)"><img[\S|\s]*? src="([^"]*)"', blog_body_html)
             big_2_small_image_lust = {}
             for big_image_url, small_image_url in big_image_list_find:
-                big_2_small_image_lust[str(small_image_url)] = str(big_image_url)
+                big_2_small_image_lust[small_image_url] = big_image_url
             result_image_info["big_2_small_image_lust"] = big_2_small_image_lust
             result["blog_info_list"].append(result_image_info)
         # 判断是不是最后一页

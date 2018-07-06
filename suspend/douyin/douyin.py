@@ -76,7 +76,7 @@ def get_one_page_video(account_id, cursor_id):
             raise crawler.CrawlerException("视频信息'url_list'字段类型不正确\n%s" % video_info)
         if len(video_info["video"]["play_addr"]["url_list"]) == 0:
             raise crawler.CrawlerException("视频信息'url_list'字段长度不正确\n%s" % video_info)
-        result_video_info["video_url"] = str(video_info["video"]["play_addr"]["url_list"][0])
+        result_video_info["video_url"] = video_info["video"]["play_addr"]["url_list"][0]
         result["video_info_list"].append(result_video_info)
     return result
 

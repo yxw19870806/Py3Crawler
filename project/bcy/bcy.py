@@ -157,7 +157,7 @@ def get_one_page_album(account_id, page_count):
         album_url = album_selector.find("a.posr").attr("href")
         if not album_url:
             raise crawler.CrawlerException("作品信息截取作品地址失败\n%s" % album_selector.html())
-        album_id = str(album_url).split("/")[-1]
+        album_id = album_url.split("/")[-1]
         if not crawler.is_integer(album_id):
             raise crawler.CrawlerException("作品地址 %s 截取作品id失败\n%s" % (album_url, album_selector.html()))
         result["album_id_list"].append(album_id)
@@ -219,7 +219,7 @@ def get_album_page(album_id):
         image_url = image_selector.attr("src")
         if not image_url:
             raise crawler.CrawlerException("图片信息截取图片地址失败\n%s" % image_selector.html())
-        result["image_url_list"].append(str(image_url))
+        result["image_url_list"].append(image_url)
 
     if not is_skip and len(result["image_url_list"]) == 0:
         raise crawler.CrawlerException("页面匹配图片地址失败\n%s" % album_response.data)

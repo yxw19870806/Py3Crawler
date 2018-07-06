@@ -59,7 +59,7 @@ def get_album_page(sub_path, page_count):
             raise crawler.CrawlerException("图集列表截取图集地址失败\n%s" % album_selector.html())
         album_id = album_url.split("/")[-2]
         if not crawler.is_integer(album_id):
-            raise crawler.CrawlerException("图集地址截取图集id失败\n%s" % str(album_url))
+            raise crawler.CrawlerException("图集地址截取图集id失败\n%s" % album_url)
         result_album_info["page_id"] = album_id
         # 获取图集标题
         album_title = album_selector.attr("title")
@@ -100,7 +100,7 @@ def get_album_photo(sub_path, page_id):
         if image_list_selector.length == 0:
             raise crawler.CrawlerException("第%s页 页面匹配图片地址失败\n%s" % (page_count, photo_pagination_html))
         for image_index in range(0, image_list_selector.length):
-            result["image_url_list"].append("http://www.88mmw.com" + str(image_list_selector.eq(image_index).attr("src")).replace("-lp", ""))
+            result["image_url_list"].append("http://www.88mmw.com" + image_list_selector.eq(image_index).attr("src").replace("-lp", ""))
         # 判断是不是最后一页
         is_over = False
         max_page_selector = pq(photo_pagination_html).find("div.page").eq(0).find("span strong").text()

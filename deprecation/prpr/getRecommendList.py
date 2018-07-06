@@ -47,7 +47,7 @@ def get_channel_from_api():
     for channel_info in api_response.json_data["result"]:
         if not crawler.check_sub_key(("_id",), channel_info):
             raise crawler.CrawlerException("频道信息'_id'字段不存在\n%s" % channel_info)
-        channel_list.append(str(channel_info["_id"]))
+        channel_list.append(channel_info["_id"])
     return channel_list
 
 
@@ -80,7 +80,7 @@ def get_channel_account_from_api(channel_id):
                 raise crawler.CrawlerException("返回信息'_id'字段不存在\n%s" % account_info)
             if not crawler.check_sub_key(("nickname",), account_info):
                 raise crawler.CrawlerException("返回信息'result'字段不存在\n%s" % account_info)
-            account_list[str(account_info["_id"])] = path.filter_text(account_info["nickname"])
+            account_list[account_info["_id"]] = path.filter_text(account_info["nickname"])
         page_count += 1
     return account_list
 

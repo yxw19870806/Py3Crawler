@@ -61,7 +61,7 @@ def get_one_page_photo(account_id, page_count):
         # 获取图片地址
         if not crawler.check_sub_key(("pic_host", "pic_name"), image_info):
             raise crawler.CrawlerException("图片信息'pic_host'或者'pic_name'字段不存在\n%s" % image_info)
-        result_image_info["image_url"] = str(image_info["pic_host"]) + "/large/" + str(image_info["pic_name"])
+        result_image_info["image_url"] =  image_info["pic_host"] + "/large/" + image_info["pic_name"]
         result["image_info_list"].append(result_image_info)
     # 检测是不是还有下一页 总的图片数量 / 每页显示的图片数量 = 总的页数
     result["is_over"] = page_count >= (photo_pagination_response.json_data["data"]["total"] * 1.0 / IMAGE_COUNT_PER_PAGE)
@@ -132,7 +132,7 @@ def get_video_url(video_play_url):
             raise crawler.CrawlerException("返回信息'result'字段长度不正确\n%s" % video_info_response.json_data)
         for video_info in video_info_response.json_data["result"]:
             if crawler.check_sub_key(("path", "host", "scheme"), video_info):
-                video_url = str(video_info["scheme"] + video_info["host"] + video_info["path"])
+                video_url = video_info["scheme"] + video_info["host"] + video_info["path"]
                 break
         if video_url is None:
             raise crawler.CrawlerException("返回信息匹配视频地址失败\n%s" % video_info_response.json_data)
@@ -146,7 +146,7 @@ def get_video_url(video_play_url):
                 video_url = tool.find_sub_string(video_play_response.data, 'flashvars="list=', '"')
             if not video_url:
                 raise crawler.CrawlerException("页面截取视频地址失败\n%s" % video_play_response.data)
-            video_url = str(urllib.parse.unquote(video_url))
+            video_url = urllib.parse.unquote(video_url)
             if video_url.find("//") == 0:
                 video_url = "http:" + video_url
         elif video_play_response.status == 404:

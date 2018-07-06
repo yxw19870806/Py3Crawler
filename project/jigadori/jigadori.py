@@ -45,13 +45,13 @@ def get_one_page_photo(page_count):
         account_name = photo_selector.find(".user-info .user-name .screen-name").text()
         if not account_name:
             raise crawler.CrawlerException("图片信息截取twitter账号失败\n%s" % photo_selector_html)
-        result_photo_info["account_name"] = str(account_name).strip().replace("@", "")
+        result_photo_info["account_name"] = account_name.strip().replace("@", "")
         # 获取tweet发布时间
         tweet_time = photo_selector.find(".tweet-text .tweet-created-at").text().strip()
         if not tweet_time:
             raise crawler.CrawlerException("图片信息截取tweet发布时间失败\n%s" % photo_selector_html)
         try:
-            result_photo_info["tweet_time"] = int(time.mktime(time.strptime(str(tweet_time).strip(), "%Y-%m-%d %H:%M:%S")))
+            result_photo_info["tweet_time"] = int(time.mktime(time.strptime(tweet_time.strip(), "%Y-%m-%d %H:%M:%S")))
         except ValueError:
             raise crawler.CrawlerException("tweet发布时间文本格式不正确\n%s" % tweet_time)
         # 获取图片地址
@@ -60,7 +60,7 @@ def get_one_page_photo(page_count):
             image_url = image_list_selector.eq(image_index).attr("src")
             if not image_url:
                 raise crawler.CrawlerException("图片列表截取图片地址失败\n%s" % image_list_selector.eq(image_index).html())
-            result_photo_info["image_url_list"].append(str(image_url).strip())
+            result_photo_info["image_url_list"].append(image_url.strip())
         result["image_info_list"].append(result_photo_info)
     return result
 

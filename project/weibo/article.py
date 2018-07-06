@@ -59,7 +59,7 @@ def get_one_page_article(page_id, page_count):
         article_path = tool.find_sub_string(preview_article_data, '<a target=\\"_blank\\" href=\\"', '\\">')
         if not article_time:
             raise crawler.CrawlerException("文章预览截取文章地址失败\n%s" % preview_article_data)
-        result_article_info["article_url"] = "http://weibo.com" + str(article_path).replace("\\/", "/").replace("&amp;", "&")
+        result_article_info["article_url"] = "http://weibo.com" + article_path.replace("\\/", "/").replace("&amp;", "&")
         result["article_info_list"].append(result_article_info)
     # 检测是否还有下一页
     page_count_find = re.findall('<a[\s|\S]*?>([\d]+)<\\\\/a>', article_pagination_response.data)
@@ -121,7 +121,7 @@ def get_article_page(article_url):
             continue
         if image_url.find("//") == 0:
             image_url = "http:" + image_url
-        result["image_url_list"].append(str(image_url))
+        result["image_url_list"].append(image_url)
     return result
 
 

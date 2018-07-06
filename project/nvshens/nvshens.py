@@ -63,7 +63,7 @@ def get_album_page(album_id):
                 result["is_delete"] = True
                 return result
             # 获取图集标题
-            result["album_title"] = str(tool.find_sub_string(album_pagination_response.data, '<h1 id="htilte">', "</h1>")).strip()
+            result["album_title"] = tool.find_sub_string(album_pagination_response.data, '<h1 id="htilte">', "</h1>").strip()
             if not result["album_title"]:
                 raise crawler.CrawlerException("页面截取标题失败\n%s" % album_pagination_response.data)
         # 获取图集图片地址，存在两种页面样式
@@ -73,7 +73,7 @@ def get_album_page(album_id):
         if image_list_selector.length == 0:
             raise crawler.CrawlerException("第%s页 页面匹配图片地址失败\n%s" % (page_count, album_pagination_response.data))
         for image_index in range(0, image_list_selector.length):
-            result["image_url_list"].append(str(image_list_selector.eq(image_index).attr("src")))
+            result["image_url_list"].append(image_list_selector.eq(image_index).attr("src"))
         # 获取总页数
         pagination_html = pq(album_pagination_response.data).find("#pages").html()
         if pagination_html:

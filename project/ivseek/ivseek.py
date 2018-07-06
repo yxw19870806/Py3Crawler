@@ -68,7 +68,7 @@ def get_archive_page(archive_id):
             if not account_id:
                 account_id = tool.find_sub_string(video_play_response.data, '<meta itemprop="channelId" content="', '">')
             if account_id:
-                result_video_info["account_id"] = str(account_id)
+                result_video_info["account_id"] = account_id
             else:
                 log.error("视频 %s 发布账号截取失败\n%s" % (result_video_info["video_url"], video_play_response.data))
         elif video_url.find(".nicovideo.jp/") >= 0:
@@ -87,7 +87,7 @@ def get_archive_page(archive_id):
                 raise crawler.CrawlerException("视频播放页%s，%s" % (result["video_url"], crawler.request_failre(video_play_response.status)))
             account_id = tool.find_sub_string(video_play_response.data, '<a href="/user/', '"')
             if crawler.is_integer(account_id):
-                result_video_info["account_id"] = str(account_id)
+                result_video_info["account_id"] = account_id
         # http://www.dailymotion.com/embed/video/x5oi0x
         elif video_url.find("//www.dailymotion.com/") >= 0:
             video_id = video_url.split("/")[-1][0]
@@ -98,7 +98,7 @@ def get_archive_page(archive_id):
                 raise crawler.CrawlerException("视频播放页%s，%s" % (result_video_info["video_url"], crawler.request_failre(video_play_response.status)))
             account_id = tool.find_sub_string(video_play_response.data, '"screenname":"', '"')
             if account_id:
-                result_video_info["account_id"] = str(account_id)
+                result_video_info["account_id"] = account_id
         # 无效的视频地址
         elif video_url.find("//rcm-fe.amazon-adsystem.com") >= 0:
             continue
@@ -110,7 +110,7 @@ def get_archive_page(archive_id):
     title = tool.find_sub_string(archive_response.data, '<meta property="og:title" content="', '"')
     if not title:
         raise crawler.CrawlerException("标题截取失败")
-    result["title"] = str(title).strip()
+    result["title"] = title.strip()
     return result
 
 

@@ -48,7 +48,7 @@ def get_one_page_blog(account_id, page_count):
         blog_id = tool.find_sub_string(blog_info, "/diary/detail/", "?")
         if not crawler.is_integer(blog_id):
             raise crawler.CrawlerException("日志页面截取日志id失败\n%s" % blog_info)
-        result_blog_info["blog_id"] = str(blog_id)
+        result_blog_info["blog_id"] = blog_id
         # 获取全部图片地址
         image_url_list = re.findall('<img[\S|\s]*?src="([^"]+)"', blog_info)
         result_blog_info["image_url_list"] = list(map(str, image_url_list))

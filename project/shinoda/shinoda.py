@@ -38,7 +38,7 @@ def get_one_page_blog(page_count):
         image_name_list = re.findall('data-original="./([^"]*)"', blog_html)
         if len(image_name_list) == 0:
             continue
-        blog_id = str(image_name_list[0]).split("-")[0]
+        blog_id = image_name_list[0].split("-")[0]
         if not crawler.is_integer(blog_id):
             raise crawler.CrawlerException("图片名字截取日志id失败\n%s" % blog_html)
         result_blog_info["blog_id"] = blog_id

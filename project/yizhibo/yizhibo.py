@@ -107,7 +107,7 @@ def get_video_info_page(video_id):
     # 获取视频地址所在文件地址
     if not crawler.check_sub_key(("linkurl",), video_info_response.json_data["data"]):
         raise crawler.CrawlerException("返回信息'linkurl'字段不存在\n%s" % video_info_response.json_data)
-    video_file_url = str(video_info_response.json_data["data"]["linkurl"])
+    video_file_url = video_info_response.json_data["data"]["linkurl"]
     video_file_response = net.http_request(video_file_url, method="GET")
     if video_file_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(video_info_response.status))
@@ -117,7 +117,7 @@ def get_video_info_page(video_id):
     # http://alcdn.hls.xiaoka.tv/20161122/6b6/c5f/xX9-TLVx0xTiSZ69/
     prefix_url = video_file_url[:video_file_url.rfind("/") + 1]
     for ts_id in ts_id_list:
-        result["video_url_list"].append(prefix_url + str(ts_id))
+        result["video_url_list"].append(prefix_url + ts_id)
     return result
 
 

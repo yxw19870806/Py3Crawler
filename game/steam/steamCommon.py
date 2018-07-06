@@ -307,19 +307,19 @@ def get_account_inventory(account_id):
                 raise crawler.CrawlerException("物品信息'market_fee_app'字段不存在\n%s" % item_info)
             if not crawler.is_integer(item_info["market_fee_app"]):
                 raise crawler.CrawlerException("物品信息'market_fee_app'字段类型不正确\n%s" % item_info)
-            item_list[class_id]["game_id"] = str(item_info["market_fee_app"])
+            item_list[class_id]["game_id"] = item_info["market_fee_app"]
             # 物品类型
             for tag in item_info["tags"]:
                 if not crawler.check_sub_key(("category", "localized_tag_name"), tag):
                     raise crawler.CrawlerException("物品标签信息'category'或'localized_tag_name'字段不存在\n%s" % tag)
                 # Gems / Trading Card / Trading Card / Profile Background / Emoticon
                 if tag["category"] == "item_class":
-                    item_list[class_id]["type"] = str(tag["localized_tag_name"])
+                    item_list[class_id]["type"] = tag["localized_tag_name"]
                     break
         # 下一页起始asset id
         if crawler.check_sub_key(("more_items", "last_assetid"), api_response.json_data):
             if api_response.json_data["more_items"] == 1 and api_response.json_data["last_assetid"] != last_assert_id:
-                last_assert_id = str(api_response.json_data["last_assetid"])
+                last_assert_id = api_response.json_data["last_assetid"]
                 page_count += 1
             else:
                 break
@@ -401,5 +401,5 @@ def get_account_owned_app_list(user_id, is_played=False):
         # 只需要玩过的游戏
         if is_played and "hours_forever" not in game_data:
             continue
-        app_id_list.append(str(game_data["appid"]))
+        app_id_list.append(game_data["appid"])
     return app_id_list

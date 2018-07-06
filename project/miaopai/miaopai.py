@@ -79,7 +79,7 @@ def get_video_info_page(video_id):
     video_url_list = []
     for result in video_info_response.json_data["result"]:
         if crawler.check_sub_key(("path", "host", "scheme"), result):
-            video_url_list.append(str(result["scheme"]) + str(result["host"]) + str(result["path"]))
+            video_url_list.append(result["scheme"] + result["host"] + result["path"])
     if len(video_url_list) == 0:
         raise crawler.CrawlerException("返回信息匹配视频地址失败\n%s" % video_info_response.json_data)
     result["video_url_list"] = video_url_list

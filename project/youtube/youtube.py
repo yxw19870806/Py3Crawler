@@ -103,10 +103,10 @@ def get_one_page_video(account_id, token):
             raise crawler.CrawlerException("视频信息'gridVideoRenderer'字段不存在\n%s" % item)
         if not crawler.check_sub_key(("videoId",), item["gridVideoRenderer"]):
             raise crawler.CrawlerException("视频信息'gridVideoRenderer'字段不存在\n%s" % item)
-        result["video_id_list"].append(str(item["gridVideoRenderer"]["videoId"]))
+        result["video_id_list"].append(item["gridVideoRenderer"]["videoId"])
     # 获取下一页token
     try:
-        result["next_page_token"] = str(video_list_data["continuations"][0]["nextContinuationData"]["continuation"])
+        result["next_page_token"] = video_list_data["continuations"][0]["nextContinuationData"]["continuation"]
     except KeyError:
         pass
     return result
@@ -165,7 +165,7 @@ def get_video_page(video_id):
         video_resolution = video_url = signature = None
         is_skip = False
         for sub_param in sub_url_encoded_fmt_stream_map.split("&"):
-            key, value = str(sub_param).split("=", 1)
+            key, value = sub_param.split("=", 1)
             if key == "type":  # 视频类型
                 video_type = urllib.parse.unquote(value)
                 if video_type.find("video/mp4") == 0:
@@ -216,7 +216,7 @@ def get_video_page(video_id):
             continue
         # 加上signature参数
         if signature is not None:
-            video_url += "&signature=" + str(signature)
+            video_url += "&signature=" + signature
         resolution_to_url[video_resolution] = video_url
     if len(resolution_to_url) == 0:
         raise crawler.CrawlerException("视频地址解析错误\n%s" % video_info_string)
