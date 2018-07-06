@@ -81,6 +81,7 @@ class KeyboardEvent(threading.Thread):
             else:
                 if key in self.event_key_list:
                     self.event_key_list[key]()
+        return 1
 
     def on_keyboard_up(self, event):
         """Function of key up event listener"""
@@ -88,6 +89,7 @@ class KeyboardEvent(threading.Thread):
         # 组合键归位
         if key in self.key_down_list:
             self.key_down_list[key] = False
+        return 1
 
     def run(self):
         """Start listener"""

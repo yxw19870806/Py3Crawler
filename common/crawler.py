@@ -14,7 +14,7 @@ import sys
 import _thread
 import threading
 import time
-from common import browser, log, net, output, path, portListenerEvent, tool
+from common import browser, keyboardEvent, log, net, output, path, portListenerEvent, tool
 
 # 程序是否支持下载图片功能（会判断配置中是否需要下载图片，如全部是则创建图片下载目录）
 SYS_DOWNLOAD_IMAGE = "download_image"
@@ -244,25 +244,25 @@ class Crawler(object):
             process_control_thread.start()
 
         # 键盘监控线程（仅支持windows）
-        # if platform.system() == "Windows" and analysis_config(config, "IS_KEYBOARD_EVENT", True, CONFIG_ANALYSIS_MODE_BOOLEAN):
-        #     keyboard_event_bind = {}
-        #     pause_process_key = analysis_config(config, "PAUSE_PROCESS_KEYBOARD_KEY", "F9")
-        #     # 暂停进程
-        #     if pause_process_key:
-        #         keyboard_event_bind[pause_process_key] = net.pause_request
-        #     # 继续进程
-        #     continue_process_key = analysis_config(config, "CONTINUE_PROCESS_KEYBOARD_KEY", "F10")
-        #     if continue_process_key:
-        #         keyboard_event_bind[continue_process_key] = net.resume_request
-        #     # 结束进程（取消当前的线程，完成任务）
-        #     stop_process_key = analysis_config(config, "STOP_PROCESS_KEYBOARD_KEY", "CTRL + F12")
-        #     if stop_process_key:
-        #         keyboard_event_bind[stop_process_key] = self.stop_process
-        #
-        #     if keyboard_event_bind:
-        #         keyboard_control_thread = keyboardEvent.KeyboardEvent(keyboard_event_bind)
-        #         keyboard_control_thread.setDaemon(True)
-        #         keyboard_control_thread.start()
+        if platform.system() == "Windows" and analysis_config(config, "IS_KEYBOARD_EVENT", True, CONFIG_ANALYSIS_MODE_BOOLEAN):
+            keyboard_event_bind = {}
+            pause_process_key = analysis_config(config, "PAUSE_PROCESS_KEYBOARD_KEY", "F9")
+            # 暂停进程
+            if pause_process_key:
+                keyboard_event_bind[pause_process_key] = net.pause_request
+            # 继续进程
+            continue_process_key = analysis_config(config, "CONTINUE_PROCESS_KEYBOARD_KEY", "F10")
+            if continue_process_key:
+                keyboard_event_bind[continue_process_key] = net.resume_request
+            # 结束进程（取消当前的线程，完成任务）
+            stop_process_key = analysis_config(config, "STOP_PROCESS_KEYBOARD_KEY", "CTRL + F12")
+            if stop_process_key:
+                keyboard_event_bind[stop_process_key] = self.stop_process
+
+            if keyboard_event_bind:
+                keyboard_control_thread = keyboardEvent.KeyboardEvent(keyboard_event_bind)
+                keyboard_control_thread.setDaemon(True)
+                keyboard_control_thread.start()
 
         self.total_image_count = 0
         self.total_video_count = 0
