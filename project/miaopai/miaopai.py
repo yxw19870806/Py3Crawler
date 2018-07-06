@@ -24,9 +24,10 @@ def get_account_index_page(account_id):
     }
     if account_index_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(account_index_response.status))
-    user_id = tool.find_sub_string(account_index_response.data, '<button class="guanzhu gz" suid="', '" heade="1" token="')
+    account_index_response_content = account_index_response.data.decode()
+    user_id = tool.find_sub_string(account_index_response_content, '<button class="guanzhu gz" suid="', '" heade="1" token="')
     if not user_id:
-        raise crawler.CrawlerException("页面截取user id失败\n%s" % account_index_response.data)
+        raise crawler.CrawlerException("页面截取user id失败\n%s" % account_index_response_content)
     result["user_id"] = user_id
     return result
 
