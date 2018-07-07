@@ -193,7 +193,7 @@ class Download(crawler.DownloadThread):
             # 从最早的相册开始下载
             while len(album_url_list) > 0:
                 album_url = album_url_list.pop()
-                log.step(self.account_name + " 开始解析第相册%s" % album_url)
+                log.step(self.account_name + " 开始解析第相册%s" % get_album_id(album_url))
                 self.crawl_album(album_url)
                 self.main_thread_check()  # 检测主线程运行状态
         except SystemExit as se:
