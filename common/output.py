@@ -5,7 +5,6 @@
 email: hikaru870806@hotmail.com
 如有问题或建议请联系
 """
-import sys
 import threading
 import time
 

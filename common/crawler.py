@@ -11,7 +11,6 @@ import os
 import platform
 import re
 import sys
-import _thread
 import threading
 import time
 from common import browser, keyboardEvent, log, net, output, path, portListenerEvent, tool

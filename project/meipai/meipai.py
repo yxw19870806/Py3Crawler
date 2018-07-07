@@ -11,8 +11,8 @@ import os
 import threading
 import time
 import traceback
-from common import *
 from functools import reduce
+from common import *
 
 VIDEO_COUNT_PER_PAGE = 20  # 每次请求获取的视频数量
 
