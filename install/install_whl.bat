@@ -11,6 +11,7 @@ echo install Urllib3
 pip.exe install urllib3
 
 echo install PyQuery
+FOR /F %%i IN ('python.exe get_whl_path.py lxml') DO pip.exe install %%i
 pip.exe install pyquery
 
 echo install PyCrypto
@@ -21,6 +22,6 @@ pip.exe install pywin32
 FOR /F "delims=" %%i IN ('python.exe get_python_scripts_path.py') DO python.exe "%%i\pywin32_postinstall.py" -install
 
 echo install PyHook
-pip.exe install pyHook
+FOR /F %%i IN ('python.exe get_whl_path.py pyHook') DO pip.exe install %%i
 
 pause
