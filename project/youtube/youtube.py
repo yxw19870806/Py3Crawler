@@ -11,7 +11,7 @@ import re
 import threading
 import time
 import traceback
-import urllib.request, urllib.parse, urllib.error
+import urllib.parse
 from common import *
 
 IS_LOGIN = True
