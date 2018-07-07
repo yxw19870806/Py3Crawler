@@ -11,7 +11,6 @@ import re
 import threading
 import time
 import traceback
-import urllib.request, urllib.parse, urllib.error
 import urllib.parse
 from pyquery import PyQuery as pq
 from common import *

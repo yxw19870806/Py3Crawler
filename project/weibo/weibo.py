@@ -11,7 +11,7 @@ import re
 import threading
 import time
 import traceback
-import urllib.request, urllib.error, urllib.parse
+import urllib.parse
 from common import *
 from project.meipai import meipai
 from project.weibo import weiboCommon

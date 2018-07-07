@@ -5,12 +5,12 @@
 email: hikaru870806@hotmail.com
 如有问题或建议请联系
 """
-import urllib.request, urllib.parse, urllib.error
+import urllib.parse
 from common import output, crawler
 from game.steam import steamCommon
 
 MIN_CARD_PRICE = 0  # 最低卡牌价格
-MAX_CARD_PRICE = 99  # 最高卡牌价格
+MAX_CARD_PRICE = 0.5  # 最高卡牌价格
 
 
 # 获取当前account正在收集的徽章进度
