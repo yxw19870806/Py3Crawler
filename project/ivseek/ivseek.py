@@ -165,7 +165,7 @@ class IvSeek(crawler.Crawler):
 
                 for video_info in archive_response["video_info_list"]:
                     log.step("视频%s 《%s》: %s" % (archive_id, archive_response["title"], video_info["video_url"]))
-                    tool.write_file("%s\t%s\t%s\t%s" % (archive_id, archive_response["title"], video_info["video_url"], video_info["account_id"]), self.save_data_path)
+                    tool.write_file("%s\t%s\t%s\t%s\t" % (archive_id, archive_response["title"], video_info["video_url"], video_info["account_id"]), self.save_data_path)
 
                 # 提前结束
                 if not self.is_running():
