@@ -19,7 +19,7 @@ def read_save_data(save_data_path):
         if len(single_save_data) == 0:
             continue
         single_save_list = single_save_data.split("\t")
-        while len(single_save_list) <= 5:
+        while len(single_save_list) < 5:
             single_save_list.append("")
         result_list.append(single_save_list)
     return result_list
@@ -35,9 +35,9 @@ def main():
     for single_save_list in save_data:
         if single_save_list[3] in done_list:
             if single_save_list[4] != DONE_SING:
+                single_save_list[4] = DONE_SING
                 output.print_msg("new done account " + str(single_save_list))
-                single_save_list.append(DONE_SING)
-
+    tool.write_file(tool.list_to_string(save_data), save_data_path, tool.WRITE_FILE_TYPE_REPLACE)
 
 if __name__ == "__main__":
     main()
