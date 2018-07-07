@@ -21,12 +21,13 @@ def get_index_page():
     }
     if index_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(index_response.status))
-    first_album_url = pq(index_response.data).find("div.magazine_list_wrap .magazine_item").eq(0).find(".magazine_item_wrap").attr("href")
+    index_response_content = index_response.data.decode()
+    first_album_url = pq(index_response_content).find("div.magazine_list_wrap .magazine_item").eq(0).find(".magazine_item_wrap").attr("href")
     if not first_album_url:
-        raise crawler.CrawlerException("页面截取最新图集地址失败\n%s" % index_response.data)
+        raise crawler.CrawlerException("页面截取最新图集地址失败\n%s" % index_response_content)
     album_id = tool.find_sub_string(first_album_url, "/Product-", ".html")
     if not crawler.is_integer(album_id):
-        raise crawler.CrawlerException("图集地址截取图集id失败\n%s" % index_response.data)
+        raise crawler.CrawlerException("图集地址截取图集id失败\n%s" % index_response_content)
     result["max_album_id"] = int(album_id)
     return result
 
@@ -42,18 +43,19 @@ def get_album_page(album_id):
     }
     if album_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(album_response.status))
-    if album_response.data.find("该页面不存在,或者已经被删除!") >= 0:
+    album_response_content = album_response.data.decode()
+    if album_response_content.find("该页面不存在,或者已经被删除!") >= 0:
         result["is_delete"] = True
         return result
     # 获取模特名字
-    model_name = pq(album_response.data).find("div.ren_head div.ren_head_c a").attr("title")
+    model_name = pq(album_response_content).find("div.ren_head div.ren_head_c a").attr("title")
     if not model_name:
-        raise crawler.CrawlerException("模特信息截取模特名字失败\n%s" % album_response.data)
-    result["model_name"] = model_name.encode("UTF-8").strip()
+        raise crawler.CrawlerException("模特信息截取模特名字失败\n%s" % album_response_content)
+    result["model_name"] = model_name.strip()
     # 获取所有图片地址
-    image_list_selector = pq(album_response.data).find("ul#myGallery li img")
+    image_list_selector = pq(album_response_content).find("ul#myGallery li img")
     if image_list_selector.length == 0:
-        raise crawler.CrawlerException("页面匹配图片地址失败\n%s" % album_response.data)
+        raise crawler.CrawlerException("页面匹配图片地址失败\n%s" % album_response_content)
     for image_index in range(0, image_list_selector.length):
         image_url = image_list_selector.eq(image_index).attr("src")
         if image_url.find("_magazine_web_m.") == -1:
@@ -89,7 +91,7 @@ class UGirls(crawler.Crawler):
             # 获取图集首页
             try:
                 index_response = get_index_page()
-            except crawler.CrawlerException, e:
+            except crawler.CrawlerException as e:
                 log.error("图集首页解析失败，原因：%s" % e.message)
                 raise
 
@@ -103,7 +105,7 @@ class UGirls(crawler.Crawler):
                 # 获取相册
                 try:
                     album_response = get_album_page(album_id)
-                except crawler.CrawlerException, e:
+                except crawler.CrawlerException as e:
                     log.error("第%s页图集解析失败，原因：%s" % (album_id, e.message))
                     raise
 
@@ -134,7 +136,7 @@ class UGirls(crawler.Crawler):
                 temp_path = ""  # 临时目录设置清除
                 self.total_image_count += image_index - 1  # 计数累加
                 album_id += 1  # 设置存档记录
-        except SystemExit, se:
+        except SystemExit as se:
             if se.code == 0:
                 log.step("提前退出")
             else:
@@ -142,9 +144,9 @@ class UGirls(crawler.Crawler):
             # 如果临时目录变量不为空，表示某个图集正在下载中，需要把下载了部分的内容给清理掉
             if temp_path:
                 path.delete_dir_or_file(temp_path)
-        except Exception, e:
+        except Exception as e:
             log.error("未知异常")
-            log.error(str(e) + "\n" + str(traceback.format_exc()))
+            log.error(str(e) + "\n" + traceback.format_exc())
 
         # 重新保存存档文件
         tool.write_file(str(album_id), self.save_data_path, tool.WRITE_FILE_TYPE_REPLACE)
