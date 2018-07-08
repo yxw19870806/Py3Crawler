@@ -266,7 +266,7 @@ def get_account_inventory(account_id):
             "l": "english",
             "count": each_page_inventory_count,
         }
-        if last_assert_id > 0:
+        if last_assert_id != "0":
             query_data["start_assetid"] = last_assert_id
         api_response = net.http_request(api_url, method="GET", fields=query_data, json_decode=True)
         if api_response.status == 403:
