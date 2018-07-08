@@ -14,7 +14,7 @@ DUPLICATE_CSV_FILE_PATH = os.path.abspath("D:\\duplicate.csv")
 def main(file_path):
     index = 1
     check_list = []
-    with open(file_path) as file_handle:
+    with open(file_path, encoding="UTF-8") as file_handle:
         csv_reader = csv.DictReader(file_handle)
         for row in csv_reader:
             # 处理一个组别的
