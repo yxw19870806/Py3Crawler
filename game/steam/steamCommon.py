@@ -368,7 +368,7 @@ def get_account_badges(account_id):
             badge_level_find = re.findall("Level (\d*),", badge_info_text)
             if len(badge_level_find) != 1:
                 raise crawler.CrawlerException("徽章详情截取徽章等级失败\n%s" % badge_info_text)
-            badge_level_list[game_id] = int(badge_level_find[0])
+            badge_level_list[int(game_id)] = int(badge_level_find[0])
         # 判断是不是还有下一页
         next_page_selector = pq(badges_pagination_response.data).find("div.profile_paging div.pageLinks a.pagelink:last")
         if next_page_selector.length == 0:
