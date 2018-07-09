@@ -6,7 +6,7 @@ http://www.nicovideo.jp/
 email: hikaru870806@hotmail.com
 如有问题或建议请联系
 """
-import html.parser
+import html
 import os
 import threading
 import time
@@ -93,7 +93,7 @@ def get_video_info(video_id):
             result["is_delete"] = True
             return result
         raise crawler.CrawlerException("视频信息截取失败\n%s" % video_play_response_content)
-    video_info_string = html.parser.HTMLParser().unescape(video_info_string)
+    video_info_string = html.unescape(video_info_string)
     video_info = tool.json_decode(video_info_string)
     if video_info is None:
         raise crawler.CrawlerException("视频信息加载失败\n%s" % video_play_response_content)
