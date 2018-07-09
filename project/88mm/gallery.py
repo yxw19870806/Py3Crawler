@@ -50,17 +50,20 @@ def get_album_page(sub_path, page_count):
     for album_index in range(0, album_list_selector.length):
         result_album_info = {
             "album_title": "",  # 图集id
-            "page_id": None,  # 图集页面id
+            "album_url": "",  # 图集id
+            "album_id": None,  # 图集页面id
         }
         album_selector = album_list_selector.eq(album_index)
-        # 获取图集id
+        # 获取图集地址
         album_url = album_selector.attr("href")
         if not album_url:
             raise crawler.CrawlerException("图集列表截取图集地址失败\n%s" % album_selector.html())
+        result_album_info["album_url"] = "http://www.88mmw.com" + album_url
+        # 获取图集id
         album_id = album_url.split("/")[-2]
         if not crawler.is_integer(album_id):
             raise crawler.CrawlerException("图集地址截取图集id失败\n%s" % album_url)
-        result_album_info["page_id"] = album_id
+        result_album_info["album_id"] = album_id
         # 获取图集标题
         album_title = album_selector.attr("title")
         if len(re.findall("_共\d*张", album_title)) == 1:
@@ -80,16 +83,16 @@ def get_album_page(sub_path, page_count):
 
 
 # 获取图集全部图片
-def get_album_photo(sub_path, page_id):
+def get_album_photo(album_url):
     page_count = 1
     result = {
         "image_url_list": [],  # 全部图片地址
     }
     while True:
         if page_count == 1:
-            photo_pagination_url = "http://www.88mmw.com/%s/%s" % (sub_path, page_id)
+            photo_pagination_url = album_url
         else:
-            photo_pagination_url = "http://www.88mmw.com/%s/%s/index_%s.html" % (sub_path, page_id, page_count)
+            photo_pagination_url = "%s/index_%s.html" % (album_url, page_count)
         photo_pagination_response = net.http_request(photo_pagination_url, method="GET")
         if photo_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
             raise crawler.CrawlerException("第%s页 " % page_count + crawler.request_failre(photo_pagination_response.status))
@@ -133,7 +136,7 @@ class Gallery(crawler.Crawler):
         crawler.Crawler.__init__(self, sys_config)
 
         # 解析存档文件
-        # sub_path  last_page_id
+        # sub_path  last_album_id
         self.account_list = crawler.read_save_data(self.save_data_path, 0, ["", "0"])
         for sub_path in SUB_PATH_LIST:
             if sub_path not in self.account_list:
@@ -199,7 +202,7 @@ class Download(crawler.DownloadThread):
             # 寻找这一页符合条件的图集
             for album_info in album_response["album_info_list"]:
                 # 检查是否达到存档记录
-                if int(album_info["page_id"]) > int(self.account_info[1]):
+                if int(album_info["album_id"]) > int(self.account_info[1]):
                     album_info_list.append(album_info)
                 else:
                     is_over = True
@@ -217,41 +220,41 @@ class Download(crawler.DownloadThread):
     def crawl_album(self, album_info):
         # 获取图集全部图片
         try:
-            photo_pagination_response = get_album_photo(self.sub_path, album_info["page_id"])
+            photo_pagination_response = get_album_photo(album_info["album_url"])
         except crawler.CrawlerException as e:
-            log.error(self.sub_path + " %s号图集解析失败，原因：%s" % (album_info["page_id"], e.message))
+            log.error(self.sub_path + " %s号图集解析失败，原因：%s" % (album_info["album_id"], e.message))
             raise
 
-        log.trace(self.sub_path + " %s号图集《%s》解析的全部图片：%s" % (album_info["page_id"], album_info["album_title"], photo_pagination_response["image_url_list"]))
+        log.trace(self.sub_path + " %s号图集《%s》解析的全部图片：%s" % (album_info["album_id"], album_info["album_title"], photo_pagination_response["image_url_list"]))
 
         image_index = 1
         # 过滤标题中不支持的字符
         album_title = path.filter_text(album_info["album_title"])
         if album_title:
-            album_path = os.path.join(self.main_thread.image_download_path, "%04d %s" % (int(album_info["page_id"]), album_title))
+            album_path = os.path.join(self.main_thread.image_download_path, "%04d %s" % (int(album_info["album_id"]), album_title))
         else:
-            album_path = os.path.join(self.main_thread.image_download_path, "%04d" % int(album_info["page_id"]))
+            album_path = os.path.join(self.main_thread.image_download_path, "%04d" % int(album_info["album_id"]))
         # 设置临时目录
         self.temp_path_list.append(album_path)
         for image_url in photo_pagination_response["image_url_list"]:
             self.main_thread_check()  # 检测主线程运行状态
             # 图片地址转义
             image_url = get_image_url(image_url)
-            log.step(self.sub_path + " %s号图集《%s》 开始下载第%s张图片 %s" % (album_info["page_id"], album_info["album_title"], image_index, image_url))
+            log.step(self.sub_path + " %s号图集《%s》 开始下载第%s张图片 %s" % (album_info["album_id"], album_info["album_title"], image_index, image_url))
 
             file_type = image_url.split(".")[-1]
             file_path = os.path.join(album_path, "%03d.%s" % (image_index, file_type))
             save_file_return = net.save_net_file(image_url, file_path)
             if save_file_return["status"] == 1:
-                log.step(self.sub_path + " %s号图集《%s》 第%s张图片下载成功" % (album_info["page_id"], album_info["album_title"], image_index))
+                log.step(self.sub_path + " %s号图集《%s》 第%s张图片下载成功" % (album_info["album_id"], album_info["album_title"], image_index))
                 image_index += 1
             else:
-                log.error(self.sub_path + " %s号图集《%s》 第%s张图片 %s 下载失败，原因：%s" % (album_info["page_id"], album_info["album_title"], image_index, image_url, crawler.download_failre(save_file_return["code"])))
+                log.error(self.sub_path + " %s号图集《%s》 第%s张图片 %s 下载失败，原因：%s" % (album_info["album_id"], album_info["album_title"], image_index, image_url, crawler.download_failre(save_file_return["code"])))
 
         # 图集内图片全部下载完毕
         self.temp_path_list = []  # 临时目录设置清除
         self.total_image_count += image_index - 1  # 计数累加
-        self.account_info[1] = album_info["page_id"]  # 设置存档记录
+        self.account_info[1] = album_info["album_id"]  # 设置存档记录
 
     def run(self):
         try:
@@ -262,7 +265,7 @@ class Download(crawler.DownloadThread):
             # 从最早的图集开始下载
             while len(album_info_list) > 0:
                 album_info = album_info_list.pop()
-                log.step(self.sub_path + " 开始解析%s号图集" % album_info["page_id"])
+                log.step(self.sub_path + " 开始解析%s号图集" % album_info["album_id"])
                 self.crawl_album(album_info)
                 self.main_thread_check()  # 检测主线程运行状态
         except SystemExit as se:
