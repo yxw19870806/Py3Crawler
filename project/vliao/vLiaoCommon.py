@@ -9,6 +9,7 @@ email: hikaru870806@hotmail.com
 import json
 import os
 from common import *
+from common import crypto
 
 USER_ID = ""
 USER_KEY = ""
@@ -21,7 +22,7 @@ def check_login():
     global USER_ID, USER_KEY
     # 文件存在，检查格式是否正确
     if os.path.exists(token_file_path):
-        api_info = tool.json_decode(tool.decrypt_string(tool.read_file(token_file_path)))
+        api_info = tool.json_decode(crypto.Crypto().decrypt(tool.read_file(token_file_path)))
         if crawler.check_sub_key(("user_id", "user_key"), api_info):
             # 验证token是否有效
             if check_token(api_info["user_id"], api_info["user_key"]):
@@ -40,8 +41,7 @@ def check_login():
             USER_KEY = user_key
             # 加密保存到文件中
             if not os.path.exists(token_file_path):
-                api_info = tool.encrypt_string(json.dumps({"user_id": user_id, "user_key": user_key}))
-                tool.write_file(api_info, token_file_path, tool.WRITE_FILE_TYPE_REPLACE)
+                tool.write_file(crypto.Crypto().encrypt(json.dumps({"user_id": user_id, "user_key": user_key})), token_file_path, tool.WRITE_FILE_TYPE_REPLACE)
             return True
         log.step("incorrect api info, please type again!")
     return False

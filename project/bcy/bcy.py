@@ -13,6 +13,7 @@ import time
 import traceback
 from pyquery import PyQuery as pq
 from common import *
+from common import crypto
 
 COOKIE_INFO = {}
 IS_AUTO_FOLLOW = True
@@ -49,7 +50,7 @@ def check_login():
     # 没有浏览器cookies，尝试读取文件
     else:
         # 从文件中读取账号密码
-        account_data = tool.json_decode(tool.decrypt_string(tool.read_file(SESSION_DATA_PATH)), {})
+        account_data = tool.json_decode(crypto.Crypto().decrypt(tool.read_file(SESSION_DATA_PATH)), {})
         if crawler.check_sub_key(("email", "password"), account_data):
             if _do_login(account_data["email"], account_data["password"]):
                 return True
@@ -68,8 +69,7 @@ def login_from_console():
             if input_str in ["y", "yes"]:
                 if _do_login(email, password):
                     if IS_LOCAL_SAVE_SESSION:
-                        account_info_encrypt_string = tool.encrypt_string(json.dumps({"email": email, "password": password}))
-                        tool.write_file(account_info_encrypt_string, SESSION_DATA_PATH, tool.WRITE_FILE_TYPE_REPLACE)
+                        tool.write_file(crypto.Crypto().encrypt(json.dumps({"email": email, "password": password})), SESSION_DATA_PATH, tool.WRITE_FILE_TYPE_REPLACE)
                     return True
                 return False
             elif input_str in ["n", "no"]:
