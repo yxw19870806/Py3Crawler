@@ -13,8 +13,8 @@ pip.exe install urllib3
 echo install PyQuery
 pip.exe install pyquery
 
-echo install PyCrypto
-pip.exe install pycryptodome
+echo install cryptography
+pip.exe install cryptography
 
 echo install PyWin32
 pip.exe install pywin32
