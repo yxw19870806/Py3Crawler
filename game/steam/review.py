@@ -47,14 +47,11 @@ def main(account_id):
         output.print_msg("个人游戏主页解析失败，原因：%s" % e.message)
         raise
     for game_id in played_game_list:
-        game_id = int(game_id)
         # 获取游戏信息
         game_data = steamCommon.get_game_store_index(game_id)
 
         # 有DLC的话，遍历每个DLC
         for dlc_id in game_data["dlc_list"]:
-            dlc_id = int(dlc_id)
-
             # 已经评测过了，跳过检查
             if dlc_id in review_data["review_list"]:
                 continue
@@ -105,11 +102,11 @@ def print_list(print_type=0):
     review_data = load_review_list()
     for game_id in review_data["can_review_lists"]:
         # 是DLC
-        if str(game_id) in review_data["dlc_in_game"]:
+        if game_id in review_data["dlc_in_game"]:
             if print_type == 1:
                 continue
             # 本体没有评测过
-            if review_data["dlc_in_game"][str(game_id)] in review_data["can_review_lists"]:
+            if review_data["dlc_in_game"][game_id] in review_data["can_review_lists"]:
                 if print_type == 3:
                     continue
         else:
