@@ -15,6 +15,8 @@ INVENTORY_ITEM_TYPE_TRADE_CARD = "Trading Card"
 INVENTORY_ITEM_TYPE_PROFILE_BACKGROUND = "Profile Background"
 INVENTORY_ITEM_TYPE_EMOTICON = "Emoticon"
 
+MAX_BADGE_LEVEL = 5
+
 COOKIE_INFO = None
 ACCOUNT_ID_FILE_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), "data\\account.data"))
 
@@ -215,7 +217,7 @@ def get_self_account_badge_card(badge_detail_url):
         badge_level = int(badge_level_find[0])
     else:
         badge_level = 0
-    wanted_count = 5 - badge_level
+    wanted_count = MAX_BADGE_LEVEL - badge_level
     # 集换式卡牌div
     cards_selector = page_selector.find(".maincontent .badge_detail_tasks .badge_card_set_card")
     for card_index in range(0, cards_selector.length):
@@ -310,7 +312,7 @@ def get_account_inventory(account_id):
                 raise crawler.CrawlerException("物品信息'market_fee_app'字段不存在\n%s" % item_info)
             if not crawler.is_integer(item_info["market_fee_app"]):
                 raise crawler.CrawlerException("物品信息'market_fee_app'字段类型不正确\n%s" % item_info)
-            item_list[class_id]["game_id"] = item_info["market_fee_app"]
+            item_list[class_id]["game_id"] = str(item_info["market_fee_app"])
             # 物品类型
             for tag in item_info["tags"]:
                 if not crawler.check_sub_key(("category", "localized_tag_name"), tag):
