@@ -148,7 +148,7 @@ c:\python27\Scripts\pip.exe install XXX.whl
 
 20.list内元素 强制转化为str
 a = [1, 2, 3, 4, 5, "6", "a"]
-map(str, a)
+list(map(str, a))
 
 a = [[1, 2], [3, 4], [5, 6]]
 [map(str, key) for key in a]
