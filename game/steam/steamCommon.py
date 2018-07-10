@@ -49,7 +49,7 @@ def init_cookie_from_browser():
     login_url = "https://store.steampowered.com/login/checkstoredlogin/?redirectURL="
     login_response = net.http_request(login_url, method="GET", cookies_list=all_cookie_from_browser["store.steampowered.com"], is_auto_redirect=False)
     if login_response.status != 302:
-        raise crawler.CrawlerException("登录返回code不正确，\n%s\n%s" % (login_response.status, login_response.data.decode()))
+        raise crawler.CrawlerException("登录返回code不正确，\n%s" % login_response.status)
     set_cookies = net.get_cookies_from_response_header(login_response.headers)
     if "steamLogin" not in set_cookies:
         raise crawler.CrawlerException("登录返回cookies不正确，\n%s" % set_cookies)
