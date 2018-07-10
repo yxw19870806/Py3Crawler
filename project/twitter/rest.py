@@ -10,6 +10,7 @@ import base64
 import json
 import os
 from common import *
+from common import crypto
 
 API_HOST = "https://api.twitter.com"
 API_VERSION = "1.1"
@@ -26,7 +27,7 @@ def init():
 
     # 文件存在，检查格式是否正确
     if os.path.exists(token_file_path):
-        api_info = tool.json_decode(tool.decrypt_string(tool.read_file(token_file_path)), [])
+        api_info = tool.json_decode(crypto.Crypto().decrypt(tool.read_file(token_file_path)), [])
         if crawler.check_sub_key(("api_key", "api_secret"), api_info):
             # 验证token是否有效
             if get_access_token(api_info["api_key"], api_info["api_secret"]):
@@ -46,8 +47,7 @@ def init():
         if get_access_token(api_key, api_secret):
             # 加密保存到文件中
             if not os.path.exists(token_file_path):
-                api_info = tool.encrypt_string(json.dumps({"api_key": api_key, "api_secret": api_secret}))
-                tool.write_file(api_info, token_file_path, tool.WRITE_FILE_TYPE_REPLACE)
+                tool.write_file(crypto.Crypto().encrypt(json.dumps({"api_key": api_key, "api_secret": api_secret})), token_file_path, tool.WRITE_FILE_TYPE_REPLACE)
             output.print_msg("access token get succeed!")
             return True
         output.print_msg("incorrect api info, please type again!")

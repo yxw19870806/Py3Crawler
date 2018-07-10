@@ -12,7 +12,6 @@ import platform
 import random
 import string
 import sys
-from Crypto.Cipher import AES
 from common import path
 
 # if sys.stdout.encoding != "UTF-8":
@@ -186,6 +185,7 @@ def read_file(file_path, read_type=READ_FILE_TYPE_FULL):
         READ_FILE_TYPE_FULL     type of string
         READ_FILE_TYPE_LINE     type of list
     """
+    file_path = os.path.abspath(file_path)
     if not os.path.exists(file_path):
         if read_type == 1:
             return ""
@@ -215,6 +215,7 @@ def read_file(file_path, read_type=READ_FILE_TYPE_FULL):
 # type=1: 追加
 # type=2: 覆盖
 def write_file(msg, file_path, append_type=WRITE_FILE_TYPE_APPEND):
+    file_path = os.path.abspath(file_path)
     if not path.create_dir(os.path.dirname(file_path)):
         return False
     if append_type == WRITE_FILE_TYPE_APPEND:
@@ -232,33 +233,3 @@ AES_PRIVATE_KEY = "#@PyCrawl@#"
 
 def _get_aes_key():
     return hashlib.md5(AES_PRIVATE_KEY.encode("UTF-8")).hexdigest().encode("UTF-8")
-
-
-# AES-256加密字符串
-def encrypt_string(s):
-    # generate aes key
-    encrypt_key = _get_aes_key()
-    aes_obj = AES.new(encrypt_key, AES.MODE_CBC, encrypt_key[:16])
-
-    # base64
-    if not isinstance(s, bytes):
-        s = str(s).encode("UTF-8")
-    message = base64.b64encode(s)
-    # 补齐16*n位
-    message += b"=" * (16 - len(message) % 16)
-
-    return base64.b64encode(aes_obj.encrypt(message)).decode("UTF-8")
-
-
-# AES-256解密字符串
-def decrypt_string(s):
-    # generate aes key
-    encrypt_key = _get_aes_key()
-    aes_obj = AES.new(encrypt_key, AES.MODE_CBC, encrypt_key[:16])
-
-    try:
-        return base64.b64decode(aes_obj.decrypt(base64.b64decode(s)))
-    except TypeError:
-        return None
-    except ValueError:
-        return None
