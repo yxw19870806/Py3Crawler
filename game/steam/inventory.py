@@ -36,9 +36,17 @@ def main(account_id):
             if CHECK_DUPLICATE_EMOTICON and item_info["count"] > 1:
                 output.print_msg(item_info)
         elif item_info["type"] == steamCommon.INVENTORY_ITEM_TYPE_TRADE_CARD:
-            # 有这个徽章并且徽章等级大等于5
-            if CHECK_EXTRA_CARD and item_info["game_id"] in badges_list and badges_list[item_info["game_id"]] == 5:
-                output.print_msg(item_info)
+            if CHECK_EXTRA_CARD:
+                # 闪卡，跳过
+                if item_info['name'].find("(Foil)") >= 0:
+                    continue
+                if item_info["game_id"] in badges_list:
+                    badge_level = badges_list[item_info["game_id"]]
+                else:
+                    badge_level = 0
+                # 如果剩余卡牌数量 + 当前徽章等级 > 5
+                if item_info["count"] + badge_level > steamCommon.MAX_BADGE_LEVEL:
+                    output.print_msg(item_info)
 
 
 if __name__ == "__main__":
