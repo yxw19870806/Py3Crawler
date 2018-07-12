@@ -29,7 +29,8 @@ support multiple parameter for visit web
   set whether auto redirect(http code 301, 302, 303, 307, 308) <br>
 
 # Install
-* run install/install.bat in CMD console
+* run install/install.bat (if installed Microsoft Build Tools) <br>
+  or run install/install_whl.bat (if not installed Microsoft Build Tools)
 
 # Notice
 * suggest IDE and Project Encoding setting with UTF-8

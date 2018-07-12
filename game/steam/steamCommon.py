@@ -51,7 +51,7 @@ def init_cookie_from_browser():
     if login_response.status != 302:
         raise crawler.CrawlerException("登录返回code不正确，\n%s" % login_response.status)
     set_cookies = net.get_cookies_from_response_header(login_response.headers)
-    if "steamLogin" not in set_cookies:
+    if "steamLogin" not in set_cookies and "steamLoginSecure" not in set_cookies:
         raise crawler.CrawlerException("登录返回cookies不正确，\n%s" % set_cookies)
     COOKIE_INFO.update(set_cookies)
     # 强制使用英文
@@ -65,7 +65,7 @@ def get_discount_game_list():
     app_id_list = []
     while True:
         output.print_msg("开始解析第%s页打折游戏" % page_count)
-        discount_game_pagination_url = "http://store.steampowered.com/search/results?sort_by=Price_ASC&category1=996,998&os=win&specials=1&page=%s" % page_count
+        discount_game_pagination_url = "https://store.steampowered.com/search/results?sort_by=Price_ASC&category1=996,998&os=win&specials=1&page=%s" % page_count
         discount_game_pagination_response = net.http_request(discount_game_pagination_url, method="GET", cookies_list=COOKIE_INFO)
         if discount_game_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
             raise crawler.CrawlerException("第%s页打折游戏访问失败，原因：%s" % (page_count, crawler.request_failre(discount_game_pagination_response.status)))
@@ -173,7 +173,7 @@ def get_game_store_index(game_id):
 # 获取全部已经没有剩余卡牌掉落且还没有收集完毕的徽章详细地址
 def get_self_account_badges(account_id):
     # 徽章第一页
-    badges_index_url = "http://steamcommunity.com/profiles/%s/badges/" % account_id
+    badges_index_url = "https://steamcommunity.com/profiles/%s/badges/" % account_id
     badges_index_response = net.http_request(badges_index_url, method="GET", cookies_list=COOKIE_INFO)
     if badges_index_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(badges_index_response.status))
@@ -189,12 +189,12 @@ def get_self_account_badges(account_id):
             if not badge_detail_url:
                 raise crawler.CrawlerException("徽章信息截取徽章详细界面地址失败\n%s" % badge_html)
             badges_detail_url_list.append(badge_detail_url)
-    # ['http://steamcommunity.com/profiles/76561198172925593/gamecards/459820/', 'http://steamcommunity.com/profiles/76561198172925593/gamecards/357200/', 'http://steamcommunity.com/profiles/76561198172925593/gamecards/502740/', 'http://steamcommunity.com/profiles/76561198172925593/gamecards/359600/', 'http://steamcommunity.com/profiles/76561198172925593/gamecards/354380/', 'http://steamcommunity.com/profiles/76561198172925593/gamecards/359670/', 'http://steamcommunity.com/profiles/76561198172925593/gamecards/525300/', 'http://steamcommunity.com/profiles/76561198172925593/gamecards/337980/', 'http://steamcommunity.com/profiles/76561198172925593/gamecards/591420/']
+    # ['https://steamcommunity.com/profiles/76561198172925593/gamecards/459820/', 'https://steamcommunity.com/profiles/76561198172925593/gamecards/357200/', 'https://steamcommunity.com/profiles/76561198172925593/gamecards/502740/', 'https://steamcommunity.com/profiles/76561198172925593/gamecards/359600/', 'https://steamcommunity.com/profiles/76561198172925593/gamecards/354380/', 'https://steamcommunity.com/profiles/76561198172925593/gamecards/359670/', 'https://steamcommunity.com/profiles/76561198172925593/gamecards/525300/', 'https://steamcommunity.com/profiles/76561198172925593/gamecards/337980/', 'https://steamcommunity.com/profiles/76561198172925593/gamecards/591420/']
     return badges_detail_url_list
 
 
 # 获取指定徽章仍然缺少的集换式卡牌名字和对应缺少的数量
-# badge_detail_url -> http://steamcommunity.com/profiles/76561198172925593/gamecards/459820/
+# badge_detail_url -> https://steamcommunity.com/profiles/76561198172925593/gamecards/459820/
 def get_self_account_badge_card(badge_detail_url):
     badge_detail_response = net.http_request(badge_detail_url, method="GET", cookies_list=COOKIE_INFO)
     if badge_detail_response.status != net.HTTP_RETURN_CODE_SUCCEED:
@@ -236,7 +236,7 @@ def get_self_account_badge_card(badge_detail_url):
 
 # 获取某个游戏的集换式卡牌市场售价
 def get_market_game_trade_card_price(game_id):
-    market_search_url = "http://steamcommunity.com/market/search/render/"
+    market_search_url = "https://steamcommunity.com/market/search/render/"
     market_search_url += "?query=&count=20&appid=753&category_753_Game[0]=tag_app_%s&category_753_cardborder[0]=tag_cardborder_0" % game_id
     market_search_response = net.http_request(market_search_url, method="GET", cookies_list=COOKIE_INFO, json_decode=True)
     if market_search_response.status != net.HTTP_RETURN_CODE_SUCCEED:
@@ -345,7 +345,7 @@ def get_account_badges(account_id):
     page_count = 1
     while True:
         output.print_msg("开始解析第%s页徽章" % page_count)
-        badges_pagination_url = "http://steamcommunity.com/profiles/%s/badges/" % account_id
+        badges_pagination_url = "https://steamcommunity.com/profiles/%s/badges/" % account_id
         badges_pagination_response = net.http_request(badges_pagination_url, method="GET", cookies_list=cookies_list)
         if badges_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
             raise crawler.CrawlerException("第%s页徽章访问失败，原因：%s" % (page_count, crawler.request_failre(badges_pagination_response.status)))
@@ -389,7 +389,7 @@ def get_account_badges(account_id):
 
 # 获取指定账号的全部游戏id列表
 def get_account_owned_app_list(user_id, is_played=False):
-    game_index_url = "http://steamcommunity.com/profiles/%s/games/?tab=all" % user_id
+    game_index_url = "https://steamcommunity.com/profiles/%s/games/?tab=all" % user_id
     game_index_response = net.http_request(game_index_url, method="GET")
     if game_index_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(game_index_response.status))
