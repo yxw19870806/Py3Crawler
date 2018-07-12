@@ -6,7 +6,10 @@ email: hikaru870806@hotmail.com
 如有问题或建议请联系
 """
 import pythoncom
-import pyHook
+try:
+    import PyHook3 as pyHook
+except ModuleNotFoundError:
+    import pyHook
 import threading
 
 SUPPORT_KEYBOARD_LIST = ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z",
