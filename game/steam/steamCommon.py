@@ -51,7 +51,7 @@ def init_cookie_from_browser():
     if login_response.status != 302:
         raise crawler.CrawlerException("登录返回code不正确，\n%s" % login_response.status)
     set_cookies = net.get_cookies_from_response_header(login_response.headers)
-    if "steamLogin" not in set_cookies:
+    if "steamLogin" not in set_cookies and "steamLoginSecure" not in set_cookies:
         raise crawler.CrawlerException("登录返回cookies不正确，\n%s" % set_cookies)
     COOKIE_INFO.update(set_cookies)
     # 强制使用英文
