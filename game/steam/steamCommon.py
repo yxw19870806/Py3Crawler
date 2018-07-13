@@ -346,7 +346,8 @@ def get_account_badges(account_id):
     while True:
         output.print_msg("开始解析第%s页徽章" % page_count)
         badges_pagination_url = "https://steamcommunity.com/profiles/%s/badges/" % account_id
-        badges_pagination_response = net.http_request(badges_pagination_url, method="GET", cookies_list=cookies_list)
+        query_data = {"p": page_count}
+        badges_pagination_response = net.http_request(badges_pagination_url, method="GET", fields=query_data, cookies_list=cookies_list)
         if badges_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
             raise crawler.CrawlerException("第%s页徽章访问失败，原因：%s" % (page_count, crawler.request_failre(badges_pagination_response.status)))
         badges_pagination_response_content = badges_pagination_response.data.decode()
