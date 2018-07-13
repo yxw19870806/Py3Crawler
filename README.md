@@ -45,8 +45,8 @@ Visual Studio Installer安装完毕后，在工作负载标签下选择 'Visual 
 选择swigwin-X.X.XX（版本号，如swigwin-3.0.12）下载，不要下载源码swig-X.X.XX（如swig-3.0.12）<br>
 解压下载的压缩文件到任意目录，并将该目录添加到系统环境变量中（如 D:\swig-3.0.12）
 
-* 如果未安装Visual C++ 生成工具和swig，请运行install/install.bat <br>
-If you haven't installed Visual C++ Build Tools and swig for windows, you can run install/install_whl.bat <br>
+* 如果未安装Visual C++ 生成工具和swig，请运行install/install.bat<br>
+If you haven't installed Visual C++ Build Tools and swig for windows, you can run install/install_whl.bat<br>
 
 
 # Support website / App
@@ -73,3 +73,8 @@ If you haven't installed Visual C++ Build Tools and swig for windows, you can ru
 * [755](https://7gogo.jp/)
 * [Ameblo](https://ameblo.jp/)
 * [ニコニコ动画](http://www.nicovideo.jp/)
+
+# Known Issue
+* **install/install_whl.bat** 中使用的PyHook（用于在windows中监听鼠标、键盘事件）在python3下有兼容性问题<br>
+如果前台激活了存在非ascii字符的窗口，会抛出异常（类似于 TypeError: KeyboardSwitch() missing 8 required positional arguments: 'msg', 'vk_code', 'scan_code', 'ascii', 'flags', 'time', 'hwnd', and 'win_name'）、甚至导致进程退出<br>
+如遇到该问题，可安装Visual C++ 生成工具和swig后使用**install/install.bat**中的PyHook3替换；或者在config.ini中禁用键盘事件监听功能
