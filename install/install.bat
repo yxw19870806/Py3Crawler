@@ -20,7 +20,7 @@ echo install PyWin32
 pip.exe install pywin32
 FOR /F "delims=" %%i IN ('python.exe get_python_scripts_path.py') DO python.exe "%%i\pywin32_postinstall.py" -install
 
-echo install PyHook
-pip.exe install pyHook
+echo install PyHook3
+pip.exe install PyHook3
 
 pause
