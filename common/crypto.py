@@ -9,7 +9,7 @@ import base64
 import hashlib
 import socket
 import uuid
-from cryptography.fernet import Fernet
+from cryptography.fernet import Fernet, InvalidToken
 
 
 class Crypto():
@@ -34,5 +34,10 @@ class Crypto():
         return f.encrypt(s).decode()
 
     def decrypt(self, s):
+        if not s:
+            return None
         f = Fernet(self.PRIVATE_KEY)
-        return f.decrypt(s.encode()).decode()
+        try:
+            f.decrypt(s.encode()).decode()
+        except InvalidToken:
+            return None
