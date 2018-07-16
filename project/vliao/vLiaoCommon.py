@@ -40,8 +40,7 @@ def check_login():
             USER_ID = user_id
             USER_KEY = user_key
             # 加密保存到文件中
-            if not os.path.exists(token_file_path):
-                tool.write_file(crypto.Crypto().encrypt(json.dumps({"user_id": user_id, "user_key": user_key})), token_file_path, tool.WRITE_FILE_TYPE_REPLACE)
+            tool.write_file(crypto.Crypto().encrypt(json.dumps({"user_id": user_id, "user_key": user_key})), token_file_path, tool.WRITE_FILE_TYPE_REPLACE)
             return True
         log.step("incorrect api info, please type again!")
     return False
