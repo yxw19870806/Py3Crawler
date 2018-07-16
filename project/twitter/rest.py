@@ -57,7 +57,7 @@ def init():
 def get_access_token(api_key, api_secret):
     auth_url = API_HOST + "/oauth2/token"
     header_list = {
-        "Authorization": "Basic %s" % base64.b64encode("%s:%s" % (api_key, api_secret)),
+        "Authorization": "Basic %s" % base64.b64encode(("%s:%s" % (api_key, api_secret)).encode()).decode(),
         "Content-Type": 'application/x-www-form-urlencoded;charset=UTF-8.',
     }
     post_data = {

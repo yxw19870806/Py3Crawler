@@ -178,6 +178,7 @@ def get_video_play_page(tweet_id):
             m3u8_file_response = net.http_request(file_url, method="GET")
             if m3u8_file_response.status != net.HTTP_RETURN_CODE_SUCCEED:
                 raise crawler.CrawlerException("最高分辨率m3u8文件 %s 访问失败，%s" % (file_url, crawler.request_failre(m3u8_file_response.status)))
+            m3u8_file_response_content = m3u8_file_response.data.decode()
         # 包含分P视频文件名的m3u8文件
         ts_url_find = re.findall("(/[\S]*.ts)", m3u8_file_response_content)
         if len(ts_url_find) == 0:

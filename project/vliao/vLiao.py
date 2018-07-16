@@ -54,7 +54,7 @@ def get_one_page_video(account_id, page_count):
             raise crawler.CrawlerException("视频信息'id'字段不存在\n%s" % video_info)
         if not crawler.is_integer(video_info["id"]):
             raise crawler.CrawlerException("视频信息'id'字段类型不正确\n%s" % video_info)
-        result_video_info["video_id"] = video_info["id"]
+        result_video_info["video_id"] = str(video_info["id"])
         # 获取视频标题
         if not crawler.check_sub_key(("title",), video_info):
             raise crawler.CrawlerException("视频信息'title'字段不存在\n%s" % video_info)
