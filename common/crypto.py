@@ -12,7 +12,7 @@ import uuid
 from cryptography.fernet import Fernet, InvalidToken
 
 
-class Crypto():
+class Crypto:
     """Encrypt、Decrypt Algorithm
         cryptography.fernet.Fernet
         加解密算法为AES，密钥位长128，CBC模式，填充标准PKCS7
@@ -22,10 +22,10 @@ class Crypto():
 
     def __init__(self):
         # MAC + 固定字符串 + 计算机名，生成基本上唯一的加密私钥
-        PRIVATE_KEY = hex(uuid.getnode()) + self.SALT + socket.gethostname()
+        private_key = hex(uuid.getnode()) + self.SALT + socket.gethostname()
 
         # 任意字符串MD5后生成32位的key，然后base64
-        self.PRIVATE_KEY = base64.urlsafe_b64encode(hashlib.md5(PRIVATE_KEY.encode()).hexdigest().encode())
+        self.PRIVATE_KEY = base64.urlsafe_b64encode(hashlib.md5(private_key.encode()).hexdigest().encode())
 
     def encrypt(self, s):
         if not isinstance(s, bytes):

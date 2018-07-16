@@ -186,8 +186,8 @@ class Weibo(crawler.Crawler):
             crawler.SYS_DOWNLOAD_IMAGE: True,
             crawler.SYS_DOWNLOAD_VIDEO: True,
             crawler.SYS_GET_COOKIE: {
-                ".sina.com.cn": (),
-                ".login.sina.com.cn": (),
+                "sina.com.cn": (),
+                "login.sina.com.cn": (),
             },
         }
         crawler.Crawler.__init__(self, sys_config, extra_config)

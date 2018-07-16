@@ -25,7 +25,7 @@ SESSION_DATA_PATH = None
 # 生成session cookies
 def init_session():
     # 如果有登录信息（初始化时从浏览器中获得）
-    if "LOGGED_USER" in COOKIE_INFO and COOKIE_INFO["LOGGED_USER"]:
+    if "_csrf_token" in COOKIE_INFO and COOKIE_INFO["_csrf_token"]:
         cookies_list = COOKIE_INFO
     else:
         cookies_list = None
@@ -41,7 +41,7 @@ def init_session():
 
 # 检测登录状态
 def check_login():
-    if "LOGGED_USER" in COOKIE_INFO and COOKIE_INFO["LOGGED_USER"]:
+    if "_csrf_token" in COOKIE_INFO and COOKIE_INFO["_csrf_token"]:
         home_url = "https://bcy.net/home/account"
         home_response = net.http_request(home_url, method="GET", cookies_list=COOKIE_INFO, is_auto_redirect=False)
         if home_response.status == net.HTTP_RETURN_CODE_SUCCEED:
@@ -245,7 +245,7 @@ class Bcy(crawler.Crawler):
         # 初始化参数
         sys_config = {
             crawler.SYS_DOWNLOAD_IMAGE: True,
-            crawler.SYS_GET_COOKIE: {".bcy.net": ()},
+            crawler.SYS_GET_COOKIE: {"bcy.net": ()},
             crawler.SYS_APP_CONFIG: (
                 ("IS_AUTO_FOLLOW", True, crawler.CONFIG_ANALYSIS_MODE_BOOLEAN),
                 ("IS_LOCAL_SAVE_SESSION", False, crawler.CONFIG_ANALYSIS_MODE_BOOLEAN)
@@ -255,7 +255,7 @@ class Bcy(crawler.Crawler):
 
         # 设置全局变量，供子线程调用
         COOKIE_INFO = self.cookie_value
-        if "LOGGED_USER" not in COOKIE_INFO:
+        if "_csrf_token" not in COOKIE_INFO:
             COOKIE_INFO = {}
         IS_AUTO_FOLLOW = self.app_config["IS_AUTO_FOLLOW"]
         IS_LOCAL_SAVE_SESSION = self.app_config["IS_LOCAL_SAVE_SESSION"]

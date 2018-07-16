@@ -194,7 +194,7 @@ class Ameblo(crawler.Crawler):
         # 初始化参数
         sys_config = {
             crawler.SYS_DOWNLOAD_IMAGE: True,
-            crawler.SYS_GET_COOKIE: {".ameba.jp": (), ".mypage.ameba.jp": ()},
+            crawler.SYS_GET_COOKIE: {"ameba.jp": (), "mypage.ameba.jp": ()},
         }
         crawler.Crawler.__init__(self, sys_config)
 
