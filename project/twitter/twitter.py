@@ -205,7 +205,7 @@ class Twitter(crawler.Crawler):
             crawler.SYS_DOWNLOAD_IMAGE: True,
             crawler.SYS_DOWNLOAD_VIDEO: True,
             crawler.SYS_SET_PROXY: True,
-            crawler.SYS_GET_COOKIE: {".twitter.com": ()}
+            crawler.SYS_GET_COOKIE: {"twitter.com": ()}
         }
         crawler.Crawler.__init__(self, sys_config, extra_config)
 

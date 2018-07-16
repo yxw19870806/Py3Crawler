@@ -416,7 +416,7 @@ class Tumblr(crawler.Crawler):
         sys_config = {
             crawler.SYS_DOWNLOAD_IMAGE: True,
             crawler.SYS_DOWNLOAD_VIDEO: True,
-            crawler.SYS_GET_COOKIE: {".tumblr.com": (), "www.tumblr.com": ()},
+            crawler.SYS_GET_COOKIE: {"tumblr.com": (), "www.tumblr.com": ()},
             crawler.SYS_SET_PROXY: True,
             crawler.SYS_APP_CONFIG: (
                 ("USER_AGENT", "", crawler.CONFIG_ANALYSIS_MODE_RAW),
