@@ -6,21 +6,10 @@ https://www.instagram.com/
 email: hikaru870806@hotmail.com
 如有问题或建议请联系
 """
-import os
 import time
 from common import *
 
 COOKIE_INFO = {}
-# 存放解析出的账号文件路径
-ACCOUNT_ID_FILE_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), "info/account.data"))
-
-
-# 获取账号存档文件
-def get_account_from_save_data():
-    account_list = []
-    for line in tool.read_file(ACCOUNT_ID_FILE_PATH, tool.READ_FILE_TYPE_LINE):
-        account_list.append(line.replace("\n", "").split("\t")[0])
-    return account_list
 
 
 # 关注指定账号
@@ -59,7 +48,7 @@ def main():
         tool.process_exit()
 
     # 读取存档文件
-    account_list = get_account_from_save_data()
+    account_list = crawler.read_save_data(crawler.quickly_get_save_data_path(), 0, [])
 
     count = 0
     for account_id in account_list:

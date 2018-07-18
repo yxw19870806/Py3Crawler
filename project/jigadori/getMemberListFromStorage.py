@@ -7,24 +7,12 @@ email: hikaru870806@hotmail.com
 如有问题或建议请联系
 """
 import os
-from common import tool
+from common import *
 
 # Twitter存档文件目录
-SAVE_DATA_PATH = os.path.abspath(os.path.join(tool.PROJECT_APP_ROOT_PATH, "twitter/info/save_5.data"))
+SAVE_DATA_PATH = os.path.abspath(os.path.join(tool.PROJECT_APP_ROOT_PATH, "twitter/info/save.data"))
 # 图片下载后的保存目录
 FILE_STORAGE_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), "photo"))
-
-
-# 获取存档文件
-def get_account_from_save_data():
-    account_list = {}
-    if not os.path.exists(SAVE_DATA_PATH):
-        return account_list
-    for line in tool.read_file(SAVE_DATA_PATH, tool.READ_FILE_TYPE_LINE):
-        line = line.replace("\n", "")
-        account_info_temp = line.split("\t")
-        account_list[account_info_temp[0]] = line
-    return account_list
 
 
 # 从存档目录获取去重后的账号名字
@@ -40,12 +28,12 @@ def get_account_from_storage():
 def main():
     account_list_from_storage = get_account_from_storage()
     if len(account_list_from_storage) > 0:
-        account_list_from_save_data = get_account_from_save_data()
+        account_list_from_save_data = crawler.read_save_data(SAVE_DATA_PATH, 0, [])
         for account_id in account_list_from_storage:
             if account_id not in account_list_from_save_data:
-                account_list_from_save_data[account_id] = "%s\t\t\t\t\t" % account_id
+                account_list_from_save_data[account_id] = [account_id, "", "", "", ""]
         temp_list = [account_list_from_save_data[key] for key in sorted(account_list_from_save_data.keys())]
-        tool.write_file("\n".join(temp_list), SAVE_DATA_PATH, tool.WRITE_FILE_TYPE_REPLACE)
+        tool.write_file(tool.list_to_string(temp_list), SAVE_DATA_PATH, tool.WRITE_FILE_TYPE_REPLACE)
 
 
 if __name__ == "__main__":

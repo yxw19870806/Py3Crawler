@@ -226,10 +226,3 @@ def write_file(msg, file_path, append_type=WRITE_FILE_TYPE_APPEND):
         return False
     with open(file_path, open_type, encoding="UTF-8") as file_handle:
         file_handle.write(msg + "\n")
-
-
-AES_PRIVATE_KEY = "#@PyCrawl@#"
-
-
-def _get_aes_key():
-    return hashlib.md5(AES_PRIVATE_KEY.encode("UTF-8")).hexdigest().encode("UTF-8")

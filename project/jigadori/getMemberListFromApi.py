@@ -11,19 +11,7 @@ from pyquery import PyQuery as pq
 from common import *
 
 # Twitter存档文件目录
-SAVE_DATA_PATH = os.path.abspath(os.path.join(tool.PROJECT_APP_ROOT_PATH, "twitter/info/save_5.data"))
-
-
-# 获取存档文件
-def get_account_from_save_data():
-    account_list = {}
-    if not os.path.exists(SAVE_DATA_PATH):
-        return account_list
-    for line in tool.read_file(SAVE_DATA_PATH, tool.READ_FILE_TYPE_LINE):
-        line = line.replace("\n", "")
-        account_info_temp = line.split("\t")
-        account_list[account_info_temp[0]] = line
-    return account_list
+SAVE_DATA_PATH = os.path.abspath(os.path.join(tool.PROJECT_APP_ROOT_PATH, "twitter/info/save.data"))
 
 
 # 从页面获取全部账号
@@ -73,20 +61,19 @@ def get_one_page_account(page_count):
 def main():
     account_list_from_api = get_account_from_index()
     if len(account_list_from_api) > 0:
-        account_list_from_save_data = get_account_from_save_data()
+        account_list_from_save_data = crawler.read_save_data(SAVE_DATA_PATH, 0, [])
         for account_id in account_list_from_save_data:
             if account_id not in account_list_from_api:
                 output.print_msg("%s (%s) not found from API result" % (account_id, account_list_from_save_data[account_id]))
         for account_id in account_list_from_api:
             if account_id not in account_list_from_save_data:
-                account_list_from_save_data[account_id] = "%s\t\t\t\t\t%s" % (account_id, account_list_from_api[account_id])
+                account_list_from_save_data[account_id] = [account_id, "", "", "", "", account_list_from_api[account_id]]
             else:
-                temp_list = account_list_from_save_data[account_id].split("\t")
-                if len(temp_list) >= 6 and temp_list[5] != account_list_from_api[account_id]:
+                if len(account_list_from_save_data[account_id]) >= 6 and account_list_from_save_data[account_id][5] != account_list_from_api[account_id]:
                     output.print_msg("%s name changed" % account_id)
-                    account_list_from_save_data[account_id] = "\t".join(temp_list)
+                    account_list_from_save_data[account_id][5] = account_list_from_api[account_id]
         temp_list = [account_list_from_save_data[key] for key in sorted(account_list_from_save_data.keys())]
-        tool.write_file("\n".join(temp_list), SAVE_DATA_PATH, tool.WRITE_FILE_TYPE_REPLACE)
+        tool.write_file(tool.list_to_string(temp_list), SAVE_DATA_PATH, tool.WRITE_FILE_TYPE_REPLACE)
 
 
 if __name__ == "__main__":
