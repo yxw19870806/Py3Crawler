@@ -10,7 +10,7 @@ import os
 from common import *
 
 DONE_SING = "~"
-YOUTUBE_SAVE_DATA_PATH = os.path.abspath(os.path.join(tool.PROJECT_APP_ROOT_PATH, "youtube/info/save.data"))
+YOUTUBE_SAVE_DATA_PATH = os.path.abspath(os.path.join(tool.PROJECT_APP_ROOT_PATH, "../data/youtube/save.data"))
 
 
 def read_save_data(save_data_path):
