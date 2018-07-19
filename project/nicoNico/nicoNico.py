@@ -79,6 +79,7 @@ def get_video_info(video_id):
     result = {
         "extra_cookie": {},  # 额外的cookie
         "is_delete": False,  # 是否已删除
+        "video_title": "",  # 视频标题
         "video_url": None,  # 视频地址
     }
     if video_play_response.status == 403:
@@ -99,8 +100,13 @@ def get_video_info(video_id):
         raise crawler.CrawlerException("视频信息加载失败\n%s" % video_play_response_content)
     if not crawler.check_sub_key(("video",), video_info):
         raise crawler.CrawlerException("视频信息'video'字段不存在\n%s" % video_info)
+    # 获取视频标题
+    if not crawler.check_sub_key(("title",), video_info["video"]):
+        raise crawler.CrawlerException("视频信息'title'字段不存在\n%s" % video_info)
+    result["video_title"] = video_info["video"]["title"]
+    # 获取视频地址
     if not crawler.check_sub_key(("smileInfo",), video_info["video"]):
-        raise crawler.CrawlerException("视频信息'sm7647845'字段不存在\n%s" % video_info)
+        raise crawler.CrawlerException("视频信息'smileInfo'字段不存在\n%s" % video_info)
     if not crawler.check_sub_key(("url",), video_info["video"]["smileInfo"]):
         raise crawler.CrawlerException("视频信息'url'字段不存在\n%s" % video_info)
     result["video_url"] = video_info["video"]["smileInfo"]["url"]
