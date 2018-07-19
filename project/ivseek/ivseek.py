@@ -94,6 +94,7 @@ def get_archive_page(archive_id):
                 result_video_info["account_id"] = account_id
         # http://www.dailymotion.com/embed/video/x5oi0x
         elif video_url.find("//www.dailymotion.com/") >= 0:
+            video_url = video_url.replace("http://", "https://")
             video_id = video_url.split("/")[-1][0]
             result_video_info["video_url"] = "http://www.dailymotion.com/video/%s" % video_id
             # 获取视频发布账号
