@@ -5,6 +5,7 @@
 email: hikaru870806@hotmail.com
 如有问题或建议请联系
 """
+import os
 import threading
 import time
 from common import output, tool
@@ -12,9 +13,9 @@ from common import output, tool
 IS_SHOW_ERROR = True
 IS_SHOW_STEP = False
 IS_SHOW_TRACE = False
-ERROR_LOG_PATH = ""
-STEP_LOG_PATH = ""
-TRACE_LOG_PATH = ""
+ERROR_LOG_PATH = os.path.abspath(os.path.join(tool.PROJECT_ROOT_PATH, 'log\\errorLog.txt'))
+STEP_LOG_PATH = os.path.abspath(os.path.join(tool.PROJECT_ROOT_PATH, 'log\\stepLog.txt'))
+TRACE_LOG_PATH = os.path.abspath(os.path.join(tool.PROJECT_ROOT_PATH, 'log\\traceLog.txt'))
 thread_lock = threading.Lock()
 
 
