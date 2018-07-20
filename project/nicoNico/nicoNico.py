@@ -90,6 +90,9 @@ def get_video_info(video_id):
     video_play_response_content = video_play_response.data.decode()
     video_info_string = tool.find_sub_string(video_play_response_content, 'data-api-data="', '" data-environment="')
     if not video_info_string:
+        # 播放页面提示flash没有安装，重新访问
+        if pq(video_play_response_content).find("div.notify_update_flash_player").length > 0:
+            return get_video_info(video_id)
         if video_play_response_content.find("<p>この動画が投稿されている公開コミュニティはありません。</p>") > 0:
             result["is_delete"] = True
             return result
