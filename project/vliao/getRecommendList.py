@@ -9,7 +9,7 @@ email: hikaru870806@hotmail.com
 from common import *
 from project.vliao import vLiaoCommon
 
-TAG_ID_LIST = [1, 2, 3, 4, 5, 9997, 9998]  # 好像 tag = 1就是全部账号
+TAG_ID_LIST = [1]
 
 
 # 从API获取所有推荐账号
