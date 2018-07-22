@@ -38,6 +38,6 @@ class Crypto:
             return None
         f = Fernet(self.PRIVATE_KEY)
         try:
-            f.decrypt(s.encode()).decode()
+            return f.decrypt(s.encode()).decode()
         except InvalidToken:
             return None
