@@ -9,7 +9,7 @@ email: hikaru870806@hotmail.com
 from common import *
 from project.vliao import vLiaoCommon
 
-TAG_ID_LIST = [1, 2, 3, 4, 5, 9997, 9998]  # 好像 tag = 1就是全部账号
+TAG_ID_LIST = [1]
 
 
 # 从API获取所有推荐账号
@@ -52,7 +52,7 @@ def get_tag_account_list(tag_id):
                 raise crawler.CrawlerException("账号信息'id'字段不存在\n%s" % account_info)
             if not crawler.is_integer(account_info["id"]):
                 raise crawler.CrawlerException("账号信息'id'字段类型不正确\n%s" % account_info)
-            account_id = account_info["id"]
+            account_id = str(account_info["id"])
             # 获取账号昵称
             if not crawler.check_sub_key(("nickname",), account_info):
                 raise crawler.CrawlerException("账号信息'title'字段不存在\n%s" % account_info)
