@@ -16,6 +16,8 @@ from common import *
 
 COOKIE_INFO = {}
 AUTHORIZATION = ""
+thread_event = threading.Event()
+thread_event.set()
 
 
 # 初始化session。获取authorization
@@ -142,6 +144,8 @@ def get_one_page_media(account_name, position_blog_id):
 
 # 根据视频所在推特的ID，获取视频的下载地址
 def get_video_play_page(tweet_id):
+    thread_event.wait()
+    thread_event.clear()
     video_play_url = "https://api.twitter.com/1.1/videos/tweet/config/%s.json" % tweet_id
     header_list = {
         "authorization": "Bearer " + AUTHORIZATION,
@@ -151,6 +155,7 @@ def get_video_play_page(tweet_id):
     result = {
         "video_url": None,  # 视频地址
     }
+    thread_event.set()
     if video_play_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(video_play_response.status))
     if not crawler.check_sub_key(("track",), video_play_response.json_data):
