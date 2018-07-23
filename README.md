@@ -35,7 +35,7 @@ support multiple parameter for visit web
 * 如果已安装Visual C++ 生成工具和swig（并将swig的安装路径加入系统变量中，否则会提示无法找到swig.exe），请运行install/install.bat<br>
 If you have installed Visual C++ Build Tools and swig for windows (and add swig's install path to your environment variables), you can run install/install.bat <br>
 > 如何安装Visual C++ 生成工具
->> 访问[微软官方Visual Studio下载页面](https://visualstudio.microsoft.com/zh-hans/downloads/)<br>
+>> 访问[微软官方Visual Studio下载页面](https://visualstudio.microsoft.com/downloads/)<br>
 选择"Visual Studio 2017 生成工具"那列的下载<br>
 运行下载的exe引导文件、开始安装Visual Studio Installer<br>
 Visual Studio Installer安装完毕后，在工作负载标签下选择 'Visual C++生成工具'（点击后右侧默认会有'测试工具核心功能 - 生成工具'+一个对应操作系统的最新版本SDK包）并安装<br>
@@ -45,8 +45,8 @@ Visual Studio Installer安装完毕后，在工作负载标签下选择 'Visual 
 选择swigwin-X.X.XX（版本号，如swigwin-3.0.12）下载，不要下载源码swig-X.X.XX（如swig-3.0.12）<br>
 解压下载的压缩文件到任意目录，并将该目录添加到系统环境变量中（如 D:\swig-3.0.12）
 
-* 如果未安装Visual C++ 生成工具和swig，请运行install/install.bat<br>
-If you haven't installed Visual C++ Build Tools and swig for windows, you can run install/install_whl.bat<br>
+* (不推荐) 如果未安装Visual C++ 生成工具和swig，请运行install/install.bat<br>
+(Don't suggest) If you haven't installed Visual C++ Build Tools and swig for windows, you can run install/install_whl.bat<br>
 
 
 # Support website / App
