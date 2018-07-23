@@ -38,6 +38,9 @@ def get_video_page(video_id):
     # 判断是否需要跳过
     if not crawler.check_sub_key(("orientation",), video_info):
         raise crawler.CrawlerException("视频列表信息'orientation'字段不存在\n%s" % video_info)
+    # straight, shemale, gay
+    if video_info["orientation"] not in ["straight", "shemale", "gay"]:
+        log.error("new orientation: " + video_info["orientation"])
     if video_info["orientation"] == "gay":
         result["is_skip"] = True
         return result
