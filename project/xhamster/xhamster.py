@@ -11,6 +11,12 @@ import traceback
 from common import *
 
 FIRST_CHOICE_RESOLUTION = 720
+VIDEO_ORIENTATION_FILTER = 7
+ORIENTATION_TYPE_LIST = {
+    "straight": 1,
+    "shemale": 2,
+    "gay": 4,
+}
 
 
 # 获取指定视频
@@ -40,12 +46,15 @@ def get_video_page(video_id):
     # 判断是否需要跳过
     if not crawler.check_sub_key(("orientation",), video_info):
         raise crawler.CrawlerException("视频列表信息'orientation'字段不存在\n%s" % video_info)
-    # straight, shemale, gay
-    if video_info["orientation"] not in ["straight", "shemale", "gay"]:
+    # 过滤视频orientation
+    print(video_info["orientation"])
+    if video_info["orientation"] in ORIENTATION_TYPE_LIST:
+        if not (ORIENTATION_TYPE_LIST[video_info["orientation"]] & VIDEO_ORIENTATION_FILTER):
+            result["is_skip"] = True
+            return result
+    else:
         log.error("new orientation: " + video_info["orientation"])
-    if video_info["orientation"] == "gay":
-        result["is_skip"] = True
-        return result
+
     if not crawler.check_sub_key(("videoModel",), video_info):
         raise crawler.CrawlerException("视频列表信息'videoModel'字段不存在\n%s" % video_info)
     # 获取视频标题
@@ -86,6 +95,7 @@ def get_video_page(video_id):
 class Xhamster(crawler.Crawler):
     def __init__(self):
         global FIRST_CHOICE_RESOLUTION
+        global VIDEO_ORIENTATION_FILTER
 
         # 设置APP目录
         tool.PROJECT_APP_PATH = os.path.abspath(os.path.dirname(__file__))
@@ -97,6 +107,7 @@ class Xhamster(crawler.Crawler):
             crawler.SYS_NOT_CHECK_SAVE_DATA: True,
             crawler.SYS_APP_CONFIG: (
                 ("VIDEO_QUALITY", 3, crawler.CONFIG_ANALYSIS_MODE_INTEGER),
+                ("VIDEO_ORIENTATION", 7, crawler.CONFIG_ANALYSIS_MODE_INTEGER),
             ),
         }
         crawler.Crawler.__init__(self, sys_config)
@@ -110,6 +121,11 @@ class Xhamster(crawler.Crawler):
             FIRST_CHOICE_RESOLUTION = 720
         else:
             log.error("配置文件config.ini中key为'VIDEO_QUALITY'的值必须是一个1~3的整数，使用程序默认设置")
+
+        video_orientation = self.app_config["VIDEO_ORIENTATION"]
+        if not crawler.is_integer(video_orientation) and not (1 <= video_orientation <= 7):
+            log.error("配置文件config.ini中key为'VIDEO_ORIENTATION'的值必须是一个1~7的整数，使用程序默认设置")
+        VIDEO_ORIENTATION_FILTER = int(video_orientation)
 
 
     def main(self):
