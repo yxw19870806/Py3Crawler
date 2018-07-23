@@ -47,14 +47,12 @@ def get_video_page(video_id):
     if not crawler.check_sub_key(("orientation",), video_info):
         raise crawler.CrawlerException("视频列表信息'orientation'字段不存在\n%s" % video_info)
     # 过滤视频orientation
-    print(video_info["orientation"])
     if video_info["orientation"] in ORIENTATION_TYPE_LIST:
         if not (ORIENTATION_TYPE_LIST[video_info["orientation"]] & VIDEO_ORIENTATION_FILTER):
             result["is_skip"] = True
             return result
     else:
         log.error("new orientation: " + video_info["orientation"])
-
     if not crawler.check_sub_key(("videoModel",), video_info):
         raise crawler.CrawlerException("视频列表信息'videoModel'字段不存在\n%s" % video_info)
     # 获取视频标题
