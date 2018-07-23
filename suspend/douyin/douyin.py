@@ -150,7 +150,6 @@ class Download(crawler.DownloadThread):
             except crawler.CrawlerException as e:
                 log.error(self.account_name + " cursor %s后的一页视频解析失败，原因：%s" % (cursor_id, e.message))
                 raise
-            print(video_pagination_response)
             log.trace(self.account_name + " cursor %s后的一页视频：%s" % (cursor_id, video_pagination_response["video_info_list"]))
 
             # 寻找这一页符合条件的视频
