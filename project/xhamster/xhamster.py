@@ -10,6 +10,8 @@ import os
 import traceback
 from common import *
 
+FIRST_CHOICE_RESOLUTION = 720
+
 
 # 获取指定视频
 def get_video_page(video_id):
@@ -55,7 +57,8 @@ def get_video_page(video_id):
         raise crawler.CrawlerException("视频列表信息'sources'字段不存在\n%s" % video_info["videoModel"])
     if not crawler.check_sub_key(("mp4",), video_info["videoModel"]["sources"]):
         raise crawler.CrawlerException("视频列表信息'mp4'字段不存在\n%s" % video_info["videoModel"]["sources"])
-    max_resolution = 0
+    # 各个分辨率下的视频地址
+    resolution_to_url = {}
     for resolution_string in video_info["videoModel"]["sources"]["mp4"]:
         resolution = resolution_string.replace("p", "")
         if not crawler.is_integer(resolution):
@@ -63,14 +66,27 @@ def get_video_page(video_id):
         resolution = int(resolution)
         if resolution not in [240, 480, 720]:
             log.error("新的分辨率: %s" % video_info["videoModel"]["sources"]["mp4"])
-        if resolution > max_resolution:
-            result["video_url"] = video_info["videoModel"]["sources"]["mp4"][resolution_string]
-            max_resolution = resolution
+        resolution_to_url[resolution] = video_info["videoModel"]["sources"]["mp4"][resolution_string]
+    # 优先使用配置中的分辨率
+    if FIRST_CHOICE_RESOLUTION in resolution_to_url:
+        result["video_url"] = resolution_to_url[FIRST_CHOICE_RESOLUTION]
+    # 如果没有这个分辨率的视频
+    else:
+        # 大于配置中分辨率的所有视频中分辨率最小的那个
+        for resolution in sorted(resolution_to_url.keys()):
+            if resolution > FIRST_CHOICE_RESOLUTION:
+                result["video_url"] = resolution_to_url[FIRST_CHOICE_RESOLUTION]
+                break
+        # 如果还是没有，则所有视频中分辨率最大的那个
+        if result["video_url"] is None:
+            result["video_url"] = resolution_to_url[max(resolution_to_url)]
     return result
 
 
 class Xhamster(crawler.Crawler):
     def __init__(self):
+        global FIRST_CHOICE_RESOLUTION
+
         # 设置APP目录
         tool.PROJECT_APP_PATH = os.path.abspath(os.path.dirname(__file__))
 
@@ -79,8 +95,21 @@ class Xhamster(crawler.Crawler):
             crawler.SYS_DOWNLOAD_VIDEO: True,
             crawler.SYS_SET_PROXY: True,
             crawler.SYS_NOT_CHECK_SAVE_DATA: True,
+            crawler.SYS_APP_CONFIG: (
+                ("VIDEO_QUALITY", 3, crawler.CONFIG_ANALYSIS_MODE_INTEGER),
+            ),
         }
         crawler.Crawler.__init__(self, sys_config)
+
+        video_quality = self.app_config["VIDEO_QUALITY"]
+        if video_quality == 1:
+            FIRST_CHOICE_RESOLUTION = 240
+        elif video_quality == 2:
+            FIRST_CHOICE_RESOLUTION = 480
+        elif video_quality == 3:
+            FIRST_CHOICE_RESOLUTION = 720
+        else:
+            log.error("配置文件config.ini中key为'VIDEO_QUALITY'的值必须是一个1~3的整数，使用程序默认设置")
 
 
     def main(self):
