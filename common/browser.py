@@ -89,6 +89,7 @@ def get_all_cookie_from_browser(browser_type, file_path):
             if cookie_domain not in all_cookies:
                 all_cookies[cookie_domain] = {}
             all_cookies[cookie_domain][cookie_key] = cookie_value
+        con.close()
     elif browser_type == 3:
         # chrome仅支持windows系统的解密
         if platform.system() != "Windows":
@@ -106,6 +107,7 @@ def get_all_cookie_from_browser(browser_type, file_path):
             if cookie_domain not in all_cookies:
                 all_cookies[cookie_domain] = {}
             all_cookies[cookie_domain][cookie_key] = cookie_value.decode()
+        con.close()
     else:
         output.print_msg("不支持的浏览器类型：" + browser_type)
         return None
