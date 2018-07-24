@@ -1,6 +1,6 @@
 # -*- coding:UTF-8  -*-
 """
-nico nico视频爬虫
+nico nico视频列表（My List）视频爬虫
 http://www.nicovideo.jp/
 @author: hikaru
 email: hikaru870806@hotmail.com
@@ -28,7 +28,7 @@ def check_login():
     return False
 
 
-# 获取账号全部视频信息
+# 获取视频列表全部视频信息
 # account_id => 15614906
 def get_mylist_index(account_id):
     # http://www.nicovideo.jp/mylist/15614906
@@ -38,9 +38,9 @@ def get_mylist_index(account_id):
         "video_info_list": [],  # 所有视频信息
     }
     if account_index_response.status == 404:
-        raise crawler.CrawlerException("账号不存在")
+        raise crawler.CrawlerException("视频列表不存在")
     elif account_index_response.status == 403:
-        raise crawler.CrawlerException("账号发布视频未公开")
+        raise crawler.CrawlerException("视频列表未公开")
     elif account_index_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(account_index_response.status))
     account_index_response_content = account_index_response.data.decode()
@@ -138,7 +138,7 @@ class NicoNico(crawler.Crawler):
         COOKIE_INFO = self.cookie_value
 
         # 解析存档文件
-        # account_id  last_video_id
+        # mylist_id  last_video_id
         self.account_list = crawler.read_save_data(self.save_data_path, 0, ["", "0"])
 
         # 检测登录状态
