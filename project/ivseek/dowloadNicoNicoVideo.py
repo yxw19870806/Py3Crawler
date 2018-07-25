@@ -58,12 +58,12 @@ def main():
             cookies_list.update(video_info_response["extra_cookie"])
         save_file_return = net.save_net_file(video_info_response["video_url"], file_path, cookies_list=cookies_list)
         if save_file_return["status"] == 1:
-            output.print_msg("视频%s 《%s》下载成功" % (single_save_list[2], video_info_response["video_title"]))
+            output.print_msg("视频%s 《%s》下载成功" % (video_id, video_info_response["video_title"]))
         else:
-            log.error("视频%s 《%s》 %s 下载失败，原因：%s" % (single_save_list[2], video_info_response["video_title"], video_info_response["video_url"], crawler.download_failre(save_file_return["code"])))
+            log.error("视频%s 《%s》 %s 下载失败，原因：%s" % (video_id, video_info_response["video_title"], video_info_response["video_url"], crawler.download_failre(save_file_return["code"])))
             continue
 
-        # 增加已完成标记
+        # 增加已处理标记
         single_save_list[4] = ivseekCommon.DONE_SING
         # 保存记录
         tool.write_file(tool.list_to_string(save_data_list), save_data_path, tool.WRITE_FILE_TYPE_REPLACE)
