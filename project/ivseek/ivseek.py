@@ -114,7 +114,7 @@ def get_archive_page(archive_id):
     # 获取标题
     title = tool.find_sub_string(archive_response_content, '<meta property="og:title" content="', '"')
     if not title:
-        raise crawler.CrawlerException("标题截取失败")
+        raise crawler.CrawlerException("页面截取标题失败")
     result["title"] = title.strip()
     return result
 
