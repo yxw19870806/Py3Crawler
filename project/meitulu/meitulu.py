@@ -56,7 +56,7 @@ def get_album_page(album_id):
             # 获取图集标题
             album_title = tool.find_sub_string(album_pagination_response_content, "<h1>", "</h1>")
             if not album_title:
-                raise crawler.CrawlerException("标题截取失败\n%s" % album_pagination_response_content)
+                raise crawler.CrawlerException("页面截取标题失败\n%s" % album_pagination_response_content)
             result["album_title"] = album_title.strip()
         result["album_title"] = result["album_title"].replace("・", "")  # \u30fb
         # 获取图集图片地址
