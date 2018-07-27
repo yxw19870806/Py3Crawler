@@ -61,7 +61,7 @@ def get_archive_page(archive_id):
             # 获取视频发布账号
             video_play_response = net.http_request(result_video_info["video_url"], method="GET", header_list={"accept-language": "en-US"})
             if video_play_response.status != net.HTTP_RETURN_CODE_SUCCEED:
-                raise crawler.CrawlerException("视频播放页%s，%s" % (result["video_url"], crawler.request_failre(archive_response.status)))
+                raise crawler.CrawlerException("视频播放页%s，%s" % (result_video_info["video_url"], crawler.request_failre(video_play_response.status)))
             video_play_response_content = video_play_response.data.decode()
             # 账号已被删除，跳过
             if video_play_response_content.find('"reason":"This video is no longer available because the YouTube account associated with this video has been terminated."') >= 0:
