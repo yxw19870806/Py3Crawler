@@ -1,7 +1,7 @@
 # -*- coding:UTF-8  -*-
 """
-美图日图片爬虫
-https://www.meituri.com
+妹子图图片爬虫
+http://www.mzitu.com/
 @author: hikaru
 email: hikaru870806@hotmail.com
 如有问题或建议请联系
@@ -9,12 +9,13 @@ email: hikaru870806@hotmail.com
 import os
 import re
 import traceback
+from pyquery import PyQuery as pq
 from common import *
 
 
 # 获取图集首页
 def get_index_page():
-    index_url = "http://www.meituri.com/"
+    index_url = "http://www.mzitu.com/"
     index_response = net.http_request(index_url, method="GET")
     result = {
         "max_album_id": None,  # 最新图集id
@@ -22,7 +23,7 @@ def get_index_page():
     if index_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(index_response.status))
     index_response_content = index_response.data.decode()
-    album_id_find = re.findall('a href="http://www.meituri.com/a/(\d*)/', index_response_content)
+    album_id_find = re.findall('<a href="http://www.mzitu.com/(\d+)', index_response_content)
     if len(album_id_find) == 0:
         raise crawler.CrawlerException("页面匹配图集id失败\n%s" % index_response_content)
     result["max_album_id"] = max(list(map(int, album_id_find)))
@@ -31,19 +32,19 @@ def get_index_page():
 
 # 获取指定一页的图集
 def get_album_page(album_id):
-    page_count = max_page_count = 1
     result = {
         "album_title": "",  # 图集标题
         "image_url_list": [],  # 全部图片地址
         "is_delete": False,  # 是不是已经被删除
     }
-    while page_count <= max_page_count:
+    page_count = 1
+    while True:
         if page_count == 1:
-            album_pagination_url = "http://www.meituri.com/a/%s/" % album_id
+            album_pagination_url = "http://www.mzitu.com/%s" % album_id
         else:
-            album_pagination_url = "http://www.meituri.com/a/%s/%s.html" % (album_id, page_count)
+            album_pagination_url = "http://www.mzitu.com/%s/%s" % (album_id, page_count)
         album_pagination_response = net.http_request(album_pagination_url, method="GET")
-        if page_count == 1 and album_pagination_response.status in [403, 404]:
+        if page_count == 1 and album_pagination_response.status == 404:
             result["is_delete"] = True
             return result
         elif album_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
@@ -51,36 +52,28 @@ def get_album_page(album_id):
         album_pagination_response_content = album_pagination_response.data.decode()
         if page_count == 1:
             # 获取图集标题
-            album_title = tool.find_sub_string(album_pagination_response_content, "<h1>", "</h1>")
+            album_title = pq(album_pagination_response_content).find(".main-title").html()
             if not album_title:
                 raise crawler.CrawlerException("页面截取标题失败\n%s" % album_pagination_response_content)
             result["album_title"] = album_title.strip()
         # 获取图集图片地址
-        image_list_html = tool.find_sub_string(album_pagination_response_content, '<div class="content">', "</div>")
-        if not image_list_html:
+        image_list_selector = pq(album_pagination_response_content).find(".main-image img")
+        if image_list_selector.length == 0:
             raise crawler.CrawlerException("第%s页 页面截取图片列表失败\n%s" % (page_count, album_pagination_response_content))
-        image_url_list = re.findall('<img src="([^"]*)"', image_list_html)
-        if len(image_url_list) == 0:
-            if image_list_html.strip() != "<center></center>":
-                raise crawler.CrawlerException("第%s页 图片列表匹配图片地址失败\n%s" % (page_count, album_pagination_response_content))
-        else:
-            result["image_url_list"] += image_url_list
+        for image_index in range(0, image_list_selector.length):
+            result["image_url_list"].append(image_list_selector.eq(image_index).attr("src"))
         # 判断是不是最后一页
-        page_count_find = re.findall('">(\d*)</a>', tool.find_sub_string(album_pagination_response_content, '<div id="pages">', "</div>"))
-        if len(page_count_find) > 0:
-            max_page_count = max(list(map(int, page_count_find)))
+        next_pagination_html = pq(album_pagination_response_content).find(".pagenavi a:last span").html()
+        if next_pagination_html == "下一页»":
+            page_count += 1
+        elif next_pagination_html == "下一组»":
+            break
         else:
-            max_page_count = 1
-        page_count += 1
+            raise crawler.CrawlerException("页面截取分页信息失败\n%s" % album_pagination_response_content)
     return result
 
 
-# 对一些异常的图片地址做过滤
-def get_image_url(image_url):
-    return image_url.replace("/[page]", "/")
-
-
-class MeiTuRi(crawler.Crawler):
+class MZiTu(crawler.Crawler):
     def __init__(self):
         # 设置APP目录
         tool.PROJECT_APP_PATH = os.path.abspath(os.path.dirname(__file__))
@@ -144,12 +137,11 @@ class MeiTuRi(crawler.Crawler):
                 for image_url in album_response["image_url_list"]:
                     if not self.is_running():
                         tool.process_exit(0)
-                    image_url = get_image_url(image_url)
                     log.step("图集%s 《%s》 开始下载第%s张图片 %s" % (album_id, album_title, image_index, image_url))
 
                     file_type = image_url.split(".")[-1]
                     file_path = os.path.join(album_path, "%03d.%s" % (image_index, file_type))
-                    save_file_return = net.save_net_file(image_url, file_path, header_list={"Referer": "http://www.meituri.com/"})
+                    save_file_return = net.save_net_file(image_url, file_path, header_list={"Referer": "http://www.mzitu.com/"})
                     if save_file_return["status"] == 1:
                         log.step("图集%s 《%s》 第%s张图片下载成功" % (album_id, album_title, image_index))
                     else:
@@ -177,4 +169,4 @@ class MeiTuRi(crawler.Crawler):
 
 
 if __name__ == "__main__":
-    MeiTuRi().main()
+    MZiTu().main()
