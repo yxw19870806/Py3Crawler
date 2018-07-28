@@ -39,6 +39,14 @@ def get_album_page(album_id):
     }
     page_count = 1
     while True:
+        if album_id == 57773:
+            if page_count == 40:
+                page_count += 1
+                continue
+            elif page_count == 41:
+                result["image_url_list"].append("http://i.meizitu.net/2016/01/25f40.jpg")
+                page_count += 1
+                continue
         if page_count == 1:
             album_pagination_url = "http://www.mzitu.com/%s" % album_id
         else:
