@@ -69,7 +69,7 @@ def get_album_page(album_id):
         elif next_pagination_html == "下一组»":
             break
         else:
-            raise crawler.CrawlerException("页面截取分页信息失败\n%s" % album_pagination_response_content)
+            raise crawler.CrawlerException("第%s页 页面截取分页信息失败\n%s" % (page_count, album_pagination_response_content))
     return result
 
 
@@ -130,9 +130,9 @@ class MZiTu(crawler.Crawler):
                 # 过滤标题中不支持的字符
                 album_title = path.filter_text(album_response["album_title"])
                 if album_title:
-                    album_path = os.path.join(self.image_download_path, "%05d %s" % (album_id, album_title))
+                    album_path = os.path.join(self.image_download_path, "%06d %s" % (album_id, album_title))
                 else:
-                    album_path = os.path.join(self.image_download_path, "%05d" % album_id)
+                    album_path = os.path.join(self.image_download_path, "%06d" % album_id)
                 temp_path = album_path
                 for image_url in album_response["image_url_list"]:
                     if not self.is_running():
