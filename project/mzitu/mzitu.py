@@ -69,7 +69,7 @@ def get_album_page(album_id):
         elif next_pagination_html == "下一组»":
             break
         else:
-            raise crawler.CrawlerException("页面截取分页信息失败\n%s" % album_pagination_response_content)
+            raise crawler.CrawlerException("第%s页 页面截取分页信息失败\n%s" % (page_count, album_pagination_response_content))
     return result
 
 
