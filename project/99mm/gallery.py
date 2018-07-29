@@ -59,16 +59,24 @@ def get_album_page(album_id):
     # 获取图集图片地址
     js_string = tool.find_sub_string(album_pagination_response_content, "var iaStr = '", "'")
     if not js_string:
-        raise crawler.CrawlerException("页面截取页面参数失败\n%s" % album_pagination_response_content)
+        raise crawler.CrawlerException("页面截取页面参数iaStr失败\n%s" % album_pagination_response_content)
     var_list = js_string.split(",")
     if len(var_list) < 8:
-        raise crawler.CrawlerException("页面参数长度不正确\n%s" % album_pagination_response_content)
+        raise crawler.CrawlerException("iaStr参数长度不正确\n%s" % album_pagination_response_content)
     if not crawler.is_integer(var_list[2]):
-        raise crawler.CrawlerException("图片数量参数类型不正确\n%s" % album_pagination_response_content)
-    if len(var_list) != int(var_list[2]) + 8:
-        raise crawler.CrawlerException("页面参数长度不正确\n%s" % album_pagination_response_content)
-    for image_index in range(1, int(var_list[2]) + 1):
-        result["image_url_list"].append("http://fj.kanmengmei.com/%s/%s/%s-%s.jpg" % (var_list[4], album_id, image_index, var_list[image_index + 7]))
+        raise crawler.CrawlerException("图片数量类型不正确\n%s" % album_pagination_response_content)
+    image_count = int(var_list[2])
+    if len(var_list) != image_count + 8:
+        raise crawler.CrawlerException("iaStr参数长度不正确\n%s" % album_pagination_response_content)
+    path_list = []
+    path_string = tool.find_sub_string(album_pagination_response_content, "var iaOther = '", "'")
+    if path_string:
+        path_list = path_string.split(",")
+        if len(path_list) != image_count:
+            raise crawler.CrawlerException("iaOther参数长度不正确\n%s" % album_pagination_response_content)
+    for image_index in range(1, int(image_count) + 1):
+        host_name = "file" if len(path_list) == image_count and path_list[image_index - 1] == "1" else "fj"
+        result["image_url_list"].append("http://%s.kanmengmei.com/%s/%s/%s-%s.jpg" % (host_name, var_list[4], album_id, image_index, var_list[image_index + 7]))
     return result
 
 
