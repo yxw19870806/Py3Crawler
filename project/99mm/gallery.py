@@ -67,7 +67,7 @@ def get_album_page(album_id):
         raise crawler.CrawlerException("图片数量类型不正确\n%s" % album_pagination_response_content)
     image_count = int(var_list[2])
     if len(var_list) != image_count + 8:
-        raise crawler.CrawlerException("iaStr参数长度不正确\n%s" % album_pagination_response_content)
+        log.error("图集%s iaStr参数长度不正确\n%s" % (album_id, var_list))
     path_list = []
     path_string = tool.find_sub_string(album_pagination_response_content, "var iaOther = '", "'")
     if path_string:
@@ -75,6 +75,9 @@ def get_album_page(album_id):
         if len(path_list) != image_count:
             raise crawler.CrawlerException("iaOther参数长度不正确\n%s" % album_pagination_response_content)
     for image_index in range(1, int(image_count) + 1):
+        if image_index >= len(var_list) - 7:
+            log.error("图集%s 第%s张图已被跳过" % (album_id, image_index))
+            continue
         host_name = "file" if len(path_list) == image_count and path_list[image_index - 1] == "1" else "fj"
         result["image_url_list"].append("http://%s.kanmengmei.com/%s/%s/%s-%s.jpg" % (host_name, var_list[4], album_id, image_index, var_list[image_index + 7]))
     return result
