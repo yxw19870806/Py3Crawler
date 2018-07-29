@@ -126,8 +126,8 @@ class Gallery(crawler.Crawler):
                     log.error("图集%s解析失败，原因：%s" % (album_id, e.message))
                     raise
 
-                log.trace("图集%s 《%s》解析的全部图片：%s" % (album_id, album_response["album_title"], album_response["image_url_list"]))
-                log.step("图集%s 《%s》解析获取%s张图片" % (album_id, album_response["album_title"],  len(album_response["image_url_list"])))
+                log.trace("图集%s《%s》解析的全部图片：%s" % (album_id, album_response["album_title"], album_response["image_url_list"]))
+                log.step("图集%s《%s》解析获取%s张图片" % (album_id, album_response["album_title"],  len(album_response["image_url_list"])))
 
                 image_index = 1
                 # 过滤标题中不支持的字符
