@@ -268,7 +268,8 @@ class Download(crawler.DownloadThread):
                 log.error(self.account_name + " 第%s页图片解析失败，原因：%s" % (page_count, e.message))
                 raise
 
-            log.trace(self.account_name + "第%s页解析的全部图片信息：%s" % (page_count, photo_pagination_response["image_info_list"]))
+            log.trace(self.account_name + "第%s页解析的全部图片：%s" % (page_count, photo_pagination_response["image_info_list"]))
+            log.step(self.account_name + "第%s页解析获取%s张图片" % (page_count, len(photo_pagination_response["image_info_list"])))
 
             # 寻找这一页符合条件的图片
             for image_info in photo_pagination_response["image_info_list"]:
@@ -307,16 +308,17 @@ class Download(crawler.DownloadThread):
         # 获取全部还未下载过需要解析的视频
         while not is_over:
             self.main_thread_check()  # 检测主线程运行状态
-            log.step(self.account_name + " 开始解析%s后一页视频" % since_id)
+            log.step(self.account_name + " 开始解析since_id：%s页视频" % since_id)
 
             # 获取指定时间点后的一页视频信息
             try:
                 video_pagination_response = get_one_page_video(account_index_response["account_page_id"], since_id)
             except crawler.CrawlerException as e:
-                log.error(self.account_name + " %s后的一页视频解析失败，原因：%s" % (since_id, e.message))
+                log.error(self.account_name + " since_id：%s页视频解析失败，原因：%s" % (since_id, e.message))
                 raise
 
-            log.trace(self.account_name + "since_id：%s解析的全部视频：%s" % (since_id, video_pagination_response["video_play_url_list"]))
+            log.trace(self.account_name + "since_id：%s页解析的全部视频：%s" % (since_id, video_pagination_response["video_play_url_list"]))
+            log.step(self.account_name + "since_id：%s页解析获取%s个视频" % (since_id, len(video_pagination_response["video_play_url_list"])))
 
             # 寻找这一页符合条件的视频
             for video_play_url in video_pagination_response["video_play_url_list"]:

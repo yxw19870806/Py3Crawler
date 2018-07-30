@@ -475,16 +475,17 @@ class Download(crawler.DownloadThread):
         # 获取全部还未下载过需要解析的相册
         while not is_over:
             self.main_thread_check()  # 检测主线程运行状态
-            log.step(self.account_name + " 开始解析 %s 视频页" % token)
+            log.step(self.account_name + " 开始解析token：%s页视频" % token)
 
             # 获取一页视频
             try:
                 video_pagination_response = get_one_page_video(self.account_id, token)
             except crawler.CrawlerException as e:
-                log.error(self.account_name + " 视频页（token：%s）解析失败，原因：%s" % (token, e.message))
+                log.error(self.account_name + " token：%s页视频解析失败，原因：%s" % (token, e.message))
                 raise
 
-            log.trace(self.account_name + " 视频页（token：%s）解析的全部日志：%s" % (token, video_pagination_response["video_id_list"]))
+            log.trace(self.account_name + " token：%s页解析的全部视频：%s" % (token, video_pagination_response["video_id_list"]))
+            log.trace(self.account_name + " token：%s页解析获取%s个视频" % (token, len(video_pagination_response["video_id_list"])))
 
             if len(self.account_info) < 4:
                 log.step(self.account_name + " 频道名：%s" % video_pagination_response["account_name"])
@@ -534,15 +535,15 @@ class Download(crawler.DownloadThread):
             return
 
         self.main_thread_check()  # 检测主线程运行状态
-        log.step(self.account_name + " 开始下载视频%s 《%s》 %s" % (video_id, video_response["title"], video_response["video_url"]))
+        log.step(self.account_name + " 开始下载视频%s《%s》 %s" % (video_id, video_response["title"], video_response["video_url"]))
 
         video_file_path = os.path.join(self.main_thread.video_download_path, self.account_name, "%s - %s.mp4" % (video_id, path.filter_text(video_response["title"])))
         save_file_return = net.save_net_file(video_response["video_url"], video_file_path, head_check=True)
         if save_file_return["status"] == 1:
             # 设置临时目录
-            log.step(self.account_name + " 视频%s 《%s》下载成功" % (video_id, video_response["title"]))
+            log.step(self.account_name + " 视频%s《%s》下载成功" % (video_id, video_response["title"]))
         else:
-            log.error(self.account_name + " 视频%s 《%s》 %s 下载失败，原因：%s" % (video_id, video_response["title"], video_response["video_url"], crawler.download_failre(save_file_return["code"])))
+            log.error(self.account_name + " 视频%s《%s》 %s 下载失败，原因：%s" % (video_id, video_response["title"], video_response["video_url"], crawler.download_failre(save_file_return["code"])))
 
         # 媒体内图片和视频全部下载完毕
         self.total_video_count += 1  # 计数累加

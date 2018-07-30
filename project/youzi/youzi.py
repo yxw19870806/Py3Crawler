@@ -47,7 +47,7 @@ def get_album_page(album_id):
             result["is_delete"] = True
             return result
         elif album_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
-            raise crawler.CrawlerException("第%s页 " % page_count + crawler.request_failre(album_pagination_response.status))
+            raise crawler.CrawlerException("第%s页" % page_count + crawler.request_failre(album_pagination_response.status))
         album_pagination_response_content = album_pagination_response.data.decode()
         # 判断图集是否已经被删除
         if page_count == 1:
@@ -58,7 +58,7 @@ def get_album_page(album_id):
         # 获取图集图片地址
         image_list_selector = pq(album_pagination_response_content).find("div.articleV4Body a img")
         if image_list_selector.length == 0:
-            raise crawler.CrawlerException("第%s页 页面匹配图片地址失败\n%s" % (page_count, album_pagination_response_content))
+            raise crawler.CrawlerException("第%s页页面匹配图片地址失败\n%s" % (page_count, album_pagination_response_content))
         for image_index in range(0, image_list_selector.length):
             result["image_url_list"].append(image_list_selector.eq(image_index).attr("src"))
         # 获取总页数
@@ -70,7 +70,7 @@ def get_album_page(album_id):
                     max_page_count = max(int(temp_page_count), max_page_count)
         else:
             if page_count > 1:
-                raise crawler.CrawlerException("第%s页 页面匹配分页信息失败\n%s" % (page_count, album_pagination_response_content))
+                raise crawler.CrawlerException("第%s页页面匹配分页信息失败\n%s" % (page_count, album_pagination_response_content))
         page_count += 1
     return result
 

@@ -197,6 +197,9 @@ class Download(crawler.DownloadThread):
             log.error(self.account_name + " 视频列表解析失败，原因：%s" % e.message)
             raise
 
+        log.trace(self.account_name + " 解析的全部视频：%s" % account_index_response["video_info_list"])
+        log.step(self.account_name + " 解析获取%s个视频" % len(account_index_response["video_info_list"]))
+
         video_info_list = []
         # 寻找这一页符合条件的视频
         for video_info in account_index_response["video_info_list"]:

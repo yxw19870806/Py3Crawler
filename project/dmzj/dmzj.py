@@ -169,7 +169,8 @@ class Download(crawler.DownloadThread):
             log.error(self.comic_name + " 漫画首页解析失败，原因：%s" % e.message)
             raise
 
-        log.trace(self.comic_name + " 漫画首页解析的全部页面：%s" % blog_pagination_response["comic_info_list"])
+        log.trace(self.comic_name + " 漫画首页解析的全部漫画：%s" % blog_pagination_response["comic_info_list"])
+        log.step(self.comic_name + " 漫画首页解析获取%s个漫画" % len(blog_pagination_response["comic_info_list"]))
 
         # 寻找这一页符合条件的媒体
         for page_id in sorted(list(blog_pagination_response["comic_info_list"].keys()), reverse=True):

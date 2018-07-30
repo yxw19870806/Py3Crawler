@@ -59,15 +59,15 @@ def get_album_page(album_id):
     # 获取图集图片地址
     js_string = tool.find_sub_string(album_pagination_response_content, "var iaStr = '", "'")
     if not js_string:
-        raise crawler.CrawlerException("页面截取页面参数iaStr失败\n%s" % album_pagination_response_content)
+        raise crawler.CrawlerException("页面截取页面参数'iaStr'失败\n%s" % album_pagination_response_content)
     var_list = js_string.split(",")
     if len(var_list) < 8:
-        raise crawler.CrawlerException("iaStr参数长度不正确\n%s" % album_pagination_response_content)
+        raise crawler.CrawlerException("'iaStr'参数长度不正确\n%s" % album_pagination_response_content)
     if not crawler.is_integer(var_list[2]):
         raise crawler.CrawlerException("图片数量类型不正确\n%s" % album_pagination_response_content)
     image_count = int(var_list[2])
     if len(var_list) != image_count + 8:
-        log.error("图集%s iaStr参数长度不正确\n%s" % (album_id, var_list))
+        log.error("图集%s'iaStr'参数长度不正确\n%s" % (album_id, var_list))
     path_list = []
     path_string = tool.find_sub_string(album_pagination_response_content, "var iaOther = '", "'")
     if path_string:
@@ -76,7 +76,7 @@ def get_album_page(album_id):
             raise crawler.CrawlerException("iaOther参数长度不正确\n%s" % album_pagination_response_content)
     for image_index in range(1, int(image_count) + 1):
         if image_index >= len(var_list) - 7:
-            log.error("图集%s 第%s张图已被跳过" % (album_id, image_index))
+            log.error("图集%s第%s张图片已被跳过" % (album_id, image_index))
             continue
         host_name = "file" if len(path_list) == image_count and path_list[image_index - 1] == "1" else "fj"
         result["image_url_list"].append("http://%s.kanmengmei.com/%s/%s/%s-%s.jpg" % (host_name, var_list[4], album_id, image_index, var_list[image_index + 7]))
@@ -142,15 +142,15 @@ class Gallery(crawler.Crawler):
                 for image_url in album_response["image_url_list"]:
                     if not self.is_running():
                         tool.process_exit(0)
-                    log.step("图集%s 《%s》 开始下载第%s张图片 %s" % (album_id, album_title, image_index, image_url))
+                    log.step("图集%s《%s》开始下载第%s张图片 %s" % (album_id, album_title, image_index, image_url))
 
                     file_type = image_url.split(".")[-1]
                     file_path = os.path.join(album_path, "%03d.%s" % (image_index, file_type))
                     save_file_return = net.save_net_file(image_url, file_path, header_list={"Referer": "http://www.99mm.me/"})
                     if save_file_return["status"] == 1:
-                        log.step("图集%s 《%s》 第%s张图片下载成功" % (album_id, album_title, image_index))
+                        log.step("图集%s《%s》第%s张图片下载成功" % (album_id, album_title, image_index))
                     else:
-                        log.error("图集%s 《%s》 第%s张图片 %s 下载失败，原因：%s" % (album_id, album_title, image_index, image_url, crawler.download_failre(save_file_return["code"])))
+                        log.error("图集%s《%s》第%s张图片 %s 下载失败，原因：%s" % (album_id, album_title, image_index, image_url, crawler.download_failre(save_file_return["code"])))
                     image_index += 1
                 # 图集内图片全部下载完毕
                 temp_path = ""  # 临时目录设置清除

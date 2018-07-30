@@ -152,20 +152,21 @@ class Download(crawler.DownloadThread):
         # 获取全部还未下载过需要解析的日志
         while not is_over:
             self.main_thread_check()  # 检测主线程运行状态
-            log.step(self.account_name + " 开始解析target id %s后的一页日志" % target_id)
+            log.step(self.account_name + " 开始解析target：%s页" % target_id)
 
             # 获取一页日志信息
             try:
                 blog_pagination_response = get_one_page_blog(self.account_name, target_id)
             except crawler.CrawlerException as e:
-                log.error(self.account_name + " target id %s的一页日志信息解析失败，原因：%s" % (target_id, e.message))
+                log.error(self.account_name + " target：%s页解析失败，原因：%s" % (target_id, e.message))
                 raise
 
             # 如果为空，表示已经取完了
             if len(blog_pagination_response["blog_info_list"]) == 0:
                 break
 
-            log.trace(self.account_name + " target id %s解析的全部日志：%s" % (target_id, blog_pagination_response["blog_info_list"]))
+            log.trace(self.account_name + " target：%s页解析的全部日志：%s" % (target_id, blog_pagination_response["blog_info_list"]))
+            log.step(self.account_name + " target：%s页解析获取%s个日志" % (target_id, len(blog_pagination_response["blog_info_list"])))
 
             # 寻找这一页符合条件的日志
             for blog_info in blog_pagination_response["blog_info_list"]:
@@ -185,6 +186,9 @@ class Download(crawler.DownloadThread):
         # 图片下载
         image_index = int(self.account_info[1]) + 1
         if self.main_thread.is_download_image:
+            log.trace(self.account_name + " 日志%s解析的全部图片：%s" % (blog_info["blog_id"], blog_info["image_url_list"]))
+            log.step(self.account_name + " 日志%s解析获取%s张图片" % (blog_info["blog_id"], len(blog_info["image_url_list"])))
+
             for image_url in blog_info["image_url_list"]:
                 self.main_thread_check()  # 检测主线程运行状态
                 log.step(self.account_name + " 开始下载第%s张图片 %s" % (image_index, image_url))
@@ -202,6 +206,9 @@ class Download(crawler.DownloadThread):
         # 视频下载
         video_index = int(self.account_info[2]) + 1
         if self.main_thread.is_download_video:
+            log.trace(self.account_name + " 日志%s解析的全部视频：%s" % (blog_info["blog_id"], blog_info["video_url_list"]))
+            log.step(self.account_name + " 日志%s解析获取%s个视频" % (blog_info["blog_id"], len(blog_info["video_url_list"])))
+
             for video_url in blog_info["video_url_list"]:
                 self.main_thread_check()  # 检测主线程运行状态
                 log.step(self.account_name + " 开始下载第%s个视频 %s" % (video_index, video_url))

@@ -517,6 +517,7 @@ class Download(crawler.DownloadThread):
                 break
 
             log.trace(self.account_id + " 第%s页解析的全部日志：%s" % (page_count, post_pagination_response["post_info_list"]))
+            log.step(self.account_id + " 第%s页解析获取%s个日志" % (page_count, len(post_pagination_response["post_info_list"])))
 
             # 寻找这一页符合条件的日志
             for post_info in post_pagination_response["post_info_list"]:
@@ -613,7 +614,8 @@ class Download(crawler.DownloadThread):
         # 图片下载
         image_index = 1
         if self.main_thread.is_download_image and len(image_url_list) > 0:
-            log.trace(self.account_id + " 日志 %s 解析的的全部图片：%s" % (post_id, image_url_list))
+            log.trace(self.account_id + " 日志 %s 解析的全部图片：%s" % (post_id, image_url_list))
+            log.step(self.account_id + " 日志 %s 解析获取%s个图片" % (post_id, len(image_url_list)))
 
             for image_url in image_url_list:
                 self.main_thread_check()  # 检测主线程运行状态

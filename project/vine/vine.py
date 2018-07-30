@@ -145,6 +145,9 @@ class Download(crawler.DownloadThread):
             log.error(self.account_name + " 账号首页解析失败，原因：%s" % e.message)
             raise
 
+        log.trace(self.account_name + " 解析的全部视频：%s" % account_index_page_response["video_id_list"])
+        log.step(self.account_name + " 解析获取%s个视频" % len(account_index_page_response["video_id_list"]))
+
         video_id_list = []
         # 是否有根据视频id找到上一次的记录
         if self.account_info[2] == "":
