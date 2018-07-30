@@ -77,7 +77,7 @@ class CNU(crawler.Crawler):
                     tool.process_exit(0)
                 log.step("开始解析第%s页作品" % album_id)
 
-                # 获取相册
+                # 获取作品
                 try:
                     album_response = get_album_page(album_id)
                 except crawler.CrawlerException as e:

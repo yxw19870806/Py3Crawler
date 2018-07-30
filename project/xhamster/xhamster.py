@@ -143,7 +143,7 @@ class Xhamster(crawler.Crawler):
                     tool.process_exit(0)
                 log.step("开始解析视频%s" % video_id)
 
-                # 获取相册
+                # 获取视频
                 try:
                     video_play_response = get_video_page(video_id)
                 except crawler.CrawlerException as e:
