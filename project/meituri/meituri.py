@@ -47,7 +47,7 @@ def get_album_page(album_id):
             result["is_delete"] = True
             return result
         elif album_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
-            raise crawler.CrawlerException("第%s页 " % page_count + crawler.request_failre(album_pagination_response.status))
+            raise crawler.CrawlerException("第%s页" % page_count + crawler.request_failre(album_pagination_response.status))
         album_pagination_response_content = album_pagination_response.data.decode()
         if page_count == 1:
             # 获取图集标题
@@ -58,11 +58,11 @@ def get_album_page(album_id):
         # 获取图集图片地址
         image_list_html = tool.find_sub_string(album_pagination_response_content, '<div class="content">', "</div>")
         if not image_list_html:
-            raise crawler.CrawlerException("第%s页 页面截取图片列表失败\n%s" % (page_count, album_pagination_response_content))
+            raise crawler.CrawlerException("第%s页页面截取图片列表失败\n%s" % (page_count, album_pagination_response_content))
         image_url_list = re.findall('<img src="([^"]*)"', image_list_html)
         if len(image_url_list) == 0:
             if image_list_html.strip() != "<center></center>":
-                raise crawler.CrawlerException("第%s页 图片列表匹配图片地址失败\n%s" % (page_count, album_pagination_response_content))
+                raise crawler.CrawlerException("第%s页图片列表匹配图片地址失败\n%s" % (page_count, album_pagination_response_content))
         else:
             result["image_url_list"] += image_url_list
         # 判断是不是最后一页

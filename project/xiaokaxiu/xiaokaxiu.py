@@ -138,6 +138,7 @@ class Download(crawler.DownloadThread):
                 break
 
             log.trace(self.account_name + " 第%s页解析的全部视频：%s" % (page_count, video_pagination_response["video_info_list"]))
+            log.step(self.account_name + " 第%s页解析获取%s个视频" % (page_count, len(video_pagination_response["video_info_list"])))
 
             # 寻找这一页符合条件的视频
             for video_info in video_pagination_response["video_info_list"]:

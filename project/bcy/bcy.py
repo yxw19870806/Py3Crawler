@@ -348,6 +348,7 @@ class Download(crawler.DownloadThread):
                 raise
 
             log.trace(self.account_name + " 第%s页解析的全部作品：%s" % (page_count, album_pagination_response["album_id_list"]))
+            log.step(self.account_name + " 第%s页解析获取%s个作品" % (page_count, len(album_pagination_response["album_id_list"])))
 
             # 寻找这一页符合条件的作品
             for album_id in album_pagination_response["album_id_list"]:
@@ -403,6 +404,9 @@ class Download(crawler.DownloadThread):
                 # 关注失败
                 log.error(self.account_name + " 关注失败，跳过作品%s" % album_id)
                 return
+
+        log.trace(self.account_name + " 作品%s解析的全部图片：%s" % (album_id, album_response["image_url_list"]))
+        log.step(self.account_name + " 作品%s解析获取%s张图" % (album_id, len(album_response["image_url_list"])))
 
         image_index = 1
         album_path = os.path.join(self.main_thread.image_download_path, self.account_name, album_id)

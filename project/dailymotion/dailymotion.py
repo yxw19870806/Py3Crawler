@@ -275,7 +275,8 @@ class Download(crawler.DownloadThread):
                 log.error(self.account_id + " 第%s页视频解析失败，原因：%s" % (page_count, e.message))
                 raise
 
-            log.trace(self.account_id + " 解析的全部视频：%s" % blog_pagination_response["video_info_list"])
+            log.trace(self.account_id + " 第%s页解析的全部视频：%s" % (page_count, blog_pagination_response["video_info_list"]))
+            log.step(self.account_id + " 第%s页解析获取%s个视频" % (page_count, len(blog_pagination_response["video_info_list"])))
 
             # 寻找这一页符合条件的日志
             for video_info in blog_pagination_response["video_info_list"]:

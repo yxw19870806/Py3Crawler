@@ -321,16 +321,17 @@ class Download(crawler.DownloadThread):
         # 获取全部还未下载过需要解析的媒体
         while not is_over:
             self.main_thread_check()  # 检测主线程运行状态
-            log.step(self.account_name + " 开始解析cursor '%s'的媒体信息" % cursor)
+            log.step(self.account_name + " 开始解析cursor：%s页媒体" % cursor)
 
             # 获取指定时间后的一页媒体信息
             try:
                 media_pagination_response = get_one_page_media(self.account_info[1], cursor)
             except crawler.CrawlerException as e:
-                log.error(self.account_name + " cursor '%s'的一页媒体信息解析失败，原因：%s" % (cursor, e.message))
+                log.error(self.account_name + " cursor：%s页媒体解析失败，原因：%s" % (cursor, e.message))
                 raise
 
-            log.trace(self.account_name + " cursor '%s'解析的全部媒体：%s" % (cursor, media_pagination_response["media_info_list"]))
+            log.trace(self.account_name + " cursor：%s页解析的全部媒体：%s" % (cursor, media_pagination_response["media_info_list"]))
+            log.step(self.account_name + " cursor：%s页解析获取%s个媒体" % (cursor, len(media_pagination_response["media_info_list"])))
 
             # 寻找这一页符合条件的媒体
             for media_info in media_pagination_response["media_info_list"]:
@@ -369,6 +370,9 @@ class Download(crawler.DownloadThread):
             else:
                 image_url_list = [media_info["image_url"]]
 
+            log.trace(self.account_name + " 媒体%s解析的全部图片：%s" % (media_info["page_id"], media_response["image_url_list"]))
+            log.step(self.account_name + " 媒体%s解析获取%s张图片" % (media_info["page_id"], len(media_response["image_url_list"])))
+
             for image_url in image_url_list:
                 self.main_thread_check()  # 检测主线程运行状态
                 # 去除特效，获取原始路径
@@ -397,6 +401,9 @@ class Download(crawler.DownloadThread):
                 except crawler.CrawlerException as e:
                     log.error(self.account_name + " 媒体%s解析失败，原因：%s" % (media_info["page_id"], e.message))
                     raise
+
+            log.trace(self.account_name + " 媒体%s解析的全部视频：%s" % (media_info["page_id"], media_response["video_url_list"]))
+            log.step(self.account_name + " 媒体%s解析获取%s个视频" % (media_info["page_id"], len(media_response["video_url_list"])))
 
             for video_url in media_response["video_url_list"]:
                 self.main_thread_check()  # 检测主线程运行状态

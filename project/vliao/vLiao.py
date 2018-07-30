@@ -166,6 +166,7 @@ class Download(crawler.DownloadThread):
                 raise
 
             log.trace(self.account_name + " 第%s页解析的全部视频：%s" % (page_count, video_pagination_response["video_info_list"]))
+            log.step(self.account_name + " 第%s页解析获取%s个视频" % (page_count, len(video_pagination_response["video_info_list"])))
 
             # 寻找这一页符合条件的视频
             for video_info in video_pagination_response["video_info_list"]:
@@ -196,6 +197,7 @@ class Download(crawler.DownloadThread):
         # 视频下载
         self.main_thread_check()  # 检测主线程运行状态
         log.step(self.account_name + " 开始下载视频 %s 《%s》 %s" % (video_info["video_id"], video_info["video_title"], video_info_response["video_url"]))
+
         video_title = path.filter_text(video_info["video_title"])
         video_file_path = os.path.join(self.main_thread.video_download_path, self.account_name, "%06d %s.mp4" % (int(video_info["video_id"]), video_title))
         save_file_return = net.save_net_file(video_info_response["video_url"], video_file_path)

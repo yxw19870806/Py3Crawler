@@ -50,7 +50,7 @@ def get_album_page(album_id):
             result["is_delete"] = True
             return result
         elif album_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
-            raise crawler.CrawlerException("第%s页 " % page_count + crawler.request_failre(album_pagination_response.status))
+            raise crawler.CrawlerException("第%s页" % page_count + crawler.request_failre(album_pagination_response.status))
         album_pagination_response_content = album_pagination_response.data.decode()
         if page_count == 1:
             # 获取图集标题
@@ -62,11 +62,11 @@ def get_album_page(album_id):
         # 获取图集图片地址
         image_list_html = tool.find_sub_string(album_pagination_response_content, '<div class="content">', "</div>")
         if not image_list_html:
-            raise crawler.CrawlerException("第%s页 页面截取图片列表失败\n%s" % (page_count, album_pagination_response_content))
+            raise crawler.CrawlerException("第%s页页面截取图片列表失败\n%s" % (page_count, album_pagination_response_content))
         image_url_list = re.findall('<img src="([^"]*)"', image_list_html)
         if len(image_url_list) == 0:
             if image_list_html.strip() != "<center></center>":
-                raise crawler.CrawlerException("第%s页 图片列表匹配图片地址失败\n%s" % (page_count, album_pagination_response_content))
+                raise crawler.CrawlerException("第%s页图片列表匹配图片地址失败\n%s" % (page_count, album_pagination_response_content))
         else:
             result["image_url_list"] += image_url_list
         # 判断是不是最后一页
@@ -149,15 +149,15 @@ class MeiTuLu(crawler.Crawler):
                     if not self.is_running():
                         tool.process_exit(0)
                     image_url = get_image_url(image_url)
-                    log.step("图集%s 《%s》 开始下载第%s张图片 %s" % (album_id, album_title, image_index, image_url))
+                    log.step("图集%s《%s》开始下载第%s张图片 %s" % (album_id, album_title, image_index, image_url))
 
                     file_type = image_url.split(".")[-1]
                     file_path = os.path.join(album_path, "%03d.%s" % (image_index, file_type))
                     save_file_return = net.save_net_file(image_url, file_path, header_list={"Referer": "https://www.meitulu.com/"})
                     if save_file_return["status"] == 1:
-                        log.step("图集%s 《%s》 第%s张图片下载成功" % (album_id, album_title, image_index))
+                        log.step("图集%s《%s》第%s张图片下载成功" % (album_id, album_title, image_index))
                     else:
-                        log.error("图集%s 《%s》 第%s张图片 %s 下载失败，原因：%s" % (album_id, album_title, image_index, image_url, crawler.download_failre(save_file_return["code"])))
+                        log.error("图集%s《%s》第%s张图片 %s 下载失败，原因：%s" % (album_id, album_title, image_index, image_url, crawler.download_failre(save_file_return["code"])))
                     image_index += 1
                 # 图集内图片全部下载完毕
                 temp_path = ""  # 临时目录设置清除

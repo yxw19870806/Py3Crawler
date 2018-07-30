@@ -129,13 +129,19 @@ class Favorite(crawler.Crawler):
                 log.error("第%s页收藏解析失败，原因：%s" % (page_count, e.message))
                 raise
 
+            log.trace("第%s页解析的全部微博：%s" % (page_count, favorite_pagination_response["blog_info_list"]))
+            log.step("第%s页解析获取%s个微博" % (page_count, len(favorite_pagination_response["blog_info_list"])))
+
             for blog_info in favorite_pagination_response["blog_info_list"]:
                 log.step("开始解析微博%s" % blog_info["blog_id"])
+
+                log.trace("微博%s解析的全部图片：%s" % (blog_info["blog_id"], blog_info["image_url_list"]))
+                log.step("微博%s解析获取%s张图片" % (blog_info["blog_id"], len(blog_info["image_url_list"])))
 
                 image_count = 1
                 image_path = os.path.join(self.image_download_path, blog_info["blog_id"])
                 for image_url in blog_info["image_url_list"]:
-                    log.step("开始下载微博%s的第%s张图片 %s" % (blog_info["blog_id"], image_count, image_url))
+                    log.step("微博%s开始下载第%s张图片 %s" % (blog_info["blog_id"], image_count, image_url))
 
                     file_type = image_url.split(".")[-1]
                     file_path = os.path.join(image_path, "%s.%s" % (image_count, file_type))

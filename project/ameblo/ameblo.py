@@ -277,6 +277,7 @@ class Download(crawler.DownloadThread):
                 raise
 
             log.trace(self.account_name + " 第%s页解析的全部日志：%s" % (page_count, blog_pagination_response["blog_id_list"]))
+            log.step(self.account_name + " 第%s页解析获取%s个日志" % (page_count, len(blog_pagination_response["blog_id_list"])))
 
             for blog_id in blog_pagination_response["blog_id_list"]:
                 # 检查是否达到存档记录
@@ -308,6 +309,7 @@ class Download(crawler.DownloadThread):
             raise
 
         log.trace(self.account_name + " 日志%s解析的全部图片：%s" % (blog_id, blog_response["image_url_list"]))
+        log.step(self.account_name + " 日志%s解析获取%s张图片" % (blog_id, len(blog_response["image_url_list"])))
 
         image_index = int(self.account_info[1]) + 1
         for image_url in blog_response["image_url_list"]:

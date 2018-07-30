@@ -56,7 +56,7 @@ def get_album_page(album_id):
             result["is_delete"] = True
             return result
         elif album_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
-            raise crawler.CrawlerException("第%s页 " % page_count + crawler.request_failre(album_pagination_response.status))
+            raise crawler.CrawlerException("第%s页" % page_count + crawler.request_failre(album_pagination_response.status))
         album_pagination_response_content = album_pagination_response.data.decode()
         if page_count == 1:
             # 获取图集标题
@@ -67,7 +67,7 @@ def get_album_page(album_id):
         # 获取图集图片地址
         image_list_selector = pq(album_pagination_response_content).find(".main-image img")
         if image_list_selector.length == 0:
-            raise crawler.CrawlerException("第%s页 页面截取图片列表失败\n%s" % (page_count, album_pagination_response_content))
+            raise crawler.CrawlerException("第%s页页面截取图片列表失败\n%s" % (page_count, album_pagination_response_content))
         for image_index in range(0, image_list_selector.length):
             result["image_url_list"].append(image_list_selector.eq(image_index).attr("src"))
         # 判断是不是最后一页
@@ -77,7 +77,7 @@ def get_album_page(album_id):
         elif next_pagination_html == "下一组»":
             break
         else:
-            raise crawler.CrawlerException("第%s页 页面截取分页信息失败\n%s" % (page_count, album_pagination_response_content))
+            raise crawler.CrawlerException("第%s页页面截取分页信息失败\n%s" % (page_count, album_pagination_response_content))
     return result
 
 

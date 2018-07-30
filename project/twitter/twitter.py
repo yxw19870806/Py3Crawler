@@ -278,19 +278,20 @@ class Download(crawler.DownloadThread):
         # 获取全部还未下载过需要解析的媒体
         while not is_over:
             self.main_thread_check()  # 检测主线程运行状态
-            log.step(self.account_name + " 开始解析position %s后的一页媒体列表" % position_blog_id)
+            log.step(self.account_name + " 开始解析position：%s页媒体" % position_blog_id)
 
             # 获取指定时间点后的一页图片信息
             try:
                 media_pagination_response = get_one_page_media(self.account_name, position_blog_id)
             except crawler.CrawlerException as e:
-                log.error(self.account_name + " position %s后的一页媒体信息解析失败，原因：%s" % (position_blog_id, e.message))
+                log.error(self.account_name + " position：%s页媒体解析失败，原因：%s" % (position_blog_id, e.message))
                 raise
 
             if media_pagination_response["is_over"]:
                 break
 
-            log.trace(self.account_name + " position %s解析的全部媒体：%s" % (position_blog_id, media_pagination_response["media_info_list"]))
+            log.trace(self.account_name + " position：%s页解析的全部媒体：%s" % (position_blog_id, media_pagination_response["media_info_list"]))
+            log.step(self.account_name + " position：%s页解析获取%s个媒体" % (position_blog_id, len(media_pagination_response["media_info_list"])))
 
             # 寻找这一页符合条件的媒体
             for media_info in media_pagination_response["media_info_list"]:
@@ -316,6 +317,9 @@ class Download(crawler.DownloadThread):
         # 图片下载
         image_index = int(self.account_info[2]) + 1
         if self.main_thread.is_download_image:
+            log.trace(self.account_name + " 媒体%s解析的全部图片：%s" % (media_info["blog_id"], media_info["image_url_list"]))
+            log.step(self.account_name + " 媒体%s解析获取%s张图片" % (media_info["blog_id"], len(media_info["image_url_list"])))
+
             for image_url in media_info["image_url_list"]:
                 self.main_thread_check()  # 检测主线程运行状态
                 log.step(self.account_name + " 开始下载第%s张图片 %s" % (image_index, image_url))
@@ -395,7 +399,7 @@ class Download(crawler.DownloadThread):
             # 从最早的媒体开始下载
             while len(media_info_list) > 0:
                 media_info = media_info_list.pop()
-                log.step(self.account_name + " 开始解析媒体志 %s" % media_info["blog_id"])
+                log.step(self.account_name + " 开始解析媒体%s" % media_info["blog_id"])
                 self.crawl_media(media_info)
                 self.main_thread_check()  # 检测主线程运行状态
         except SystemExit as se:

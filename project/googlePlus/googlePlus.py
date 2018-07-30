@@ -201,16 +201,17 @@ class Download(crawler.DownloadThread):
         # 获取全部还未下载过需要解析的相册
         while not is_over:
             self.main_thread_check()  # 检测主线程运行状态
-            log.step(self.account_name + " 开始解析 %s 相册页" % key)
+            log.step(self.account_name + " 开始解析token：%s页日志" % key)
 
             # 获取一页相册
             try:
                 blog_pagination_response = get_one_page_blog(self.account_id, key)
             except crawler.CrawlerException as e:
-                log.error(self.account_name + " 相册页（token：%s）解析失败，原因：%s" % (key, e.message))
+                log.error(self.account_name + " token：%s页日志解析失败，原因：%s" % (key, e.message))
                 raise
 
-            log.trace(self.account_name + " 相册页（token：%s）解析的全部日志：%s" % (key, blog_pagination_response["blog_info_list"]))
+            log.trace(self.account_name + " token：%s页解析的全部日志：%s" % (key, blog_pagination_response["blog_info_list"]))
+            log.step(self.account_name + " token：%s页解析获取%s个日志" % (key, len(blog_pagination_response["blog_info_list"])))
 
             # 寻找这一页符合条件的日志
             for blog_info in blog_pagination_response["blog_info_list"]:
@@ -243,7 +244,8 @@ class Download(crawler.DownloadThread):
             log.error(self.account_name + " 相册%s没有解析到图片" % blog_info["blog_id"])
             return
 
-        log.trace(self.account_name + " 相册存档页%s解析的全部图片：%s" % (blog_info["blog_id"], album_response["image_url_list"]))
+        log.trace(self.account_name + " 相册%s解析的全部图片：%s" % (blog_info["blog_id"], album_response["image_url_list"]))
+        log.step(self.account_name + " 相册%s解析获取%s张图片" % (blog_info["blog_id"], len(album_response["image_url_list"])))
 
         image_index = int(self.account_info[1]) + 1
         for image_url in album_response["image_url_list"]:
