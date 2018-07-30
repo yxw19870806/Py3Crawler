@@ -157,6 +157,7 @@ class Download(crawler.DownloadThread):
                 break
 
             log.trace(self.account_name + " 第%s页%s解析的全部歌曲：%s" % (page_count, audio_type_name, audio_pagination_response["audio_info_list"]))
+            log.step(self.account_name + " 第%s页%s解析获取%s首歌曲" % (page_count, audio_type_name, len(audio_pagination_response["audio_info_list"])))
 
             # 寻找这一页符合条件的歌曲
             for audio_info in audio_pagination_response["audio_info_list"]:

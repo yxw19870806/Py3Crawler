@@ -18,7 +18,7 @@ SUB_PATH_LIST = ["mncm", "mnmx", "qcmn", "rhmn", "swmt", "xgmn"]
 # 获取图集首页
 def get_index_page():
     index_url = "http://92mntu.com/"
-    index_response = net.http_request(index_url, method="GET")
+    index_response = net.http_request(index_url, method="GET", header_list={"Host": "92mntu.com"})
     result = {
         "max_album_id": None,  # 最新图集id
     }
@@ -53,7 +53,7 @@ def get_album_page(album_id):
                     continue
                 break
         else:
-            album_pagination_url = "http://92mntu.com/%s/%s.html" % (sub_path, album_id)
+            album_pagination_url = "http://92mntu.com/%s/%s_%s.html" % (sub_path, album_id, page_count)
             album_pagination_response = net.http_request(album_pagination_url, method="GET", header_list={"Host": "92mntu.com"})
         if album_pagination_response.status == 409:
             continue
@@ -69,13 +69,13 @@ def get_album_page(album_id):
         # 获取图集图片地址
         image_list_selector = pq(album_pagination_response_content).find("#postarea #bigpic img")
         if image_list_selector.length == 0:
-            raise crawler.CrawlerException("第%s页 页面截取图片列表失败\n%s" % (page_count, album_pagination_response_content))
+            raise crawler.CrawlerException("第%s页页面截取图片列表失败\n%s" % (page_count, album_pagination_response_content))
         for image_index in range(0, image_list_selector.length):
             result["image_url_list"].append("http://92mntu.com" + image_list_selector.eq(image_index).attr("src"))
         # 判断是不是最后一页
         max_page_count = pq(album_pagination_response_content).find(".pageart ul li").eq(-2).find("a").html()
         if not crawler.is_integer(max_page_count):
-            raise crawler.CrawlerException("第%s页 页面截取最大页数失败\n%s" % (page_count, album_pagination_response_content))
+            raise crawler.CrawlerException("第%s页页面截取最大页数失败\n%s" % (page_count, album_pagination_response_content))
         max_page_count = int(max_page_count)
         page_count += 1
     return result
@@ -140,15 +140,15 @@ class Gallery(crawler.Crawler):
                 for image_url in album_response["image_url_list"]:
                     if not self.is_running():
                         tool.process_exit(0)
-                    log.step("图集%s 《%s》 开始下载第%s张图片 %s" % (album_id, album_title, image_index, image_url))
+                    log.step("图集%s《%s》开始下载第%s张图片 %s" % (album_id, album_title, image_index, image_url))
 
                     file_type = image_url.split(".")[-1]
                     file_path = os.path.join(album_path, "%03d.%s" % (image_index, file_type))
-                    save_file_return = net.save_net_file(image_url, file_path, header_list={"Referer": "http://www.99mm.me/"})
+                    save_file_return = net.save_net_file(image_url, file_path)
                     if save_file_return["status"] == 1:
-                        log.step("图集%s 《%s》 第%s张图片下载成功" % (album_id, album_title, image_index))
+                        log.step("图集%s《%s》第%s张图片下载成功" % (album_id, album_title, image_index))
                     else:
-                        log.error("图集%s 《%s》 第%s张图片 %s 下载失败，原因：%s" % (album_id, album_title, image_index, image_url, crawler.download_failre(save_file_return["code"])))
+                        log.error("图集%s《%s》第%s张图片 %s 下载失败，原因：%s" % (album_id, album_title, image_index, image_url, crawler.download_failre(save_file_return["code"])))
                     image_index += 1
                 # 图集内图片全部下载完毕
                 temp_path = ""  # 临时目录设置清除

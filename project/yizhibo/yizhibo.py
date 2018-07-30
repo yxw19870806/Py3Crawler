@@ -189,6 +189,9 @@ class Download(crawler.DownloadThread):
             log.error(self.account_name + " 图片首页解析失败，原因：%s" % e.message)
             return []
 
+        log.trace(self.account_name + " 解析的全部图片：%s" % image_index_response["image_url_list"])
+        log.step(self.account_name + " 解析获取%s张图片" % len(image_index_response["image_url_list"]))
+
         # 寻找这一页符合条件的图片
         image_info_list = []
         for image_url in image_index_response["image_url_list"]:
@@ -235,6 +238,9 @@ class Download(crawler.DownloadThread):
         except crawler.CrawlerException as e:
             log.error(self.account_name + " 视频首页解析失败，原因：%s" % e.message)
             return []
+
+        log.trace(self.account_name + " 解析的全部视频：%s" % video_pagination_response["video_id_list"])
+        log.step(self.account_name + " 解析获取%s个视频" % len(video_pagination_response["video_id_list"]))
 
         # 寻找这一页符合条件的视频
         for video_id in video_pagination_response["video_id_list"]:

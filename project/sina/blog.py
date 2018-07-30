@@ -175,6 +175,7 @@ class Download(crawler.DownloadThread):
                 raise
 
             log.trace(self.account_name + " 第%s页解析的全部日志：%s" % (page_count, blog_pagination_response["blog_info_list"]))
+            log.step(self.account_name + " 第%s页解析获取%s个日志" % (page_count, len(blog_pagination_response["blog_info_list"])))
 
             # 寻找这一页符合条件的日志
             for blog_info in blog_pagination_response["blog_info_list"]:
@@ -208,6 +209,7 @@ class Download(crawler.DownloadThread):
             raise
 
         log.trace(self.account_name + " 日志《%s》 %s 解析的全部图片：%s" % (blog_info["blog_title"], blog_info["blog_url"], blog_response["image_url_list"]))
+        log.step(self.account_name + " 日志《%s》 %s 解析获取%s张图片" % (blog_info["blog_title"], blog_info["blog_url"], len(blog_response["image_url_list"])))
 
         image_index = 1
         # 过滤标题中不支持的字符

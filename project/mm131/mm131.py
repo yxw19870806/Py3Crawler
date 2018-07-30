@@ -1,81 +1,90 @@
 # -*- coding:UTF-8  -*-
 """
-优姿图片爬虫
-http://www.youzi4.cc
+MM131图片爬虫
+http://www.mm131.com/
 @author: hikaru
 email: hikaru870806@hotmail.com
 如有问题或建议请联系
 """
 import os
+import re
 import traceback
 from pyquery import PyQuery as pq
 from common import *
 
+SUB_PATH_LIST = ["chemo", "mingxing", "qingchun", "qipao", "xiaohua", "xinggan"]
+
 
 # 获取图集首页
 def get_index_page():
-    index_url = "http://www.youzi4.cc/mm/xin/index_pt2_1.html"
-    index_response = net.http_request(index_url, method="GET")
     result = {
-        "max_album_id": None,  # 最新图集id
+        "max_album_id": 0,  # 最新图集id
     }
-    if index_response.status != net.HTTP_RETURN_CODE_SUCCEED:
-        raise crawler.CrawlerException(crawler.request_failre(index_response.status))
-    index_response_content = index_response.data.decode()
-    first_album_url = pq(index_response_content).find("div.MeinvTuPianBox ul li a").eq(0).attr("href")
-    if not first_album_url:
-        raise crawler.CrawlerException("页面截取最新图集地址失败\n%s" % index_response_content)
-    album_id = tool.find_sub_string(first_album_url, "/mm/", "/")
-    if not crawler.is_integer(album_id):
-        raise crawler.CrawlerException("图集地址截取图集id失败\n%s" % index_response_content)
-    result["max_album_id"] = int(album_id)
+    for sub_path in SUB_PATH_LIST:
+        sub_index_url = "http://www.mm131.com/%s/" % sub_path
+        sub_index_response = net.http_request(sub_index_url, method="GET")
+        if sub_index_response.status != net.HTTP_RETURN_CODE_SUCCEED:
+            raise crawler.CrawlerException("%s分组" % sub_path + crawler.request_failre(sub_index_response.status))
+        sub_index_response_content = sub_index_response.data.decode("GBK")
+        last_album_page_url = pq(sub_index_response_content).find(".public-box dd:first a").attr("href")
+        if not last_album_page_url:
+            raise crawler.CrawlerException("%s分组页面截取最新图集地址失败\n%s" % (sub_path, sub_index_response_content))
+        album_id_find = re.findall("/(\d*).html", last_album_page_url)
+        if len(album_id_find) != 1:
+            raise crawler.CrawlerException("%s分组最新图集地址截取图集id失败\n%s" % (sub_path, sub_index_response_content))
+        print(album_id_find)
+        result["max_album_id"] = max(result["max_album_id"], int(album_id_find[0]))
     return result
 
 
-# 获取图集全部图片
+# 获取指定一页的图集
 def get_album_page(album_id):
-    page_count = max_page_count = 1
     result = {
         "album_title": "",  # 图集标题
         "image_url_list": [],  # 全部图片地址
-        "is_delete": False,  # 是不是已经被删除
     }
+    page_count = max_page_count = 1
+    sub_path = ""
+    album_pagination_response = None
     while page_count <= max_page_count:
-        album_pagination_url = "http://www.youzi4.cc/mm/%s/%s_%s.html" % (album_id, album_id, page_count)
-        album_pagination_response = net.http_request(album_pagination_url, method="GET")
-        if album_pagination_response.status == 404 and page_count == 1:
-            result["is_delete"] = True
-            return result
-        elif album_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
-            raise crawler.CrawlerException("第%s页" % page_count + crawler.request_failre(album_pagination_response.status))
-        album_pagination_response_content = album_pagination_response.data.decode()
-        # 判断图集是否已经被删除
+        if page_count == 1:
+            for sub_path in SUB_PATH_LIST:
+                album_pagination_url = "http://www.mm131.com/%s/%s.html" % (sub_path, album_id)
+                album_pagination_response = net.http_request(album_pagination_url, method="GET")
+                if album_pagination_response.status == 404:
+                    continue
+                break
+        else:
+            album_pagination_url = "http://www.mm131.com/%s/%s_%s.html" % (sub_path, album_id, page_count)
+            album_pagination_response = net.http_request(album_pagination_url, method="GET")
+        if album_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
+            raise crawler.CrawlerException(crawler.request_failre(album_pagination_response.status))
+        album_pagination_response_content = album_pagination_response.data.decode("GBK")
         if page_count == 1:
             # 获取图集标题
-            result["album_title"] = pq(album_pagination_response_content).find("h1.articleV4Tit").text()
-            if not result["album_title"]:
+            album_title = pq(album_pagination_response_content).find(".content h5").html()
+            if not album_title:
                 raise crawler.CrawlerException("页面截取标题失败\n%s" % album_pagination_response_content)
+            result["album_title"] = album_title.strip()
         # 获取图集图片地址
-        image_list_selector = pq(album_pagination_response_content).find("div.articleV4Body a img")
+        image_list_selector = pq(album_pagination_response_content).find(".content .content-pic img")
         if image_list_selector.length == 0:
-            raise crawler.CrawlerException("第%s页页面匹配图片地址失败\n%s" % (page_count, album_pagination_response_content))
+            raise crawler.CrawlerException("第%s页页面截取图片列表失败\n%s" % (page_count, album_pagination_response_content))
         for image_index in range(0, image_list_selector.length):
             result["image_url_list"].append(image_list_selector.eq(image_index).attr("src"))
-        # 获取总页数
-        pagination_list_selector = pq(album_pagination_response_content).find("ul.articleV4Page a.page-a")
-        if pagination_list_selector.length > 0:
-            for pagination_index in range(0, pagination_list_selector.length):
-                temp_page_count = pagination_list_selector.eq(pagination_index).html()
-                if crawler.is_integer(temp_page_count):
-                    max_page_count = max(int(temp_page_count), max_page_count)
-        else:
-            if page_count > 1:
-                raise crawler.CrawlerException("第%s页页面匹配分页信息失败\n%s" % (page_count, album_pagination_response_content))
+        # 判断是不是最后一页
+        max_page_count_string = pq(album_pagination_response_content).find(".content-page span.page-ch").eq(0).html()
+        if not max_page_count_string:
+            raise crawler.CrawlerException("第%s页页面截取总页数失败\n%s" % (page_count, album_pagination_response_content))
+        max_page_count = tool.find_sub_string(max_page_count_string, "共", "页")
+        if not crawler.is_integer(max_page_count):
+            raise crawler.CrawlerException("第%s页页面截取总页数类型不正确\n%s" % (page_count, album_pagination_response_content))
+        max_page_count = int(max_page_count)
         page_count += 1
     return result
 
 
-class YouZi(crawler.Crawler):
+class Gallery(crawler.Crawler):
     def __init__(self):
         # 设置APP目录
         tool.PROJECT_APP_PATH = os.path.abspath(os.path.dirname(__file__))
@@ -113,42 +122,36 @@ class YouZi(crawler.Crawler):
                     tool.process_exit(0)
                 log.step("开始解析图集%s" % album_id)
 
-                # 获取图集
+                # 获取相册
                 try:
                     album_response = get_album_page(album_id)
                 except crawler.CrawlerException as e:
                     log.error("图集%s解析失败，原因：%s" % (album_id, e.message))
                     raise
 
-                if album_response["is_delete"]:
-                    log.step("图集%s不存在，跳过" % album_id)
-                    album_id += 1
-                    continue
-
                 log.trace("图集%s《%s》解析的全部图片：%s" % (album_id, album_response["album_title"], album_response["image_url_list"]))
-                log.step("图集%s《%s》解析获取%s张图片" % (album_id, album_response["album_title"], len(album_response["image_url_list"])))
+                log.step("图集%s《%s》解析获取%s张图片" % (album_id, album_response["album_title"],  len(album_response["image_url_list"])))
 
                 image_index = 1
                 # 过滤标题中不支持的字符
                 album_title = path.filter_text(album_response["album_title"])
                 if album_title:
-                    album_path = os.path.join(self.image_download_path, "%05d %s" % (album_id, album_title))
+                    album_path = os.path.join(self.image_download_path, "%04d %s" % (album_id, album_title))
                 else:
-                    album_path = os.path.join(self.image_download_path, "%05d" % str(album_id))
+                    album_path = os.path.join(self.image_download_path, "%04d" % album_id)
                 temp_path = album_path
                 for image_url in album_response["image_url_list"]:
-                    image_url = image_url.replace("//pic1.youzi4.com/", "//res.youzi4.cc/")
                     if not self.is_running():
                         tool.process_exit(0)
-                    log.step("图集%s 《%s》 开始下载第%s张图片 %s" % (album_id, album_title, image_index, image_url))
+                    log.step("图集%s《%s》开始下载第%s张图片 %s" % (album_id, album_title, image_index, image_url))
 
                     file_type = image_url.split(".")[-1]
                     file_path = os.path.join(album_path, "%03d.%s" % (image_index, file_type))
-                    save_file_return = net.save_net_file(image_url, file_path)
+                    save_file_return = net.save_net_file(image_url, file_path, header_list={"Referer": "http://www.mm131.com/"})
                     if save_file_return["status"] == 1:
-                        log.step("图集%s 《%s》 第%s张图片下载成功" % (album_id, album_title, image_index))
+                        log.step("图集%s《%s》第%s张图片下载成功" % (album_id, album_title, image_index))
                     else:
-                        log.error("图集%s 《%s》 第%s张图片 %s 下载失败，原因：%s" % (album_id, album_title, image_index, image_url, crawler.download_failre(save_file_return["code"])))
+                        log.error("图集%s《%s》第%s张图片 %s 下载失败，原因：%s" % (album_id, album_title, image_index, image_url, crawler.download_failre(save_file_return["code"])))
                     image_index += 1
                 # 图集内图片全部下载完毕
                 temp_path = ""  # 临时目录设置清除
@@ -172,4 +175,4 @@ class YouZi(crawler.Crawler):
 
 
 if __name__ == "__main__":
-    YouZi().main()
+    Gallery().main()

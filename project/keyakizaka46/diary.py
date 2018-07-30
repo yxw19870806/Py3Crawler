@@ -146,6 +146,7 @@ class Download(crawler.DownloadThread):
                 break
 
             log.trace(self.account_name + " 第%s页解析的全部日志：%s" % (page_count, blog_pagination_response["blog_info_list"]))
+            log.step(self.account_name + " 第%s页解析获取%s个日志" % (page_count, len(blog_pagination_response["blog_info_list"])))
 
             # 寻找这一页符合条件的日志
             for blog_info in blog_pagination_response["blog_info_list"]:

@@ -109,6 +109,7 @@ class Wallpaper(crawler.Crawler):
                     break
 
                 log.trace("第%s页壁纸解析的全部图片：%s" % (page_count, photo_pagination_response["image_info_list"]))
+                log.step("第%s页壁纸解析获取%s张图片" % (page_count, len(photo_pagination_response["image_info_list"])))
 
                 for image_info in photo_pagination_response["image_info_list"]:
                     image_info_list.append(image_info)
