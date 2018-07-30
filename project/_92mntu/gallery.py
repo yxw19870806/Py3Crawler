@@ -18,7 +18,7 @@ SUB_PATH_LIST = ["mncm", "mnmx", "qcmn", "rhmn", "swmt", "xgmn"]
 # 获取图集首页
 def get_index_page():
     index_url = "http://92mntu.com/"
-    index_response = net.http_request(index_url, method="GET")
+    index_response = net.http_request(index_url, method="GET", header_list={"Host": "92mntu.com"})
     result = {
         "max_album_id": None,  # 最新图集id
     }
