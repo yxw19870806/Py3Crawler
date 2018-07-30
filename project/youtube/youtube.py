@@ -485,7 +485,7 @@ class Download(crawler.DownloadThread):
                 raise
 
             log.trace(self.account_name + " token：%s页解析的全部视频：%s" % (token, video_pagination_response["video_id_list"]))
-            log.trace(self.account_name + " token：%s页解析获取%s个视频" % (token, len(video_pagination_response["video_id_list"])))
+            log.step(self.account_name + " token：%s页解析获取%s个视频" % (token, len(video_pagination_response["video_id_list"])))
 
             if len(self.account_info) < 4:
                 log.step(self.account_name + " 频道名：%s" % video_pagination_response["account_name"])
