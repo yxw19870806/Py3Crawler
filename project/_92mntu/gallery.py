@@ -53,7 +53,7 @@ def get_album_page(album_id):
                     continue
                 break
         else:
-            album_pagination_url = "http://92mntu.com/%s/%s.html" % (sub_path, album_id)
+            album_pagination_url = "http://92mntu.com/%s/%s_%s.html" % (sub_path, album_id, page_count)
             album_pagination_response = net.http_request(album_pagination_url, method="GET", header_list={"Host": "92mntu.com"})
         if album_pagination_response.status == 409:
             continue
