@@ -56,7 +56,9 @@ def get_album_page(album_id):
         else:
             album_pagination_url = "http://www.mm131.com/%s/%s_%s.html" % (sub_path, album_id, page_count)
             album_pagination_response = net.http_request(album_pagination_url, method="GET")
-        if album_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
+        if album_pagination_response.status == 514:
+            continue
+        elif album_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
             raise crawler.CrawlerException(crawler.request_failre(album_pagination_response.status))
         album_pagination_response_content = album_pagination_response.data.decode("GBK")
         if page_count == 1:
