@@ -198,7 +198,7 @@ class Download(crawler.DownloadThread):
                 raise
 
             log.trace(self.sub_path + " 第%s页解析的全部图集：%s" % (page_count, album_response["album_info_list"]))
-            log.step(self.sub_path + " 第%s页解析获取%s个图集" % (page_count, len(album_response["image_url_list"])))
+            log.step(self.sub_path + " 第%s页解析获取%s个图集" % (page_count, len(album_response["album_info_list"])))
 
             # 寻找这一页符合条件的图集
             for album_info in album_response["album_info_list"]:
