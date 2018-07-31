@@ -42,10 +42,12 @@ def get_album_page(album_id):
             album_pagination_url = "http://www.meituri.com/a/%s/" % album_id
         else:
             album_pagination_url = "http://www.meituri.com/a/%s/%s.html" % (album_id, page_count)
-        album_pagination_response = net.http_request(album_pagination_url, method="GET")
+        album_pagination_response = net.http_request(album_pagination_url, method="GET", header_list={"Host": "www.meituri.com"})
         if page_count == 1 and album_pagination_response.status in [403, 404]:
             result["is_delete"] = True
             return result
+        elif album_pagination_response.status == 409:
+            continue
         elif album_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
             raise crawler.CrawlerException("第%s页" % page_count + crawler.request_failre(album_pagination_response.status))
         album_pagination_response_content = album_pagination_response.data.decode()
