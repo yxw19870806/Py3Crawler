@@ -32,7 +32,6 @@ def get_index_page():
         album_id_find = re.findall("/(\d*).html", last_album_page_url)
         if len(album_id_find) != 1:
             raise crawler.CrawlerException("%s分组最新图集地址截取图集id失败\n%s" % (sub_path, sub_index_response_content))
-        print(album_id_find)
         result["max_album_id"] = max(result["max_album_id"], int(album_id_find[0]))
     return result
 
