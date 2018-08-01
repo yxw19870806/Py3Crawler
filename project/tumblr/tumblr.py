@@ -353,7 +353,7 @@ def analysis_image(image_url):
         image_id = temp_list[0]
         resolution = int(temp_list[1])
     # http://78.media.tumblr.com/15427139_r1_500.jpg
-    elif len(temp_list) == 3 and crawler.is_integer(temp_list[0]) and crawler.is_integer(temp_list[-1]) and temp_list[1][0] == "r" :
+    elif len(temp_list) == 3 and crawler.is_integer(temp_list[0]) and crawler.is_integer(temp_list[-1]) and temp_list[1][0] == "r":
         image_id = temp_list[0]
         resolution = int(temp_list[2])
     else:

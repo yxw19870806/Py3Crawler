@@ -571,7 +571,7 @@ class Download(crawler.DownloadThread):
             # 从最早的视频开始下载
             while len(video_id_list) > 0:
                 video_id = video_id_list.pop()
-                log.step(self.account_name + " 开始解析视频%s" %  video_id)
+                log.step(self.account_name + " 开始解析视频%s" % video_id)
                 self.crawl_video(video_id)
                 self.main_thread_check()  # 检测主线程运行状态
         except SystemExit as se:

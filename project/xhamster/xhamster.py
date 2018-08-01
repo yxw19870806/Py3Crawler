@@ -125,7 +125,6 @@ class Xhamster(crawler.Crawler):
             log.error("配置文件config.ini中key为'VIDEO_ORIENTATION'的值必须是一个1~7的整数，使用程序默认设置")
         VIDEO_ORIENTATION_FILTER = int(video_orientation)
 
-
     def main(self):
         # 解析存档文件，获取上一次的album id
         video_id = 1
