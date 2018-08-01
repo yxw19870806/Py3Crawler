@@ -71,14 +71,14 @@ def get_one_page_video(account_id, token):
         try:
             channel_tab_data = script_data["contents"]["twoColumnBrowseResultsRenderer"]["tabs"]
         except KeyError:
-            raise crawler.CrawlerException("频道标签格式不正确\n%s" % script_data)
+            raise crawler.CrawlerException("页面解析频道标签失败\n%s" % script_data)
         # 没有视频标签
         if len(channel_tab_data) < 2:
             return result
         try:
             temp_data = channel_tab_data[1]["tabRenderer"]["content"]["sectionListRenderer"]["contents"][0]["itemSectionRenderer"]["contents"][0]
         except KeyError:
-            raise crawler.CrawlerException("视频信息格式不正确\n%s" % script_data)
+            raise crawler.CrawlerException("页面解析视频信息失败\n%s" % script_data)
         if not crawler.check_sub_key(("gridRenderer",), temp_data):
             try:
                 # 没有上传过任何视频
@@ -102,9 +102,9 @@ def get_one_page_video(account_id, token):
         try:
             video_list_data = video_pagination_response.json_data[1]["response"]["continuationContents"]["gridContinuation"]
         except KeyError:
-            raise crawler.CrawlerException("视频信息格式不正确\n%s" % video_pagination_response.json_data)
+            raise crawler.CrawlerException("返回信息解析视频信息失败\n%s" % video_pagination_response.json_data)
         except IndexError:
-            raise crawler.CrawlerException("视频信息格式不正确\n%s" % video_pagination_response.json_data)
+            raise crawler.CrawlerException("返回信息解析视频信息失败\n%s" % video_pagination_response.json_data)
     if not crawler.check_sub_key(("items",), video_list_data):
         raise crawler.CrawlerException("视频列表信息'items'字段不存在\n%s" % video_list_data)
     for item in video_list_data["items"]:
