@@ -348,7 +348,8 @@ def save_net_file(file_url, file_path, need_content_type=False, header_list=None
     # 判断保存目录是否存在
     if not path.create_dir(os.path.dirname(file_path)):
         return False
-    create_file = False
+    is_create_file = False
+    return_code = {"status": 0, "code": -3}
     for retry_count in range(0, HTTP_DOWNLOAD_RETRY_COUNT):
         if head_check:
             request_method = "HEAD"
@@ -383,7 +384,7 @@ def save_net_file(file_url, file_path, need_content_type=False, header_list=None
             # 下载
             with open(file_path, "wb") as file_handle:
                 file_handle.write(response.data)
-            create_file = True
+            is_create_file = True
             # 判断文件下载后的大小和response中的Content-Length是否一致
             if content_length is None:
                 return {"status": 1, "code": 0, "file_path": file_path}
@@ -393,23 +394,21 @@ def save_net_file(file_url, file_path, need_content_type=False, header_list=None
             else:
                 time.sleep(10)
                 output.print_msg("本地文件%s：%s和网络文件%s：%s不一致" % (file_path, content_length, file_url, file_size))
-        elif response.status == HTTP_RETURN_CODE_URL_INVALID:
-            if create_file:
-                path.delete_dir_or_file(file_path)
-            return {"status": 0, "code": -1}
-        # 超过重试次数，直接退出
-        elif response.status == HTTP_RETURN_CODE_RETRY:
-            if create_file:
-                path.delete_dir_or_file(file_path)
-            return {"status": 0, "code": -2}
-        # 其他http code，退出
+        # 其他返回状态，退出
         else:
-            if create_file:
-                path.delete_dir_or_file(file_path)
-            return {"status": 0, "code": response.status}
-    if create_file:
+            # URL格式不正确
+            if response.status == HTTP_RETURN_CODE_URL_INVALID:
+                return_code = {"status": 0, "code": -1}
+            # 超过重试次数
+            elif response.status == HTTP_RETURN_CODE_RETRY:
+                return_code = {"status": 0, "code": -2}
+            # 其他http code
+            else:
+                return_code = {"status": 0, "code": response.status}
+            break
+    if is_create_file:
         path.delete_dir_or_file(file_path)
-    return {"status": 0, "code": -3}
+    return return_code
 
 
 def save_net_file_list(file_url_list, file_path, header_list=None, cookies_list=None):
