@@ -60,7 +60,7 @@ def get_one_page_photo(account_id, page_count):
         else:
             raise crawler.CrawlerException("图片信息'sq300_url'和'sq150_url'字段不存在\n%s" % photo_info)
         if image_url.find("-350x600.") == -1:
-            raise crawler.CrawlerException("图片预览地址 %s 格式不正确\n%s" % image_url)
+            raise crawler.CrawlerException("图片预览地址 %s 格式不正确\n" % image_url)
         result_photo_info["image_url"] = image_url
         result["photo_info_list"].append(result_photo_info)
     # 判断是不是最后一页
