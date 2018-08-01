@@ -14,7 +14,7 @@ import time
 import threading
 import traceback
 import urllib3
-from common import browser, output, path, tool
+from common import output, path, tool
 
 HTTP_CONNECTION_POOL = None
 HTTP_CONNECTION_TIMEOUT = 10
@@ -298,16 +298,16 @@ def _random_user_agent():
         "Windows 8.1": "Windows NT 6.3",
         "Windows 10": "Windows NT 10.0",
     }
-    # browser_type = random.choice([browser.BROWSER_TYPE_IE, browser.BROWSER_TYPE_FIREFOX, browser.BROWSER_TYPE_CHROME])
-    browser_type = random.choice([browser.BROWSER_TYPE_FIREFOX, browser.BROWSER_TYPE_CHROME])
+    # browser_type = random.choice(["IE", "firefox", "chrome"])
+    browser_type = random.choice(["firefox", "chrome"])
     os_type = random.choice(list(windows_version_dict.values()))
-    if browser_type == browser.BROWSER_TYPE_IE:
+    if browser_type == "IE":
         sub_version = random.randint(6, 10)
         return "Mozilla/4.0 (compatible; MSIE %s.0; %s; WOW64)" % (sub_version, os_type)
-    elif browser_type == browser.BROWSER_TYPE_FIREFOX:
+    elif browser_type == "firefox":
         firefox_version = random.randint(firefox_version_max - 10, firefox_version_max)
         return "Mozilla/5.0 (%s; WOW64; rv:%s.0) Gecko/20100101 Firefox/%s.0" % (os_type, firefox_version, firefox_version)
-    elif browser_type == browser.BROWSER_TYPE_CHROME:
+    elif browser_type == "chrome":
         sub_version = random.randint(1, 100)
         chrome_version = random.choice(chrome_version_list)
         return "Mozilla/5.0 (%s; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/%s.%s Safari/537.36" % (os_type, chrome_version, sub_version)
