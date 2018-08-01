@@ -239,12 +239,6 @@ def http_request(url, method="GET", fields=None, binary_data=None, header_list=N
             return ErrorResponse(HTTP_RETURN_CODE_RESPONSE_TO_LARGE)
         except urllib3.exceptions.ProxyError:
             time.sleep(5)
-            # notice = "无法访问代理服务器，请检查代理设置。检查完成后输入(C)ontinue继续程序或者(S)top退出程序："
-            # input_str = input(notice).lower()
-            # if input_str in ["c", "continue"]:
-            #     pass
-            # elif input_str in ["s", "stop"]:
-            #     tool.process_exit(0)
         except Exception as e:
             message = str(e)
             output.print_msg(url + " 访问超时，重试中")
