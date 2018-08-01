@@ -196,6 +196,8 @@ def get_media_page(page_id):
         media_data = media_info_data["entry_data"]["PostPage"][0]["graphql"]["shortcode_media"]
     except KeyError:
         raise crawler.CrawlerException("媒体信息格式不正确\n%s" % media_info_data)
+    except IndexError:
+        raise crawler.CrawlerException("媒体信息格式不正确\n%s" % media_info_data)
     if len(media_info_data["entry_data"]["PostPage"]) != 1:
         raise crawler.CrawlerException("媒体信息'PostPage'字段长度不正确\n%s" % media_info_data)
     if not crawler.check_sub_key(("__typename",), media_data):

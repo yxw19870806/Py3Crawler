@@ -73,6 +73,8 @@ def get_one_page_video(account_id, token):
             temp_data = temp_data["contents"][0]["itemSectionRenderer"]["contents"][0]
         except KeyError:
             raise crawler.CrawlerException("视频信息格式不正确\n%s" % script_data)
+        except IndexError:
+            raise crawler.CrawlerException("视频信息格式不正确\n%s" % script_data)
         if not crawler.check_sub_key(("gridRenderer",), temp_data):
             try:
                 # 没有上传过任何视频
@@ -97,6 +99,8 @@ def get_one_page_video(account_id, token):
             video_list_data = video_pagination_response.json_data[1]["response"]["continuationContents"]["gridContinuation"]
         except KeyError:
             raise crawler.CrawlerException("视频信息格式不正确\n%s" % video_pagination_response.json_data)
+        except IndexError:
+            raise crawler.CrawlerException("视频信息格式不正确\n%s" % video_pagination_response.json_data)
     if not crawler.check_sub_key(("items",), video_list_data):
         raise crawler.CrawlerException("视频列表信息'items'字段不存在\n%s" % video_list_data)
     for item in video_list_data["items"]:
@@ -109,6 +113,8 @@ def get_one_page_video(account_id, token):
     try:
         result["next_page_token"] = video_list_data["continuations"][0]["nextContinuationData"]["continuation"]
     except KeyError:
+        pass
+    except IndexError:
         pass
     return result
 
