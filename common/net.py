@@ -42,6 +42,8 @@ HTTP_RETURN_CODE_SUCCEED = 200
 thread_event = threading.Event()
 thread_event.set()
 
+MIME_DICTIONARY = None
+
 
 class ErrorResponse(object):
     """Default http_request() response object(exception return)"""
@@ -370,8 +372,11 @@ def save_net_file(file_url, file_path, need_content_type=False, header_list=None
             if need_content_type:
                 content_type = response.getheader("Content-Type")
                 if content_type is not None and content_type != "octet-stream":
-                    if content_type == "video/quicktime":
-                        new_file_type = "mov"
+                    global MIME_DICTIONARY
+                    if MIME_DICTIONARY is None:
+                        MIME_DICTIONARY = tool.json_decode(tool.read_file(os.path.join(os.path.dirname(__file__), "mime.json")), {})
+                    if content_type in MIME_DICTIONARY:
+                        new_file_type = MIME_DICTIONARY[content_type]
                     else:
                         new_file_type = content_type.split("/")[-1]
                     file_path = os.path.splitext(file_path)[0] + "." + new_file_type
