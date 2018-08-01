@@ -194,17 +194,19 @@ def read_file(file_path, read_type=READ_FILE_TYPE_FULL):
     with open(file_path, "r", encoding="UTF-8") as file_handle:
         if read_type == 1:
             result = file_handle.read()
-            if result[0] == BOM_SIGN:
-                result = result[1:]
-            if result[-1] == "\n":
-                result = result[:-1]
+            if len(result) > 0:
+                if result[0] == BOM_SIGN:
+                    result = result[1:]
+                if result[-1] == "\n":
+                    result = result[:-1]
         else:
             result = []
             for line in file_handle.readlines():
-                if line[0] == BOM_SIGN:
-                    line = line[1:]
-                if line[-1] == "\n":
-                    line = line[:-1]
+                if len(line) > 0:
+                    if line[0] == BOM_SIGN:
+                        line = line[1:]
+                    if line[-1] == "\n":
+                        line = line[:-1]
                 if len(line) == 0:
                     continue
                 result.append(line)
