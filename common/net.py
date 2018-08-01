@@ -198,7 +198,9 @@ def http_request(url, method="GET", fields=None, binary_data=None, header_list=N
             if response.status == HTTP_RETURN_CODE_SUCCEED and json_decode:
                 try:
                     response.json_data = json.loads(response.data)
-                except ValueError:
+                except ValueError as ve:
+                    output.print_msg("response json decode failure\n %s" % response.data)
+                    output.print_msg(str(ve))
                     is_error = True
                     content_type = response.getheader("Content-Type")
                     if content_type is not None:
