@@ -61,7 +61,7 @@ def get_one_page_photo(account_id, page_count):
         # 获取图片地址
         if not crawler.check_sub_key(("pic_host", "pic_name"), image_info):
             raise crawler.CrawlerException("图片信息'pic_host'或者'pic_name'字段不存在\n%s" % image_info)
-        result_image_info["image_url"] =  image_info["pic_host"] + "/large/" + image_info["pic_name"]
+        result_image_info["image_url"] = image_info["pic_host"] + "/large/" + image_info["pic_name"]
         result["image_info_list"].append(result_image_info)
     # 检测是不是还有下一页 总的图片数量 / 每页显示的图片数量 = 总的页数
     result["is_over"] = page_count >= (photo_pagination_response.json_data["data"]["total"] * 1.0 / IMAGE_COUNT_PER_PAGE)
@@ -80,7 +80,7 @@ def get_one_page_video(account_page_id, since_id):
         "ajax_call": "1",
         "__rnd": int(time.time() * 1000),
     }
-    cookies_list = {"SUB":  weiboCommon.COOKIE_INFO["SUB"]}
+    cookies_list = {"SUB": weiboCommon.COOKIE_INFO["SUB"]}
     result = {
         "next_page_since_id": None,  # 下一页视频指针
         "video_play_url_list": [],  # 全部视频地址
@@ -136,7 +136,7 @@ def get_video_url(video_play_url):
             raise crawler.CrawlerException("返回信息匹配视频地址失败\n%s" % video_info_response.json_data)
     # http://video.weibo.com/show?fid=1034:e608e50d5fa95410748da61a7dfa2bff
     elif video_play_url.find("video.weibo.com/show?fid=") >= 0:  # 微博视频
-        cookies_list = {"SUB":  weiboCommon.COOKIE_INFO["SUB"]}
+        cookies_list = {"SUB": weiboCommon.COOKIE_INFO["SUB"]}
         video_play_response = net.http_request(video_play_url, method="GET", cookies_list=cookies_list)
         if video_play_response.status == net.HTTP_RETURN_CODE_SUCCEED:
             video_play_response_content = video_play_response.data.decode()

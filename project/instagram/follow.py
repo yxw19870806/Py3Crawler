@@ -46,7 +46,7 @@ def follow_account(account_name, account_id):
     follow_response = net.http_request(follow_api_url, method="POST", header_list=header_list, cookies_list=COOKIE_INFO, json_decode=True)
     if follow_response.status == net.HTTP_RETURN_CODE_SUCCEED:
         if not crawler.check_sub_key(("status", "result"), follow_response.json_data):
-            output.print_msg(crawler.CrawlerException("关注%s失败，返回内容不匹配\n%s" % (account_name, follow_response.json_data)))
+            output.print_msg("关注%s失败，返回内容不匹配\n%s" % (account_name, follow_response.json_data))
             tool.process_exit()
         if follow_response.json_data["result"] == "following":
             output.print_msg("关注%s成功" % account_name)

@@ -14,7 +14,7 @@ import time
 import threading
 import traceback
 import urllib3
-from common import browser, output, path, tool
+from common import output, path, tool
 
 HTTP_CONNECTION_POOL = None
 HTTP_CONNECTION_TIMEOUT = 10
@@ -41,6 +41,8 @@ HTTP_RETURN_CODE_SUCCEED = 200
 
 thread_event = threading.Event()
 thread_event.set()
+
+MIME_DICTIONARY = None
 
 
 class ErrorResponse(object):
@@ -198,7 +200,9 @@ def http_request(url, method="GET", fields=None, binary_data=None, header_list=N
             if response.status == HTTP_RETURN_CODE_SUCCEED and json_decode:
                 try:
                     response.json_data = json.loads(response.data)
-                except ValueError:
+                except ValueError as ve:
+                    output.print_msg("response json decode failure\n %s" % response.data)
+                    output.print_msg(str(ve))
                     is_error = True
                     content_type = response.getheader("Content-Type")
                     if content_type is not None:
@@ -235,12 +239,6 @@ def http_request(url, method="GET", fields=None, binary_data=None, header_list=N
             return ErrorResponse(HTTP_RETURN_CODE_RESPONSE_TO_LARGE)
         except urllib3.exceptions.ProxyError:
             time.sleep(5)
-            # notice = "无法访问代理服务器，请检查代理设置。检查完成后输入(C)ontinue继续程序或者(S)top退出程序："
-            # input_str = input(notice).lower()
-            # if input_str in ["c", "continue"]:
-            #     pass
-            # elif input_str in ["s", "stop"]:
-            #     tool.process_exit(0)
         except Exception as e:
             message = str(e)
             output.print_msg(url + " 访问超时，重试中")
@@ -286,9 +284,9 @@ def _random_user_agent():
         Common chrome user agent    "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/51.0.2704.103 Safari/537.36"
         Common IE user agent        "Mozilla/4.0 (compatible; MSIE 8.0; Windows NT 6.1; WOW64)"
     """
-    firefox_version_max = 58
+    firefox_version_max = 61
     # https://zh.wikipedia.org/zh-cn/Google_Chrome
-    chrome_version_list = ["56.0.2924", "57.0.2987", "58.0.3029", "59.0.3071", "60.0.3112", "61.0.3163", "62.0.3202", "63.0.3239", "64.0.3282", "65.0.3325"]
+    chrome_version_list = ["59.0.3071", "60.0.3112", "61.0.3163", "62.0.3202", "63.0.3239", "64.0.3282", "65.0.3325", "66.0.3359", "67.0.3396", "68.0.3423"]
     windows_version_dict = {
         "Windows 2000": "Windows NT 5.0",
         "Windows XP": "Windows NT 5.1",
@@ -298,16 +296,16 @@ def _random_user_agent():
         "Windows 8.1": "Windows NT 6.3",
         "Windows 10": "Windows NT 10.0",
     }
-    # browser_type = random.choice([browser.BROWSER_TYPE_IE, browser.BROWSER_TYPE_FIREFOX, browser.BROWSER_TYPE_CHROME])
-    browser_type = random.choice([browser.BROWSER_TYPE_FIREFOX, browser.BROWSER_TYPE_CHROME])
+    # browser_type = random.choice(["IE", "firefox", "chrome"])
+    browser_type = random.choice(["firefox", "chrome"])
     os_type = random.choice(list(windows_version_dict.values()))
-    if browser_type == browser.BROWSER_TYPE_IE:
+    if browser_type == "IE":
         sub_version = random.randint(6, 10)
         return "Mozilla/4.0 (compatible; MSIE %s.0; %s; WOW64)" % (sub_version, os_type)
-    elif browser_type == browser.BROWSER_TYPE_FIREFOX:
+    elif browser_type == "firefox":
         firefox_version = random.randint(firefox_version_max - 10, firefox_version_max)
         return "Mozilla/5.0 (%s; WOW64; rv:%s.0) Gecko/20100101 Firefox/%s.0" % (os_type, firefox_version, firefox_version)
-    elif browser_type == browser.BROWSER_TYPE_CHROME:
+    elif browser_type == "chrome":
         sub_version = random.randint(1, 100)
         chrome_version = random.choice(chrome_version_list)
         return "Mozilla/5.0 (%s; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/%s.%s Safari/537.36" % (os_type, chrome_version, sub_version)
@@ -348,7 +346,8 @@ def save_net_file(file_url, file_path, need_content_type=False, header_list=None
     # 判断保存目录是否存在
     if not path.create_dir(os.path.dirname(file_path)):
         return False
-    create_file = False
+    is_create_file = False
+    return_code = {"status": 0, "code": -3}
     for retry_count in range(0, HTTP_DOWNLOAD_RETRY_COUNT):
         if head_check:
             request_method = "HEAD"
@@ -367,8 +366,11 @@ def save_net_file(file_url, file_path, need_content_type=False, header_list=None
             if need_content_type:
                 content_type = response.getheader("Content-Type")
                 if content_type is not None and content_type != "octet-stream":
-                    if content_type == "video/quicktime":
-                        new_file_type = "mov"
+                    global MIME_DICTIONARY
+                    if MIME_DICTIONARY is None:
+                        MIME_DICTIONARY = tool.json_decode(tool.read_file(os.path.join(os.path.dirname(__file__), "mime.json")), {})
+                    if content_type in MIME_DICTIONARY:
+                        new_file_type = MIME_DICTIONARY[content_type]
                     else:
                         new_file_type = content_type.split("/")[-1]
                     file_path = os.path.splitext(file_path)[0] + "." + new_file_type
@@ -383,7 +385,7 @@ def save_net_file(file_url, file_path, need_content_type=False, header_list=None
             # 下载
             with open(file_path, "wb") as file_handle:
                 file_handle.write(response.data)
-            create_file = True
+            is_create_file = True
             # 判断文件下载后的大小和response中的Content-Length是否一致
             if content_length is None:
                 return {"status": 1, "code": 0, "file_path": file_path}
@@ -393,23 +395,21 @@ def save_net_file(file_url, file_path, need_content_type=False, header_list=None
             else:
                 time.sleep(10)
                 output.print_msg("本地文件%s：%s和网络文件%s：%s不一致" % (file_path, content_length, file_url, file_size))
-        elif response.status == HTTP_RETURN_CODE_URL_INVALID:
-            if create_file:
-                path.delete_dir_or_file(file_path)
-            return {"status": 0, "code": -1}
-        # 超过重试次数，直接退出
-        elif response.status == HTTP_RETURN_CODE_RETRY:
-            if create_file:
-                path.delete_dir_or_file(file_path)
-            return {"status": 0, "code": -2}
-        # 其他http code，退出
+        # 其他返回状态，退出
         else:
-            if create_file:
-                path.delete_dir_or_file(file_path)
-            return {"status": 0, "code": response.status}
-    if create_file:
+            # URL格式不正确
+            if response.status == HTTP_RETURN_CODE_URL_INVALID:
+                return_code = {"status": 0, "code": -1}
+            # 超过重试次数
+            elif response.status == HTTP_RETURN_CODE_RETRY:
+                return_code = {"status": 0, "code": -2}
+            # 其他http code
+            else:
+                return_code = {"status": 0, "code": response.status}
+            break
+    if is_create_file:
         path.delete_dir_or_file(file_path)
-    return {"status": 0, "code": -3}
+    return return_code
 
 
 def save_net_file_list(file_url_list, file_path, header_list=None, cookies_list=None):

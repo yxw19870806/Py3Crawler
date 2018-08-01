@@ -227,7 +227,7 @@ class Download(crawler.DownloadThread):
             raise
 
         log.trace(self.sub_path + " 图集%s《%s》解析的全部图片：%s" % (album_info["album_id"], album_info["album_title"], photo_pagination_response["image_url_list"]))
-        log.step(self.sub_path + " 图集%s《%s》解析获取%s张图片" % (album_info["album_id"], album_info["album_title"],  len(photo_pagination_response["image_url_list"])))
+        log.step(self.sub_path + " 图集%s《%s》解析获取%s张图片" % (album_info["album_id"], album_info["album_title"], len(photo_pagination_response["image_url_list"])))
 
         image_index = 1
         # 过滤标题中不支持的字符
