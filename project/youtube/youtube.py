@@ -69,11 +69,15 @@ def get_one_page_video(account_id, token):
         if script_data is None:
             raise crawler.CrawlerException("视频信息加载失败\n%s" % script_data_html)
         try:
-            temp_data = script_data["contents"]["twoColumnBrowseResultsRenderer"]["tabs"][1]["tabRenderer"]["content"]["sectionListRenderer"]
-            temp_data = temp_data["contents"][0]["itemSectionRenderer"]["contents"][0]
+            channel_tab_data = script_data["contents"]["twoColumnBrowseResultsRenderer"]["tabs"]
         except KeyError:
-            raise crawler.CrawlerException("视频信息格式不正确\n%s" % script_data)
-        except IndexError:
+            raise crawler.CrawlerException("频道标签格式不正确\n%s" % script_data)
+        # 没有视频标签
+        if len(channel_tab_data) < 2:
+            return result
+        try:
+            temp_data = channel_tab_data[1]["tabRenderer"]["content"]["sectionListRenderer"]["contents"][0]["itemSectionRenderer"]["contents"][0]
+        except KeyError:
             raise crawler.CrawlerException("视频信息格式不正确\n%s" % script_data)
         if not crawler.check_sub_key(("gridRenderer",), temp_data):
             try:
