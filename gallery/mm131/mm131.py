@@ -40,6 +40,7 @@ def get_index_page():
 def get_album_page(album_id):
     result = {
         "album_title": "",  # 图集标题
+        "is_delete": False,  # 是否已经被删除
         "image_url_list": [],  # 全部图片地址
     }
     page_count = max_page_count = 1
@@ -58,6 +59,9 @@ def get_album_page(album_id):
             album_pagination_response = net.http_request(album_pagination_url, method="GET")
         if album_pagination_response.status == 514:
             continue
+        elif album_pagination_response.status == 404:
+            result["is_delete"] = True
+            return result
         elif album_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
             raise crawler.CrawlerException(crawler.request_failre(album_pagination_response.status))
         album_pagination_response_content = album_pagination_response.data.decode("GBK")
@@ -129,6 +133,11 @@ class MM131(crawler.Crawler):
                 except crawler.CrawlerException as e:
                     log.error("图集%s解析失败，原因：%s" % (album_id, e.message))
                     raise
+
+                if album_response["is_delete"]:
+                    log.step("图集%s不存在，跳过" % album_id)
+                    album_id += 1
+                    continue
 
                 log.trace("图集%s《%s》解析的全部图片：%s" % (album_id, album_response["album_title"], album_response["image_url_list"]))
                 log.step("图集%s《%s》解析获取%s张图片" % (album_id, album_response["album_title"], len(album_response["image_url_list"])))
