@@ -206,7 +206,7 @@ class Download(crawler.DownloadThread):
                 log.step(self.account_name + " 相册%s《%s》第%s张图片下载成功" % (album_info["album_id"], album_info["album_title"], image_index))
                 image_index += 1
             else:
-                log.error(self.account_name + " 相册%s《%s》第%s张图片 %s 下载失败，原因：%s" % (album_info["album_id"], album_info["album_title"],  image_index, image_url, crawler.download_failre(save_file_return["code"])))
+                log.error(self.account_name + " 相册%s《%s》第%s张图片 %s 下载失败，原因：%s" % (album_info["album_id"], album_info["album_title"], image_index, image_url, crawler.download_failre(save_file_return["code"])))
 
         # 相册内图片全部下载完毕
         self.temp_path_list = []  # 临时目录设置清除

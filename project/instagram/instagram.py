@@ -131,7 +131,7 @@ def get_one_page_media(account_id, cursor):
         raise crawler.CrawlerException("返回数据格式不正确\n%s" % media_pagination_response.json_data)
     if not crawler.check_sub_key(("page_info", "edges", "count"), media_data):
         raise crawler.CrawlerException("返回数据'page_info', 'edges', 'count'字段不存在\n%s" % json_data)
-    if not crawler.check_sub_key(("end_cursor", "has_next_page",), media_data["page_info"]):
+    if not crawler.check_sub_key(("end_cursor", "has_next_page"), media_data["page_info"]):
         raise crawler.CrawlerException("返回数据'end_cursor', 'has_next_page'字段不存在\n%s" % json_data)
     if not isinstance(media_data["edges"], list):
         raise crawler.CrawlerException("返回数据'edges'字段类型不正确\n%s" % json_data)
@@ -139,7 +139,7 @@ def get_one_page_media(account_id, cursor):
         if cursor == "":
             if int(media_data["count"]) > 0:
                 raise crawler.CrawlerException("私密账号，需要关注才能访问")
-            else: # 没有发布任何帖子
+            else:  # 没有发布任何帖子
                 return result
         else:
             raise crawler.CrawlerException("返回数据'edges'字段长度不正确\n%s" % json_data)
