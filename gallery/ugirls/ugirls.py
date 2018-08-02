@@ -1,6 +1,5 @@
 # -*- coding:UTF-8  -*-
 """
-尤果图集预览图片爬虫
 http://www.ugirls.com/
 @author: hikaru
 email: hikaru870806@hotmail.com

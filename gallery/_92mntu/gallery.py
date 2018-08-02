@@ -1,6 +1,5 @@
 # -*- coding:UTF-8  -*-
 """
-92美女图图片爬虫
 http://92mntu.com/
 @author: hikaru
 email: hikaru870806@hotmail.com

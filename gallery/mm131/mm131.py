@@ -1,6 +1,5 @@
 # -*- coding:UTF-8  -*-
 """
-MM131图片爬虫
 http://www.mm131.com/
 @author: hikaru
 email: hikaru870806@hotmail.com

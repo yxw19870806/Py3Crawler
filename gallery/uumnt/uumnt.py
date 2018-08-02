@@ -1,6 +1,5 @@
 # -*- coding:UTF-8  -*-
 """
-优优美图图片爬虫
 https://www.uumnt.cc/
 @author: hikaru
 email: hikaru870806@hotmail.com

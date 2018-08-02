@@ -1,6 +1,5 @@
 # -*- coding:UTF-8  -*-
 """
-爱套图图片爬虫
 https://www.aitaotu.com
 @author: hikaru
 email: hikaru870806@hotmail.com

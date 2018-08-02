@@ -1,6 +1,5 @@
 # -*- coding:UTF-8  -*-
 """
-88mm图库图片爬虫
 http://www.88mmw.com/
 @author: hikaru
 email: hikaru870806@hotmail.com
