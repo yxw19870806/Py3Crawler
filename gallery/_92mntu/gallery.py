@@ -39,7 +39,7 @@ def get_index_page():
 def get_album_page(album_id):
     result = {
         "album_title": "",  # 图集标题
-        "is_delete": "",  # 是否已经被删除
+        "is_delete": False,  # 是否已经被删除
         "image_url_list": [],  # 全部图片地址
     }
     page_count = max_page_count = 1
