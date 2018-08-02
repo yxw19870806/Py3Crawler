@@ -131,7 +131,7 @@ class UGirls(crawler.Crawler):
                         log.step("图集%s的第%s张图片下载成功" % (album_id, image_index))
                         image_index += 1
                     else:
-                         log.error("图集%s的第%s张图片 %s 下载失败，原因：%s" % (album_id, image_index, image_url, crawler.download_failre(save_file_return["code"])))
+                        log.error("图集%s的第%s张图片 %s 下载失败，原因：%s" % (album_id, image_index, image_url, crawler.download_failre(save_file_return["code"])))
                 # 图集内图片全部下载完毕
                 temp_path = ""  # 临时目录设置清除
                 self.total_image_count += image_index - 1  # 计数累加
