@@ -1,22 +1,18 @@
 # -*- coding:UTF-8  -*-
 """
-https://www.aitaotu.com
 @author: hikaru
 email: hikaru870806@hotmail.com
 如有问题或建议请联系
 """
-import re
 import os
 import traceback
 from pyquery import PyQuery as pq
 from common import *
 
-SUB_PATH_LIST = ["gangtai", "guonei", "rihan"]
-
 
 # 获取图集首页
 def get_index_page():
-    index_url = "https://www.aitaotu.com/taotu/"
+    index_url = "http://www.mmjpg.com/"
     index_response = net.http_request(index_url, method="GET")
     result = {
         "max_album_id": 0,  # 最新图集id
@@ -24,70 +20,50 @@ def get_index_page():
     if index_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(index_response.status))
     index_response_content = index_response.data.decode()
-    last_album_url = pq(index_response_content).find(".taotu-main ul li:first>a").attr("href")
-    if last_album_url is None:
+    last_album_url = pq(index_response_content).find(".main .pic ul li:first>a").attr("href")
+    if not last_album_url:
         raise crawler.CrawlerException("页面截取最新图集地址失败\n%s" % index_response_content)
-    album_id_find = re.findall("/(\d*).html", last_album_url)
-    if len(album_id_find) != 1:
+    album_id = last_album_url.split("/")[-1]
+    if not crawler.is_integer(album_id):
         raise crawler.CrawlerException("最新图集地址截取图集id失败\n%s" % last_album_url)
-    result["max_album_id"] = int(album_id_find[0])
+    result["max_album_id"] = int(album_id)
     return result
 
 
-# 获取指定一页的图集
+# 获取指定id的图集
 def get_album_page(album_id):
     result = {
         "album_title": "",  # 图集标题
         "image_url_list": [],  # 全部图片地址
     }
-    page_count = max_page_count = 1
-    sub_path = ""
-    album_pagination_response = None
-    while page_count <= max_page_count:
-        if page_count == 1:
-            for sub_path in SUB_PATH_LIST:
-                album_pagination_url = "https://www.aitaotu.com/%s/%s.html" % (sub_path, album_id)
-                album_pagination_response = net.http_request(album_pagination_url, method="GET")
-                if album_pagination_response.status == 404:
-                    continue
-                break
-        else:
-            album_pagination_url = "https://www.aitaotu.com/%s/%s_%s.html" % (sub_path, album_id, page_count)
-            album_pagination_response = net.http_request(album_pagination_url, method="GET")
-        if album_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
-            raise crawler.CrawlerException(crawler.request_failre(album_pagination_response.status))
-        album_pagination_response_content = album_pagination_response.data.decode()
-        if page_count == 1:
-            # 获取图集标题
-            album_title = pq(album_pagination_response_content).find("#photos h1").children().empty().parent().text()
-            if not album_title:
-                raise crawler.CrawlerException("页面截取标题失败\n%s" % album_pagination_response_content)
-            result["album_title"] = album_title
-            # 获取总页数
-            pagination_selector = pq(album_pagination_response_content).find(".pages ul a")
-            if pagination_selector.length == 0:
-                raise crawler.CrawlerException("页面截取分页信息失败\n%s" % album_pagination_response_content)
-            last_page_selector = pagination_selector.eq(-1)
-            if last_page_selector.html() != "末页":
-                raise crawler.CrawlerException("页面截取最后页按钮文字不正确\n%s" % album_pagination_response_content)
-            last_page_url = last_page_selector.attr("href")
-            if last_page_url is None:
-                raise crawler.CrawlerException("页面截取最后页地址失败\n%s" % album_pagination_response_content)
-            max_page_count = tool.find_sub_string(last_page_url, "/%s/%s_" % (sub_path, album_id), ".html")
-            if not crawler.is_integer(max_page_count):
-                raise crawler.CrawlerException("最后页地址截取最后页失败\n%s" % album_pagination_response_content)
-            max_page_count = int(max_page_count)
-        # 获取图集图片地址
-        image_list_selector = pq(album_pagination_response_content).find(".big-pic a img")
-        if image_list_selector.length == 0:
-            raise crawler.CrawlerException("第%s页页面截取图片列表失败\n%s" % (page_count, album_pagination_response_content))
-        for image_index in range(0, image_list_selector.length):
-            result["image_url_list"].append(image_list_selector.eq(image_index).attr("src"))
-        page_count += 1
+    album_url = "http://www.mmjpg.com/mm/%s" % album_id
+    album_response = net.http_request(album_url, method="GET")
+    if album_response.status != net.HTTP_RETURN_CODE_SUCCEED:
+        raise crawler.CrawlerException(crawler.request_failre(album_response.status))
+    album_response_content = album_response.data.decode()
+    # 获取图集标题
+    album_title = pq(album_response_content).find(".article h2").html()
+    if not album_title:
+        raise crawler.CrawlerException("页面截取标题失败\n%s" % album_response_content)
+    result["album_title"] = album_title.strip()
+    # 获取总页数
+    pagination_selector = pq(album_response_content).find("#page a")
+    if pagination_selector.length < 3:
+        raise crawler.CrawlerException("页面截取分页失败\n%s" % album_response_content)
+    max_page_count = pagination_selector.eq(-2).html()
+    if not crawler.is_integer(max_page_count):
+        raise crawler.CrawlerException("页面截取最大页数失败\n%s" % album_response_content)
+    # 获取图集图片地址
+    image_url = pq(album_response_content).find("#content img").attr("src")
+    if not image_url:
+        raise crawler.CrawlerException("页面截取图片地址失败\n%s" % album_response_content)
+    image_url_prefix = "/".join(image_url.split("/")[:-1])
+    for image_index in range(1, int(max_page_count) + 1):
+        result["image_url_list"].append("%s/%s.jpg" % (image_url_prefix, image_index))
     return result
 
 
-class UUMNT(crawler.Crawler):
+class MMJpg(crawler.Crawler):
     def __init__(self):
         # 设置APP目录
         tool.PROJECT_APP_PATH = os.path.abspath(os.path.dirname(__file__))
@@ -133,15 +109,15 @@ class UUMNT(crawler.Crawler):
                     raise
 
                 log.trace("图集%s《%s》解析的全部图片：%s" % (album_id, album_response["album_title"], album_response["image_url_list"]))
-                log.step("图集%s《%s》解析获取%s张图片" % (album_id, album_response["album_title"],  len(album_response["image_url_list"])))
+                log.step("图集%s《%s》解析获取%s张图片" % (album_id, album_response["album_title"], len(album_response["image_url_list"])))
 
                 image_index = 1
                 # 过滤标题中不支持的字符
                 album_title = path.filter_text(album_response["album_title"])
                 if album_title:
-                    album_path = os.path.join(self.image_download_path, "%05d %s" % (album_id, album_title))
+                    album_path = os.path.join(self.image_download_path, "%04d %s" % (album_id, album_title))
                 else:
-                    album_path = os.path.join(self.image_download_path, "%05d" % album_id)
+                    album_path = os.path.join(self.image_download_path, "%04d" % album_id)
                 temp_path = album_path
                 for image_url in album_response["image_url_list"]:
                     if not self.is_running():
@@ -150,7 +126,7 @@ class UUMNT(crawler.Crawler):
 
                     file_type = image_url.split(".")[-1]
                     file_path = os.path.join(album_path, "%03d.%s" % (image_index, file_type))
-                    save_file_return = net.save_net_file(image_url, file_path, header_list={"Referer": "https://www.aitaotu.com/"})
+                    save_file_return = net.save_net_file(image_url, file_path, header_list={"Referer": "http://www.mmjpg.com/"})
                     if save_file_return["status"] == 1:
                         log.step("图集%s《%s》第%s张图片下载成功" % (album_id, album_title, image_index))
                     else:
@@ -178,4 +154,4 @@ class UUMNT(crawler.Crawler):
 
 
 if __name__ == "__main__":
-    UUMNT().main()
+    MMJpg().main()

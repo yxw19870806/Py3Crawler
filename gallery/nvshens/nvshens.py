@@ -1,6 +1,5 @@
 # -*- coding:UTF-8  -*-
 """
-nvshens图片爬虫
 https://www.nvshens.com/
 @author: hikaru
 email: hikaru870806@hotmail.com

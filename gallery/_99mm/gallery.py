@@ -1,6 +1,5 @@
 # -*- coding:UTF-8  -*-
 """
-九妹图社图片爬虫
 http://www.99mm.me/
 @author: hikaru
 email: hikaru870806@hotmail.com

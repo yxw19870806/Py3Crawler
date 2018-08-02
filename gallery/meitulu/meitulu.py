@@ -1,6 +1,5 @@
 # -*- coding:UTF-8  -*-
 """
-美图录图片爬虫
 https://www.meitulu.com
 @author: hikaru
 email: hikaru870806@hotmail.com

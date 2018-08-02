@@ -1,6 +1,5 @@
 # -*- coding:UTF-8  -*-
 """
-美图日图片爬虫
 https://www.meituri.com
 @author: hikaru
 email: hikaru870806@hotmail.com

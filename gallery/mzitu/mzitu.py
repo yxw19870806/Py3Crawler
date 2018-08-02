@@ -1,6 +1,5 @@
 # -*- coding:UTF-8  -*-
 """
-妹子图图片爬虫
 http://www.mzitu.com/
 @author: hikaru
 email: hikaru870806@hotmail.com
