@@ -1,6 +1,5 @@
 # -*- coding:UTF-8  -*-
 """
-克拉女神壁纸图片爬虫
 https://www.kelagirls.com/bizhi_findForIndexMore
 @author: hikaru
 email: hikaru870806@hotmail.com

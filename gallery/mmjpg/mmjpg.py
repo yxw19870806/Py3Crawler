@@ -1,6 +1,5 @@
 # -*- coding:UTF-8  -*-
 """
-http://www.mmjpg.com/
 @author: hikaru
 email: hikaru870806@hotmail.com
 如有问题或建议请联系

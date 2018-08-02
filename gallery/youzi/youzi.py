@@ -1,6 +1,5 @@
 # -*- coding:UTF-8  -*-
 """
-优姿图片爬虫
 http://www.youzi4.cc
 @author: hikaru
 email: hikaru870806@hotmail.com
