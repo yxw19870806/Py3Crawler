@@ -27,6 +27,7 @@ HTTP_CONNECTION_POOL = None
 # 网络访问相关阻塞/继续事件
 thread_event = threading.Event()
 thread_event.set()
+EXIT_FLAG = False
 # response header中Content-Type对应的Mine字典
 MIME_DICTIONARY = None
 # 网络访问相关配置
@@ -191,6 +192,8 @@ def http_request(url, method="GET", fields=None, binary_data=None, header_list=N
     retry_count = 0
     while True:
         thread_event.wait()
+        if EXIT_FLAG:
+            tool.process_exit(0)
 
         try:
             if method in ['DELETE', 'GET', 'HEAD', 'OPTIONS']:

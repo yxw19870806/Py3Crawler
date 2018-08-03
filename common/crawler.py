@@ -270,6 +270,7 @@ class Crawler(object):
         output.print_msg("stop process")
         net.resume_request()
         self.process_status = False
+        net.EXIT_FLAG = True
 
     # 获取程序已运行时间（seconds）
     def get_run_time(self):
