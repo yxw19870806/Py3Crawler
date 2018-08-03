@@ -16,7 +16,20 @@ import traceback
 import urllib3
 from common import output, path, tool
 
+# https://www.python.org/dev/peps/pep-0476/
+# disable urllib3 HTTPS warning
+urllib3.disable_warnings()
+# disable URLError: <urlopen error [SSL: CERTIFICATE_VERIFY_FAILED] certificate verify failed (_ssl.c:590)>
+ssl._create_default_https_context = ssl._create_unverified_context
+
+# 连接池
 HTTP_CONNECTION_POOL = None
+# 网络访问相关阻塞/继续事件
+thread_event = threading.Event()
+thread_event.set()
+# response header中Content-Type对应的Mine字典
+MIME_DICTIONARY = None
+# 网络访问相关配置
 HTTP_CONNECTION_TIMEOUT = 10
 HTTP_READ_TIMEOUT = 30
 HTTP_REQUEST_RETRY_COUNT = 10
@@ -24,12 +37,7 @@ HTTP_DOWNLOAD_CONNECTION_TIMEOUT = 10
 HTTP_DOWNLOAD_READ_TIMEOUT = 60
 HTTP_DOWNLOAD_RETRY_COUNT = 10
 HTTP_DOWNLOAD_MAX_SIZE = 512 * 2 ** 20  # 文件下载限制（字节）
-# https://www.python.org/dev/peps/pep-0476/
-# disable urllib3 HTTPS warning
-urllib3.disable_warnings()
-# disable URLError: <urlopen error [SSL: CERTIFICATE_VERIFY_FAILED] certificate verify failed (_ssl.c:590)>
-ssl._create_default_https_context = ssl._create_unverified_context
-
+# 网络访问返回值
 HTTP_RETURN_CODE_RETRY = 0
 HTTP_RETURN_CODE_URL_INVALID = -1  # 地址不符合规范（非http:// 或者 https:// 开头）
 HTTP_RETURN_CODE_JSON_DECODE_ERROR = -2  # 返回数据不是JSON格式，但返回状态是200
@@ -38,11 +46,6 @@ HTTP_RETURN_CODE_RESPONSE_TO_LARGE = -4  # 文件太大
 HTTP_RETURN_CODE_TOO_MANY_REDIRECTS = -5  # 重定向次数过多
 HTTP_RETURN_CODE_EXCEPTION_CATCH = -10
 HTTP_RETURN_CODE_SUCCEED = 200
-
-thread_event = threading.Event()
-thread_event.set()
-
-MIME_DICTIONARY = None
 
 
 class ErrorResponse(object):
