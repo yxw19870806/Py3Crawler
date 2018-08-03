@@ -43,8 +43,8 @@ def get_album_page(album_id):
     album_pagination_response = None
     result = {
         "album_title": "",  # 图集标题
-        "is_delete": False,  # 是否已经被删除
         "image_url_list": [],  # 全部图片地址
+        "is_delete": False,  # 是否已经被删除
     }
     while page_count <= max_page_count:
         if page_count == 1:
@@ -59,7 +59,7 @@ def get_album_page(album_id):
             album_pagination_response = net.http_request(album_pagination_url, method="GET", is_auto_redirect=False)
         if album_pagination_response.status == 302:
             continue
-        elif album_pagination_response.status == 404:
+        elif page_count == 1 and album_pagination_response.status == 404:
             result["is_delete"] = True
             return result
         elif album_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
