@@ -33,12 +33,12 @@ def get_index_page():
 
 # 获取指定id的图集
 def get_album_page(album_id):
+    album_url = "http://www.mmjpg.com/mm/%s" % album_id
+    album_response = net.http_request(album_url, method="GET")
     result = {
         "album_title": "",  # 图集标题
         "image_url_list": [],  # 全部图片地址
     }
-    album_url = "http://www.mmjpg.com/mm/%s" % album_id
-    album_response = net.http_request(album_url, method="GET")
     if album_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(album_response.status))
     album_response_content = album_response.data.decode()
@@ -47,13 +47,13 @@ def get_album_page(album_id):
     if not album_title:
         raise crawler.CrawlerException("页面截取标题失败\n%s" % album_response_content)
     result["album_title"] = album_title.strip()
-    # 获取总页数
+    # 获取图集总页数
     pagination_selector = pq(album_response_content).find("#page a")
     if pagination_selector.length < 3:
         raise crawler.CrawlerException("页面截取分页失败\n%s" % album_response_content)
     max_page_count = pagination_selector.eq(-2).html()
     if not crawler.is_integer(max_page_count):
-        raise crawler.CrawlerException("页面截取最大页数失败\n%s" % album_response_content)
+        raise crawler.CrawlerException("页面截取总页数失败\n%s" % album_response_content)
     # 获取图集图片地址
     image_url = pq(album_response_content).find("#content img").attr("src")
     if not image_url:

@@ -60,11 +60,6 @@ def get_one_page_photo(page_count):
     return result
 
 
-# 对一些异常的图片地址做过滤
-def get_image_url(image_url):
-    return image_url.replace("/[page]", "/")
-
-
 class Wallpaper(crawler.Crawler):
     def __init__(self):
         # 设置APP目录

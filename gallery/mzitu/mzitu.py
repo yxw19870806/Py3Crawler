@@ -31,12 +31,12 @@ def get_index_page():
 
 # 获取指定一页的图集
 def get_album_page(album_id):
+    page_count = 1
     result = {
         "album_title": "",  # 图集标题
         "image_url_list": [],  # 全部图片地址
         "is_delete": False,  # 是不是已经被删除
     }
-    page_count = 1
     while True:
         if album_id == 57773:
             if page_count == 40:
