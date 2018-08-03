@@ -58,7 +58,7 @@ def get_album_page(album_id):
             album_pagination_response = net.http_request(album_pagination_url, method="GET")
         if album_pagination_response.status == 514:
             continue
-        elif album_pagination_response.status == 404:
+        elif page_count == 1 and album_pagination_response.status == 404:
             result["is_delete"] = True
             return result
         elif album_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:

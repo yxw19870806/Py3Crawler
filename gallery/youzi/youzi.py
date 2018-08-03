@@ -42,7 +42,7 @@ def get_album_page(album_id):
     while page_count <= max_page_count:
         album_pagination_url = "http://www.youzi4.cc/mm/%s/%s_%s.html" % (album_id, album_id, page_count)
         album_pagination_response = net.http_request(album_pagination_url, method="GET")
-        if album_pagination_response.status == 404 and page_count == 1:
+        if page_count == 1 and album_pagination_response.status == 404:
             result["is_delete"] = True
             return result
         elif album_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
