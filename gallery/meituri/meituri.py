@@ -1,6 +1,6 @@
 # -*- coding:UTF-8  -*-
 """
-https://www.meituri.com
+https://www.meituri.com/
 @author: hikaru
 email: hikaru870806@hotmail.com
 如有问题或建议请联系

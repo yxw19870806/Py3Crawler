@@ -45,7 +45,7 @@ def get_one_page_photo(page_count):
             raise crawler.CrawlerException("图片列表匹配图片地址失败\n%s" % photo_list_selector.eq(photo_index).html())
         result_image_info["image_url"] = "http://kelagirls.com/" + image_path
         # 获取模特名字
-        model_name = photo_list_selector.eq(photo_index).find(".bzwdown span").eq(0).text()
+        model_name = photo_list_selector.eq(photo_index).find(".bzwdown span:first").text()
         if not model_name:
             raise crawler.CrawlerException("图片列表匹配模特名字失败\n%s" % photo_list_selector.eq(photo_index).html())
         result_image_info["model_name"] = model_name
@@ -58,11 +58,6 @@ def get_one_page_photo(page_count):
             max_page_count = max(max_page_count, int(pagination_selector.eq(pagination_index).text()))
     result["is_over"] = page_count >= max_page_count
     return result
-
-
-# 对一些异常的图片地址做过滤
-def get_image_url(image_url):
-    return image_url.replace("/[page]", "/")
 
 
 class Wallpaper(crawler.Crawler):

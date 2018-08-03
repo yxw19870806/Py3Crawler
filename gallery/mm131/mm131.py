@@ -37,14 +37,14 @@ def get_index_page():
 
 # 获取指定一页的图集
 def get_album_page(album_id):
+    page_count = max_page_count = 1
+    sub_path = ""
+    album_pagination_response = None
     result = {
         "album_title": "",  # 图集标题
         "is_delete": False,  # 是否已经被删除
         "image_url_list": [],  # 全部图片地址
     }
-    page_count = max_page_count = 1
-    sub_path = ""
-    album_pagination_response = None
     while page_count <= max_page_count:
         if page_count == 1:
             for sub_path in SUB_PATH_LIST:
@@ -70,20 +70,20 @@ def get_album_page(album_id):
             if not album_title:
                 raise crawler.CrawlerException("页面截取标题失败\n%s" % album_pagination_response_content)
             result["album_title"] = album_title.strip()
+            # 获取图集总页数
+            max_page_count_string = pq(album_pagination_response_content).find(".content-page span.page-ch:first").html()
+            if not max_page_count_string:
+                raise crawler.CrawlerException("页面截取总页数失败\n%s" % album_pagination_response_content)
+            max_page_count = tool.find_sub_string(max_page_count_string, "共", "页")
+            if not crawler.is_integer(max_page_count):
+                raise crawler.CrawlerException("页面截取总页数类型不正确\n%s" % album_pagination_response_content)
+            max_page_count = int(max_page_count)
         # 获取图集图片地址
         image_list_selector = pq(album_pagination_response_content).find(".content .content-pic img")
         if image_list_selector.length == 0:
             raise crawler.CrawlerException("第%s页页面截取图片列表失败\n%s" % (page_count, album_pagination_response_content))
         for image_index in range(0, image_list_selector.length):
             result["image_url_list"].append(image_list_selector.eq(image_index).attr("src"))
-        # 判断是不是最后一页
-        max_page_count_string = pq(album_pagination_response_content).find(".content-page span.page-ch").eq(0).html()
-        if not max_page_count_string:
-            raise crawler.CrawlerException("第%s页页面截取总页数失败\n%s" % (page_count, album_pagination_response_content))
-        max_page_count = tool.find_sub_string(max_page_count_string, "共", "页")
-        if not crawler.is_integer(max_page_count):
-            raise crawler.CrawlerException("第%s页页面截取总页数类型不正确\n%s" % (page_count, album_pagination_response_content))
-        max_page_count = int(max_page_count)
         page_count += 1
     return result
 

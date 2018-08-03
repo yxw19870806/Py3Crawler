@@ -22,7 +22,7 @@ def get_index_page():
     if index_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(index_response.status))
     index_response_content = index_response.data.decode()
-    first_album_url = pq(index_response_content).find("div.listdiv ul li.galleryli").eq(0).find("a.galleryli_link").attr("href")
+    first_album_url = pq(index_response_content).find("div.listdiv ul li.galleryli:first a.galleryli_link").attr("href")
     if not first_album_url:
         raise crawler.CrawlerException("页面截取最新图集地址失败\n%s" % index_response_content)
     album_id = tool.find_sub_string(first_album_url, "/g/", "/")
