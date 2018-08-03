@@ -66,21 +66,24 @@ def get_album_page(album_id):
             # 获取图集总页数
             pagination_selector = pq(album_pagination_response_content).find(".pages ul a")
             if pagination_selector.length == 0:
-                raise crawler.CrawlerException("页面截取分页信息失败\n%s" % album_pagination_response_content)
-            last_page_selector = pagination_selector.eq(-1)
-            if last_page_selector.html() != "末页":
-                raise crawler.CrawlerException("页面截取最后页按钮文字不正确\n%s" % album_pagination_response_content)
-            last_page_url = last_page_selector.attr("href")
-            if last_page_url is None:
-                raise crawler.CrawlerException("页面截取最后页地址失败\n%s" % album_pagination_response_content)
-            max_page_count = tool.find_sub_string(last_page_url, "/%s/%s_" % (sub_path, album_id), ".html")
-            if not crawler.is_integer(max_page_count):
-                raise crawler.CrawlerException("最后页地址截取最后页失败\n%s" % album_pagination_response_content)
-            max_page_count = int(max_page_count)
+                if pq(album_pagination_response_content).find(".pages ul").length == 0 or pq(album_pagination_response_content).find(".pages ul").html().strip() != "":
+                    raise crawler.CrawlerException("页面截取分页信息失败\n%s" % album_pagination_response_content)
+            else:
+                last_page_selector = pagination_selector.eq(-1)
+                if last_page_selector.html() != "末页":
+                    raise crawler.CrawlerException("页面截取最后页按钮文字不正确\n%s" % album_pagination_response_content)
+                last_page_url = last_page_selector.attr("href")
+                if last_page_url is None:
+                    raise crawler.CrawlerException("页面截取最后页地址失败\n%s" % album_pagination_response_content)
+                max_page_count = tool.find_sub_string(last_page_url, "/%s/%s_" % (sub_path, album_id), ".html")
+                if not crawler.is_integer(max_page_count):
+                    raise crawler.CrawlerException("最后页地址截取最后页失败\n%s" % album_pagination_response_content)
+                max_page_count = int(max_page_count)
         # 获取图集图片地址
         image_list_selector = pq(album_pagination_response_content).find(".big-pic a img")
         if image_list_selector.length == 0:
-            raise crawler.CrawlerException("第%s页页面截取图片列表失败\n%s" % (page_count, album_pagination_response_content))
+            if pq(album_pagination_response_content).find(".big-pic").length == 0 or pq(album_pagination_response_content).find(".big-pic").text().strip() != "":
+                raise crawler.CrawlerException("第%s页页面截取图片列表失败\n%s" % (page_count, album_pagination_response_content))
         for image_index in range(0, image_list_selector.length):
             result["image_url_list"].append(image_list_selector.eq(image_index).attr("src"))
         page_count += 1
