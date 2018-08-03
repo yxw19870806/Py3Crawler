@@ -71,7 +71,7 @@ def get_album_page(album_id):
                 raise crawler.CrawlerException("页面截取标题失败\n%s" % album_pagination_response_content)
             result["album_title"] = album_title.strip()
             # 获取图集总页数
-            max_page_count_string = pq(album_pagination_response_content).find(".content-page span.page-ch").eq(0).html()
+            max_page_count_string = pq(album_pagination_response_content).find(".content-page span.page-ch:first").html()
             if not max_page_count_string:
                 raise crawler.CrawlerException("页面截取总页数失败\n%s" % album_pagination_response_content)
             max_page_count = tool.find_sub_string(max_page_count_string, "共", "页")
