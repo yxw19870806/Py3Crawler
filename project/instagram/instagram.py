@@ -372,8 +372,8 @@ class Download(crawler.DownloadThread):
             else:
                 image_url_list = [media_info["image_url"]]
 
-            log.trace(self.account_name + " 媒体%s解析的全部图片：%s" % (media_info["page_id"], media_response["image_url_list"]))
-            log.step(self.account_name + " 媒体%s解析获取%s张图片" % (media_info["page_id"], len(media_response["image_url_list"])))
+            log.trace(self.account_name + " 媒体%s解析的全部图片：%s" % (media_info["page_id"], image_url_list))
+            log.step(self.account_name + " 媒体%s解析获取%s张图片" % (media_info["page_id"], len(image_url_list)))
 
             for image_url in image_url_list:
                 self.main_thread_check()  # 检测主线程运行状态
