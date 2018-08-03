@@ -28,7 +28,7 @@ HTTP_CONNECTION_POOL = None
 thread_event = threading.Event()
 thread_event.set()
 EXIT_FLAG = False
-# response header中Content-Type对应的Mine字典
+# response header中Content-Type对应的Mime字典
 MIME_DICTIONARY = None
 # 网络访问相关配置
 HTTP_CONNECTION_TIMEOUT = 10
