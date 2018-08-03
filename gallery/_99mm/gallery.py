@@ -55,7 +55,7 @@ def get_album_page(album_id):
     if not album_title:
         raise crawler.CrawlerException("页面截取标题失败\n%s" % album_pagination_response_content)
     result["album_title"] = album_title.strip()
-    # 获取图集图片地址
+    # 获取图集图片地址（逻辑解析来自页面JS文件http://www.99mm.me/css/content.js）
     js_string = tool.find_sub_string(album_pagination_response_content, "var iaStr = '", "'")
     if not js_string:
         raise crawler.CrawlerException("页面截取页面参数'iaStr'失败\n%s" % album_pagination_response_content)

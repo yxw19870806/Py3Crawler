@@ -58,10 +58,10 @@ def get_album_page(album_id):
             if not album_title:
                 raise crawler.CrawlerException("页面截取标题失败\n%s" % album_pagination_response_content)
             result["album_title"] = album_title.strip()
-            # 判断图集总页数
+            # 获取图集总页数
             max_page_count = pq(album_pagination_response_content).find("div.page ul li").eq(-2).find("a").html()
             if not crawler.is_integer(max_page_count):
-                raise crawler.CrawlerException("页面截取最大页数失败\n%s" % album_pagination_response_content)
+                raise crawler.CrawlerException("页面截取总页数失败\n%s" % album_pagination_response_content)
             max_page_count = int(max_page_count)
         # 获取图集图片地址
         image_list_selector = pq(album_pagination_response_content).find(".imagepic>a img")

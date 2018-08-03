@@ -36,13 +36,13 @@ def get_index_page():
 
 # 获取指定一页的图集
 def get_album_page(album_id):
+    page_count = max_page_count = 1
+    sub_path = ""
+    album_pagination_response = None
     result = {
         "album_title": "",  # 图集标题
         "image_url_list": [],  # 全部图片地址
     }
-    page_count = max_page_count = 1
-    sub_path = ""
-    album_pagination_response = None
     while page_count <= max_page_count:
         if page_count == 1:
             for sub_path in SUB_PATH_LIST:
@@ -63,7 +63,7 @@ def get_album_page(album_id):
             if not album_title:
                 raise crawler.CrawlerException("页面截取标题失败\n%s" % album_pagination_response_content)
             result["album_title"] = album_title
-            # 获取总页数
+            # 获取图集总页数
             pagination_selector = pq(album_pagination_response_content).find(".pages ul a")
             if pagination_selector.length == 0:
                 raise crawler.CrawlerException("页面截取分页信息失败\n%s" % album_pagination_response_content)
