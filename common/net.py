@@ -24,6 +24,7 @@ ssl._create_default_https_context = ssl._create_unverified_context
 
 # 连接池
 HTTP_CONNECTION_POOL = None
+PROXY_HTTP_CONNECTION_POOL = None
 # 网络访问相关阻塞/继续事件
 thread_event = threading.Event()
 thread_event.set()
@@ -71,8 +72,8 @@ def set_proxy(ip, port):
     match = re.match("((25[0-5]|2[0-4]\d|((1\d{2})|([1-9]?\d)))\.){3}(25[0-5]|2[0-4]\d|((1\d{2})|([1-9]?\d)))", ip)
     if not match or match.group() != ip:
         return
-    global HTTP_CONNECTION_POOL
-    HTTP_CONNECTION_POOL = urllib3.ProxyManager("http://%s:%s" % (ip, port), retries=False)
+    global PROXY_HTTP_CONNECTION_POOL
+    PROXY_HTTP_CONNECTION_POOL = urllib3.ProxyManager("http://%s:%s" % (ip, port), retries=False)
     output.print_msg("设置代理成功")
 
 
@@ -109,7 +110,7 @@ def get_cookies_from_response_header(response_headers):
     return cookies_list
 
 
-def http_request(url, method="GET", fields=None, binary_data=None, header_list=None, cookies_list=None, encode_multipart=False, is_auto_redirect=True,
+def http_request(url, method="GET", fields=None, binary_data=None, header_list=None, cookies_list=None, encode_multipart=False, is_auto_proxy = True, is_auto_redirect=True,
                  is_auto_retry=True, connection_timeout=HTTP_CONNECTION_TIMEOUT, read_timeout=HTTP_READ_TIMEOUT, is_random_ip=True, json_decode=False):
     """Http request via urllib3
 
@@ -134,6 +135,9 @@ def http_request(url, method="GET", fields=None, binary_data=None, header_list=N
 
     :param encode_multipart:
         see "encode_multipart" in urllib3.request_encode_body
+
+    :param is_auto_proxy:
+        is auto use proxy when init PROXY_HTTP_CONNECTION_POOL
 
     :param is_auto_redirect:
         is auto redirect, when response.status in [301, 302, 303, 307, 308]
@@ -161,6 +165,9 @@ def http_request(url, method="GET", fields=None, binary_data=None, header_list=N
         return ErrorResponse(HTTP_RETURN_CODE_URL_INVALID)
     if HTTP_CONNECTION_POOL is None:
         init_http_connection_pool()
+    connection_pool = HTTP_CONNECTION_POOL
+    if PROXY_HTTP_CONNECTION_POOL is not None and is_auto_proxy:
+        connection_pool = PROXY_HTTP_CONNECTION_POOL
 
     if header_list is None:
         header_list = {}
@@ -197,12 +204,12 @@ def http_request(url, method="GET", fields=None, binary_data=None, header_list=N
 
         try:
             if method in ['DELETE', 'GET', 'HEAD', 'OPTIONS']:
-                response = HTTP_CONNECTION_POOL.request(method, url, headers=header_list, redirect=is_auto_redirect, timeout=timeout, fields=fields)
+                response = connection_pool.request(method, url, headers=header_list, redirect=is_auto_redirect, timeout=timeout, fields=fields)
             else:
                 if binary_data is None:
-                    response = HTTP_CONNECTION_POOL.request(method, url, headers=header_list, redirect=is_auto_redirect, timeout=timeout, fields=fields, encode_multipart=encode_multipart)
+                    response = connection_pool.request(method, url, headers=header_list, redirect=is_auto_redirect, timeout=timeout, fields=fields, encode_multipart=encode_multipart)
                 else:
-                    response = HTTP_CONNECTION_POOL.request(method, url, headers=header_list, redirect=is_auto_redirect, timeout=timeout, body=binary_data, encode_multipart=encode_multipart)
+                    response = connection_pool.request(method, url, headers=header_list, redirect=is_auto_redirect, timeout=timeout, body=binary_data, encode_multipart=encode_multipart)
             if response.status == HTTP_RETURN_CODE_SUCCEED and json_decode:
                 try:
                     response.json_data = json.loads(response.data)
@@ -323,7 +330,7 @@ def _random_ip_address():
     return "%s.%s.%s.%s" % (random.randint(1, 254), random.randint(0, 255), random.randint(0, 255), random.randint(0, 255))
 
 
-def save_net_file(file_url, file_path, need_content_type=False, header_list=None, cookies_list=None, head_check=False):
+def save_net_file(file_url, file_path, need_content_type=False, header_list=None, cookies_list=None, head_check=False, is_auto_proxy=True):
     """Visit web and save to local
 
     :param file_url:
@@ -360,7 +367,7 @@ def save_net_file(file_url, file_path, need_content_type=False, header_list=None
         else:
             request_method = "GET"
         # 获取头信息
-        response = http_request(file_url, request_method, header_list=header_list, cookies_list=cookies_list,
+        response = http_request(file_url, request_method, header_list=header_list, cookies_list=cookies_list, is_auto_proxy=is_auto_proxy,
                                 connection_timeout=HTTP_CONNECTION_TIMEOUT, read_timeout=HTTP_READ_TIMEOUT)
         if response.status == HTTP_RETURN_CODE_SUCCEED:
             # todo 分段下载
@@ -383,7 +390,7 @@ def save_net_file(file_url, file_path, need_content_type=False, header_list=None
 
             # 如果是先调用HEAD方法的，需要重新获取完整数据
             if head_check:
-                response = http_request(file_url, method="GET", header_list=header_list, cookies_list=cookies_list,
+                response = http_request(file_url, method="GET", header_list=header_list, cookies_list=cookies_list, is_auto_proxy=is_auto_proxy,
                                         connection_timeout=HTTP_DOWNLOAD_CONNECTION_TIMEOUT, read_timeout=HTTP_DOWNLOAD_READ_TIMEOUT)
                 if response.status != HTTP_RETURN_CODE_SUCCEED:
                     continue
