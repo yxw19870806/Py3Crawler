@@ -27,6 +27,7 @@ def get_video_page(video_id):
     video_play_response = net.http_request(video_play_url, method="GET")
     result = {
         "is_delete": False,  # 是否已被删除
+        "is_password": False,  # 是否需要密码
         "is_skip": False,  # 是否跳过
         "video_title": "",  # 视频标题
         "video_url": None,  # 视频地址
@@ -37,6 +38,9 @@ def get_video_page(video_id):
     if video_play_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(video_play_response.status))
     video_play_response_content = video_play_response.data.decode()
+    if video_play_response_content.find('<div class="title">This video requires password</div>') >= 0:
+        result["is_password"] = True
+        return result
     video_info_html = tool.find_sub_string(video_play_response_content, "window.initials = ", ";\n")
     if not video_info_html:
         raise crawler.CrawlerException("页面截取视频信息失败\n%s" % video_play_response_content)
@@ -151,6 +155,11 @@ class Xhamster(crawler.Crawler):
 
                 if video_play_response["is_delete"]:
                     log.step("视频%s已删除，跳过" % video_id)
+                    video_id += 1
+                    continue
+
+                if video_play_response["is_password"]:
+                    log.step("视频%s需要密码访问，跳过" % video_id)
                     video_id += 1
                     continue
 
