@@ -172,7 +172,7 @@ class Xhamster(crawler.Crawler):
 
                 video_title = path.filter_text(video_play_response["video_title"])
                 file_path = os.path.join(self.video_download_path, "%08d %s.mp4" % (video_id, video_title))
-                save_file_return = net.save_net_file(video_play_response["video_url"], file_path, head_check=True)
+                save_file_return = net.save_net_file(video_play_response["video_url"], file_path, head_check=True, is_auto_proxy=False)
                 if save_file_return["status"] == 1:
                     log.step("视频%s 下载成功" % video_id)
                 else:
