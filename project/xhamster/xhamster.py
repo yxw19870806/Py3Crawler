@@ -17,6 +17,8 @@ ORIENTATION_TYPE_LIST = {
     "shemale": 2,
     "gay": 4,
 }
+CATEGORY_WHITELIST = []
+CATEGORY_BLACKLIST = []
 
 
 # 获取指定视频
@@ -59,6 +61,26 @@ def get_video_page(video_id):
         log.error("new orientation: " + video_info["orientation"])
     if not crawler.check_sub_key(("videoModel",), video_info):
         raise crawler.CrawlerException("视频列表信息'videoModel'字段不存在\n%s" % video_info)
+    # 过滤视频category
+    if not crawler.check_sub_key(("categories",), video_info["videoModel"]):
+        raise crawler.CrawlerException("视频列表信息'categories'字段不存在\n%s" % video_info["videoModel"])
+    if not isinstance(video_info["videoModel"]["categories"], list):
+        raise crawler.CrawlerException("视频列表信息'categories'字段类型不正确\n%s" % video_info["videoModel"])
+    category_list = []
+    for category_info in video_info["videoModel"]["categories"]:
+        if not crawler.check_sub_key(("name",), category_info):
+            raise crawler.CrawlerException("categories信息'name'字段不存在\n%s" % category_info)
+        category_list.append(category_info["name"].lower())
+    if CATEGORY_BLACKLIST:
+        # category在黑名单中
+        if len([temp for temp in CATEGORY_BLACKLIST if temp in category_list]) > 0:
+            result["is_skip"] = True
+            return result
+    if CATEGORY_WHITELIST:
+        # category不在白名单中
+        if len([temp for temp in CATEGORY_WHITELIST if temp in category_list]) == 0:
+            result["is_skip"] = True
+            return result
     # 获取视频标题
     if not crawler.check_sub_key(("title",), video_info["videoModel"]):
         raise crawler.CrawlerException("视频列表信息'title'字段不存在\n%s" % video_info["videoModel"])
@@ -98,6 +120,8 @@ class Xhamster(crawler.Crawler):
     def __init__(self):
         global FIRST_CHOICE_RESOLUTION
         global VIDEO_ORIENTATION_FILTER
+        global CATEGORY_WHITELIST
+        global CATEGORY_BLACKLIST
 
         # 设置APP目录
         tool.PROJECT_APP_PATH = os.path.abspath(os.path.dirname(__file__))
@@ -110,6 +134,8 @@ class Xhamster(crawler.Crawler):
             crawler.SYS_APP_CONFIG: (
                 ("VIDEO_QUALITY", 3, crawler.CONFIG_ANALYSIS_MODE_INTEGER),
                 ("VIDEO_ORIENTATION", 7, crawler.CONFIG_ANALYSIS_MODE_INTEGER),
+                ("CATEGORY_WHITELIST", "", crawler.CONFIG_ANALYSIS_MODE_RAW),
+                ("CATEGORY_BLACKLIST", "", crawler.CONFIG_ANALYSIS_MODE_RAW),
             ),
         }
         crawler.Crawler.__init__(self, sys_config)
@@ -128,6 +154,13 @@ class Xhamster(crawler.Crawler):
         if not crawler.is_integer(video_orientation) and not (1 <= video_orientation <= 7):
             log.error("配置文件config.ini中key为'VIDEO_ORIENTATION'的值必须是一个1~7的整数，使用程序默认设置")
         VIDEO_ORIENTATION_FILTER = int(video_orientation)
+
+        category_whitelist = self.app_config["CATEGORY_WHITELIST"]
+        if category_whitelist:
+            CATEGORY_WHITELIST = category_whitelist.lower().split(",")
+        category_blacklist = self.app_config["CATEGORY_BLACKLIST"]
+        if category_blacklist:
+            CATEGORY_BLACKLIST = category_blacklist.lower().split(",")
 
     def main(self):
         # 解析存档文件，获取上一次的album id
