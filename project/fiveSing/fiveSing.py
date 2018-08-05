@@ -43,27 +43,23 @@ def get_one_page_audio(account_id, page_type, page_count):
 
 # 获取指定id的歌曲播放页
 def get_audio_play_page(audio_id, song_type):
-    audio_play_url = "http://5sing.kugou.com/%s/%s.html" % (song_type, audio_id)
-    audio_play_response = net.http_request(audio_play_url, method="GET")
+    audio_info_url = "http://service.5sing.kugou.com/song/getsongurl?songid=%s&songtype=%s" % (audio_id, song_type)
+    audio_info_response = net.http_request(audio_info_url, method="GET", json_decode=True)
     result = {
         "audio_url": None,  # 歌曲地址
     }
-    if audio_play_response.status != net.HTTP_RETURN_CODE_SUCCEED:
-        raise crawler.CrawlerException(crawler.request_failre(audio_play_response.status))
-    # 获取歌曲地址
-    audio_info_string = tool.find_sub_string(audio_play_response.data, '"ticket":', ",").strip().strip('"')
-    if not audio_info_string:
-        raise crawler.CrawlerException("页面截取加密歌曲信息失败\n%s" % audio_play_response.data)
-    try:
-        audio_info_string = base64.b64decode(audio_info_string)
-    except TypeError:
-        raise crawler.CrawlerException("加密歌曲信息解密失败\n%s" % audio_info_string)
-    audio_info = tool.json_decode(audio_info_string)
-    if audio_info is None:
-        raise crawler.CrawlerException("歌曲信息加载失败\n%s" % audio_info_string)
-    if not crawler.check_sub_key(("file",), audio_info):
-        raise crawler.CrawlerException("歌曲信息'file'字段不存在\n%s" % audio_info)
-    result["audio_url"] = audio_info["file"]
+    if audio_info_response.status != net.HTTP_RETURN_CODE_SUCCEED:
+        raise crawler.CrawlerException(crawler.request_failre(audio_info_response.status))
+    if not crawler.check_sub_key(("data",), audio_info_response.json_data):
+        raise crawler.CrawlerException("歌曲信息'data'字段不存在\n%s" % audio_info_response.json_data)
+    if crawler.check_sub_key(("squrl",), audio_info_response.json_data["data"]):
+        result["audio_url"] = audio_info_response.json_data["data"]["squrl"]
+    elif crawler.check_sub_key(("lqurl",), audio_info_response.json_data["data"]):
+        result["audio_url"] = audio_info_response.json_data["data"]["lqurl"]
+    elif crawler.check_sub_key(("hqurl",), audio_info_response.json_data["data"]):
+        result["audio_url"] = audio_info_response.json_data["data"]["hqurl"]
+    else:
+        raise crawler.CrawlerException("歌曲信息'squrl'、'lqurl'、'hqurl'字段都不存在\n%s" % audio_info_response.json_data)
     return result
 
 
@@ -189,20 +185,20 @@ class Download(crawler.DownloadThread):
 
         # 获取歌曲的详情页
         try:
-            audio_play_response = get_audio_play_page(audio_info["audio_id"], audio_type)
+            audio_info_response = get_audio_play_page(audio_info["audio_id"], audio_type)
         except crawler.CrawlerException as e:
             log.error(self.account_name + " %s歌曲%s《%s》解析失败，原因：%s" % (audio_type_name, audio_info["audio_id"], audio_info["audio_title"], e.message))
             return
 
         self.main_thread_check()  # 检测主线程运行状态
-        log.step(self.account_name + " 开始下载%s歌曲%s《%s》 %s" % (audio_type_name, audio_info["audio_id"], audio_info["audio_title"], audio_play_response["audio_url"]))
+        log.step(self.account_name + " 开始下载%s歌曲%s《%s》 %s" % (audio_type_name, audio_info["audio_id"], audio_info["audio_title"], audio_info_response["audio_url"]))
 
         file_path = os.path.join(self.main_thread.video_download_path, self.account_name, audio_type_name, "%08d - %s.mp3" % (int(audio_info["audio_id"]), path.filter_text(audio_info["audio_title"])))
-        save_file_return = net.save_net_file(audio_play_response["audio_url"], file_path)
+        save_file_return = net.save_net_file(audio_info_response["audio_url"], file_path)
         if save_file_return["status"] == 1:
             log.step(self.account_name + " %s歌曲%s《%s》下载成功" % (audio_type_name, audio_info["audio_id"], audio_info["audio_title"]))
         else:
-            log.error(self.account_name + " %s歌曲%s《%s》 %s 下载失败，原因：%s" % (audio_type_name, audio_info["audio_id"], audio_info["audio_title"], audio_play_response["audio_url"], crawler.download_failre(save_file_return["code"])))
+            log.error(self.account_name + " %s歌曲%s《%s》 %s 下载失败，原因：%s" % (audio_type_name, audio_info["audio_id"], audio_info["audio_title"], audio_info_response["audio_url"], crawler.download_failre(save_file_return["code"])))
             return
 
         # 歌曲下载完毕
