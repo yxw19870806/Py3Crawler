@@ -113,10 +113,10 @@ def get_album_page(account_id, album_id):
         image_pagination_response = net.http_request(api_url, method="POST", fields=post_data, encode_multipart=False)
         if image_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
             raise crawler.CrawlerException(crawler.request_failre(album_response.status))
-        continue_data = tool.find_sub_string(image_pagination_response.data, ")]}'", None).strip()
-        continue_data = tool.json_decode(continue_data)
+        continue_data_html = tool.find_sub_string(image_pagination_response.data.decode(), ")]}'", None).strip()
+        continue_data = tool.json_decode(continue_data_html)
         if continue_data is None:
-            raise crawler.CrawlerException("相册信息加载失败\n%s" % script_data_html)
+            raise crawler.CrawlerException("相册信息加载失败\n%s" % continue_data_html)
         try:
             continue_token = continue_data[0][2]["113305010"][3]
             for data in continue_data[0][2]["113305010"][4][1]:
