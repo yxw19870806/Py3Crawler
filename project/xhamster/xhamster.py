@@ -197,7 +197,7 @@ class Xhamster(crawler.Crawler):
                     continue
 
                 if video_play_response["is_skip"]:
-                    log.error("视频%s已过滤，跳过" % video_id)
+                    log.step("视频%s已过滤，跳过" % video_id)
                     video_id += 1
                     continue
 
