@@ -7,6 +7,7 @@ email: hikaru870806@hotmail.com
 如有问题或建议请联系
 """
 import os
+import re
 import traceback
 from common import *
 
@@ -17,8 +18,8 @@ ORIENTATION_TYPE_LIST = {
     "shemale": 2,
     "gay": 4,
 }
-CATEGORY_WHITELIST = []
-CATEGORY_BLACKLIST = []
+CATEGORY_WHITELIST = ""
+CATEGORY_BLACKLIST = ""
 
 
 # 获取指定视频
@@ -71,14 +72,19 @@ def get_video_page(video_id):
         if not crawler.check_sub_key(("name",), category_info):
             raise crawler.CrawlerException("categories信息'name'字段不存在\n%s" % category_info)
         category_list.append(category_info["name"].lower())
-    if CATEGORY_BLACKLIST:
-        # category在黑名单中
-        if len([temp for temp in CATEGORY_BLACKLIST if temp in category_list]) > 0:
-            result["is_skip"] = True
-            return result
-    if CATEGORY_WHITELIST:
-        # category不在白名单中
-        if len([temp for temp in CATEGORY_WHITELIST if temp in category_list]) == 0:
+    if CATEGORY_BLACKLIST or CATEGORY_WHITELIST:
+        is_skip = True if CATEGORY_WHITELIST else False
+        for category in category_list:
+            if CATEGORY_BLACKLIST:
+                # category在黑名单中
+                if len(re.findall(CATEGORY_BLACKLIST, category)) > 0:
+                    is_skip = True
+                    break
+            if CATEGORY_WHITELIST:
+                # category在黑名单中
+                if len(re.findall(CATEGORY_WHITELIST, category)) > 0:
+                    is_skip = False
+        if is_skip:
             result["is_skip"] = True
             return result
     # 获取视频标题
@@ -157,10 +163,10 @@ class Xhamster(crawler.Crawler):
 
         category_whitelist = self.app_config["CATEGORY_WHITELIST"]
         if category_whitelist:
-            CATEGORY_WHITELIST = category_whitelist.lower().split(",")
+            CATEGORY_WHITELIST = "|".join(category_whitelist.lower().split(",")).replace("*", "\w*")
         category_blacklist = self.app_config["CATEGORY_BLACKLIST"]
         if category_blacklist:
-            CATEGORY_BLACKLIST = category_blacklist.lower().split(",")
+            CATEGORY_BLACKLIST = "|".join(category_blacklist.lower().split(",")).replace("*", "\w*")
 
     def main(self):
         # 解析存档文件，获取上一次的album id
