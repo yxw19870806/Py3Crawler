@@ -231,7 +231,7 @@ class Download(crawler.DownloadThread):
                 file_type = image_url.split(".")[-1]
             else:
                 file_type = "jpg"
-            file_path = os.path.join(image_path, "%04d.%s" % (image_index, file_type))
+            file_path = os.path.join(image_path, "%02d.%s" % (image_index, file_type))
             save_file_return = net.save_net_file(image_url, file_path)
             if save_file_return["status"] == 1:
                 log.step(self.account_name + " 日志《%s》 第%s张图片下载成功" % (blog_info["blog_title"], image_index))
