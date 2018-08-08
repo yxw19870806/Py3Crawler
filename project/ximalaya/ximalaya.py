@@ -198,16 +198,15 @@ class Download(crawler.DownloadThread):
             return
 
         audio_url = audio_play_response["audio_url"]
-        audio_title = path.filter_text(audio_info["audio_title"])
-        log.step(self.account_name + " 开始下载歌曲%s《%s》 %s" % (audio_info["audio_id"], audio_title, audio_url))
+        log.step(self.account_name + " 开始下载歌曲%s《%s》 %s" % (audio_info["audio_id"], audio_info["audio_title"], audio_url))
 
         file_type = audio_url.split(".")[-1]
-        file_path = os.path.join(self.main_thread.video_download_path, self.account_name, "%09d - %s.%s" % (int(audio_info["audio_id"]), audio_title, file_type))
+        file_path = os.path.join(self.main_thread.video_download_path, self.account_name, "%09d - %s.%s" % (int(audio_info["audio_id"]), path.filter_text(audio_info["audio_title"]), file_type))
         save_file_return = net.save_net_file(audio_url, file_path)
         if save_file_return["status"] == 1:
-            log.step(self.account_name + " 歌曲%s《%s》下载成功" % (audio_info["audio_id"], audio_title))
+            log.step(self.account_name + " 歌曲%s《%s》下载成功" % (audio_info["audio_id"], audio_info["audio_title"]))
         else:
-            log.error(self.account_name + " 歌曲%s《%s》 %s 下载失败，原因：%s" % (audio_info["audio_id"], audio_title, audio_url, crawler.download_failre(save_file_return["code"])))
+            log.error(self.account_name + " 歌曲%s《%s》 %s 下载失败，原因：%s" % (audio_info["audio_id"], audio_info["audio_title"], audio_url, crawler.download_failre(save_file_return["code"])))
             return
 
         # 歌曲下载完毕

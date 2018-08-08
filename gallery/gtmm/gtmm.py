@@ -38,7 +38,6 @@ def get_album_page(album_id):
     result = {
         "album_title": "",  # 图集标题
         "image_url_list": [],  # 全部图片地址
-        "is_delete": False,  # 是不是已经被删除
     }
     while page_count <= max_page_count:
         if page_count == 1:
@@ -46,10 +45,7 @@ def get_album_page(album_id):
         else:
             album_pagination_url = "http://www.gtmm.net/xgmn/%s_%s.html" % (album_id, page_count)
         album_pagination_response = net.http_request(album_pagination_url, method="GET")
-        if page_count == 1 and album_pagination_response.status == 404:
-            result["is_delete"] = True
-            return result
-        elif album_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
+        if album_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
             raise crawler.CrawlerException("第%s页" % page_count + crawler.request_failre(album_pagination_response.status))
         album_pagination_response_content = album_pagination_response.data.decode("GBK")
         if page_count == 1:
@@ -132,15 +128,15 @@ class GTMM(crawler.Crawler):
                 for image_url in album_response["image_url_list"]:
                     if not self.is_running():
                         tool.process_exit(0)
-                    log.step("图集%s《%s》开始下载第%s张图片 %s" % (album_id, album_title, image_index, image_url))
+                    log.step("图集%s《%s》开始下载第%s张图片 %s" % (album_id, album_response["album_title"], image_index, image_url))
 
                     file_type = image_url.split(".")[-1]
                     file_path = os.path.join(album_path, "%03d.%s" % (image_index, file_type))
                     save_file_return = net.save_net_file(image_url, file_path)
                     if save_file_return["status"] == 1:
-                        log.step("图集%s《%s》第%s张图片下载成功" % (album_id, album_title, image_index))
+                        log.step("图集%s《%s》第%s张图片下载成功" % (album_id, album_response["album_title"], image_index))
                     else:
-                        log.error("图集%s《%s》第%s张图片 %s 下载失败，原因：%s" % (album_id, album_title, image_index, image_url, crawler.download_failre(save_file_return["code"])))
+                        log.error("图集%s《%s》第%s张图片 %s 下载失败，原因：%s" % (album_id, album_response["album_title"], image_index, image_url, crawler.download_failre(save_file_return["code"])))
                     image_index += 1
                 # 图集内图片全部下载完毕
                 temp_path = ""  # 临时目录设置清除
