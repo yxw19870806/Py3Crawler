@@ -213,10 +213,9 @@ class Download(crawler.DownloadThread):
         log.step(self.account_name + " 日志《%s》 %s 解析获取%s张图片" % (blog_info["blog_title"], blog_info["blog_url"], len(blog_response["image_url_list"])))
 
         image_index = 1
-        # 过滤标题中不支持的字符
-        blog_title = path.filter_text(blog_info["blog_title"])
         blog_id = get_blog_id(blog_info["blog_url"])
         # 过滤标题中不支持的字符
+        blog_title = path.filter_text(blog_info["blog_title"])
         if blog_title:
             image_path = os.path.join(self.main_thread.image_download_path, self.account_name, "%s %s" % (blog_id, blog_title))
         else:
