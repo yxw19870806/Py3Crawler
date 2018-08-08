@@ -136,8 +136,8 @@ def get_video_page(video_id):
         # 没有登录时默认使用英语
         video_play_response = net.http_request(video_play_url, method="GET", fields=query_data, header_list={"accept-language": "en"})
     result = {
-        "title": "",  # 视频标题
         "video_time": None,  # 视频上传时间
+        "video_title": "",  # 视频标题
         "video_url": None,  # 视频地址
     }
     # 获取视频地址
@@ -165,7 +165,7 @@ def get_video_page(video_id):
     # 获取视频标题
     if not crawler.check_sub_key(("title",), video_info_data["args"]):
         raise crawler.CrawlerException("视频信息'title'字段不存在\n%s" % video_info_data)
-    result["title"] = video_info_data["args"]["title"]
+    result["video_title"] = video_info_data["args"]["title"]
     # 获取视频地址
     if not crawler.check_sub_key(("url_encoded_fmt_stream_map",), video_info_data["args"]):
         raise crawler.CrawlerException("视频信息'url_encoded_fmt_stream_map'字段不存在\n%s" % video_info_data["args"])
@@ -545,15 +545,15 @@ class Download(crawler.DownloadThread):
             return
 
         self.main_thread_check()  # 检测主线程运行状态
-        log.step(self.account_name + " 开始下载视频%s《%s》 %s" % (video_id, video_response["title"], video_response["video_url"]))
+        log.step(self.account_name + " 开始下载视频%s《%s》 %s" % (video_id, video_response["video_title"], video_response["video_url"]))
 
-        video_file_path = os.path.join(self.main_thread.video_download_path, self.account_name, "%s - %s.mp4" % (video_id, path.filter_text(video_response["title"])))
+        video_file_path = os.path.join(self.main_thread.video_download_path, self.account_name, "%s - %s.mp4" % (video_id, path.filter_text(video_response["video_title"])))
         save_file_return = net.save_net_file(video_response["video_url"], video_file_path, head_check=True)
         if save_file_return["status"] == 1:
             # 设置临时目录
-            log.step(self.account_name + " 视频%s《%s》下载成功" % (video_id, video_response["title"]))
+            log.step(self.account_name + " 视频%s《%s》下载成功" % (video_id, video_response["video_title"]))
         else:
-            log.error(self.account_name + " 视频%s《%s》 %s 下载失败，原因：%s" % (video_id, video_response["title"], video_response["video_url"], crawler.download_failre(save_file_return["code"])))
+            log.error(self.account_name + " 视频%s《%s》 %s 下载失败，原因：%s" % (video_id, video_response["video_title"], video_response["video_url"], crawler.download_failre(save_file_return["code"])))
 
         # 媒体内图片和视频全部下载完毕
         self.total_video_count += 1  # 计数累加

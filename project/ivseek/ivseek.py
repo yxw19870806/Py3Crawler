@@ -31,7 +31,7 @@ def get_archive_page(archive_id):
     archive_url = "http://www.ivseek.com/archives/%s.html" % archive_id
     archive_response = net.http_request(archive_url, method="GET")
     result = {
-        "title": "",  # 标题
+        "video_title": "",  # 标题
         "video_info_list": [],  # 全部视频信息
     }
     if archive_response.status == 404:
@@ -115,7 +115,7 @@ def get_archive_page(archive_id):
     title = tool.find_sub_string(archive_response_content, '<meta property="og:title" content="', '"')
     if not title:
         raise crawler.CrawlerException("页面截取标题失败")
-    result["title"] = title.strip()
+    result["video_title"] = title.strip()
     return result
 
 
@@ -165,8 +165,8 @@ class IvSeek(crawler.Crawler):
                     continue
 
                 for video_info in archive_response["video_info_list"]:
-                    log.step("视频%s《%s》: %s" % (archive_id, archive_response["title"], video_info["video_url"]))
-                    tool.write_file("%s\t%s\t%s\t%s\t" % (archive_id, archive_response["title"], video_info["video_url"], video_info["account_id"]), self.save_data_path)
+                    log.step("视频%s《%s》: %s" % (archive_id, archive_response["video_title"], video_info["video_url"]))
+                    tool.write_file("%s\t%s\t%s\t%s\t" % (archive_id, archive_response["video_title"], video_info["video_url"], video_info["account_id"]), self.save_data_path)
 
                 # 提前结束
                 if not self.is_running():
