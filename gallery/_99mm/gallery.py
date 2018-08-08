@@ -38,6 +38,7 @@ def get_index_page():
 def get_album_page(album_id):
     result = {
         "album_title": "",  # 图集标题
+        "album_url": "",  # 图集首页地址
         "image_url_list": [],  # 全部图片地址
     }
     album_pagination_response = None
@@ -46,6 +47,7 @@ def get_album_page(album_id):
         album_pagination_response = net.http_request(album_pagination_url, method="GET", is_auto_redirect=False)
         if album_pagination_response.status == 404:
             continue
+        result["album_url"] = album_pagination_url
         break
     if album_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(album_pagination_response.status))
@@ -127,8 +129,8 @@ class Gallery(crawler.Crawler):
                     log.error("图集%s解析失败，原因：%s" % (album_id, e.message))
                     raise
 
-                log.trace("图集%s《%s》解析的全部图片：%s" % (album_id, album_response["album_title"], album_response["image_url_list"]))
-                log.step("图集%s《%s》解析获取%s张图片" % (album_id, album_response["album_title"], len(album_response["image_url_list"])))
+                log.trace("图集%s《%s》 %s 解析的全部图片：%s" % (album_id, album_response["album_title"], album_response["album_url"], album_response["image_url_list"]))
+                log.step("图集%s《%s》 %s 解析获取%s张图片" % (album_id, album_response["album_title"], album_response["album_url"], len(album_response["image_url_list"])))
 
                 image_index = 1
                 # 过滤标题中不支持的字符
@@ -141,15 +143,15 @@ class Gallery(crawler.Crawler):
                 for image_url in album_response["image_url_list"]:
                     if not self.is_running():
                         tool.process_exit(0)
-                    log.step("图集%s《%s》开始下载第%s张图片 %s" % (album_id, album_title, image_index, image_url))
+                    log.step("图集%s《%s》开始下载第%s张图片 %s" % (album_id, album_response["album_title"], image_index, image_url))
 
                     file_type = image_url.split(".")[-1]
                     file_path = os.path.join(album_path, "%03d.%s" % (image_index, file_type))
                     save_file_return = net.save_net_file(image_url, file_path, header_list={"Referer": "http://www.99mm.me/"})
                     if save_file_return["status"] == 1:
-                        log.step("图集%s《%s》第%s张图片下载成功" % (album_id, album_title, image_index))
+                        log.step("图集%s《%s》第%s张图片下载成功" % (album_id, album_response["album_title"], image_index))
                     else:
-                        log.error("图集%s《%s》第%s张图片 %s 下载失败，原因：%s" % (album_id, album_title, image_index, image_url, crawler.download_failre(save_file_return["code"])))
+                        log.error("图集%s《%s》 %s 第%s张图片 %s 下载失败，原因：%s" % (album_id, album_response["album_title"], album_response["album_url"], image_index, image_url, crawler.download_failre(save_file_return["code"])))
                     image_index += 1
                 # 图集内图片全部下载完毕
                 temp_path = ""  # 临时目录设置清除
