@@ -38,7 +38,7 @@ def get_index_page():
 def get_album_page(album_id):
     result = {
         "album_title": "",  # 图集标题
-        "album_url": "",  # 图集首页地址
+        "album_url": None,  # 图集首页地址
         "image_url_list": [],  # 全部图片地址
     }
     album_pagination_response = None

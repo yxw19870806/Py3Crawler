@@ -73,7 +73,7 @@ def get_article_page(article_url):
     cookies_list = {"SUB": weiboCommon.COOKIE_INFO["SUB"]}
     article_response = net.http_request(article_url, method="GET", cookies_list=cookies_list)
     result = {
-        "article_id": "",  # 文章id
+        "article_id": None,  # 文章id
         "article_title": "",  # 文章标题
         "image_url_list": [],  # 全部图片地址
         "is_pay": False,  # 是否需要购买
