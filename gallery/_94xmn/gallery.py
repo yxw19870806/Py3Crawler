@@ -42,9 +42,9 @@ def get_album_page(sub_path, page_count):
         raise crawler.CrawlerException("页面截取图集列表失败\n%s" % album_pagination_html)
     for album_index in range(0, album_list_selector.length):
         result_album_info = {
+            "album_id": None,  # 图集id
             "album_title": "",  # 图集id
             "album_url": None,  # 图集地址
-            "album_id": None,  # 图集id
         }
         album_selector = album_list_selector.eq(album_index)
         # 获取图集地址
