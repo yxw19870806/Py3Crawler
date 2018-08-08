@@ -236,7 +236,7 @@ class Download(crawler.DownloadThread):
             if save_file_return["status"] == 1:
                 if weiboCommon.check_image_invalid(file_path):
                     path.delete_dir_or_file(file_path)
-                    log.error(self.account_name + " 第%s张图片 %s 资源已被删除，跳过" % (image_index, image_info["image_url"]))
+                    log.error(self.account_name + " 第%s张图片 %s 资源已被删除，跳过" % (image_index, image_url))
                     continue
                 else:
                     log.step(self.account_name + " 日志《%s》 第%s张图片下载成功" % (blog_info["blog_title"], image_index))
