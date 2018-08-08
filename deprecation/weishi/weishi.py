@@ -85,7 +85,7 @@ def get_video_info_page(video_vid, video_id):
     video_info_url = "http://wsi.weishi.com/weishi/video/downloadVideo.php?vid=%s&id=%s" % (video_vid, video_id)
     video_info_response = net.http_request(video_info_url, method="GET", json_decode=True)
     result = {
-        "video_url": "",  # 视频地址
+        "video_url": None,  # 视频地址
     }
     if video_info_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(video_info_response.status))

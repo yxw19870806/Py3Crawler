@@ -198,8 +198,7 @@ class Download(crawler.DownloadThread):
         self.main_thread_check()  # 检测主线程运行状态
         log.step(self.account_name + " 开始下载视频 %s 《%s》 %s" % (video_info["video_id"], video_info["video_title"], video_info_response["video_url"]))
 
-        video_title = path.filter_text(video_info["video_title"])
-        video_file_path = os.path.join(self.main_thread.video_download_path, self.account_name, "%06d %s.mp4" % (int(video_info["video_id"]), video_title))
+        video_file_path = os.path.join(self.main_thread.video_download_path, self.account_name, "%06d %s.mp4" % (int(video_info["video_id"]), path.filter_text(video_info["video_title"])))
         save_file_return = net.save_net_file(video_info_response["video_url"], video_file_path)
         if save_file_return["status"] == 1:
             log.step(self.account_name + " 视频 %s 《%s》下载成功" % (video_info["video_id"], video_info["video_title"]))

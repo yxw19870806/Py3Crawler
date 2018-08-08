@@ -6,7 +6,6 @@ http://5sing.kugou.com/
 email: hikaru870806@hotmail.com
 如有问题或建议请联系
 """
-import base64
 import os
 import re
 import threading

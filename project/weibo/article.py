@@ -73,7 +73,7 @@ def get_article_page(article_url):
     cookies_list = {"SUB": weiboCommon.COOKIE_INFO["SUB"]}
     article_response = net.http_request(article_url, method="GET", cookies_list=cookies_list)
     result = {
-        "article_id": "",  # 文章id
+        "article_id": None,  # 文章id
         "article_title": "",  # 文章标题
         "image_url_list": [],  # 全部图片地址
         "is_pay": False,  # 是否需要购买
@@ -253,11 +253,10 @@ class Download(crawler.DownloadThread):
             log.error(self.account_name + " 文章 %s 存在付费查看的内容" % article_info["article_url"])
 
         article_id = article_response["article_id"]
-        article_title = article_response["article_title"]
         # 过滤标题中不支持的字符
-        title = path.filter_text(article_title)
-        if title:
-            article_path = os.path.join(self.main_thread.image_download_path, self.account_name, "%s %s" % (article_id, title))
+        article_title = path.filter_text(article_response["article_title"])
+        if article_title:
+            article_path = os.path.join(self.main_thread.image_download_path, self.account_name, "%s %s" % (article_id, article_title))
         else:
             article_path = os.path.join(self.main_thread.image_download_path, self.account_name, article_id)
         self.temp_path_list.append(article_path)
@@ -267,19 +266,19 @@ class Download(crawler.DownloadThread):
             self.main_thread_check()  # 检测主线程运行状态
             if image_url.find("/p/e_weibo_com") >= 0 or image_url.find("//e.weibo.com") >= 0:
                 continue
-            log.step(self.account_name + " 文章%s《%s》 开始下载第%s张图片 %s" % (article_id, article_title, image_index, image_url))
+            log.step(self.account_name + " 文章%s《%s》 开始下载第%s张图片 %s" % (article_id, article_response["article_title"], image_index, image_url))
             file_type = image_url.split(".")[-1]
             file_path = os.path.join(article_path, "%03d.%s" % (image_index, file_type))
             save_file_return = net.save_net_file(image_url, file_path)
             if save_file_return["status"] == 1:
                 if weiboCommon.check_image_invalid(file_path):
                     path.delete_dir_or_file(file_path)
-                    log.error(self.account_name + " 文章%s《%s》 第%s张图片 %s 资源已被删除，跳过" % (article_id, article_title, image_index, image_url))
+                    log.error(self.account_name + " 文章%s《%s》 第%s张图片 %s 资源已被删除，跳过" % (article_id, article_response["article_title"], image_index, image_url))
                 else:
-                    log.step(self.account_name + " 文章%s《%s》 第%s张图片下载成功" % (article_id, article_title, image_index))
+                    log.step(self.account_name + " 文章%s《%s》 第%s张图片下载成功" % (article_id, article_response["article_title"], image_index))
                     image_index += 1
             else:
-                log.error(self.account_name + " 文章%s《%s》 第%s张图片 %s 下载失败，原因：%s" % (article_id, article_title, image_index, image_url, crawler.download_failre(save_file_return["code"])))
+                log.error(self.account_name + " 文章%s《%s》 第%s张图片 %s 下载失败，原因：%s" % (article_id, article_response["article_title"], image_index, image_url, crawler.download_failre(save_file_return["code"])))
 
         # 文章顶部图片
         if article_response["top_image_url"] is not None:

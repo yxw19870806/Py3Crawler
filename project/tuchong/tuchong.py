@@ -190,9 +190,9 @@ class Download(crawler.DownloadThread):
     def crawl_album(self, album_info):
         image_index = 1
         # 过滤标题中不支持的字符
-        title = path.filter_text(album_info["album_title"])
-        if title:
-            post_path = os.path.join(self.main_thread.image_download_path, self.account_name, "%08d %s" % (int(album_info["album_id"]), title))
+        album_title = path.filter_text(album_info["album_title"])
+        if album_title:
+            post_path = os.path.join(self.main_thread.image_download_path, self.account_name, "%08d %s" % (int(album_info["album_id"]), album_title))
         else:
             post_path = os.path.join(self.main_thread.image_download_path, self.account_name, "%08d" % int(album_info["album_id"]))
         self.temp_path_list.append(post_path)
