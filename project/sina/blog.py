@@ -13,6 +13,7 @@ import time
 import traceback
 from pyquery import PyQuery as pq
 from common import *
+from project.weibo import weiboCommon
 
 
 # 获取指定页数的全部日志
@@ -26,7 +27,7 @@ def get_one_page_blog(account_id, page_count):
     }
     if blog_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(blog_pagination_response.status))
-    blog_pagination_response_content = blog_pagination_response.data.deocde()
+    blog_pagination_response_content = blog_pagination_response.data.decode()
     if page_count == 1 and blog_pagination_response_content.find("抱歉，您要访问的页面不存在或被删除！") >= 0:
         raise crawler.CrawlerException("账号不存在")
     article_list_selector = pq(blog_pagination_response_content).find(".articleList .articleCell")
@@ -231,11 +232,16 @@ class Download(crawler.DownloadThread):
                 file_type = image_url.split(".")[-1]
             else:
                 file_type = "jpg"
-            file_path = os.path.join(image_path, "%04d.%s" % (image_index, file_type))
+            file_path = os.path.join(image_path, "%02d.%s" % (image_index, file_type))
             save_file_return = net.save_net_file(image_url, file_path)
             if save_file_return["status"] == 1:
-                log.step(self.account_name + " 日志《%s》 第%s张图片下载成功" % (blog_info["blog_title"], image_index))
-                image_index += 1
+                if weiboCommon.check_image_invalid(file_path):
+                    path.delete_dir_or_file(file_path)
+                    log.error(self.account_name + " 第%s张图片 %s 资源已被删除，跳过" % (image_index, image_info["image_url"]))
+                    continue
+                else:
+                    log.step(self.account_name + " 日志《%s》 第%s张图片下载成功" % (blog_info["blog_title"], image_index))
+                    image_index += 1
             else:
                 log.error(self.account_name + " 日志《%s》 第%s张图片 %s 下载失败，原因：%s" % (blog_info["blog_title"], image_index, image_url, crawler.download_failre(save_file_return["code"])))
 
