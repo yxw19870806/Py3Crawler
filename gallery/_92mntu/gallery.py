@@ -7,6 +7,7 @@ email: hikaru870806@hotmail.com
 """
 import os
 import re
+import time
 import traceback
 from pyquery import PyQuery as pq
 from common import *
@@ -58,6 +59,7 @@ def get_album_page(album_id):
             album_pagination_url = "http://92mntu.com/%s/%s_%s.html" % (sub_path, album_id, page_count)
             album_pagination_response = net.http_request(album_pagination_url, method="GET", header_list={"Host": "92mntu.com"})
         if album_pagination_response.status == 409:
+            time.sleep(5)
             continue
         elif page_count == 1 and album_pagination_response.status == 404:
             result["is_delete"] = True

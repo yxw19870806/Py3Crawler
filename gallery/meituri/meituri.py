@@ -7,6 +7,7 @@ email: hikaru870806@hotmail.com
 """
 import os
 import re
+import time
 import traceback
 from common import *
 
@@ -46,6 +47,7 @@ def get_album_page(album_id):
             result["is_delete"] = True
             return result
         elif album_pagination_response.status == 409:
+            time.sleep(5)
             continue
         elif album_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
             raise crawler.CrawlerException("第%s页" % page_count + crawler.request_failre(album_pagination_response.status))

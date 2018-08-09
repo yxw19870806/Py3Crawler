@@ -33,6 +33,7 @@ def get_album_page(sub_path, page_count):
         "is_over": False,  # 是不是最后一页图集
     }
     if album_pagination_response.status == 409:
+        time.sleep(5)
         return get_album_page(sub_path, page_count)
     elif album_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(album_pagination_response.status))
@@ -90,6 +91,7 @@ def get_album_photo(album_url):
             photo_pagination_url = album_url.replace(".html", "_%s.html" % page_count)
         photo_pagination_response = net.http_request(photo_pagination_url, method="GET", header_list={"Host": "www.94xmn.com"})
         if photo_pagination_response.status == 409:
+            time.sleep(5)
             continue
         elif photo_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
             raise crawler.CrawlerException("第%s页" % page_count + crawler.request_failre(photo_pagination_response.status))
