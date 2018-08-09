@@ -203,7 +203,9 @@ class Download(crawler.DownloadThread):
             except crawler.CrawlerException as e:
                 log.error(self.account_name + " cursor %s后的一页视频解析失败，原因：%s" % (cursor_id, e.message))
                 raise
-            log.trace(self.account_name + " cursor %s后的一页视频：%s" % (cursor_id, video_pagination_response["video_info_list"]))
+
+            log.trace(self.account_name + " cursor %s页获取的全部视频：%s" % (cursor_id, video_pagination_response["video_info_list"]))
+            log.step(self.account_name + " cursor %s页获取%s个视频" % (cursor_id, len(video_pagination_response["video_info_list"])))
 
             # 寻找这一页符合条件的视频
             for video_info in video_pagination_response["video_info_list"]:
@@ -244,7 +246,7 @@ class Download(crawler.DownloadThread):
             # 从最早的视频开始下载
             while len(video_id_list) > 0:
                 video_info = video_id_list.pop()
-                log.step(self.account_name + " 开始解析视频 %s" % video_info["video_id"])
+                log.step(self.account_name + " 开始解析视频%s" % video_info["video_id"])
                 self.crawl_video(video_info)
                 self.main_thread_check()  # 检测主线程运行状态
         except SystemExit as se:
