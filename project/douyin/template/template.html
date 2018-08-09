@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title></title>
+</head>
+<body>
+<script>
+    navigator = {'userAgent': '%%USER_AGENT%%'};
+    tac = '%%TAC%%';
+</script>
+<div id="result">
+</div>
+<script src="https://s3.bytecdn.cn/ies/resource/falcon/douyin_falcon/static/script/lib/base_327cc85.js"></script>
+<script src="https://s3a.bytecdn.cn/ies/resource/falcon/douyin_falcon/pkg/third_ee38eac.js"></script>
+<script>
+    $("#result").html(window.__M.require("douyin_falcon:node_modules/byted-acrawler/dist/runtime").sign('%%UID%%'));
+</script>
+</body>
+</html>
