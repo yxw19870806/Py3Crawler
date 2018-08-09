@@ -27,12 +27,15 @@ SUB_PATH_LIST = {
 # 获取指定一页的图集
 def get_album_page(sub_path, page_count):
     album_pagination_url = "http://www.94xmn.com/%s/list_%s_%s.html" % (sub_path, SUB_PATH_LIST[sub_path], page_count)
-    album_pagination_response = net.http_request(album_pagination_url, method="GET")
+    album_pagination_response = net.http_request(album_pagination_url, method="GET", header_list={"Host": "www.94xmn.com"})
     result = {
         "album_info_list": {},  # 全部图集信息
         "is_over": False,  # 是不是最后一页图集
     }
-    if album_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
+    if album_pagination_response.status == 409:
+        time.sleep(5)
+        return get_album_page(sub_path, page_count)
+    elif album_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(album_pagination_response.status))
     # 页面编码
     album_pagination_html = album_pagination_response.data.decode()
@@ -53,7 +56,11 @@ def get_album_page(sub_path, page_count):
             raise crawler.CrawlerException("图集列表截取图集地址失败\n%s" % album_selector.html())
         result_album_info["album_url"] = album_url
         # 获取图集id
-        album_id = album_url.split("/")[-1].split(".")[0]
+        # http://www.94xmn.com/plus/view.php?aid=25
+        if album_url.find("/view.php?") > 0:
+            album_id = album_url.split("aid=")[-1]
+        else:
+            album_id = album_url.split("/")[-1].split(".")[0]
         if not crawler.is_integer(album_id):
             raise crawler.CrawlerException("图集地址截取图集id失败\n%s" % album_url)
         result_album_info["album_id"] = int(album_id)
@@ -82,8 +89,11 @@ def get_album_photo(album_url):
             photo_pagination_url = album_url
         else:
             photo_pagination_url = album_url.replace(".html", "_%s.html" % page_count)
-        photo_pagination_response = net.http_request(photo_pagination_url, method="GET")
-        if photo_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
+        photo_pagination_response = net.http_request(photo_pagination_url, method="GET", header_list={"Host": "www.94xmn.com"})
+        if photo_pagination_response.status == 409:
+            time.sleep(5)
+            continue
+        elif photo_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
             raise crawler.CrawlerException("第%s页" % page_count + crawler.request_failre(photo_pagination_response.status))
         photo_pagination_content = photo_pagination_response.data.decode()
         # 获取图片地址
@@ -237,7 +247,7 @@ class Download(crawler.DownloadThread):
         # 图集内图片全部下载完毕
         self.temp_path_list = []  # 临时目录设置清除
         self.total_image_count += image_index - 1  # 计数累加
-        self.account_info[1] = album_info["album_id"]  # 设置存档记录
+        self.account_info[1] = str(album_info["album_id"])  # 设置存档记录
 
     def run(self):
         try:
