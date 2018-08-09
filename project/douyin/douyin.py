@@ -11,24 +11,67 @@ import threading
 import time
 import traceback
 from common import *
+from selenium import webdriver
 
 EACH_PAGE_VIDEO_COUNT = 21
+CACHE_FILE_PATH = os.path.join(os.path.dirname(__file__), "cache")
+TEMPLATE_HTML_PATH = os.path.join(os.path.dirname(__file__), "template.html")
+USER_AGENT = net._random_user_agent()
+
+
+# 获取账号首页
+def get_account_index_page(account_id):
+    account_index_url = "https://www.douyin.com/share/user/%s" % account_id
+    header_list = {
+        "User-Agent": USER_AGENT,
+    }
+    account_index_response = net.http_request(account_index_url, method="GET", header_list=header_list)
+    result = {
+        "dytk": "a7c57cbc452668bcf4827f3665381a71",  # 账号dytk值（请求参数）
+        "signature": "alr0uRAaMTSdKhxrhHrIQWpa9K",  # 加密串（请求参数）
+    }
+    if account_index_response.status != net.HTTP_RETURN_CODE_SUCCEED:
+        raise crawler.CrawlerException(crawler.request_failre(account_index_response.status))
+    account_index_response_content = account_index_response.data.decode()
+    script_tac = tool.find_sub_string(account_index_response_content, "<script>tac='", "'</script>")
+    if not script_tac:
+        raise crawler.CrawlerException("页面截取tac参数失败\n%s" % account_index_response_content)
+    script_dytk = tool.find_sub_string(account_index_response_content, "dytk: '", "'")
+    if not script_dytk:
+        raise crawler.CrawlerException("页面截取dytk参数失败\n%s" % account_index_response_content)
+    result["dytk"] = script_dytk
+    # 读取模板并替换相关参数
+    template_html = tool.read_file(TEMPLATE_HTML_PATH)
+    template_html = template_html.replace("%%USER_AGENT%%", USER_AGENT).replace("%%TAC%%", script_tac).replace("%%UID%%", str(account_id))
+    cache_html = os.path.join(CACHE_FILE_PATH, "%s.html" % account_id)
+    tool.write_file(template_html, cache_html, tool.WRITE_FILE_TYPE_REPLACE)
+    # 使用抖音的加密JS方法算出signature的值
+    chrome_options = webdriver.chrome.options.Options()
+    chrome_options.add_argument('--headless')  # 不打开浏览器
+    chrome_options.add_argument("user-agent=" + USER_AGENT)  # 使用指定UA
+    chrome = webdriver.Chrome(chrome_options=chrome_options)
+    chrome.get("file:///" + os.path.realpath(cache_html))
+    signature = chrome.find_element_by_id("result").text
+    chrome.close()
+    if not signature:
+        raise crawler.CrawlerException("signature参数计算失败\n%s" % account_index_response_content)
+    result["signature"] = signature
+    return result
 
 
 # 获取指定页数的全部视频
-def get_one_page_video(account_id, cursor_id):
+def get_one_page_video(account_id, cursor_id, dytk, signature):
     api_url = "https://www.douyin.com/aweme/v1/aweme/post/"
     query_data = {
-        "user_id": account_id,
-        "max_cursor": str(cursor_id),
+        "_signature": signature,
         "count": EACH_PAGE_VIDEO_COUNT,
-        "ts": "1528882843",
-        "as": "a1852ea2db294ba6002927",
-        "cp": "ea99bb52b1022f61e1fmnc",
-        "mas": "00fc1cec2a176642c8bc842e47ff5c262cec4c9c4c0c0c6c86462c",
+        "dytk": dytk,
+        "max_cursor": cursor_id,
+        "user_id": account_id,
     }
     header_list = {
-        "User-Agent": "okhttp/3.8.1",
+        "Referer": "https://www.douyin.com/share/user/%s" % account_id,
+        "User-Agent": USER_AGENT,
     }
     video_pagination_response = net.http_request(api_url, method="GET", fields=query_data, header_list=header_list, json_decode=True)
     result = {
@@ -89,8 +132,8 @@ class DouYin(crawler.Crawler):
         crawler.Crawler.__init__(self, sys_config)
 
         # 解析存档文件
-        # account_name account_id  last_video_id
-        self.account_list = crawler.read_save_data(self.save_data_path, 0, ["", "0", "0"])
+        # account_id last_video_id
+        self.account_list = crawler.read_save_data(self.save_data_path, 0, ["", "0"])
 
     def main(self):
         # 循环下载每个id
@@ -121,6 +164,9 @@ class DouYin(crawler.Crawler):
         # 重新排序保存存档文件
         crawler.rewrite_save_file(self.temp_save_data_path, self.save_data_path)
 
+        # 删除临时缓存目录
+        path.delete_dir_or_file(CACHE_FILE_PATH)
+
         log.step("全部下载完毕，耗时%s秒，共计视频%s个" % (self.get_run_time(), self.total_video_count))
 
 
@@ -128,14 +174,21 @@ class Download(crawler.DownloadThread):
     def __init__(self, account_info, main_thread):
         crawler.DownloadThread.__init__(self, account_info, main_thread)
         self.account_id = self.account_info[0]
-        if len(self.account_info) >= 4 and self.account_info[3]:
-            self.account_name = self.account_info[3]
+        if len(self.account_info) >= 3 and self.account_info[2]:
+            self.account_name = self.account_info[2]
         else:
             self.account_name = self.account_info[0]
         log.step(self.account_name + " 开始")
 
     # 获取所有可下载视频
     def get_crawl_list(self):
+        # 获取指定一页的视频信息
+        try:
+            account_index_response = get_account_index_page(self.account_id)
+        except crawler.CrawlerException as e:
+            log.error(self.account_name + " 账号首页访问失败，原因：%s" % e.message)
+            raise
+
         cursor_id = 0
         video_info_list = []
         is_over = False
@@ -146,16 +199,18 @@ class Download(crawler.DownloadThread):
 
             # 获取指定一页的视频信息
             try:
-                video_pagination_response = get_one_page_video(self.account_id, cursor_id)
+                video_pagination_response = get_one_page_video(self.account_id, cursor_id, account_index_response["dytk"], account_index_response["signature"])
             except crawler.CrawlerException as e:
                 log.error(self.account_name + " cursor %s后的一页视频解析失败，原因：%s" % (cursor_id, e.message))
                 raise
-            log.trace(self.account_name + " cursor %s后的一页视频：%s" % (cursor_id, video_pagination_response["video_info_list"]))
+
+            log.trace(self.account_name + " cursor %s页获取的全部视频：%s" % (cursor_id, video_pagination_response["video_info_list"]))
+            log.step(self.account_name + " cursor %s页获取%s个视频" % (cursor_id, len(video_pagination_response["video_info_list"])))
 
             # 寻找这一页符合条件的视频
             for video_info in video_pagination_response["video_info_list"]:
                 # 检查是否达到存档记录
-                if video_info["video_id"] > int(self.account_info[2]):
+                if video_info["video_id"] > int(self.account_info[1]):
                     video_info_list.append(video_info)
                 else:
                     is_over = True
@@ -182,7 +237,6 @@ class Download(crawler.DownloadThread):
         self.account_info[1] = str(video_info["video_id"])  # 设置存档记录
         self.total_video_count += 1  # 计数累加
 
-
     def run(self):
         try:
             # 获取所有可下载视频
@@ -191,9 +245,9 @@ class Download(crawler.DownloadThread):
 
             # 从最早的视频开始下载
             while len(video_id_list) > 0:
-                video_id = video_id_list.pop()
-                log.step(self.account_name + " 开始解析第%s个视频 %s" % (int(self.account_info[1]) + 1, video_id))
-                self.crawl_video(video_id)
+                video_info = video_id_list.pop()
+                log.step(self.account_name + " 开始解析视频%s" % video_info["video_id"])
+                self.crawl_video(video_info)
                 self.main_thread_check()  # 检测主线程运行状态
         except SystemExit as se:
             if se.code == 0:
