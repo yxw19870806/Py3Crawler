@@ -96,7 +96,7 @@ def get_album_page(album_id):
     return result
 
 
-class UUMNT(crawler.Crawler):
+class AiTaoTu(crawler.Crawler):
     def __init__(self):
         # 设置APP目录
         tool.PROJECT_APP_PATH = os.path.abspath(os.path.dirname(__file__))
@@ -192,4 +192,4 @@ class UUMNT(crawler.Crawler):
 
 
 if __name__ == "__main__":
-    UUMNT().main()
+    AiTaoTu().main()
