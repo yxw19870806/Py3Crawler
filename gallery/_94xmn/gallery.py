@@ -241,7 +241,7 @@ class Download(crawler.DownloadThread):
         # 图集内图片全部下载完毕
         self.temp_path_list = []  # 临时目录设置清除
         self.total_image_count += image_index - 1  # 计数累加
-        self.account_info[1] = album_info["album_id"]  # 设置存档记录
+        self.account_info[1] = str(album_info["album_id"])  # 设置存档记录
 
     def run(self):
         try:
