@@ -5,3 +5,10 @@
 ## 账号ID获取步骤
 点击任意账号网页版主页
 地址类似为**https://www.douyin.com/share/user/[1234567890]**，其中[]内的字母+数字就是账号的ID（实际不包括[]）
+
+## install
+1. 需要安装selenium
+pip install selenium
+2. 需要安装chrome浏览器
+3. 需要下载最新版本的chrome driver（http://chromedriver.storage.googleapis.com/index.html）
+将下载后的chromedriver.exe放在程序根目录（/project/douyin/) 或者把chromedrive.exe所在文件目录添加到系统环境变量中
