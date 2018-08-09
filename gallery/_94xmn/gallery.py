@@ -27,7 +27,7 @@ SUB_PATH_LIST = {
 # 获取指定一页的图集
 def get_album_page(sub_path, page_count):
     album_pagination_url = "http://www.94xmn.com/%s/list_%s_%s.html" % (sub_path, SUB_PATH_LIST[sub_path], page_count)
-    album_pagination_response = net.http_request(album_pagination_url, method="GET")
+    album_pagination_response = net.http_request(album_pagination_url, method="GET", header_list={"Host": "www.94xmn.com"})
     result = {
         "album_info_list": {},  # 全部图集信息
         "is_over": False,  # 是不是最后一页图集
@@ -88,7 +88,7 @@ def get_album_photo(album_url):
             photo_pagination_url = album_url
         else:
             photo_pagination_url = album_url.replace(".html", "_%s.html" % page_count)
-        photo_pagination_response = net.http_request(photo_pagination_url, method="GET")
+        photo_pagination_response = net.http_request(photo_pagination_url, method="GET", header_list={"Host": "www.94xmn.com"})
         if photo_pagination_response.status == 409:
             continue
         elif photo_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
