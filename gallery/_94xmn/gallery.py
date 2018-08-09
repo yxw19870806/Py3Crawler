@@ -53,7 +53,11 @@ def get_album_page(sub_path, page_count):
             raise crawler.CrawlerException("图集列表截取图集地址失败\n%s" % album_selector.html())
         result_album_info["album_url"] = album_url
         # 获取图集id
-        album_id = album_url.split("/")[-1].split(".")[0]
+        # http://www.94xmn.com/plus/view.php?aid=25
+        if album_url.find("/view.php?") > 0:
+            album_id = album_url.split("aid=")[-1]
+        else:
+            album_id = album_url.split("/")[-1].split(".")[0]
         if not crawler.is_integer(album_id):
             raise crawler.CrawlerException("图集地址截取图集id失败\n%s" % album_url)
         result_album_info["album_id"] = int(album_id)
