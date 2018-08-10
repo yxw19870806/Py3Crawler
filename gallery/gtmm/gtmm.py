@@ -11,41 +11,58 @@ import traceback
 from pyquery import PyQuery as pq
 from common import *
 
+SUB_PATH_LIST = ["mnzp", "rhmn", "swmn", "xgmn"]
+
 
 # 获取图集首页
 def get_index_page():
-    index_url = "http://www.gtmm.net/xgmn/"
-    index_response = net.http_request(index_url, method="GET")
     result = {
         "max_album_id": 0,  # 最新图集id
     }
-    if index_response.status != net.HTTP_RETURN_CODE_SUCCEED:
-        raise crawler.CrawlerException(crawler.request_failre(index_response.status))
-    index_response_content = index_response.data.decode("GBK")
-    last_album_url = pq(index_response_content).find(".listPic ul li:first>a").attr("href")
-    if last_album_url is None:
-        raise crawler.CrawlerException("页面截取最新图集地址失败\n%s" % index_response_content)
-    album_id_find = re.findall("/(\d*).html", last_album_url)
-    if len(album_id_find) != 1:
-        raise crawler.CrawlerException("最新图集地址截取图集id失败\n%s" % last_album_url)
-    result["max_album_id"] = int(album_id_find[0])
+    for sub_path in SUB_PATH_LIST:
+        index_url = "http://www.gtmm.net/%s/" % sub_path
+        index_response = net.http_request(index_url, method="GET")
+
+        if index_response.status != net.HTTP_RETURN_CODE_SUCCEED:
+            raise crawler.CrawlerException(crawler.request_failre(index_response.status))
+        index_response_content = index_response.data.decode("GBK")
+        last_album_url = pq(index_response_content).find(".listPic ul li:first>a").attr("href")
+        if last_album_url is None:
+            raise crawler.CrawlerException("页面截取最新图集地址失败\n%s" % index_response_content)
+        album_id_find = re.findall("/(\d*).html", last_album_url)
+        if len(album_id_find) != 1:
+            raise crawler.CrawlerException("最新图集地址截取图集id失败\n%s" % last_album_url)
+        result["max_album_id"] = max(result["max_album_id"], int(album_id_find[0]))
     return result
 
 
 # 获取指定一页的图集
 def get_album_page(album_id):
     page_count = max_page_count = 1
+    sub_path = ""
+    album_pagination_response = None
     result = {
         "album_title": "",  # 图集标题
+        "album_url": None,  # 图集首页地址
         "image_url_list": [],  # 全部图片地址
+        "is_delete": False,  # 是否已经被删除
     }
     while page_count <= max_page_count:
         if page_count == 1:
-            album_pagination_url = "http://www.gtmm.net/xgmn/%s.html" % album_id
+            for sub_path in SUB_PATH_LIST:
+                album_pagination_url = "http://www.gtmm.net/%s/%s.html" % (sub_path, album_id)
+                album_pagination_response = net.http_request(album_pagination_url, method="GET")
+                if album_pagination_response.status == 404:
+                    continue
+                result["album_url"] = album_pagination_url
+                break
         else:
-            album_pagination_url = "http://www.gtmm.net/xgmn/%s_%s.html" % (album_id, page_count)
-        album_pagination_response = net.http_request(album_pagination_url, method="GET")
-        if album_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
+            album_pagination_url = "http://www.gtmm.net/%s/%s_%s.html" % (sub_path, album_id, page_count)
+            album_pagination_response = net.http_request(album_pagination_url, method="GET")
+        if album_pagination_response.status == 404:
+            result["is_delete"] = True
+            return result
+        elif album_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
             raise crawler.CrawlerException("第%s页" % page_count + crawler.request_failre(album_pagination_response.status))
         album_pagination_response_content = album_pagination_response.data.decode("GBK")
         if page_count == 1:
@@ -60,7 +77,7 @@ def get_album_page(album_id):
                 raise crawler.CrawlerException("页面截取总页数失败\n%s" % album_pagination_response_content)
             max_page_count = int(max_page_count)
         # 获取图集图片地址
-        image_list_selector = pq(album_pagination_response_content).find(".imagepic>a img")
+        image_list_selector = pq(album_pagination_response_content).find(".imagepic a img")
         if image_list_selector.length == 0:
             raise crawler.CrawlerException("第%s页页面截取图片列表失败\n%s" % (page_count, album_pagination_response_content))
         for image_index in range(0, image_list_selector.length):
@@ -113,6 +130,11 @@ class GTMM(crawler.Crawler):
                 except crawler.CrawlerException as e:
                     log.error("图集%s解析失败，原因：%s" % (album_id, e.message))
                     raise
+
+                if album_response["is_delete"]:
+                    log.step("图集%s不存在，跳过" % album_id)
+                    album_id += 1
+                    continue
 
                 log.trace("图集%s《%s》解析的全部图片：%s" % (album_id, album_response["album_title"], album_response["image_url_list"]))
                 log.step("图集%s《%s》解析获取%s张图片" % (album_id, album_response["album_title"], len(album_response["image_url_list"])))
