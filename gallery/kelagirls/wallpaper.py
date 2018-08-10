@@ -7,15 +7,15 @@ email: hikaru870806@hotmail.com
 """
 import os
 import traceback
+import urllib.parse
 from pyquery import PyQuery as pq
 from common import *
 
 
 # 获取指定一页的壁纸
 def get_one_page_photo(page_count):
-    photo_pagination_url = "https://www.kelagirls.com/bizhi_findForIndexMore"
-    query_data = {"page": page_count}
-    photo_pagination_response = net.http_request(photo_pagination_url, method="GET", fields=query_data)
+    photo_pagination_url = "https://www.kelagirls.com/wallpapers-page-%s.html" % page_count
+    photo_pagination_response = net.http_request(photo_pagination_url, method="GET")
     result = {
         "image_info_list": [],  # 全部图片地址
         "is_over": False,  # 是不是最后一页壁纸
@@ -51,12 +51,10 @@ def get_one_page_photo(page_count):
         result_image_info["model_name"] = model_name
         result["image_info_list"].append(result_image_info)
     # 判断是不是最后一页
-    pagination_selector = pq(photo_pagination_response_content).find(".pageBottom div")
-    max_page_count = page_count
-    for pagination_index in range(0, pagination_selector.length):
-        if crawler.is_integer(pagination_selector.eq(pagination_index).text()):
-            max_page_count = max(max_page_count, int(pagination_selector.eq(pagination_index).text()))
-    result["is_over"] = page_count >= max_page_count
+    max_page_count = tool.find_sub_string(photo_pagination_response_content, "pageCount: ", ",")
+    if not crawler.is_integer(max_page_count):
+        raise crawler.CrawlerException("页面截取总页数失败\n%s" % photo_pagination_response_content)
+    result["is_over"] = page_count >= int(max_page_count)
     return result
 
 
@@ -106,7 +104,12 @@ class Wallpaper(crawler.Crawler):
                 log.step("第%s页壁纸解析获取%s张图片" % (page_count, len(photo_pagination_response["image_info_list"])))
 
                 for image_info in photo_pagination_response["image_info_list"]:
-                    image_info_list.append(image_info)
+                    # 检查是否达到存档记录
+                    if int(image_info["image_id"]) > last_image_id:
+                        image_info_list.append(image_info)
+                    else:
+                        is_over = True
+                        break
 
                 if not is_over:
                     if photo_pagination_response["is_over"]:
@@ -126,7 +129,9 @@ class Wallpaper(crawler.Crawler):
 
                 file_type = image_info["image_url"].split(".")[-1]
                 file_path = os.path.join(self.image_download_path, "%03d %s.%s" % (int(image_info["image_id"]), path.filter_text(image_info["model_name"]), file_type))
-                save_file_return = net.save_net_file(image_info["image_url"], file_path)
+                image_url_split = urllib.parse.urlsplit(image_info["image_url"])
+                image_url = image_url_split[0] + "://" + image_url_split[1] + urllib.parse.quote(image_url_split[2])
+                save_file_return = net.save_net_file(image_url, file_path)
                 if save_file_return["status"] == 1:
                     log.step("第%s张图片下载成功" % image_info["image_id"])
                 else:
