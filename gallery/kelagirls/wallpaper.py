@@ -104,7 +104,12 @@ class Wallpaper(crawler.Crawler):
                 log.step("第%s页壁纸解析获取%s张图片" % (page_count, len(photo_pagination_response["image_info_list"])))
 
                 for image_info in photo_pagination_response["image_info_list"]:
-                    image_info_list.append(image_info)
+                    # 检查是否达到存档记录
+                    if int(image_info["image_id"]) > last_image_id:
+                        image_info_list.append(image_info)
+                    else:
+                        is_over = True
+                        break
 
                 if not is_over:
                     if photo_pagination_response["is_over"]:
