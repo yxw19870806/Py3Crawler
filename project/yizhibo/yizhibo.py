@@ -175,10 +175,10 @@ class Download(crawler.DownloadThread):
         crawler.DownloadThread.__init__(self, account_info, main_thread)
         self.account_id = self.account_info[0]
         if len(self.account_info) >= 6 and self.account_info[5]:
-            self.account_name = self.account_info[5]
+            self.display_name = self.account_info[5]
         else:
-            self.account_name = self.account_info[0]
-        log.step(self.account_name + " 开始")
+            self.display_name = self.account_info[0]
+        self.step("开始")
 
     # 获取所有可下载图片
     def get_crawl_image_list(self):
@@ -186,22 +186,22 @@ class Download(crawler.DownloadThread):
         try:
             image_index_response = get_image_index_page(self.account_id)
         except crawler.CrawlerException as e:
-            log.error(self.account_name + " 图片首页解析失败，原因：%s" % e.message)
+            self.error("图片首页解析失败，原因：%s" % e.message)
             return []
 
-        log.trace(self.account_name + " 解析的全部图片：%s" % image_index_response["image_url_list"])
-        log.step(self.account_name + " 解析获取%s张图片" % len(image_index_response["image_url_list"]))
+        self.trace("解析的全部图片：%s" % image_index_response["image_url_list"])
+        self.step("解析获取%s张图片" % len(image_index_response["image_url_list"]))
 
         # 寻找这一页符合条件的图片
         image_info_list = []
         for image_url in image_index_response["image_url_list"]:
             self.main_thread_check()  # 检测主线程运行状态
-            log.step(self.account_name + " 开始解析图片%s" % image_url)
+            self.step("开始解析图片%s" % image_url)
 
             try:
                 image_head_response = get_image_header(image_url)
             except crawler.CrawlerException as e:
-                log.error(self.account_name + " 图片%s解析失败，原因：%s" % (image_url, e.message))
+                self.error("图片%s解析失败，原因：%s" % (image_url, e.message))
                 return []
 
             # 检查是否达到存档记录
@@ -216,12 +216,12 @@ class Download(crawler.DownloadThread):
     def crawl_image(self, image_info):
         image_index = int(self.account_info[3]) + 1
         file_type = image_info["image_url"].split(".")[-1].split(":")[0]
-        image_file_path = os.path.join(self.main_thread.image_download_path, self.account_name, "%04d.%s" % (image_index, file_type))
+        image_file_path = os.path.join(self.main_thread.image_download_path, self.display_name, "%04d.%s" % (image_index, file_type))
         save_file_return = net.save_net_file(image_info["image_url"], image_file_path)
         if save_file_return["status"] == 1:
-            log.step(self.account_name + " 第%s张图片下载成功" % image_index)
+            self.step("第%s张图片下载成功" % image_index)
         else:
-            log.error(self.account_name + " 第%s张图片 %s 下载失败，原因：%s" % (image_index, image_info["image_url"], crawler.download_failre(save_file_return["code"])))
+            self.error("第%s张图片 %s 下载失败，原因：%s" % (image_index, image_info["image_url"], crawler.download_failre(save_file_return["code"])))
             return
 
         # 图片下载完毕
@@ -236,22 +236,22 @@ class Download(crawler.DownloadThread):
         try:
             video_pagination_response = get_video_index_page(self.account_id)
         except crawler.CrawlerException as e:
-            log.error(self.account_name + " 视频首页解析失败，原因：%s" % e.message)
+            self.error("视频首页解析失败，原因：%s" % e.message)
             return []
 
-        log.trace(self.account_name + " 解析的全部视频：%s" % video_pagination_response["video_id_list"])
-        log.step(self.account_name + " 解析获取%s个视频" % len(video_pagination_response["video_id_list"]))
+        self.trace("解析的全部视频：%s" % video_pagination_response["video_id_list"])
+        self.step("解析获取%s个视频" % len(video_pagination_response["video_id_list"]))
 
         # 寻找这一页符合条件的视频
         for video_id in video_pagination_response["video_id_list"]:
             self.main_thread_check()  # 检测主线程运行状态
-            log.step(self.account_name + " 开始解析视频%s" % video_id)
+            self.step("开始解析视频%s" % video_id)
 
             # 获取视频的时间和下载地址
             try:
                 video_info_response = get_video_info_page(video_id)
             except crawler.CrawlerException as e:
-                log.error(self.account_name + " 视频%s解析失败，原因：%s" % (video_id, e.message))
+                self.error("视频%s解析失败，原因：%s" % (video_id, e.message))
                 return []
 
             # 检查是否达到存档记录
@@ -265,12 +265,12 @@ class Download(crawler.DownloadThread):
     # 解析单个视频
     def crawl_video(self, video_info):
         video_index = int(self.account_info[1]) + 1
-        video_file_path = os.path.join(self.main_thread.video_download_path, self.account_name, "%04d.ts" % video_index)
+        video_file_path = os.path.join(self.main_thread.video_download_path, self.display_name, "%04d.ts" % video_index)
         save_file_return = net.save_net_file_list(video_info["video_url_list"], video_file_path)
         if save_file_return["status"] == 1:
-            log.step(self.account_name + " 第%s个视频下载成功" % video_index)
+            self.step("第%s个视频下载成功" % video_index)
         else:
-            log.error(self.account_name + " 第%s个视频 %s 下载失败" % (video_index, video_info["video_url_list"]))
+            self.error("第%s个视频 %s 下载失败" % (video_index, video_info["video_url_list"]))
             return
 
         # 视频下载完毕
@@ -284,12 +284,12 @@ class Download(crawler.DownloadThread):
             if self.main_thread.is_download_image:
                 # 获取所有可下载图片
                 image_info_list = self.get_crawl_image_list()
-                log.step("需要下载的全部图片解析完毕，共%s张" % len(image_info_list))
+                self.step("需要下载的全部图片解析完毕，共%s张" % len(image_info_list))
 
                 # 从最早的图片开始下载
                 while len(image_info_list) > 0:
                     image_info = image_info_list.pop()
-                    log.step(self.account_name + " 开始下载第%s张图片 %s" % (int(self.account_info[3]) + 1, image_info["image_url"]))
+                    self.step("开始下载第%s张图片 %s" % (int(self.account_info[3]) + 1, image_info["image_url"]))
                     self.crawl_image(image_info)
                     self.main_thread_check()  # 检测主线程运行状态
 
@@ -297,22 +297,22 @@ class Download(crawler.DownloadThread):
             if self.main_thread.is_download_video:
                 # 获取所有可下载视频
                 video_info_list = self.get_crawl_video_list()
-                log.step(self.account_name + " 需要下载的全部视频解析完毕，共%s个" % len(video_info_list))
+                self.step("需要下载的全部视频解析完毕，共%s个" % len(video_info_list))
 
                 # 从最早的视频开始下载
                 while len(video_info_list) > 0:
                     video_info = video_info_list.pop()
-                    log.step(self.account_name + " 开始下载第%s个视频 %s" % (int(self.account_info[1]) + 1, video_info["video_url_list"]))
+                    self.step("开始下载第%s个视频 %s" % (int(self.account_info[1]) + 1, video_info["video_url_list"]))
                     self.crawl_video(video_info)
                     self.main_thread_check()  # 检测主线程运行状态
         except SystemExit as se:
             if se.code == 0:
-                log.step(self.account_name + " 提前退出")
+                self.step("提前退出")
             else:
-                log.error(self.account_name + " 异常退出")
+                self.error("异常退出")
         except Exception as e:
-            log.error(self.account_name + " 未知异常")
-            log.error(str(e) + "\n" + traceback.format_exc())
+            self.error("未知异常")
+            self.error(str(e) + "\n" + traceback.format_exc(), False)
 
         # 保存最后的信息
         with self.thread_lock:
@@ -320,7 +320,7 @@ class Download(crawler.DownloadThread):
             self.main_thread.total_image_count += self.total_image_count
             self.main_thread.total_video_count += self.total_video_count
             self.main_thread.account_list.pop(self.account_id)
-        log.step(self.account_name + " 下载完毕，总共获得%s张图片和%s个视频" % (self.total_image_count, self.total_video_count))
+        self.step("下载完毕，总共获得%s张图片和%s个视频" % (self.total_image_count, self.total_video_count))
         self.notify_main_thread()
 
 

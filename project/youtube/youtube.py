@@ -36,7 +36,7 @@ def check_login():
 def get_one_page_video(account_id, token):
     # token = "4qmFsgJAEhhVQ2xNXzZHRU9razY2STFfWWJTUFFqSWcaJEVnWjJhV1JsYjNNZ0FEZ0JZQUZxQUhvQk1yZ0JBQSUzRCUzRA%3D%3D"
     result = {
-        "account_name": None,  # 账号名字
+        "channel_name": None,  # 账号名字
         "video_id_list": [],  # 全部视频id
         "next_page_token": None,  # 下一页token
     }
@@ -55,7 +55,7 @@ def get_one_page_video(account_id, token):
         if index_response_content.find('<button id="a11y-skip-nav" class="skip-nav"') >= 0:
             log.step("首页访问出现跳转，再次访问")
             return get_one_page_video(account_id, token)
-        result["account_name"] = tool.find_sub_string(index_response_content, '<meta property="og:title" content="', '">').replace("- YouTube", "").strip()
+        result["channel_name"] = tool.find_sub_string(index_response_content, '<meta property="og:title" content="', '">').replace("- YouTube", "").strip()
         if index_response_content.find('{"alertRenderer":{"type":"ERROR",') != -1:
             reason = tool.find_sub_string(tool.find_sub_string(index_response_content, '{"alertRenderer":{"type":"ERROR",', '}],'), '{"simpleText":"', '"}')
             if reason == "This channel does not exist.":
@@ -469,10 +469,10 @@ class Download(crawler.DownloadThread):
         crawler.DownloadThread.__init__(self, account_info, main_thread)
         self.account_id = self.account_info[0]
         if len(self.account_info) >= 4 and self.account_info[3]:
-            self.account_name = self.account_info[3]
+            self.display_name = self.account_info[3]
         else:
-            self.account_name = self.account_info[0]
-        log.step(self.account_name + " 开始")
+            self.display_name = self.account_info[0]
+        self.step("开始")
 
     # 获取所有可下载视频
     def get_crawl_list(self):
@@ -485,22 +485,22 @@ class Download(crawler.DownloadThread):
         # 获取全部还未下载过需要解析的相册
         while not is_over:
             self.main_thread_check()  # 检测主线程运行状态
-            log.step(self.account_name + " 开始解析token：%s页视频" % token)
+            self.step("开始解析token：%s页视频" % token)
 
             # 获取一页视频
             try:
                 video_pagination_response = get_one_page_video(self.account_id, token)
             except crawler.CrawlerException as e:
-                log.error(self.account_name + " token：%s页视频解析失败，原因：%s" % (token, e.message))
+                self.error("token：%s页视频解析失败，原因：%s" % (token, e.message))
                 raise
 
-            log.trace(self.account_name + " token：%s页解析的全部视频：%s" % (token, video_pagination_response["video_id_list"]))
-            log.step(self.account_name + " token：%s页解析获取%s个视频" % (token, len(video_pagination_response["video_id_list"])))
+            self.trace("token：%s页解析的全部视频：%s" % (token, video_pagination_response["video_id_list"]))
+            self.step("token：%s页解析获取%s个视频" % (token, len(video_pagination_response["video_id_list"])))
 
             if len(self.account_info) < 4:
-                log.step(self.account_name + " 频道名：%s" % video_pagination_response["account_name"])
-                self.account_name = video_pagination_response["account_name"]
-                self.account_info.append(self.account_name)
+                self.step("频道名：%s" % video_pagination_response["channel_name"])
+                self.display_name = video_pagination_response["channel_name"]
+                self.account_info.append(self.display_name)
 
             # 寻找这一页符合条件的日志
             for video_id in video_pagination_response["video_id_list"]:
@@ -527,33 +527,33 @@ class Download(crawler.DownloadThread):
         try:
             video_response = get_video_page(video_id)
         except crawler.CrawlerException as e:
-            log.error(self.account_name + " 视频%s解析失败，原因：%s" % (video_id, e.message))
+            self.error("视频%s解析失败，原因：%s" % (video_id, e.message))
             raise
 
         # 如果解析需要下载的视频时没有找到上次的记录，表示存档所在的视频已被删除，则判断数字id
         if not self.is_find:
             if video_response["video_time"] < int(self.account_info[2]):
-                log.step(self.account_name + " 视频%s跳过" % video_id)
+                self.step("视频%s跳过" % video_id)
                 return
             elif video_response["video_time"] == int(self.account_info[2]):
-                log.error(self.account_name + " 视频%s与存档视频发布日期一致，无法过滤，再次下载" % video_id)
+                self.error("视频%s与存档视频发布日期一致，无法过滤，再次下载" % video_id)
             else:
                 self.is_find = True
 
         if video_response["video_url"] is None:
-            log.error(self.account_name + " 视频%s无法播放，跳过" % video_id)
+            self.error("视频%s无法播放，跳过" % video_id)
             return
 
         self.main_thread_check()  # 检测主线程运行状态
-        log.step(self.account_name + " 开始下载视频%s《%s》 %s" % (video_id, video_response["video_title"], video_response["video_url"]))
+        self.step("开始下载视频%s《%s》 %s" % (video_id, video_response["video_title"], video_response["video_url"]))
 
-        video_file_path = os.path.join(self.main_thread.video_download_path, self.account_name, "%s - %s.mp4" % (video_id, path.filter_text(video_response["video_title"])))
+        video_file_path = os.path.join(self.main_thread.video_download_path, self.display_name, "%s - %s.mp4" % (video_id, path.filter_text(video_response["video_title"])))
         save_file_return = net.save_net_file(video_response["video_url"], video_file_path, head_check=True)
         if save_file_return["status"] == 1:
             # 设置临时目录
-            log.step(self.account_name + " 视频%s《%s》下载成功" % (video_id, video_response["video_title"]))
+            self.step("视频%s《%s》下载成功" % (video_id, video_response["video_title"]))
         else:
-            log.error(self.account_name + " 视频%s《%s》 %s 下载失败，原因：%s" % (video_id, video_response["video_title"], video_response["video_url"], crawler.download_failre(save_file_return["code"])))
+            self.error("视频%s《%s》 %s 下载失败，原因：%s" % (video_id, video_response["video_title"], video_response["video_url"], crawler.download_failre(save_file_return["code"])))
 
         # 媒体内图片和视频全部下载完毕
         self.total_video_count += 1  # 计数累加
@@ -564,31 +564,31 @@ class Download(crawler.DownloadThread):
         try:
             # 获取所有可下载视频
             video_id_list = self.get_crawl_list()
-            log.step(self.account_name + " 需要下载的全部视频解析完毕，共%s个" % len(video_id_list))
+            self.step("需要下载的全部视频解析完毕，共%s个" % len(video_id_list))
             if not self.is_find:
-                log.step(self.account_name + " 存档所在视频已删除，需要在下载时进行过滤")
+                self.step("存档所在视频已删除，需要在下载时进行过滤")
 
             # 从最早的视频开始下载
             while len(video_id_list) > 0:
                 video_id = video_id_list.pop()
-                log.step(self.account_name + " 开始解析视频%s" % video_id)
+                self.step("开始解析视频%s" % video_id)
                 self.crawl_video(video_id)
                 self.main_thread_check()  # 检测主线程运行状态
         except SystemExit as se:
             if se.code == 0:
-                log.step(self.account_name + " 提前退出")
+                self.step("提前退出")
             else:
-                log.error(self.account_name + " 异常退出")
+                self.error("异常退出")
         except Exception as e:
-            log.error(self.account_name + " 未知异常")
-            log.error(str(e) + "\n" + traceback.format_exc())
+            self.error("未知异常")
+            self.error(str(e) + "\n" + traceback.format_exc(), False)
 
         # 保存最后的信息
         with self.thread_lock:
             tool.write_file("\t".join(self.account_info), self.main_thread.temp_save_data_path)
             self.main_thread.total_video_count += self.total_video_count
             self.main_thread.account_list.pop(self.account_id)
-        log.step(self.account_name + " 下载完毕，总共获得%s个视频" % self.total_video_count)
+        self.step("下载完毕，总共获得%s个视频" % self.total_video_count)
         self.notify_main_thread()
 
 

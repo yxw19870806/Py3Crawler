@@ -170,7 +170,8 @@ class Download(crawler.DownloadThread):
     def __init__(self, account_info, main_thread):
         crawler.DownloadThread.__init__(self, account_info, main_thread)
         self.sub_path = self.account_info[0]
-        log.step(self.sub_path + " 开始")
+        self.display_name = self.sub_path
+        self.step("开始")
 
     # 获取所有可下载图集
     def get_crawl_list(self):
@@ -181,17 +182,17 @@ class Download(crawler.DownloadThread):
         # 获取全部图集
         while not is_over:
             self.main_thread_check()  # 检测主线程运行状态
-            log.step(self.sub_path + " 开始解析第%s页图集" % page_count)
+            self.step("开始解析第%s页图集" % page_count)
 
             # 获取一页图集
             try:
                 album_response = get_album_page(self.sub_path, page_count)
             except crawler.CrawlerException as e:
-                log.error(self.sub_path + " 第%s页图集解析失败，原因：%s" % (page_count, e.message))
+                self.error("第%s页图集解析失败，原因：%s" % (page_count, e.message))
                 raise
 
-            log.trace(self.sub_path + " 第%s页解析的全部图集：%s" % (page_count, album_response["album_info_list"]))
-            log.step(self.sub_path + " 第%s页解析获取%s个图集" % (page_count, len(album_response["album_info_list"])))
+            self.trace("第%s页解析的全部图集：%s" % (page_count, album_response["album_info_list"]))
+            self.step("第%s页解析获取%s个图集" % (page_count, len(album_response["album_info_list"])))
 
             temp_album_info_list.update(album_response["album_info_list"])
 
@@ -216,11 +217,11 @@ class Download(crawler.DownloadThread):
         try:
             photo_pagination_response = get_album_photo(album_info["album_url"])
         except crawler.CrawlerException as e:
-            log.error(self.sub_path + " 图集%s解析失败，原因：%s" % (album_info["album_id"], e.message))
+            self.error("图集%s解析失败，原因：%s" % (album_info["album_id"], e.message))
             raise
 
-        log.trace(self.sub_path + " 图集%s《%s》 %s 解析的全部图片：%s" % (album_info["album_id"], album_info["album_title"], album_info["album_url"], photo_pagination_response["image_url_list"]))
-        log.step(self.sub_path + " 图集%s《%s》 %s 解析获取%s张图片" % (album_info["album_id"], album_info["album_title"], album_info["album_url"], len(photo_pagination_response["image_url_list"])))
+        self.trace("图集%s《%s》 %s 解析的全部图片：%s" % (album_info["album_id"], album_info["album_title"], album_info["album_url"], photo_pagination_response["image_url_list"]))
+        self.step("图集%s《%s》 %s 解析获取%s张图片" % (album_info["album_id"], album_info["album_title"], album_info["album_url"], len(photo_pagination_response["image_url_list"])))
 
         image_index = 1
         # 过滤标题中不支持的字符
@@ -233,16 +234,16 @@ class Download(crawler.DownloadThread):
         self.temp_path_list.append(album_path)
         for image_url in photo_pagination_response["image_url_list"]:
             self.main_thread_check()  # 检测主线程运行状态
-            log.step(self.sub_path + " 图集%s《%s》开始下载第%s张图片 %s" % (album_info["album_id"], album_info["album_title"], image_index, image_url))
+            self.step("图集%s《%s》开始下载第%s张图片 %s" % (album_info["album_id"], album_info["album_title"], image_index, image_url))
 
             file_type = image_url.split(".")[-1]
             file_path = os.path.join(album_path, "%03d.%s" % (image_index, file_type))
             save_file_return = net.save_net_file(image_url, file_path)
             if save_file_return["status"] == 1:
-                log.step(self.sub_path + " 图集%s《%s》第%s张图片下载成功" % (album_info["album_id"], album_info["album_title"], image_index))
+                self.step("图集%s《%s》第%s张图片下载成功" % (album_info["album_id"], album_info["album_title"], image_index))
                 image_index += 1
             else:
-                log.error(self.sub_path + " 图集%s《%s》 %s 第%s张图片 %s 下载失败，原因：%s" % (album_info["album_id"], album_info["album_title"], album_info["album_url"], image_index, image_url, crawler.download_failre(save_file_return["code"])))
+                self.error("图集%s《%s》 %s 第%s张图片 %s 下载失败，原因：%s" % (album_info["album_id"], album_info["album_title"], album_info["album_url"], image_index, image_url, crawler.download_failre(save_file_return["code"])))
 
         # 图集内图片全部下载完毕
         self.temp_path_list = []  # 临时目录设置清除
@@ -253,31 +254,31 @@ class Download(crawler.DownloadThread):
         try:
             # 获取所有可下载图集
             album_info_list = self.get_crawl_list()
-            log.step(self.sub_path + " 需要下载的全部图集解析完毕，共%s个" % len(album_info_list))
+            self.step("需要下载的全部图集解析完毕，共%s个" % len(album_info_list))
 
             # 从最早的图集开始下载
             while len(album_info_list) > 0:
                 album_info = album_info_list.pop()
-                log.step(self.sub_path + " 开始解析%s号图集 %s" % (album_info["album_id"], album_info["album_url"]))
+                self.step("开始解析%s号图集 %s" % (album_info["album_id"], album_info["album_url"]))
                 self.crawl_album(album_info)
                 self.main_thread_check()  # 检测主线程运行状态
         except SystemExit as se:
             if se.code == 0:
-                log.step(self.sub_path + " 提前退出")
+                self.step("提前退出")
             else:
-                log.error(self.sub_path + " 异常退出")
+                self.error("异常退出")
             # 如果临时目录变量不为空，表示某个图集正在下载中，需要把下载了部分的内容给清理掉
             self.clean_temp_path()
         except Exception as e:
-            log.error(self.sub_path + " 未知异常")
-            log.error(str(e) + "\n" + traceback.format_exc())
+            self.error("未知异常")
+            self.error(str(e) + "\n" + traceback.format_exc(), False)
 
         # 保存最后的信息
         with self.thread_lock:
             tool.write_file("\t".join(self.account_info), self.main_thread.temp_save_data_path)
             self.main_thread.total_image_count += self.total_image_count
             self.main_thread.account_list.pop(self.sub_path)
-        log.step(self.sub_path + " 下载完毕，总共获得%s张图片" % self.total_image_count)
+        self.step("下载完毕，总共获得%s张图片" % self.total_image_count)
         self.notify_main_thread()
 
 

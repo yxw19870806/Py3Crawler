@@ -184,14 +184,14 @@ class Download(crawler.DownloadThread):
         crawler.DownloadThread.__init__(self, account_info, main_thread)
         self.account_id = self.account_info[0]
         if len(self.account_info) >= 4 and self.account_info[3]:
-            self.account_name = self.account_info[3]
+            self.display_name = self.account_info[3]
         else:
-            self.account_name = self.account_info[0]
+            self.display_name = self.account_info[0]
         if len(self.account_info) >= 5 and self.account_info[4]:
             self.account_team = self.account_info[4]
         else:
             self.account_team = ""
-        log.step(self.account_name + " 开始")
+        self.step("开始")
 
     # 获取所有可下载日志
     def get_crawl_list(self):
@@ -201,17 +201,17 @@ class Download(crawler.DownloadThread):
         # 获取全部还未下载过需要解析的相册
         while not is_over:
             self.main_thread_check()  # 检测主线程运行状态
-            log.step(self.account_name + " 开始解析token：%s页日志" % key)
+            self.step("开始解析token：%s页日志" % key)
 
             # 获取一页相册
             try:
                 blog_pagination_response = get_one_page_blog(self.account_id, key)
             except crawler.CrawlerException as e:
-                log.error(self.account_name + " token：%s页日志解析失败，原因：%s" % (key, e.message))
+                self.error("token：%s页日志解析失败，原因：%s" % (key, e.message))
                 raise
 
-            log.trace(self.account_name + " token：%s页解析的全部日志：%s" % (key, blog_pagination_response["blog_info_list"]))
-            log.step(self.account_name + " token：%s页解析获取%s个日志" % (key, len(blog_pagination_response["blog_info_list"])))
+            self.trace("token：%s页解析的全部日志：%s" % (key, blog_pagination_response["blog_info_list"]))
+            self.step("token：%s页解析获取%s个日志" % (key, len(blog_pagination_response["blog_info_list"])))
 
             # 寻找这一页符合条件的日志
             for blog_info in blog_pagination_response["blog_info_list"]:
@@ -237,15 +237,15 @@ class Download(crawler.DownloadThread):
         try:
             album_response = get_album_page(self.account_id, blog_info["blog_id"])
         except crawler.CrawlerException as e:
-            log.error(self.account_name + " 相册%s解析失败，原因：%s" % (blog_info["blog_id"], e.message))
+            self.error("相册%s解析失败，原因：%s" % (blog_info["blog_id"], e.message))
             raise
 
         if len(album_response["image_url_list"]) == 0:
-            log.error(self.account_name + " 相册%s没有解析到图片" % blog_info["blog_id"])
+            self.error("相册%s没有解析到图片" % blog_info["blog_id"])
             return
 
-        log.trace(self.account_name + " 相册%s解析的全部图片：%s" % (blog_info["blog_id"], album_response["image_url_list"]))
-        log.step(self.account_name + " 相册%s解析获取%s张图片" % (blog_info["blog_id"], len(album_response["image_url_list"])))
+        self.trace("相册%s解析的全部图片：%s" % (blog_info["blog_id"], album_response["image_url_list"]))
+        self.step("相册%s解析获取%s张图片" % (blog_info["blog_id"], len(album_response["image_url_list"])))
 
         image_index = int(self.account_info[1]) + 1
         for image_url in album_response["image_url_list"]:
@@ -253,17 +253,17 @@ class Download(crawler.DownloadThread):
             # 过滤图片地址
             if filter_image_url(image_url):
                 continue
-            log.step(self.account_name + " 开始下载第%s张图片 %s" % (image_index, image_url))
+            self.step("开始下载第%s张图片 %s" % (image_index, image_url))
 
-            file_path = os.path.join(self.main_thread.image_download_path, self.account_team, self.account_name, "%04d.jpg" % image_index)
+            file_path = os.path.join(self.main_thread.image_download_path, self.account_team, self.display_name, "%04d.jpg" % image_index)
             save_file_return = net.save_net_file(image_url, file_path, need_content_type=True)
             if save_file_return["status"] == 1:
                 # 设置临时目录
                 self.temp_path_list.append(save_file_return["file_path"])
-                log.step(self.account_name + " 第%s张图片下载成功" % image_index)
+                self.step("第%s张图片下载成功" % image_index)
                 image_index += 1
             else:
-                log.error(self.account_name + " 第%s张图片 %s 下载失败，原因：%s" % (image_index, image_url, crawler.download_failre(save_file_return["code"])))
+                self.error("第%s张图片 %s 下载失败，原因：%s" % (image_index, image_url, crawler.download_failre(save_file_return["code"])))
 
         # 相册内图片全部下载完毕
         self.temp_path_list = []  # 临时目录设置清除
@@ -275,31 +275,31 @@ class Download(crawler.DownloadThread):
         try:
             # 获取所有可下载日志
             blog_info_list = self.get_crawl_list()
-            log.step(self.account_name + " 需要下载的全部相册解析完毕，共%s个" % len(blog_info_list))
+            self.step("需要下载的全部相册解析完毕，共%s个" % len(blog_info_list))
 
             # 从最早的相册开始下载
             while len(blog_info_list) > 0:
                 blog_info = blog_info_list.pop()
-                log.step(self.account_name + " 开始解析日志 %s" % blog_info["blog_id"])
+                self.step("开始解析日志 %s" % blog_info["blog_id"])
                 self.crawl_blog(blog_info)
                 self.main_thread_check()  # 检测主线程运行状态
         except SystemExit as se:
             if se.code == 0:
-                log.step(self.account_name + " 提前退出")
+                self.step("提前退出")
             else:
-                log.error(self.account_name + " 异常退出")
+                self.error("异常退出")
             # 如果临时目录变量不为空，表示某个日志正在下载中，需要把下载了部分的内容给清理掉
             self.clean_temp_path()
         except Exception as e:
-            log.error(self.account_name + " 未知异常")
-            log.error(str(e) + "\n" + traceback.format_exc())
+            self.error("未知异常")
+            self.error(str(e) + "\n" + traceback.format_exc(), False)
 
         # 保存最后的信息
         with self.thread_lock:
             tool.write_file("\t".join(self.account_info), self.main_thread.temp_save_data_path)
             self.main_thread.total_image_count += self.total_image_count
             self.main_thread.account_list.pop(self.account_id)
-        log.step(self.account_name + " 下载完毕，总共获得%s张图片" % self.total_image_count)
+        self.step("下载完毕，总共获得%s张图片" % self.total_image_count)
         self.notify_main_thread()
 
 

@@ -290,6 +290,7 @@ class DownloadThread(threading.Thread):
     """Download sub-thread"""
     main_thread = None
     thread_lock = None
+    display_name = None
 
     def __init__(self, account_info, main_thread):
         """
@@ -329,6 +330,24 @@ class DownloadThread(threading.Thread):
     def clean_temp_path(self):
         for temp_path in self.temp_path_list:
             path.delete_dir_or_file(temp_path)
+
+    # Trace log
+    def trace(self, message, include_display_name=True):
+        if include_display_name and self.display_name is not None:
+            message = self.display_name + " " + message
+        log.trace(message)
+
+    # step log
+    def step(self, message, include_display_name=True):
+        if include_display_name and self.display_name is not None:
+            message = self.display_name + " " + message
+        log.step(message)
+
+    # error log
+    def error(self, message, include_display_name=True):
+        if include_display_name and self.display_name is not None:
+            message = self.display_name + " " + message
+        log.error(message)
 
 
 class CrawlerException(SystemExit):
