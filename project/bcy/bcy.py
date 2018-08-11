@@ -325,10 +325,10 @@ class Download(crawler.DownloadThread):
         crawler.DownloadThread.__init__(self, account_info, main_thread)
         self.account_id = self.account_info[0]
         if len(self.account_info) >= 3:
-            self.account_name = self.account_info[2]
+            self.display_name = self.account_info[2]
         else:
-            self.account_name = self.account_info[0]
-        log.step(self.account_name + " 开始")
+            self.display_name = self.account_info[0]
+        self.step("开始")
 
     # 获取所有可下载作品
     def get_crawl_list(self):
@@ -338,17 +338,17 @@ class Download(crawler.DownloadThread):
         is_over = False
         while not is_over:
             self.main_thread_check()  # 检测主线程运行状态
-            log.step(self.account_name + " 开始解析第%s页作品" % page_count)
+            self.step("开始解析第%s页作品" % page_count)
 
             # 获取一页作品
             try:
                 album_pagination_response = get_one_page_album(self.account_id, page_count)
             except crawler.CrawlerException as e:
-                log.error(self.account_name + " 第%s页作品解析失败，原因：%s" % (page_count, e.message))
+                self.error("第%s页作品解析失败，原因：%s" % (page_count, e.message))
                 raise
 
-            log.trace(self.account_name + " 第%s页解析的全部作品：%s" % (page_count, album_pagination_response["album_id_list"]))
-            log.step(self.account_name + " 第%s页解析获取%s个作品" % (page_count, len(album_pagination_response["album_id_list"])))
+            self.trace("第%s页解析的全部作品：%s" % (page_count, album_pagination_response["album_id_list"]))
+            self.step("第%s页解析获取%s个作品" % (page_count, len(album_pagination_response["album_id_list"])))
 
             # 寻找这一页符合条件的作品
             for album_id in album_pagination_response["album_id_list"]:
@@ -379,44 +379,44 @@ class Download(crawler.DownloadThread):
         try:
             album_response = get_album_page(album_id)
         except crawler.CrawlerException as e:
-            log.error(self.account_name + " 作品%s解析失败，原因：%s" % (album_id, e.message))
+            self.error("作品%s解析失败，原因：%s" % (album_id, e.message))
             raise
 
         # 是不是只对登录账号可见
         if album_response["is_only_login"]:
-            log.error(self.account_name + " 作品%s只对登录账号显示，跳过" % album_id)
+            self.error("作品%s只对登录账号显示，跳过" % album_id)
             return
 
         # 是不是只对粉丝可见，并判断是否需要自动关注
         if album_response["is_only_follower"]:
             if not IS_LOGIN or not IS_AUTO_FOLLOW:
                 return
-            log.step(self.account_name + " 作品%s是私密作品且账号不是ta的粉丝，自动关注" % album_id)
+            self.step("作品%s是私密作品且账号不是ta的粉丝，自动关注" % album_id)
             if follow(self.account_id):
                 self.main_thread_check()  # 检测主线程运行状态
                 # 重新获取作品页面
                 try:
                     album_response = get_album_page(album_id)
                 except crawler.CrawlerException as e:
-                    log.error(self.account_name + " 作品%s解析失败，原因：%s" % (album_id, e.message))
+                    self.error("作品%s解析失败，原因：%s" % (album_id, e.message))
                     raise
             else:
                 # 关注失败
-                log.error(self.account_name + " 关注失败，跳过作品%s" % album_id)
+                self.error("关注失败，跳过作品%s" % album_id)
                 return
 
-        log.trace(self.account_name + " 作品%s解析的全部图片：%s" % (album_id, album_response["image_url_list"]))
-        log.step(self.account_name + " 作品%s解析获取%s张图" % (album_id, len(album_response["image_url_list"])))
+        self.trace("作品%s解析的全部图片：%s" % (album_id, album_response["image_url_list"]))
+        self.step("作品%s解析获取%s张图" % (album_id, len(album_response["image_url_list"])))
 
         image_index = 1
-        album_path = os.path.join(self.main_thread.image_download_path, self.account_name, album_id)
+        album_path = os.path.join(self.main_thread.image_download_path, self.display_name, album_id)
         # 设置临时目录
         self.temp_path_list.append(album_path)
         for image_url in album_response["image_url_list"]:
             self.main_thread_check()  # 检测主线程运行状态
             # 禁用指定分辨率
             image_url = get_image_url(image_url)
-            log.step(self.account_name + " 作品%s开始下载第%s张图片 %s" % (album_id, image_index, image_url))
+            self.step("作品%s开始下载第%s张图片 %s" % (album_id, image_index, image_url))
 
             if image_url.rfind("/") < image_url.rfind("."):
                 file_type = image_url.split(".")[-1]
@@ -426,14 +426,14 @@ class Download(crawler.DownloadThread):
             while True:
                 save_file_return = net.save_net_file(image_url, file_path)
                 if save_file_return["status"] == 1:
-                    log.step(self.account_name + " 作品%s第%s张图片下载成功" % (album_id, image_index))
+                    self.step("作品%s第%s张图片下载成功" % (album_id, image_index))
                     image_index += 1
                 else:
                     # 560报错，重新下载
                     if save_file_return["code"] == 560:
                         time.sleep(5)
                         continue
-                    log.error(self.account_name + " 作品%s第%s张图片 %s，下载失败，原因：%s" % (album_id, image_index, image_url, crawler.download_failre(save_file_return["code"])))
+                    self.error("作品%s第%s张图片 %s，下载失败，原因：%s" % (album_id, image_index, image_url, crawler.download_failre(save_file_return["code"])))
                 break
 
         # 作品内图片下全部载完毕
@@ -445,31 +445,31 @@ class Download(crawler.DownloadThread):
         try:
             # 获取所有可下载作品
             album_id_list = self.get_crawl_list()
-            log.step(self.account_name + " 需要下载的全部作品解析完毕，共%s个" % len(album_id_list))
+            self.step("需要下载的全部作品解析完毕，共%s个" % len(album_id_list))
 
             # 从最早的作品开始下载
             while len(album_id_list) > 0:
                 album_id = album_id_list.pop()
-                log.step(self.account_name + " 开始解析作品%s" % album_id)
+                self.step("开始解析作品%s" % album_id)
                 self.crawl_album(album_id)
                 self.main_thread_check()  # 检测主线程运行状态
         except SystemExit as se:
             if se.code == 0:
-                log.step(self.account_name + " 提前退出")
+                self.step("提前退出")
             else:
-                log.error(self.account_name + " 异常退出")
+                self.error("异常退出")
             # 如果临时目录变量不为空，表示某个图集正在下载中，需要把下载了部分的内容给清理掉
             self.clean_temp_path()
         except Exception as e:
-            log.error(self.account_name + " 未知异常")
-            log.error(str(e) + "\n" + traceback.format_exc())
+            self.error("未知异常")
+            self.error(str(e) + "\n" + traceback.format_exc(), False)
 
         # 保存最后的信息
         with self.thread_lock:
             tool.write_file("\t".join(self.account_info), self.main_thread.temp_save_data_path)
             self.main_thread.total_image_count += self.total_image_count
             self.main_thread.account_list.pop(self.account_id)
-        log.step(self.account_name + " 下载完毕，总共获得%s张图片" % self.total_image_count)
+        self.step("下载完毕，总共获得%s张图片" % self.total_image_count)
         self.notify_main_thread()
 
 
