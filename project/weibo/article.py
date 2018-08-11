@@ -195,10 +195,10 @@ class Download(crawler.DownloadThread):
         crawler.DownloadThread.__init__(self, account_info, main_thread)
         self.account_id = self.account_info[0]
         if len(self.account_info) >= 3 and self.account_info[2]:
-            self.account_name = self.account_info[2]
+            self.display_name = self.account_info[2]
         else:
-            self.account_name = self.account_info[0]
-        log.step(self.account_name + " 开始")
+            self.display_name = self.account_info[0]
+        self.step("开始")
 
     # 获取所有可下载视频
     def get_crawl_list(self):
@@ -206,7 +206,7 @@ class Download(crawler.DownloadThread):
         try:
             account_index_response = weiboCommon.get_account_index_page(self.account_id)
         except crawler.CrawlerException as e:
-            log.error(self.account_name + " 首页解析失败，原因：%s" % e.message)
+            self.error("首页解析失败，原因：%s" % e.message)
             raise
 
         page_count = 1
@@ -219,7 +219,7 @@ class Download(crawler.DownloadThread):
             try:
                 article_pagination_response = get_one_page_article(account_index_response["account_page_id"], page_count)
             except crawler.CrawlerException as e:
-                log.error(self.account_name + " 第%s页文章解析失败，原因：%s" % (page_count, e.message))
+                self.error("第%s页文章解析失败，原因：%s" % (page_count, e.message))
                 raise
 
             # 寻找这一页符合条件的文章
@@ -246,19 +246,19 @@ class Download(crawler.DownloadThread):
         try:
             article_response = get_article_page(article_info["article_url"])
         except crawler.CrawlerException as e:
-            log.error(self.account_name + " 文章 %s 解析失败，原因：%s" % (article_info["article_url"], e.message))
+            self.error("文章 %s 解析失败，原因：%s" % (article_info["article_url"], e.message))
             raise
 
         if article_response["is_pay"]:
-            log.error(self.account_name + " 文章 %s 存在付费查看的内容" % article_info["article_url"])
+            self.error("文章 %s 存在付费查看的内容" % article_info["article_url"])
 
         article_id = article_response["article_id"]
         # 过滤标题中不支持的字符
         article_title = path.filter_text(article_response["article_title"])
         if article_title:
-            article_path = os.path.join(self.main_thread.image_download_path, self.account_name, "%s %s" % (article_id, article_title))
+            article_path = os.path.join(self.main_thread.image_download_path, self.display_name, "%s %s" % (article_id, article_title))
         else:
-            article_path = os.path.join(self.main_thread.image_download_path, self.account_name, article_id)
+            article_path = os.path.join(self.main_thread.image_download_path, self.display_name, article_id)
         self.temp_path_list.append(article_path)
         # 文章正文图片
         image_index = 1
@@ -266,24 +266,24 @@ class Download(crawler.DownloadThread):
             self.main_thread_check()  # 检测主线程运行状态
             if image_url.find("/p/e_weibo_com") >= 0 or image_url.find("//e.weibo.com") >= 0:
                 continue
-            log.step(self.account_name + " 文章%s《%s》 开始下载第%s张图片 %s" % (article_id, article_response["article_title"], image_index, image_url))
+            self.step("文章%s《%s》 开始下载第%s张图片 %s" % (article_id, article_response["article_title"], image_index, image_url))
             file_type = image_url.split(".")[-1]
             file_path = os.path.join(article_path, "%03d.%s" % (image_index, file_type))
             save_file_return = net.save_net_file(image_url, file_path)
             if save_file_return["status"] == 1:
                 if weiboCommon.check_image_invalid(file_path):
                     path.delete_dir_or_file(file_path)
-                    log.error(self.account_name + " 文章%s《%s》 第%s张图片 %s 资源已被删除，跳过" % (article_id, article_response["article_title"], image_index, image_url))
+                    self.error("文章%s《%s》 第%s张图片 %s 资源已被删除，跳过" % (article_id, article_response["article_title"], image_index, image_url))
                 else:
-                    log.step(self.account_name + " 文章%s《%s》 第%s张图片下载成功" % (article_id, article_response["article_title"], image_index))
+                    self.step("文章%s《%s》 第%s张图片下载成功" % (article_id, article_response["article_title"], image_index))
                     image_index += 1
             else:
-                log.error(self.account_name + " 文章%s《%s》 第%s张图片 %s 下载失败，原因：%s" % (article_id, article_response["article_title"], image_index, image_url, crawler.download_failre(save_file_return["code"])))
+                self.error("文章%s《%s》 第%s张图片 %s 下载失败，原因：%s" % (article_id, article_response["article_title"], image_index, image_url, crawler.download_failre(save_file_return["code"])))
 
         # 文章顶部图片
         if article_response["top_image_url"] is not None:
             self.main_thread_check()  # 检测主线程运行状态
-            log.step(self.account_name + " 文章%s《%s》 开始下载顶部图片 %s" % (article_id, article_title, article_response["top_image_url"]))
+            self.step("文章%s《%s》 开始下载顶部图片 %s" % (article_id, article_title, article_response["top_image_url"]))
 
             file_type = article_response["top_image_url"].split(".")[-1]
             file_path = os.path.join(article_path, "000.%s" % file_type)
@@ -291,12 +291,12 @@ class Download(crawler.DownloadThread):
             if save_file_return["status"] == 1:
                 if weiboCommon.check_image_invalid(file_path):
                     path.delete_dir_or_file(file_path)
-                    log.error(self.account_name + " 文章%s《%s》 顶部图片 %s 资源已被删除，跳过" % (article_id, article_title, article_response["top_image_url"]))
+                    self.error("文章%s《%s》 顶部图片 %s 资源已被删除，跳过" % (article_id, article_title, article_response["top_image_url"]))
                 else:
-                    log.step(self.account_name + " 文章%s《%s》 顶部图片下载成功" % (article_id, article_title))
+                    self.step("文章%s《%s》 顶部图片下载成功" % (article_id, article_title))
                     image_index += 1
             else:
-                log.error(self.account_name + " 文章%s《%s》 顶部图片 %s 下载失败，原因：%s" % (article_id, article_title, article_response["top_image_url"], crawler.download_failre(save_file_return["code"])))
+                self.error("文章%s《%s》 顶部图片 %s 下载失败，原因：%s" % (article_id, article_title, article_response["top_image_url"], crawler.download_failre(save_file_return["code"])))
 
         # 文章内图片全部下载完毕
         self.temp_path_list = []  # 临时目录设置清除
@@ -307,31 +307,31 @@ class Download(crawler.DownloadThread):
         try:
             # 获取所有可下载文章
             article_info_list = self.get_crawl_list()
-            log.step(self.account_name + " 需要下载的全部文章解析完毕，共%s个" % len(article_info_list))
+            self.step("需要下载的全部文章解析完毕，共%s个" % len(article_info_list))
 
             # 从最早的文章开始下载
             while len(article_info_list) > 0:
                 article_info = article_info_list.pop()
-                log.step(self.account_name + " 开始解析文章 %s" % article_info["article_url"])
+                self.step("开始解析文章 %s" % article_info["article_url"])
                 self.crawl_article(article_info)
                 self.main_thread_check()  # 检测主线程运行状态
         except SystemExit as se:
             if se.code == 0:
-                log.step(self.account_name + " 提前退出")
+                self.step("提前退出")
             else:
-                log.error(self.account_name + " 异常退出")
+                self.error("异常退出")
             # 如果临时目录变量不为空，表示某个文章正在下载中，需要把下载了部分的内容给清理掉
             self.clean_temp_path()
         except Exception as e:
-            log.error(self.account_name + " 未知异常")
-            log.error(str(e) + "\n" + traceback.format_exc())
+            self.error("未知异常")
+            self.error(str(e) + "\n" + traceback.format_exc(), False)
 
         # 保存最后的信息
         with self.thread_lock:
             tool.write_file("\t".join(self.account_info), self.main_thread.temp_save_data_path)
             self.main_thread.total_image_count += self.total_image_count
             self.main_thread.account_list.pop(self.account_id)
-        log.step(self.account_name + " 下载完毕，总共获得%s张图片" % self.total_image_count)
+        self.step("下载完毕，总共获得%s张图片" % self.total_image_count)
         self.notify_main_thread()
 
 

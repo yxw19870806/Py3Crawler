@@ -130,10 +130,10 @@ class Download(crawler.DownloadThread):
         crawler.DownloadThread.__init__(self, account_info, main_thread)
         self.account_id = self.account_info[0]
         if len(self.account_info) >= 3:
-            self.account_name = self.account_info[2]
+            self.display_name = self.account_info[2]
         else:
-            self.account_name = self.account_info[0]
-        log.step(self.account_name + " 开始")
+            self.display_name = self.account_info[0]
+        self.step("开始")
 
     # 获取所有可下载图片
     def get_crawl_list(self):
@@ -143,17 +143,17 @@ class Download(crawler.DownloadThread):
         is_over = False
         while not is_over:
             self.main_thread_check()  # 检测主线程运行状态
-            log.step(self.account_name + " 开始解析第%s页图片" % page_count)
+            self.step("开始解析第%s页图片" % page_count)
 
             # 获取一页图片
             try:
                 photo_pagination_response = get_one_page_photo(self.account_id, page_count)
             except crawler.CrawlerException as e:
-                log.error(self.account_name + " 第%s页图片解析失败，原因：%s" % (page_count, e.message))
+                self.error("第%s页图片解析失败，原因：%s" % (page_count, e.message))
                 raise
 
-            log.trace(self.account_name + " 第%s页解析的全部图片：%s" % (page_count, photo_pagination_response["photo_info_list"]))
-            log.step(self.account_name + " 第%s页解析获取%s张图片" % (page_count, len(photo_pagination_response["photo_info_list"])))
+            self.trace("第%s页解析的全部图片：%s" % (page_count, photo_pagination_response["photo_info_list"]))
+            self.step("第%s页解析获取%s张图片" % (page_count, len(photo_pagination_response["photo_info_list"])))
 
             # 寻找这一页符合条件的图片
             for photo_info in photo_pagination_response["photo_info_list"]:
@@ -180,16 +180,16 @@ class Download(crawler.DownloadThread):
     # 解析单个图片
     def crawl_photo(self, photo_info):
         # 禁用指定分辨率
-        log.step(self.account_name + " 开始下载图片%s %s" % (photo_info["photo_id"], photo_info["image_url"]))
+        self.step("开始下载图片%s %s" % (photo_info["photo_id"], photo_info["image_url"]))
 
         image_url = get_image_url(photo_info["image_url"])
         file_type = photo_info["image_url"].split(".")[-1]
-        file_path = os.path.join(self.main_thread.image_download_path, self.account_name, "%08d.%s" % (photo_info["photo_id"], file_type))
+        file_path = os.path.join(self.main_thread.image_download_path, self.display_name, "%08d.%s" % (photo_info["photo_id"], file_type))
         save_file_return = net.save_net_file(image_url, file_path)
         if save_file_return["status"] == 1:
-            log.step(self.account_name + " 图片%s下载成功" % photo_info["photo_id"])
+            self.step("图片%s下载成功" % photo_info["photo_id"])
         else:
-            log.error(self.account_name + " 图片%s %s，下载失败，原因：%s" % (photo_info["photo_id"], photo_info["image_url"], crawler.download_failre(save_file_return["code"])))
+            self.error("图片%s %s，下载失败，原因：%s" % (photo_info["photo_id"], photo_info["image_url"], crawler.download_failre(save_file_return["code"])))
 
         # 图片内图片下全部载完毕
         self.temp_path_list = []  # 临时目录设置清除
@@ -200,7 +200,7 @@ class Download(crawler.DownloadThread):
         try:
             # 获取所有可下载图片
             photo_info_list = self.get_crawl_list()
-            log.step(self.account_name + " 需要下载的全部图片解析完毕，共%s个" % len(photo_info_list))
+            self.step("需要下载的全部图片解析完毕，共%s个" % len(photo_info_list))
 
             # 从最早的图片开始下载
             while len(photo_info_list) > 0:
@@ -209,21 +209,21 @@ class Download(crawler.DownloadThread):
                 self.main_thread_check()  # 检测主线程运行状态
         except SystemExit as se:
             if se.code == 0:
-                log.step(self.account_name + " 提前退出")
+                self.step("提前退出")
             else:
-                log.error(self.account_name + " 异常退出")
+                self.error("异常退出")
             # 如果临时目录变量不为空，表示某个图集正在下载中，需要把下载了部分的内容给清理掉
             self.clean_temp_path()
         except Exception as e:
-            log.error(self.account_name + " 未知异常")
-            log.error(str(e) + "\n" + traceback.format_exc())
+            self.error("未知异常")
+            self.error(str(e) + "\n" + traceback.format_exc(), False)
 
         # 保存最后的信息
         with self.thread_lock:
             tool.write_file("\t".join(self.account_info), self.main_thread.temp_save_data_path)
             self.main_thread.total_image_count += self.total_image_count
             self.main_thread.account_list.pop(self.account_id)
-        log.step(self.account_name + " 下载完毕，总共获得%s张图片" % self.total_image_count)
+        self.step("下载完毕，总共获得%s张图片" % self.total_image_count)
         self.notify_main_thread()
 
 

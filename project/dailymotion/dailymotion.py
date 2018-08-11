@@ -257,7 +257,8 @@ class Download(crawler.DownloadThread):
     def __init__(self, account_info, main_thread):
         crawler.DownloadThread.__init__(self, account_info, main_thread)
         self.account_id = self.account_info[0]
-        log.step(self.account_id + " 开始")
+        self.display_name = self.account_id
+        self.step("开始")
 
     # 获取所有可下载视频
     def get_crawl_list(self):
@@ -267,16 +268,16 @@ class Download(crawler.DownloadThread):
         # 获取全部还未下载过需要解析的相册
         while not is_over:
             self.main_thread_check()  # 检测主线程运行状态
-            log.step(self.account_id + " 开始解析第%s页视频" % page_count)
+            self.step("开始解析第%s页视频" % page_count)
 
             try:
                 blog_pagination_response = get_one_page_video(self.account_id, page_count)
             except crawler.CrawlerException as e:
-                log.error(self.account_id + " 第%s页视频解析失败，原因：%s" % (page_count, e.message))
+                self.error("第%s页视频解析失败，原因：%s" % (page_count, e.message))
                 raise
 
-            log.trace(self.account_id + " 第%s页解析的全部视频：%s" % (page_count, blog_pagination_response["video_info_list"]))
-            log.step(self.account_id + " 第%s页解析获取%s个视频" % (page_count, len(blog_pagination_response["video_info_list"])))
+            self.trace("第%s页解析的全部视频：%s" % (page_count, blog_pagination_response["video_info_list"]))
+            self.step("第%s页解析获取%s个视频" % (page_count, len(blog_pagination_response["video_info_list"])))
 
             # 寻找这一页符合条件的日志
             for video_info in blog_pagination_response["video_info_list"]:
@@ -299,19 +300,19 @@ class Download(crawler.DownloadThread):
         try:
             video_response = get_video_page(video_info["video_id"])
         except crawler.CrawlerException as e:
-            log.error(self.account_id + " 视频%s解析失败，原因：%s" % (video_info["video_id"], e.message))
+            self.error("视频%s解析失败，原因：%s" % (video_info["video_id"], e.message))
             raise
 
         self.main_thread_check()  # 检测主线程运行状态
-        log.step(self.account_id + " 开始下载视频%s 《%s》 %s" % (video_info["video_id"], video_info["video_title"], video_response["video_url"]))
+        self.step("开始下载视频%s 《%s》 %s" % (video_info["video_id"], video_info["video_title"], video_response["video_url"]))
 
         video_file_path = os.path.join(self.main_thread.video_download_path, self.account_id, "%s - %s.mp4" % (video_info["video_id"], path.filter_text(video_info["video_title"])))
         save_file_return = net.save_net_file(video_response["video_url"], video_file_path, head_check=True)
         if save_file_return["status"] == 1:
             # 设置临时目录
-            log.step(self.account_id + " 视频%s 《%s》下载成功" % (video_info["video_id"], video_info["video_title"]))
+            self.step("视频%s 《%s》下载成功" % (video_info["video_id"], video_info["video_title"]))
         else:
-            log.error(self.account_id + " 视频%s 《%s》 %s 下载失败，原因：%s" % (video_info["video_id"], video_info["video_title"], video_response["video_url"], crawler.download_failre(save_file_return["code"])))
+            self.error("视频%s 《%s》 %s 下载失败，原因：%s" % (video_info["video_id"], video_info["video_title"], video_response["video_url"], crawler.download_failre(save_file_return["code"])))
 
         # 媒体内图片和视频全部下载完毕
         self.total_video_count += 1  # 计数累加
@@ -321,29 +322,29 @@ class Download(crawler.DownloadThread):
         try:
             # 获取所有可下载视频
             video_info_list = self.get_crawl_list()
-            log.step(self.account_id + " 需要下载的全部视频解析完毕，共%s个" % len(video_info_list))
+            self.step("需要下载的全部视频解析完毕，共%s个" % len(video_info_list))
 
             # 从最早的视频开始下载
             while len(video_info_list) > 0:
                 video_info = video_info_list.pop()
-                log.step(self.account_id + " 开始解析视频%s" % video_info["video_id"])
+                self.step("开始解析视频%s" % video_info["video_id"])
                 self.crawl_video(video_info)
                 self.main_thread_check()  # 检测主线程运行状态
         except SystemExit as se:
             if se.code == 0:
-                log.step(self.account_id + " 提前退出")
+                self.step("提前退出")
             else:
-                log.error(self.account_id + " 异常退出")
+                self.error("异常退出")
         except Exception as e:
-            log.error(self.account_id + " 未知异常")
-            log.error(str(e) + "\n" + traceback.format_exc())
+            self.error("未知异常")
+            self.error(str(e) + "\n" + traceback.format_exc(), False)
 
         # 保存最后的信息
         with self.thread_lock:
             tool.write_file("\t".join(self.account_info), self.main_thread.temp_save_data_path)
             self.main_thread.total_video_count += self.total_video_count
             self.main_thread.account_list.pop(self.account_id)
-        log.step(self.account_id + " 下载完毕，总共获得%s个视频" % self.total_video_count)
+        self.step("下载完毕，总共获得%s个视频" % self.total_video_count)
         self.notify_main_thread()
 
 
