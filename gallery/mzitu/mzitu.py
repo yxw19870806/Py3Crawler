@@ -21,7 +21,7 @@ def get_index_page():
     }
     if index_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(index_response.status))
-    index_response_content = index_response.data.decode()
+    index_response_content = index_response.data.decode(errors="ignore")
     album_id_find = re.findall('<a href="http://www.mzitu.com/(\d+)', index_response_content)
     if len(album_id_find) == 0:
         raise crawler.CrawlerException("页面匹配图集id失败\n%s" % index_response_content)
@@ -56,7 +56,7 @@ def get_album_page(album_id):
             return result
         elif album_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
             raise crawler.CrawlerException("第%s页" % page_count + crawler.request_failre(album_pagination_response.status))
-        album_pagination_response_content = album_pagination_response.data.decode()
+        album_pagination_response_content = album_pagination_response.data.decode(errors="ignore")
         if page_count == 1:
             # 获取图集标题
             album_title = pq(album_pagination_response_content).find(".main-title").html()

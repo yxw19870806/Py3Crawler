@@ -38,7 +38,7 @@ def get_album_page(sub_path, page_count):
     elif album_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(album_pagination_response.status))
     # 页面编码
-    album_pagination_html = album_pagination_response.data.decode()
+    album_pagination_html = album_pagination_response.data.decode(errors="ignore")
     # 获取图集信息，存在两种页面样式
     album_list_selector = pq(album_pagination_html).find(".wf-main .wf-cld a")
     if album_list_selector.length == 0:
@@ -95,7 +95,7 @@ def get_album_photo(album_url):
             continue
         elif photo_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
             raise crawler.CrawlerException("第%s页" % page_count + crawler.request_failre(photo_pagination_response.status))
-        photo_pagination_content = photo_pagination_response.data.decode()
+        photo_pagination_content = photo_pagination_response.data.decode(errors="ignore")
         # 获取图片地址
         image_list_selector = pq(photo_pagination_content).find("div.bbox a img")
         if image_list_selector.length == 0:

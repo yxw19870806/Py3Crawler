@@ -27,7 +27,7 @@ def get_one_page_blog(account_id, page_count):
     }
     if blog_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(blog_pagination_response.status))
-    blog_pagination_response_content = blog_pagination_response.data.decode()
+    blog_pagination_response_content = blog_pagination_response.data.decode(errors="ignore")
     if page_count == 1 and blog_pagination_response_content.find("抱歉，您要访问的页面不存在或被删除！") >= 0:
         raise crawler.CrawlerException("账号不存在")
     article_list_selector = pq(blog_pagination_response_content).find(".articleList .articleCell")
@@ -80,7 +80,7 @@ def get_blog_page(blog_url):
     if blog_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(blog_response.status))
     # 获取博客正文
-    article_html = tool.find_sub_string(blog_response.data.decode(), "<!-- 正文开始 -->", "<!-- 正文结束 -->")
+    article_html = tool.find_sub_string(blog_response.data.decode(errors="ignore"), "<!-- 正文开始 -->", "<!-- 正文结束 -->")
     # 获取图片地址
     result["image_url_list"] = re.findall('real_src ="([^"]*)"', article_html)
     # 获取全部图片地址

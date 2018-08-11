@@ -25,7 +25,7 @@ def get_account_index_page(account_name):
     if account_index_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(account_index_response.status))
     # 页面编码
-    account_index_response_content = account_index_response.data.decode("GBK")
+    account_index_response_content = account_index_response.data.decode("GBK", errors="ignore")
     if account_index_response_content.find("<title>该页面不存在</title>") >= 0:
         raise crawler.CrawlerException("账号不存在")
     # 获取全部相册地址
@@ -54,7 +54,7 @@ def get_album_page(album_url):
     }
     if album_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(album_response.status))
-    album_response_content = album_response.data.decode("GBK")
+    album_response_content = album_response.data.decode("GBK", errors="ignore")
     # 获取相册标题
     album_title = tool.find_sub_string(album_response_content, '<h2 class="picset-title" id="p_username_copy">', "</h2>").strip()
     if album_title:
