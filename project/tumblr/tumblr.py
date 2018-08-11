@@ -79,6 +79,9 @@ def get_index_setting(account_id):
         # "Show this blog on the web" disabled
         elif redirect_url.find("//www.tumblr.com/login_required/%s" % account_id) > 0:
             is_private = True
+            index_response = net.http_request(redirect_url, method="GET", cookies_list=COOKIE_INFO)
+            if index_response.status == 404:
+                raise crawler.CrawlerException("账号不存在")
     elif index_response.status == 404:
         raise crawler.CrawlerException("账号不存在")
     elif index_response.status != net.HTTP_RETURN_CODE_SUCCEED:
