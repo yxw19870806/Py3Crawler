@@ -25,7 +25,7 @@ def init_session():
     index_page_response = net.http_request(index_url, method="GET")
     if index_page_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException("首页，" + crawler.request_failre(index_page_response.status))
-    index_page_response_content = index_page_response.data.decode()
+    index_page_response_content = index_page_response.data.decode(errors="ignore")
     page_data = tool.find_sub_string(index_page_response_content, "var __PLAYER_CONFIG__ = ", ";\n")
     if not page_data:
         raise crawler.CrawlerException("页面信息截取失败\n%s" % index_page_response_content)
@@ -133,7 +133,7 @@ def get_video_page(video_id):
     }
     if video_play_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(video_play_response.status))
-    video_play_response_content = video_play_response.data.decode()
+    video_play_response_content = video_play_response.data.decode(errors="ignore")
     video_data = tool.find_sub_string(video_play_response_content, "var __PLAYER_CONFIG__ = ", ";\n")
     if not video_data:
         raise crawler.CrawlerException("截取视频信息失败\n%s" % video_play_response_content)

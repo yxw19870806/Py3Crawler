@@ -25,7 +25,7 @@ def get_image_index_page(account_id):
     }
     if image_index_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(image_index_response.status))
-    image_index_response_content = image_index_response.data.decode()
+    image_index_response_content = image_index_response.data.decode(errors="ignore")
     if image_index_response_content == '<script>window.location.href="/404.html";</script>':
         raise crawler.CrawlerException("账号不存在")
     # 获取全部图片地址
@@ -69,7 +69,7 @@ def get_video_index_page(account_id):
     }
     if video_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(video_pagination_response.status))
-    video_pagination_response_content = video_pagination_response.data.decode()
+    video_pagination_response_content = video_pagination_response.data.decode(errors="ignore")
     if video_pagination_response_content == '<script>window.location.href="/404.html";</script>':
         raise crawler.CrawlerException("账号不存在")
     if video_pagination_response_content.find("还没有直播哦") == -1:
@@ -111,7 +111,7 @@ def get_video_info_page(video_id):
     video_file_response = net.http_request(video_file_url, method="GET")
     if video_file_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(video_info_response.status))
-    video_file_response_content = video_file_response.data.decode()
+    video_file_response_content = video_file_response.data.decode(errors="ignore")
     ts_id_list = re.findall("([\S]*.ts)", video_file_response_content)
     if len(ts_id_list) == 0:
         raise crawler.CrawlerException("分集文件匹配视频地址失败\n%s" % video_file_response_content)

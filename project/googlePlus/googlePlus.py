@@ -26,7 +26,7 @@ def get_one_page_blog(account_id, token):
         blog_pagination_response = net.http_request(api_url, method="POST", fields=post_data)
         if blog_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
             raise crawler.CrawlerException(crawler.request_failre(blog_pagination_response.status))
-        blog_pagination_response_content = blog_pagination_response.data.decode()
+        blog_pagination_response_content = blog_pagination_response.data.decode(errors="ignore")
         script_data_html = tool.find_sub_string(blog_pagination_response_content, ")]}'", None).strip()
         if not script_data_html:
             raise crawler.CrawlerException("页面截取日志信息失败\n%s" % blog_pagination_response_content)
@@ -43,7 +43,7 @@ def get_one_page_blog(account_id, token):
             raise crawler.CrawlerException("账号不存在")
         elif blog_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
             raise crawler.CrawlerException(crawler.request_failre(blog_pagination_response.status))
-        blog_pagination_response_content = blog_pagination_response.data.decode()
+        blog_pagination_response_content = blog_pagination_response.data.decode(errors="ignore")
         script_data_html = tool.find_sub_string(blog_pagination_response_content, "AF_initDataCallback({key: 'ds:0'", "</script>")
         script_data_html = tool.find_sub_string(script_data_html, "return ", "}});")
         if not script_data_html:
@@ -91,7 +91,7 @@ def get_album_page(account_id, album_id):
     album_response = net.http_request(album_url, method="GET")
     if album_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(album_response.status))
-    album_response_content = album_response.data.decode()
+    album_response_content = album_response.data.decode(errors="ignore")
     script_data_html = tool.find_sub_string(album_response_content, "AF_initDataCallback({key: 'ds:0'", "</script>")
     script_data_html = tool.find_sub_string(script_data_html, "return ", "}});")
     if not script_data_html:
@@ -113,7 +113,7 @@ def get_album_page(account_id, album_id):
         image_pagination_response = net.http_request(api_url, method="POST", fields=post_data, encode_multipart=False)
         if image_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
             raise crawler.CrawlerException(crawler.request_failre(album_response.status))
-        continue_data_html = tool.find_sub_string(image_pagination_response.data.decode(), ")]}'", None).strip()
+        continue_data_html = tool.find_sub_string(image_pagination_response.data.decode(errors="ignore"), ")]}'", None).strip()
         continue_data = tool.json_decode(continue_data_html)
         if continue_data is None:
             raise crawler.CrawlerException("相册信息加载失败\n%s" % continue_data_html)

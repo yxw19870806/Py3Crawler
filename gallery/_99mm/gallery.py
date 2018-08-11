@@ -23,7 +23,7 @@ def get_index_page():
     }
     if index_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(index_response.status))
-    index_response_content = index_response.data.decode()
+    index_response_content = index_response.data.decode(errors="ignore")
     last_album_page_url = pq(index_response_content).find("#piclist li:first dt a").attr("href")
     if not last_album_page_url:
         raise crawler.CrawlerException("页面截取最新图集地址失败\n%s" % index_response_content)
@@ -51,7 +51,7 @@ def get_album_page(album_id):
         break
     if album_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(album_pagination_response.status))
-    album_pagination_response_content = album_pagination_response.data.decode()
+    album_pagination_response_content = album_pagination_response.data.decode(errors="ignore")
     # 获取图集标题
     album_title = pq(album_pagination_response_content).find(".title span h2").html()
     if not album_title:

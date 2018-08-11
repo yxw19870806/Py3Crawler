@@ -29,7 +29,7 @@ def get_account_index_page(account_name):
         raise crawler.CrawlerException("账号不存在")
     elif account_index_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(account_index_response.status))
-    account_index_response_content = account_index_response.data.decode()
+    account_index_response_content = account_index_response.data.decode(errors="ignore")
     account_id = tool.find_sub_string(account_index_response_content, 'site_id":"', '",')
     if not account_id:
         raise crawler.CrawlerException("页面截取site id失败\n%s" % account_index_response_content)

@@ -20,7 +20,7 @@ def get_member_from_talk(talk_id):
     account_list = {}
     if talk_index_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(talk_index_response.status))
-    talk_index_response_content = talk_index_response.data.decode()
+    talk_index_response_content = talk_index_response.data.decode(errors="ignore")
     talk_data_string = tool.find_sub_string(talk_index_response_content, "window.__DEHYDRATED_STATES__ = ", "</script>")
     if not talk_data_string:
         raise crawler.CrawlerException("页面截取talk信息失败\n%s" % talk_index_response_content)

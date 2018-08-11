@@ -28,7 +28,7 @@ def init_session():
     index_page_response = net.http_request(index_url, method="GET", cookies_list=COOKIE_INFO, header_list={"referer": "https://twitter.com"})
     if index_page_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(index_page_response.status))
-    index_page_response_content = index_page_response.data.decode()
+    index_page_response_content = index_page_response.data.decode(errors="ignore")
     # 没有登录状态
     if not COOKIE_INFO or index_page_response_content.find('<div class="StaticLoggedOutHomePage-login">') >= 0:
         COOKIE_INFO = net.get_cookies_from_response_header(index_page_response.headers)
@@ -38,7 +38,7 @@ def init_session():
     init_js_response = net.http_request(init_js_url_find[0], method="GET")
     if init_js_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException("初始化JS文件，" + crawler.request_failre(init_js_response.status))
-    init_js_response_content = init_js_response.data.decode()
+    init_js_response_content = init_js_response.data.decode(errors="ignore")
     authorization_string = tool.find_sub_string(init_js_response_content, '="AAAAAAAAAA', '"', )
     if not authorization_string:
         raise crawler.CrawlerException("初始化JS中截取authorization失败\n%s" % init_js_response_content)
@@ -57,7 +57,7 @@ def get_account_index_page(account_name):
         raise crawler.CrawlerException("账号不存在")
     elif account_index_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(account_index_response.status))
-    account_index_response_content = account_index_response.data.decode()
+    account_index_response_content = account_index_response.data.decode(errors="ignore")
     # 重新访问
     if account_index_response_content.find("captureMessage( 'Failed to load source'") >= 0:
         return get_account_index_page(account_name)
@@ -175,7 +175,7 @@ def get_video_play_page(tweet_id):
             return result
         elif m3u8_file_response.status != net.HTTP_RETURN_CODE_SUCCEED:
             raise crawler.CrawlerException("m3u8文件 %s 访问失败，%s" % (file_url, crawler.request_failre(m3u8_file_response.status)))
-        m3u8_file_response_content = m3u8_file_response.data.decode()
+        m3u8_file_response_content = m3u8_file_response.data.decode(errors="ignore")
         include_m3u8_file_list = re.findall("(/[\S]*.m3u8)", m3u8_file_response_content)
         if len(include_m3u8_file_list) > 0:
             # 生成最高分辨率视频所在的m3u8文件地址
@@ -183,7 +183,7 @@ def get_video_play_page(tweet_id):
             m3u8_file_response = net.http_request(file_url, method="GET")
             if m3u8_file_response.status != net.HTTP_RETURN_CODE_SUCCEED:
                 raise crawler.CrawlerException("最高分辨率m3u8文件 %s 访问失败，%s" % (file_url, crawler.request_failre(m3u8_file_response.status)))
-            m3u8_file_response_content = m3u8_file_response.data.decode()
+            m3u8_file_response_content = m3u8_file_response.data.decode(errors="ignore")
         # 包含分P视频文件名的m3u8文件
         ts_url_find = re.findall("(/[\S]*.ts)", m3u8_file_response_content)
         if len(ts_url_find) == 0:

@@ -40,7 +40,7 @@ def check_safe_mode():
     account_setting_url = "https://www.tumblr.com/settings/account"
     account_setting_response = net.http_request(account_setting_url, method="GET", cookies_list=COOKIE_INFO, header_list={"User-Agent": USER_AGENT})
     if account_setting_response.status == net.HTTP_RETURN_CODE_SUCCEED:
-        account_setting_response_content = account_setting_response.data.decode()
+        account_setting_response_content = account_setting_response.data.decode(errors="ignore")
         # 页面存在safe mode的设置，并且没有选择上
         if pq(account_setting_response_content).find('#user_safe_mode').length == 1 and pq(account_setting_response_content).find('#user_safe_mode:checked').val() is None:
             # 访问一次safe mode的网址获取这个UA对应的cookies
@@ -120,7 +120,7 @@ def get_one_page_post(account_id, page_count, is_https, is_safe_mode):
         return result
     elif post_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(post_pagination_response.status))
-    post_pagination_response_content = post_pagination_response.data.decode()
+    post_pagination_response_content = post_pagination_response.data.decode(errors="ignore")
     page_html = tool.find_sub_string(post_pagination_response_content, '<script type="application/ld+json">', "</script>").strip()
     if page_html:
         page_data = tool.json_decode(page_html)
@@ -255,7 +255,7 @@ def get_post_page(post_url, is_safe_mode):
         return result
     elif post_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(post_response.status))
-    post_response_content = post_response.data.decode()
+    post_response_content = post_response.data.decode(errors="ignore")
     post_page_head = tool.find_sub_string(post_response_content, "<head", "</head>", 3)
     if not post_page_head:
         raise crawler.CrawlerException("页面截取正文失败\n%s" % post_response_content)
@@ -385,7 +385,7 @@ def get_video_play_page(account_id, post_id, is_https):
             video_play_response = net.http_request(video_play_url, method="GET")
     if video_play_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(video_play_response.status))
-    video_play_response_content = video_play_response.data.decode()
+    video_play_response_content = video_play_response.data.decode(errors="ignore")
     video_url_find = re.findall('<source src="(http[s]?://' + account_id + '.tumblr.com/video_file/[^"]*)" type="[^"]*"', video_play_response_content)
     if len(video_url_find) == 1:
         if crawler.is_integer(video_url_find[0].split("/")[-1]):

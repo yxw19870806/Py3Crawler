@@ -20,7 +20,7 @@ def get_follow_list(account_id):
         follow_pagination_response = net.http_request(follow_pagination_url, method="GET", fields=query_data)
         if follow_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
             return None
-        follow_pagination_response_content = follow_pagination_response.data.decode()
+        follow_pagination_response_content = follow_pagination_response.data.decode(errors="ignore")
         follow_list_find = re.findall('<div class="ucard-info">([\s|\S]*?)</div>', follow_pagination_response_content)
         for follow_info in follow_list_find:
             follow_account_id = tool.find_sub_string(follow_info, '<a hidefocus href="/user/', '"').strip()

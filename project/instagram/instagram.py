@@ -49,7 +49,7 @@ def check_login():
         index_url = "https://www.instagram.com/"
         index_response = net.http_request(index_url, method="GET", cookies_list=COOKIE_INFO)
         if index_response.status == net.HTTP_RETURN_CODE_SUCCEED:
-            return index_response.data.decode().find('"viewer":{') >= 0
+            return index_response.data.decode(errors="ignore").find('"viewer":{') >= 0
     return False
 
 
@@ -98,7 +98,7 @@ def get_account_index_page(account_name):
         raise crawler.CrawlerException("账号不存在")
     elif account_index_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(account_index_response.status))
-    account_index_response_content = account_index_response.data.decode()
+    account_index_response_content = account_index_response.data.decode(errors="ignore")
     account_id = tool.find_sub_string(account_index_response_content, '"profilePage_', '"')
     if not crawler.is_integer(account_id):
         raise crawler.CrawlerException("页面截取账号id失败\n%s" % account_index_response_content)
@@ -185,7 +185,7 @@ def get_media_page(page_id):
     }
     if media_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(media_response.status))
-    media_response_content = media_response.data.decode()
+    media_response_content = media_response.data.decode(errors="ignore")
     media_info_html = tool.find_sub_string(media_response_content, "window._sharedData = ", ";</script>")
     if not media_info_html:
         crawler.CrawlerException("页面截取媒体信息失败\n%s" % media_response_content)

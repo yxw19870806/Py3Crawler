@@ -20,7 +20,7 @@ def get_index_page():
     }
     if index_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(index_response.status))
-    index_response_content = index_response.data.decode()
+    index_response_content = index_response.data.decode(errors="ignore")
     new_album_html = tool.find_sub_string(index_response_content, '<div class="zuixin">最新发布</div>', '<div class="zuixin">名站写真</div>')
     if not new_album_html:
         raise crawler.CrawlerException("页面截取最新发布失败\n%s" % index_response_content)
@@ -50,7 +50,7 @@ def get_album_page(album_id):
             return result
         elif album_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
             raise crawler.CrawlerException("第%s页" % page_count + crawler.request_failre(album_pagination_response.status))
-        album_pagination_response_content = album_pagination_response.data.decode()
+        album_pagination_response_content = album_pagination_response.data.decode(errors="ignore")
         if page_count == 1:
             # 获取图集标题
             album_title = tool.find_sub_string(album_pagination_response_content, "<h1>", "</h1>")

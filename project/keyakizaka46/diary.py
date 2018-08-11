@@ -32,7 +32,7 @@ def get_one_page_blog(account_id, page_count):
     }
     if blog_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(blog_pagination_response.status))
-    blog_pagination_response_content = blog_pagination_response.data.decode()
+    blog_pagination_response_content = blog_pagination_response.data.decode(errors="ignore")
     if len(tool.find_sub_string(blog_pagination_response_content, '<div class="box-profile">', "</div>").strip()) < 10:
         raise crawler.CrawlerException("账号不存在")
     # 日志正文部分

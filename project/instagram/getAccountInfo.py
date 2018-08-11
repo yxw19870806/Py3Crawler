@@ -20,7 +20,7 @@ def get_account_index_page(account_name):
     }
     if account_index_response.status == net.HTTP_RETURN_CODE_SUCCEED:
         # 获取账号信息
-        if account_index_response.data.decode().find('"biography": null,') >= 0:
+        if account_index_response.data.decode(errors="ignore").find('"biography": null,') >= 0:
             result["account_info"] = ""
         else:
             account_info = tool.find_sub_string(account_index_response.data, '"biography": "', '"')
@@ -29,7 +29,7 @@ def get_account_index_page(account_name):
             account_info = account_info.replace(r"\n", "").replace("'", chr(1))
             result["account_info"] = eval("u'%s'" % account_info).replace(chr(1), "'")
         # 获取外部链接地址
-        if account_index_response.data.decode().find('"external_url": null,') >= 0:
+        if account_index_response.data.decode(errors="ignore").find('"external_url": null,') >= 0:
             result["external_url"] = ""
         else:
             result["external_url"] = tool.find_sub_string(account_index_response.data, '"external_url": "', '"')

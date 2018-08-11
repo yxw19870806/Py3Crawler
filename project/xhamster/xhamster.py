@@ -40,7 +40,7 @@ def get_video_page(video_id):
         return result
     if video_play_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(video_play_response.status))
-    video_play_response_content = video_play_response.data.decode()
+    video_play_response_content = video_play_response.data.decode(errors="ignore")
     if video_play_response_content.find('<div class="title">This video requires password</div>') >= 0:
         result["is_password"] = True
         return result

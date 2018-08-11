@@ -22,7 +22,7 @@ def get_one_page_photo(page_count):
     }
     if photo_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(photo_pagination_response.status))
-    photo_pagination_response_content = photo_pagination_response.data.decode()
+    photo_pagination_response_content = photo_pagination_response.data.decode(errors="ignore")
     photo_list_selector = pq(photo_pagination_response_content).find(".bizhinmore .bizhi")
     if photo_list_selector.length == 0:
         raise crawler.CrawlerException("页面匹配图片列失败\n%s" % photo_pagination_response_content)

@@ -24,7 +24,7 @@ def get_comic_index_page(comic_name):
     }
     if index_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(index_response.status))
-    index_response_content = index_response.data.decode()
+    index_response_content = index_response.data.decode(errors="ignore")
     comic_info_html = tool.find_sub_string(index_response_content, "initIntroData(", ");\n")
     if not comic_info_html:
         raise crawler.CrawlerException("漫画信息截取失败\n%s" % index_response_content)
@@ -76,7 +76,7 @@ def get_chapter_page(comic_id, page_id):
     }
     if chapter_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(chapter_response.status))
-    chapter_response_content = chapter_response.data.decode()
+    chapter_response_content = chapter_response.data.decode(errors="ignore")
     chapter_info_html = tool.find_sub_string(chapter_response_content, "mReader.initData(", ");")
     chapter_info_html = chapter_info_html[0:chapter_info_html.rfind("},") + 1]
     if not chapter_info_html:

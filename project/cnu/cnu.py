@@ -24,7 +24,7 @@ def get_album_page(album_id):
         result["is_delete"] = True
     elif album_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(album_response.status))
-    album_response_content = album_response.data.decode()
+    album_response_content = album_response.data.decode(errors="ignore")
     # 获取作品标题
     album_title = tool.find_sub_string(album_response_content, '<h2 class="work-title">', "</h2>")
     if not album_title:
