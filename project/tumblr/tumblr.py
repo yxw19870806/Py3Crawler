@@ -79,6 +79,9 @@ def get_index_setting(account_id):
         # "Show this blog on the web" disabled
         elif redirect_url.find("//www.tumblr.com/login_required/%s" % account_id) > 0:
             is_private = True
+            index_response = net.http_request(redirect_url, method="GET", cookies_list=COOKIE_INFO)
+            if index_response.status == 404:
+                raise crawler.CrawlerException("账号不存在")
     elif index_response.status == 404:
         raise crawler.CrawlerException("账号不存在")
     elif index_response.status != net.HTTP_RETURN_CODE_SUCCEED:
@@ -108,8 +111,8 @@ def get_one_page_post(account_id, page_count, is_https, is_safe_mode):
         "post_info_list": [],  # 全部日志信息
     }
     if post_pagination_response.status == 404:
-        time.sleep(5)
         log.step(account_id + "第%s页日志异常，重试" % page_count)
+        time.sleep(5)
         return get_one_page_post(account_id, page_count, is_https, is_safe_mode)
     elif post_pagination_response.status in [503, 504, net.HTTP_RETURN_CODE_RETRY] and page_count > 1:
         # 服务器错误，跳过这页
@@ -166,6 +169,7 @@ def get_one_page_private_blog(account_id, page_count):
         "post_info_list": [],  # 全部日志信息
     }
     if post_pagination_response.status == 404:
+        log.step(account_id + "第%s页日志异常，重试" % page_count)
         time.sleep(5)
         return get_one_page_private_blog(account_id, page_count)
     elif post_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
