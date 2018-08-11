@@ -13,9 +13,11 @@ from common import output, tool
 IS_SHOW_ERROR = True
 IS_SHOW_STEP = False
 IS_SHOW_TRACE = False
+IS_SHOW_NOTICE = False
 ERROR_LOG_PATH = os.path.abspath(os.path.join(tool.PROJECT_ROOT_PATH, 'log\\errorLog.txt'))
 STEP_LOG_PATH = os.path.abspath(os.path.join(tool.PROJECT_ROOT_PATH, 'log\\stepLog.txt'))
 TRACE_LOG_PATH = os.path.abspath(os.path.join(tool.PROJECT_ROOT_PATH, 'log\\traceLog.txt'))
+NOTICE_LOG_PATH = os.path.abspath(os.path.join(tool.PROJECT_ROOT_PATH, 'log\\debugLog.txt'))
 thread_lock = threading.Lock()
 
 
@@ -40,13 +42,23 @@ def step(msg):
 
 
 def trace(msg):
-    """Trace(Debugger) message logger"""
+    """Trace message logger"""
     msg = _get_time() + " " + str(msg)
     if IS_SHOW_TRACE:
         output.print_msg(msg, False)
     if TRACE_LOG_PATH != "":
         with thread_lock:
             tool.write_file(msg, TRACE_LOG_PATH)
+
+
+def notice(msg):
+    """Debug message logger"""
+    msg = _get_time() + " " + str(msg)
+    if IS_SHOW_NOTICE:
+        output.print_msg(msg, False)
+    if NOTICE_LOG_PATH != "":
+        with thread_lock:
+            tool.write_file(msg, NOTICE_LOG_PATH)
 
 
 def _get_time():
