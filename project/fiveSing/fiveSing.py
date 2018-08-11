@@ -25,7 +25,7 @@ def get_one_page_audio(account_id, page_type, page_count):
     }
     if audio_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(audio_pagination_response.status))
-    audio_pagination_response_content = audio_pagination_response.data.decode()
+    audio_pagination_response_content = audio_pagination_response.data.decode(errors="ignore")
     if audio_pagination_response_content.find("var OwnerNickName = '';") >= 0:
         raise crawler.CrawlerException("账号不存在")
     # 获取歌曲信息

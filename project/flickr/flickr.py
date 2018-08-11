@@ -26,7 +26,7 @@ def check_login():
     index_url = "https://www.flickr.com/"
     index_response = net.http_request(index_url, method="GET", cookies_list=COOKIE_INFO)
     if index_response.status == net.HTTP_RETURN_CODE_SUCCEED:
-        return index_response.data.decode().find('data-track="gnYouMainClick"') >= 0
+        return index_response.data.decode(errors="ignore").find('data-track="gnYouMainClick"') >= 0
     IS_LOGIN = False
     return False
 
@@ -38,7 +38,7 @@ def check_safe_search():
     setting_url = "https://www.flickr.com/account/prefs/safesearch/?from=privacy"
     setting_response = net.http_request(setting_url, method="GET", cookies_list=COOKIE_INFO, is_auto_redirect=False)
     if setting_response.status == net.HTTP_RETURN_CODE_SUCCEED:
-        if pq(setting_response.data.decode()).find("input[name='safe_search']:checked").val() == "2":
+        if pq(setting_response.data.decode(errors="ignore")).find("input[name='safe_search']:checked").val() == "2":
             return True
     return False
 
@@ -56,7 +56,7 @@ def get_account_index_page(account_name):
         raise crawler.CrawlerException("账号不存在")
     elif account_index_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(account_index_response.status))
-    account_index_response_content = account_index_response.data.decode()
+    account_index_response_content = account_index_response.data.decode(errors="ignore")
     # 获取user id
     user_id = tool.find_sub_string(tool.find_sub_string(account_index_response_content, "Y.ClientApp.init(", "},\n"), '"nsid":"', '"')
     if not user_id:

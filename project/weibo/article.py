@@ -33,7 +33,7 @@ def get_one_page_article(page_id, page_count):
     article_pagination_response = net.http_request(preview_article_pagination_url, method="GET", fields=query_data, cookies_list=cookies_list, is_auto_redirect=False)
     if article_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(article_pagination_response.status))
-    article_pagination_response_content = article_pagination_response.data.decode()
+    article_pagination_response_content = article_pagination_response.data.decode(errors="ignore")
     # 截取文章数据
     article_list_html = tool.find_sub_string(article_pagination_response_content, '"html":"', '"})')
     article_data = article_list_html.replace("\\t", "").replace("\\n", "").replace("\\r", "")
@@ -81,7 +81,7 @@ def get_article_page(article_url):
     }
     if article_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(article_response.status))
-    article_response_content = article_response.data.decode()
+    article_response_content = article_response.data.decode(errors="ignore")
     # 判断是否需要购买
     result["is_pay"] = article_response_content.find("购买继续阅读") >= 0
     article_id = tool.find_sub_string(article_url, "http://weibo.com/ttarticle/p/show?id=", "&mod=zwenzhang")

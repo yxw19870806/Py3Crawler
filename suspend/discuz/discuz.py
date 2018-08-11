@@ -13,7 +13,7 @@ from common import *
 def get_bbs_forum_url_list(index_url):
     index_response = net.http_request(index_url, method="GET")
     if index_response.status == net.HTTP_RETURN_CODE_SUCCEED:
-        forum_find = re.findall('<a href="(forum-\w*-\d*.\w*)"[^>]*>([\S]*)</a>', index_response.data.decode())
+        forum_find = re.findall('<a href="(forum-\w*-\d*.\w*)"[^>]*>([\S]*)</a>', index_response.data.decode(errors="ignore"))
         host = index_url[0: index_url.rfind("/") + 1]
         forum_url_list = {}
         for forum_path, forum_name in forum_find:
@@ -26,7 +26,7 @@ def get_bbs_forum_url_list(index_url):
 def get_one_forum_page_thread_url_list(forum_url):
     forum_response = net.http_request(forum_url, method="GET")
     if forum_response.status == net.HTTP_RETURN_CODE_SUCCEED:
-        forum_page = tool.find_sub_string(forum_response.data.decode(), '<div id="threadlist"', '<div id="filter_special_menu"', 1)
+        forum_page = tool.find_sub_string(forum_response.data.decode(errors="ignore"), '<div id="threadlist"', '<div id="filter_special_menu"', 1)
         thread_find = re.findall('<a href="(thread-\d*-1-1.\w*)" onclick="atarget\(this\)" class="s xst">([\S|\s]*?)</a>', forum_page)
         host = forum_url[0: forum_url.rfind("/") + 1]
         thread_url_list = {}
@@ -40,7 +40,7 @@ def get_one_forum_page_thread_url_list(forum_url):
 def get_thread_author_post(thread_url):
     thread_response = net.http_request(thread_url, method="GET")
     if thread_response.status == net.HTTP_RETURN_CODE_SUCCEED:
-        post_message = tool.find_sub_string(thread_response.data.decode(), '<td class="t_f" id="postmessage_', '<div id="comment_')
+        post_message = tool.find_sub_string(thread_response.data.decode(errors="ignore"), '<td class="t_f" id="postmessage_', '<div id="comment_')
         post_message = post_message[post_message.find('">') + 2: post_message.rfind("</td>")]
         content_type = thread_response.getheader("Content-Type")
         if content_type is None:

@@ -24,7 +24,7 @@ def check_login():
     index_url = "http://www.nicovideo.jp/"
     index_response = net.http_request(index_url, method="GET", cookies_list=COOKIE_INFO)
     if index_response.status == net.HTTP_RETURN_CODE_SUCCEED:
-        return pq(index_response.data.decode()).find('#siteHeaderUserNickNameContainer').length > 0
+        return pq(index_response.data.decode(errors="ignore")).find('#siteHeaderUserNickNameContainer').length > 0
     return False
 
 
@@ -43,7 +43,7 @@ def get_mylist_index(account_id):
         raise crawler.CrawlerException("视频列表未公开")
     elif account_index_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(account_index_response.status))
-    account_index_response_content = account_index_response.data.decode()
+    account_index_response_content = account_index_response.data.decode(errors="ignore")
     all_video_info = tool.find_sub_string(account_index_response_content, "Mylist.preload(%s," % account_id, ");").strip()
     if not all_video_info:
         raise crawler.CrawlerException("截取视频列表失败\n%s" % account_index_response_content)
@@ -87,7 +87,7 @@ def get_video_info(video_id):
         return result
     elif video_play_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException("视频播放页访问失败，" + crawler.request_failre(video_play_response.status))
-    video_play_response_content = video_play_response.data.decode()
+    video_play_response_content = video_play_response.data.decode(errors="ignore")
     video_info_string = tool.find_sub_string(video_play_response_content, 'data-api-data="', '" data-environment="')
     if not video_info_string:
         # 播放页面提示flash没有安装，重新访问

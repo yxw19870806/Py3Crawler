@@ -21,7 +21,7 @@ def get_index_page():
     }
     if index_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(index_response.status))
-    index_response_content = index_response.data.decode()
+    index_response_content = index_response.data.decode(errors="ignore")
     first_album_url = pq(index_response_content).find("div.listdiv ul li.galleryli:first a.galleryli_link").attr("href")
     if not first_album_url:
         raise crawler.CrawlerException("页面截取最新图集地址失败\n%s" % index_response_content)
@@ -46,7 +46,7 @@ def get_album_page(album_id):
         album_pagination_response = net.http_request(album_pagination_url, method="GET")
         if album_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
             raise crawler.CrawlerException("第%s页" % page_count + crawler.request_failre(album_pagination_response.status))
-        album_pagination_response_content = album_pagination_response.data.decode()
+        album_pagination_response_content = album_pagination_response.data.decode(errors="ignore")
         # 判断图集是否已经被删除
         if page_count == 1:
             result["is_delete"] = album_pagination_response_content.find("<title>该页面未找到-宅男女神</title>") >= 0

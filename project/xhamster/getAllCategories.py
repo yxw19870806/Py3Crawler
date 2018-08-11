@@ -24,7 +24,7 @@ def get_one_page_categories(orientation, category_index):
     category_index_response = net.http_request(category_index_url, method="GET")
     if category_index_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         log.error(category_index_url + " " + crawler.request_failre(category_index_response.status))
-    category_index_response_content = category_index_response.data.decode()
+    category_index_response_content = category_index_response.data.decode(errors="ignore")
     category_list_selector = pq(category_index_response_content).find(".items .item")
     for index in range(0, category_list_selector.length):
         category_name = category_list_selector.eq(index).find("a").html()

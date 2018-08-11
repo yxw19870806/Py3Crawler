@@ -45,7 +45,7 @@ def check_login():
         home_url = "https://bcy.net/home/account"
         home_response = net.http_request(home_url, method="GET", cookies_list=COOKIE_INFO, is_auto_redirect=False)
         if home_response.status == net.HTTP_RETURN_CODE_SUCCEED:
-            if home_response.data.decode().find('<a href="/login">登录</a>') == -1:
+            if home_response.data.decode(errors="ignore").find('<a href="/login">登录</a>') == -1:
                 return True
     # 没有浏览器cookies，尝试读取文件
     else:
@@ -88,7 +88,7 @@ def _do_login(email, password):
     }
     login_response = net.http_request(login_url, method="POST", fields=login_post, cookies_list=COOKIE_INFO, header_list=header_list)
     if login_response.status == net.HTTP_RETURN_CODE_SUCCEED:
-        if login_response.data.decode().find('<a href="/login">登录</a>') == -1:
+        if login_response.data.decode(errors="ignore").find('<a href="/login">登录</a>') == -1:
             return True
     return False
 
@@ -105,7 +105,7 @@ def follow(account_id):
     }
     follow_response = net.http_request(follow_api_url, method="POST", fields=follow_post_data, cookies_list=COOKIE_INFO, header_list=header_list)
     if follow_response.status == net.HTTP_RETURN_CODE_SUCCEED:
-        follow_response_content = follow_response.data.decode()
+        follow_response_content = follow_response.data.decode(errors="ignore")
         # 0 未登录，11 关注成功，12 已关注
         if crawler.is_integer(follow_response_content) and int(follow_response_content) in [11, 12]:
             return True
@@ -122,7 +122,7 @@ def unfollow(account_id):
     }
     unfollow_response = net.http_request(unfollow_api_url, method="POST", fields=unfollow_post_data, cookies_list=COOKIE_INFO, header_list=header_list)
     if unfollow_response.status == net.HTTP_RETURN_CODE_SUCCEED:
-        unfollow_response_content = unfollow_response.data.decode()
+        unfollow_response_content = unfollow_response.data.decode(errors="ignore")
         if crawler.is_integer(unfollow_response_content) and int(unfollow_response_content) == 1:
             return True
     return False
@@ -140,7 +140,7 @@ def get_one_page_album(account_id, page_count):
     }
     if album_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(album_pagination_response.status))
-    album_pagination_content = album_pagination_response.data.decode()
+    album_pagination_content = album_pagination_response.data.decode(errors="ignore")
     if page_count == 1 and album_pagination_content.find("<h2>用户不存在</h2>") >= 0:
         raise crawler.CrawlerException("账号不存在")
     # 没有作品
@@ -186,14 +186,14 @@ def get_album_page(album_id):
     is_skip = False
     # 问题
     # https://bcy.net/item/detail/6115326868729126670
-    if pq(album_response.data).find("div.post__content.js-fullimg").length == 1 and album_response.data.decode().find('<a href="/group/discover">问答</a>') > 0:
+    if pq(album_response.data).find("div.post__content.js-fullimg").length == 1 and album_response.data.decode(errors="ignore").find('<a href="/group/discover">问答</a>') > 0:
         is_skip = True
     # 文章
     # https://bcy.net/item/detail/6162547130750754574
     elif pq(album_response.data).find("div.post__content h1.title.mt5").length == 1:
         is_skip = True
     # 检测作品是否被管理员锁定
-    elif album_response.data.decode().find("<h2>问题已被锁定，无法查看回答</h2>") >= 0:
+    elif album_response.data.decode(errors="ignore").find("<h2>问题已被锁定，无法查看回答</h2>") >= 0:
         is_skip = True
 
     # 是不是有报错信息

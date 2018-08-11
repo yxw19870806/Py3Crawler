@@ -139,7 +139,7 @@ def get_video_url(video_play_url):
         cookies_list = {"SUB": weiboCommon.COOKIE_INFO["SUB"]}
         video_play_response = net.http_request(video_play_url, method="GET", cookies_list=cookies_list)
         if video_play_response.status == net.HTTP_RETURN_CODE_SUCCEED:
-            video_play_response_content = video_play_response.data.decode()
+            video_play_response_content = video_play_response.data.decode(errors="ignore")
             video_url = tool.find_sub_string(video_play_response_content, "video_src=", "&")
             if not video_url:
                 video_url = tool.find_sub_string(video_play_response_content, 'flashvars="list=', '"')
@@ -157,7 +157,7 @@ def get_video_url(video_play_url):
         video_play_response = net.http_request(video_play_url, method="GET")
         if video_play_response.status != net.HTTP_RETURN_CODE_SUCCEED:
             raise crawler.CrawlerException(crawler.request_failre(video_play_response.status))
-        video_play_response_content = video_play_response.data.decode()
+        video_play_response_content = video_play_response.data.decode(errors="ignore")
         if video_play_response_content.decode().find('<p class="error-p">为建设清朗网络空间，视频正在审核中，暂时无法播放。</p>') > 0:
             video_url = ""
         else:

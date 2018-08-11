@@ -24,7 +24,7 @@ def get_index_page():
         sub_index_response = net.http_request(sub_index_url, method="GET")
         if sub_index_response.status != net.HTTP_RETURN_CODE_SUCCEED:
             raise crawler.CrawlerException("%s分组" % sub_path + crawler.request_failre(sub_index_response.status))
-        sub_index_response_content = sub_index_response.data.decode("GBK")
+        sub_index_response_content = sub_index_response.data.decode("GBK", errors="ignore")
         last_album_page_url = pq(sub_index_response_content).find(".public-box dd:first a").attr("href")
         if not last_album_page_url:
             raise crawler.CrawlerException("%s分组页面截取最新图集地址失败\n%s" % (sub_path, sub_index_response_content))
@@ -65,7 +65,7 @@ def get_album_page(album_id):
             return result
         elif album_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
             raise crawler.CrawlerException(crawler.request_failre(album_pagination_response.status))
-        album_pagination_response_content = album_pagination_response.data.decode("GBK")
+        album_pagination_response_content = album_pagination_response.data.decode("GBK", errors="ignore")
         if page_count == 1:
             # 获取图集标题
             album_title = pq(album_pagination_response_content).find(".content h5").html()

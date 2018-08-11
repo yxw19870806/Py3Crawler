@@ -33,7 +33,7 @@ def get_album_page(page_count):
         result["is_delete"] = True
     elif album_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(album_response.status))
-    album_response_content = album_response.data.decode()
+    album_response_content = album_response.data.decode(errors="ignore")
     # 获取相册标题
     result["is_over"] = album_response_content.find("<p>视频正在审核中<br><b>精彩需要耐心等待</b></p>") >= 0
     if result["is_over"]:

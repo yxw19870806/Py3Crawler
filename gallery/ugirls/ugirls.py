@@ -20,7 +20,7 @@ def get_index_page():
     }
     if index_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(index_response.status))
-    index_response_content = index_response.data.decode()
+    index_response_content = index_response.data.decode(errors="ignore")
     first_album_url = pq(index_response_content).find("div.magazine_list_wrap .magazine_item:first .magazine_item_wrap").attr("href")
     if not first_album_url:
         raise crawler.CrawlerException("页面截取最新图集地址失败\n%s" % index_response_content)
@@ -42,7 +42,7 @@ def get_album_page(album_id):
     }
     if album_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(album_response.status))
-    album_response_content = album_response.data.decode()
+    album_response_content = album_response.data.decode(errors="ignore")
     if album_response_content.find("该页面不存在,或者已经被删除!") >= 0:
         result["is_delete"] = True
         return result

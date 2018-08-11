@@ -26,7 +26,7 @@ def get_account_index_page(account_id):
         raise crawler.CrawlerException("账号不存在")
     elif account_index_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(account_index_response.status))
-    account_index_response_content = account_index_response.data.decode()
+    account_index_response_content = account_index_response.data.decode(errors="ignore")
     # 获取user id
     user_id = tool.find_sub_string(account_index_response_content, "var userid = '", "'")
     if not crawler.is_integer(user_id):
@@ -94,7 +94,7 @@ def get_audio_play_page(audio_en_word_id, audio_type):
     audio_play_response = net.http_request(audio_play_url, method="GET")
     if audio_play_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(audio_play_response.status))
-    audio_play_response_content = audio_play_response.data.decode()
+    audio_play_response_content = audio_play_response.data.decode(errors="ignore")
     if audio_play_response_content.find("该作品可能含有不恰当内容将不能显示。") > -1:
         result["is_delete"] = True
     else:
@@ -138,7 +138,7 @@ def get_audio_play_page(audio_en_word_id, audio_type):
                 bokecc_xml_response = net.http_request(bokecc_xml_url, method="GET", fields=query_data)
                 if bokecc_xml_response.status != net.HTTP_RETURN_CODE_SUCCEED:
                     raise crawler.CrawlerException("bokecc xml文件 %s 访问失败" % bokecc_xml_url)
-                bokecc_xml_response_content = bokecc_xml_response.data.decode()
+                bokecc_xml_response_content = bokecc_xml_response.data.decode(errors="ignore")
                 audio_url_find = re.findall('playurl="([^"]*)"', bokecc_xml_response_content)
                 if len(audio_url_find) == 0:
                     raise crawler.CrawlerException("bokecc xml文件 %s 截取歌曲地址失败\n%s" % (bokecc_xml_url, bokecc_xml_response_content))

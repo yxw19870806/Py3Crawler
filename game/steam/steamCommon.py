@@ -69,7 +69,7 @@ def get_discount_game_list():
         discount_game_pagination_response = net.http_request(discount_game_pagination_url, method="GET", cookies_list=COOKIE_INFO)
         if discount_game_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
             raise crawler.CrawlerException("第%s页打折游戏访问失败，原因：%s" % (page_count, crawler.request_failre(discount_game_pagination_response.status)))
-        discount_game_pagination_response_content = discount_game_pagination_response.data.decode()
+        discount_game_pagination_response_content = discount_game_pagination_response.data.decode(errors="ignore")
         search_result_selector = pq(discount_game_pagination_response_content).find("#search_result_container")
         game_list_selector = search_result_selector.find("div").eq(1).find("a")
         for game_index in range(0, game_list_selector.length):
@@ -152,7 +152,7 @@ def get_game_store_index(game_id):
     game_index_response = net.http_request(game_index_url, method="GET", cookies_list=COOKIE_INFO)
     if game_index_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(game_index_response.status))
-    game_index_response_content = game_index_response.data.decode()
+    game_index_response_content = game_index_response.data.decode(errors="ignore")
     result = {
         "dlc_list": [],  # 游戏下的DLC列表
         "reviewed": False,  # 是否评测过
@@ -179,7 +179,7 @@ def get_self_account_badges(account_id):
         raise crawler.CrawlerException(crawler.request_failre(badges_index_response.status))
     badges_detail_url_list = []
     # 徽章div
-    badges_selector = pq(badges_index_response.data.decode()).find(".maincontent .badges_sheet .badge_row")
+    badges_selector = pq(badges_index_response.data.decode(errors="ignore")).find(".maincontent .badges_sheet .badge_row")
     for index in range(0, badges_selector.length):
         badge_html = badges_selector.eq(index).html()
         # 已经掉落全部卡牌的徽章
@@ -199,7 +199,7 @@ def get_self_account_badge_card(badge_detail_url):
     badge_detail_response = net.http_request(badge_detail_url, method="GET", cookies_list=COOKIE_INFO)
     if badge_detail_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(badge_detail_response.status))
-    badge_detail_response_content = badge_detail_response.data.decode()
+    badge_detail_response_content = badge_detail_response.data.decode(errors="ignore")
     wanted_card_list = {}
     page_selector = pq(badge_detail_response_content)
     # 徽章等级
@@ -350,7 +350,7 @@ def get_account_badges(account_id):
         badges_pagination_response = net.http_request(badges_pagination_url, method="GET", fields=query_data, cookies_list=cookies_list)
         if badges_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
             raise crawler.CrawlerException("第%s页徽章访问失败，原因：%s" % (page_count, crawler.request_failre(badges_pagination_response.status)))
-        badges_pagination_response_content = badges_pagination_response.data.decode()
+        badges_pagination_response_content = badges_pagination_response.data.decode(errors="ignore")
         badge_list_selector = pq(badges_pagination_response_content).find("div.badge_row")
         if badge_list_selector.length == 0:
             # 如果是隐私账号，会302到主页的，这里只判断页面文字就不判断状态了
@@ -394,7 +394,7 @@ def get_account_owned_app_list(user_id, is_played=False):
     game_index_response = net.http_request(game_index_url, method="GET")
     if game_index_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(game_index_response.status))
-    game_index_response_content = game_index_response.data.decode()
+    game_index_response_content = game_index_response.data.decode(errors="ignore")
     # 如果是隐私账号，会302到主页的，这里只判断页面文字就不判断状态了
     if pq(game_index_response_content).find("div.profile_private_info").length == 1:
         raise crawler.CrawlerException("账号隐私设置中未公开游戏详情")

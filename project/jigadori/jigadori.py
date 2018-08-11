@@ -23,7 +23,7 @@ def get_one_page_photo(page_count):
     }
     if photo_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(photo_pagination_response.status))
-    photo_list_selector = pq(photo_pagination_response.data.decode()).find("#wrapper .row .photo")
+    photo_list_selector = pq(photo_pagination_response.data.decode(errors="ignore")).find("#wrapper .row .photo")
     for photo_index in range(0, photo_list_selector.length):
         photo_selector = photo_list_selector.eq(photo_index)
         photo_selector_html = photo_selector.html()

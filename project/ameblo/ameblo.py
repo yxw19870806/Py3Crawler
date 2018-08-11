@@ -43,7 +43,7 @@ def get_one_page_blog(account_name, page_count):
         raise crawler.CrawlerException("账号不存在")
     elif blog_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(blog_pagination_response.status))
-    blog_pagination_response_content = blog_pagination_response.data.decode()
+    blog_pagination_response_content = blog_pagination_response.data.decode(errors="ignore")
     # 获取日志id
     result["blog_id_list"] = re.findall('data-unique-entry-id="([\d]*)"', blog_pagination_response_content)
     # 另一种页面格式
@@ -98,7 +98,7 @@ def get_blog_page(account_name, blog_id):
     }
     if blog_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(blog_response.status))
-    blog_response_content = blog_response.data.decode()
+    blog_response_content = blog_response.data.decode(errors="ignore")
     # todo 登录cookies
     if blog_response_content.find('この記事はアメンバーさん限定です。') >= 0:
         raise crawler.CrawlerException("日志只限会员访问")

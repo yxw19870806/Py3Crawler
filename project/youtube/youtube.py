@@ -51,7 +51,7 @@ def get_one_page_video(account_id, token):
             raise crawler.CrawlerException("账号不存在")
         elif index_response.status != net.HTTP_RETURN_CODE_SUCCEED:
             raise crawler.CrawlerException(crawler.request_failre(index_response.status))
-        index_response_content = index_response.data.decode()
+        index_response_content = index_response.data.decode(errors="ignore")
         if index_response_content.find('<button id="a11y-skip-nav" class="skip-nav"') >= 0:
             log.step("首页访问出现跳转，再次访问")
             return get_one_page_video(account_id, token)
@@ -143,7 +143,7 @@ def get_video_page(video_id):
     # 获取视频地址
     if video_play_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(video_play_response.status))
-    video_play_response_content = video_play_response.data.decode()
+    video_play_response_content = video_play_response.data.decode(errors="ignore")
     if video_play_response_content.find('"playabilityStatus":{"status":"UNPLAYABLE"') != -1 or video_play_response_content.find('"playabilityStatus":{"status":"ERROR"') != -1:
         return result
     # 没有登录，判断是否必须要登录
@@ -298,7 +298,7 @@ def get_decrypt_step(js_file_url):
     js_file_response = net.http_request(js_file_url, method="GET")
     if js_file_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException("播放器JS文件 %s 访问失败，原因：%s" % (js_file_url, crawler.request_failre(js_file_response.status)))
-    js_file_response_content = js_file_response.data.decode()
+    js_file_response_content = js_file_response.data.decode(errors="ignore")
     # 加密方法入口
     # old k.sig?f.set("signature",k.sig):k.s&&f.set("signature",SJ(k.s));
     # new var l=k.sig;l?f.set("signature",l):k.s&&f.set("signature",CK(k.s));

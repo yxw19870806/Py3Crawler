@@ -22,7 +22,7 @@ def get_index_page():
     }
     if index_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(index_response.status))
-    index_response_content = index_response.data.decode()
+    index_response_content = index_response.data.decode(errors="ignore")
     album_page_selector = pq(index_response_content).find("#mainbodypul .listmainrows>a")
     if album_page_selector.length == 0:
         raise crawler.CrawlerException("页面截取图集信息失败\n%s" % index_response_content)
@@ -61,7 +61,7 @@ def get_album_page(album_id):
             album_pagination_response = net.http_request(album_pagination_url, method="GET")
         if album_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
             raise crawler.CrawlerException(crawler.request_failre(album_pagination_response.status))
-        album_pagination_response_content = album_pagination_response.data.decode()
+        album_pagination_response_content = album_pagination_response.data.decode(errors="ignore")
         if page_count == 1:
             # 获取图集标题
             album_title = pq(album_pagination_response_content).find("h1.center").html()

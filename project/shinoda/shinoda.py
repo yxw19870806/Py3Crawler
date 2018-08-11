@@ -22,7 +22,7 @@ def get_one_page_blog(page_count):
     blog_pagination_response = net.http_request(blog_pagination_url, method="GET")
     if blog_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(blog_pagination_response.status))
-    blog_pagination_response_content = blog_pagination_response.data.decode()
+    blog_pagination_response_content = blog_pagination_response.data.decode(errors="ignore")
     # 检测是否是最后一页
     result["is_over"] = blog_pagination_response_content == "記事が存在しません。"
     if result["is_over"]:
