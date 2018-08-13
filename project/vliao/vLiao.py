@@ -16,7 +16,7 @@ from project.vliao import vLiaoCommon
 
 # 获取一页视频
 def get_one_page_video(account_id, page_count):
-    video_pagination_url = "http://v3.vliao3.xyz/v%s/smallvideo/list" % vLiaoCommon.API_VERSION
+    video_pagination_url = "http://v3.vliao3.xyz/v31/smallvideo/list"
     post_data = {
         "userId": vLiaoCommon.USER_ID,
         "userKey": vLiaoCommon.USER_KEY,
@@ -65,7 +65,7 @@ def get_one_page_video(account_id, page_count):
 
 # 获取指定视频
 def get_video_info_page(account_id, video_id):
-    video_info_url = "http://v3.vliao3.xyz/v%s/smallvideo/one" % vLiaoCommon.API_VERSION
+    video_info_url = "http://v3.vliao3.xyz/v31/smallvideo/one"
     post_data = {
         "userId": vLiaoCommon.USER_ID,
         "userKey": vLiaoCommon.USER_KEY,

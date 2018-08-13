@@ -13,7 +13,6 @@ from common import crypto
 
 USER_ID = ""
 USER_KEY = ""
-API_VERSION = "31"
 token_file_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "info\\session"))
 
 
@@ -48,7 +47,7 @@ def check_login():
 
 # 验证user_id和user_key是否匹配
 def check_token(user_id, user_key):
-    index_url = "http://v3.vliao3.xyz/v%s/user/mydata" % API_VERSION
+    index_url = "http://v3.vliao3.xyz/v31/user/mydata"
     post_data = {
         "userId": user_id,
         "userKey": user_key,
