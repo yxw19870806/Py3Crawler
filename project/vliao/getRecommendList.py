@@ -33,7 +33,7 @@ def get_tag_account_list(tag_id):
     account_list = {}
     while True:
         output.print_msg("开始解析tag %s第%s页推荐账号" % (tag_id, page_count))
-        account_pagination_url = "http://v3.vliao3.xyz/v%s/homepage" % vLiaoCommon.API_VERSION
+        account_pagination_url = "http://v3.vliao3.xyz/v31/homepage"
         post_data = {
             "userId": vLiaoCommon.USER_ID,
             "userKey": vLiaoCommon.USER_KEY,
