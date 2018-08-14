@@ -51,28 +51,28 @@ def get_account_index_page(account_id):
 
 
 # 获取指定日志
-def get_video_page(video_id):
+def get_video_info_page(video_id):
     # https://archive.vine.co/posts/iUQV3w3mJMV.json
-    video_page_url = "https://archive.vine.co/posts/%s.json" % video_id
-    video_page_response = net.http_request(video_page_url, method="GET", json_decode=True)
+    video_info_url = "https://archive.vine.co/posts/%s.json" % video_id
+    video_info_response = net.http_request(video_info_url, method="GET", json_decode=True)
     result = {
         "is_skip": False,  # 是否跳过
         "video_url": None,  # 视频地址
         "video_id": 0,  # 视频id（数字）
     }
-    if video_page_response.status == 403:
+    if video_info_response.status == 403:
         result["is_skip"] = True
-    elif video_page_response.status != net.HTTP_RETURN_CODE_SUCCEED:
-        raise crawler.CrawlerException(crawler.request_failre(video_page_response.status))
+    elif video_info_response.status != net.HTTP_RETURN_CODE_SUCCEED:
+        raise crawler.CrawlerException(crawler.request_failre(video_info_response.status))
     else:
-        if not crawler.check_sub_key(("postId", "videoUrl", "videoDashUrl"), video_page_response.json_data):
-            raise crawler.CrawlerException("返回信息'postId'、'videoUrl'或'videoDashUrl'字段不存在\n%s" % video_page_response.json_data)
-        if not crawler.is_integer(video_page_response.json_data["postId"]):
-            raise crawler.CrawlerException("返回信息'postId'字段类型不正确\n%s" % video_page_response.json_data)
+        if not crawler.check_sub_key(("postId", "videoUrl", "videoDashUrl"), video_info_response.json_data):
+            raise crawler.CrawlerException("返回信息'postId'、'videoUrl'或'videoDashUrl'字段不存在\n%s" % video_info_response.json_data)
+        if not crawler.is_integer(video_info_response.json_data["postId"]):
+            raise crawler.CrawlerException("返回信息'postId'字段类型不正确\n%s" % video_info_response.json_data)
         # 获取视频地址
-        result["video_url"] = video_page_response.json_data["videoUrl"]
+        result["video_url"] = video_info_response.json_data["videoUrl"]
         # 获取视频id（数字）
-        result["video_id"] = video_page_response.json_data["postId"]
+        result["video_id"] = video_info_response.json_data["postId"]
     return result
 
 
@@ -167,7 +167,7 @@ class Download(crawler.DownloadThread):
     def crawl_video(self, video_id):
         # 获取指定视频信息
         try:
-            video_response = get_video_page(video_id)
+            video_response = get_video_info_page(video_id)
         except crawler.CrawlerException as e:
             self.error("视频%s解析失败，原因：%s" % (video_id, e.message))
             raise

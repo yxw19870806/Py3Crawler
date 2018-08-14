@@ -25,10 +25,10 @@ def get_index_page():
         if sub_index_response.status != net.HTTP_RETURN_CODE_SUCCEED:
             raise crawler.CrawlerException("%s分组" % sub_path + crawler.request_failre(sub_index_response.status))
         sub_index_response_content = sub_index_response.data.decode("GBK", errors="ignore")
-        last_album_page_url = pq(sub_index_response_content).find(".public-box dd:first a").attr("href")
-        if not last_album_page_url:
+        last_album_url = pq(sub_index_response_content).find(".public-box dd:first a").attr("href")
+        if not last_album_url:
             raise crawler.CrawlerException("%s分组页面截取最新图集地址失败\n%s" % (sub_path, sub_index_response_content))
-        album_id_find = re.findall("/(\d*).html", last_album_page_url)
+        album_id_find = re.findall("/(\d*).html", last_album_url)
         if len(album_id_find) != 1:
             raise crawler.CrawlerException("%s分组最新图集地址截取图集id失败\n%s" % (sub_path, sub_index_response_content))
         result["max_album_id"] = max(result["max_album_id"], int(album_id_find[0]))
