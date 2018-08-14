@@ -20,7 +20,7 @@ def main():
             # 图集id  图集名字
             album_id, album_name = album_dir.split(" ", 1)
             # 图片数量
-            file_count = path.get_dir_files_name(os.path.join(website_path, album_dir))
+            file_count = len(path.get_dir_files_name(os.path.join(website_path, album_dir)))
             # 图集分类
             album_category = ""
             for temp_album_category in ALBUM_CATEGORY_LIST:
