@@ -16,7 +16,7 @@ def main():
         if single_save_list[4] == ivseekCommon.DONE_SING:
             done_list[single_save_list[3]] = 1
     for single_save_list in save_data:
-        if single_save_list[3] in done_list:
+        if single_save_list[3] != "" and single_save_list[3] in done_list:
             if single_save_list[4] != ivseekCommon.DONE_SING:
                 single_save_list[4] = ivseekCommon.DONE_SING
                 output.print_msg("new done account " + str(single_save_list))
