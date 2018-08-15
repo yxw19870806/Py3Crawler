@@ -19,9 +19,10 @@ def get_account_list_from_api():
         try:
             tag_account_list = get_tag_account_list(tag_id)
         except crawler.CrawlerException as e:
-            output.print_msg("tag %s推荐账号解析失败，原因：%s" % (tag_id, e.message))
+            log.error("tag %s推荐账号解析失败，原因：%s" % (tag_id, e.message))
             raise
-        output.print_msg("频道%s获取推荐账号%s个" % (tag_id, len(tag_account_list)))
+        log.trace("频道%s获取的全部推荐账号：%s" % (tag_id, tag_account_list))
+        log.step("频道%s获取推荐账号%s个" % (tag_id, len(tag_account_list)))
         # 累加账号
         account_list.update(tag_account_list)
     return account_list
@@ -32,7 +33,7 @@ def get_tag_account_list(tag_id):
     page_count = 1
     account_list = {}
     while True:
-        output.print_msg("开始解析tag %s第%s页推荐账号" % (tag_id, page_count))
+        log.step("开始解析tag %s第%s页推荐账号" % (tag_id, page_count))
         account_pagination_url = "http://v3.vliao3.xyz/v31/homepage"
         post_data = {
             "userId": vLiaoCommon.USER_ID,
@@ -72,6 +73,9 @@ def get_tag_account_list(tag_id):
 
 
 def main():
+    # 设置日志路径
+    crawler.quicky_set_log_path()
+
     # 检测登录状态
     try:
         vLiaoCommon.check_login()
