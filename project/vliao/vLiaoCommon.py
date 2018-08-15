@@ -29,10 +29,9 @@ def check_login():
                 USER_ID = api_info["user_id"]
                 USER_KEY = api_info["user_key"]
                 return True
+            output.print_msg("登录信息已过期")
         # token已经无效了，删除掉
         path.delete_dir_or_file(token_file_path)
-    log.step("Please input api info")
-    log.step("Please input your phone number and password")
     while True:
         input_str = input("未检测到api信息，是否手动输入手机号码+密码登录(1)、或者直接输入api信息进行验证(2)、或者退出程序(E)xit？").lower()
         if input_str in ["e", "exit"]:
@@ -43,20 +42,16 @@ def check_login():
             phone_number = input("Phone Number: ")
             password = input("password; ")
             # 模拟登录
-            try:
-                login_status, error_message = login(phone_number, password)
-            except crawler.CrawlerException as e:
-                log.error("登录异常，原因：%s" % e.message)
-                continue
+            login_status, error_message = login(phone_number, password)
             if login_status is False:
-                log.step("登录失败，原因：%s" % error_message)
+                output.print_msg("登录失败，原因：%s" % error_message)
                 continue
         elif input_str == "2":
             user_id = input("USER ID: ")
             user_key = input("USER KEY; ")
             # 验证token是否有效
             if not check_token(user_id, user_key):
-                log.step("incorrect phone number or password, please type again!")
+                output.print_msg("无效的登录信息，请重新输入")
                 continue
             # 设置全局变量
             USER_ID = user_id
