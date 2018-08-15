@@ -57,7 +57,7 @@ def get_one_page_video(account_id, token):
             raise crawler.CrawlerException(crawler.request_failre(index_response.status))
         index_response_content = index_response.data.decode(errors="ignore")
         if index_response_content.find('<button id="a11y-skip-nav" class="skip-nav"') >= 0:
-            log.step("首页访问出现跳转，再次访问")
+            log.step("首页 %s 访问出现跳转，再次访问" % index_url)
             return get_one_page_video(account_id, token)
         result["channel_name"] = tool.find_sub_string(index_response_content, '<meta property="og:title" content="', '">').replace("- YouTube", "").strip()
         if index_response_content.find('{"alertRenderer":{"type":"ERROR",') != -1:
@@ -188,7 +188,7 @@ def get_video_page(video_id):
                     is_skip = True  # 跳过
                     break
                 else:
-                    log.error("unknown video type " + video_type)
+                    log.notice("未知视频类型：" + video_type)
             elif key == "quality":  # 视频画质
                 if value == "tiny":
                     video_resolution = 144
@@ -202,7 +202,7 @@ def get_video_page(video_id):
                     video_resolution = int(value[2:])
                 else:
                     video_resolution = 1
-                    log.error("unknown video quality " + value)
+                    log.notice("未知视频画质：" + value)
             elif key == "url":
                 video_url = urllib.parse.unquote(value)
             elif key == "s":
@@ -225,7 +225,7 @@ def get_video_page(video_id):
         if is_skip:
             continue
         if video_resolution is None or video_url is None:
-            log.error("unknown video param" + video_info_string)
+            log.notice("未知视频未知视频参数：" + video_info_string)
             continue
         # 加上signature参数
         if signature is not None:
