@@ -40,7 +40,7 @@ def search_account(account_name, search_type):
     try:
         account_name_to_id_list = _search_account(account_name)
     except crawler.CrawlerException as e:
-        output.print_msg("搜索账号失败，原因：%s" % e.message)
+        log.error("搜索账号失败，原因：%s" % e.message)
         raise
     if search_type == SEARCH_TYPE_MATCH:
         if account_name in account_name_to_id_list:
@@ -51,6 +51,9 @@ def search_account(account_name, search_type):
 
 
 def main():
+    # 设置日志路径
+    crawler.quicky_set_log_path()
+    
     # 检测登录状态
     try:
         vLiaoCommon.check_login()
@@ -65,7 +68,7 @@ def main():
         account_name = input("查找内容：").lower()
         account_list = search_account(account_name, search_type)
         if len(account_list) == 0:
-            output.print_msg("没有找到账号", False)
+            log.step("没有找到账号")
         else:
             for account_name in account_list:
                 output.print_msg("账号ID：%-10s, 昵称：%s" % (account_list[account_name], account_name), False)

@@ -29,7 +29,7 @@ def check_login():
                 USER_ID = api_info["user_id"]
                 USER_KEY = api_info["user_key"]
                 return True
-            output.print_msg("登录信息已过期")
+            log.step("登录信息已过期")
         # token已经无效了，删除掉
         path.delete_dir_or_file(token_file_path)
     while True:
@@ -44,14 +44,14 @@ def check_login():
             # 模拟登录
             login_status, error_message = login(phone_number, password)
             if login_status is False:
-                output.print_msg("登录失败，原因：%s" % error_message)
+                log.step("登录失败，原因：%s" % error_message)
                 continue
         elif input_str == "2":
             user_id = input("USER ID: ")
             user_key = input("USER KEY; ")
             # 验证token是否有效
             if not check_token(user_id, user_key):
-                output.print_msg("无效的登录信息，请重新输入")
+                log.step("无效的登录信息，请重新输入")
                 continue
             # 设置全局变量
             USER_ID = user_id
