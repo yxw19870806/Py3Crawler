@@ -151,7 +151,7 @@ def get_video_page(video_id):
         if not crawler.is_integer(video_resolution):
             continue
         if int(video_resolution) not in [144, 240, 380, 480, 720, 1080]:
-            log.error("unknown video quality " + video_resolution)
+            log.notice("未知视频分辨率：" + video_resolution)
         for video_info in video_data["metadata"]["qualities"][video_resolution]:
             if not crawler.check_sub_key(("type", "url"), video_info):
                 raise crawler.CrawlerException("最高分辨率视频信息'type'或'url'字段不存在\n%s" % video_info)

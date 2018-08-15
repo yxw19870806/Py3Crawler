@@ -101,8 +101,10 @@ class MMXYZ(crawler.Crawler):
             page_count = 1
             album_info_list = []
             unique_list = []
-            is_over = True
+            is_over = False
             while not is_over:
+                log.step("开始解析第%s页图集" % page_count)
+
                 # 获取一页图集
                 try:
                     album_pagination_response = get_one_page_album(page_count)

@@ -24,7 +24,6 @@ CATEGORY_BLACKLIST = ""
 
 # 获取指定视频
 def get_video_page(video_id):
-    # https://www.youtube.com/watch?v=GCOSw4WSXqU
     video_play_url = "https://xhamster.com/videos/%s" % video_id
     # 强制使用英语
     video_play_response = net.http_request(video_play_url, method="GET")
@@ -59,7 +58,7 @@ def get_video_page(video_id):
             result["is_skip"] = True
             return result
     else:
-        log.error("new orientation: " + video_info["orientation"])
+        log.notice("未知视频orientation：" + video_info["orientation"])
     if not crawler.check_sub_key(("videoModel",), video_info):
         raise crawler.CrawlerException("视频列表信息'videoModel'字段不存在\n%s" % video_info)
     # 过滤视频category
@@ -104,7 +103,7 @@ def get_video_page(video_id):
             raise crawler.CrawlerException("视频信息分辨率字段类型不正确\n%s" % resolution_string)
         resolution = int(resolution)
         if resolution not in [240, 480, 720]:
-            log.error("新的分辨率: %s" % video_info["videoModel"]["sources"]["mp4"])
+            log.notice("未知视频分辨率：%s" % video_info["videoModel"]["sources"]["mp4"])
         resolution_to_url[resolution] = video_info["videoModel"]["sources"]["mp4"][resolution_string]
     # 优先使用配置中的分辨率
     if FIRST_CHOICE_RESOLUTION in resolution_to_url:

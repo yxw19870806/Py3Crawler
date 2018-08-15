@@ -46,14 +46,18 @@ def get_one_page_video(account_id, token):
             index_url = "https://www.youtube.com/channel/%s/videos" % account_id
         else:
             index_url = "https://www.youtube.com/user/%s/videos" % account_id
-        index_response = net.http_request(index_url, method="GET", header_list={"accept-language": "en"})
+        post_data = {
+            "sort": "dd",
+            "view": "0",
+        }
+        index_response = net.http_request(index_url, method="GET", fields=post_data, header_list={"accept-language": "en"})
         if index_response.status == 404:
             raise crawler.CrawlerException("账号不存在")
         elif index_response.status != net.HTTP_RETURN_CODE_SUCCEED:
             raise crawler.CrawlerException(crawler.request_failre(index_response.status))
         index_response_content = index_response.data.decode(errors="ignore")
         if index_response_content.find('<button id="a11y-skip-nav" class="skip-nav"') >= 0:
-            log.step("首页访问出现跳转，再次访问")
+            log.step("首页 %s 访问出现跳转，再次访问" % index_url)
             return get_one_page_video(account_id, token)
         result["channel_name"] = tool.find_sub_string(index_response_content, '<meta property="og:title" content="', '">').replace("- YouTube", "").strip()
         if index_response_content.find('{"alertRenderer":{"type":"ERROR",') != -1:
@@ -128,8 +132,6 @@ def get_video_page(video_id):
     # https://www.youtube.com/watch?v=GCOSw4WSXqU
     video_play_url = "https://www.youtube.com/watch"
     query_data = {"v": video_id}
-    # 强制使用英语
-
     if IS_LOGIN:
         video_play_response = net.http_request(video_play_url, method="GET", fields=query_data, cookies_list=COOKIE_INFO)
     else:
@@ -186,7 +188,7 @@ def get_video_page(video_id):
                     is_skip = True  # 跳过
                     break
                 else:
-                    log.error("unknown video type " + video_type)
+                    log.notice("未知视频类型：" + video_type)
             elif key == "quality":  # 视频画质
                 if value == "tiny":
                     video_resolution = 144
@@ -200,7 +202,7 @@ def get_video_page(video_id):
                     video_resolution = int(value[2:])
                 else:
                     video_resolution = 1
-                    log.error("unknown video quality " + value)
+                    log.notice("未知视频画质：" + value)
             elif key == "url":
                 video_url = urllib.parse.unquote(value)
             elif key == "s":
@@ -216,7 +218,6 @@ def get_video_page(video_id):
                         else:
                             raise crawler.CrawlerException("播放器JS文件地址截取失败\n%s" % video_play_response_content)
                     decrypt_function_step = get_decrypt_step(js_file_url)
-                    log.trace("JS文件 %s 解析出的本地加密方法\n%s" % (js_file_url, decrypt_function_step))
                 # 生成加密字符串
                 signature = decrypt_signature(decrypt_function_step, value)
             elif key == "sig":
@@ -224,7 +225,7 @@ def get_video_page(video_id):
         if is_skip:
             continue
         if video_resolution is None or video_url is None:
-            log.error("unknown video param" + video_info_string)
+            log.notice("未知视频未知视频参数：" + video_info_string)
             continue
         # 加上signature参数
         if signature is not None:
