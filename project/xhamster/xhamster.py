@@ -24,7 +24,6 @@ CATEGORY_BLACKLIST = ""
 
 # 获取指定视频
 def get_video_page(video_id):
-    # https://www.youtube.com/watch?v=GCOSw4WSXqU
     video_play_url = "https://xhamster.com/videos/%s" % video_id
     # 强制使用英语
     video_play_response = net.http_request(video_play_url, method="GET")
