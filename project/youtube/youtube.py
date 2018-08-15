@@ -46,7 +46,11 @@ def get_one_page_video(account_id, token):
             index_url = "https://www.youtube.com/channel/%s/videos" % account_id
         else:
             index_url = "https://www.youtube.com/user/%s/videos" % account_id
-        index_response = net.http_request(index_url, method="GET", header_list={"accept-language": "en"})
+        post_data = {
+            "sort": "dd",
+            "view": "0",
+        }
+        index_response = net.http_request(index_url, method="GET", fields=post_data, header_list={"accept-language": "en"})
         if index_response.status == 404:
             raise crawler.CrawlerException("账号不存在")
         elif index_response.status != net.HTTP_RETURN_CODE_SUCCEED:
@@ -128,8 +132,6 @@ def get_video_page(video_id):
     # https://www.youtube.com/watch?v=GCOSw4WSXqU
     video_play_url = "https://www.youtube.com/watch"
     query_data = {"v": video_id}
-    # 强制使用英语
-
     if IS_LOGIN:
         video_play_response = net.http_request(video_play_url, method="GET", fields=query_data, cookies_list=COOKIE_INFO)
     else:
