@@ -101,7 +101,7 @@ class MMXYZ(crawler.Crawler):
             page_count = 1
             album_info_list = []
             unique_list = []
-            is_over = True
+            is_over = False
             while not is_over:
                 # 获取一页图集
                 try:
