@@ -186,6 +186,9 @@ def http_request(url, method="GET", fields=None, binary_data=None, header_list=N
     if cookies_list:
         header_list["Cookie"] = build_header_cookie_string(cookies_list)
 
+    # 设置压缩格式
+    header_list["Accept-Encoding"] = "gzip"
+
     # 超时设置
     if connection_timeout == 0 and read_timeout == 0:
         timeout = None
