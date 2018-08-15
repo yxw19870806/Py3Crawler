@@ -102,8 +102,10 @@ class VLiao(crawler.Crawler):
         self.account_list = crawler.read_save_data(self.save_data_path, 0, ["", "0"])
 
         # 检测登录状态
-        if not vLiaoCommon.check_login():
-            log.error("没有检测到登录状态，退出程序")
+        try:
+            vLiaoCommon.check_login()
+        except crawler.CrawlerException as e:
+            log.error("登录失败，原因：%s" % e.message)
             tool.process_exit()
 
     def main(self):

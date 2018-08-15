@@ -52,8 +52,10 @@ def search_account(account_name, search_type):
 
 def main():
     # 检测登录状态
-    if not vLiaoCommon.check_login():
-        output.print_msg("没有检测到登录状态，退出程序")
+    try:
+        vLiaoCommon.check_login()
+    except crawler.CrawlerException as e:
+        log.error("登录失败，原因：%s" % e.message)
         tool.process_exit()
 
     while True:

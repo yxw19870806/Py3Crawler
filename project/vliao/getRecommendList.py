@@ -73,8 +73,10 @@ def get_tag_account_list(tag_id):
 
 def main():
     # 检测登录状态
-    if not vLiaoCommon.check_login():
-        log.error("没有检测到登录状态，退出程序")
+    try:
+        vLiaoCommon.check_login()
+    except crawler.CrawlerException as e:
+        log.error("登录失败，原因：%s" % e.message)
         tool.process_exit()
 
     account_list_from_api = get_account_list_from_api()
