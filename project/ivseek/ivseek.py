@@ -74,7 +74,7 @@ def get_archive_page(archive_id):
             if account_id:
                 result_video_info["account_id"] = account_id
             else:
-                log.error("视频 %s 发布账号截取失败\n%s" % (result_video_info["video_url"], video_play_response_content))
+                log.notice("视频 %s 发布账号截取失败\n%s" % (result_video_info["video_url"], video_play_response_content))
         elif video_url.find(".nicovideo.jp/") >= 0:
             # https://embed.nicovideo.jp/watch/sm23008734/script?w=640&#038;h=360
             if video_url.find("embed.nicovideo.jp/watch") >= 0:
@@ -109,7 +109,6 @@ def get_archive_page(archive_id):
             continue
         else:
             result_video_info["video_url"] = video_url
-            log.error("未知视频来源" + video_url)
         result["video_info_list"].append(result_video_info)
     # 获取标题
     title = tool.find_sub_string(archive_response_content, '<meta property="og:title" content="', '"')
