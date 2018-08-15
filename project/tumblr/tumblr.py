@@ -111,12 +111,12 @@ def get_one_page_post(account_id, page_count, is_https, is_safe_mode):
         "post_info_list": [],  # 全部日志信息
     }
     if post_pagination_response.status == 404:
-        log.step(account_id + "第%s页日志异常，重试" % page_count)
+        log.step(account_id + " 第%s页日志异常，重试" % page_count)
         time.sleep(5)
         return get_one_page_post(account_id, page_count, is_https, is_safe_mode)
     elif post_pagination_response.status in [503, 504, net.HTTP_RETURN_CODE_RETRY] and page_count > 1:
         # 服务器错误，跳过这页
-        log.error(account_id + "第%s页日志无法访问，跳过" % page_count)
+        log.error(account_id + " 第%s页日志无法访问，跳过" % page_count)
         return result
     elif post_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(post_pagination_response.status))
@@ -169,7 +169,7 @@ def get_one_page_private_blog(account_id, page_count):
         "post_info_list": [],  # 全部日志信息
     }
     if post_pagination_response.status == 404:
-        log.step(account_id + "第%s页日志异常，重试" % page_count)
+        log.step(account_id + " 第%s页日志异常，重试" % page_count)
         time.sleep(5)
         return get_one_page_private_blog(account_id, page_count)
     elif post_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
@@ -299,8 +299,6 @@ def get_post_page(post_url, is_safe_mode):
             # 判断是否有分辨率更小的相同图片
             if image_id in new_image_url_list:
                 image_id, old_resolution = analysis_image(new_image_url_list[image_id])
-                if old_resolution == -1:
-                    log.error("unknown image url 1: %s, image url 2: %s" % (image_url, new_image_url_list[image_id]))
                 if resolution < old_resolution:
                     continue
             new_image_url_list[image_id] = image_url
@@ -344,7 +342,7 @@ def analysis_image(image_url):
         ):
             pass
         else:
-            log.error("unknown 1 image url: %s" % image_url)
+            log.notice("未知图片地址类型1：" + image_url)
     # http://78.media.tumblr.com/TVeEqrZktkygbzi2tUbbKMGXo1_1280.jpg
     elif not crawler.is_integer(temp_list[0]) and crawler.is_integer(temp_list[-1]):
         image_id = temp_list[0]
@@ -362,9 +360,9 @@ def analysis_image(image_url):
         resolution = int(temp_list[2])
     else:
         image_id = image_url.split("/")[-1]
-        log.error("unknown 2 image url: %s" % image_url)
+        log.notice("未知图片地址类型2：" + image_url)
     if len(image_id) < 15 and not (crawler.is_integer(image_id) and int(image_id) < 2000000000):
-        log.error("unknown 3 image url: %s" % image_url)
+        log.notice("未知图片地址类型3：" + image_url)
     return image_id, resolution
 
 
