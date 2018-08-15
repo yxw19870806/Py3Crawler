@@ -43,8 +43,13 @@ def check_login():
             phone_number = input("Phone Number: ")
             password = input("password; ")
             # 模拟登录
-            if not login(phone_number, password):
-                log.step("incorrect phone number or password, please type again!")
+            try:
+                login_status, error_message = login(phone_number, password)
+            except crawler.CrawlerException as e:
+                log.error("登录异常，原因：%s" % e.message)
+                continue
+            if login_status is False:
+                log.step("登录失败，原因：%s" % error_message)
                 continue
         elif input_str == "2":
             user_id = input("USER ID: ")
@@ -73,16 +78,18 @@ def login(phone_number, password):
     }
     login_response = net.http_request(login_url, method="POST", fields=post_data, json_decode=True)
     if login_response.status != net.HTTP_RETURN_CODE_SUCCEED:
-        return False
+        raise crawler.CrawlerException(crawler.request_failre(login_response.status))
     if not crawler.check_sub_key(("result", "user"), login_response.json_data):
-        return False
-    if login_response.json_data["result"] is not True:
-        return False
+        raise crawler.CrawlerException("返回信息`result`或`user`字段不存在\n%s" % login_response.json_data)
+    if login_response.json_data["result"] is False:
+        if crawler.check_sub_key(("errorMsg",), login_response.json_data):
+            return False, login_response.json_data["errorMsg"]
+        raise crawler.CrawlerException("返回信息`result`字段取值不正确\n%s" % login_response.json_data)
     if not crawler.check_sub_key(("id", "userKey"), login_response.json_data["user"]):
-        return False
+        raise crawler.CrawlerException("返回信息`id`或`userKey`字段不存在\n%s" % login_response.json_data)
     USER_ID = login_response.json_data["user"]["id"]
     USER_KEY = login_response.json_data["user"]["userKey"]
-    return True
+    return True, ""
 
 
 # 验证user_id和user_key是否匹配
