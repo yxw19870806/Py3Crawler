@@ -218,7 +218,6 @@ def get_video_page(video_id):
                         else:
                             raise crawler.CrawlerException("播放器JS文件地址截取失败\n%s" % video_play_response_content)
                     decrypt_function_step = get_decrypt_step(js_file_url)
-                    log.trace("JS文件 %s 解析出的本地加密方法\n%s" % (js_file_url, decrypt_function_step))
                 # 生成加密字符串
                 signature = decrypt_signature(decrypt_function_step, value)
             elif key == "sig":
