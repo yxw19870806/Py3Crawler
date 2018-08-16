@@ -110,9 +110,13 @@ def get_cookies_from_response_header(response_headers):
     return cookies_list
 
 
-def get_file_type(file_url):
+def get_file_type(file_url, default_file_type=""):
     # http://www.example.com/sub_path/file_name.file_type?parm1=value1&parm2=value2
-    return file_url.split("/")[-1].split("?")[0].split(".")[-1]
+    file_name_and_type = file_url.split("/")[-1].split("?")[0].split(".")
+    if len(file_name_and_type) == 1:
+        return default_file_type
+    else:
+        return file_name_and_type[-1]
 
 
 def http_request(url, method="GET", fields=None, binary_data=None, header_list=None, cookies_list=None, encode_multipart=False, is_auto_proxy = True, is_auto_redirect=True,
