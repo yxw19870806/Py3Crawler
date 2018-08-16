@@ -321,11 +321,7 @@ class Download(crawler.DownloadThread):
             image_url = get_origin_image_url(image_url)
             self.step("开始下载第%s张图片 %s" % (image_index, image_url))
 
-            if image_url.rfind("/") > image_url.rfind("."):
-                file_type = "jpg"
-            else:
-                file_type = image_url.split(".")[-1].split("?")[0]
-            file_path = os.path.join(self.main_thread.image_download_path, self.account_id, "%04d.%s" % (image_index, file_type))
+            file_path = os.path.join(self.main_thread.image_download_path, self.account_id, "%04d.%s" % (image_index, net.get_file_type(image_url, "jpg")))
             save_file_return = net.save_net_file(image_url, file_path)
             if save_file_return["status"] == 1:
                 if check_image_invalid(file_path):

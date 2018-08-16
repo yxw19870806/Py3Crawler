@@ -103,8 +103,7 @@ class YWKB(crawler.Crawler):
                 image_info = image_info_list.pop()
                 log.step("开始下载%s的图片 %s" % (image_info["image_id"], image_info["image_url"]))
 
-                file_type = image_info["image_url"].split(".")[-1]
-                file_path = os.path.join(self.image_download_path, "%04d.%s" % (image_info["image_id"], file_type))
+                file_path = os.path.join(self.image_download_path, "%04d.%s" % (image_info["image_id"], net.get_file_type(image_info["image_url"])))
                 try:
                     save_file_return = net.save_net_file(image_info["image_url"], file_path)
                     if save_file_return["status"] == 1:

@@ -202,8 +202,7 @@ class Download(crawler.DownloadThread):
             self.main_thread_check()  # 检测主线程运行状态
             self.step("漫画%s %s《%s》开始下载第%s张图片 %s" % (comic_info["page_id"], comic_info["version_name"], comic_info["chapter_name"], image_index, image_url))
 
-            file_type = image_url.split(".")[-1]
-            image_file_path = os.path.join(chapter_path, "%03d.%s" % (image_index, file_type))
+            image_file_path = os.path.join(chapter_path, "%03d.%s" % (image_index, net.get_file_type(image_url)))
             save_file_return = net.save_net_file(image_url, image_file_path, header_list={"Referer": "https://m.dmzj.com/"})
             if save_file_return["status"] == 1:
                 self.step("漫画%s %s《%s》第%s张图片下载成功" % (comic_info["page_id"], comic_info["version_name"], comic_info["chapter_name"], image_index))

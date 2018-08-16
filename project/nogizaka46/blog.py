@@ -224,10 +224,7 @@ class Download(crawler.DownloadThread):
                 image_url = big_image_response["image_url"]
             self.step("开始下载第%s张图片 %s" % (image_index, image_url))
 
-            file_type = image_url.split(".")[-1]
-            if file_type.find("?") != -1:
-                file_type = "jpeg"
-            file_path = os.path.join(self.main_thread.image_download_path, self.display_name, "%04d.%s" % (image_index, file_type))
+            file_path = os.path.join(self.main_thread.image_download_path, self.display_name, "%04d.%s" % (image_index, net.get_file_type(image_url, "jpg")))
             save_file_return = net.save_net_file(image_url, file_path, cookies_list=big_image_response["cookies"])
             if save_file_return["status"] == 1:
                 if check_image_invalid(file_path):

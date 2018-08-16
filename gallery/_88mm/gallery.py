@@ -156,8 +156,7 @@ class Gallery(crawler.Crawler):
                         tool.process_exit(0)
                     log.step("图集%s《%s》开始下载第%s张图片 %s" % (album_id, album_response["album_title"], image_index, image_url))
 
-                    file_type = image_url.split(".")[-1]
-                    file_path = os.path.join(album_path, "%03d.%s" % (image_index, file_type))
+                    file_path = os.path.join(album_path, "%03d.%s" % (image_index, net.get_file_type(image_url)))
                     save_file_return = net.save_net_file(image_url, file_path)
                     if save_file_return["status"] == 1:
                         log.step("图集%s《%s》第%s张图片下载成功" % (album_id, album_response["album_title"], image_index))
