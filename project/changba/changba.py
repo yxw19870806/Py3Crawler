@@ -120,35 +120,14 @@ def get_audio_play_page(audio_en_word_id):
         else:
             raise crawler.CrawlerException("歌曲原始地址解密歌曲地址失败\n%s" % audio_source_url)
     else:  # 视频
-        video_source_string = tool.find_sub_string(audio_play_response_content, "<script>jwplayer.utils.qn = '", "';</script>")
+        video_source_string = tool.find_sub_string(audio_play_response_content, "video_url: '", "',")
         if not video_source_string:
-            # 是不是使用bokecc cdn的视频
-            bokecc_param = tool.find_sub_string(audio_play_response_content, '<script src="//p.bokecc.com/player?', '"')
-            if not bokecc_param:
-                raise crawler.CrawlerException("页面截取歌曲加密地址失败\n%s" % audio_play_response_content)
-            vid = tool.find_sub_string(bokecc_param, "vid=", "&")
-            if not vid:
-                raise crawler.CrawlerException("bokecc参数截取vid失败\n%s" % bokecc_param)
-            bokecc_xml_url = "https://p.bokecc.com/servlet/playinfo"
-            query_data = {
-                "vid": vid,
-                "m": "1",
-                "fv": "WIN",
-                "rnd": str(int(time.time()))[-4:],
-            }
-            bokecc_xml_response = net.http_request(bokecc_xml_url, method="GET", fields=query_data)
-            if bokecc_xml_response.status != net.HTTP_RETURN_CODE_SUCCEED:
-                raise crawler.CrawlerException("bokecc xml文件 %s 访问失败" % bokecc_xml_url)
-            bokecc_xml_response_content = bokecc_xml_response.data.decode(errors="ignore")
-            audio_url_find = re.findall('playurl="([^"]*)"', bokecc_xml_response_content)
-            if len(audio_url_find) == 0:
-                raise crawler.CrawlerException("bokecc xml文件 %s 截取歌曲地址失败\n%s" % (bokecc_xml_url, bokecc_xml_response_content))
-            video_url = audio_url_find[-1].replace("&amp;", "&")
-        else:
-            try:
-                video_url = base64.b64decode(video_source_string)
-            except TypeError:
-                raise crawler.CrawlerException("歌曲加密地址解密失败\n%s" % video_source_string)
+            raise crawler.CrawlerException("页面截取加密视频地址失败\n%s" % audio_play_response_content)
+        try:
+            video_url = base64.b64decode(video_source_string)
+        except TypeError:
+            raise crawler.CrawlerException("歌曲加密地址解密失败\n%s" % video_source_string)
+        video_url = "http:" + video_url.decode()
         result["audio_url"] = video_url
     return result
 
