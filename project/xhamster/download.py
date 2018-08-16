@@ -27,7 +27,7 @@ def main():
             video_id = video_url.split("/")[-1].split("-")[-1]
         # 无效的视频地址
         if not crawler.is_integer(video_id):
-            log.step("错误的视频地址，正确的地址格式如：https://xhamster.com/videos/xxx-xxx-xxx-123456", False)
+            log.step("错误的视频地址，正确的地址格式如：https://xhamster.com/videos/xxx-xxx-xxx-123456")
             continue
         # 访问视频播放页
         try:
@@ -43,7 +43,7 @@ def main():
             # 设置临时目录
             log.step("视频《%s》下载成功" % video_response["video_title"])
         else:
-            log.step("视频《%s》下载失败，原因：%s" % (video_response["video_title"], crawler.download_failre(save_file_return["code"]))
+            log.step("视频《%s》下载失败，原因：%s" % (video_response["video_title"], crawler.download_failre(save_file_return["code"])))
 
 
 if __name__ == "__main__":
