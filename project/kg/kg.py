@@ -76,11 +76,17 @@ def get_audio_play_page(audio_key):
     query_data = {"s": audio_key}
     audio_play_response = net.http_request(audio_play_url, method="GET", fields=query_data)
     result = {
+        "audio_title": "",  # 歌曲标题
         "audio_url": None,  # 歌曲地址
     }
     if audio_play_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(audio_play_response.status))
     audio_play_response_content = audio_play_response.data.decode(errors="ignore")
+    # 获取歌曲标题
+    audio_title = tool.find_sub_string(audio_play_response_content, '<h2 class="play_name">', "</h2>")
+    if not audio_title:
+        raise crawler.CrawlerException("页面截取歌曲标题失败\n%s" % audio_play_response_content)
+    result["audio_title"] = audio_title.strip()
     # 获取歌曲地址
     audio_url = tool.find_sub_string(audio_play_response_content, '"playurl":"', '"')
     if not audio_url:
