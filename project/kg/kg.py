@@ -97,6 +97,22 @@ def get_audio_play_page(audio_key):
     return result
 
 
+# 获取文件后缀
+def get_file_type(file_url):
+    file_name_and_param = file_url.split("/")[-1]
+    file_name_and_type = file_name_and_param.split("?")[0].split(".")[-1]
+    if len(file_name_and_type) == 2:
+        return file_name_and_type[1]
+    query_string_list = file_name_and_param.split("?")[-1].split("&")
+    for query_string in query_string_list:
+        if query_string.find("=") == -1:
+            continue
+        key, value = query_string.split("=", 1)
+        if key == "fname":
+            return value.split(".")[-1]
+    return "m4a"
+
+
 class KG(crawler.Crawler):
     def __init__(self):
         # 设置APP目录
@@ -208,7 +224,7 @@ class Download(crawler.DownloadThread):
         self.main_thread_check()  # 检测主线程运行状态
         self.step("开始下载歌曲%s《%s》 %s" % (audio_info["audio_key"], audio_info["audio_title"], audio_play_response["audio_url"]))
 
-        file_type = audio_play_response["audio_url"].split(".")[-1].split("?")[0].split("&")[0]
+        file_type = get_file_type(audio_play_response["audio_url"])
         file_path = os.path.join(self.main_thread.video_download_path, self.display_name, "%s - %s.%s" % (audio_info["audio_id"], path.filter_text(audio_info["audio_title"]), file_type))
         save_file_return = net.save_net_file(audio_play_response["audio_url"], file_path)
         if save_file_return["status"] == 1:
