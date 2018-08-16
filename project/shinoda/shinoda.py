@@ -124,8 +124,7 @@ class Blog(crawler.Crawler):
                         tool.process_exit(0)
                     log.step("开始下载第%s张图片 %s" % (image_index, image_url))
 
-                    file_type = image_url.split(".")[-1].split(":")[0]
-                    file_path = os.path.join(self.image_download_path, "%05d.%s" % (image_index, file_type))
+                    file_path = os.path.join(self.image_download_path, "%05d.%s" % (image_index, net.get_file_type(image_url)))
                     save_file_return = net.save_net_file(image_url, file_path)
                     if save_file_return["status"] == 1:
                         temp_path_list.append(file_path)

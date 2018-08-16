@@ -183,8 +183,7 @@ class Download(crawler.DownloadThread):
         self.step("开始下载图片%s %s" % (photo_info["photo_id"], photo_info["image_url"]))
 
         image_url = get_image_url(photo_info["image_url"])
-        file_type = photo_info["image_url"].split(".")[-1]
-        file_path = os.path.join(self.main_thread.image_download_path, self.display_name, "%08d.%s" % (photo_info["photo_id"], file_type))
+        file_path = os.path.join(self.main_thread.image_download_path, self.display_name, "%08d.%s" % (photo_info["photo_id"], net.get_file_type(image_url)))
         save_file_return = net.save_net_file(image_url, file_path)
         if save_file_return["status"] == 1:
             self.step("图片%s下载成功" % photo_info["photo_id"])

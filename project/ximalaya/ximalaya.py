@@ -200,8 +200,7 @@ class Download(crawler.DownloadThread):
         audio_url = audio_play_response["audio_url"]
         self.step("开始下载歌曲%s《%s》 %s" % (audio_info["audio_id"], audio_info["audio_title"], audio_url))
 
-        file_type = audio_url.split(".")[-1]
-        file_path = os.path.join(self.main_thread.video_download_path, self.display_name, "%09d - %s.%s" % (int(audio_info["audio_id"]), path.filter_text(audio_info["audio_title"]), file_type))
+        file_path = os.path.join(self.main_thread.video_download_path, self.display_name, "%09d - %s.%s" % (int(audio_info["audio_id"]), path.filter_text(audio_info["audio_title"]), net.get_file_type(audio_url)))
         save_file_return = net.save_net_file(audio_url, file_path)
         if save_file_return["status"] == 1:
             self.step("歌曲%s《%s》下载成功" % (audio_info["audio_id"], audio_info["audio_title"]))

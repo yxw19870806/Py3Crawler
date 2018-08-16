@@ -127,8 +127,7 @@ class Wallpaper(crawler.Crawler):
 
                 log.step("开始下载第%s张图片 %s" % (image_info["image_id"], image_info["image_url"]))
 
-                file_type = image_info["image_url"].split(".")[-1]
-                file_path = os.path.join(self.image_download_path, "%03d %s.%s" % (int(image_info["image_id"]), path.filter_text(image_info["model_name"]), file_type))
+                file_path = os.path.join(self.image_download_path, "%03d %s.%s" % (int(image_info["image_id"]), path.filter_text(image_info["model_name"]), net.get_file_type(image_info["image_url"])))
                 image_url_split = urllib.parse.urlsplit(image_info["image_url"])
                 image_url = image_url_split[0] + "://" + image_url_split[1] + urllib.parse.quote(image_url_split[2])
                 save_file_return = net.save_net_file(image_url, file_path)

@@ -146,11 +146,7 @@ class Jigadori(crawler.Crawler):
                         tool.process_exit(0)
                     log.step("开始下载第%s张图片 %s" % (image_index, image_url))
 
-                    if image_url.rfind("/") > image_url.rfind("."):
-                        file_type = "jpg"
-                    else:
-                        file_type = image_url.split(".")[-1]
-                    file_path = os.path.join(self.image_download_path, "%05d_%s.%s" % (image_index, image_info["account_name"], file_type))
+                    file_path = os.path.join(self.image_download_path, "%05d_%s.%s" % (image_index, image_info["account_name"], net.get_file_type(image_url, "jpg")))
                     save_file_return = net.save_net_file(image_url, file_path)
                     if save_file_return["status"] == 1:
                         # 设置临时目录

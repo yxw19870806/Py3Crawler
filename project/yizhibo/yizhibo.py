@@ -215,8 +215,7 @@ class Download(crawler.DownloadThread):
     # 解析单张图片
     def crawl_image(self, image_info):
         image_index = int(self.account_info[3]) + 1
-        file_type = image_info["image_url"].split(".")[-1].split(":")[0]
-        image_file_path = os.path.join(self.main_thread.image_download_path, self.display_name, "%04d.%s" % (image_index, file_type))
+        image_file_path = os.path.join(self.main_thread.image_download_path, self.display_name, "%04d.%s" % (image_index, net.get_file_type(image_info["image_url"])))
         save_file_return = net.save_net_file(image_info["image_url"], image_file_path)
         if save_file_return["status"] == 1:
             self.step("第%s张图片下载成功" % image_index)

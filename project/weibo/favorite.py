@@ -143,8 +143,7 @@ class Favorite(crawler.Crawler):
                 for image_url in blog_info["image_url_list"]:
                     log.step("微博%s开始下载第%s张图片 %s" % (blog_info["blog_id"], image_count, image_url))
 
-                    file_type = image_url.split(".")[-1]
-                    file_path = os.path.join(image_path, "%s.%s" % (image_count, file_type))
+                    file_path = os.path.join(image_path, "%s.%s" % (image_count, net.get_file_type(image_url)))
                     save_file_return = net.save_net_file(image_url, file_path)
                     if save_file_return["status"] == 1:
                         if weiboCommon.check_image_invalid(file_path):

@@ -208,8 +208,7 @@ class Download(crawler.DownloadThread):
                         raise
                     log.step(account_name + " 开始下载第%s个视频 %s" % (video_index, video_info_response["video_url"]))
 
-                    file_type = video_info_response["video_url"].split(".")[-1].split("?")[0]
-                    file_path = os.path.join(self.main_thread.video_download_path, account_name, "%04d.%s" % (video_index, file_type))
+                    file_path = os.path.join(self.main_thread.video_download_path, account_name, "%04d.%s" % (video_index, net.get_file_type(video_info_response["video_url"])))
                     save_file_return = net.save_net_file(video_info_response["video_url"], file_path)
                     if save_file_return["status"] == 1:
                         temp_path_list.append(file_path)
