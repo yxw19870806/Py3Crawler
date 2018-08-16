@@ -129,6 +129,7 @@ def get_video_page(video_id):
     video_play_url = "http://www.dailymotion.com/video/%s" % video_id
     video_play_response = net.http_request(video_play_url, method="GET")
     result = {
+        "video_title": "",  # 视频标题
         "video_url": None,  # 视频地址
     }
     if video_play_response.status != net.HTTP_RETURN_CODE_SUCCEED:
@@ -142,6 +143,10 @@ def get_video_page(video_id):
         raise crawler.CrawlerException("视频信息加载失败\n%s" % video_play_response_content)
     if not crawler.check_sub_key(("metadata",), video_data):
         raise crawler.CrawlerException("视频信息'metadata'字段不存在\n%s" % video_data)
+    # 获取视频标题
+    if not crawler.check_sub_key(("title",), video_data["metadata"]):
+        raise crawler.CrawlerException("视频信息'title'字段不存在\n%s" % video_data["metadata"])
+    result["video_title"] = video_data["metadata"]["title"]
     # 查找最高分辨率的视频源地址
     if not crawler.check_sub_key(("qualities",), video_data["metadata"]):
         raise crawler.CrawlerException("视频信息'qualities'字段不存在\n%s" % video_data["metadata"])
