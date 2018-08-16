@@ -32,7 +32,7 @@ def main():
     crawler.quickly_set_proxy(config)
 
     while True:
-        video_url = input("请输入youtube视频地址：")
+        video_url = input(crawler.get_time() + " 请输入youtube视频地址：")
         video_id = None
         # https://www.youtube.com/watch?v=lkHlnWFnA0c
         if video_url.lower().find("//www.youtube.com/") > 0:
@@ -58,7 +58,7 @@ def main():
             tool.process_exit()
         # 开始下载
         video_file_path = os.path.abspath(os.path.join(DOWNLOAD_FILE_PATH, "%s - %s.mp4" % (video_id, path.filter_text(video_response["video_title"]))))
-        log.step("解析出的视频标题：%s\n视频地址：%s\n下载路径：%s" % (video_response["video_title"], video_response["video_url"], video_file_path))
+        log.step("\n视频标题：%s\n视频地址：%s\n下载路径：%s" % (video_response["video_title"], video_response["video_url"], video_file_path))
         save_file_return = net.save_net_file(video_response["video_url"], video_file_path, head_check=True)
         if save_file_return["status"] == 1:
             # 设置临时目录
