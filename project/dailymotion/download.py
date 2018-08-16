@@ -39,10 +39,9 @@ def main():
         log.step("\n视频标题：%s\n视频地址：%s\n下载路径：%s" % (video_response["video_title"], video_response["video_url"], video_file_path))
         save_file_return = net.save_net_file(video_response["video_url"], video_file_path, head_check=True)
         if save_file_return["status"] == 1:
-            # 设置临时目录
             log.step("视频《%s》下载成功" % video_response["video_title"])
         else:
-            log.step("视频《%s》下载失败，原因：%s" % (video_response["video_title"], crawler.download_failre(save_file_return["code"])))
+            log.error("视频《%s》下载失败，原因：%s" % (video_response["video_title"], crawler.download_failre(save_file_return["code"])))
 
 
 if __name__ == "__main__":
