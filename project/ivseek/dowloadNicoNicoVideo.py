@@ -51,6 +51,9 @@ def main():
             log.error("视频%s解析失败，原因：%s" % (single_save_list[2], e.message))
             continue
 
+        if video_info_response["is_delete"]:
+            continue
+
         output.print_msg("开始下载视频%s 《%s》 %s" % (video_id, video_info_response["video_title"], video_info_response["video_url"]))
         file_path = os.path.join(NICONICO_VIDEO_DOWNLOAD_PATH, "%08d - %s.mp4" % (int(video_id), path.filter_text(video_info_response["video_title"])))
         cookies_list = nicoNico.COOKIE_INFO
