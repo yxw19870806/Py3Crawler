@@ -206,15 +206,13 @@ class Xhamster(crawler.Crawler):
                     video_id += 1
                     continue
 
-                log.step("开始下载视频%s 《%s》 %s" % (video_id, video_play_response["video_title"], video_play_response["video_url"]))
-
+                log.step("开始下载视频%s《%s》 %s" % (video_id, video_play_response["video_title"], video_play_response["video_url"]))
                 file_path = os.path.join(self.video_download_path, "%08d %s.mp4" % (video_id, path.filter_text(video_play_response["video_title"])))
                 save_file_return = net.save_net_file(video_play_response["video_url"], file_path, head_check=True)
                 if save_file_return["status"] == 1:
-                    log.step("视频%s 下载成功" % video_id)
+                    log.step("视频%s《%s》 下载成功" % (video_id, video_play_response["video_title"]))
                 else:
-                    log.error("视频%s %s 下载失败，原因：%s" % (video_id, video_play_response["video_url"], crawler.download_failre(save_file_return["code"])))
-
+                    log.error("视频%s《%s》 %s 下载失败，原因：%s" % (video_id, video_play_response["video_title"], video_play_response["video_url"], crawler.download_failre(save_file_return["code"])))
                 self.total_video_count += 1  # 计数累加
                 video_id += 1  # 设置存档记录
         except SystemExit as se:
