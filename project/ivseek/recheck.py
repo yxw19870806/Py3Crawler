@@ -22,5 +22,6 @@ def main():
                 output.print_msg("new done account " + str(single_save_list))
     tool.write_file(tool.list_to_string(save_data), save_data_path, tool.WRITE_FILE_TYPE_REPLACE)
 
+
 if __name__ == "__main__":
     main()

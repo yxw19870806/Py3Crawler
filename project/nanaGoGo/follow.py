@@ -58,5 +58,6 @@ def main():
 
     output.print_msg("关注完成，成功关注了%s个账号" % count)
 
+
 if __name__ == "__main__":
     main()
