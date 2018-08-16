@@ -71,7 +71,7 @@ def decrypt_video_url(encrypted_string):
         return None
     if video_url.find("http") != 0:
         return None
-    return video_url
+    return video_url.decode()
 
 
 def _get_hex(arg1):
