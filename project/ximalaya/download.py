@@ -7,10 +7,12 @@ email: hikaru870806@hotmail.com
 如有问题或建议请联系
 """
 import os
+import tkinter
+from tkinter import filedialog
 from common import *
 from project.ximalaya import ximalaya
 
-DOWNLOAD_FILE_PATH = os.path.join(os.path.dirname(__file__), "video")
+DOWNLOAD_FILE_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), "video"))
 
 
 def main():
@@ -19,6 +21,9 @@ def main():
     crawler.quicky_set_log_path(config)
     # 设置代理
     crawler.quickly_set_proxy(config)
+    # GUI窗口
+    gui = tkinter.Tk()
+    gui.withdraw()
 
     while True:
         audio_url = input(crawler.get_time() + " 请输入喜马拉雅歌曲地址：").lower()
@@ -36,9 +41,17 @@ def main():
         except crawler.CrawlerException as e:
             log.error("解析歌曲下载地址失败，原因：%s" % e.message)
             tool.process_exit()
+        # 选择下载目录
+        file_type = net.get_file_type(audio_response["audio_url"])
+        options = {
+            "initialdir": DOWNLOAD_FILE_PATH,
+            "initialfile": "%s - %s.%s" % (audio_id, path.filter_text(audio_response["audio_title"]), file_type),
+            "filetypes": [(file_type, "." + file_type)],
+        }
+        file_path = tkinter.filedialog.asksaveasfilename(**options)
+        if not file_path:
+            continue
         # 开始下载
-        file_type = audio_response["audio_url"].split(".")[-1]
-        file_path = os.path.abspath(os.path.join(DOWNLOAD_FILE_PATH, "%s - %s.%s" % (audio_id, path.filter_text(audio_response["audio_title"]), file_type)))
         log.step("\n歌曲标题：%s\n歌曲地址：%s\n下载路径：%s" % (audio_response["audio_title"], audio_response["audio_url"], file_path))
         save_file_return = net.save_net_file(audio_response["audio_url"], file_path, head_check=True)
         if save_file_return["status"] == 1:
