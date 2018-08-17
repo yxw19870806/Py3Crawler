@@ -1,7 +1,7 @@
 # -*- coding:UTF-8  -*-
 """
 乃木坂46 OFFICIAL BLOG成员id获取
-http://http://blog.nogizaka46.com/
+https://blog.nogizaka46.com/
 @author: hikaru
 email: hikaru870806@hotmail.com
 如有问题或建议请联系
@@ -12,7 +12,7 @@ from common import *
 
 # 从页面获取全部成员账号
 def get_account_from_index():
-    index_url = "http://blog.nogizaka46.com/"
+    index_url = "https://blog.nogizaka46.com/"
     index_response = net.http_request(index_url, method="GET")
     account_list = {}
     if index_response.status != net.HTTP_RETURN_CODE_SUCCEED:
