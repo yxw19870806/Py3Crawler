@@ -141,7 +141,7 @@ class Download(crawler.DownloadThread):
                 self.main_thread_check()  # 检测主线程运行状态
                 log.step(self.account_name + " 开始下载第%s张图片 %s" % (image_index, image_url))
 
-                file_type = image_url.split(".")[-1]
+                file_type = net.get_file_type(image_url)
                 image_file_path = os.path.join(self.main_thread.image_download_path, self.account_name, "%04d.%s" % (image_index, file_type))
                 save_file_return = net.save_net_file(image_url, image_file_path)
                 if save_file_return["status"] == 1:
@@ -160,7 +160,7 @@ class Download(crawler.DownloadThread):
                 self.main_thread_check()  # 检测主线程运行状态
                 log.step(self.account_name + " 开始下载第%s个视频 %s" % (video_index, video_url))
 
-                file_type = video_url.split(".")[-1]
+                file_type = net.get_file_type(video_url)
                 video_file_path = os.path.join(self.main_thread.video_download_path, self.account_name, "%04d.%s" % (video_index, file_type))
                 save_file_return = net.save_net_file(video_url, video_file_path)
                 if save_file_return["status"] == 1:

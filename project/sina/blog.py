@@ -227,11 +227,7 @@ class Download(crawler.DownloadThread):
             image_url = get_image_url(image_url)
             self.step("日志《%s》 开始下载第%s张图片 %s" % (blog_info["blog_title"], image_index, image_url))
 
-            if image_url.rfind(".") > image_url.rfind("/"):
-                file_type = image_url.split(".")[-1]
-            else:
-                file_type = "jpg"
-            file_path = os.path.join(image_path, "%02d.%s" % (image_index, file_type))
+            file_path = os.path.join(image_path, "%02d.%s" % (image_index, net.get_file_type(image_url, "jpg")))
             save_file_return = net.save_net_file(image_url, file_path)
             if save_file_return["status"] == 1:
                 if weiboCommon.check_image_invalid(file_path):

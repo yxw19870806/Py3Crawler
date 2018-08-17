@@ -123,8 +123,7 @@ class UGirls(crawler.Crawler):
                         tool.process_exit(0)
                     log.step("开始下载图集%s的第%s张图片 %s" % (album_id, image_index, image_url))
 
-                    file_type = image_url.split(".")[-1]
-                    file_path = os.path.join(album_path, "%03d.%s" % (image_index, file_type))
+                    file_path = os.path.join(album_path, "%03d.%s" % (image_index, net.get_file_type(image_url)))
                     save_file_return = net.save_net_file(image_url, file_path)
                     if save_file_return["status"] == 1:
                         log.step("图集%s的第%s张图片下载成功" % (album_id, image_index))

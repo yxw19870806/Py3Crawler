@@ -267,8 +267,7 @@ class Download(crawler.DownloadThread):
             if image_url.find("/p/e_weibo_com") >= 0 or image_url.find("//e.weibo.com") >= 0:
                 continue
             self.step("文章%s《%s》 开始下载第%s张图片 %s" % (article_id, article_response["article_title"], image_index, image_url))
-            file_type = image_url.split(".")[-1]
-            file_path = os.path.join(article_path, "%03d.%s" % (image_index, file_type))
+            file_path = os.path.join(article_path, "%03d.%s" % (image_index, net.get_file_type(image_url)))
             save_file_return = net.save_net_file(image_url, file_path)
             if save_file_return["status"] == 1:
                 if weiboCommon.check_image_invalid(file_path):
@@ -285,8 +284,7 @@ class Download(crawler.DownloadThread):
             self.main_thread_check()  # 检测主线程运行状态
             self.step("文章%s《%s》 开始下载顶部图片 %s" % (article_id, article_title, article_response["top_image_url"]))
 
-            file_type = article_response["top_image_url"].split(".")[-1]
-            file_path = os.path.join(article_path, "000.%s" % file_type)
+            file_path = os.path.join(article_path, "000.%s" % net.get_file_type(article_response["top_image_url"]))
             save_file_return = net.save_net_file(article_response["top_image_url"], file_path)
             if save_file_return["status"] == 1:
                 if weiboCommon.check_image_invalid(file_path):

@@ -381,8 +381,7 @@ class Download(crawler.DownloadThread):
                 # 去除特效，获取原始路径
                 self.step("开始下载第%s张图片 %s" % (image_index, image_url))
 
-                file_type = image_url.split("?")[0].split(".")[-1]
-                image_file_path = os.path.join(self.main_thread.image_download_path, self.account_name, "%04d.%s" % (image_index, file_type))
+                image_file_path = os.path.join(self.main_thread.image_download_path, self.account_name, "%04d.%s" % (image_index, net.get_file_type(image_url)))
                 save_file_return = net.save_net_file(image_url, image_file_path)
                 if save_file_return["status"] == 1:
                     # 设置临时目录
@@ -412,8 +411,7 @@ class Download(crawler.DownloadThread):
                 self.main_thread_check()  # 检测主线程运行状态
                 self.step("开始下载第%s个视频 %s" % (video_index, video_url))
 
-                file_type = video_url.split("?")[0].split(".")[-1]
-                video_file_path = os.path.join(self.main_thread.video_download_path, self.account_name, "%04d.%s" % (video_index, file_type))
+                video_file_path = os.path.join(self.main_thread.video_download_path, self.account_name, "%04d.%s" % (video_index, net.get_file_type(video_url)))
                 save_file_return = net.save_net_file(video_url, video_file_path)
                 if save_file_return["status"] == 1:
                     # 设置临时目录

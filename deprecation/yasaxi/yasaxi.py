@@ -215,8 +215,7 @@ class Download(crawler.DownloadThread):
                         self.main_thread_check()  # 检测主线程运行状态
                         file_name_and_type = image_url.split("?")[0].split("/")[-1]
                         resolution = image_url.split("?")[0].split("/")[-2]
-                        file_name = file_name_and_type.split(".")[0]
-                        file_type = file_name_and_type.split(".")[1]
+                        file_name, file_type = file_name_and_type.split(".")
                         if file_name[-2:] != "_b" and resolution == "1080":
                             image_file_path = os.path.join(image_path, "origin/%s.%s" % (file_name, file_type))
                         else:
