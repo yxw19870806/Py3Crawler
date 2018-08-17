@@ -1,7 +1,7 @@
 # -*- coding:UTF-8  -*-
 """
 微博收藏夹图片爬虫
-http://www.weibo.com/
+https://www.weibo.com/
 @author: hikaru
 email: hikaru870806@hotmail.com
 如有问题或建议请联系
@@ -15,7 +15,7 @@ from project.weibo import weiboCommon
 
 # 获取一页的收藏微博ge
 def get_one_page_favorite(page_count):
-    # http://www.weibo.com/fav?page=1
+    # https://www.weibo.com/fav?page=1
     favorite_pagination_url = "http://www.weibo.com/fav"
     query_data = {"page": page_count}
     cookies_list = {"SUB": weiboCommon.COOKIE_INFO["SUB"]}

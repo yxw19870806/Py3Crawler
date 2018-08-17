@@ -1,7 +1,7 @@
 # -*- coding:UTF-8  -*-
 """
 微博图片爬虫
-http://www.weibo.com/
+https://www.weibo.com/
 @author: hikaru
 email: hikaru870806@hotmail.com
 如有问题或建议请联系
@@ -71,8 +71,8 @@ def get_one_page_photo(account_id, page_count):
 # 获取一页的视频信息
 # page_id -> 1005052535836307
 def get_one_page_video(account_page_id, since_id):
-    # http://weibo.com/p/aj/album/loading?type=video&since_id=9999999999999999&page_id=1005052535836307&page=1&ajax_call=1
-    video_pagination_url = "http://weibo.com/p/aj/album/loading"
+    # https://weibo.com/p/aj/album/loading?type=video&since_id=9999999999999999&page_id=1005052535836307&page=1&ajax_call=1
+    video_pagination_url = "https://weibo.com/p/aj/album/loading"
     query_data = {
         "type": "video",
         "since_id": since_id,
@@ -134,7 +134,7 @@ def get_video_url(video_play_url):
                 break
         if video_url is None:
             raise crawler.CrawlerException("返回信息匹配视频地址失败\n%s" % video_info_response.json_data)
-    # http://video.weibo.com/show?fid=1034:e608e50d5fa95410748da61a7dfa2bff
+    # https://video.weibo.com/show?fid=1034:e608e50d5fa95410748da61a7dfa2bff
     elif video_play_url.find("video.weibo.com/show?fid=") >= 0:  # 微博视频
         cookies_list = {"SUB": weiboCommon.COOKIE_INFO["SUB"]}
         video_play_response = net.http_request(video_play_url, method="GET", cookies_list=cookies_list)
@@ -147,12 +147,12 @@ def get_video_url(video_play_url):
                 raise crawler.CrawlerException("页面截取视频地址失败\n%s" % video_play_response_content)
             video_url = urllib.parse.unquote(video_url)
             if video_url.find("//") == 0:
-                video_url = "http:" + video_url
+                video_url = "https:" + video_url
         elif video_play_response.status == 404:
             video_url = ""
         else:
             raise crawler.CrawlerException(crawler.request_failre(video_play_response.status))
-    # http://www.meipai.com/media/98089758
+    # https://www.meipai.com/media/98089758
     elif video_play_url.find("www.meipai.com/media") >= 0:  # 美拍
         video_play_response = net.http_request(video_play_url, method="GET")
         if video_play_response.status != net.HTTP_RETURN_CODE_SUCCEED:
@@ -167,10 +167,10 @@ def get_video_url(video_play_url):
             video_url = meipai.decrypt_video_url(video_url_find[0])
             if video_url is None:
                 raise crawler.CrawlerException("加密视频地址解密失败\n%s" % video_url_find[0])
-    # http://v.xiaokaxiu.com/v/0YyG7I4092d~GayCAhwdJQ__.html
+    # https://v.xiaokaxiu.com/v/0YyG7I4092d~GayCAhwdJQ__.html
     elif video_play_url.find("v.xiaokaxiu.com/v/") >= 0:  # 小咖秀
         video_id = video_play_url.split("/")[-1].split(".")[0]
-        video_url = "http://gslb.miaopai.com/stream/%s.mp4" % video_id
+        video_url = "https://gslb.miaopai.com/stream/%s.mp4" % video_id
     else:  # 其他视频，暂时不支持，收集看看有没有
         raise crawler.CrawlerException("未知的第三方视频\n%s" % video_play_url)
     return video_url
