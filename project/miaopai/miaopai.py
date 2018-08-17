@@ -44,7 +44,7 @@ def get_one_page_video(suid, page_count):
     }
     video_pagination_response = net.http_request(video_pagination_url, method="GET", fields=query_data, json_decode=True)
     result = {
-        "is_over": False,  # 是不是最后一页视频
+        "is_over": False,  # 是否最后一页视频
         "video_id_list": [],  # 全部视频id
     }
     if video_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
@@ -68,7 +68,7 @@ def get_video_info_page(video_id):
     query_data = {"token": ""}
     video_info_response = net.http_request(video_info_url, method="GET", fields=query_data, json_decode=True)
     result = {
-        "video_url_list": [],  # 视频地址
+        "video_url_list": [],  # 全部视频地址
     }
     if video_info_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(video_info_response.status))

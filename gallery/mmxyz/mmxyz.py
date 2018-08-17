@@ -21,7 +21,7 @@ def get_one_page_album(page_count):
     album_pagination_response = net.http_request(album_pagination_url, method="GET", fields=query_data)
     result = {
         "album_info_list": [],  # 所有图集信息
-        "is_over": False,  # 是不是图集已结束
+        "is_over": False,  # 是否最后一页图集
     }
     if album_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(album_pagination_response.status))

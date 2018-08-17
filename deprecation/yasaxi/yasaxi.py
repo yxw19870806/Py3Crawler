@@ -31,8 +31,8 @@ def get_one_page_photo(account_id, cursor):
         "User-Agent": "User-Agent: Dalvik/1.6.0 (Linux; U; Android 4.4.2; Nexus 6 Build/KOT49H)",
     }
     result = {
-        "is_over": False,  # 是不是已经没有新的图片
-        "next_page_cursor": None,  # 下一页图片的指针
+        "is_over": False,  # 是否最后一页日志
+        "next_page_cursor": None,  # 下一页图片指针
         "status_info_list": [],  # 全部状态信息
     }
     photo_pagination_response = net.http_request(photo_pagination_url, method="GET", fields=query_data, header_list=header_list, is_random_ip=False, json_decode=True)

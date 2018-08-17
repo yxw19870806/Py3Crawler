@@ -71,7 +71,7 @@ def get_one_page_video(account_id, page_count):
         "origin": "https://www.dailymotion.com",
     }
     result = {
-        "is_over": False,  # 是不是最后一页
+        "is_over": False,  # 是否最后一页视频
         "video_info_list": [],  # 全部视频信息
     }
     api_response = net.http_request(api_url, method="POST", binary_data=json.dumps(post_data), header_list=header_list, json_decode=True)

@@ -20,7 +20,7 @@ def get_album_page(page_count):
     result = {
         "album_title": "",  # 相册标题
         "image_url_list": [],  # 全部图片地址
-        "is_skip": False,  # 是不是需要跳过（没有内容，不需要下载）
+        "is_skip": False,  # 是否需要跳过（没有内容，不需要下载）
     }
     if album_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(album_response.status))

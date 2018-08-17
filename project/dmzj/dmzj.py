@@ -72,7 +72,7 @@ def get_chapter_page(comic_id, page_id):
     chapter_url = "https://m.dmzj.com/view/%s/%s.html" % (comic_id, page_id)
     chapter_response = net.http_request(chapter_url, method="GET")
     result = {
-        "image_url_list": [],  # 所有漫画图片地址
+        "image_url_list": [],  # 全部漫画图片地址
     }
     if chapter_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(chapter_response.status))

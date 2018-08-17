@@ -29,7 +29,7 @@ def get_one_page_video(account_id, page_time):
     else:
         query_data["pageflag"] = "0"
     result = {
-        "is_over": False,  # 是不是最后一页视频
+        "is_over": False,  # 是否最后一页视频
         "video_info_list": [],  # 全部视频信息
     }
     header_list = {"Referer": "http://weishi.qq.com/"}

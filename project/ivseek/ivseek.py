@@ -49,7 +49,7 @@ def get_archive_page(archive_id):
         return result
     for video_url in video_url_find:
         result_video_info = {
-            "account_id": "",  # 视频发布账号（youtube）
+            "account_id": "",  # 视频发布账号
             "video_url": None,  # 视频信息
         }
         # 'http://embed.share-videos.se/auto/embed/40537536?uid=6050'

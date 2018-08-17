@@ -32,7 +32,7 @@ def get_one_page_photo(account_id, page_count):
     cookies_list = {"SUB": weiboCommon.COOKIE_INFO["SUB"]}
     result = {
         "image_info_list": [],  # 全部图片信息
-        "is_over": False,  # 是不是最后一页图片
+        "is_over": False,  # 是否最后一页图片
     }
     photo_pagination_response = net.http_request(photo_pagination_url, method="GET", fields=query_data, cookies_list=cookies_list, json_decode=True)
     if photo_pagination_response.status == net.HTTP_RETURN_CODE_JSON_DECODE_ERROR and photo_pagination_response.data.find('<p class="txt M_txtb">用户不存在或者获取用户信息失败</p>'.encode()) >= 0:

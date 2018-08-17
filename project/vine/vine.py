@@ -31,7 +31,7 @@ def get_account_index_page(account_id):
     # 获取账号详情
     account_profile_url = "https://archive.vine.co/profiles/%s.json" % account_id
     result = {
-        "video_id_list": [],  # 日志id
+        "video_id_list": [],  # 全部日志id
     }
     account_profile_response = net.http_request(account_profile_url, method="GET", json_decode=True)
     if account_profile_response.status != net.HTTP_RETURN_CODE_SUCCEED:
@@ -56,7 +56,7 @@ def get_video_info_page(video_id):
     video_info_url = "https://archive.vine.co/posts/%s.json" % video_id
     video_info_response = net.http_request(video_info_url, method="GET", json_decode=True)
     result = {
-        "is_skip": False,  # 是否跳过
+        "is_skip": False,  # 是否需要跳过
         "video_url": None,  # 视频地址
         "video_id": 0,  # 视频id（数字）
     }

@@ -140,7 +140,7 @@ def get_one_page_photo(user_id, page_count, api_key, csrf, request_id):
     photo_pagination_response = net.http_request(api_url, method="GET", fields=query_data, cookies_list=COOKIE_INFO, json_decode=True)
     result = {
         "image_info_list": [],  # 全部图片信息
-        "is_over": False,  # 是不是最后一页图片
+        "is_over": False,  # 是否最后一页图片
     }
     if photo_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(photo_pagination_response.status))

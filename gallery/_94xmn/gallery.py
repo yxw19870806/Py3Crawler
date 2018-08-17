@@ -30,7 +30,7 @@ def get_album_page(sub_path, page_count):
     album_pagination_response = net.http_request(album_pagination_url, method="GET", header_list={"Host": "www.94xmn.com"})
     result = {
         "album_info_list": {},  # 全部图集信息
-        "is_over": False,  # 是不是最后一页图集
+        "is_over": False,  # 是否最后一页图集
     }
     if album_pagination_response.status == 409:
         time.sleep(5)

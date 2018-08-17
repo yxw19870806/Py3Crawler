@@ -414,3 +414,5 @@ def get_account_owned_app_list(user_id, is_played=False):
             continue
         app_id_list.append(str(game_data["appid"]))
     return app_id_list
+
+crawler.quickly_set_proxy()

@@ -39,7 +39,7 @@ def get_account_index_page(account_id):
     account_index_url = "https://weibo.com/u/%s" % account_id
     cookies_list = {"SUB": tool.generate_random_string(30)}
     result = {
-        "account_page_id": None,  # 页面解析出的账号page id
+        "account_page_id": None,  # 账号page id
     }
     account_index_response = net.http_request(account_index_url, method="GET", cookies_list=cookies_list)
     if account_index_response.status == net.HTTP_RETURN_CODE_SUCCEED:

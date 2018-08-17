@@ -25,7 +25,7 @@ def get_one_page_blog(account_id, page_count):
     blog_pagination_response = net.http_request(blog_pagination_url, method="GET", fields=query_data)
     result = {
         "blog_info_list": [],  # 全部图片信息
-        "is_over": False,  # 是不是最后一页日志
+        "is_over": False,  # 是否最后一页日志
     }
     if blog_pagination_response.status == 404:
         raise crawler.CrawlerException("账号不存在")
@@ -82,7 +82,7 @@ def check_big_image(image_url, big_2_small_list):
     result = {
         "cookies": None,  # 页面返回的cookies
         "image_url": None,  # 大图地址
-        "is_over": False,  # 是不是已经没有还生效的大图了
+        "is_over": False,  # 是否已经没有有效的大图了
     }
     if image_url in big_2_small_list:
         if big_2_small_list[image_url].find("//dcimg.awalker.jp") > 0:

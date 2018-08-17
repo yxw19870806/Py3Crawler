@@ -16,8 +16,8 @@ def get_one_page_photo(page_count):
     photo_pagination_url = "http://www.dahuadan.com/category/ywkb/page/%s" % page_count
     photo_pagination_response = net.http_request(photo_pagination_url, method="GET")
     result = {
-        "image_info_list": [],  # 是不是已经没有新的相册
-        "is_over": False,  # 是不是已经没有新的相册
+        "image_info_list": [],  # 全部图片信息
+        "is_over": False,  # 是否最后一页相册
     }
     if photo_pagination_response.status == 404:
         result["is_over"] = True
