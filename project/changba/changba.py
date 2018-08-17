@@ -79,6 +79,7 @@ def get_one_page_audio(user_id, page_count):
 def get_audio_play_page(audio_en_word_id):
     audio_play_url = "https://changba.com/s/%s" % audio_en_word_id
     result = {
+        "audio_id": None,  # 歌曲id
         "audio_title": "",  # 歌曲标题
         "audio_url": None,  # 歌曲地址
         "is_delete": False,  # 是不是已经被删除
@@ -90,6 +91,11 @@ def get_audio_play_page(audio_en_word_id):
     if audio_play_response_content.find("该作品可能含有不恰当内容将不能显示。") > -1:
         result["is_delete"] = True
         return result
+    # 获取歌曲id
+    audio_id = tool.find_sub_string(audio_play_response_content, "export_song.php?workid=", "&")
+    if not crawler.is_integer(audio_id):
+        raise crawler.CrawlerException("页面截取歌曲id失败\n%s" % audio_play_response_content)
+    result["audio_id"] = audio_id
     # 获取歌曲标题
     audio_title = tool.find_sub_string(audio_play_response_content, '<div class="title">', "</div>")
     if not audio_title:
