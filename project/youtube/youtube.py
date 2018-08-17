@@ -138,6 +138,7 @@ def get_video_page(video_id):
         # 没有登录时默认使用英语
         video_play_response = net.http_request(video_play_url, method="GET", fields=query_data, header_list={"accept-language": "en"})
     result = {
+        "is_delete": False,  # 是否已删除
         "video_time": None,  # 视频上传时间
         "video_title": "",  # 视频标题
         "video_url": None,  # 视频地址
@@ -147,6 +148,7 @@ def get_video_page(video_id):
         raise crawler.CrawlerException(crawler.request_failre(video_play_response.status))
     video_play_response_content = video_play_response.data.decode(errors="ignore")
     if video_play_response_content.find('"playabilityStatus":{"status":"UNPLAYABLE"') != -1 or video_play_response_content.find('"playabilityStatus":{"status":"ERROR"') != -1:
+        result["is_delete"] = True
         return result
     # 没有登录，判断是否必须要登录
     if not IS_LOGIN:
@@ -541,8 +543,8 @@ class Download(crawler.DownloadThread):
             else:
                 self.is_find = True
 
-        if video_response["video_url"] is None:
-            self.error("视频%s无法播放，跳过" % video_id)
+        if video_response["is_delete"]:
+            self.error("视频%s不存在，跳过" % video_id)
             return
 
         self.main_thread_check()  # 检测主线程运行状态
