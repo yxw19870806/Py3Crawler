@@ -39,7 +39,7 @@ def main():
             log.error("解析视频下载地址失败，原因：%s" % e.message)
             tool.process_exit()
         if video_response["is_delete"]:
-            log.step("视频已被删除，无法下载")
+            log.step("视频不存在，跳过")
             continue
         # 选择下载目录
         options = {
