@@ -1,7 +1,7 @@
 # -*- coding:UTF-8  -*-
 """
 dailymotion视频爬虫
-https://www.dailymotion.com
+https://www.dailymotion.com/
 @author: hikaru
 email: hikaru870806@hotmail.com
 如有问题或建议请联系

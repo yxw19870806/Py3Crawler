@@ -1,6 +1,7 @@
 # -*- coding:UTF-8  -*-
 """
 获取steam全部打折游戏信息
+https://store.steampowered.com/
 @author: hikaru
 email: hikaru870806@hotmail.com
 如有问题或建议请联系

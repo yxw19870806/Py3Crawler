@@ -1,6 +1,7 @@
 # -*- coding:UTF-8  -*-
 """
 获取指定账号的全部未收集完成徽章对应的集换卡价格
+https://store.steampowered.com/
 @author: hikaru
 email: hikaru870806@hotmail.com
 如有问题或建议请联系

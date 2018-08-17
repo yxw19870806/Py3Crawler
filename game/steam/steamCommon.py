@@ -1,6 +1,7 @@
 # -*- coding:UTF-8  -*-
 """
 steam相关数据解析爬虫
+https://store.steampowered.com/
 @author: hikaru
 email: hikaru870806@hotmail.com
 如有问题或建议请联系
