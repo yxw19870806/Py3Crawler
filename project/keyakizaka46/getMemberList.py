@@ -1,6 +1,6 @@
 # -*- coding:UTF-8  -*-
 """
-欅坂46公式ブログ成员id获取
+欅坂46公式Blog成员id获取
 https://www.keyakizaka46.com/mob/news/diarShw.php?cd=member
 @author: hikaru
 email: hikaru870806@hotmail.com

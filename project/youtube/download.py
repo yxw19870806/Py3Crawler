@@ -1,7 +1,7 @@
 # -*- coding:UTF-8  -*-
 """
 指定Youtube视频下载
-https://www.youtube.com
+https://www.youtube.com/
 @author: hikaru
 email: hikaru870806@hotmail.com
 如有问题或建议请联系
