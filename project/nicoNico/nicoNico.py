@@ -79,10 +79,15 @@ def get_video_info(video_id):
     result = {
         "extra_cookie": {},  # 额外的cookie
         "is_delete": False,  # 是否已删除
+        "is_private": False,  # 是否未公开
         "video_title": "",  # 视频标题
         "video_url": None,  # 视频地址
     }
     if video_play_response.status == 403:
+        log.step("视频%s访问异常，重试" % video_id)
+        time.sleep(30)
+        return get_video_info(video_id)
+    elif video_play_response.status == 404:
         result["is_delete"] = True
         return result
     elif video_play_response.status != net.HTTP_RETURN_CODE_SUCCEED:
@@ -94,7 +99,7 @@ def get_video_info(video_id):
         if pq(video_play_response_content).find("div.notify_update_flash_player").length > 0:
             return get_video_info(video_id)
         if video_play_response_content.find("<p>この動画が投稿されている公開コミュニティはありません。</p>") > 0:
-            result["is_delete"] = True
+            result["is_private"] = True
             return result
         raise crawler.CrawlerException("视频信息截取失败\n%s" % video_play_response_content)
     video_info_string = html.unescape(video_info_string)
@@ -222,6 +227,10 @@ class Download(crawler.DownloadThread):
 
         if video_info_response["is_delete"]:
             self.error("视频%s 《%s》已删除，跳过" % (video_info["video_id"], video_info["video_title"]))
+            return
+
+        if video_info_response["is_private"]:
+            self.error("视频%s 《%s》未公开，跳过" % (video_info["video_id"], video_info["video_title"]))
             return
 
         self.step("视频%s 《%s》 %s 开始下载" % (video_info["video_id"], video_info["video_title"], video_info_response["video_url"]))
