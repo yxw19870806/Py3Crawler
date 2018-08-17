@@ -73,10 +73,14 @@ def get_audio_info_page(audio_id):
     result = {
         "audio_title": "",  # 歌曲标题
         "audio_url": None,  # 歌曲地址
+        "is_delete": False,  # 是否已删除
     }
     audio_play_response = net.http_request(audio_info_url, method="GET", json_decode=True)
     if audio_play_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(audio_play_response.status))
+    if crawler.check_sub_key(("res",), audio_play_response.json_data) and audio_play_response.json_data["res"] is False:
+        result["is_delete"] = True
+        return result
     # 获取歌曲标题
     if not crawler.check_sub_key(("title",), audio_play_response.json_data):
         raise crawler.CrawlerException("返回信息'title'字段不存在\n%s" % audio_play_response.json_data)
@@ -201,6 +205,10 @@ class Download(crawler.DownloadThread):
             audio_play_response = get_audio_info_page(audio_info["audio_id"])
         except crawler.CrawlerException as e:
             self.error("歌曲%s解析失败，原因：%s" % (audio_info["audio_id"], e.message))
+            return
+
+        if audio_play_response["is_delete"]:
+            self.error("歌曲%s不存在" % audio_info["audio_id"])
             return
 
         audio_url = audio_play_response["audio_url"]

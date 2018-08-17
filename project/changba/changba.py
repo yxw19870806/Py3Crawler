@@ -88,7 +88,7 @@ def get_audio_play_page(audio_en_word_id):
     if audio_play_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(audio_play_response.status))
     audio_play_response_content = audio_play_response.data.decode(errors="ignore")
-    if audio_play_response_content.find("该作品可能含有不恰当内容将不能显示。") > -1:
+    if audio_play_response_content.find("该作品可能含有不恰当内容将不能显示。") > -1 or audio_play_response_content.find("<title>没有找到该作品 - 唱吧</title>") > -1:
         result["is_delete"] = True
         return result
     # 获取歌曲id
