@@ -178,8 +178,8 @@ def get_album_page(album_id):
     album_response = net.http_request(album_url, method="GET", cookies_list=COOKIE_INFO)
     result = {
         "image_url_list": [],  # 全部图片地址
-        "is_only_follower": False,  # 是否只显示给粉丝
-        "is_only_login": False,  # 是否只显示给登录用户
+        "is_only_follower": False,  # 是否只对粉丝显示
+        "is_only_login": False,  # 是否只对登录用户显示
     }
     if album_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(album_response.status))

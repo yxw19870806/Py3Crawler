@@ -28,7 +28,7 @@ def get_video_page(video_id):
     # 强制使用英语
     video_play_response = net.http_request(video_play_url, method="GET")
     result = {
-        "is_delete": False,  # 是否已被删除
+        "is_delete": False,  # 是否已删除
         "is_password": False,  # 是否需要密码
         "is_skip": False,  # 是否跳过
         "video_title": "",  # 视频标题

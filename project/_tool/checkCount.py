@@ -11,12 +11,12 @@ SAVE_DATA_FILE_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), "s
 PRIME_KEY_INDEX = 0
 # 存档中记录已下载文件数的字段所在数组下标，从0开始
 COUNT_INDEX = 1
-# 下载的文件是否是自增整数
+# 下载的文件是不是自增整数
 IS_INTEGER = True
 
 
 # 获取指定目录下全部子目录内的文件数量
-# is_integer    文件名是否是整数，如果为True，另外判断最大的那个序号是否和总文件数一致
+# is_integer    文件名是不是整数，如果为True，另外判断最大的那个序号是否和总文件数一致
 def get_storage_file_count():
     if not os.path.exists(FILE_STORAGE_PATH):
         output.print_msg("file root path %s not exist" % FILE_STORAGE_PATH)

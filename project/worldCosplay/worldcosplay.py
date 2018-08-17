@@ -28,7 +28,7 @@ def get_one_page_photo(account_id, page_count):
     photo_pagination_response = net.http_request(photo_pagination_url, method="GET", fields=query_data, json_decode=True)
     result = {
         "photo_info_list": [],  # 全部图片信息
-        "is_over": False,  # 是不是最后一页图片
+        "is_over": False,  # 是否最后一页图片
     }
     if photo_pagination_response.status == 404 and page_count == 1:
         raise crawler.CrawlerException("账号不存在")

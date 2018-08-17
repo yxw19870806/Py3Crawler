@@ -41,7 +41,7 @@ def get_one_page_video(account_id, page_count):
             continue
         result_video_info = {
             "video_id": None,  # 视频id
-            "video_url": None,  # 视频下载地址
+            "video_url": None,  # 视频地址
         }
         # 获取视频id
         if not crawler.check_sub_key(("id",), media_data):

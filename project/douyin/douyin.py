@@ -75,7 +75,7 @@ def get_one_page_video(account_id, cursor_id, dytk, signature):
     }
     video_pagination_response = net.http_request(api_url, method="GET", fields=query_data, header_list=header_list, json_decode=True)
     result = {
-        "is_over": False,  # 是不是最后一页视频
+        "is_over": False,  # 是否最后一页视频
         "next_page_cursor_id": None,  # 下一页视频指针
         "video_info_list": [],  # 全部视频信息
     }

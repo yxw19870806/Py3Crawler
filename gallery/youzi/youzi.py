@@ -37,7 +37,7 @@ def get_album_page(album_id):
     result = {
         "album_title": "",  # 图集标题
         "image_url_list": [],  # 全部图片地址
-        "is_delete": False,  # 是不是已经被删除
+        "is_delete": False,  # 是否已删除
     }
     while page_count <= max_page_count:
         album_pagination_url = "http://www.youzi4.cc/mm/%s/%s_%s.html" % (album_id, album_id, page_count)

@@ -35,7 +35,7 @@ def get_album_page(album_id):
     result = {
         "album_title": "",  # 图集标题
         "image_url_list": [],  # 全部图片地址
-        "is_delete": False,  # 是不是已经被删除
+        "is_delete": False,  # 是否已删除
     }
     while True:
         if album_id == 57773:
