@@ -36,8 +36,8 @@ def get_one_page_audio(account_id, page_count):
     audio_list_selector = pq(audit_pagination_response.json_data["html"]).find("ul.body_list li.item")
     for audio_index in range(0, audio_list_selector.length):
         audio_info = {
-            "audio_id": None,  # 页面解析出的歌曲id
-            "audio_title": "",  # 页面解析出的歌曲标题
+            "audio_id": None,  # 歌曲id
+            "audio_title": "",  # 歌曲标题
         }
         audio_selector = audio_list_selector.eq(audio_index)
         # 获取歌曲id
@@ -71,11 +71,17 @@ def get_one_page_audio(account_id, page_count):
 def get_audio_info_page(audio_id):
     audio_info_url = "http://www.ximalaya.com/tracks/%s.json" % audio_id
     result = {
-        "audio_url": None,  # 页面解析出的歌曲地址
+        "audio_title": "",  # 歌曲标题
+        "audio_url": None,  # 歌曲地址
     }
     audio_play_response = net.http_request(audio_info_url, method="GET", json_decode=True)
     if audio_play_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(audio_play_response.status))
+    # 获取歌曲标题
+    if not crawler.check_sub_key(("title",), audio_play_response.json_data):
+        raise crawler.CrawlerException("返回信息'title'字段不存在\n%s" % audio_play_response.json_data)
+    result["audio_title"] = audio_play_response.json_data["title"]
+    # 获取歌曲地址
     if crawler.check_sub_key(("play_path_64",), audio_play_response.json_data):
         result["audio_url"] = audio_play_response.json_data["play_path_64"]
     elif crawler.check_sub_key(("play_path_32",), audio_play_response.json_data):
