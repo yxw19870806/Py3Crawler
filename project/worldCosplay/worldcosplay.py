@@ -1,7 +1,7 @@
 # -*- coding:UTF-8  -*-
 """
 World Cosplay图片爬虫
-http://worldcosplay.net/
+https://worldcosplay.net/
 @author: hikaru
 email: hikaru870806@hotmail.com
 如有问题或建议请联系
@@ -17,8 +17,8 @@ IMAGE_COUNT_PER_PAGE = 16
 
 # 获取指定页数的全部图片
 def get_one_page_photo(account_id, page_count):
-    # http://worldcosplay.net/zh-hans/api/member/photos.json?limit=16&member_id=502191&p3_photo_list=true&page=1
-    photo_pagination_url = "http://worldcosplay.net/zh-hans/api/member/photos.json"
+    # https://worldcosplay.net/zh-hans/api/member/photos.json?limit=16&member_id=502191&p3_photo_list=true&page=1
+    photo_pagination_url = "https://worldcosplay.net/zh-hans/api/member/photos.json"
     query_data = {
         "limit": IMAGE_COUNT_PER_PAGE,
         "member_id": account_id,
