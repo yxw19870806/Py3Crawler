@@ -1,7 +1,7 @@
 # -*- coding:UTF-8  -*-
 """
 喜马拉雅歌曲爬虫
-http://www.ximalaya.com/
+https://www.ximalaya.com/
 @author: hikaru
 email: hikaru870806@hotmail.com
 如有问题或建议请联系
@@ -16,8 +16,8 @@ from common import *
 
 # 获取指定页数的全部歌曲信息
 def get_one_page_audio(account_id, page_count):
-    # http://www.ximalaya.com/1014267/index_tracks?page=2
-    audit_pagination_url = "http://www.ximalaya.com/%s/index_tracks" % account_id
+    # https://www.ximalaya.com/1014267/index_tracks?page=2
+    audit_pagination_url = "https://www.ximalaya.com/%s/index_tracks" % account_id
     query_data = {"page": page_count}
     audit_pagination_response = net.http_request(audit_pagination_url, method="GET", fields=query_data, json_decode=True)
     result = {
@@ -69,7 +69,7 @@ def get_one_page_audio(account_id, page_count):
 # 获取指定id的歌曲播放页
 # audio_id -> 16558983
 def get_audio_info_page(audio_id):
-    audio_info_url = "http://www.ximalaya.com/tracks/%s.json" % audio_id
+    audio_info_url = "https://www.ximalaya.com/tracks/%s.json" % audio_id
     result = {
         "audio_title": "",  # 歌曲标题
         "audio_url": None,  # 歌曲地址
