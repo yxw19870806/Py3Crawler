@@ -129,10 +129,14 @@ def get_video_page(video_id):
     video_play_url = "https://www.dailymotion.com/video/%s" % video_id
     video_play_response = net.http_request(video_play_url, method="GET")
     result = {
+        "is_delete": False,  # 是否已删除
         "video_title": "",  # 视频标题
         "video_url": None,  # 视频地址
     }
-    if video_play_response.status != net.HTTP_RETURN_CODE_SUCCEED:
+    if video_play_response.status == 404:
+        result["is_delete"] = True
+        return result
+    elif video_play_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(video_play_response.status))
     video_play_response_content = video_play_response.data.decode(errors="ignore")
     video_data = tool.find_sub_string(video_play_response_content, "var __PLAYER_CONFIG__ = ", ";\n")
