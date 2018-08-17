@@ -16,8 +16,8 @@ from common import *
 
 # 获取全部图片地址列表
 def get_image_index_page(account_id):
-    # http://www.yizhibo.com/member/personel/user_photos?memberid=6066534
-    image_index_url = "http://www.yizhibo.com/member/personel/user_photos"
+    # https://www.yizhibo.com/member/personel/user_photos?memberid=6066534
+    image_index_url = "https://www.yizhibo.com/member/personel/user_photos"
     query_data = {"memberid": account_id}
     image_index_response = net.http_request(image_index_url, method="GET", fields=query_data)
     result = {
@@ -59,8 +59,8 @@ def get_image_header(image_url):
 
 # 获取全部视频ID列表
 def get_video_index_page(account_id):
-    # http://www.yizhibo.com/member/personel/user_videos?memberid=6066534
-    video_pagination_url = "http://www.yizhibo.com/member/personel/user_videos"
+    # https://www.yizhibo.com/member/personel/user_videos?memberid=6066534
+    video_pagination_url = "https://www.yizhibo.com/member/personel/user_videos"
     query_data = {"memberid": account_id}
     video_pagination_response = net.http_request(video_pagination_url, method="GET", fields=query_data)
     result = {
@@ -82,8 +82,8 @@ def get_video_index_page(account_id):
 # 根据video id获取指定视频的详细信息（上传时间、视频列表的下载地址等）
 # video_id -> qxonW5XeZru03nUB
 def get_video_info_page(video_id):
-    # http://api.xiaoka.tv/live/web/get_play_live?scid=xX9-TLVx0xTiSZ69
-    video_info_url = "http://api.xiaoka.tv/live/web/get_play_live"
+    # https://api.xiaoka.tv/live/web/get_play_live?scid=xX9-TLVx0xTiSZ69
+    video_info_url = "https://api.xiaoka.tv/live/web/get_play_live"
     query_data = {"scid": video_id}
     video_info_response = net.http_request(video_info_url, method="GET", fields=query_data, json_decode=True)
     result = {

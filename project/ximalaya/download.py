@@ -1,7 +1,7 @@
 # -*- coding:UTF-8  -*-
 """
 指定喜马拉雅歌曲下载
-http://www.ximalaya.com/
+https://www.ximalaya.com/
 @author: hikaru
 email: hikaru870806@hotmail.com
 如有问题或建议请联系

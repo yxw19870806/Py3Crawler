@@ -7,7 +7,7 @@
 
 ## 账号ID获取步骤
 点击任意账号，进入主页
-地址类似为**http://www.yizhibo.com/member/personel/user_info?memberid=[1234567890]**，其中[]中的数字（实际不包括[]）就是账号的ID
+地址类似为**https://www.yizhibo.com/member/personel/user_info?memberid=[1234567890]**，其中[]中的数字（实际不包括[]）就是账号的ID
 或者查看界面左侧，用户头像&用户名下面的ID：[1234567890]，其中[]中的数字（实际不包括[]）就是账号的ID
 
 ## 配置参数
