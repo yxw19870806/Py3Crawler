@@ -35,6 +35,9 @@ def main():
         except crawler.CrawlerException as e:
             log.error("解析视频下载地址失败，原因：%s" % e.message)
             continue
+        if video_response["is_delete"]:
+            log.step("视频不存在，跳过")
+            continue
         # 开始下载
         file_path = os.path.abspath(os.path.join(DOWNLOAD_FILE_PATH, "%08d - %s.mp4" % (int(video_id), path.filter_text(video_response["video_title"]))))
         log.step("\n视频标题：%s\n视频地址：%s\n下载路径：%s" % (video_response["video_title"], video_response["video_url"], file_path))
