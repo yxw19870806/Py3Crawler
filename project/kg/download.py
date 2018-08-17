@@ -21,10 +21,10 @@ def main():
     crawler.quickly_set_proxy(config)
 
     while True:
-        audio_url = input(crawler.get_time() + " 请输入全名K歌歌曲地址：")
+        audio_url = input(crawler.get_time() + " 请输入全名K歌歌曲地址：").lower()
         audio_id = None
         # http://node.kg.qq.com/play?s=JLm8h1J64lEyXJ6n&g_f=personal
-        if audio_url.lower().find("//node.kg.qq.com/play") > 0:
+        if audio_url.find("//node.kg.qq.com/play") > 0:
             query_string_list = audio_url.split("?")[-1].split("&")
             for query_string in query_string_list:
                 if query_string.find("=") == -1:

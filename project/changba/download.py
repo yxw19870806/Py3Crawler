@@ -21,9 +21,9 @@ def main():
     crawler.quickly_set_proxy(config)
 
     while True:
-        audio_url = input(crawler.get_time() + " 请输入唱吧歌曲地址：")
+        audio_url = input(crawler.get_time() + " 请输入唱吧歌曲地址：").lower()
         # https://changba.com/s/LBdSlkRwmqApasSCCVp5VA
-        if audio_url.lower().find("//changba.com/s/") == -1:
+        if audio_url.find("//changba.com/s/") == -1:
             log.step("错误的歌曲地址，正确的地址格式如：https://changba.com/s/LBdSlkRwmqApasSCCVp5VA")
             continue
         audio_id = audio_url.split("/")[-1].split("?")[0]

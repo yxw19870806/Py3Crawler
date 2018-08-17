@@ -21,9 +21,9 @@ def main():
     crawler.quickly_set_proxy(config)
 
     while True:
-        video_url = input(crawler.get_time() + " 请输入dailymotion视频地址：")
+        video_url = input(crawler.get_time() + " 请输入dailymotion视频地址：").lower()
         # https://www.dailymotion.com/video/x6njw4l
-        if video_url.lower().find("//www.dailymotion.com/video/") == -1:
+        if video_url.find("//www.dailymotion.com/video/") == -1:
             log.step("错误的视频地址，正确的地址格式如：https://www.dailymotion.com/video/x6njw4l")
             continue
         video_id = video_url.split("/")[-1].split("?")[0]
