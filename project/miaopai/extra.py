@@ -1,6 +1,6 @@
 # -*- coding:UTF-8  -*-
 """
-http://www.miaopai.com/
+https://www.miaopai.com/
 @author: hikaru
 email: hikaru870806@hotmail.com
 如有问题或建议请联系
@@ -15,7 +15,7 @@ def get_follow_list(suid):
     page_count = 1
     follow_list = {}
     while True:
-        follow_pagination_url = "http://www.miaopai.com/gu/follow"
+        follow_pagination_url = "https://www.miaopai.com/gu/follow"
         query_data = {
             "page": page_count,
             "suid": suid,
@@ -25,7 +25,7 @@ def get_follow_list(suid):
             if crawler.check_sub_key(("msg", "stat"), follow_pagination_response.json_data) and follow_pagination_response.json_data["stat"].isdigit():
                 stat = int(follow_pagination_response.json_data["stat"]["stat"])
                 if stat == 1 or stat == 2:
-                    one_page_follow_list = re.findall('<a title="([^"]*)" href="http://www.miaopai.com/u/paike_([^"]*)">', follow_pagination_response.json_data["msg"])
+                    one_page_follow_list = re.findall('<a title="([^"]*)" href="http[s]?://www.miaopai.com/u/paike_([^"]*)">', follow_pagination_response.json_data["msg"])
                     for account_name, account_id in one_page_follow_list:
                         follow_list[account_id] = account_name
                     if stat == 1:

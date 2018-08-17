@@ -1,7 +1,7 @@
 # -*- coding:UTF-8  -*-
 """
 新浪博客图片爬虫
-http://blog.sina.com.cn/
+https://blog.sina.com.cn/
 @author: hikaru
 email: hikaru870806@hotmail.com
 如有问题或建议请联系
@@ -18,8 +18,8 @@ from project.weibo import weiboCommon
 
 # 获取指定页数的全部日志
 def get_one_page_blog(account_id, page_count):
-    # http://moexia.lofter.com/?page=1
-    blog_pagination_url = "http://blog.sina.com.cn/s/articlelist_%s_0_%s.html" % (account_id, page_count)
+    # https://moexia.lofter.com/?page=1
+    blog_pagination_url = "https://blog.sina.com.cn/s/articlelist_%s_0_%s.html" % (account_id, page_count)
     blog_pagination_response = net.http_request(blog_pagination_url, method="GET")
     result = {
         "blog_info_list": [],  # 全部日志地址

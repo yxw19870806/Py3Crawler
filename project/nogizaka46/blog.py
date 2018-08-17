@@ -1,7 +1,7 @@
 # -*- coding:UTF-8  -*-
 """
 乃木坂46 OFFICIAL BLOG图片爬虫
-http://blog.nogizaka46.com/
+https://blog.nogizaka46.com/
 @author: hikaru
 email: hikaru870806@hotmail.com
 如有问题或建议请联系
@@ -19,8 +19,8 @@ from common import *
 # 获取成员指定页数的一页日志信息
 # account_id -> asuka.saito
 def get_one_page_blog(account_id, page_count):
-    # http://blog.nogizaka46.com/asuka.saito
-    blog_pagination_url = "http://blog.nogizaka46.com/%s/" % account_id
+    # https://blog.nogizaka46.com/asuka.saito
+    blog_pagination_url = "https://blog.nogizaka46.com/%s/" % account_id
     query_data = {"p": page_count}
     blog_pagination_response = net.http_request(blog_pagination_url, method="GET", fields=query_data)
     result = {
@@ -85,7 +85,7 @@ def check_big_image(image_url, big_2_small_list):
         "is_over": False,  # 是不是已经没有还生效的大图了
     }
     if image_url in big_2_small_list:
-        if big_2_small_list[image_url].find("http://dcimg.awalker.jp") == 0:
+        if big_2_small_list[image_url].find("//dcimg.awalker.jp") > 0:
             big_image_response = net.http_request(big_2_small_list[image_url], method="GET")
             if big_image_response.status == net.HTTP_RETURN_CODE_SUCCEED:
                 # 检测是不是已经过期删除

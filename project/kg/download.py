@@ -1,7 +1,7 @@
 # -*- coding:UTF-8  -*-
 """
 指定全名K歌歌曲下载
-http://kg.qq.com/
+https://kg.qq.com/
 @author: hikaru
 email: hikaru870806@hotmail.com
 如有问题或建议请联系
@@ -23,7 +23,7 @@ def main():
     while True:
         audio_url = input(crawler.get_time() + " 请输入全名K歌歌曲地址：").lower()
         audio_id = None
-        # http://node.kg.qq.com/play?s=JLm8h1J64lEyXJ6n&g_f=personal
+        # https://node.kg.qq.com/play?s=JLm8h1J64lEyXJ6n&g_f=personal
         if audio_url.find("//node.kg.qq.com/play") > 0:
             query_string_list = audio_url.split("?")[-1].split("&")
             for query_string in query_string_list:
@@ -34,7 +34,7 @@ def main():
                     audio_id = value
                     break
         if audio_id is None:
-            log.step("错误的歌曲地址，正确的地址格式如：http://node.kg.qq.com/play?s=JLm8h1J64lEyXJ6n")
+            log.step("错误的歌曲地址，正确的地址格式如：https://node.kg.qq.com/play?s=JLm8h1J64lEyXJ6n")
             continue
         # 访问歌曲播放页
         try:

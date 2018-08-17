@@ -1,7 +1,7 @@
 # -*- coding:UTF-8  -*-
 """
 秒拍视频爬虫
-http://www.miaopai.com/
+https://www.miaopai.com/
 @author: hikaru
 email: hikaru870806@hotmail.com
 如有问题或建议请联系
@@ -17,7 +17,7 @@ from common import *
 # 获取用户的suid，作为查找指定用户的视频页的凭证
 # account_id -> mi9wmdhhof
 def get_account_index_page(account_id):
-    account_index_url = "http://www.miaopai.com/u/paike_%s/relation/follow.htm" % account_id
+    account_index_url = "https://www.miaopai.com/u/paike_%s/relation/follow.htm" % account_id
     account_index_response = net.http_request(account_index_url, method="GET")
     result = {
         "user_id": None,  # 账号user id
@@ -35,8 +35,8 @@ def get_account_index_page(account_id):
 # 获取指定页数的全部视频
 # suid -> 0r9ewgQ0v7UoDptu
 def get_one_page_video(suid, page_count):
-    # http://www.miaopai.com/gu/u?page=1&suid=0r9ewgQ0v7UoDptu&fen_type=channel
-    video_pagination_url = "http://www.miaopai.com/gu/u"
+    # https://www.miaopai.com/gu/u?page=1&suid=0r9ewgQ0v7UoDptu&fen_type=channel
+    video_pagination_url = "https://www.miaopai.com/gu/u"
     query_data = {
         "page": page_count,
         "suid": suid,
@@ -64,7 +64,7 @@ def get_one_page_video(suid, page_count):
 
 # 获取指定id视频的详情页
 def get_video_info_page(video_id):
-    video_info_url = "http://gslb.miaopai.com/stream/%s.json" % video_id
+    video_info_url = "https://gslb.miaopai.com/stream/%s.json" % video_id
     query_data = {"token": ""}
     video_info_response = net.http_request(video_info_url, method="GET", fields=query_data, json_decode=True)
     result = {

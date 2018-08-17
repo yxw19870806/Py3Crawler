@@ -1,7 +1,7 @@
 # -*- coding:UTF-8  -*-
 """
 全民k歌歌曲爬虫
-http://kg.qq.com/
+https://kg.qq.com/
 @author: hikaru
 email: hikaru870806@hotmail.com
 如有问题或建议请联系
@@ -17,7 +17,7 @@ AUDIO_COUNT_PER_PAGE = 8
 
 # 获取指定页数的一页歌曲信息
 def get_one_page_audio(account_id, page_count):
-    audio_pagination_url = "http://kg.qq.com/cgi/kg_ugc_get_homepage"
+    audio_pagination_url = "https://kg.qq.com/cgi/kg_ugc_get_homepage"
     query_data = {
         "type": "get_ugc",
         "format": "json",
@@ -72,7 +72,7 @@ def get_one_page_audio(account_id, page_count):
 
 # 获取歌曲播放地址
 def get_audio_play_page(audio_key):
-    audio_play_url = "http://kg.qq.com/node/play"
+    audio_play_url = "https://kg.qq.com/node/play"
     query_data = {"s": audio_key}
     audio_play_response = net.http_request(audio_play_url, method="GET", fields=query_data)
     result = {
