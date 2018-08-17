@@ -19,8 +19,8 @@ def get_account_index_page(account_name):
     account_index_response = net.http_request(account_index_url, method="GET", cookies_list=COOKIE_INFO)
     result = {
         "is_follow": False,  # 是否已经关注
-        "is_private": False,  # 是否是私密账号
-        "account_id": None,  # account id
+        "is_private": False,  # 是否私密账号
+        "account_id": None,  # 账号id
     }
     if account_index_response.status == net.HTTP_RETURN_CODE_SUCCEED:
         # 获取账号id

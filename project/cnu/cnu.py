@@ -18,7 +18,7 @@ def get_album_page(album_id):
     result = {
         "album_title": "",  # 作品标题
         "image_url_list": [],  # 全部图片地址
-        "is_delete": False,  # 是不是作品已被删除
+        "is_delete": False,  # 是否已删除
     }
     if album_response.status == 404:
         result["is_delete"] = True

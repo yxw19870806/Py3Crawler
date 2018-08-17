@@ -35,7 +35,7 @@ def get_mylist_index(account_id):
     account_index_url = "http://www.nicovideo.jp/mylist/%s" % account_id
     account_index_response = net.http_request(account_index_url, method="GET")
     result = {
-        "video_info_list": [],  # 所有视频信息
+        "video_info_list": [],  # 全部视频信息
     }
     if account_index_response.status == 404:
         raise crawler.CrawlerException("视频列表不存在")

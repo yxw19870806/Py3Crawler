@@ -37,7 +37,7 @@ def get_one_page_blog(account_name, page_count):
     blog_pagination_response = net.http_request(blog_pagination_url, method="GET")
     result = {
         "blog_id_list": [],  # 全部日志id
-        "is_over": False,  # 是不是最后一页日志
+        "is_over": False,  # 是否最后一页日志
     }
     if page_count == 1 and blog_pagination_response.status == 404:
         raise crawler.CrawlerException("账号不存在")

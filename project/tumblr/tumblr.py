@@ -107,7 +107,7 @@ def get_one_page_post(account_id, page_count, is_https, is_safe_mode):
         cookies_list = None
     post_pagination_response = net.http_request(post_pagination_url, method="GET", header_list=header_list, cookies_list=cookies_list)
     result = {
-        "is_over": False,  # 是不是最后一页日志
+        "is_over": False,  # 是否最后一页日志
         "post_info_list": [],  # 全部日志信息
     }
     if post_pagination_response.status == 404:

@@ -45,7 +45,7 @@ def get_album_page(album_id):
         "album_title": "",  # 图集标题
         "album_url": None,  # 图集首页地址
         "image_url_list": [],  # 全部图片地址
-        "is_delete": False,  # 是否已经被删除
+        "is_delete": False,  # 是否已删除
     }
     while page_count <= max_page_count:
         if page_count == 1:
@@ -104,7 +104,7 @@ class Gallery(crawler.Crawler):
 
     def main(self):
         # 解析存档文件，获取上一次的album id
-        album_id = 1382
+        album_id = 1
         if os.path.exists(self.save_data_path):
             file_save_info = tool.read_file(self.save_data_path)
             if not crawler.is_integer(file_save_info):

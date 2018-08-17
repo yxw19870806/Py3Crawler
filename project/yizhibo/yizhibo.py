@@ -64,7 +64,7 @@ def get_video_index_page(account_id):
     query_data = {"memberid": account_id}
     video_pagination_response = net.http_request(video_pagination_url, method="GET", fields=query_data)
     result = {
-        "is_exist": True,  # 是不是存在视频
+        "is_exist": True,  # 是否存在视频
         "video_id_list": [],  # 全部视频id
     }
     if video_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:

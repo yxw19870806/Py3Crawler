@@ -22,7 +22,7 @@ def get_one_page_favorite(page_count):
     favorite_pagination_response = net.http_request(favorite_pagination_url, method="GET", fields=query_data, cookies_list=cookies_list)
     result = {
         "blog_info_list": [],  # 所有微博信息
-        "is_over": False,  # 是不是最后一页收藏
+        "is_over": False,  # 是否最后一页收藏
     }
     if favorite_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(favorite_pagination_response.status))

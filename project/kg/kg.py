@@ -28,7 +28,7 @@ def get_one_page_audio(account_id, page_count):
     audio_pagination_response = net.http_request(audio_pagination_url, method="GET", fields=query_data, json_decode=True)
     result = {
         "audio_info_list": [],  # 全部歌曲信息
-        "is_over": False,  # 是不是最后一页歌曲
+        "is_over": False,  # 是否最后一页歌曲
     }
     if audio_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(audio_pagination_response.status))
