@@ -133,8 +133,7 @@ class ZunGuang(crawler.Crawler):
                     tool.process_exit(0)
                 log.step("开始下载第%s页第%s张图片 %s" % (page_count, image_count, image_url))
 
-                file_type = image_url.split(".")[-1]
-                file_path = os.path.join(image_path, "%03d.%s" % (image_count, file_type))
+                file_path = os.path.join(image_path, "%03d.%s" % (image_count, net.get_file_type(image_url)))
                 try:
                     save_file_return = net.save_net_file(image_url, file_path, need_content_type=True)
                     if save_file_return["status"] == 1:
