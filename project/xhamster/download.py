@@ -7,6 +7,8 @@ email: hikaru870806@hotmail.com
 如有问题或建议请联系
 """
 import os
+import tkinter
+from tkinter import filedialog
 from common import *
 from project.xhamster import xhamster
 
@@ -19,6 +21,9 @@ def main():
     crawler.quicky_set_log_path(config)
     # 设置代理
     crawler.quickly_set_proxy(config)
+    # GUI窗口
+    gui = tkinter.Tk()
+    gui.withdraw()
 
     while True:
         video_url = input("请输入xhamster视频地址：").lower()
@@ -38,8 +43,16 @@ def main():
         if video_response["is_delete"]:
             log.step("视频不存在，跳过")
             continue
+        # 选择下载目录
+        options = {
+            "initialdir": DOWNLOAD_FILE_PATH,
+            "initialfile": "%08d - %s.mp4" % (int(video_id), path.filter_text(video_response["video_title"])),
+            "filetypes": [("mp4", ".mp4")],
+        }
+        file_path = tkinter.filedialog.asksaveasfilename(**options)
+        if not file_path:
+            continue
         # 开始下载
-        file_path = os.path.abspath(os.path.join(DOWNLOAD_FILE_PATH, "%08d - %s.mp4" % (int(video_id), path.filter_text(video_response["video_title"]))))
         log.step("\n视频标题：%s\n视频地址：%s\n下载路径：%s" % (video_response["video_title"], video_response["video_url"], file_path))
         save_file_return = net.save_net_file(video_response["video_url"], file_path, head_check=True)
         if save_file_return["status"] == 1:
