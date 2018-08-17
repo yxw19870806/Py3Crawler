@@ -7,6 +7,8 @@ email: hikaru870806@hotmail.com
 如有问题或建议请联系
 """
 import os
+import tkinter
+from tkinter import filedialog
 from common import *
 from project.youtube import youtube
 
@@ -30,6 +32,9 @@ def main():
         youtube.IS_LOGIN = False
     # 设置代理
     crawler.quickly_set_proxy(config)
+    # GUI窗口
+    gui = tkinter.Tk()
+    gui.withdraw()
 
     while True:
         video_url = input(crawler.get_time() + " 请输入youtube视频地址：")
@@ -57,10 +62,18 @@ def main():
         except crawler.CrawlerException as e:
             log.error("解析视频下载地址失败，原因：%s" % e.message)
             tool.process_exit()
+        # 选择下载目录
+        options = {
+            "initialdir": DOWNLOAD_FILE_PATH,
+            "initialfile": "%s - %s.mp4" % (video_id, path.filter_text(video_response["video_title"])),
+            "filetypes": [("mp4", ".mp4")],
+        }
+        file_path = tkinter.filedialog.asksaveasfilename(**options)
+        if not file_path:
+            continue
         # 开始下载
-        video_file_path = os.path.abspath(os.path.join(DOWNLOAD_FILE_PATH, "%s - %s.mp4" % (video_id, path.filter_text(video_response["video_title"]))))
-        log.step("\n视频标题：%s\n视频地址：%s\n下载路径：%s" % (video_response["video_title"], video_response["video_url"], video_file_path))
-        save_file_return = net.save_net_file(video_response["video_url"], video_file_path, head_check=True)
+        log.step("\n视频标题：%s\n视频地址：%s\n下载路径：%s" % (video_response["video_title"], video_response["video_url"], file_path))
+        save_file_return = net.save_net_file(video_response["video_url"], file_path, head_check=True)
         if save_file_return["status"] == 1:
             log.step("视频《%s》下载成功" % video_response["video_title"])
         else:
