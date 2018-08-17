@@ -1,7 +1,7 @@
 # -*- coding:UTF-8  -*-
 """
 Youtube视频爬虫
-https://www.youtube.com
+https://www.youtube.com/
 @author: hikaru
 email: hikaru870806@hotmail.com
 如有问题或建议请联系

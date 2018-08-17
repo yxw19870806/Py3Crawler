@@ -1,7 +1,7 @@
 # -*- coding:UTF-8  -*-
 """
 V聊视频公共方法
-http://www.vliaoapp.com/
+http://www.vchat6.com/
 @author: hikaru
 email: hikaru870806@hotmail.com
 如有问题或建议请联系
@@ -33,22 +33,22 @@ def check_login():
         # token已经无效了，删除掉
         path.delete_dir_or_file(token_file_path)
     while True:
-        input_str = input("未检测到api信息，是否手动输入手机号码+密码登录(1)、或者直接输入api信息进行验证(2)、或者退出程序(E)xit？").lower()
+        input_str = input(crawler.get_time() + " 未检测到api信息，是否手动输入手机号码+密码登录(1)、或者直接输入api信息进行验证(2)、或者退出程序(E)xit？").lower()
         if input_str in ["e", "exit"]:
             tool.process_exit()
         elif input_str not in ["1", "2"]:
             continue
         elif input_str == "1":
-            phone_number = input("Phone Number: ")
-            password = input("password; ")
+            phone_number = input(crawler.get_time() + " 请输入手机号：")
+            password = input(crawler.get_time() + " 请输入密码：")
             # 模拟登录
             login_status, error_message = login(phone_number, password)
             if login_status is False:
                 log.step("登录失败，原因：%s" % error_message)
                 continue
         elif input_str == "2":
-            user_id = input("USER ID: ")
-            user_key = input("USER KEY; ")
+            user_id = input(crawler.get_time() + " 请输入USER ID: ")
+            user_key = input(crawler.get_time() + " 请输入USER KEY; ")
             # 验证token是否有效
             if not check_token(user_id, user_key):
                 log.step("无效的登录信息，请重新输入")

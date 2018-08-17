@@ -1,7 +1,7 @@
 # -*- coding:UTF-8  -*-
 """
 dailymotion视频爬虫
-http://www.dailymotion.com
+https://www.dailymotion.com/
 @author: hikaru
 email: hikaru870806@hotmail.com
 如有问题或建议请联系
@@ -21,7 +21,7 @@ FIRST_CHOICE_RESOLUTION = 720
 # 初始化session。获取authorization
 def init_session():
     global AUTHORIZATION
-    index_url = "http://www.dailymotion.com"
+    index_url = "https://www.dailymotion.com"
     index_page_response = net.http_request(index_url, method="GET")
     if index_page_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException("首页，" + crawler.request_failre(index_page_response.status))
@@ -68,7 +68,7 @@ def get_one_page_video(account_id, page_count):
     }
     header_list = {
         "authorization": "Bearer " + AUTHORIZATION,
-        "origin": "http://www.dailymotion.com",
+        "origin": "https://www.dailymotion.com",
     }
     result = {
         "is_over": False,  # 是不是最后一页
@@ -125,10 +125,11 @@ def get_one_page_video(account_id, page_count):
 # 获取指定视频
 def get_video_page(video_id):
     # 获取视频播放页
-    # http://www.dailymotion.com/video/x6lgrfa
-    video_play_url = "http://www.dailymotion.com/video/%s" % video_id
+    # https://www.dailymotion.com/video/x6lgrfa
+    video_play_url = "https://www.dailymotion.com/video/%s" % video_id
     video_play_response = net.http_request(video_play_url, method="GET")
     result = {
+        "video_title": "",  # 视频标题
         "video_url": None,  # 视频地址
     }
     if video_play_response.status != net.HTTP_RETURN_CODE_SUCCEED:
@@ -142,6 +143,10 @@ def get_video_page(video_id):
         raise crawler.CrawlerException("视频信息加载失败\n%s" % video_play_response_content)
     if not crawler.check_sub_key(("metadata",), video_data):
         raise crawler.CrawlerException("视频信息'metadata'字段不存在\n%s" % video_data)
+    # 获取视频标题
+    if not crawler.check_sub_key(("title",), video_data["metadata"]):
+        raise crawler.CrawlerException("视频信息'title'字段不存在\n%s" % video_data["metadata"])
+    result["video_title"] = video_data["metadata"]["title"]
     # 查找最高分辨率的视频源地址
     if not crawler.check_sub_key(("qualities",), video_data["metadata"]):
         raise crawler.CrawlerException("视频信息'qualities'字段不存在\n%s" % video_data["metadata"])

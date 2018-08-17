@@ -1,7 +1,7 @@
 # -*- coding:UTF-8  -*-
 """
 欅坂46公式Blog图片爬虫
-http://www.keyakizaka46.com/mob/news/diarShw.php?cd=member
+https://www.keyakizaka46.com/mob/news/diarShw.php?cd=member
 @author: hikaru
 email: hikaru870806@hotmail.com
 如有问题或建议请联系
@@ -18,8 +18,8 @@ IMAGE_COUNT_PER_PAGE = 20
 
 # 获取指定页数的全部日志
 def get_one_page_blog(account_id, page_count):
-    # http://www.keyakizaka46.com/mob/news/diarKiji.php?cd=member&ct=01&page=0&rw=20
-    blog_pagination_url = "http://www.keyakizaka46.com/mob/news/diarKiji.php"
+    # https://www.keyakizaka46.com/mob/news/diarKiji.php?cd=member&ct=01&page=0&rw=20
+    blog_pagination_url = "https://www.keyakizaka46.com/mob/news/diarKiji.php"
     query_data = {
         "cd": "member",
         "ct": "%02d" % int(account_id),
@@ -61,9 +61,9 @@ def get_image_url(image_url):
     # 如果图片地址没有域名，表示直接使用当前域名下的资源，需要拼接成完整的地址
     if image_url[:7] != "http://" and image_url[:8] != "https://":
         if image_url[0] == "/":
-            image_url = "http://www.keyakizaka46.com%s" % image_url
+            image_url = "https://www.keyakizaka46.com%s" % image_url
         else:
-            image_url = "http://www.keyakizaka46.com/%s" % image_url
+            image_url = "https://www.keyakizaka46.com/%s" % image_url
     return image_url
 
 

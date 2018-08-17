@@ -4,5 +4,5 @@
 
 ## 账号ID获取步骤
 点击任意视频发布者头像旁的名字，进入频道主页
-地址类似为**http://www.dailymotion.com/[abcd123]**，其中[]中的字符串就是账号的ID
+地址类似为**https://www.dailymotion.com/[abcd123]**，其中[]中的字符串就是账号的ID
 

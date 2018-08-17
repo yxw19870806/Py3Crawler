@@ -1,6 +1,7 @@
 # -*- coding:UTF-8  -*-
 """
-ivseek 存档文件公共类
+ivseek公共类
+http://www.ivseek.com/
 @author: hikaru
 email: hikaru870806@hotmail.com
 如有问题或建议请联系

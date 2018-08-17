@@ -1,7 +1,7 @@
 # -*- coding:UTF-8  -*-
 """
-ivseek 已解析文件中提取全部youtube频道账号
-http://jigadori.fkoji.com/users
+ivseek已解析文件中提取全部youtube频道账号
+http://www.ivseek.com/
 @author: hikaru
 email: hikaru870806@hotmail.com
 如有问题或建议请联系

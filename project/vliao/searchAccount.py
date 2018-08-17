@@ -1,7 +1,7 @@
 # -*- coding:UTF-8  -*-
 """
 V聊账号搜索
-http://www.vliaoapp.com/
+http://www.vchat6.com/
 @author: hikaru
 email: hikaru870806@hotmail.com
 如有问题或建议请联系
@@ -62,10 +62,10 @@ def main():
         tool.process_exit()
 
     while True:
-        search_type = input("查找方式：完全匹配(1) / 模糊查找(2)：").lower()
+        search_type = input(crawler.get_time() + " 查找方式：完全匹配(1) / 模糊查找(2)：").lower()
         if search_type not in [SEARCH_TYPE_MATCH, SEARCH_TYPE_LOOKUP]:
             continue
-        account_name = input("查找内容：").lower()
+        account_name = input(crawler.get_time() + " 查找内容：").lower()
         account_list = search_account(account_name, search_type)
         if len(account_list) == 0:
             log.step("没有找到账号")

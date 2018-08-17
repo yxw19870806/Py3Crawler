@@ -5,4 +5,4 @@
 
 ## 账号ID获取步骤
 点击任意账号，进入主页
-地址类似为**http://www.miaopai.com/u/paike_[abcd1efgh2]**，其中[]内的字母+数字就是账号的ID（实际不包括[]）
+地址类似为**https://www.miaopai.com/u/paike_[abcd1efgh2]**，其中[]内的字母+数字就是账号的ID（实际不包括[]）

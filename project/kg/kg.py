@@ -1,7 +1,7 @@
 # -*- coding:UTF-8  -*-
 """
 全民k歌歌曲爬虫
-http://kg.qq.com/
+https://kg.qq.com/
 @author: hikaru
 email: hikaru870806@hotmail.com
 如有问题或建议请联系
@@ -17,7 +17,7 @@ AUDIO_COUNT_PER_PAGE = 8
 
 # 获取指定页数的一页歌曲信息
 def get_one_page_audio(account_id, page_count):
-    audio_pagination_url = "http://kg.qq.com/cgi/kg_ugc_get_homepage"
+    audio_pagination_url = "https://kg.qq.com/cgi/kg_ugc_get_homepage"
     query_data = {
         "type": "get_ugc",
         "format": "json",
@@ -72,15 +72,21 @@ def get_one_page_audio(account_id, page_count):
 
 # 获取歌曲播放地址
 def get_audio_play_page(audio_key):
-    audio_play_url = "http://kg.qq.com/node/play"
+    audio_play_url = "https://kg.qq.com/node/play"
     query_data = {"s": audio_key}
     audio_play_response = net.http_request(audio_play_url, method="GET", fields=query_data)
     result = {
+        "audio_title": "",  # 歌曲标题
         "audio_url": None,  # 歌曲地址
     }
     if audio_play_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(audio_play_response.status))
     audio_play_response_content = audio_play_response.data.decode(errors="ignore")
+    # 获取歌曲标题
+    audio_title = tool.find_sub_string(audio_play_response_content, '<h2 class="play_name">', "</h2>")
+    if not audio_title:
+        raise crawler.CrawlerException("页面截取歌曲标题失败\n%s" % audio_play_response_content)
+    result["audio_title"] = audio_title.strip()
     # 获取歌曲地址
     audio_url = tool.find_sub_string(audio_play_response_content, '"playurl":"', '"')
     if not audio_url:
@@ -89,6 +95,22 @@ def get_audio_play_page(audio_key):
         raise crawler.CrawlerException("页面截取歌曲地址失败\n%s" % audio_play_response_content)
     result["audio_url"] = audio_url
     return result
+
+
+# 获取文件后缀
+def get_file_type(file_url):
+    file_name_and_param = file_url.split("/")[-1]
+    file_name_and_type = file_name_and_param.split("?")[0].split(".")[-1]
+    if len(file_name_and_type) == 2:
+        return file_name_and_type[1]
+    query_string_list = file_name_and_param.split("?")[-1].split("&")
+    for query_string in query_string_list:
+        if query_string.find("=") == -1:
+            continue
+        key, value = query_string.split("=", 1)
+        if key == "fname":
+            return value.split(".")[-1]
+    return "m4a"
 
 
 class KG(crawler.Crawler):
@@ -202,7 +224,7 @@ class Download(crawler.DownloadThread):
         self.main_thread_check()  # 检测主线程运行状态
         self.step("开始下载歌曲%s《%s》 %s" % (audio_info["audio_key"], audio_info["audio_title"], audio_play_response["audio_url"]))
 
-        file_type = audio_play_response["audio_url"].split(".")[-1].split("?")[0].split("&")[0]
+        file_type = get_file_type(audio_play_response["audio_url"])
         file_path = os.path.join(self.main_thread.video_download_path, self.display_name, "%s - %s.%s" % (audio_info["audio_id"], path.filter_text(audio_info["audio_title"]), file_type))
         save_file_return = net.save_net_file(audio_play_response["audio_url"], file_path)
         if save_file_return["status"] == 1:

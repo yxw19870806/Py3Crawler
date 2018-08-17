@@ -1,7 +1,7 @@
 # -*- coding:UTF-8  -*-
 """
-ivseek 已解析文件中下载全部nico nico视频
-http://jigadori.fkoji.com/users
+ivseek已解析文件中下载全部nico nico视频
+http://www.ivseek.com/
 @author: hikaru
 email: hikaru870806@hotmail.com
 如有问题或建议请联系
@@ -49,6 +49,9 @@ def main():
             video_info_response = nicoNico.get_video_info(video_id)
         except crawler.CrawlerException as e:
             log.error("视频%s解析失败，原因：%s" % (single_save_list[2], e.message))
+            continue
+
+        if video_info_response["is_delete"]:
             continue
 
         output.print_msg("开始下载视频%s 《%s》 %s" % (video_id, video_info_response["video_title"], video_info_response["video_url"]))

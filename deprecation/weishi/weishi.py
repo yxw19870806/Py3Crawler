@@ -1,7 +1,7 @@
 # -*- coding:UTF-8  -*-
 """
 微视视频爬虫
-http://weishi.qq.com
+http://weishi.qq.com/
 @author: hikaru
 email: hikaru870806@hotmail.com
 如有问题或建议请联系

@@ -1,7 +1,7 @@
 # -*- coding:UTF-8  -*-
 """
-欅坂46公式ブログ成员id获取
-http://www.keyakizaka46.com/mob/news/diarShw.php?cd=member
+欅坂46公式Blog成员id获取
+https://www.keyakizaka46.com/mob/news/diarShw.php?cd=member
 @author: hikaru
 email: hikaru870806@hotmail.com
 如有问题或建议请联系
@@ -12,7 +12,7 @@ from common import *
 
 # 从页面获取全部成员账号
 def get_account_from_index():
-    index_url = "http://www.keyakizaka46.com/mob/news/diarShw.php"
+    index_url = "https://www.keyakizaka46.com/mob/news/diarShw.php"
     query_data = {"cd": "member"}
     index_response = net.http_request(index_url, method="GET", fields=query_data)
     account_list = {}

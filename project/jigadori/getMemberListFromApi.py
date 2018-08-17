@@ -1,7 +1,7 @@
 # -*- coding:UTF-8  -*-
 """
 グラドル自画撮り部 成员tweet账号获取
-http://jigadori.fkoji.com/users
+http://jigadori.fkoji.com/
 @author: hikaru
 email: hikaru870806@hotmail.com
 如有问题或建议请联系

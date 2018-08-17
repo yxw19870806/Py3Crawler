@@ -1,7 +1,7 @@
 # -*- coding:UTF-8  -*-
 """
 微博文章图片爬虫
-http://www.weibo.com/
+https://www.weibo.com/
 @author: hikaru
 email: hikaru870806@hotmail.com
 如有问题或建议请联系
@@ -18,7 +18,7 @@ from project.weibo import weiboCommon
 # 获取一页的预览文章
 # page_id -> 1005052212970554
 def get_one_page_article(page_id, page_count):
-    # http://weibo.com/p/1005052212970554/wenzhang?pids=Pl_Core_ArticleList__62&Pl_Core_ArticleList__62_page=1&ajaxpagelet=1
+    # https://weibo.com/p/1005052212970554/wenzhang?pids=Pl_Core_ArticleList__62&Pl_Core_ArticleList__62_page=1&ajaxpagelet=1
     preview_article_pagination_url = "http://weibo.com/p/%s/wenzhang" % page_id
     query_data = {
         "pids": "Pl_Core_ArticleList__62",

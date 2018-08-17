@@ -1,7 +1,7 @@
 # -*- coding:UTF-8  -*-
 """
 グラドル自画撮り部 图片爬虫
-http://jigadori.fkoji.com
+http://jigadori.fkoji.com/
 @author: hikaru
 email: hikaru870806@hotmail.com
 如有问题或建议请联系

@@ -1,7 +1,7 @@
 # -*- coding:UTF-8  -*-
 """
 唱吧歌曲爬虫
-http://changba.com/
+https://changba.com/
 @author: hikaru
 email: hikaru870806@hotmail.com
 如有问题或建议请联系
@@ -17,12 +17,12 @@ from common import *
 
 # 获取账号首页页面
 def get_account_index_page(account_id):
-    account_index_url = "http://changba.com/u/%s" % account_id
+    account_index_url = "https://changba.com/u/%s" % account_id
     account_index_response = net.http_request(account_index_url, method="GET", is_auto_redirect=False)
     result = {
         "user_id": None,  # user id
     }
-    if account_index_response.status == 302 and account_index_response.getheader("Location") == "http://changba.com":
+    if account_index_response.status == 302 and account_index_response.getheader("Location") == "https://changba.com":
         raise crawler.CrawlerException("账号不存在")
     elif account_index_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(account_index_response.status))
@@ -38,8 +38,8 @@ def get_account_index_page(account_id):
 # 获取指定页数的全部歌曲信息
 # user_id -> 4306405
 def get_one_page_audio(user_id, page_count):
-    # http://changba.com/member/personcenter/loadmore.php?userid=4306405&pageNum=1
-    audit_pagination_url = "http://changba.com/member/personcenter/loadmore.php"
+    # https://changba.com/member/personcenter/loadmore.php?userid=4306405&pageNum=1
+    audit_pagination_url = "https://changba.com/member/personcenter/loadmore.php"
     query_data = {
         "userid": user_id,
         "pageNum": page_count - 1,
@@ -55,7 +55,6 @@ def get_one_page_audio(user_id, page_count):
             "audio_id": None,  # 歌曲id
             "audio_key": None,  # 歌曲唯一key
             "audio_title": "",  # 歌曲标题
-            "audio_type": None,  # 歌曲类型，2 MV，1/3 歌曲
         }
         # 获取歌曲id
         if not crawler.check_sub_key(("workid",), audio_info):
@@ -71,23 +70,17 @@ def get_one_page_audio(user_id, page_count):
         if not crawler.check_sub_key(("enworkid",), audio_info):
             raise crawler.CrawlerException("歌曲信息'enworkid'字段不存在\n%s" % audio_info)
         result_audio_info["audio_key"] = audio_info["enworkid"]
-        # 获取歌曲类型
-        if not crawler.check_sub_key(("type",), audio_info):
-            raise crawler.CrawlerException("歌曲信息'type'字段不存在\n%s" % audio_info)
-        if not crawler.is_integer(audio_info["type"]):
-            raise crawler.CrawlerException("歌曲信息'type'字段类型不正确\n%s" % audio_info)
-        if int(audio_info["type"]) not in (1, 2, 3):
-            raise crawler.CrawlerException("歌曲信息'type'字段取值不正确\n%s" % audio_info)
-        result_audio_info["audio_type"] = int(audio_info["type"])
         result["audio_info_list"].append(result_audio_info)
     return result
 
 
 # 获取指定id的歌曲播放页
 # audio_en_word_id => w-ptydrV23KVyIPbWPoKsA
-def get_audio_play_page(audio_en_word_id, audio_type):
-    audio_play_url = "http://changba.com/s/%s" % audio_en_word_id
+def get_audio_play_page(audio_en_word_id):
+    audio_play_url = "https://changba.com/s/%s" % audio_en_word_id
     result = {
+        "audio_id": None,  # 歌曲id
+        "audio_title": "",  # 歌曲标题
         "audio_url": None,  # 歌曲地址
         "is_delete": False,  # 是不是已经被删除
     }
@@ -97,58 +90,51 @@ def get_audio_play_page(audio_en_word_id, audio_type):
     audio_play_response_content = audio_play_response.data.decode(errors="ignore")
     if audio_play_response_content.find("该作品可能含有不恰当内容将不能显示。") > -1:
         result["is_delete"] = True
-    else:
-        # 获取歌曲地址
-        if audio_type == 1 or audio_type == 3:
-            audio_source_url = tool.find_sub_string(audio_play_response_content, 'var a="', '"')
-            if not audio_source_url:
-                raise crawler.CrawlerException("页面截取歌曲原始地址失败\n%s" % audio_play_response_content)
-            # 从JS处解析的规则
-            special_find = re.findall("userwork/([abc])(\d+)/(\w+)/(\w+)\.mp3", audio_source_url)
-            if len(special_find) == 0:
-                result["audio_url"] = audio_source_url
-            elif len(special_find) == 1:
-                e = int(special_find[0][1], 8)
-                f = int(int(special_find[0][2], 16) / e / e)
-                g = int(int(special_find[0][3], 16) / e / e)
-                if "a" == special_find[0][0] and g % 1000 == f:
-                    result["audio_url"] = "http://a%smp3.changba.com/userdata/userwork/%s/%g.mp3" % (e, f, g)
-                else:
-                    result["audio_url"] = "http://aliuwmp3.changba.com/userdata/userwork/%s.mp3" % g
+        return result
+    # 获取歌曲id
+    audio_id = tool.find_sub_string(audio_play_response_content, "export_song.php?workid=", "&")
+    if not crawler.is_integer(audio_id):
+        raise crawler.CrawlerException("页面截取歌曲id失败\n%s" % audio_play_response_content)
+    result["audio_id"] = audio_id
+    # 获取歌曲标题
+    audio_title = tool.find_sub_string(audio_play_response_content, '<div class="title">', "</div>")
+    if not audio_title:
+        raise crawler.CrawlerException("页面截取歌曲标题失败\n%s" % audio_play_response_content)
+    result["audio_title"] = audio_title.strip()
+    # 判断歌曲类型（音频或者视频）
+    is_video = tool.find_sub_string(audio_play_response_content, "&isvideo=", "'")
+    if not crawler.is_integer(is_video):
+        raise crawler.CrawlerException("页面截取歌曲类型失败\n%s" % audio_play_response_content)
+    is_video = False if is_video == "0" else True
+    # 获取歌曲地址
+    if not is_video:  # 音频
+        audio_source_url = tool.find_sub_string(audio_play_response_content, 'var a="', '"')
+        if not audio_source_url:
+            raise crawler.CrawlerException("页面截取歌曲原始地址失败\n%s" % audio_play_response_content)
+        # 从JS处解析的规则
+        special_find = re.findall("userwork/([abc])(\d+)/(\w+)/(\w+)\.mp3", audio_source_url)
+        if len(special_find) == 0:
+            result["audio_url"] = audio_source_url
+        elif len(special_find) == 1:
+            e = int(special_find[0][1], 8)
+            f = int(int(special_find[0][2], 16) / e / e)
+            g = int(int(special_find[0][3], 16) / e / e)
+            if "a" == special_find[0][0] and g % 1000 == f:
+                result["audio_url"] = "https://a%smp3.changba.com/userdata/userwork/%s/%g.mp3" % (e, f, g)
             else:
-                raise crawler.CrawlerException("歌曲原始地址解密歌曲地址失败\n%s" % audio_source_url)
-        # MV
+                result["audio_url"] = "https://aliuwmp3.changba.com/userdata/userwork/%s.mp3" % g
         else:
-            video_source_string = tool.find_sub_string(audio_play_response_content, "<script>jwplayer.utils.qn = '", "';</script>")
-            if not video_source_string:
-                # 是不是使用bokecc cdn的视频
-                bokecc_param = tool.find_sub_string(audio_play_response_content, '<script src="//p.bokecc.com/player?', '"')
-                if not bokecc_param:
-                    raise crawler.CrawlerException("页面截取歌曲加密地址失败\n%s" % audio_play_response_content)
-                vid = tool.find_sub_string(bokecc_param, "vid=", "&")
-                if not vid:
-                    raise crawler.CrawlerException("bokecc参数截取vid失败\n%s" % bokecc_param)
-                bokecc_xml_url = "https://p.bokecc.com/servlet/playinfo"
-                query_data = {
-                    "vid": vid,
-                    "m": "1",
-                    "fv": "WIN",
-                    "rnd": str(int(time.time()))[-4:],
-                }
-                bokecc_xml_response = net.http_request(bokecc_xml_url, method="GET", fields=query_data)
-                if bokecc_xml_response.status != net.HTTP_RETURN_CODE_SUCCEED:
-                    raise crawler.CrawlerException("bokecc xml文件 %s 访问失败" % bokecc_xml_url)
-                bokecc_xml_response_content = bokecc_xml_response.data.decode(errors="ignore")
-                audio_url_find = re.findall('playurl="([^"]*)"', bokecc_xml_response_content)
-                if len(audio_url_find) == 0:
-                    raise crawler.CrawlerException("bokecc xml文件 %s 截取歌曲地址失败\n%s" % (bokecc_xml_url, bokecc_xml_response_content))
-                video_url = audio_url_find[-1].replace("&amp;", "&")
-            else:
-                try:
-                    video_url = base64.b64decode(video_source_string)
-                except TypeError:
-                    raise crawler.CrawlerException("歌曲加密地址解密失败\n%s" % video_source_string)
-            result["audio_url"] = video_url
+            raise crawler.CrawlerException("歌曲原始地址解密歌曲地址失败\n%s" % audio_source_url)
+    else:  # 视频
+        video_source_string = tool.find_sub_string(audio_play_response_content, "video_url: '", "',")
+        if not video_source_string:
+            raise crawler.CrawlerException("页面截取加密视频地址失败\n%s" % audio_play_response_content)
+        try:
+            video_url = base64.b64decode(video_source_string)
+        except TypeError:
+            raise crawler.CrawlerException("歌曲加密地址解密失败\n%s" % video_source_string)
+        video_url = "https:" + video_url.decode()
+        result["audio_url"] = video_url
     return result
 
 
@@ -265,7 +251,7 @@ class Download(crawler.DownloadThread):
         self.main_thread_check()  # 检测主线程运行状态
         # 获取歌曲播放页
         try:
-            audio_play_response = get_audio_play_page(audio_info["audio_key"], audio_info["audio_type"])
+            audio_play_response = get_audio_play_page(audio_info["audio_key"])
         except crawler.CrawlerException as e:
             self.error("歌曲%s《%s》解析失败，原因：%s" % (audio_info["audio_key"], audio_info["audio_title"], e.message))
             raise
@@ -277,7 +263,8 @@ class Download(crawler.DownloadThread):
         self.main_thread_check()  # 检测主线程运行状态
         self.step("开始下载歌曲%s《%s》 %s" % (audio_info["audio_key"], audio_info["audio_title"], audio_play_response["audio_url"]))
 
-        file_path = os.path.join(self.main_thread.video_download_path, self.display_name, "%010d - %s.mp3" % (int(audio_info["audio_id"]), path.filter_text(audio_info["audio_title"])))
+        file_type = audio_play_response["audio_url"].split(".")[-1]
+        file_path = os.path.join(self.main_thread.video_download_path, self.display_name, "%010d - %s.%s" % (int(audio_info["audio_id"]), path.filter_text(audio_info["audio_title"]), file_type))
         save_file_return = net.save_net_file(audio_play_response["audio_url"], file_path)
         if save_file_return["status"] == 1:
             self.step("歌曲%s《%s》下载成功" % (audio_info["audio_key"], audio_info["audio_title"]))

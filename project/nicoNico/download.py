@@ -1,7 +1,7 @@
 # -*- coding:UTF-8  -*-
 """
-指定xhamster视频下载
-https://xhamster.com/
+指定Nico Nico视频下载
+http://www.nicovideo.jp/
 @author: hikaru
 email: hikaru870806@hotmail.com
 如有问题或建议请联系
@@ -10,7 +10,7 @@ import os
 import tkinter
 from tkinter import filedialog
 from common import *
-from project.xhamster import xhamster
+from project.nicoNico import nicoNico
 
 DOWNLOAD_FILE_PATH = os.path.join(os.path.dirname(__file__), "video")
 
@@ -26,22 +26,20 @@ def main():
     gui.withdraw()
 
     while True:
-        video_url = input("请输入xhamster视频地址：").lower()
-        video_id = None
-        if video_url.find("//xhamster.com/videos/") > 0:
-            video_id = video_url.split("/")[-1].split("-")[-1]
-        # 无效的视频地址
-        if not crawler.is_integer(video_id):
-            log.step("错误的视频地址，正确的地址格式如：https://xhamster.com/videos/xxx-xxx-xxx-123456")
+        video_url = input(crawler.get_time() + " 请输入Nico Nico视频地址：").lower()
+        # http://www.nicovideo.jp/watch/sm20429274?ref=search_key_video&ss_pos=3&ss_id=361e7a4b-278e-40c1-acbb-a0c55c84005d
+        if video_url.find("//www.nicovideo.jp/watch/sm") == -1:
+            log.step("错误的视频地址，正确的地址格式如：http://www.nicovideo.jp/watch/sm20429274")
             continue
+        video_id = video_url.split("/")[-1].split("?")[0].replace("sm", "")
         # 访问视频播放页
         try:
-            video_response = xhamster.get_video_page(video_id)
+            video_response = nicoNico.get_video_info(video_id)
         except crawler.CrawlerException as e:
             log.error("解析视频下载地址失败，原因：%s" % e.message)
-            continue
+            tool.process_exit()
         if video_response["is_delete"]:
-            log.step("视频不存在，跳过")
+            log.step("视频已被删除，无法下载")
             continue
         # 选择下载目录
         options = {
@@ -56,10 +54,9 @@ def main():
         log.step("\n视频标题：%s\n视频地址：%s\n下载路径：%s" % (video_response["video_title"], video_response["video_url"], file_path))
         save_file_return = net.save_net_file(video_response["video_url"], file_path, head_check=True)
         if save_file_return["status"] == 1:
-            # 设置临时目录
             log.step("视频《%s》下载成功" % video_response["video_title"])
         else:
-            log.step("视频《%s》下载失败，原因：%s" % (video_response["video_title"], crawler.download_failre(save_file_return["code"])))
+            log.error("视频《%s》下载失败，原因：%s" % (video_response["video_title"], crawler.download_failre(save_file_return["code"])))
 
 
 if __name__ == "__main__":

@@ -158,7 +158,7 @@ def get_origin_image_url(image_url):
             else:
                 # todo 检测包含其他格式
                 log.error("无法解析的图片地址 %s" % image_url)
-    elif image_url.find("http://stat100.ameba.jp/blog/img/") == 0:
+    elif image_url.find("//stat100.ameba.jp/blog/img/") != -1:
         pass
     else:
         log.trace("第三方图片地址 %s" % image_url)
