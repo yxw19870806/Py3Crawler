@@ -157,12 +157,12 @@ class MMXYZ(crawler.Crawler):
                 for image_url in album_response["image_url_list"]:
                     if not self.is_running():
                         tool.process_exit(0)
-                    log.step("图集%s《%s》 %s 开始下载第%s张图片 %s" % (album_info["album_id"], album_info["album_title"], album_info["album_url"], image_index, image_url))
+                    log.step("图集%s《%s》 开始下载第%s张图片 %s" % (album_info["album_id"], album_info["album_title"], image_index, image_url))
 
                     file_path = os.path.join(album_path, "%03d.%s" % (image_index, net.get_file_type(image_url)))
                     save_file_return = net.save_net_file(image_url, file_path)
                     if save_file_return["status"] == 1:
-                        log.step("图集%s《%s》 %s 第%s张图片下载成功" % (album_info["album_id"], album_info["album_title"], album_info["album_url"], image_index))
+                        log.step("图集%s《%s》 第%s张图片下载成功" % (album_info["album_id"], album_info["album_title"], image_index))
                     else:
                         log.error("图集%s《%s》 %s 第%s张图片 %s 下载失败，原因：%s" % (album_info["album_id"], album_info["album_title"], album_info["album_url"], image_index, image_url, crawler.download_failre(save_file_return["code"])))
                     image_index += 1
