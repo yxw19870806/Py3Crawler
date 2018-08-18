@@ -77,6 +77,9 @@ def get_album_page(album_id):
             # 获取图集总页数
             max_page_count = pq(album_pagination_response_content).find("div.page ul li").eq(-2).find("a").html()
             if not crawler.is_integer(max_page_count):
+                if pq(album_pagination_response_content).find("div.page ul").length == 1:
+                    result["is_delete"] = True
+                    return result
                 raise crawler.CrawlerException("页面截取总页数失败\n%s" % album_pagination_response_content)
             max_page_count = int(max_page_count)
         # 获取图集图片地址
