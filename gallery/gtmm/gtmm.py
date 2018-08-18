@@ -88,7 +88,11 @@ def get_album_page(album_id):
             if pq(album_pagination_response_content).find(".imagepic").length == 0:
                 raise crawler.CrawlerException("第%s页页面截取图片列表失败\n%s" % (page_count, album_pagination_response_content))
         for image_index in range(0, image_list_selector.length):
-            result["image_url_list"].append("http://www.gtmm.net/" + image_list_selector.eq(image_index).attr("src"))
+            image_url = image_list_selector.eq(image_index).attr("src")
+            if image_url[0] == "/":
+                result["image_url_list"].append("http://www.gtmm.net" + image_url)
+            else:
+                result["image_url_list"].append(image_url)
         page_count += 1
     return result
 
