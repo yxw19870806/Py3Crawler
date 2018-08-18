@@ -93,18 +93,30 @@ def get_video_page(video_id):
     # 获取视频下载地址
     if not crawler.check_sub_key(("sources",), video_info["videoModel"]):
         raise crawler.CrawlerException("视频列表信息'sources'字段不存在\n%s" % video_info["videoModel"])
-    if not crawler.check_sub_key(("mp4",), video_info["videoModel"]["sources"]):
-        raise crawler.CrawlerException("视频列表信息'mp4'字段不存在\n%s" % video_info["videoModel"]["sources"])
+    if len(video_info["videoModel"]["sources"]) == 0:
+        if not crawler.check_sub_key(("vr",), video_info):
+            raise crawler.CrawlerException("视频列表信息'vr'字段不存在\n%s" % video_info)
+        if not crawler.check_sub_key(("sources",), video_info["vr"]):
+            raise crawler.CrawlerException("视频列表信息'vr.sources'字段不存在\n%s" % video_info)
+        video_list = {}
+        for resolution_string in video_info["vr"]["sources"]:
+            if not crawler.check_sub_key(("downloadUrl",), video_info["vr"]["sources"][resolution_string]):
+                raise crawler.CrawlerException("视频列表信息'downloadUrl'字段不存在\n%s" % video_info)
+            video_list[resolution_string] = video_info["vr"]["sources"][resolution_string]["downloadUrl"]
+    else:
+        if not crawler.check_sub_key(("mp4",), video_info["videoModel"]["sources"]):
+            raise crawler.CrawlerException("视频列表信息'mp4'字段不存在\n%s" % video_info)
+        video_list = video_info["videoModel"]["sources"]["mp4"]
     # 各个分辨率下的视频地址
     resolution_to_url = {}
-    for resolution_string in video_info["videoModel"]["sources"]["mp4"]:
+    for resolution_string in video_list:
         resolution = resolution_string.replace("p", "")
         if not crawler.is_integer(resolution):
             raise crawler.CrawlerException("视频信息分辨率字段类型不正确\n%s" % resolution_string)
         resolution = int(resolution)
         if resolution not in [240, 480, 720]:
-            log.notice("未知视频分辨率：%s" % video_info["videoModel"]["sources"]["mp4"])
-        resolution_to_url[resolution] = video_info["videoModel"]["sources"]["mp4"][resolution_string]
+            log.notice("未知视频分辨率：%s" % video_list)
+        resolution_to_url[resolution] = video_list[resolution_string]
     # 优先使用配置中的分辨率
     if FIRST_CHOICE_RESOLUTION in resolution_to_url:
         result["video_url"] = resolution_to_url[FIRST_CHOICE_RESOLUTION]
