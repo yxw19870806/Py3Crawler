@@ -7,6 +7,7 @@ email: hikaru870806@hotmail.com
 """
 import os
 import traceback
+import urllib.parse
 from pyquery import PyQuery as pq
 from common import *
 
@@ -159,6 +160,8 @@ class MMXYZ(crawler.Crawler):
                         tool.process_exit(0)
                     log.step("图集%s《%s》 开始下载第%s张图片 %s" % (album_info["album_id"], album_info["album_title"], image_index, image_url))
 
+                    image_url_split = urllib.parse.urlsplit(image_url)
+                    image_url = image_url_split[0] + "://" + image_url_split[1] + urllib.parse.quote(image_url_split[2])
                     file_path = os.path.join(album_path, "%03d.%s" % (image_index, net.get_file_type(image_url)))
                     save_file_return = net.save_net_file(image_url, file_path)
                     if save_file_return["status"] == 1:
