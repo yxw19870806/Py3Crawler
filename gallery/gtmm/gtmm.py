@@ -77,6 +77,9 @@ def get_album_page(album_id):
             # 获取图集总页数
             max_page_count = pq(album_pagination_response_content).find("div.page ul li").eq(-2).find("a").html()
             if not crawler.is_integer(max_page_count):
+                if pq(album_pagination_response_content).find("div.page ul").length == 1:
+                    result["is_delete"] = True
+                    return result
                 raise crawler.CrawlerException("页面截取总页数失败\n%s" % album_pagination_response_content)
             max_page_count = int(max_page_count)
         # 获取图集图片地址
@@ -85,7 +88,11 @@ def get_album_page(album_id):
             if pq(album_pagination_response_content).find(".imagepic").length == 0:
                 raise crawler.CrawlerException("第%s页页面截取图片列表失败\n%s" % (page_count, album_pagination_response_content))
         for image_index in range(0, image_list_selector.length):
-            result["image_url_list"].append("http://www.gtmm.net/" + image_list_selector.eq(image_index).attr("src"))
+            image_url = image_list_selector.eq(image_index).attr("src")
+            if image_url[0] == "/":
+                result["image_url_list"].append("http://www.gtmm.net" + image_url)
+            else:
+                result["image_url_list"].append(image_url)
         page_count += 1
     return result
 
@@ -147,9 +154,9 @@ class GTMM(crawler.Crawler):
                 # 过滤标题中不支持的字符
                 album_title = path.filter_text(album_response["album_title"])
                 if album_title:
-                    album_path = os.path.join(self.image_download_path, "%05d %s" % (album_id, album_title))
+                    album_path = os.path.join(self.image_download_path, "%04d %s" % (album_id, album_title))
                 else:
-                    album_path = os.path.join(self.image_download_path, "%05d" % album_id)
+                    album_path = os.path.join(self.image_download_path, "%04d" % album_id)
                 temp_path = album_path
                 for image_url in album_response["image_url_list"]:
                     if not self.is_running():

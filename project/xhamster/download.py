@@ -43,6 +43,9 @@ def main():
         if video_response["is_delete"]:
             log.step("视频不存在，跳过")
             continue
+        if video_response["is_password"]:
+            log.step("视频已加密，跳过")
+            continue
         # 选择下载目录
         options = {
             "initialdir": DOWNLOAD_FILE_PATH,
