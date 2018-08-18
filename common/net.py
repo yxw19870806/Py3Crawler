@@ -74,7 +74,7 @@ def set_proxy(ip, port):
         return
     global PROXY_HTTP_CONNECTION_POOL
     PROXY_HTTP_CONNECTION_POOL = urllib3.ProxyManager("http://%s:%s" % (ip, port), retries=False)
-    output.print_msg("设置代理成功")
+    output.print_msg("设置代理成功(%s:%s)" % (ip, port))
 
 
 def build_header_cookie_string(cookies_list):
