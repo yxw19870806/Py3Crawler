@@ -12,8 +12,6 @@ from tkinter import filedialog
 from common import *
 from project.ximalaya import ximalaya
 
-DOWNLOAD_FILE_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), "video"))
-
 
 def main():
     config = crawler._get_config()
@@ -47,7 +45,7 @@ def main():
         # 选择下载目录
         file_type = net.get_file_type(audio_response["audio_url"])
         options = {
-            "initialdir": DOWNLOAD_FILE_PATH,
+            "initialdir": os.path.join(os.path.dirname(__file__), "video"),
             "initialfile": "%s - %s.%s" % (audio_id, path.filter_text(audio_response["audio_title"]), file_type),
             "filetypes": [(file_type, "." + file_type)],
         }

@@ -12,7 +12,6 @@ from tkinter import filedialog
 from common import *
 from project.dailymotion import dailymotion
 
-DOWNLOAD_FILE_PATH = os.path.join(os.path.dirname(__file__), "video")
 
 
 def main():
