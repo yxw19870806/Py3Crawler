@@ -42,15 +42,21 @@ def get_one_page_audio(account_id, page_type, page_count):
 
 # 获取指定id的歌曲播放页
 def get_audio_play_page(audio_id, song_type):
-    audio_info_url = "http://service.5sing.kugou.com/song/getsongurl?songid=%s&songtype=%s" % (audio_id, song_type)
-    audio_info_response = net.http_request(audio_info_url, method="GET", json_decode=True)
+    audio_info_url = "http://service.5sing.kugou.com/song/getsongurl"
+    query_data = {
+        "songid": audio_id,
+        "songtype": song_type,
+    }
+    audio_info_response = net.http_request(audio_info_url, method="GET", fields=query_data, json_decode=True)
     result = {
+        "audio_title": "",  # 歌曲标题
         "audio_url": None,  # 歌曲地址
     }
     if audio_info_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(audio_info_response.status))
     if not crawler.check_sub_key(("data",), audio_info_response.json_data):
         raise crawler.CrawlerException("歌曲信息'data'字段不存在\n%s" % audio_info_response.json_data)
+    # 获取歌曲地址
     if crawler.check_sub_key(("squrl",), audio_info_response.json_data["data"]):
         result["audio_url"] = audio_info_response.json_data["data"]["squrl"]
     elif crawler.check_sub_key(("lqurl",), audio_info_response.json_data["data"]):
@@ -59,6 +65,10 @@ def get_audio_play_page(audio_id, song_type):
         result["audio_url"] = audio_info_response.json_data["data"]["hqurl"]
     else:
         raise crawler.CrawlerException("歌曲信息'squrl'、'lqurl'、'hqurl'字段都不存在\n%s" % audio_info_response.json_data)
+    # 获取歌曲标题
+    if not crawler.check_sub_key(("songName",), audio_info_response.json_data["data"]):
+        raise crawler.CrawlerException("歌曲信息'songName'字段不存在\n%s" % audio_info_response.json_data)
+    result["audio_title"] = audio_info_response.json_data["data"]["songName"]
     return result
 
 
