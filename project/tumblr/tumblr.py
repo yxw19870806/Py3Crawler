@@ -401,7 +401,7 @@ def get_video_play_page(account_id, post_id, is_https):
 def get_post_id(post_url):
     post_id = tool.find_sub_string(post_url, "/post/").split("/")[0]
     if crawler.is_integer(post_id):
-        return post_id
+        return int(post_id)
     return None
 
 
@@ -531,7 +531,7 @@ class Download(crawler.DownloadThread):
                     tool.process_exit()
 
                 # 检查是否达到存档记录
-                if int(post_id) > int(self.account_info[1]):
+                if post_id > int(self.account_info[1]):
                     # 新增信息页导致的重复判断
                     if post_id in unique_list:
                         continue
@@ -589,7 +589,7 @@ class Download(crawler.DownloadThread):
             self.main_thread_check()  # 检测主线程运行状态
             self.step("日志 %s 开始下载视频 %s" % (post_id, video_url))
 
-            video_file_path = os.path.join(self.main_thread.video_download_path, self.account_id, "%012d.mp4" % int(post_id))
+            video_file_path = os.path.join(self.main_thread.video_download_path, self.account_id, "%012d.mp4" % post_id)
             save_file_return = net.save_net_file(video_url, video_file_path)
             if save_file_return["status"] == 1:
                 # 设置临时目录
@@ -624,7 +624,7 @@ class Download(crawler.DownloadThread):
                 self.main_thread_check()  # 检测主线程运行状态
                 self.step("日志 %s 开始下载第%s张图片 %s" % (post_id, image_index, image_url))
 
-                image_file_path = os.path.join(self.main_thread.image_download_path, self.account_id, "%012d_%02d.%s" % (int(post_id), image_index, net.get_file_type(image_url)))
+                image_file_path = os.path.join(self.main_thread.image_download_path, self.account_id, "%012d_%02d.%s" % (post_id, image_index, net.get_file_type(image_url)))
                 save_file_return = net.save_net_file(image_url, image_file_path)
                 if save_file_return["status"] == 1:
                     # 设置临时目录
@@ -679,7 +679,7 @@ class Download(crawler.DownloadThread):
 
                 post_id = get_post_id(post_pagination_response["post_info_list"][-1]["post_url"])
                 # 这页已经匹配到存档点，返回上一个节点
-                if int(post_id) < int(self.account_info[1]):
+                if post_id < int(self.account_info[1]):
                     start_page_count -= self.EACH_LOOP_MAX_PAGE_COUNT
                     break
 

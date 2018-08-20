@@ -72,7 +72,7 @@ def get_video_info_page(video_id):
         # 获取视频地址
         result["video_url"] = video_info_response.json_data["videoUrl"]
         # 获取视频id（数字）
-        result["video_id"] = video_info_response.json_data["postId"]
+        result["video_id"] = int(video_info_response.json_data["postId"])
     return result
 
 
@@ -155,7 +155,7 @@ class Download(crawler.DownloadThread):
         # 寻找符合条件的视频
         for video_id in account_index_page_response["video_id_list"]:
             # 检查是否达到存档记录
-            if video_id != self.account_info[2]:
+            if video_id > self.account_info[2]:
                 video_id_list.append(video_id)
             else:
                 self.is_find = True

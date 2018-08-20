@@ -1,7 +1,7 @@
 # -*- coding:UTF-8  -*-
 """
-指定唱吧歌曲下载
-https://changba.com/
+指定5sing歌曲下载
+http://5sing.kugou.com/
 @author: hikaru
 email: hikaru870806@hotmail.com
 如有问题或建议请联系
@@ -10,7 +10,7 @@ import os
 import tkinter
 from tkinter import filedialog
 from common import *
-from project.changba import changba
+from project.fiveSing import fiveSing
 
 
 def main():
@@ -24,15 +24,20 @@ def main():
     gui.withdraw()
 
     while True:
-        audio_url = input(crawler.get_time() + " 请输入唱吧歌曲地址：")
-        # https://changba.com/s/LBdSlkRwmqApasSCCVp5VA
-        if audio_url.lower().find("//changba.com/s/") == -1:
-            log.step("错误的歌曲地址，正确的地址格式如：https://changba.com/s/LBdSlkRwmqApasSCCVp5VA")
+        audio_url = input(crawler.get_time() + " 请输入5sing歌曲地址：").lower()
+        audio_type = None
+        audio_id = None
+        # http://5sing.kugou.com/fc/15887314.html
+        if audio_url.find("//5sing.kugou.com/") > 0:
+            temp_list = audio_url.split("/")
+            audio_type = temp_list[-2]
+            audio_id = temp_list[-1].split(".")[0]
+        if not crawler.is_integer(audio_id) or audio_type not in ["yc", "fc", "bz"]:
+            log.step("错误的歌曲地址，正确的地址格式如：http://5sing.kugou.com/fc/15887314.html")
             continue
-        audio_key = audio_url.split("/")[-1].split("?")[0]
         # 访问歌曲播放页
         try:
-            audio_response = changba.get_audio_play_page(audio_key)
+            audio_response = fiveSing.get_audio_play_page(audio_id, audio_type)
         except crawler.CrawlerException as e:
             log.error("解析歌曲下载地址失败，原因：%s" % e.message)
             tool.process_exit()
@@ -43,7 +48,7 @@ def main():
         file_type = net.get_file_type(audio_response["audio_url"])
         options = {
             "initialdir": os.path.join(os.path.dirname(__file__), "video"),
-            "initialfile": "%010d - %s.%s" % (audio_response["audio_id"], path.filter_text(audio_response["audio_title"]), file_type),
+            "initialfile": "%08d - %s.%s" % (int(audio_id), path.filter_text(audio_response["audio_title"]), file_type),
             "filetypes": [(file_type, "." + file_type)],
         }
         file_path = tkinter.filedialog.asksaveasfilename(**options)

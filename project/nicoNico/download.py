@@ -12,8 +12,6 @@ from tkinter import filedialog
 from common import *
 from project.nicoNico import nicoNico
 
-DOWNLOAD_FILE_PATH = os.path.join(os.path.dirname(__file__), "video")
-
 
 def main():
     config = crawler._get_config()
@@ -43,7 +41,7 @@ def main():
             continue
         # 选择下载目录
         options = {
-            "initialdir": DOWNLOAD_FILE_PATH,
+            "initialdir": os.path.join(os.path.dirname(__file__), "video"),
             "initialfile": "%08d - %s.mp4" % (int(video_id), path.filter_text(video_response["video_title"])),
             "filetypes": [("mp4", ".mp4")],
         }

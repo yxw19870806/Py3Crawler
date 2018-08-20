@@ -130,7 +130,7 @@ def get_one_page_media(account_name, position_blog_id):
         blog_id = tool.find_sub_string(tweet_data, 'data-tweet-id="', '"')
         if not crawler.is_integer(blog_id):
             raise crawler.CrawlerException("tweet内容中截取tweet id失败\n%s" % tweet_data)
-        result_media_info["blog_id"] = blog_id
+        result_media_info["blog_id"] = int(blog_id)
         # 获取图片地址
         result_media_info["image_url_list"] = re.findall('data-image-url="([^"]*)"', tweet_data)
         # 判断是不是有视频
@@ -297,7 +297,7 @@ class Download(crawler.DownloadThread):
             # 寻找这一页符合条件的媒体
             for media_info in media_pagination_response["media_info_list"]:
                 # 检查是否达到存档记录
-                if int(media_info["blog_id"]) > int(self.account_info[4]):
+                if media_info["blog_id"] > int(self.account_info[4]):
                     media_info_list.append(media_info)
                 else:
                     is_over = True
@@ -374,7 +374,7 @@ class Download(crawler.DownloadThread):
         self.total_video_count += (video_index - 1) - int(self.account_info[3])  # 计数累加
         self.account_info[2] = str(image_index - 1)  # 设置存档记录
         self.account_info[3] = str(video_index - 1)  # 设置存档记录
-        self.account_info[4] = media_info["blog_id"]
+        self.account_info[4] = str(media_info["blog_id"])
 
     def run(self):
         try:
