@@ -1,6 +1,6 @@
 # -*- coding:UTF-8  -*-
 """
-浏览器数据相关类
+路径相关类
 @author: hikaru
 email: hikaru870806@hotmail.com
 如有问题或建议请联系
