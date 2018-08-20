@@ -51,6 +51,7 @@ def get_audio_play_page(audio_id, song_type):
     result = {
         "audio_title": "",  # 歌曲标题
         "audio_url": None,  # 歌曲地址
+        "is_delete": False,  # 是否已删除
     }
     if audio_info_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(audio_info_response.status))
@@ -64,6 +65,10 @@ def get_audio_play_page(audio_id, song_type):
     elif crawler.check_sub_key(("hqurl",), audio_info_response.json_data["data"]):
         result["audio_url"] = audio_info_response.json_data["data"]["hqurl"]
     else:
+        if crawler.check_sub_key(("success", "message"), audio_info_response.json_data) and audio_info_response.json_data["success"] is False:
+            if audio_info_response.json_data["message"] in ["该歌曲已下架", "歌曲不存在"]:
+                result["is_delete"] = True
+                return result
         raise crawler.CrawlerException("歌曲信息'squrl'、'lqurl'、'hqurl'字段都不存在\n%s" % audio_info_response.json_data)
     # 获取歌曲标题
     if not crawler.check_sub_key(("songName",), audio_info_response.json_data["data"]):
