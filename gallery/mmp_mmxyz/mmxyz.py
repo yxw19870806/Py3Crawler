@@ -119,7 +119,7 @@ class MMP_MMXYZ(crawler.Crawler):
                 # 寻找这一页符合条件的图集
                 for album_info in album_pagination_response["album_info_list"]:
                     # 检查是否达到存档记录
-                    if int(album_info["album_id"]) > album_id:
+                    if album_info["album_id"] > album_id:
                         # 新增图片导致的重复判断
                         if album_info["album_id"] in unique_list:
                             continue
@@ -148,9 +148,9 @@ class MMP_MMXYZ(crawler.Crawler):
                 # 过滤标题中不支持的字符
                 album_title = path.filter_text(album_info["album_title"])
                 if album_title:
-                    album_path = os.path.join(self.image_download_path, "%04d %s" % (int(album_info["album_id"]), album_title))
+                    album_path = os.path.join(self.image_download_path, "%04d %s" % (album_info["album_id"], album_title))
                 else:
-                    album_path = os.path.join(self.image_download_path, "%04d" % int(album_info["album_id"]))
+                    album_path = os.path.join(self.image_download_path, "%04d" % album_info["album_id"])
                 temp_path = album_path
                 for image_url in album_response["image_url_list"]:
                     if not self.is_running():
@@ -169,7 +169,7 @@ class MMP_MMXYZ(crawler.Crawler):
                 # 图集内图片全部下载完毕
                 temp_path = ""  # 临时目录设置清除
                 self.total_image_count += image_index - 1  # 计数累加
-                album_id = album_info["album_id"]  # 设置存档记录
+                album_id = str(album_info["album_id"])  # 设置存档记录
         except SystemExit as se:
             if se.code == 0:
                 log.step("提前退出")

@@ -69,7 +69,7 @@ def get_one_page_album(account_id, post_time):
             raise crawler.CrawlerException("相册信息'post_id'字段不存在\n%s" % album_info)
         if not crawler.is_integer(album_info["post_id"]):
             raise crawler.CrawlerException("相册信息'post_id'字段类型不正确\n%s" % album_info)
-        result_image_info["album_id"] = album_info["post_id"]
+        result_image_info["album_id"] = int(album_info["post_id"])
         # 获取相册标题
         if not crawler.check_sub_key(("title",), album_info):
             raise crawler.CrawlerException("相册信息'title'字段不存在\n%s" % album_info)
@@ -178,7 +178,7 @@ class Download(crawler.DownloadThread):
             # 寻找这一页符合条件的相册
             for album_info in album_pagination_response["album_info_list"]:
                 # 检查是否达到存档记录
-                if int(album_info["album_id"]) > int(self.account_info[1]):
+                if album_info["album_id"] > int(self.account_info[1]):
                     album_info_list.append(album_info)
                     post_time = album_info["album_time"]
                 else:
@@ -193,9 +193,9 @@ class Download(crawler.DownloadThread):
         # 过滤标题中不支持的字符
         album_title = path.filter_text(album_info["album_title"])
         if album_title:
-            post_path = os.path.join(self.main_thread.image_download_path, self.account_name, "%08d %s" % (int(album_info["album_id"]), album_title))
+            post_path = os.path.join(self.main_thread.image_download_path, self.account_name, "%08d %s" % (album_info["album_id"], album_title))
         else:
-            post_path = os.path.join(self.main_thread.image_download_path, self.account_name, "%08d" % int(album_info["album_id"]))
+            post_path = os.path.join(self.main_thread.image_download_path, self.account_name, "%08d" % album_info["album_id"])
         self.temp_path_list.append(post_path)
         for image_url in album_info["image_url_list"]:
             self.main_thread_check()  # 检测主线程运行状态
@@ -212,7 +212,7 @@ class Download(crawler.DownloadThread):
         # 相册内图片全部下载完毕
         self.temp_path_list = []  # 临时目录设置清除
         self.total_image_count += image_index - 1  # 计数累加
-        self.account_info[1] = album_info["album_id"]  # 设置存档记录
+        self.account_info[1] = str(album_info["album_id"])  # 设置存档记录
 
     def run(self):
         try:

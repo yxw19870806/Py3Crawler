@@ -61,7 +61,7 @@ def get_one_page_audio(user_id, page_count):
             raise crawler.CrawlerException("歌曲信息'workid'字段不存在\n%s" % audio_info)
         if not crawler.is_integer(audio_info["workid"]):
             raise crawler.CrawlerException("歌曲信息'workid'字段类型不正确\n%s" % audio_info)
-        result_audio_info["audio_id"] = audio_info["workid"]
+        result_audio_info["audio_id"] = str(audio_info["workid"])
         # 获取歌曲标题
         if not crawler.check_sub_key(("songname",), audio_info):
             raise crawler.CrawlerException("歌曲信息'songname'字段不存在\n%s" % audio_info)
@@ -95,7 +95,7 @@ def get_audio_play_page(audio_en_word_id):
     audio_id = tool.find_sub_string(audio_play_response_content, "export_song.php?workid=", "&")
     if not crawler.is_integer(audio_id):
         raise crawler.CrawlerException("页面截取歌曲id失败\n%s" % audio_play_response_content)
-    result["audio_id"] = audio_id
+    result["audio_id"] = str(audio_id)
     # 获取歌曲标题
     audio_title = tool.find_sub_string(audio_play_response_content, '<div class="title">', "</div>")
     if not audio_title:
@@ -225,7 +225,7 @@ class Download(crawler.DownloadThread):
             # 寻找这一页符合条件的歌曲
             for audio_info in audit_pagination_response["audio_info_list"]:
                 # 检查是否达到存档记录
-                if int(audio_info["audio_id"]) > int(self.account_info[1]):
+                if audio_info["audio_id"] > int(self.account_info[1]):
                     # 新增歌曲导致的重复判断
                     if audio_info["audio_id"] in unique_list:
                         continue
@@ -264,7 +264,7 @@ class Download(crawler.DownloadThread):
         self.step("开始下载歌曲%s《%s》 %s" % (audio_info["audio_key"], audio_info["audio_title"], audio_play_response["audio_url"]))
 
         file_type = audio_play_response["audio_url"].split(".")[-1]
-        file_path = os.path.join(self.main_thread.video_download_path, self.display_name, "%010d - %s.%s" % (int(audio_info["audio_id"]), path.filter_text(audio_info["audio_title"]), file_type))
+        file_path = os.path.join(self.main_thread.video_download_path, self.display_name, "%010d - %s.%s" % (audio_info["audio_id"], path.filter_text(audio_info["audio_title"]), file_type))
         save_file_return = net.save_net_file(audio_play_response["audio_url"], file_path)
         if save_file_return["status"] == 1:
             self.step("歌曲%s《%s》下载成功" % (audio_info["audio_key"], audio_info["audio_title"]))
@@ -275,7 +275,7 @@ class Download(crawler.DownloadThread):
         # 歌曲下载完毕
         if save_file_return["status"] == 1:
             self.total_video_count += 1  # 计数累加
-        self.account_info[1] = audio_info["audio_id"]  # 设置存档
+        self.account_info[1] = str(audio_info["audio_id"])  # 设置存档
 
     def run(self):
         try:

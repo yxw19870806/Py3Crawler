@@ -62,11 +62,13 @@ def get_mylist_index(account_id):
         # 获取视频id
         if not crawler.check_sub_key(("video_id",), video_info["item_data"]):
             raise crawler.CrawlerException("视频信息'video_id'字段不存在\n%s" % video_info)
-        video_id = video_info["item_data"]["video_id"]
-        result_video_info["video_id"] = video_id.replace("sm", "")
+        video_id = video_info["item_data"]["video_id"].replace("sm", "")
+        if not crawler.is_integer(video_id):
+            raise crawler.CrawlerException("视频信息'video_id'字段类型不正确\n%s" % video_info)
+        result_video_info["video_id"] = int(video_id)
         # 获取视频辩题
         if not crawler.check_sub_key(("title",), video_info["item_data"]):
-            raise crawler.CrawlerException("视频信息'video_id'字段不存在\n%s" % video_info)
+            raise crawler.CrawlerException("视频信息'title'字段不存在\n%s" % video_info)
         result_video_info["video_title"] = video_info["item_data"]["title"]
         result["video_info_list"].append(result_video_info)
     return result
@@ -210,7 +212,7 @@ class Download(crawler.DownloadThread):
         for video_info in account_index_response["video_info_list"]:
             self.main_thread_check()  # 检测主线程运行状态
             # 检查是否达到存档记录
-            if int(video_info["video_id"]) > int(self.account_info[1]):
+            if video_info["video_id"] > int(self.account_info[1]):
                 video_info_list.append(video_info)
             else:
                 break
@@ -235,7 +237,7 @@ class Download(crawler.DownloadThread):
 
         self.step("视频%s 《%s》 %s 开始下载" % (video_info["video_id"], video_info["video_title"], video_info_response["video_url"]))
 
-        video_file_path = os.path.join(self.main_thread.video_download_path, self.display_name, "%08d - %s.mp4" % (int(video_info["video_id"]), path.filter_text(video_info["video_title"])))
+        video_file_path = os.path.join(self.main_thread.video_download_path, self.display_name, "%08d - %s.mp4" % (video_info["video_id"], path.filter_text(video_info["video_title"])))
         cookies_list = COOKIE_INFO
         if video_info_response["extra_cookie"]:
             cookies_list.update(video_info_response["extra_cookie"])
@@ -248,7 +250,7 @@ class Download(crawler.DownloadThread):
 
         # 视频下载完毕
         self.total_video_count += 1  # 计数累加
-        self.account_info[1] = video_info["video_id"]  # 设置存档记录
+        self.account_info[1] = str(video_info["video_id"])  # 设置存档记录
 
     def run(self):
         try:

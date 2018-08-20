@@ -143,7 +143,7 @@ class Download(crawler.DownloadThread):
             # 寻找这一页符合条件的视频
             for video_info in video_pagination_response["video_info_list"]:
                 # 检查是否达到存档记录
-                if int(video_info["video_id"]) > int(self.account_info[1]):
+                if video_info["video_id"] > int(self.account_info[1]):
                     # 新增视频导致的重复判断
                     if video_info["video_id"] in unique_list:
                         continue

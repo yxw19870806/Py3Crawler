@@ -52,7 +52,7 @@ def get_one_page_blog(account_id, page_count):
         blog_id = blog_url.split("/")[-1].split(".")[0]
         if not crawler.is_integer(blog_id):
             raise crawler.CrawlerException("日志内容截取日志id失败\n%s" % blog_bottom_selector.eq(blog_body_index).html())
-        result_image_info["blog_id"] = blog_id
+        result_image_info["blog_id"] = int(blog_id)
         # 获取图片地址列表
         result_image_info["image_url_list"] = re.findall('src="(http[^"]*)"', blog_body_html)
         # 获取全部大图对应的小图
@@ -196,7 +196,7 @@ class Download(crawler.DownloadThread):
             # 寻找这一页符合条件的日志
             for blog_info in blog_pagination_response["blog_info_list"]:
                 # 检查是否达到存档记录
-                if int(blog_info["blog_id"]) > int(self.account_info[2]):
+                if blog_info["blog_id"] > int(self.account_info[2]):
                     blog_info_list.append(blog_info)
                 else:
                     is_over = True
@@ -241,7 +241,7 @@ class Download(crawler.DownloadThread):
         self.temp_path_list = []  # 临时目录设置清除
         self.total_image_count += (image_index - 1) - int(self.account_info[1])  # 计数累加
         self.account_info[1] = str(image_index - 1)  # 设置存档记录
-        self.account_info[2] = blog_info["blog_id"]  # 设置存档记录
+        self.account_info[2] = str(blog_info["blog_id"])  # 设置存档记录
 
     def run(self):
         try:

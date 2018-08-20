@@ -227,9 +227,9 @@ class Download(crawler.DownloadThread):
         # 过滤标题中不支持的字符
         album_title = path.filter_text(album_info["album_title"])
         if album_title:
-            album_path = os.path.join(self.main_thread.image_download_path, "%04d %s" % (int(album_info["album_id"]), album_title))
+            album_path = os.path.join(self.main_thread.image_download_path, "%04d %s" % (album_info["album_id"], album_title))
         else:
-            album_path = os.path.join(self.main_thread.image_download_path, "%04d" % int(album_info["album_id"]))
+            album_path = os.path.join(self.main_thread.image_download_path, "%04d" % album_info["album_id"])
         # 设置临时目录
         self.temp_path_list.append(album_path)
         for image_url in photo_pagination_response["image_url_list"]:

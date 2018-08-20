@@ -42,7 +42,7 @@ def get_one_page_blog(page_count):
         blog_id = image_name_list[0].split("-")[0]
         if not crawler.is_integer(blog_id):
             raise crawler.CrawlerException("图片名字截取日志id失败\n%s" % blog_html)
-        result_blog_info["blog_id"] = blog_id
+        result_blog_info["blog_id"] = int(blog_id)
         for image_name in image_name_list:
             result_blog_info["image_url_list"].append("http://blog.mariko-shinoda.net/%s" % image_name)
         result["blog_info_list"].append(result_blog_info)
@@ -102,7 +102,7 @@ class Blog(crawler.Crawler):
                 # 寻找这一页符合条件的日志
                 for blog_info in blog_pagination_response["blog_info_list"]:
                     # 检查是否达到存档记录
-                    if int(blog_info["blog_id"]) > int(save_info[1]):
+                    if blog_info["blog_id"] > int(save_info[1]):
                         blog_info_list.append(blog_info)
                     else:
                         is_over = True
@@ -136,7 +136,7 @@ class Blog(crawler.Crawler):
                 temp_path_list = []  # 临时目录设置清除
                 self.total_image_count += (image_index - 1) - int(save_info[0])  # 计数累加
                 save_info[0] = str(image_index - 1)  # 设置存档记录
-                save_info[1] = blog_info["blog_id"]  # 设置存档记录
+                save_info[1] = str(blog_info["blog_id"])  # 设置存档记录
         except SystemExit as se:
             if se.code == 0:
                 log.step("提前退出")

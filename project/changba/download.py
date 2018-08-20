@@ -45,7 +45,7 @@ def main():
         file_type = net.get_file_type(audio_response["audio_url"])
         options = {
             "initialdir": DOWNLOAD_FILE_PATH,
-            "initialfile": "%010d - %s.%s" % (int(audio_response["audio_id"]), path.filter_text(audio_response["audio_title"]), file_type),
+            "initialfile": "%010d - %s.%s" % (audio_response["audio_id"], path.filter_text(audio_response["audio_title"]), file_type),
             "filetypes": [(file_type, "." + file_type)],
         }
         file_path = tkinter.filedialog.asksaveasfilename(**options)

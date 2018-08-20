@@ -38,7 +38,7 @@ def get_one_page_photo(page_count):
             raise crawler.CrawlerException("图片列表匹配图片id失败\n%s" % photo_list_selector.eq(photo_index).html())
         if not (image_id[0:3] == "big" and crawler.is_integer(image_id[3:])):
             raise crawler.CrawlerException("图片列表匹配的图片id格式不正确\n%s" % photo_list_selector.eq(photo_index).html())
-        result_image_info["image_id"] = image_id[3:]
+        result_image_info["image_id"] = int(image_id[3:])
         # 获取图片地址
         image_path = photo_list_selector.eq(photo_index).find(".bizhibig img").eq(1).attr("src")
         if not image_path:
@@ -105,7 +105,7 @@ class Wallpaper(crawler.Crawler):
 
                 for image_info in photo_pagination_response["image_info_list"]:
                     # 检查是否达到存档记录
-                    if int(image_info["image_id"]) > last_image_id:
+                    if image_info["image_id"] > last_image_id:
                         image_info_list.append(image_info)
                     else:
                         is_over = True
@@ -127,7 +127,7 @@ class Wallpaper(crawler.Crawler):
 
                 log.step("开始下载第%s张图片 %s" % (image_info["image_id"], image_info["image_url"]))
 
-                file_path = os.path.join(self.image_download_path, "%03d %s.%s" % (int(image_info["image_id"]), path.filter_text(image_info["model_name"]), net.get_file_type(image_info["image_url"])))
+                file_path = os.path.join(self.image_download_path, "%03d %s.%s" % (image_info["image_id"], path.filter_text(image_info["model_name"]), net.get_file_type(image_info["image_url"])))
                 image_url_split = urllib.parse.urlsplit(image_info["image_url"])
                 image_url = image_url_split[0] + "://" + image_url_split[1] + urllib.parse.quote(image_url_split[2])
                 save_file_return = net.save_net_file(image_url, file_path)
@@ -138,7 +138,7 @@ class Wallpaper(crawler.Crawler):
                     continue
                 # 图片下载完毕
                 self.total_image_count += 1  # 计数累加
-                last_image_id = image_info["image_id"]  # 设置存档记录
+                last_image_id = str(image_info["image_id"])  # 设置存档记录
         except SystemExit as se:
             if se.code == 0:
                 log.step("提前退出")

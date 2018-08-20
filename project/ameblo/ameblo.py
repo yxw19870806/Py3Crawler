@@ -45,14 +45,19 @@ def get_one_page_blog(account_name, page_count):
         raise crawler.CrawlerException(crawler.request_failre(blog_pagination_response.status))
     blog_pagination_response_content = blog_pagination_response.data.decode(errors="ignore")
     # 获取日志id
-    result["blog_id_list"] = re.findall('data-unique-entry-id="([\d]*)"', blog_pagination_response_content)
+    blog_id_list = re.findall('data-unique-entry-id="([\d]*)"', blog_pagination_response_content)
+    result["blog_id_list"] = list(map(int, blog_id_list))
     # 另一种页面格式
     if len(result["blog_id_list"]) == 0:
         # goto-risako
         blog_list_selector = pq(blog_pagination_response_content).find('#main li a.skin-titleLink')
         if blog_list_selector.length > 0:
             for blog_url_index in range(0, blog_list_selector.length):
-                result["blog_id_list"].append(tool.find_sub_string(blog_list_selector.eq(blog_url_index).attr("href"), "entry-", ".html"))
+                blog_url = blog_list_selector.eq(blog_url_index).attr("href")
+                blog_id = tool.find_sub_string(blog_url, "entry-", ".html")
+                if not crawler.is_integer(blog_id):
+                    raise crawler.CrawlerException("日志地址截取日志id失败\n%s" % blog_url)
+                result["blog_id_list"].append(int(blog_id))
     if len(result["blog_id_list"]) == 0:
         if page_count == 1:
             raise crawler.CrawlerException("页面匹配日志id失败\n%s" % blog_pagination_response_content)
@@ -281,7 +286,7 @@ class Download(crawler.DownloadThread):
 
             for blog_id in blog_pagination_response["blog_id_list"]:
                 # 检查是否达到存档记录
-                if int(blog_id) > int(self.account_info[2]):
+                if blog_id > int(self.account_info[2]):
                     # 新增日志导致的重复判断
                     if blog_id in blog_id_list:
                         continue
@@ -339,7 +344,7 @@ class Download(crawler.DownloadThread):
         self.temp_path_list = []  # 临时目录设置清除
         self.total_image_count += (image_index - 1) - int(self.account_info[1])  # 计数累加
         self.account_info[1] = str(image_index - 1)  # 设置存档记录
-        self.account_info[2] = blog_id  # 设置存档记录
+        self.account_info[2] = str(blog_id)  # 设置存档记录
 
     def run(self):
         try:

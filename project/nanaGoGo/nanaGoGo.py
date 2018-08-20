@@ -58,7 +58,7 @@ def get_one_page_blog(account_name, target_id):
             raise crawler.CrawlerException("日志信息'postId'字段不存在\n%s" % blog_info)
         if not crawler.is_integer(blog_info["post"]["postId"]):
             raise crawler.CrawlerException("日志信息'postId'类型不正确n%s" % blog_info)
-        result_blog_info["blog_id"] = blog_info["post"]["postId"]
+        result_blog_info["blog_id"] = int(blog_info["post"]["postId"])
         # 获取日志内容
         if not crawler.check_sub_key(("body",), blog_info["post"]):
             raise crawler.CrawlerException("日志信息'body'字段不存在\n%s" % blog_info)
@@ -172,7 +172,7 @@ class Download(crawler.DownloadThread):
             # 寻找这一页符合条件的日志
             for blog_info in blog_pagination_response["blog_info_list"]:
                 # 检查是否达到存档记录
-                if int(blog_info["blog_id"]) > int(self.account_info[3]):
+                if blog_info["blog_id"] > int(self.account_info[3]):
                     blog_info_list.append(blog_info)
                     # 设置下一页指针
                     target_id = blog_info["blog_id"]
