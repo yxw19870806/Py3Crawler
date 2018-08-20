@@ -54,7 +54,7 @@ def get_one_page_video(account_id, page_count):
             raise crawler.CrawlerException("视频信息'id'字段不存在\n%s" % video_info)
         if not crawler.is_integer(video_info["id"]):
             raise crawler.CrawlerException("视频信息'id'字段类型不正确\n%s" % video_info)
-        result_video_info["video_id"] = str(video_info["id"])
+        result_video_info["video_id"] = int(video_info["id"])
         # 获取视频标题
         if not crawler.check_sub_key(("title",), video_info):
             raise crawler.CrawlerException("视频信息'title'字段不存在\n%s" % video_info)
@@ -173,7 +173,7 @@ class Download(crawler.DownloadThread):
             # 寻找这一页符合条件的视频
             for video_info in video_pagination_response["video_info_list"]:
                 # 检查是否达到存档记录
-                if int(video_info["video_id"]) > int(self.account_info[1]):
+                if video_info["video_id"] > int(self.account_info[1]):
                     video_info_list.append(video_info)
                 else:
                     is_over = True
@@ -200,7 +200,7 @@ class Download(crawler.DownloadThread):
         self.main_thread_check()  # 检测主线程运行状态
         self.step("开始下载视频 %s 《%s》 %s" % (video_info["video_id"], video_info["video_title"], video_info_response["video_url"]))
 
-        video_file_path = os.path.join(self.main_thread.video_download_path, self.display_name, "%06d %s.mp4" % (int(video_info["video_id"]), path.filter_text(video_info["video_title"])))
+        video_file_path = os.path.join(self.main_thread.video_download_path, self.display_name, "%06d %s.mp4" % (video_info["video_id"], path.filter_text(video_info["video_title"])))
         save_file_return = net.save_net_file(video_info_response["video_url"], video_file_path)
         if save_file_return["status"] == 1:
             self.step("视频 %s 《%s》下载成功" % (video_info["video_id"], video_info["video_title"]))
@@ -211,7 +211,7 @@ class Download(crawler.DownloadThread):
         # 媒体内图片和视频全部下载完毕
         self.temp_path_list = []  # 临时目录设置清除
         self.total_video_count += 1  # 计数累加
-        self.account_info[1] = video_info["video_id"]  # 设置存档记录
+        self.account_info[1] = str(video_info["video_id"])  # 设置存档记录
 
     def run(self):
         try:

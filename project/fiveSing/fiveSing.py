@@ -33,7 +33,7 @@ def get_one_page_audio(account_id, page_type, page_count):
     audio_info_list = re.findall('<a href="http://5sing.kugou.com/' + page_type + '/([\d]*).html" [\s|\S]*? title="([^"]*)">', audio_pagination_response_content)
     for audio_info in audio_info_list:
         result_audio_info = {
-            "audio_id": audio_info[0],
+            "audio_id": int(audio_info[0]),
             "audio_title": audio_info[1],
         }
         result["audio_info_list"].append(result_audio_info)
@@ -157,7 +157,7 @@ class Download(crawler.DownloadThread):
             # 寻找这一页符合条件的歌曲
             for audio_info in audio_pagination_response["audio_info_list"]:
                 # 检查是否达到存档记录
-                if int(audio_info["audio_id"]) > int(self.account_info[audio_type_index]):
+                if audio_info["audio_id"] > int(self.account_info[audio_type_index]):
                     # 新增歌曲导致的重复判断
                     if audio_info["audio_id"] in unique_list:
                         continue
@@ -192,7 +192,7 @@ class Download(crawler.DownloadThread):
         self.main_thread_check()  # 检测主线程运行状态
         self.step("开始下载%s歌曲%s《%s》 %s" % (audio_type_name, audio_info["audio_id"], audio_info["audio_title"], audio_info_response["audio_url"]))
 
-        file_path = os.path.join(self.main_thread.video_download_path, self.display_name, audio_type_name, "%08d - %s.mp3" % (int(audio_info["audio_id"]), path.filter_text(audio_info["audio_title"])))
+        file_path = os.path.join(self.main_thread.video_download_path, self.display_name, audio_type_name, "%08d - %s.mp3" % (audio_info["audio_id"], path.filter_text(audio_info["audio_title"])))
         save_file_return = net.save_net_file(audio_info_response["audio_url"], file_path)
         if save_file_return["status"] == 1:
             self.step("%s歌曲%s《%s》下载成功" % (audio_type_name, audio_info["audio_id"], audio_info["audio_title"]))
@@ -202,7 +202,7 @@ class Download(crawler.DownloadThread):
 
         # 歌曲下载完毕
         self.total_video_count += 1  # 计数累加
-        self.account_info[self.audio_type_to_index_dict[audio_type]] = audio_info["audio_id"]  # 设置存档记录
+        self.account_info[self.audio_type_to_index_dict[audio_type]] = str(audio_info["audio_id"])  # 设置存档记录
 
     def run(self):
         try:

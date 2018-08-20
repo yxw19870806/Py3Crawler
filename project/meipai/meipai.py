@@ -46,7 +46,9 @@ def get_one_page_video(account_id, page_count):
         # 获取视频id
         if not crawler.check_sub_key(("id",), media_data):
             raise crawler.CrawlerException("视频信息'id'字段不存在\n%s" % media_data)
-        result_video_info["video_id"] = media_data["id"]
+        if not crawler.is_integer(media_data["id"]):
+            raise crawler.CrawlerException("视频信息'id'字段类型不正确\n%s" % media_data)
+        result_video_info["video_id"] = int(media_data["id"])
         # 获取视频下载地址
         if not crawler.check_sub_key(("video",), media_data):
             raise crawler.CrawlerException("视频信息'video'字段不存在\n%s" % media_data)
@@ -179,7 +181,7 @@ class Download(crawler.DownloadThread):
             # 寻找这一页符合条件的视频
             for video_info in video_pagination_response["video_info_list"]:
                 # 检查是否达到存档记录
-                if int(video_info["video_id"]) > int(self.account_info[2]):
+                if video_info["video_id"] > int(self.account_info[2]):
                     # 新增视频导致的重复判断
                     if video_info["video_id"] in unique_list:
                         continue
@@ -211,7 +213,7 @@ class Download(crawler.DownloadThread):
 
         # 视频下载完毕
         self.account_info[1] = str(video_index)  # 设置存档记录
-        self.account_info[2] = video_info["video_id"]  # 设置存档记录
+        self.account_info[2] = str(video_info["video_id"])  # 设置存档记录
         self.total_video_count += 1  # 计数累加
 
     def run(self):

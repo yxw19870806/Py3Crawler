@@ -63,7 +63,7 @@ def get_one_page_audio(account_id, page_count):
             raise crawler.CrawlerException("返回数据'time'字段不存在\n%s" % audio_info)
         if not crawler.is_integer(audio_info["time"]):
             raise crawler.CrawlerException("返回数据'time'字段类型不正确\n%s" % audio_info)
-        result_audio_info["audio_time"] = audio_info["time"]
+        result_audio_info["audio_time"] = int(audio_info["time"])
         result["audio_info_list"].append(result_audio_info)
     # 判断是不是最后一页
     result["is_over"] = not bool(int(audio_pagination_response.json_data["data"]["has_more"]))
@@ -194,7 +194,7 @@ class Download(crawler.DownloadThread):
             # 寻找这一页符合条件的歌曲
             for audio_info in audio_pagination_response["audio_info_list"]:
                 # 检查是否达到存档记录
-                if int(audio_info["audio_time"]) > int(self.account_info[1]):
+                if audio_info["audio_time"] > int(self.account_info[1]):
                     # 新增歌曲导致的重复判断
                     if audio_info["audio_id"] in unique_list:
                         continue
