@@ -31,7 +31,7 @@ def get_index_page():
     return result
 
 
-# 获取指定页数的图集
+# 获取指定id的图集
 def get_album_page(album_id):
     album_url = "http://www.ugirls.com/Content/List/Magazine-%s.html" % album_id
     album_response = net.http_request(album_url, method="GET")
