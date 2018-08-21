@@ -486,7 +486,7 @@ class Tumblr(crawler.Crawler):
 
 
 class Download(crawler.DownloadThread):
-    EACH_LOOP_MAX_PAGE_COUNT = 200  # 单词缓存多少页的日志
+    EACH_LOOP_MAX_PAGE_COUNT = 200  # 单次缓存多少页的日志
     is_https = True
     is_safe_mode = False
     is_private = False
@@ -552,7 +552,7 @@ class Download(crawler.DownloadThread):
     # 解析单个日志
     def crawl_post(self, post_info):
         post_id = get_post_id(post_info["post_url"])
-        post_url = post_info["post_url"][:post_info["post_url"].find(post_id) + len(post_id)]
+        post_url = post_info["post_url"][:post_info["post_url"].find(post_id) + len(str(post_id))]
 
         if self.is_private:
             has_video = post_info["has_video"]
@@ -644,7 +644,7 @@ class Download(crawler.DownloadThread):
         self.temp_path_list = []  # 临时目录设置清除
         self.total_image_count += image_index - 1  # 计数累加
         self.total_video_count += video_index - 1  # 计数累加
-        self.account_info[1] = post_id
+        self.account_info[1] = post_id  # 设置存档记录
 
     def run(self):
         try:

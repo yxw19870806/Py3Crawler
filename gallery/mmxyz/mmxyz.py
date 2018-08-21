@@ -69,7 +69,10 @@ def get_album_page(album_url):
     # 获取图集图片地址
     image_list_selector = pq(album_response_content).find("#gallery-1 a")
     if image_list_selector.length == 0:
-        raise crawler.CrawlerException("页面截取图片地址失败\n%s" % album_response_content)
+        if pq(album_response_content).find(".post-inner .widgets").empty().parents(".post-inner").find(".post-content a>img").length == 0:
+            raise crawler.CrawlerException("页面截取图片地址失败\n%s" % album_response_content)
+        else:
+            result["image_url_list"].append(pq(album_response_content).find(".post-inner .post-content a").attr("href"))
     for image_index in range(1, image_list_selector.length):
         result["image_url_list"].append(image_list_selector.eq(image_index).attr("href"))
     return result

@@ -34,7 +34,7 @@ def get_index_page():
     return result
 
 
-# 获取指定一页的图集
+# 获取指定id的图集
 def get_album_page(album_id):
     result = {
         "album_title": "",  # 图集标题
