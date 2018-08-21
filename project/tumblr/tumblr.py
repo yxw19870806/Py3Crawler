@@ -644,7 +644,7 @@ class Download(crawler.DownloadThread):
         self.temp_path_list = []  # 临时目录设置清除
         self.total_image_count += image_index - 1  # 计数累加
         self.total_video_count += video_index - 1  # 计数累加
-        self.account_info[1] = post_id
+        self.account_info[1] = post_id  # 设置存档记录
 
     def run(self):
         try:
