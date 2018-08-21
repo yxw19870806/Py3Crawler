@@ -78,7 +78,7 @@ def get_album_page(sub_path, page_count):
     return result
 
 
-# 获取图集全部图片
+# 获取指定图集
 def get_album_photo(album_url):
     page_count = max_page_count = 1
     result = {
