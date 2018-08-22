@@ -96,9 +96,10 @@ def decrypt_video_url(encrypted_string):
         video_url = base64.b64decode(video_url_string)
     except TypeError:
         return None
+    video_url = video_url.decode(errors="ignore")
     if video_url.find("http") != 0:
         return None
-    return video_url.decode()
+    return video_url
 
 
 def _get_hex(arg1):
