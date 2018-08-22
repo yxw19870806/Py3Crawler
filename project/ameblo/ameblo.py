@@ -255,6 +255,8 @@ class Ameblo(crawler.Crawler):
 
 
 class Download(crawler.DownloadThread):
+    EACH_LOOP_MAX_PAGE_COUNT = 200
+
     def __init__(self, account_info, main_thread):
         crawler.DownloadThread.__init__(self, account_info, main_thread)
         self.account_id = self.account_info[0]
@@ -265,8 +267,7 @@ class Download(crawler.DownloadThread):
         self.step("开始")
 
     # 获取所有可下载日志
-    def get_crawl_list(self):
-        page_count = 1
+    def get_crawl_list(self, page_count):
         blog_id_list = []
         is_over = False
         # 获取全部还未下载过需要解析的日志
@@ -301,7 +302,6 @@ class Download(crawler.DownloadThread):
                     is_over = True
                 else:
                     page_count += 1
-
         return blog_id_list
 
     # 解析单个日志
@@ -348,16 +348,47 @@ class Download(crawler.DownloadThread):
 
     def run(self):
         try:
-            # 获取所有可下载日志
-            blog_id_list = self.get_crawl_list()
-            self.step("需要下载的全部日志解析完毕，共%s个" % len(blog_id_list))
-
-            # 从最早的日志开始下载
-            while len(blog_id_list) > 0:
-                blog_id = blog_id_list.pop()
-                self.step("开始解析日志%s" % blog_id)
-                self.crawl_blog(blog_id)
+            # 查询当前任务大致需要从多少页开始爬取
+            start_page_count = 1
+            while self.EACH_LOOP_MAX_PAGE_COUNT > 0:
                 self.main_thread_check()  # 检测主线程运行状态
+
+                # 获取下一个检查节点页数的日志
+                start_page_count += self.EACH_LOOP_MAX_PAGE_COUNT
+                try:
+                    blog_pagination_response = get_one_page_blog(self.account_id, start_page_count)
+                except crawler.CrawlerException as e:
+                    self.error("第%s页日志解析失败，原因：%s" % (start_page_count, e.message))
+                    raise
+
+                # 这页没有任何内容，返回上一个检查节点
+                if blog_pagination_response["is_over"]:
+                    start_page_count -= self.EACH_LOOP_MAX_PAGE_COUNT
+                    break
+
+                # 这页已经匹配到存档点，返回上一个节点
+                if blog_pagination_response["blog_id_list"][-1] < int(self.account_info[1]):
+                    start_page_count -= self.EACH_LOOP_MAX_PAGE_COUNT
+                    break
+
+                self.step("前%s页日志全部符合条件，跳过%s页后继续查询" % (start_page_count, self.EACH_LOOP_MAX_PAGE_COUNT))
+
+            while True:
+                # 获取所有可下载日志
+                blog_id_list = self.get_crawl_list(start_page_count)
+                self.step("需要下载的全部日志解析完毕，共%s个" % len(blog_id_list))
+
+                # 从最早的日志开始下载
+                while len(blog_id_list) > 0:
+                    blog_id = blog_id_list.pop()
+                    self.step("开始解析日志%s" % blog_id)
+                    self.crawl_blog(blog_id)
+                    self.main_thread_check()  # 检测主线程运行状态
+
+                if start_page_count == 1:
+                    break
+                else:
+                    start_page_count -= self.EACH_LOOP_MAX_PAGE_COUNT
         except SystemExit as se:
             if se.code == 0:
                 self.step("提前退出")

@@ -131,7 +131,7 @@ class ImgXr(crawler.Crawler):
 
                     # 如果没有找到之前的记录，首先跳过不匹配的图集
                     if not is_find:
-                        if album_url == save_info[0]:
+                        if album_url.lower() == save_info[0].lower():
                             is_find = True
                         continue
 

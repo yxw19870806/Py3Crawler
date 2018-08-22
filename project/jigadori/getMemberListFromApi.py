@@ -7,11 +7,10 @@ email: hikaru870806@hotmail.com
 如有问题或建议请联系
 """
 import os
+import tkinter
 from pyquery import PyQuery as pq
+from tkinter import filedialog
 from common import *
-
-# Twitter存档文件目录
-SAVE_DATA_PATH = os.path.abspath(os.path.join(tool.PROJECT_APP_ROOT_PATH, "twitter/info/save.data"))
 
 
 # 从页面获取全部账号
@@ -59,9 +58,22 @@ def get_one_page_account(page_count):
 
 
 def main():
+    # GUI窗口
+    gui = tkinter.Tk()
+    gui.withdraw()
+
+    options = {
+        "initialdir": os.path.abspath(os.path.join(tool.PROJECT_APP_ROOT_PATH, "twitter/info")),
+        "initialfile": "save.data",
+        "filetypes": [("data file", "*.data"), ("all files", "*")],
+    }
+    save_data_path = tkinter.filedialog.askopenfile(**options)
+    if not save_data_path:
+        tool.process_exit()
+
     account_list_from_api = get_account_from_index()
     if len(account_list_from_api) > 0:
-        account_list_from_save_data = crawler.read_save_data(SAVE_DATA_PATH, 0, [])
+        account_list_from_save_data = crawler.read_save_data(save_data_path, 0, [])
         for account_id in account_list_from_save_data:
             if account_id not in account_list_from_api:
                 output.print_msg("%s (%s) not found from API result" % (account_id, account_list_from_save_data[account_id]))
@@ -73,7 +85,7 @@ def main():
                     output.print_msg("%s name changed" % account_id)
                     account_list_from_save_data[account_id][5] = account_list_from_api[account_id]
         temp_list = [account_list_from_save_data[key] for key in sorted(account_list_from_save_data.keys())]
-        tool.write_file(tool.list_to_string(temp_list), SAVE_DATA_PATH, tool.WRITE_FILE_TYPE_REPLACE)
+        tool.write_file(tool.list_to_string(temp_list), save_data_path, tool.WRITE_FILE_TYPE_REPLACE)
 
 
 if __name__ == "__main__":

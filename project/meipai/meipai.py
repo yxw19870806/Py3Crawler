@@ -12,6 +12,7 @@ import threading
 import time
 import traceback
 from functools import reduce
+from pyquery import PyQuery as pq
 from common import *
 
 VIDEO_COUNT_PER_PAGE = 20  # 每次请求获取的视频数量
@@ -60,6 +61,30 @@ def get_one_page_video(account_id, page_count):
     return result
 
 
+# 获取指定视频播放页
+def get_video_play_page(video_id):
+    video_play_url = "http://www.meipai.com/media/%s" % video_id
+    video_play_response = net.http_request(video_play_url, method="GET")
+    result = {
+        "is_delete": False,  # 是否已删除
+        "video_url": None,  # 视频地址
+    }
+    if video_play_response.status == 404:
+        result["is_delete"] = True
+        return result
+    elif video_play_response.status != net.HTTP_RETURN_CODE_SUCCEED:
+        raise crawler.CrawlerException(crawler.request_failre(video_play_response.status))
+    video_play_response_content = video_play_response.data.decode(errors="ignore")
+    video_url_crypt_string = pq(video_play_response_content).find("meta[property='og:video:url']").attr("content")
+    if not video_url_crypt_string:
+        raise crawler.CrawlerException("页面截取加密视频地址失败\n%s" % video_play_response_content)
+    video_url = decrypt_video_url(video_url_crypt_string)
+    if not video_url:
+        raise crawler.CrawlerException("加密视频地址解密失败\n%s" % video_url_crypt_string)
+    result["video_url"] = video_url
+    return result
+
+
 # 视频地址解谜
 # 破解于播放器swf文件中com.meitu.cryptography.meipai.Default.decode
 def decrypt_video_url(encrypted_string):
@@ -71,9 +96,10 @@ def decrypt_video_url(encrypted_string):
         video_url = base64.b64decode(video_url_string)
     except TypeError:
         return None
+    video_url = video_url.decode(errors="ignore")
     if video_url.find("http") != 0:
         return None
-    return video_url.decode()
+    return video_url
 
 
 def _get_hex(arg1):
@@ -147,8 +173,8 @@ class Download(crawler.DownloadThread):
     def __init__(self, account_info, main_thread):
         crawler.DownloadThread.__init__(self, account_info, main_thread)
         self.account_id = self.account_info[0]
-        if len(self.account_info) >= 4 and self.account_info[3]:
-            self.display_name = self.account_info[3]
+        if len(self.account_info) >= 3 and self.account_info[2]:
+            self.display_name = self.account_info[2]
         else:
             self.display_name = self.account_info[0]
         self.step("开始")
@@ -181,7 +207,7 @@ class Download(crawler.DownloadThread):
             # 寻找这一页符合条件的视频
             for video_info in video_pagination_response["video_info_list"]:
                 # 检查是否达到存档记录
-                if video_info["video_id"] > int(self.account_info[2]):
+                if video_info["video_id"] > int(self.account_info[1]):
                     # 新增视频导致的重复判断
                     if video_info["video_id"] in unique_list:
                         continue
@@ -203,17 +229,15 @@ class Download(crawler.DownloadThread):
 
     # 下载单个视频
     def crawl_video(self, video_info):
-        video_index = int(self.account_info[1]) + 1
-        file_path = os.path.join(self.main_thread.video_download_path, self.display_name, "%04d.mp4" % video_index)
+        file_path = os.path.join(self.main_thread.video_download_path, self.display_name, "%010d.mp4" % video_info["video_id"])
         save_file_return = net.save_net_file(video_info["video_url"], file_path)
         if save_file_return["status"] == 1:
-            self.step("第%s个视频下载成功" % video_index)
+            self.step("视频%s下载成功" % video_info["video_id"])
         else:
-            self.error("第%s个视频 %s 下载失败，原因：%s" % (video_index, video_info["video_url"], crawler.download_failre(save_file_return["code"])))
+            self.error("视频%s %s 下载失败，原因：%s" % (video_info["video_id"], video_info["video_url"], crawler.download_failre(save_file_return["code"])))
 
         # 视频下载完毕
-        self.account_info[1] = str(video_index)  # 设置存档记录
-        self.account_info[2] = str(video_info["video_id"])  # 设置存档记录
+        self.account_info[1] = str(video_info["video_id"])  # 设置存档记录
         self.total_video_count += 1  # 计数累加
 
     def run(self):
@@ -225,7 +249,7 @@ class Download(crawler.DownloadThread):
             # 从最早的视频开始下载
             while len(video_info_list) > 0:
                 video_info = video_info_list.pop()
-                self.step("开始下载第%s个视频 %s" % (int(self.account_info[1]) + 1, video_info["video_url"]))
+                self.step("开始下载视频%s %s" % (video_info["video_id"], video_info["video_url"]))
                 self.crawl_video(video_info)
                 self.main_thread_check()  # 检测主线程运行状态
         except SystemExit as se:
