@@ -498,7 +498,8 @@ class Download(crawler.DownloadThread):
         self.step("开始")
 
     # 获取所有可下载日志
-    def get_crawl_list(self, page_count, unique_list):
+    def get_crawl_list(self, page_count):
+        unique_list = []
         post_info_list = []
         is_over = False
         # 获取全部还未下载过需要解析的日志
@@ -685,10 +686,9 @@ class Download(crawler.DownloadThread):
 
                 self.step("前%s页没有符合条件的日志，跳过%s页后继续查询" % (start_page_count, self.EACH_LOOP_MAX_PAGE_COUNT))
 
-            unique_list = []
             while True:
                 # 获取所有可下载日志
-                post_info_list = self.get_crawl_list(start_page_count, unique_list)
+                post_info_list = self.get_crawl_list(start_page_count)
                 self.step("需要下载的全部日志解析完毕，共%s个" % len(post_info_list))
 
                 # 从最早的日志开始下载
