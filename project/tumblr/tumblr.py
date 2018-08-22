@@ -660,6 +660,7 @@ class Download(crawler.DownloadThread):
                 self.error("账号开启了安全模式，跳过")
                 tool.process_exit()
 
+            # 查询当前任务大致需要从多少页开始爬取
             start_page_count = 1
             while self.EACH_LOOP_MAX_PAGE_COUNT > 0:
                 self.main_thread_check()  # 检测主线程运行状态
@@ -684,7 +685,7 @@ class Download(crawler.DownloadThread):
                     start_page_count -= self.EACH_LOOP_MAX_PAGE_COUNT
                     break
 
-                self.step("前%s页没有符合条件的日志，跳过%s页后继续查询" % (start_page_count, self.EACH_LOOP_MAX_PAGE_COUNT))
+                self.step("前%s页日志全部符合条件，跳过%s页后继续查询" % (start_page_count, self.EACH_LOOP_MAX_PAGE_COUNT))
 
             while True:
                 # 获取所有可下载日志
