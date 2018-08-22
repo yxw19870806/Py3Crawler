@@ -42,7 +42,7 @@ def main():
             continue
         # 选择下载目录
         options = {
-            "initialdir": DOWNLOAD_FILE_PATH,
+            "initialdir": os.path.join(os.path.dirname(__file__), "video"),
             "initialfile": "%s - %s.mp4" % (video_id, path.filter_text(video_response["video_title"])),
             "filetypes": [("mp4", ".mp4")],
         }
