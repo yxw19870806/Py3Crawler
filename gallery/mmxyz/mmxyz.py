@@ -73,8 +73,13 @@ def get_album_page(album_url):
             raise crawler.CrawlerException("页面截取图片地址失败\n%s" % album_response_content)
         else:
             result["image_url_list"].append(pq(album_response_content).find(".post-inner .post-content a").attr("href"))
-    for image_index in range(1, image_list_selector.length):
-        result["image_url_list"].append(image_list_selector.eq(image_index).attr("href"))
+    else:
+        for image_index in range(0, image_list_selector.length):
+            image_url = image_list_selector.eq(image_index).attr("href")
+            # 非正常源地址
+            if image_url.find("//www.mmxyz.net/") > 0:
+                image_url = image_list_selector.eq(image_index).find("img").attr("data-lazy-src").replace("-150x150", "")
+            result["image_url_list"].append(image_url)
     return result
 
 
