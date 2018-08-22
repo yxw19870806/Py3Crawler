@@ -12,6 +12,7 @@ import threading
 import time
 import traceback
 from functools import reduce
+from pyquery import PyQuery as pq
 from common import *
 
 VIDEO_COUNT_PER_PAGE = 20  # 每次请求获取的视频数量
@@ -57,6 +58,30 @@ def get_one_page_video(account_id, page_count):
             raise crawler.CrawlerException("加密视频地址解密失败\n%s" % media_data["video"])
         result_video_info["video_url"] = video_url
         result["video_info_list"].append(result_video_info)
+    return result
+
+
+# 获取指定视频播放页
+def get_video_play_page(video_id):
+    video_play_url = "http://www.meipai.com/media/%s" % video_id
+    video_play_response = net.http_request(video_play_url, method="GET")
+    result = {
+        "is_delete": False,  # 是否已删除
+        "video_url": None,  # 视频地址
+    }
+    if video_play_response.status == 404:
+        result["is_delete"] = True
+        return result
+    elif video_play_response.status != net.HTTP_RETURN_CODE_SUCCEED:
+        raise crawler.CrawlerException(crawler.request_failre(video_play_response.status))
+    video_play_response_content = video_play_response.data.decode(errors="ignore")
+    video_url_crypt_string = pq(video_play_response_content).find("meta[property='og:video:url']").attr("content")
+    if not video_url_crypt_string:
+        raise crawler.CrawlerException("页面截取加密视频地址失败\n%s" % video_play_response_content)
+    video_url = decrypt_video_url(video_url_crypt_string)
+    if not video_url:
+        raise crawler.CrawlerException("加密视频地址解密失败\n%s" % video_url_crypt_string)
+    result["video_url"] = video_url
     return result
 
 
