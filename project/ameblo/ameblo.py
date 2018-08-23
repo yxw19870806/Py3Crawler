@@ -145,21 +145,6 @@ def get_blog_page(account_name, blog_id):
     return result
 
 
-# 过滤一些无效的地址
-def filter_image_url(image_url):
-    # 过滤表情
-    if image_url.find("//emoji.ameba.jp/") >= 0 or image_url.find("//blog.ameba.jp/ucs/img/char/") >= 0 \
-            or image_url.find("//stat.ameba.jp/blog/ucs/img/") >= 0 or image_url.find("//stat100.ameba.jp//blog/ucs/img/char/") >= 0 \
-            or image_url.find("//stat100.ameba.jp/blog/ucs/img/char/") >= 0 or image_url.find("//i.yimg.jp/images/mail/emoji/") >= 0 \
-            or image_url.find("//b.st-hatena.com/images/entry-button/") >= 0 or image_url.find("//vc.ameba.jp/view?") >= 0 \
-            or image_url.find("//mail.google.com/mail/") >= 0 or image_url.find("//www.youtube.com/") >= 0 \
-            or image_url.find("//jp.mg2.mail.yahoo.co.jp/ya/download/") >= 0 or image_url.find("//blog.watanabepro.co.jp/") >= 0 \
-            or image_url.find("//iine.blog.ameba.jp/web/display_iine.html") >= 0 or image_url.find("//ameblo.jp/s/embed/reblog-card/") >= 0 \
-            or image_url[-9:] == "clear.gif":
-        return True
-    return False
-
-
 # 获取原始图片下载地址
 # http://stat.ameba.jp/user_images/20110612/15/akihabara48/af/3e/j/t02200165_0800060011286009555.jpg
 # ->
@@ -342,9 +327,6 @@ class Download(crawler.DownloadThread):
         image_index = int(self.account_info[1]) + 1
         for image_url in blog_response["image_url_list"]:
             self.main_thread_check()  # 检测主线程运行状态
-            # 过滤一些无效的地址
-            # if filter_image_url(image_url):
-            #     continue
             # 获取原始图片下载地址
             image_url = get_origin_image_url(image_url)
             self.step("开始下载第%s张图片 %s" % (image_index, image_url))
