@@ -127,7 +127,7 @@ def get_blog_page(account_name, blog_id):
             or image_url.find("//stat100.ameba.jp/blog/ucs/img/") > 0:
             pass
         else:
-            log.notice("未知图片地址：%s" % image_url)
+            log.notice("未知图片地址：%s (%s)" % (image_url, blog_url))
     # todo 含有视频
     # https://ameblo.jp/kawasaki-nozomi/entry-12111279076.html
     return result
