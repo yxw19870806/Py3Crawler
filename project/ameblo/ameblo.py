@@ -119,12 +119,15 @@ def get_blog_page(account_name, blog_id):
     # 获取图片地址
     image_list_selector = article_html_selector.find("img")
     for image_index in range(0, image_list_selector.length):
-        image_url = image_list_selector.eq(image_index).attr("src")
+        image_selector = image_list_selector.eq(image_index)
+        if image_selector.has_class("accessLog"):
+            continue
+        image_url = image_selector.attr("src")
         if image_url.find("//stat.ameba.jp/user_images/") > 0:
             result["image_url_list"].append(image_url)
         # 表情
         elif image_url.find("//emoji.ameba.jp/img/") > 0 or image_url.find("//stat.ameba.jp/blog/ucs/img/") > 0 \
-            or image_url.find("//stat100.ameba.jp/blog/ucs/img/") > 0:
+            or image_url.find("//stat100.ameba.jp/blog/ucs/img/") > 0 or image_url.find("//stat.ameba.jp/common_style/") > 0:
             pass
         else:
             log.notice("未知图片地址：%s (%s)" % (image_url, blog_url))
