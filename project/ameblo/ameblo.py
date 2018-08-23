@@ -67,7 +67,7 @@ def get_one_page_blog(account_name, page_count):
             result["is_over"] = True
             return result
     # 判断是不是最后一页
-    # https://ameblo.jp/48orii48
+    # https://ameblo.jp/48orii48/
     if pq(blog_pagination_response_content).find("div.page").length > 0:
         pagination_selector = pq(blog_pagination_response_content).find("div.page").eq(0).find("a")
         find_page_count_list = []
@@ -85,9 +85,9 @@ def get_one_page_blog(account_name, page_count):
                 raise crawler.CrawlerException("页面截取分页信息div.pagingArea失败\n%s" % blog_pagination_response_content)
             else:
                 result["is_over"] = True
-    # https://ameblo.jp/1108ayanyan
+    # https://ameblo.jp/1108ayanyan/
     elif pq(blog_pagination_response_content).find("ul.skin-paging").length > 0:
-        if pq(blog_pagination_response_content).find("ul.skin-paging a.skin-pagingNext") == 0:
+        if pq(blog_pagination_response_content).find("ul.skin-paging a.skin-pagingNext").length == 0:
             if pq(blog_pagination_response_content).find("ul.skin-paging a.skin-pagingPrev").length == 0:
                 raise crawler.CrawlerException("页面截取分页信息ul.skin-paging失败\n%s" % blog_pagination_response_content)
             else:
