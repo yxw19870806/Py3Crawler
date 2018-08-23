@@ -101,13 +101,14 @@ def get_blog_page(account_name, blog_id):
     blog_response = net.http_request(blog_url, method="GET", cookies_list=COOKIE_INFO)
     result = {
         "image_url_list": [],  # 全部图片地址
+        "is_follow": False,  # 是否只有关注者可见
     }
     if blog_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(blog_response.status))
     blog_response_content = blog_response.data.decode(errors="ignore")
-    # todo 登录cookies
     if blog_response_content.find('この記事はアメンバーさん限定です。') >= 0:
-        raise crawler.CrawlerException("日志只限会员访问")
+        result["is_follow"] = True
+        return result
     # 截取日志正文部分（有多种页面模板）
     article_class_list = ["subContentsInner", "articleText", "skin-entryInner"]
     article_html_selector = None
@@ -320,6 +321,11 @@ class Download(crawler.DownloadThread):
         except crawler.CrawlerException as e:
             self.error("日志%s解析失败，原因：%s" % (blog_id, e.message))
             raise
+
+        # 日志只对关注者可见
+        if blog_response["is_follow"]:
+            self.error("日志%s需要关注后才能访问，请在 https://profile.ameba.jp/ameba/%s，选择'アメンバー申請'" % (blog_id, self.account_id))
+            tool.process_exit()
 
         self.trace("日志%s解析的全部图片：%s" % (blog_id, blog_response["image_url_list"]))
         self.step("日志%s解析获取%s张图片" % (blog_id, len(blog_response["image_url_list"])))
