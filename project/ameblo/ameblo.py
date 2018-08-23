@@ -11,6 +11,7 @@ import re
 import threading
 import time
 import traceback
+import urllib.parse
 from PIL import Image
 from pyquery import PyQuery as pq
 from common import *
@@ -66,7 +67,7 @@ def get_one_page_blog(account_name, page_count):
             result["is_over"] = True
             return result
     # 判断是不是最后一页
-    # https://ameblo.jp/48orii48
+    # https://ameblo.jp/48orii48/
     if pq(blog_pagination_response_content).find("div.page").length > 0:
         pagination_selector = pq(blog_pagination_response_content).find("div.page").eq(0).find("a")
         find_page_count_list = []
@@ -84,9 +85,9 @@ def get_one_page_blog(account_name, page_count):
                 raise crawler.CrawlerException("页面截取分页信息div.pagingArea失败\n%s" % blog_pagination_response_content)
             else:
                 result["is_over"] = True
-    # https://ameblo.jp/1108ayanyan
+    # https://ameblo.jp/1108ayanyan/
     elif pq(blog_pagination_response_content).find("ul.skin-paging").length > 0:
-        if pq(blog_pagination_response_content).find("ul.skin-paging a.skin-pagingNext") == 0:
+        if pq(blog_pagination_response_content).find("ul.skin-paging a.skin-pagingNext").length == 0:
             if pq(blog_pagination_response_content).find("ul.skin-paging a.skin-pagingPrev").length == 0:
                 raise crawler.CrawlerException("页面截取分页信息ul.skin-paging失败\n%s" % blog_pagination_response_content)
             else:
@@ -100,41 +101,49 @@ def get_blog_page(account_name, blog_id):
     blog_response = net.http_request(blog_url, method="GET", cookies_list=COOKIE_INFO)
     result = {
         "image_url_list": [],  # 全部图片地址
+        "is_follow": False,  # 是否只有关注者可见
     }
     if blog_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(blog_response.status))
     blog_response_content = blog_response.data.decode(errors="ignore")
-    # todo 登录cookies
     if blog_response_content.find('この記事はアメンバーさん限定です。') >= 0:
-        raise crawler.CrawlerException("日志只限会员访问")
+        result["is_follow"] = True
+        return result
     # 截取日志正文部分（有多种页面模板）
     article_class_list = ["subContentsInner", "articleText", "skin-entryInner"]
-    article_html = None
+    article_html_selector = None
     for article_class in article_class_list:
         article_html_selector = pq(blog_response_content).find("." + article_class)
         if article_html_selector.length > 0:
-            article_html = article_html_selector.html()
             break
-    if article_html is None:
+    if article_html_selector is None or article_html_selector.length == 0:
         raise crawler.CrawlerException("页面截取正文失败\n%s" % blog_response_content)
     # 获取图片地址
-    result["image_url_list"] = re.findall('<img [\S|\s]*?src="(http[^"]*)" [\S|\s]*?>', article_html)
+    image_list_selector = article_html_selector.find("img")
+    for image_index in range(0, image_list_selector.length):
+        image_selector = image_list_selector.eq(image_index)
+        if image_selector.has_class("accessLog"):
+            continue
+        image_url = image_selector.attr("src")
+        # 用户上传的图片
+        if image_url.find("//stat.ameba.jp/user_images/") > 0:
+            result["image_url_list"].append(image_url)
+        # 外部图片
+        elif image_url.find("//img-proxy.blog-video.jp/images?url=") > 0:
+            image_url = urllib.parse.unquote(image_url.split("//img-proxy.blog-video.jp/images?url=")[-1])
+            result["image_url_list"].append(image_url)
+        # 表情
+        elif image_url.find("//emoji.ameba.jp/img/") > 0 or image_url.find("//stat.ameba.jp/blog/ucs/img/") > 0 \
+            or image_url.find("//stat.ameba.jp/mb/") > 0 or image_url.find("//stat.ameba.jp/common_style/") > 0 \
+            or image_url.find("//stat100.ameba.jp/blog/ucs/img/") > 0 or image_url.find("//stat100.ameba.jp/candy/"):
+            pass
+        elif image_url.find("data:image/gif;base64,") == 0 or image_url.find("file://") == 0:
+            pass
+        else:
+            log.notice("未知图片地址：%s (%s)" % (image_url, blog_url))
+    # todo 含有视频
+    # https://ameblo.jp/kawasaki-nozomi/entry-12111279076.html
     return result
-
-
-# 过滤一些无效的地址
-def filter_image_url(image_url):
-    # 过滤表情
-    if image_url.find("//emoji.ameba.jp/") >= 0 or image_url.find("//blog.ameba.jp/ucs/img/char/") >= 0 \
-            or image_url.find("//stat.ameba.jp/blog/ucs/img/") >= 0 or image_url.find("//stat100.ameba.jp//blog/ucs/img/char/") >= 0 \
-            or image_url.find("//stat100.ameba.jp/blog/ucs/img/char/") >= 0 or image_url.find("//i.yimg.jp/images/mail/emoji/") >= 0 \
-            or image_url.find("//b.st-hatena.com/images/entry-button/") >= 0 or image_url.find("//vc.ameba.jp/view?") >= 0 \
-            or image_url.find("//mail.google.com/mail/") >= 0 or image_url.find("//www.youtube.com/") >= 0 \
-            or image_url.find("//jp.mg2.mail.yahoo.co.jp/ya/download/") >= 0 or image_url.find("//blog.watanabepro.co.jp/") >= 0 \
-            or image_url.find("//iine.blog.ameba.jp/web/display_iine.html") >= 0 or image_url.find("//ameblo.jp/s/embed/reblog-card/") >= 0 \
-            or image_url[-9:] == "clear.gif":
-        return True
-    return False
 
 
 # 获取原始图片下载地址
@@ -145,28 +154,28 @@ def filter_image_url(image_url):
 # ->
 # http://stat.ameba.jp/user_images/4b/90/10112135346.jpg
 def get_origin_image_url(image_url):
-    if image_url.find("//stat.ameba.jp/user_images") != -1:
+    if image_url.find("//stat.ameba.jp/user_images/") != -1:
         # 最新的image_url使用?caw=指定显示分辨率，去除
         # http://stat.ameba.jp/user_images/20161220/12/akihabara48/fd/1a/j/o0768032013825427476.jpg?caw=800
         image_url = image_url.split("?")[0]
         temp_list = image_url.split("/")
         image_name = temp_list[-1]
         if image_name[0] != "o":
-            # http://stat.ameba.jp/user_images/20110612/15/akihabara48/af/3e/j/t02200165_0800060011286009555.jpg
+            # https://stat.ameba.jp/user_images/20110612/15/akihabara48/af/3e/j/t02200165_0800060011286009555.jpg
             if image_name[0] == "t" and image_name.find("_") > 0:
                 temp_list[-1] = "o" + image_name.split("_", 1)[1]
                 image_url = "/".join(temp_list)
-            # http://stat.ameba.jp/user_images/4b/90/10112135346_s.jpg
+            # https://stat.ameba.jp/user_images/4b/90/10112135346_s.jpg
             elif image_name.split(".")[0][-2:] == "_s":
                 temp_list[-1] = image_name.replace("_s", "")
                 image_url = "/".join(temp_list)
+            # https://stat.ameba.jp/user_images/2a/ce/10091204420.jpg
+            elif crawler.is_integer(image_name.split(".")[0]):
+                pass
             else:
-                # todo 检测包含其他格式
-                log.error("无法解析的图片地址 %s" % image_url)
-    elif image_url.find("//stat100.ameba.jp/blog/img/") != -1:
+                log.trace("无法解析的图片地址 %s" % image_url)
+    elif image_url.find("//stat100.ameba.jp/blog/img/") > 0:
         pass
-    else:
-        log.trace("第三方图片地址 %s" % image_url)
     return image_url
 
 
@@ -313,15 +322,17 @@ class Download(crawler.DownloadThread):
             self.error("日志%s解析失败，原因：%s" % (blog_id, e.message))
             raise
 
+        # 日志只对关注者可见
+        if blog_response["is_follow"]:
+            self.error("日志%s需要关注后才能访问，请在 https://profile.ameba.jp/ameba/%s，选择'アメンバー申請'" % (blog_id, self.account_id))
+            tool.process_exit()
+
         self.trace("日志%s解析的全部图片：%s" % (blog_id, blog_response["image_url_list"]))
         self.step("日志%s解析获取%s张图片" % (blog_id, len(blog_response["image_url_list"])))
 
         image_index = int(self.account_info[1]) + 1
         for image_url in blog_response["image_url_list"]:
             self.main_thread_check()  # 检测主线程运行状态
-            # 过滤一些无效的地址
-            if filter_image_url(image_url):
-                continue
             # 获取原始图片下载地址
             image_url = get_origin_image_url(image_url)
             self.step("开始下载第%s张图片 %s" % (image_index, image_url))
@@ -367,7 +378,7 @@ class Download(crawler.DownloadThread):
                     break
 
                 # 这页已经匹配到存档点，返回上一个节点
-                if blog_pagination_response["blog_id_list"][-1] < int(self.account_info[1]):
+                if blog_pagination_response["blog_id_list"][-1] < int(self.account_info[2]):
                     start_page_count -= self.EACH_LOOP_MAX_PAGE_COUNT
                     break
 

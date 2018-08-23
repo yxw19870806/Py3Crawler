@@ -40,7 +40,7 @@ def get_one_page_album(page_count):
         album_id = tool.find_sub_string(album_url, "rosi-", ".html")
         if not crawler.is_integer(album_id):
             raise crawler.CrawlerException("图集地址截取图集id失败\n%s" % album_info_selector.html())
-        result_album_info["album_id"] = album_id
+        result_album_info["album_id"] = int(album_id)
         # 图集标题
         album_title = album_info_selector.attr("title")
         if not album_title:
