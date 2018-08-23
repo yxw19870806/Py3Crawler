@@ -133,8 +133,8 @@ def get_blog_page(account_name, blog_id):
             result["image_url_list"].append(image_url)
         # 表情
         elif image_url.find("//emoji.ameba.jp/img/") > 0 or image_url.find("//stat.ameba.jp/blog/ucs/img/") > 0 \
-            or image_url.find("//stat100.ameba.jp/blog/ucs/img/") > 0 or image_url.find("//stat.ameba.jp/common_style/") > 0 \
-            or image_url.find("//stat.ameba.jp/mb/") > 0:
+            or image_url.find("//stat.ameba.jp/mb/") > 0 or image_url.find("//stat.ameba.jp/common_style/") > 0 \
+            or image_url.find("//stat100.ameba.jp/blog/ucs/img/") > 0 or image_url.find("//stat100.ameba.jp/candy/"):
             pass
         elif image_url.find("data:image/gif;base64,") == 0 or image_url.find("file://") == 0:
             pass
@@ -176,8 +176,6 @@ def get_origin_image_url(image_url):
         image_name = temp_list[-1]
         if image_name[0] != "o":
             # https://stat.ameba.jp/user_images/20110612/15/akihabara48/af/3e/j/t02200165_0800060011286009555.jpg
-            # ->
-            # https://stat.ameba.jp/user_images/20110612/15/akihabara48/af/3e/j/o0800060011286009555.jpg
             if image_name[0] == "t" and image_name.find("_") > 0:
                 temp_list[-1] = "o" + image_name.split("_", 1)[1]
                 image_url = "/".join(temp_list)
