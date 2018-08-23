@@ -390,7 +390,7 @@ class Download(crawler.DownloadThread):
                     break
 
                 # 这页已经匹配到存档点，返回上一个节点
-                if blog_pagination_response["blog_id_list"][-1] < int(self.account_info[1]):
+                if blog_pagination_response["blog_id_list"][-1] < int(self.account_info[2]):
                     start_page_count -= self.EACH_LOOP_MAX_PAGE_COUNT
                     break
 
