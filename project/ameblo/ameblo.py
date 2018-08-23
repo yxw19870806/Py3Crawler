@@ -109,16 +109,27 @@ def get_blog_page(account_name, blog_id):
         raise crawler.CrawlerException("日志只限会员访问")
     # 截取日志正文部分（有多种页面模板）
     article_class_list = ["subContentsInner", "articleText", "skin-entryInner"]
-    article_html = None
+    article_html_selector = None
     for article_class in article_class_list:
         article_html_selector = pq(blog_response_content).find("." + article_class)
         if article_html_selector.length > 0:
-            article_html = article_html_selector.html()
             break
-    if article_html is None:
+    if article_html_selector is None or article_html_selector.length == 0:
         raise crawler.CrawlerException("页面截取正文失败\n%s" % blog_response_content)
     # 获取图片地址
-    result["image_url_list"] = re.findall('<img [\S|\s]*?src="(http[^"]*)" [\S|\s]*?>', article_html)
+    image_list_selector = article_html_selector.find("img")
+    for image_index in range(0, image_list_selector.length):
+        image_url = image_list_selector.eq(image_index).attr("src")
+        if image_url.find("//stat.ameba.jp/user_images/") > 0:
+            result["image_url_list"].append(image_url)
+        # 表情
+        elif image_url.find("//emoji.ameba.jp/img/") > 0 or image_url.find("//stat.ameba.jp/blog/ucs/img/") > 0 \
+            or image_url.find("//stat100.ameba.jp/blog/ucs/img/") > 0:
+            pass
+        else:
+            log.notice("未知图片地址：%s" % image_url)
+    # todo 含有视频
+    # https://ameblo.jp/kawasaki-nozomi/entry-12111279076.html
     return result
 
 
@@ -322,8 +333,8 @@ class Download(crawler.DownloadThread):
         for image_url in blog_response["image_url_list"]:
             self.main_thread_check()  # 检测主线程运行状态
             # 过滤一些无效的地址
-            if filter_image_url(image_url):
-                continue
+            # if filter_image_url(image_url):
+            #     continue
             # 获取原始图片下载地址
             image_url = get_origin_image_url(image_url)
             self.step("开始下载第%s张图片 %s" % (image_index, image_url))
