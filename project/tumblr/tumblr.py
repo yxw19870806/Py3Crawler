@@ -133,6 +133,7 @@ def get_one_page_post(account_id, page_count, is_https, is_safe_mode):
         # 单条日志
         for post_info in page_data["itemListElement"]:
             result_post_info = {
+                "post_id": None,  # 日志id
                 "post_url": None,  # 日志地址
             }
             # 获取日志地址
@@ -140,6 +141,11 @@ def get_one_page_post(account_id, page_count, is_https, is_safe_mode):
                 raise crawler.CrawlerException("日志信息'url'字段不存在\n%s" % page_data)
             post_url_split = urllib.parse.urlsplit(post_info["url"])
             result_post_info["post_url"] = post_url_split[0] + "://" + post_url_split[1] + urllib.parse.quote(post_url_split[2])
+            # 获取日志id
+            post_id = tool.find_sub_string(result_post_info["post_url"], "/post/").split("/")[0]
+            if not crawler.is_integer(post_id):
+                crawler.CrawlerException("日志地址截取日志id失败\n%s" % result_post_info["post_url"])
+            result_post_info["post_id"] = int(post_id)
             result["post_info_list"].append(result_post_info)
     else:
         result["is_over"] = True
@@ -397,14 +403,6 @@ def get_video_play_page(account_id, post_id, is_https):
     return result
 
 
-# 日志地址解析日志id
-def get_post_id(post_url):
-    post_id = tool.find_sub_string(post_url, "/post/").split("/")[0]
-    if crawler.is_integer(post_id):
-        return int(post_id)
-    return None
-
-
 class Tumblr(crawler.Crawler):
     def __init__(self):
         global COOKIE_INFO
@@ -525,20 +523,14 @@ class Download(crawler.DownloadThread):
 
             # 寻找这一页符合条件的日志
             for post_info in post_pagination_response["post_info_list"]:
-                # 获取日志id
-                post_id = get_post_id(post_info["post_url"])
-                if post_id is None:
-                    self.error("日志地址%s解析日志id失败" % post_info["post_url"])
-                    tool.process_exit()
-
                 # 检查是否达到存档记录
-                if post_id > int(self.account_info[1]):
+                if post_info["post_id"] > int(self.account_info[1]):
                     # 新增信息页导致的重复判断
-                    if post_id in unique_list:
+                    if post_info["post_id"] in unique_list:
                         continue
                     else:
                         post_info_list.append(post_info)
-                        unique_list.append(post_id)
+                        unique_list.append(post_info["post_id"])
                 else:
                     is_over = True
                     break
@@ -552,8 +544,7 @@ class Download(crawler.DownloadThread):
 
     # 解析单个日志
     def crawl_post(self, post_info):
-        post_id = get_post_id(post_info["post_url"])
-        post_url = post_info["post_url"][:post_info["post_url"].find(post_id) + len(str(post_id))]
+        post_url = post_info["post_url"][:post_info["post_url"].find(str(post_info["post_id"])) + len(str(post_info["post_id"]))]
 
         if self.is_private:
             has_video = post_info["has_video"]
@@ -576,7 +567,7 @@ class Download(crawler.DownloadThread):
             else:
                 self.main_thread_check()  # 检测主线程运行状态
                 try:
-                    video_play_response = get_video_play_page(self.account_id, post_id, self.is_https)
+                    video_play_response = get_video_play_page(self.account_id, post_info["post_id"], self.is_https)
                 except crawler.CrawlerException as e:
                     self.error("日志 %s 视频解析失败，原因：%s" % (post_url, e.message))
                     raise
@@ -588,14 +579,14 @@ class Download(crawler.DownloadThread):
                 break
 
             self.main_thread_check()  # 检测主线程运行状态
-            self.step("日志 %s 开始下载视频 %s" % (post_id, video_url))
+            self.step("日志 %s 开始下载视频 %s" % (post_info["post_id"], video_url))
 
-            video_file_path = os.path.join(self.main_thread.video_download_path, self.account_id, "%012d.mp4" % post_id)
+            video_file_path = os.path.join(self.main_thread.video_download_path, self.account_id, "%012d.mp4" % post_info["post_id"])
             save_file_return = net.save_net_file(video_url, video_file_path)
             if save_file_return["status"] == 1:
                 # 设置临时目录
                 self.temp_path_list.append(video_file_path)
-                self.step("日志 %s 视频下载成功" % post_id)
+                self.step("日志 %s 视频下载成功" % post_info["post_id"])
                 video_index += 1
             else:
                 if save_file_return["code"] == 403 and video_url.find("_r1_720") != -1:
@@ -604,7 +595,7 @@ class Download(crawler.DownloadThread):
                     if save_file_return["status"] == 1:
                         # 设置临时目录
                         self.temp_path_list.append(video_file_path)
-                        self.step("日志 %s 视频下载成功" % post_id)
+                        self.step("日志 %s 视频下载成功" % post_info["post_id"])
                         video_index += 1
                         break
                 error_message = "日志 %s 视频 %s 下载失败，原因：%s" % (post_url, video_url, crawler.download_failre(save_file_return["code"]))
@@ -618,19 +609,19 @@ class Download(crawler.DownloadThread):
         # 图片下载
         image_index = 1
         if self.main_thread.is_download_image and len(image_url_list) > 0:
-            self.trace("日志 %s 解析的全部图片：%s" % (post_id, image_url_list))
-            self.step("日志 %s 解析获取%s个图片" % (post_id, len(image_url_list)))
+            self.trace("日志 %s 解析的全部图片：%s" % (post_info["post_id"], image_url_list))
+            self.step("日志 %s 解析获取%s个图片" % (post_info["post_id"], len(image_url_list)))
 
             for image_url in image_url_list:
                 self.main_thread_check()  # 检测主线程运行状态
-                self.step("日志 %s 开始下载第%s张图片 %s" % (post_id, image_index, image_url))
+                self.step("日志 %s 开始下载第%s张图片 %s" % (post_info["post_id"], image_index, image_url))
 
-                image_file_path = os.path.join(self.main_thread.image_download_path, self.account_id, "%012d_%02d.%s" % (post_id, image_index, net.get_file_type(image_url)))
+                image_file_path = os.path.join(self.main_thread.image_download_path, self.account_id, "%012d_%02d.%s" % (post_info["post_id"], image_index, net.get_file_type(image_url)))
                 save_file_return = net.save_net_file(image_url, image_file_path)
                 if save_file_return["status"] == 1:
                     # 设置临时目录
                     self.temp_path_list.append(image_file_path)
-                    self.step("日志 %s 第%s张图片下载成功" % (post_id, image_index))
+                    self.step("日志 %s 第%s张图片下载成功" % (post_info["post_id"], image_index))
                     image_index += 1
                 else:
                     error_message = "日志 %s 第%s张图片 %s 下载失败，原因：%s" % (post_url, image_index, image_url, crawler.download_failre(save_file_return["code"]))
@@ -645,7 +636,7 @@ class Download(crawler.DownloadThread):
         self.temp_path_list = []  # 临时目录设置清除
         self.total_image_count += image_index - 1  # 计数累加
         self.total_video_count += video_index - 1  # 计数累加
-        self.account_info[1] = post_id  # 设置存档记录
+        self.account_info[1] = str(post_info["post_id"])  # 设置存档记录
 
     def run(self):
         try:
@@ -679,9 +670,8 @@ class Download(crawler.DownloadThread):
                     start_page_count -= self.EACH_LOOP_MAX_PAGE_COUNT
                     break
 
-                post_id = get_post_id(post_pagination_response["post_info_list"][-1]["post_url"])
                 # 这页已经匹配到存档点，返回上一个节点
-                if post_id < int(self.account_info[1]):
+                if post_pagination_response["post_info_list"][-1]["post_id"] < int(self.account_info[1]):
                     start_page_count -= self.EACH_LOOP_MAX_PAGE_COUNT
                     break
 
@@ -695,7 +685,7 @@ class Download(crawler.DownloadThread):
                 # 从最早的日志开始下载
                 while len(post_info_list) > 0:
                     post_info = post_info_list.pop()
-                    self.step("开始解析日志 %s" % post_info["post_url"])
+                    self.step("开始解析日志 %s" % post_info["post_id"])
                     self.crawl_post(post_info)
                     self.main_thread_check()  # 检测主线程运行状态
 
