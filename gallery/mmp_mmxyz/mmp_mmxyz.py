@@ -6,6 +6,7 @@ email: hikaru870806@hotmail.com
 如有问题或建议请联系
 """
 import os
+import re
 import traceback
 import urllib.parse
 from pyquery import PyQuery as pq
@@ -45,7 +46,7 @@ def get_one_page_album(page_count):
         album_title = album_info_selector.attr("title")
         if not album_title:
             raise crawler.CrawlerException("图集信息截取图集标题失败\n%s" % album_info_selector.html())
-        result_album_info["album_title"] = album_title.strip()
+        result_album_info["album_title"] = re.sub(re.compile("(\[\d*P\])"), "", album_title.strip()).strip()
         result["album_info_list"].append(result_album_info)
     max_page_count = pq(album_pagination_response_content).find("#pagenavi ol li").eq(-2).find("a").html()
     if not crawler.is_integer(max_page_count):
