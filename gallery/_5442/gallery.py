@@ -125,7 +125,10 @@ class Gallery(crawler.Crawler):
             album_id_to_url_list = {}
             is_over = True
             while not is_over:
+                if not self.is_running():
+                    tool.process_exit(0)
                 log.step("开始解析第%s页图集" % page_count)
+
                 # 获取第一页图集
                 try:
                     album_pagination_response = get_one_page_album(page_count)
@@ -143,8 +146,10 @@ class Gallery(crawler.Crawler):
                 if not is_over:
                     is_over = album_pagination_response["is_over"]
                     page_count += 1
-            album_id_to_url_list = {1: "http://www.5442.com/meinv/20120807/1.html"}
+                    
             while album_id <= max(album_id_to_url_list):
+                if not self.is_running():
+                    tool.process_exit(0)
                 # 如果图集id在列表页存在的
                 if album_id not in album_id_to_url_list:
                     album_id += 1
@@ -174,7 +179,6 @@ class Gallery(crawler.Crawler):
                     else:
                         log.error("图集%s《%s》 %s 第%s张图片 %s 下载失败，原因：%s" % (album_id, album_response["album_title"], album_url, image_index, image_url, crawler.download_failre(save_file_return["code"])))
                     image_index += 1
-
                 # 图集内图片全部下载完毕
                 temp_path = ""  # 临时目录设置清除
                 self.total_image_count += image_index - 1  # 计数累加
