@@ -11,4 +11,4 @@
 或者查看界面左侧，用户头像&用户名下面的ID：[1234567890]，其中[]中的数字（实际不包括[]）就是账号的ID
 
 ## 配置参数
-1. 可配置是否单独下载图片和视频，参数：IS_DOWNLOAD_IMAGE、IS_DOWNLOAD_VIDEO
+1. 可配置是否单独下载图片和视频，参数：IS_DOWNLOAD_PHOTO、IS_DOWNLOAD_VIDEO

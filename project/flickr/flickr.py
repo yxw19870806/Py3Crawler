@@ -13,7 +13,7 @@ import traceback
 from pyquery import PyQuery as pq
 from common import *
 
-IMAGE_COUNT_PER_PAGE = 50
+PHOTO_COUNT_PER_PAGE = 50
 IS_LOGIN = True
 COOKIE_INFO = {}
 
@@ -128,7 +128,7 @@ def get_one_page_photo(user_id, page_count, api_key, csrf, request_id):
         "safe_search": 3,
         "content_type": 7,
         "get_user_info": 0,
-        "per_page": IMAGE_COUNT_PER_PAGE,
+        "per_page": PHOTO_COUNT_PER_PAGE,
         "page": page_count,
         "user_id": user_id,
         "api_key": api_key,
@@ -139,7 +139,7 @@ def get_one_page_photo(user_id, page_count, api_key, csrf, request_id):
     # COOKIE_INFO = {}
     photo_pagination_response = net.http_request(api_url, method="GET", fields=query_data, cookies_list=COOKIE_INFO, json_decode=True)
     result = {
-        "image_info_list": [],  # 全部图片信息
+        "photo_info_list": [],  # 全部图片信息
         "is_over": False,  # 是否最后一页图片
     }
     if photo_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
@@ -154,16 +154,16 @@ def get_one_page_photo(user_id, page_count, api_key, csrf, request_id):
         raise crawler.CrawlerException("返回数据'pages'字段类型不正确\n%s" % photo_pagination_response.json_data)
     # 获取图片信息
     for photo_info in photo_pagination_response.json_data["photos"]["photo"]:
-        result_image_info = {
-            "image_time": None,  # 图片上传时间
-            "image_url": None,  # 图片地址
+        result_photo_info = {
+            "photo_time": None,  # 图片上传时间
+            "photo_url": None,  # 图片地址
         }
         # 获取图片上传时间
         if not crawler.check_sub_key(("dateupload",), photo_info):
             raise crawler.CrawlerException("图片信息'dateupload'字段不存在\n%s" % photo_info)
         if not crawler.is_integer(photo_info["dateupload"]):
             raise crawler.CrawlerException("图片信息'dateupload'字段类型不正确\n%s" % photo_info)
-        result_image_info["image_time"] = int(photo_info["dateupload"])
+        result_photo_info["photo_time"] = int(photo_info["dateupload"])
         # 获取图片地址
         max_resolution = 0
         max_resolution_photo_type = ""
@@ -177,12 +177,12 @@ def get_one_page_photo(user_id, page_count, api_key, csrf, request_id):
         if not max_resolution_photo_type:
             raise crawler.CrawlerException("图片信息匹配最高分辨率的图片尺寸失败\n%s" % photo_info)
         if crawler.check_sub_key(("url_" + max_resolution_photo_type + "_cdn",), photo_info):
-            result_image_info["image_url"] = photo_info["url_" + max_resolution_photo_type + "_cdn"]
+            result_photo_info["photo_url"] = photo_info["url_" + max_resolution_photo_type + "_cdn"]
         elif crawler.check_sub_key(("url_" + max_resolution_photo_type,), photo_info):
-            result_image_info["image_url"] = photo_info["url_" + max_resolution_photo_type]
+            result_photo_info["photo_url"] = photo_info["url_" + max_resolution_photo_type]
         else:
             raise crawler.CrawlerException("图片信息'url_%s_cdn'或者'url_%s_cdn'字段不存在\n%s" % (max_resolution_photo_type, max_resolution_photo_type, photo_info))
-        result["image_info_list"].append(result_image_info)
+        result["photo_info_list"].append(result_photo_info)
     # 判断是不是最后一页
     if page_count >= int(photo_pagination_response.json_data["photos"]["pages"]):
         result["is_over"] = True
@@ -198,7 +198,7 @@ class Flickr(crawler.Crawler):
 
         # 初始化参数
         sys_config = {
-            crawler.SYS_DOWNLOAD_IMAGE: True,
+            crawler.SYS_DOWNLOAD_PHOTO: True,
             crawler.SYS_SET_PROXY: True,
             crawler.SYS_GET_COOKIE: {"flickr.com": ()}
         }
@@ -208,7 +208,7 @@ class Flickr(crawler.Crawler):
         COOKIE_INFO = self.cookie_value
 
         # 解析存档文件
-        # account_id  image_count  last_image_time
+        # account_id  photo_count  last_photo_time
         self.account_list = crawler.read_save_data(self.save_data_path, 0, ["", "0", "0"])
 
         # 检测登录状态
@@ -255,7 +255,7 @@ class Flickr(crawler.Crawler):
         # 重新排序保存存档文件
         crawler.rewrite_save_file(self.temp_save_data_path, self.save_data_path)
 
-        log.step("全部下载完毕，耗时%s秒，共计图片%s张" % (self.get_run_time(), self.total_image_count))
+        log.step("全部下载完毕，耗时%s秒，共计图片%s张" % (self.get_run_time(), self.total_photo_count))
 
 
 class Download(crawler.DownloadThread):
@@ -270,7 +270,7 @@ class Download(crawler.DownloadThread):
     # 获取所有可下载图片
     def get_crawl_list(self, user_id, site_key, csrf):
         page_count = 1
-        image_info_list = []
+        photo_info_list = []
         is_over = False
         # 获取全部还未下载过需要解析的图片
         while not is_over:
@@ -284,14 +284,14 @@ class Download(crawler.DownloadThread):
                 self.error("第%s页图片解析失败，原因：%s" % (page_count, e.message))
                 raise
 
-            self.trace("第%s页解析的全部图片：%s" % (page_count, photo_pagination_response["image_info_list"]))
-            self.step("第%s页解析获取%s张图片" % (page_count, len(photo_pagination_response["image_info_list"])))
+            self.trace("第%s页解析的全部图片：%s" % (page_count, photo_pagination_response["photo_info_list"]))
+            self.step("第%s页解析获取%s张图片" % (page_count, len(photo_pagination_response["photo_info_list"])))
 
             # 寻找这一页符合条件的图片
-            for image_info in photo_pagination_response["image_info_list"]:
+            for photo_info in photo_pagination_response["photo_info_list"]:
                 # 检查是否达到存档记录
-                if image_info["image_time"] > int(self.account_info[2]):
-                    image_info_list.append(image_info)
+                if photo_info["photo_time"] > int(self.account_info[2]):
+                    photo_info_list.append(photo_info)
                 else:
                     is_over = True
                     break
@@ -302,29 +302,29 @@ class Download(crawler.DownloadThread):
                 else:
                     page_count += 1
 
-        return image_info_list
+        return photo_info_list
 
     # 下载同一上传时间的所有图片
-    def crawl_image(self, image_info_list):
-        image_index = int(self.account_info[1]) + 1
-        for image_info in image_info_list:
+    def crawl_photo(self, photo_info_list):
+        photo_index = int(self.account_info[1]) + 1
+        for photo_info in photo_info_list:
             self.main_thread_check()  # 检测主线程运行状态
-            self.step("开始下载第%s张图片 %s" % (image_index, image_info["image_url"]))
-            file_path = os.path.join(self.main_thread.image_download_path, self.account_name, "%04d.%s" % (image_index, net.get_file_type(image_info["image_url"])))
-            save_file_return = net.save_net_file(image_info["image_url"], file_path)
+            self.step("开始下载第%s张图片 %s" % (photo_index, photo_info["photo_url"]))
+            file_path = os.path.join(self.main_thread.photo_download_path, self.account_name, "%04d.%s" % (photo_index, net.get_file_type(photo_info["photo_url"])))
+            save_file_return = net.save_net_file(photo_info["photo_url"], file_path)
             if save_file_return["status"] == 1:
                 # 设置临时目录
                 self.temp_path_list.append(file_path)
-                self.step("第%s张图片下载成功" % image_index)
-                image_index += 1
+                self.step("第%s张图片下载成功" % photo_index)
+                photo_index += 1
             else:
-                self.error("第%s张图片 %s 下载失败，原因：%s" % (image_index, image_info["image_url"], crawler.download_failre(save_file_return["code"])))
+                self.error("第%s张图片 %s 下载失败，原因：%s" % (photo_index, photo_info["photo_url"], crawler.download_failre(save_file_return["code"])))
 
         # 图片下载完毕
         self.temp_path_list = []  # 临时目录设置清除
-        self.total_image_count += (image_index - 1) - int(self.account_info[1])  # 计数累加
-        self.account_info[1] = str(image_index - 1)  # 设置存档记录
-        self.account_info[2] = str(image_info_list[0]["image_time"])  # 设置存档记
+        self.total_photo_count += (photo_index - 1) - int(self.account_info[1])  # 计数累加
+        self.account_info[1] = str(photo_index - 1)  # 设置存档记录
+        self.account_info[2] = str(photo_info_list[0]["photo_time"])  # 设置存档记
 
     def run(self):
         try:
@@ -336,21 +336,21 @@ class Download(crawler.DownloadThread):
                 raise
 
             # 获取所有可下载图片
-            image_info_list = self.get_crawl_list(account_index_response["user_id"], account_index_response["site_key"], account_index_response["csrf"])
-            self.step("需要下载的全部图片解析完毕，共%s张" % len(image_info_list))
+            photo_info_list = self.get_crawl_list(account_index_response["user_id"], account_index_response["site_key"], account_index_response["csrf"])
+            self.step("需要下载的全部图片解析完毕，共%s张" % len(photo_info_list))
 
             # 从最早的图片开始下载
-            deal_image_info_list = []
-            while len(image_info_list) > 0:
-                image_info = image_info_list.pop()
+            deal_photo_info_list = []
+            while len(photo_info_list) > 0:
+                photo_info = photo_info_list.pop()
                 # 下一张图片的上传时间一致，合并下载
-                deal_image_info_list.append(image_info)
-                if len(image_info_list) > 0 and image_info_list[-1]["image_time"] == image_info["image_time"]:
+                deal_photo_info_list.append(photo_info)
+                if len(photo_info_list) > 0 and photo_info_list[-1]["photo_time"] == photo_info["photo_time"]:
                     continue
 
                 # 下载同一上传时间的所有图片
-                self.crawl_image(deal_image_info_list)
-                deal_image_info_list = []  # 累加图片地址清除
+                self.crawl_photo(deal_photo_info_list)
+                deal_photo_info_list = []  # 累加图片地址清除
                 self.main_thread_check()  # 检测主线程运行状态
         except SystemExit as se:
             if se.code == 0:
@@ -366,9 +366,9 @@ class Download(crawler.DownloadThread):
         # 保存最后的信息
         with self.thread_lock:
             tool.write_file("\t".join(self.account_info), self.main_thread.temp_save_data_path)
-            self.main_thread.total_image_count += self.total_image_count
+            self.main_thread.total_photo_count += self.total_photo_count
             self.main_thread.account_list.pop(self.account_name)
-        self.step("下载完毕，总共获得%s张图片" % self.total_image_count)
+        self.step("下载完毕，总共获得%s张图片" % self.total_photo_count)
         self.notify_main_thread()
 
 

@@ -39,10 +39,10 @@ def get_one_page_blog(account_id, page_count):
     if blog_body_selector.length != blog_bottom_selector.length:
         raise crawler.CrawlerException("页面截取正文数量不匹配\n%s" % blog_pagination_response_content)
     for blog_body_index in range(0, blog_body_selector.length):
-        result_image_info = {
-            "big_2_small_image_list": {},  # 全部含有大图的图片
+        result_photo_info = {
+            "big_2_small_photo_list": {},  # 全部含有大图的图片
             "blog_id": None,  # 日志id
-            "image_url_list": [],  # 全部图片地址
+            "photo_url_list": [],  # 全部图片地址
         }
         blog_body_html = blog_body_selector.eq(blog_body_index).html()
         # 获取日志id
@@ -52,16 +52,16 @@ def get_one_page_blog(account_id, page_count):
         blog_id = blog_url.split("/")[-1].split(".")[0]
         if not crawler.is_integer(blog_id):
             raise crawler.CrawlerException("日志内容截取日志id失败\n%s" % blog_bottom_selector.eq(blog_body_index).html())
-        result_image_info["blog_id"] = int(blog_id)
+        result_photo_info["blog_id"] = int(blog_id)
         # 获取图片地址列表
-        result_image_info["image_url_list"] = re.findall('src="(http[^"]*)"', blog_body_html)
+        result_photo_info["photo_url_list"] = re.findall('src="(http[^"]*)"', blog_body_html)
         # 获取全部大图对应的小图
-        big_image_list_find = re.findall('<a href="([^"]*)"><img[\S|\s]*? src="([^"]*)"', blog_body_html)
-        big_2_small_image_lust = {}
-        for big_image_url, small_image_url in big_image_list_find:
-            big_2_small_image_lust[small_image_url] = big_image_url
-        result_image_info["big_2_small_image_lust"] = big_2_small_image_lust
-        result["blog_info_list"].append(result_image_info)
+        big_photo_list_find = re.findall('<a href="([^"]*)"><img[\S|\s]*? src="([^"]*)"', blog_body_html)
+        big_2_small_photo_lust = {}
+        for big_photo_url, small_photo_url in big_photo_list_find:
+            big_2_small_photo_lust[small_photo_url] = big_photo_url
+        result_photo_info["big_2_small_photo_lust"] = big_2_small_photo_lust
+        result["blog_info_list"].append(result_photo_info)
     # 判断是不是最后一页
     paginate_selector = pq(blog_pagination_response_content).find("div#sheet div.paginate")
     if paginate_selector.length > 0:
@@ -78,31 +78,31 @@ def get_one_page_blog(account_id, page_count):
 
 
 # 检查图片是否存在对应的大图，以及判断大图是否仍然有效，如果存在可下载的大图则返回大图地址，否则返回原图片地址
-def check_big_image(image_url, big_2_small_list):
+def check_big_photo(photo_url, big_2_small_list):
     result = {
         "cookies": None,  # 页面返回的cookies
-        "image_url": None,  # 大图地址
+        "photo_url": None,  # 大图地址
         "is_over": False,  # 是否已经没有有效的大图了
     }
-    if image_url in big_2_small_list:
-        if big_2_small_list[image_url].find("//dcimg.awalker.jp") > 0:
-            big_image_response = net.http_request(big_2_small_list[image_url], method="GET")
-            if big_image_response.status == net.HTTP_RETURN_CODE_SUCCEED:
+    if photo_url in big_2_small_list:
+        if big_2_small_list[photo_url].find("//dcimg.awalker.jp") > 0:
+            big_photo_response = net.http_request(big_2_small_list[photo_url], method="GET")
+            if big_photo_response.status == net.HTTP_RETURN_CODE_SUCCEED:
                 # 检测是不是已经过期删除
-                temp_image_url = tool.find_sub_string(big_image_response.data, '<img src="', '"')
-                if temp_image_url != "/img/expired.gif":
-                    result["image_url"] = temp_image_url
+                temp_photo_url = tool.find_sub_string(big_photo_response.data, '<img src="', '"')
+                if temp_photo_url != "/img/expired.gif":
+                    result["photo_url"] = temp_photo_url
                 else:
                     result["is_over"] = True
                 # 获取cookies
-                result["cookies"] = net.get_cookies_from_response_header(big_image_response.headers)
+                result["cookies"] = net.get_cookies_from_response_header(big_photo_response.headers)
         else:
-            result["image_url"] = big_2_small_list[image_url]
+            result["photo_url"] = big_2_small_list[photo_url]
     return result
 
 
 # 检测图片是否有效
-def check_image_invalid(file_path):
+def check_photo_invalid(file_path):
     file_size = os.path.getsize(file_path)
     # 文件小于5K
     if file_size < 5120:
@@ -123,12 +123,12 @@ class Blog(crawler.Crawler):
 
         # 初始化参数
         sys_config = {
-            crawler.SYS_DOWNLOAD_IMAGE: True,
+            crawler.SYS_DOWNLOAD_PHOTO: True,
         }
         crawler.Crawler.__init__(self, sys_config)
 
         # 解析存档文件
-        # account_id  image_count  last_blog_time
+        # account_id  photo_count  last_blog_time
         self.account_list = crawler.read_save_data(self.save_data_path, 0, ["", "0", "0"])
 
     def main(self):
@@ -160,7 +160,7 @@ class Blog(crawler.Crawler):
         # 重新排序保存存档文件
         crawler.rewrite_save_file(self.temp_save_data_path, self.save_data_path)
 
-        log.step("全部下载完毕，耗时%s秒，共计图片%s张" % (self.get_run_time(), self.total_image_count))
+        log.step("全部下载完毕，耗时%s秒，共计图片%s张" % (self.get_run_time(), self.total_photo_count))
 
 
 class Download(crawler.DownloadThread):
@@ -212,35 +212,35 @@ class Download(crawler.DownloadThread):
 
     # 解析单个日志
     def crawl_blog(self, blog_info):
-        self.trace("日志%s解析的全部图片：%s" % (blog_info["blog_id"], blog_info["image_url_list"]))
-        self.step("日志%s解析获取%s张图片" % (blog_info["blog_id"], len(blog_info["image_url_list"])))
+        self.trace("日志%s解析的全部图片：%s" % (blog_info["blog_id"], blog_info["photo_url_list"]))
+        self.step("日志%s解析获取%s张图片" % (blog_info["blog_id"], len(blog_info["photo_url_list"])))
 
-        image_index = int(self.account_info[1]) + 1
-        for image_url in blog_info["image_url_list"]:
+        photo_index = int(self.account_info[1]) + 1
+        for photo_url in blog_info["photo_url_list"]:
             self.main_thread_check()  # 检测主线程运行状态
             # 检查是否存在大图可以下载
-            big_image_response = check_big_image(image_url, blog_info["big_2_small_image_lust"])
-            if big_image_response["image_url"] is not None:
-                image_url = big_image_response["image_url"]
-            self.step("开始下载第%s张图片 %s" % (image_index, image_url))
+            big_photo_response = check_big_photo(photo_url, blog_info["big_2_small_photo_lust"])
+            if big_photo_response["photo_url"] is not None:
+                photo_url = big_photo_response["photo_url"]
+            self.step("开始下载第%s张图片 %s" % (photo_index, photo_url))
 
-            file_path = os.path.join(self.main_thread.image_download_path, self.display_name, "%04d.%s" % (image_index, net.get_file_type(image_url, "jpg")))
-            save_file_return = net.save_net_file(image_url, file_path, cookies_list=big_image_response["cookies"])
+            file_path = os.path.join(self.main_thread.photo_download_path, self.display_name, "%04d.%s" % (photo_index, net.get_file_type(photo_url, "jpg")))
+            save_file_return = net.save_net_file(photo_url, file_path, cookies_list=big_photo_response["cookies"])
             if save_file_return["status"] == 1:
-                if check_image_invalid(file_path):
+                if check_photo_invalid(file_path):
                     path.delete_dir_or_file(file_path)
-                    self.step("第%s张图片 %s 不符合规则，删除" % (image_index, image_url))
+                    self.step("第%s张图片 %s 不符合规则，删除" % (photo_index, photo_url))
                 else:
                     self.temp_path_list.append(file_path)
-                    self.step("第%s张图片下载成功" % image_index)
-                    image_index += 1
+                    self.step("第%s张图片下载成功" % photo_index)
+                    photo_index += 1
             else:
-                self.error("第%s张图片 %s 下载失败，原因：%s" % (image_index, image_url, crawler.download_failre(save_file_return["code"])))
+                self.error("第%s张图片 %s 下载失败，原因：%s" % (photo_index, photo_url, crawler.download_failre(save_file_return["code"])))
 
         # 日志内图片全部下载完毕
         self.temp_path_list = []  # 临时目录设置清除
-        self.total_image_count += (image_index - 1) - int(self.account_info[1])  # 计数累加
-        self.account_info[1] = str(image_index - 1)  # 设置存档记录
+        self.total_photo_count += (photo_index - 1) - int(self.account_info[1])  # 计数累加
+        self.account_info[1] = str(photo_index - 1)  # 设置存档记录
         self.account_info[2] = str(blog_info["blog_id"])  # 设置存档记录
 
     def run(self):
@@ -269,9 +269,9 @@ class Download(crawler.DownloadThread):
         # 保存最后的信息
         with self.thread_lock:
             tool.write_file("\t".join(self.account_info), self.main_thread.temp_save_data_path)
-            self.main_thread.total_image_count += self.total_image_count
+            self.main_thread.total_photo_count += self.total_photo_count
             self.main_thread.account_list.pop(self.account_id)
-        self.step("下载完毕，总共获得%s张图片" % self.total_image_count)
+        self.step("下载完毕，总共获得%s张图片" % self.total_photo_count)
         self.notify_main_thread()
 
 

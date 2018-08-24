@@ -86,7 +86,7 @@ def get_album_page(account_id, album_id):
     # 图片不止一页：https://get.google.com/albumarchive/109057690948151627836/album/AF1QipMg1hsC4teQFP5xaBioWo-1SCr4Hphh4mfc0ZZX?source=pwa
     album_url = "https://get.google.com/albumarchive/%s/album/%s" % (account_id, album_id)
     result = {
-        "image_url_list": [],  # 全部图片地址
+        "photo_url_list": [],  # 全部图片地址
     }
     album_response = net.http_request(album_url, method="GET")
     if album_response.status != net.HTTP_RETURN_CODE_SUCCEED:
@@ -103,32 +103,32 @@ def get_album_page(account_id, album_id):
         user_key = script_data[4][0]
         continue_token = script_data[3]
         for data in script_data[4][1]:
-            result["image_url_list"].append(data[1])
+            result["photo_url_list"].append(data[1])
     except ValueError:
         raise crawler.CrawlerException("相册信息格式不正确\n%s" % script_data_html)
     # 判断是不是还有下一页
     while continue_token:
         api_url = "https://get.google.com/_/AlbumArchiveUi/data"
         post_data = {"f.req": '[[[113305010,[{"113305010":["%s",null,24,"%s"]}],null,null,0]]]' % (user_key, continue_token)}
-        image_pagination_response = net.http_request(api_url, method="POST", fields=post_data, encode_multipart=False)
-        if image_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
+        photo_pagination_response = net.http_request(api_url, method="POST", fields=post_data, encode_multipart=False)
+        if photo_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
             raise crawler.CrawlerException(crawler.request_failre(album_response.status))
-        continue_data_html = tool.find_sub_string(image_pagination_response.data.decode(errors="ignore"), ")]}'", None).strip()
+        continue_data_html = tool.find_sub_string(photo_pagination_response.data.decode(errors="ignore"), ")]}'", None).strip()
         continue_data = tool.json_decode(continue_data_html)
         if continue_data is None:
             raise crawler.CrawlerException("相册信息加载失败\n%s" % continue_data_html)
         try:
             continue_token = continue_data[0][2]["113305010"][3]
             for data in continue_data[0][2]["113305010"][4][1]:
-                result["image_url_list"].append(data[1])
+                result["photo_url_list"].append(data[1])
         except ValueError:
             raise crawler.CrawlerException("相册信息格式不正确\n%s" % script_data_html)
     return result
 
 
 # 过滤图片地址（跳过视频）
-def filter_image_url(image_url):
-    return image_url.find("/video.googleusercontent.com/") != -1 or image_url.find("/video-downloads.googleusercontent.com/") != -1
+def filter_photo_url(photo_url):
+    return photo_url.find("/video.googleusercontent.com/") != -1 or photo_url.find("/video-downloads.googleusercontent.com/") != -1
 
 
 class GooglePlus(crawler.Crawler):
@@ -138,13 +138,13 @@ class GooglePlus(crawler.Crawler):
 
         # 初始化参数
         sys_config = {
-            crawler.SYS_DOWNLOAD_IMAGE: True,
+            crawler.SYS_DOWNLOAD_PHOTO: True,
             crawler.SYS_SET_PROXY: True,
         }
         crawler.Crawler.__init__(self, sys_config)
 
         # 解析存档文件
-        # account_id  image_count  album_id  (account_name)  (file_path)
+        # account_id  photo_count  album_id  (account_name)  (file_path)
         self.account_list = crawler.read_save_data(self.save_data_path, 0, ["", "0", "0"])
 
     def main(self):
@@ -176,7 +176,7 @@ class GooglePlus(crawler.Crawler):
         # 重新排序保存存档文件
         crawler.rewrite_save_file(self.temp_save_data_path, self.save_data_path)
 
-        log.step("全部下载完毕，耗时%s秒，共计图片%s张" % (self.get_run_time(), self.total_image_count))
+        log.step("全部下载完毕，耗时%s秒，共计图片%s张" % (self.get_run_time(), self.total_photo_count))
 
 
 class Download(crawler.DownloadThread):
@@ -240,35 +240,35 @@ class Download(crawler.DownloadThread):
             self.error("相册%s解析失败，原因：%s" % (blog_info["blog_id"], e.message))
             raise
 
-        if len(album_response["image_url_list"]) == 0:
+        if len(album_response["photo_url_list"]) == 0:
             self.error("相册%s没有解析到图片" % blog_info["blog_id"])
             return
 
-        self.trace("相册%s解析的全部图片：%s" % (blog_info["blog_id"], album_response["image_url_list"]))
-        self.step("相册%s解析获取%s张图片" % (blog_info["blog_id"], len(album_response["image_url_list"])))
+        self.trace("相册%s解析的全部图片：%s" % (blog_info["blog_id"], album_response["photo_url_list"]))
+        self.step("相册%s解析获取%s张图片" % (blog_info["blog_id"], len(album_response["photo_url_list"])))
 
-        image_index = int(self.account_info[1]) + 1
-        for image_url in album_response["image_url_list"]:
+        photo_index = int(self.account_info[1]) + 1
+        for photo_url in album_response["photo_url_list"]:
             self.main_thread_check()  # 检测主线程运行状态
             # 过滤图片地址
-            if filter_image_url(image_url):
+            if filter_photo_url(photo_url):
                 continue
-            self.step("开始下载第%s张图片 %s" % (image_index, image_url))
+            self.step("开始下载第%s张图片 %s" % (photo_index, photo_url))
 
-            file_path = os.path.join(self.main_thread.image_download_path, self.account_team, self.display_name, "%04d.jpg" % image_index)
-            save_file_return = net.save_net_file(image_url, file_path, need_content_type=True)
+            file_path = os.path.join(self.main_thread.photo_download_path, self.account_team, self.display_name, "%04d.jpg" % photo_index)
+            save_file_return = net.save_net_file(photo_url, file_path, need_content_type=True)
             if save_file_return["status"] == 1:
                 # 设置临时目录
                 self.temp_path_list.append(save_file_return["file_path"])
-                self.step("第%s张图片下载成功" % image_index)
-                image_index += 1
+                self.step("第%s张图片下载成功" % photo_index)
+                photo_index += 1
             else:
-                self.error("第%s张图片 %s 下载失败，原因：%s" % (image_index, image_url, crawler.download_failre(save_file_return["code"])))
+                self.error("第%s张图片 %s 下载失败，原因：%s" % (photo_index, photo_url, crawler.download_failre(save_file_return["code"])))
 
         # 相册内图片全部下载完毕
         self.temp_path_list = []  # 临时目录设置清除
-        self.total_image_count += (image_index - 1) - int(self.account_info[1])  # 计数累加
-        self.account_info[1] = str(image_index - 1)  # 设置存档记录
+        self.total_photo_count += (photo_index - 1) - int(self.account_info[1])  # 计数累加
+        self.account_info[1] = str(photo_index - 1)  # 设置存档记录
         self.account_info[2] = str(blog_info["blog_time"])  # 设置存档记录
 
     def run(self):
@@ -297,9 +297,9 @@ class Download(crawler.DownloadThread):
         # 保存最后的信息
         with self.thread_lock:
             tool.write_file("\t".join(self.account_info), self.main_thread.temp_save_data_path)
-            self.main_thread.total_image_count += self.total_image_count
+            self.main_thread.total_photo_count += self.total_photo_count
             self.main_thread.account_list.pop(self.account_id)
-        self.step("下载完毕，总共获得%s张图片" % self.total_image_count)
+        self.step("下载完毕，总共获得%s张图片" % self.total_photo_count)
         self.notify_main_thread()
 
 

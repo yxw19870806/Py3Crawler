@@ -12,7 +12,7 @@ import time
 import traceback
 from common import *
 
-IMAGE_COUNT_PER_PAGE = 20  # 每次请求获取的图片数量
+PHOTO_COUNT_PER_PAGE = 20  # 每次请求获取的图片数量
 
 
 # 获取账号首页
@@ -46,7 +46,7 @@ def get_account_index_page(account_name):
 def get_one_page_album(account_id, post_time):
     # https://deer-vision.tuchong.com/rest/sites/1186455/posts/2016-11-11%2011:11:11?limit=20
     album_pagination_url = "https://www.tuchong.com/rest/sites/%s/posts/%s" % (account_id, post_time)
-    query_data = {"limit": IMAGE_COUNT_PER_PAGE}
+    query_data = {"limit": PHOTO_COUNT_PER_PAGE}
     album_pagination_response = net.http_request(album_pagination_url, method="GET", fields=query_data, json_decode=True)
     result = {
         "album_info_list": [],  # 全部图片信息
@@ -58,42 +58,42 @@ def get_one_page_album(account_id, post_time):
     if album_pagination_response.json_data["result"] != "SUCCESS":
         raise crawler.CrawlerException("返回数据'result'字段取值不正确\n%s" % album_pagination_response.json_data)
     for album_info in album_pagination_response.json_data["posts"]:
-        result_image_info = {
+        result_photo_info = {
             "album_id": None,  # 相册id
             "album_time": None,  # 相册创建时间
             "album_title": "",  # 相册标题
-            "image_url_list": [],  # 全部图片地址
+            "photo_url_list": [],  # 全部图片地址
         }
         # 获取相册id
         if not crawler.check_sub_key(("post_id",), album_info):
             raise crawler.CrawlerException("相册信息'post_id'字段不存在\n%s" % album_info)
         if not crawler.is_integer(album_info["post_id"]):
             raise crawler.CrawlerException("相册信息'post_id'字段类型不正确\n%s" % album_info)
-        result_image_info["album_id"] = int(album_info["post_id"])
+        result_photo_info["album_id"] = int(album_info["post_id"])
         # 获取相册标题
         if not crawler.check_sub_key(("title",), album_info):
             raise crawler.CrawlerException("相册信息'title'字段不存在\n%s" % album_info)
-        result_image_info["album_title"] = album_info["title"]
+        result_photo_info["album_title"] = album_info["title"]
         # 获取图片地址
-        if not crawler.check_sub_key(("image_count", "images"), album_info):
-            raise crawler.CrawlerException("相册信息'image_count'或'images'字段不存在\n%s" % album_info)
-        if not crawler.check_sub_key(("image_count",), album_info):
-            raise crawler.CrawlerException("相册信息'image_count'字段类型不正确\n%s" % album_info)
+        if not crawler.check_sub_key(("photo_count", "images"), album_info):
+            raise crawler.CrawlerException("相册信息'photo_count'或'images'字段不存在\n%s" % album_info)
+        if not crawler.check_sub_key(("photo_count",), album_info):
+            raise crawler.CrawlerException("相册信息'photo_count'字段类型不正确\n%s" % album_info)
         if not isinstance(album_info["images"], list):
             raise crawler.CrawlerException("相册信息'images'字段类型不正确\n%s" % album_info)
-        if len(album_info["images"]) != int(album_info["image_count"]):
-            raise crawler.CrawlerException("相册信息'images'长度和'image_count'数值不匹配\n%s" % album_info)
-        for image_info in album_info["images"]:
-            if not crawler.check_sub_key(("img_id",), image_info):
+        if len(album_info["images"]) != int(album_info["photo_count"]):
+            raise crawler.CrawlerException("相册信息'images'长度和'photo_count'数值不匹配\n%s" % album_info)
+        for photo_info in album_info["images"]:
+            if not crawler.check_sub_key(("img_id",), photo_info):
                 raise crawler.CrawlerException("相册信息'img_id'字段不存在\n%s" % album_info)
-            result_image_info["image_url_list"].append("https://photo.tuchong.com/%s/f/%s.jpg" % (account_id, image_info["img_id"]))
-        if int(album_info["image_count"]) > 0 and len(result_image_info["image_url_list"]) == 0:
+            result_photo_info["photo_url_list"].append("https://photo.tuchong.com/%s/f/%s.jpg" % (account_id, photo_info["img_id"]))
+        if int(album_info["photo_count"]) > 0 and len(result_photo_info["photo_url_list"]) == 0:
             raise crawler.CrawlerException("相册信息匹配图片地址失败\n%s" % album_info)
         # 获取相册创建时间
         if not crawler.check_sub_key(("published_at",), album_info):
             raise crawler.CrawlerException("相册信息'published_at'字段不存在\n%s" % album_info)
-        result_image_info["album_time"] = album_info["published_at"]
-        result["album_info_list"].append(result_image_info)
+        result_photo_info["album_time"] = album_info["published_at"]
+        result["album_info_list"].append(result_photo_info)
     return result
 
 
@@ -104,7 +104,7 @@ class TuChong(crawler.Crawler):
 
         # 初始化参数
         sys_config = {
-            crawler.SYS_DOWNLOAD_IMAGE: True,
+            crawler.SYS_DOWNLOAD_PHOTO: True,
         }
         crawler.Crawler.__init__(self, sys_config)
 
@@ -141,7 +141,7 @@ class TuChong(crawler.Crawler):
         # 重新排序保存存档文件
         crawler.rewrite_save_file(self.temp_save_data_path, self.save_data_path)
 
-        log.step("全部下载完毕，耗时%s秒，共计图片%s张" % (self.get_run_time(), self.total_image_count))
+        log.step("全部下载完毕，耗时%s秒，共计图片%s张" % (self.get_run_time(), self.total_photo_count))
 
 
 class Download(crawler.DownloadThread):
@@ -189,29 +189,29 @@ class Download(crawler.DownloadThread):
 
     # 解析单个相册
     def crawl_album(self, album_info):
-        image_index = 1
+        photo_index = 1
         # 过滤标题中不支持的字符
         album_title = path.filter_text(album_info["album_title"])
         if album_title:
-            post_path = os.path.join(self.main_thread.image_download_path, self.account_name, "%08d %s" % (album_info["album_id"], album_title))
+            post_path = os.path.join(self.main_thread.photo_download_path, self.account_name, "%08d %s" % (album_info["album_id"], album_title))
         else:
-            post_path = os.path.join(self.main_thread.image_download_path, self.account_name, "%08d" % album_info["album_id"])
+            post_path = os.path.join(self.main_thread.photo_download_path, self.account_name, "%08d" % album_info["album_id"])
         self.temp_path_list.append(post_path)
-        for image_url in album_info["image_url_list"]:
+        for photo_url in album_info["photo_url_list"]:
             self.main_thread_check()  # 检测主线程运行状态
-            self.step("相册%s《%s》开始下载第%s张图片 %s" % (album_info["album_id"], album_info["album_title"], image_index, image_url))
+            self.step("相册%s《%s》开始下载第%s张图片 %s" % (album_info["album_id"], album_info["album_title"], photo_index, photo_url))
 
-            file_path = os.path.join(post_path, "%s.jpg" % image_index)
-            save_file_return = net.save_net_file(image_url, file_path)
+            file_path = os.path.join(post_path, "%s.jpg" % photo_index)
+            save_file_return = net.save_net_file(photo_url, file_path)
             if save_file_return["status"] == 1:
-                self.step("相册%s《%s》第%s张图片下载成功" % (album_info["album_id"], album_info["album_title"], image_index))
-                image_index += 1
+                self.step("相册%s《%s》第%s张图片下载成功" % (album_info["album_id"], album_info["album_title"], photo_index))
+                photo_index += 1
             else:
-                self.error("相册%s《%s》第%s张图片 %s 下载失败，原因：%s" % (album_info["album_id"], album_info["album_title"], image_index, image_url, crawler.download_failre(save_file_return["code"])))
+                self.error("相册%s《%s》第%s张图片 %s 下载失败，原因：%s" % (album_info["album_id"], album_info["album_title"], photo_index, photo_url, crawler.download_failre(save_file_return["code"])))
 
         # 相册内图片全部下载完毕
         self.temp_path_list = []  # 临时目录设置清除
-        self.total_image_count += image_index - 1  # 计数累加
+        self.total_photo_count += photo_index - 1  # 计数累加
         self.account_info[1] = str(album_info["album_id"])  # 设置存档记录
 
     def run(self):
@@ -247,9 +247,9 @@ class Download(crawler.DownloadThread):
         # 保存最后的信息
         with self.thread_lock:
             tool.write_file("\t".join(self.account_info), self.main_thread.temp_save_data_path)
-            self.main_thread.total_image_count += self.total_image_count
+            self.main_thread.total_photo_count += self.total_photo_count
             self.main_thread.account_list.pop(self.account_name)
-        self.step("下载完毕，总共获得%s张图片" % self.total_image_count)
+        self.step("下载完毕，总共获得%s张图片" % self.total_photo_count)
         self.notify_main_thread()
 
 

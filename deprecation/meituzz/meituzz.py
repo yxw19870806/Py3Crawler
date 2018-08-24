@@ -23,7 +23,7 @@ def get_album_page(page_count):
         query_data = {"y": "%sm0%s" % (hex(page_count)[2:], str(9 + page_count ** 2)[-4:])}
     album_response = net.http_request(album_url, method="GET", fields=query_data)
     result = {
-        "image_url_list": None,  # 全部图片地址
+        "photo_url_list": None,  # 全部图片地址
         "is_delete": False,  # 是否已删除（或还没有内容）
         "is_over": False,  # 是否最后一页相册
         "album_title": "",  # 相册标题
@@ -59,11 +59,11 @@ def get_album_page(page_count):
         if crawler.check_sub_key(("i",), media_response.json_data):
             if not isinstance(media_response.json_data["i"], list):
                 raise crawler.CrawlerException("图片相册'i'字段格式不正确\n%s" % media_response.json_data)
-            result["image_url_list"] = []
-            for image_info in media_response.json_data["i"]:
-                if not crawler.check_sub_key(("url",), image_info):
+            result["photo_url_list"] = []
+            for photo_info in media_response.json_data["i"]:
+                if not crawler.check_sub_key(("url",), photo_info):
                     raise crawler.CrawlerException("图片相册'url'字段不存在\n%s" % media_response.json_data)
-                result["image_url_list"].append(image_info["url"])
+                result["photo_url_list"].append(photo_info["url"])
         # 检测是不是视频相册
         if crawler.check_sub_key(("v",), media_response.json_data):
             result["video_url"] = media_response.json_data["v"]
@@ -79,7 +79,7 @@ class MeiTuZZ(crawler.Crawler):
 
         # 初始化参数
         sys_config = {
-            crawler.SYS_DOWNLOAD_IMAGE: True,
+            crawler.SYS_DOWNLOAD_PHOTO: True,
             crawler.SYS_DOWNLOAD_VIDEO: True,
             crawler.SYS_NOT_CHECK_SAVE_DATA: True,
         }
@@ -126,33 +126,33 @@ class MeiTuZZ(crawler.Crawler):
                 # 成功获取到相册，错误数重置
                 error_album_count = 0
 
-                if album_response["image_url_list"] is not None:
-                    log.trace("第%s页相册解析的全部图片：%s" % (album_id, album_response["image_url_list"]))
+                if album_response["photo_url_list"] is not None:
+                    log.trace("第%s页相册解析的全部图片：%s" % (album_id, album_response["photo_url_list"]))
                 else:
                     log.trace("第%s页相册解析的视频：%s" % (album_id, album_response["video_url"]))
 
                 # 图片下载
-                image_index = 1
-                if self.is_download_image and album_response["image_url_list"] is not None:
-                    image_path = os.path.join(self.image_download_path, "%06d" % album_id)
-                    for image_url in album_response["image_url_list"]:
+                photo_index = 1
+                if self.is_download_photo and album_response["photo_url_list"] is not None:
+                    photo_path = os.path.join(self.photo_download_path, "%06d" % album_id)
+                    for photo_url in album_response["photo_url_list"]:
                         if not self.is_running():
                             tool.process_exit(0)
-                        log.step("开始下载第%s页第%s张图片 %s" % (album_id, image_index, image_url))
+                        log.step("开始下载第%s页第%s张图片 %s" % (album_id, photo_index, photo_url))
 
-                        image_file_path = os.path.join(image_path, "%04d.jpg" % image_index)
-                        save_file_return = net.save_net_file(image_url, image_file_path, True)
+                        photo_file_path = os.path.join(photo_path, "%04d.jpg" % photo_index)
+                        save_file_return = net.save_net_file(photo_url, photo_file_path, True)
                         if save_file_return["status"] == 1:
                             # 设置临时目录
-                            temp_path_list.append(image_file_path)
-                            log.step("第%s页第%s张图片下载成功" % (album_id, image_index))
-                            image_index += 1
+                            temp_path_list.append(photo_file_path)
+                            log.step("第%s页第%s张图片下载成功" % (album_id, photo_index))
+                            photo_index += 1
                         else:
-                            log.error("第%s页第%s张图片 %s 下载失败，原因：%s" % (album_id, image_index, image_url, crawler.download_failre(save_file_return["code"])))
+                            log.error("第%s页第%s张图片 %s 下载失败，原因：%s" % (album_id, photo_index, photo_url, crawler.download_failre(save_file_return["code"])))
 
                 # 视频下载
                 video_index = 1
-                if self.is_download_image and album_response["video_url"] is not None:
+                if self.is_download_video and album_response["video_url"] is not None:
                     if not self.is_running():
                         tool.process_exit(0)
                     log.step("开始下载第%s页视频 %s" % (album_id, album_response["video_url"]))
@@ -169,7 +169,7 @@ class MeiTuZZ(crawler.Crawler):
 
                 # tweet内图片和视频全部下载完毕
                 temp_path_list = []  # 临时目录设置清除
-                self.total_image_count += image_index - 1  # 计数累加
+                self.total_photo_count += photo_index - 1  # 计数累加
                 self.total_video_count += video_index - 1  # 计数累加
                 save_album_id = album_id = album_id + 1  # 设置存档记录
         except SystemExit as se:
@@ -187,7 +187,7 @@ class MeiTuZZ(crawler.Crawler):
 
         # 重新保存存档文件
         tool.write_file(str(save_album_id), self.save_data_path, tool.WRITE_FILE_TYPE_REPLACE)
-        log.step("全部下载完毕，耗时%s秒，共计图片%s张，视频%s个" % (self.get_run_time(), self.total_image_count, self.total_video_count))
+        log.step("全部下载完毕，耗时%s秒，共计图片%s张，视频%s个" % (self.get_run_time(), self.total_photo_count, self.total_video_count))
 
 
 if __name__ == "__main__":

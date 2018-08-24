@@ -16,7 +16,7 @@ import time
 from common import browser, keyboardEvent, log, net, output, path, portListenerEvent, tool
 
 # 程序是否支持下载图片功能（会判断配置中是否需要下载图片，如全部是则创建图片下载目录）
-SYS_DOWNLOAD_IMAGE = "download_image"
+SYS_DOWNLOAD_PHOTO = "download_photo"
 # 程序是否支持下载视频功能（会判断配置中是否需要下载视频，如全部是则创建视频下载目录）
 SYS_DOWNLOAD_VIDEO = "download_video"
 # 程序是否默认需要设置代理
@@ -58,7 +58,7 @@ class Crawler(object):
             self.print_msg("程序启动配置不存在，请检查代码！")
             tool.process_exit()
             return
-        sys_download_image = SYS_DOWNLOAD_IMAGE in sys_config
+        sys_download_photo = SYS_DOWNLOAD_PHOTO in sys_config
         sys_download_video = SYS_DOWNLOAD_VIDEO in sys_config
         sys_set_proxy = SYS_SET_PROXY in sys_config
         sys_get_cookie = SYS_GET_COOKIE in sys_config
@@ -127,11 +127,11 @@ class Crawler(object):
                 return
 
         # 是否下载
-        self.is_download_image = analysis_config(config, "IS_DOWNLOAD_IMAGE", True, CONFIG_ANALYSIS_MODE_BOOLEAN) and sys_download_image
+        self.is_download_photo = analysis_config(config, "IS_DOWNLOAD_PHOTO", True, CONFIG_ANALYSIS_MODE_BOOLEAN) and sys_download_photo
         self.is_download_video = analysis_config(config, "IS_DOWNLOAD_VIDEO", True, CONFIG_ANALYSIS_MODE_BOOLEAN) and sys_download_video
 
-        if not sys_not_download and not self.is_download_image and not self.is_download_video:
-            if sys_download_image or sys_download_video:
+        if not sys_not_download and not self.is_download_photo and not self.is_download_video:
+            if sys_download_photo or sys_download_video:
                 self.print_msg("所有支持的下载都没有开启，请检查配置！")
                 tool.process_exit()
                 return
@@ -155,16 +155,16 @@ class Crawler(object):
         self.session_data_path = analysis_config(config, "SESSION_DATA_PATH", "\\\\info/session.data", CONFIG_ANALYSIS_MODE_PATH)
 
         # 是否需要下载图片
-        if self.is_download_image:
+        if self.is_download_photo:
             # 图片保存目录
-            self.image_download_path = analysis_config(config, "IMAGE_DOWNLOAD_PATH", "\\\\photo", CONFIG_ANALYSIS_MODE_PATH)
-            if not path.create_dir(self.image_download_path):
+            self.photo_download_path = analysis_config(config, "PHOTO_DOWNLOAD_PATH", "\\\\photo", CONFIG_ANALYSIS_MODE_PATH)
+            if not path.create_dir(self.photo_download_path):
                 # 图片保存目录创建失败
-                self.print_msg("图片保存目录%s创建失败！" % self.image_download_path)
+                self.print_msg("图片保存目录%s创建失败！" % self.photo_download_path)
                 tool.process_exit()
                 return
         else:
-            self.image_download_path = ""
+            self.photo_download_path = ""
         # 是否需要下载视频
         if self.is_download_video:
             # 视频保存目录
@@ -261,7 +261,7 @@ class Crawler(object):
                 keyboard_control_thread.setDaemon(True)
                 keyboard_control_thread.start()
 
-        self.total_image_count = 0
+        self.total_photo_count = 0
         self.total_video_count = 0
 
         self.print_msg("初始化完成")
@@ -310,7 +310,7 @@ class DownloadThread(threading.Thread):
         else:
             output.print_msg("下载线程参数异常")
             tool.process_exit()
-        self.total_image_count = 0
+        self.total_photo_count = 0
         self.total_video_count = 0
         self.temp_path_list = []
 

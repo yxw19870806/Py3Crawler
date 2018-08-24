@@ -60,7 +60,12 @@ def get_index_setting(account_id):
     is_safe_mode = False
     is_private = False
     if index_response.status == 301:
-        raise crawler.CrawlerException("此账号已重定向第三方网站")
+        redirect_url = index_response.getheader("Location")
+        if redirect_url.find("http://") == 0:
+            is_https = False
+        is_safe_mode = False
+        is_private = False
+        # raise crawler.CrawlerException("此账号已重定向第三方网站")
     elif index_response.status == 302:
         redirect_url = index_response.getheader("Location")
         if redirect_url.find("http://%s.tumblr.com/" % account_id) == 0:
@@ -133,6 +138,7 @@ def get_one_page_post(account_id, page_count, is_https, is_safe_mode):
         # 单条日志
         for post_info in page_data["itemListElement"]:
             result_post_info = {
+                "post_id": None,  # 日志id
                 "post_url": None,  # 日志地址
             }
             # 获取日志地址
@@ -140,6 +146,11 @@ def get_one_page_post(account_id, page_count, is_https, is_safe_mode):
                 raise crawler.CrawlerException("日志信息'url'字段不存在\n%s" % page_data)
             post_url_split = urllib.parse.urlsplit(post_info["url"])
             result_post_info["post_url"] = post_url_split[0] + "://" + post_url_split[1] + urllib.parse.quote(post_url_split[2])
+            # 获取日志id
+            post_id = tool.find_sub_string(result_post_info["post_url"], "/post/").split("/")[0]
+            if not crawler.is_integer(post_id):
+                crawler.CrawlerException("日志地址截取日志id失败\n%s" % result_post_info["post_url"])
+            result_post_info["post_id"] = int(post_id)
             result["post_info_list"].append(result_post_info)
     else:
         result["is_over"] = True
@@ -189,7 +200,7 @@ def get_one_page_private_blog(account_id, page_count):
     for post_info in post_pagination_response.json_data["response"]["posts"]:
         result_post_info = {
             "has_video": False,  # 是不是包含视频
-            "image_url_list": [],  # 全部图片地址
+            "photo_url_list": [],  # 全部图片地址
             "post_url": None,  # 日志地址
             "video_url": None,  # 视频地址
         }
@@ -228,7 +239,7 @@ def get_one_page_private_blog(account_id, page_count):
                     raise crawler.CrawlerException("图片信息'original_size'字段不存在\n%s" % photo_info)
                 if not crawler.check_sub_key(("url",), photo_info["original_size"]):
                     raise crawler.CrawlerException("图片信息'url'字段不存在\n%s" % photo_info)
-                result_post_info["image_url_list"].append(photo_info["original_size"]["url"])
+                result_post_info["photo_url_list"].append(photo_info["original_size"]["url"])
         result["post_info_list"].append(result_post_info)
     if len(post_pagination_response.json_data["response"]["posts"]) < EACH_PAGE_COUNT:
         result["is_over"] = True
@@ -246,7 +257,7 @@ def get_post_page(post_url, is_safe_mode):
     post_response = net.http_request(post_url, method="GET", header_list=header_list, cookies_list=cookies_list)
     result = {
         "has_video": False,  # 是不是包含视频
-        "image_url_list": [],  # 全部图片地址
+        "photo_url_list": [],  # 全部图片地址
     }
     if post_response.status in [503, 504, net.HTTP_RETURN_CODE_RETRY]:
         # 服务器错误，跳过这页
@@ -265,9 +276,9 @@ def get_post_page(post_url, is_safe_mode):
     if og_type == "tumblr-feed:video":
         result["has_video"] = True
         # 获取图片地址
-        image_url = tool.find_sub_string(post_page_head, '<meta property="og:image" content="', '" />')
-        if image_url and image_url.find("assets.tumblr.com/images/og/fb_landscape_share.png") == -1:
-            result["image_url_list"].append(image_url)
+        photo_url = tool.find_sub_string(post_page_head, '<meta property="og:image" content="', '" />')
+        if photo_url and photo_url.find("assets.tumblr.com/images/og/fb_landscape_share.png") == -1:
+            result["photo_url_list"].append(photo_url)
     elif not og_type:
         script_data_string = tool.find_sub_string(post_page_head, '<script type="application/ld+json">', "</script>").strip()
         if not script_data_string:
@@ -279,41 +290,41 @@ def get_post_page(post_url, is_safe_mode):
             if isinstance(script_data["image"], dict):
                 if not crawler.check_sub_key(("@list",), script_data["image"]):
                     raise crawler.CrawlerException("页面脚本数据'@list'字段不存在\n%s" % script_data)
-                for image_url in script_data["image"]["@list"]:
-                    result["image_url_list"].append(image_url)
+                for photo_url in script_data["image"]["@list"]:
+                    result["photo_url_list"].append(photo_url)
             elif isinstance(script_data["image"], str) or isinstance(script_data["image"], str):
-                result["image_url_list"].append(script_data["image"])
+                result["photo_url_list"].append(script_data["image"])
             else:
                 raise crawler.CrawlerException("页面脚本数据'image'字段类型错误\n%s" % script_data)
     else:
         # 获取全部图片地址
-        image_url_list = re.findall('"(http[s]?://\d*[.]?media.tumblr.com/[^"]*)"', post_page_head)
-        new_image_url_list = {}
-        for image_url in image_url_list:
+        photo_url_list = re.findall('"(http[s]?://\d*[.]?media.tumblr.com/[^"]*)"', post_page_head)
+        new_photo_url_list = {}
+        for photo_url in photo_url_list:
             # 头像，跳过
-            if image_url.find("/avatar_") != -1 or image_url[-9:] == "_75sq.gif" or image_url[-9:] == "_75sq.jpg" or image_url[-9:] == "_75sq.png":
+            if photo_url.find("/avatar_") != -1 or photo_url[-9:] == "_75sq.gif" or photo_url[-9:] == "_75sq.jpg" or photo_url[-9:] == "_75sq.png":
                 continue
-            elif len(re.findall("/birthday\d_", image_url)) == 1:
+            elif len(re.findall("/birthday\d_", photo_url)) == 1:
                 continue
-            image_id, resolution = analysis_image(image_url)
+            photo_id, resolution = analysis_photo(photo_url)
             # 判断是否有分辨率更小的相同图片
-            if image_id in new_image_url_list:
-                image_id, old_resolution = analysis_image(new_image_url_list[image_id])
+            if photo_id in new_photo_url_list:
+                photo_id, old_resolution = analysis_photo(new_photo_url_list[photo_id])
                 if resolution < old_resolution:
                     continue
-            new_image_url_list[image_id] = image_url
-        result["image_url_list"] = list(new_image_url_list.values())
+            new_photo_url_list[photo_id] = photo_url
+        result["photo_url_list"] = list(new_photo_url_list.values())
     return result
 
 
-def analysis_image(image_url):
-    temp_list = image_url.split("/")[-1].split(".")[0].split("_")
+def analysis_photo(photo_url):
+    temp_list = photo_url.split("/")[-1].split(".")[0].split("_")
     resolution = 0
     if temp_list[0] == "tumblr":
         if temp_list[1] == "inline" and not crawler.is_integer(temp_list[2]):
-            image_id = temp_list[2]
+            photo_id = temp_list[2]
         else:
-            image_id = temp_list[1]
+            photo_id = temp_list[1]
         # http://78.media.tumblr.com/tumblr_livevtbzL31qzk5tao1_cover.jpg
         # http://78.media.tumblr.com/tumblr_ljkiptVlj61qg3k48o1_1302659992_cover.jpg
         if temp_list[-1] in ["cover", "og", "frame1"]:
@@ -328,7 +339,7 @@ def analysis_image(image_url):
             resolution = int(temp_list[-1][:-1])
         # https://78.media.tumblr.com/5c0b9f4e8ac839a628863bb5d7255938/tumblr_inline_p6ve89vOZA1uhchy5_250sq.jpg
         elif temp_list[-1][-2:] == "sq" and crawler.is_integer(temp_list[-1][:-2]):
-            image_url = image_url.replace("_250sq", "1280")
+            photo_url = photo_url.replace("_250sq", "1280")
             resolution = 1280
         # http://78.media.tumblr.com/tumblr_m9rwkpsRwt1rr15s5.jpg
         # http://78.media.tumblr.com/afd60c3d469055cea4544fe848eeb266/tumblr_inline_n9gff0sXMl1rzbdqg.gif
@@ -342,28 +353,28 @@ def analysis_image(image_url):
         ):
             pass
         else:
-            log.notice("未知图片地址类型1：" + image_url)
+            log.notice("未知图片地址类型1：" + photo_url)
     # http://78.media.tumblr.com/TVeEqrZktkygbzi2tUbbKMGXo1_1280.jpg
     elif not crawler.is_integer(temp_list[0]) and crawler.is_integer(temp_list[-1]):
-        image_id = temp_list[0]
+        photo_id = temp_list[0]
         resolution = int(temp_list[-1])
     #  http://78.media.tumblr.com/_1364612391_cover.jpg
     elif len(temp_list) == 3 and temp_list[0] == "" and crawler.is_integer(temp_list[1]) and temp_list[2] == "cover":
-        image_id = temp_list[1]
+        photo_id = temp_list[1]
     # http://78.media.tumblr.com/3562275_500.jpg
     elif len(temp_list) == 2 and crawler.is_integer(temp_list[0]) and crawler.is_integer(temp_list[-1]):
-        image_id = temp_list[0]
+        photo_id = temp_list[0]
         resolution = int(temp_list[1])
     # http://78.media.tumblr.com/15427139_r1_500.jpg
     elif len(temp_list) == 3 and crawler.is_integer(temp_list[0]) and crawler.is_integer(temp_list[-1]) and temp_list[1][0] == "r":
-        image_id = temp_list[0]
+        photo_id = temp_list[0]
         resolution = int(temp_list[2])
     else:
-        image_id = image_url.split("/")[-1]
-        log.notice("未知图片地址类型2：" + image_url)
-    if len(image_id) < 15 and not (crawler.is_integer(image_id) and int(image_id) < 2000000000):
-        log.notice("未知图片地址类型3：" + image_url)
-    return image_id, resolution
+        photo_id = photo_url.split("/")[-1]
+        log.notice("未知图片地址类型2：" + photo_url)
+    if len(photo_id) < 15 and not (crawler.is_integer(photo_id) and int(photo_id) < 2000000000):
+        log.notice("未知图片地址类型3：" + photo_url)
+    return photo_id, resolution
 
 
 # 获取视频播放页面
@@ -397,14 +408,6 @@ def get_video_play_page(account_id, post_id, is_https):
     return result
 
 
-# 日志地址解析日志id
-def get_post_id(post_url):
-    post_id = tool.find_sub_string(post_url, "/post/").split("/")[0]
-    if crawler.is_integer(post_id):
-        return int(post_id)
-    return None
-
-
 class Tumblr(crawler.Crawler):
     def __init__(self):
         global COOKIE_INFO
@@ -416,7 +419,7 @@ class Tumblr(crawler.Crawler):
 
         # 初始化参数
         sys_config = {
-            crawler.SYS_DOWNLOAD_IMAGE: True,
+            crawler.SYS_DOWNLOAD_PHOTO: True,
             crawler.SYS_DOWNLOAD_VIDEO: True,
             crawler.SYS_GET_COOKIE: {"tumblr.com": (), "www.tumblr.com": ()},
             crawler.SYS_SET_PROXY: True,
@@ -482,7 +485,7 @@ class Tumblr(crawler.Crawler):
         # 重新排序保存存档文件
         crawler.rewrite_save_file(self.temp_save_data_path, self.save_data_path)
 
-        log.step("全部下载完毕，耗时%s秒，共计图片%s张，视频%s个" % (self.get_run_time(), self.total_image_count, self.total_video_count))
+        log.step("全部下载完毕，耗时%s秒，共计图片%s张，视频%s个" % (self.get_run_time(), self.total_photo_count, self.total_video_count))
 
 
 class Download(crawler.DownloadThread):
@@ -525,20 +528,14 @@ class Download(crawler.DownloadThread):
 
             # 寻找这一页符合条件的日志
             for post_info in post_pagination_response["post_info_list"]:
-                # 获取日志id
-                post_id = get_post_id(post_info["post_url"])
-                if post_id is None:
-                    self.error("日志地址%s解析日志id失败" % post_info["post_url"])
-                    tool.process_exit()
-
                 # 检查是否达到存档记录
-                if post_id > int(self.account_info[1]):
+                if post_info["post_id"] > int(self.account_info[1]):
                     # 新增信息页导致的重复判断
-                    if post_id in unique_list:
+                    if post_info["post_id"] in unique_list:
                         continue
                     else:
                         post_info_list.append(post_info)
-                        unique_list.append(post_id)
+                        unique_list.append(post_info["post_id"])
                 else:
                     is_over = True
                     break
@@ -552,12 +549,11 @@ class Download(crawler.DownloadThread):
 
     # 解析单个日志
     def crawl_post(self, post_info):
-        post_id = get_post_id(post_info["post_url"])
-        post_url = post_info["post_url"][:post_info["post_url"].find(post_id) + len(str(post_id))]
+        post_url = post_info["post_url"][:post_info["post_url"].find(str(post_info["post_id"])) + len(str(post_info["post_id"]))]
 
         if self.is_private:
             has_video = post_info["has_video"]
-            image_url_list = post_info["image_url_list"]
+            photo_url_list = post_info["photo_url_list"]
         else:
             # 获取日志
             try:
@@ -566,7 +562,7 @@ class Download(crawler.DownloadThread):
                 self.error("日志 %s 解析失败，原因：%s" % (post_url, e.message))
                 raise
             has_video = post_response["has_video"]
-            image_url_list = post_response["image_url_list"]
+            photo_url_list = post_response["photo_url_list"]
 
         # 视频下载
         video_index = 1
@@ -576,7 +572,7 @@ class Download(crawler.DownloadThread):
             else:
                 self.main_thread_check()  # 检测主线程运行状态
                 try:
-                    video_play_response = get_video_play_page(self.account_id, post_id, self.is_https)
+                    video_play_response = get_video_play_page(self.account_id, post_info["post_id"], self.is_https)
                 except crawler.CrawlerException as e:
                     self.error("日志 %s 视频解析失败，原因：%s" % (post_url, e.message))
                     raise
@@ -588,14 +584,14 @@ class Download(crawler.DownloadThread):
                 break
 
             self.main_thread_check()  # 检测主线程运行状态
-            self.step("日志 %s 开始下载视频 %s" % (post_id, video_url))
+            self.step("日志 %s 开始下载视频 %s" % (post_info["post_id"], video_url))
 
-            video_file_path = os.path.join(self.main_thread.video_download_path, self.account_id, "%012d.mp4" % post_id)
+            video_file_path = os.path.join(self.main_thread.video_download_path, self.account_id, "%012d.mp4" % post_info["post_id"])
             save_file_return = net.save_net_file(video_url, video_file_path)
             if save_file_return["status"] == 1:
                 # 设置临时目录
                 self.temp_path_list.append(video_file_path)
-                self.step("日志 %s 视频下载成功" % post_id)
+                self.step("日志 %s 视频下载成功" % post_info["post_id"])
                 video_index += 1
             else:
                 if save_file_return["code"] == 403 and video_url.find("_r1_720") != -1:
@@ -604,7 +600,7 @@ class Download(crawler.DownloadThread):
                     if save_file_return["status"] == 1:
                         # 设置临时目录
                         self.temp_path_list.append(video_file_path)
-                        self.step("日志 %s 视频下载成功" % post_id)
+                        self.step("日志 %s 视频下载成功" % post_info["post_id"])
                         video_index += 1
                         break
                 error_message = "日志 %s 视频 %s 下载失败，原因：%s" % (post_url, video_url, crawler.download_failre(save_file_return["code"]))
@@ -616,36 +612,36 @@ class Download(crawler.DownloadThread):
             break
 
         # 图片下载
-        image_index = 1
-        if self.main_thread.is_download_image and len(image_url_list) > 0:
-            self.trace("日志 %s 解析的全部图片：%s" % (post_id, image_url_list))
-            self.step("日志 %s 解析获取%s个图片" % (post_id, len(image_url_list)))
+        photo_index = 1
+        if self.main_thread.is_download_photo and len(photo_url_list) > 0:
+            self.trace("日志 %s 解析的全部图片：%s" % (post_info["post_id"], photo_url_list))
+            self.step("日志 %s 解析获取%s个图片" % (post_info["post_id"], len(photo_url_list)))
 
-            for image_url in image_url_list:
+            for photo_url in photo_url_list:
                 self.main_thread_check()  # 检测主线程运行状态
-                self.step("日志 %s 开始下载第%s张图片 %s" % (post_id, image_index, image_url))
+                self.step("日志 %s 开始下载第%s张图片 %s" % (post_info["post_id"], photo_index, photo_url))
 
-                image_file_path = os.path.join(self.main_thread.image_download_path, self.account_id, "%012d_%02d.%s" % (post_id, image_index, net.get_file_type(image_url)))
-                save_file_return = net.save_net_file(image_url, image_file_path)
+                photo_file_path = os.path.join(self.main_thread.photo_download_path, self.account_id, "%012d_%02d.%s" % (post_info["post_id"], photo_index, net.get_file_type(photo_url)))
+                save_file_return = net.save_net_file(photo_url, photo_file_path)
                 if save_file_return["status"] == 1:
                     # 设置临时目录
-                    self.temp_path_list.append(image_file_path)
-                    self.step("日志 %s 第%s张图片下载成功" % (post_id, image_index))
-                    image_index += 1
+                    self.temp_path_list.append(photo_file_path)
+                    self.step("日志 %s 第%s张图片下载成功" % (post_info["post_id"], photo_index))
+                    photo_index += 1
                 else:
-                    error_message = "日志 %s 第%s张图片 %s 下载失败，原因：%s" % (post_url, image_index, image_url, crawler.download_failre(save_file_return["code"]))
+                    error_message = "日志 %s 第%s张图片 %s 下载失败，原因：%s" % (post_url, photo_index, photo_url, crawler.download_failre(save_file_return["code"]))
                     # 403、404错误作为step log输出
                     if IS_STEP_ERROR_403_AND_404 and save_file_return["code"] in [403, 404]:
                         self.step(error_message)
                     else:
-                        image_index += 1
+                        photo_index += 1
                         self.error(error_message)
 
         # 日志内图片和视频全部下载完毕
         self.temp_path_list = []  # 临时目录设置清除
-        self.total_image_count += image_index - 1  # 计数累加
+        self.total_photo_count += photo_index - 1  # 计数累加
         self.total_video_count += video_index - 1  # 计数累加
-        self.account_info[1] = post_id  # 设置存档记录
+        self.account_info[1] = str(post_info["post_id"])  # 设置存档记录
 
     def run(self):
         try:
@@ -679,9 +675,8 @@ class Download(crawler.DownloadThread):
                     start_page_count -= self.EACH_LOOP_MAX_PAGE_COUNT
                     break
 
-                post_id = get_post_id(post_pagination_response["post_info_list"][-1]["post_url"])
                 # 这页已经匹配到存档点，返回上一个节点
-                if post_id < int(self.account_info[1]):
+                if post_pagination_response["post_info_list"][-1]["post_id"] < int(self.account_info[1]):
                     start_page_count -= self.EACH_LOOP_MAX_PAGE_COUNT
                     break
 
@@ -695,7 +690,7 @@ class Download(crawler.DownloadThread):
                 # 从最早的日志开始下载
                 while len(post_info_list) > 0:
                     post_info = post_info_list.pop()
-                    self.step("开始解析日志 %s" % post_info["post_url"])
+                    self.step("开始解析日志 %s" % post_info["post_id"])
                     self.crawl_post(post_info)
                     self.main_thread_check()  # 检测主线程运行状态
 
@@ -717,10 +712,10 @@ class Download(crawler.DownloadThread):
         # 保存最后的信息
         with self.thread_lock:
             tool.write_file("\t".join(self.account_info), self.main_thread.temp_save_data_path)
-            self.main_thread.total_image_count += self.total_image_count
+            self.main_thread.total_photo_count += self.total_photo_count
             self.main_thread.total_video_count += self.total_video_count
             self.main_thread.account_list.pop(self.account_id)
-        self.step("下载完毕，总共获得%s张图片和%s个视频" % (self.total_image_count, self.total_video_count))
+        self.step("下载完毕，总共获得%s张图片和%s个视频" % (self.total_photo_count, self.total_video_count))
         self.notify_main_thread()
 
 

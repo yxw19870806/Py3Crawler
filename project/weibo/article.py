@@ -75,9 +75,9 @@ def get_article_page(article_url):
     result = {
         "article_id": None,  # 文章id
         "article_title": "",  # 文章标题
-        "image_url_list": [],  # 全部图片地址
+        "photo_url_list": [],  # 全部图片地址
         "is_pay": False,  # 是否需要购买
-        "top_image_url": None,  # 文章顶部图片
+        "top_photo_url": None,  # 文章顶部图片
     }
     if article_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(article_response.status))
@@ -102,9 +102,9 @@ def get_article_page(article_url):
     if not result["article_title"]:
         raise crawler.CrawlerException("页面截取文章标题失败\n%s" % article_url)
     # 获取文章顶部图片地址
-    article_top_image_html = tool.find_sub_string(article_response_content, '<div class="main_toppic">', '<div class="main_editor')
-    if article_top_image_html:
-        result["top_image_url"] = tool.find_sub_string(article_top_image_html, 'src="', '" />')
+    article_top_photo_html = tool.find_sub_string(article_response_content, '<div class="main_toppic">', '<div class="main_editor')
+    if article_top_photo_html:
+        result["top_photo_url"] = tool.find_sub_string(article_top_photo_html, 'src="', '" />')
     # 获取文章图片地址列表
     if article_type == "t":
         # 正文到作者信息间的页面
@@ -116,14 +116,14 @@ def get_article_page(article_url):
         article_body = tool.find_sub_string(article_response_content, '{"ns":"pl.content.longFeed.index"', "</script>").replace("\\", "")
     if not article_body:
         raise crawler.CrawlerException("页面截取文章正文失败\n%s" % article_response_content)
-    image_url_list = re.findall('<img[^>]* src="([^"]*)"[^>]*>', article_body)
-    for image_url in image_url_list:
+    photo_url_list = re.findall('<img[^>]* src="([^"]*)"[^>]*>', article_body)
+    for photo_url in photo_url_list:
         # 无效地址
-        if image_url.find("/p/e_weibo_com") >= 0 or image_url.find("//e.weibo.com") >= 0:
+        if photo_url.find("/p/e_weibo_com") >= 0 or photo_url.find("//e.weibo.com") >= 0:
             continue
-        if image_url.find("//") == 0:
-            image_url = "http:" + image_url
-        result["image_url_list"].append(image_url)
+        if photo_url.find("//") == 0:
+            photo_url = "http:" + photo_url
+        result["photo_url_list"].append(photo_url)
     return result
 
 
@@ -134,7 +134,7 @@ class Article(crawler.Crawler):
 
         # 初始化参数
         sys_config = {
-            crawler.SYS_DOWNLOAD_IMAGE: True,
+            crawler.SYS_DOWNLOAD_PHOTO: True,
             crawler.SYS_GET_COOKIE: {
                 "sina.com.cn": (),
                 "login.sina.com.cn": (),
@@ -187,7 +187,7 @@ class Article(crawler.Crawler):
         # 重新排序保存存档文件
         crawler.rewrite_save_file(self.temp_save_data_path, self.save_data_path)
 
-        log.step("全部下载完毕，耗时%s秒，共计图片%s张" % (self.get_run_time(), self.total_image_count))
+        log.step("全部下载完毕，耗时%s秒，共计图片%s张" % (self.get_run_time(), self.total_photo_count))
 
 
 class Download(crawler.DownloadThread):
@@ -256,49 +256,49 @@ class Download(crawler.DownloadThread):
         # 过滤标题中不支持的字符
         article_title = path.filter_text(article_response["article_title"])
         if article_title:
-            article_path = os.path.join(self.main_thread.image_download_path, self.display_name, "%s %s" % (article_id, article_title))
+            article_path = os.path.join(self.main_thread.photo_download_path, self.display_name, "%s %s" % (article_id, article_title))
         else:
-            article_path = os.path.join(self.main_thread.image_download_path, self.display_name, article_id)
+            article_path = os.path.join(self.main_thread.photo_download_path, self.display_name, article_id)
         self.temp_path_list.append(article_path)
         # 文章正文图片
-        image_index = 1
-        for image_url in article_response["image_url_list"]:
+        photo_index = 1
+        for photo_url in article_response["photo_url_list"]:
             self.main_thread_check()  # 检测主线程运行状态
-            if image_url.find("/p/e_weibo_com") >= 0 or image_url.find("//e.weibo.com") >= 0:
+            if photo_url.find("/p/e_weibo_com") >= 0 or photo_url.find("//e.weibo.com") >= 0:
                 continue
-            self.step("文章%s《%s》 开始下载第%s张图片 %s" % (article_id, article_response["article_title"], image_index, image_url))
-            file_path = os.path.join(article_path, "%03d.%s" % (image_index, net.get_file_type(image_url)))
-            save_file_return = net.save_net_file(image_url, file_path)
+            self.step("文章%s《%s》 开始下载第%s张图片 %s" % (article_id, article_response["article_title"], photo_index, photo_url))
+            file_path = os.path.join(article_path, "%03d.%s" % (photo_index, net.get_file_type(photo_url)))
+            save_file_return = net.save_net_file(photo_url, file_path)
             if save_file_return["status"] == 1:
-                if weiboCommon.check_image_invalid(file_path):
+                if weiboCommon.check_photo_invalid(file_path):
                     path.delete_dir_or_file(file_path)
-                    self.error("文章%s《%s》 第%s张图片 %s 资源已被删除，跳过" % (article_id, article_response["article_title"], image_index, image_url))
+                    self.error("文章%s《%s》 第%s张图片 %s 资源已被删除，跳过" % (article_id, article_response["article_title"], photo_index, photo_url))
                 else:
-                    self.step("文章%s《%s》 第%s张图片下载成功" % (article_id, article_response["article_title"], image_index))
-                    image_index += 1
+                    self.step("文章%s《%s》 第%s张图片下载成功" % (article_id, article_response["article_title"], photo_index))
+                    photo_index += 1
             else:
-                self.error("文章%s《%s》 第%s张图片 %s 下载失败，原因：%s" % (article_id, article_response["article_title"], image_index, image_url, crawler.download_failre(save_file_return["code"])))
+                self.error("文章%s《%s》 第%s张图片 %s 下载失败，原因：%s" % (article_id, article_response["article_title"], photo_index, photo_url, crawler.download_failre(save_file_return["code"])))
 
         # 文章顶部图片
-        if article_response["top_image_url"] is not None:
+        if article_response["top_photo_url"] is not None:
             self.main_thread_check()  # 检测主线程运行状态
-            self.step("文章%s《%s》 开始下载顶部图片 %s" % (article_id, article_title, article_response["top_image_url"]))
+            self.step("文章%s《%s》 开始下载顶部图片 %s" % (article_id, article_title, article_response["top_photo_url"]))
 
-            file_path = os.path.join(article_path, "000.%s" % net.get_file_type(article_response["top_image_url"]))
-            save_file_return = net.save_net_file(article_response["top_image_url"], file_path)
+            file_path = os.path.join(article_path, "000.%s" % net.get_file_type(article_response["top_photo_url"]))
+            save_file_return = net.save_net_file(article_response["top_photo_url"], file_path)
             if save_file_return["status"] == 1:
-                if weiboCommon.check_image_invalid(file_path):
+                if weiboCommon.check_photo_invalid(file_path):
                     path.delete_dir_or_file(file_path)
-                    self.error("文章%s《%s》 顶部图片 %s 资源已被删除，跳过" % (article_id, article_title, article_response["top_image_url"]))
+                    self.error("文章%s《%s》 顶部图片 %s 资源已被删除，跳过" % (article_id, article_title, article_response["top_photo_url"]))
                 else:
                     self.step("文章%s《%s》 顶部图片下载成功" % (article_id, article_title))
-                    image_index += 1
+                    photo_index += 1
             else:
-                self.error("文章%s《%s》 顶部图片 %s 下载失败，原因：%s" % (article_id, article_title, article_response["top_image_url"], crawler.download_failre(save_file_return["code"])))
+                self.error("文章%s《%s》 顶部图片 %s 下载失败，原因：%s" % (article_id, article_title, article_response["top_photo_url"], crawler.download_failre(save_file_return["code"])))
 
         # 文章内图片全部下载完毕
         self.temp_path_list = []  # 临时目录设置清除
-        self.total_image_count += image_index - 1  # 计数累加
+        self.total_photo_count += photo_index - 1  # 计数累加
         self.account_info[1] = str(article_info["article_time"])  # 设置存档记录
 
     def run(self):
@@ -327,9 +327,9 @@ class Download(crawler.DownloadThread):
         # 保存最后的信息
         with self.thread_lock:
             tool.write_file("\t".join(self.account_info), self.main_thread.temp_save_data_path)
-            self.main_thread.total_image_count += self.total_image_count
+            self.main_thread.total_photo_count += self.total_photo_count
             self.main_thread.account_list.pop(self.account_id)
-        self.step("下载完毕，总共获得%s张图片" % self.total_image_count)
+        self.step("下载完毕，总共获得%s张图片" % self.total_photo_count)
         self.notify_main_thread()
 
 
