@@ -130,8 +130,7 @@ def get_blog_page(account_name, blog_id):
             result["image_url_list"].append(image_url)
         # 外部图片
         elif image_url.find("//img-proxy.blog-video.jp/images?url=") > 0:
-            image_url = urllib.parse.unquote(image_url.split("//img-proxy.blog-video.jp/images?url=")[-1])
-            result["image_url_list"].append(image_url)
+            pass
         # 表情
         elif image_url.find("//emoji.ameba.jp/img/") > 0 or image_url.find("//stat.ameba.jp/blog/ucs/img/") > 0 \
             or image_url.find("//stat.ameba.jp/mb/") > 0 or image_url.find("//stat.ameba.jp/common_style/") > 0 \
