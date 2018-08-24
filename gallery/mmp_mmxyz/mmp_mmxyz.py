@@ -102,6 +102,8 @@ class MMP_MMXYZ(crawler.Crawler):
             unique_list = []
             is_over = False
             while not is_over:
+                if not self.is_running():
+                    tool.process_exit(0)
                 log.step("开始解析第%s页图集" % page_count)
 
                 # 获取一页图集
@@ -136,6 +138,8 @@ class MMP_MMXYZ(crawler.Crawler):
 
             # 从最早的图片开始下载
             while len(album_info_list) > 0:
+                if not self.is_running():
+                    tool.process_exit(0)
                 album_info = album_info_list.pop()
                 log.step("开始解析图集%s《%s》 %s" % (album_info["album_id"], album_info["album_title"], album_info["album_url"]))
 

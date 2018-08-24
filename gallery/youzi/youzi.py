@@ -59,7 +59,10 @@ def get_album_page(album_id):
         if image_list_selector.length == 0:
             raise crawler.CrawlerException("第%s页页面匹配图片地址失败\n%s" % (page_count, album_pagination_response_content))
         for image_index in range(0, image_list_selector.length):
-            result["image_url_list"].append(image_list_selector.eq(image_index).attr("src"))
+            image_url = image_list_selector.eq(image_index).attr("src")
+            if not image_url:
+                raise crawler.CrawlerException("图片信息截取图片地址失败\n%s" % image_list_selector.eq(image_index).html())
+            result["image_url_list"].append(image_url.replace("//pic1.youzi4.com/", "//res.youzi4.cc/"))
         # 获取总页数
         pagination_list_selector = pq(album_pagination_response_content).find("ul.articleV4Page a.page-a")
         if pagination_list_selector.length > 0:
@@ -136,7 +139,6 @@ class YouZi(crawler.Crawler):
                     album_path = os.path.join(self.image_download_path, "%05d" % str(album_id))
                 temp_path = album_path
                 for image_url in album_response["image_url_list"]:
-                    image_url = image_url.replace("//pic1.youzi4.com/", "//res.youzi4.cc/")
                     if not self.is_running():
                         tool.process_exit(0)
                     log.step("图集%s 《%s》 开始下载第%s张图片 %s" % (album_id, album_response["album_title"], image_index, image_url))

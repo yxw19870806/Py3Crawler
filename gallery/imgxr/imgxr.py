@@ -118,6 +118,8 @@ class ImgXr(crawler.Crawler):
 
             is_find = True if save_info[0] == "" else False
             while page_count > 0:
+                if not self.is_running():
+                    tool.process_exit(0)
                 log.step("开始解析第%s页图集" % page_count)
 
                 try:
@@ -131,6 +133,8 @@ class ImgXr(crawler.Crawler):
 
                 # 从最早的图集开始下载
                 while len(album_pagination_response["album_url_list"]) > 0:
+                    if not self.is_running():
+                        tool.process_exit(0)
                     album_url = album_pagination_response["album_url_list"].pop()
 
                     # 如果没有找到之前的记录，首先跳过不匹配的图集
@@ -140,7 +144,7 @@ class ImgXr(crawler.Crawler):
                         continue
 
                     log.step("开始解析图集 %s" % album_url)
-                    
+
                     try:
                         album_response = get_album_page(album_url)
                     except crawler.CrawlerException as e:
@@ -153,6 +157,8 @@ class ImgXr(crawler.Crawler):
                     album_path = os.path.join(self.image_download_path, "%05d %s" % (album_response["album_id"], path.filter_text(album_response["album_title"])))
                     image_index = 1
                     for image_url in album_response["image_url_list"]:
+                        if not self.is_running():
+                            tool.process_exit(0)
                         log.step("图集《%s》 %s 开始下载第%s张图片 %s" % (album_response["album_title"], album_url, image_index, image_url))
 
                         file_path = os.path.join(album_path, "%03d.%s" % (image_index, net.get_file_type(image_url)))
