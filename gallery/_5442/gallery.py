@@ -90,7 +90,7 @@ def get_album_page(album_url):
         for image_index in range(0, image_list_selector.length):
             image_url = image_list_selector.eq(image_index).attr("src")
             if not image_url:
-                raise crawler.CrawlerException("图片信息截取图片地址失败\n%s" % album_response_content)
+                raise crawler.CrawlerException("图片信息截取图片地址失败\n%s" % image_list_selector.eq(image_index).html())
             # http://pic.ytqmx.com:82/2014/0621/07/02.jpg!960.jpg -> http://pic.ytqmx.com:82/2014/0621/07/02.jpg
             result["image_url_list"].append(image_url.split("!")[0])
         page_count += 1
@@ -146,7 +146,7 @@ class Gallery(crawler.Crawler):
                 if not is_over:
                     is_over = album_pagination_response["is_over"]
                     page_count += 1
-                    
+
             while album_id <= max(album_id_to_url_list):
                 if not self.is_running():
                     tool.process_exit(0)
@@ -170,6 +170,8 @@ class Gallery(crawler.Crawler):
                 album_path = temp_path = os.path.join(self.image_download_path, "%05d %s" % (album_id, path.filter_text(album_response["album_title"])))
                 image_index = 1
                 for image_url in album_response["image_url_list"]:
+                    if not self.is_running():
+                        tool.process_exit(0)
                     log.step("图集%s《%s》开始下载第%s张图片 %s" % (album_id, album_response["album_title"], image_index, image_url))
 
                     file_path = os.path.join(album_path, "%03d.%s" % (image_index, net.get_file_type(image_url)))
