@@ -13,19 +13,19 @@ from common import *
 
 
 # 获取指定一页的壁纸
-def get_one_page_photo(page_count):
-    photo_pagination_url = "https://www.kelagirls.com/wallpapers-page-%s.html" % page_count
-    photo_pagination_response = net.http_request(photo_pagination_url, method="GET")
+def get_one_page_wallpaper(page_count):
+    wallpaper_pagination_url = "https://www.kelagirls.com/wallpapers-page-%s.html" % page_count
+    wallpaper_pagination_response = net.http_request(wallpaper_pagination_url, method="GET")
     result = {
         "image_info_list": [],  # 全部图片地址
         "is_over": False,  # 是否最后一页壁纸
     }
-    if photo_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
-        raise crawler.CrawlerException(crawler.request_failre(photo_pagination_response.status))
-    photo_pagination_response_content = photo_pagination_response.data.decode(errors="ignore")
-    photo_list_selector = pq(photo_pagination_response_content).find(".bizhinmore .bizhi")
+    if wallpaper_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
+        raise crawler.CrawlerException(crawler.request_failre(wallpaper_pagination_response.status))
+    wallpaper_pagination_response_content = wallpaper_pagination_response.data.decode(errors="ignore")
+    photo_list_selector = pq(wallpaper_pagination_response_content).find(".bizhinmore .bizhi")
     if photo_list_selector.length == 0:
-        raise crawler.CrawlerException("页面匹配图片列失败\n%s" % photo_pagination_response_content)
+        raise crawler.CrawlerException("页面匹配图片列失败\n%s" % wallpaper_pagination_response_content)
     for photo_index in range(0, photo_list_selector.length):
         photo_selector = photo_list_selector.eq(photo_index)
         result_image_info = {
@@ -49,9 +49,9 @@ def get_one_page_photo(page_count):
         result_image_info["model_name"] = model_name
         result["image_info_list"].append(result_image_info)
     # 判断是不是最后一页
-    max_page_count = tool.find_sub_string(photo_pagination_response_content, "pageCount: ", ",")
+    max_page_count = tool.find_sub_string(wallpaper_pagination_response_content, "pageCount: ", ",")
     if not crawler.is_integer(max_page_count):
-        raise crawler.CrawlerException("页面截取总页数失败\n%s" % photo_pagination_response_content)
+        raise crawler.CrawlerException("页面截取总页数失败\n%s" % wallpaper_pagination_response_content)
     result["is_over"] = page_count >= int(max_page_count)
     return result
 
@@ -89,7 +89,7 @@ class Wallpaper(crawler.Crawler):
 
                 # 获取一页壁纸
                 try:
-                    photo_pagination_response = get_one_page_photo(page_count)
+                    wallpaper_pagination_response = get_one_page_wallpaper(page_count)
                 except crawler.CrawlerException as e:
                     log.error("第%s页壁纸解析失败，原因：%s" % (page_count, e.message))
                     break
@@ -98,10 +98,10 @@ class Wallpaper(crawler.Crawler):
                     image_info_list = []
                     break
 
-                log.trace("第%s页壁纸解析的全部图片：%s" % (page_count, photo_pagination_response["image_info_list"]))
-                log.step("第%s页壁纸解析获取%s张图片" % (page_count, len(photo_pagination_response["image_info_list"])))
+                log.trace("第%s页壁纸解析的全部图片：%s" % (page_count, wallpaper_pagination_response["image_info_list"]))
+                log.step("第%s页壁纸解析获取%s张图片" % (page_count, len(wallpaper_pagination_response["image_info_list"])))
 
-                for image_info in photo_pagination_response["image_info_list"]:
+                for image_info in wallpaper_pagination_response["image_info_list"]:
                     # 检查是否达到存档记录
                     if image_info["image_id"] > last_image_id:
                         image_info_list.append(image_info)
@@ -110,7 +110,7 @@ class Wallpaper(crawler.Crawler):
                         break
 
                 if not is_over:
-                    if photo_pagination_response["is_over"]:
+                    if wallpaper_pagination_response["is_over"]:
                         is_over = True
                     else:
                         page_count += 1
