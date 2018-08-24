@@ -124,7 +124,7 @@ def get_one_page_media(account_name, position_blog_id):
         result_media_info = {
             "blog_id": None,  # 日志id
             "has_video": False,  # 是不是包含视频
-            "image_url_list": [],  # 全部图片地址
+            "photo_url_list": [],  # 全部图片地址
         }
         # 获取日志id
         blog_id = tool.find_sub_string(tweet_data, 'data-tweet-id="', '"')
@@ -132,7 +132,7 @@ def get_one_page_media(account_name, position_blog_id):
             raise crawler.CrawlerException("tweet内容中截取tweet id失败\n%s" % tweet_data)
         result_media_info["blog_id"] = int(blog_id)
         # 获取图片地址
-        result_media_info["image_url_list"] = re.findall('data-image-url="([^"]*)"', tweet_data)
+        result_media_info["photo_url_list"] = re.findall('data-image-url="([^"]*)"', tweet_data)
         # 判断是不是有视频
         result_media_info["has_video"] = tweet_data.find("PlayableMedia--video") >= 0
         result["media_info_list"].append(result_media_info)
@@ -207,7 +207,7 @@ class Twitter(crawler.Crawler):
 
         # 初始化参数
         sys_config = {
-            crawler.SYS_DOWNLOAD_IMAGE: True,
+            crawler.SYS_DOWNLOAD_PHOTO: True,
             crawler.SYS_DOWNLOAD_VIDEO: True,
             crawler.SYS_SET_PROXY: True,
             crawler.SYS_GET_COOKIE: {"twitter.com": ()}
@@ -220,7 +220,7 @@ class Twitter(crawler.Crawler):
             COOKIE_INFO = {}
 
         # 解析存档文件
-        # account_name  image_count  last_image_time
+        # account_name  photo_count  last_photo_time
         self.account_list = crawler.read_save_data(self.save_data_path, 0, ["", "", "0", "0", "0"])
 
         # 生成authorization，用于访问视频页
@@ -259,7 +259,7 @@ class Twitter(crawler.Crawler):
         # 重新排序保存存档文件
         crawler.rewrite_save_file(self.temp_save_data_path, self.save_data_path)
 
-        log.step("全部下载完毕，耗时%s秒，共计图片%s张，视频%s个" % (self.get_run_time(), self.total_image_count, self.total_video_count))
+        log.step("全部下载完毕，耗时%s秒，共计图片%s张，视频%s个" % (self.get_run_time(), self.total_photo_count, self.total_video_count))
 
 
 class Download(crawler.DownloadThread):
@@ -316,25 +316,25 @@ class Download(crawler.DownloadThread):
     # 解析单个媒体
     def crawl_media(self, media_info):
         # 图片下载
-        image_index = int(self.account_info[2]) + 1
-        if self.main_thread.is_download_image:
-            self.trace("媒体%s解析的全部图片：%s" % (media_info["blog_id"], media_info["image_url_list"]))
-            self.step("媒体%s解析获取%s张图片" % (media_info["blog_id"], len(media_info["image_url_list"])))
+        photo_index = int(self.account_info[2]) + 1
+        if self.main_thread.is_download_photo:
+            self.trace("媒体%s解析的全部图片：%s" % (media_info["blog_id"], media_info["photo_url_list"]))
+            self.step("媒体%s解析获取%s张图片" % (media_info["blog_id"], len(media_info["photo_url_list"])))
 
-            for image_url in media_info["image_url_list"]:
+            for photo_url in media_info["photo_url_list"]:
                 self.main_thread_check()  # 检测主线程运行状态
-                self.step("开始下载第%s张图片 %s" % (image_index, image_url))
+                self.step("开始下载第%s张图片 %s" % (photo_index, photo_url))
 
-                image_file_path = os.path.join(self.main_thread.image_download_path, self.account_name, "%04d.%s" % (image_index, net.get_file_type(image_url)))
-                save_file_return = net.save_net_file(image_url, image_file_path)
+                photo_file_path = os.path.join(self.main_thread.photo_download_path, self.account_name, "%04d.%s" % (photo_index, net.get_file_type(photo_url)))
+                save_file_return = net.save_net_file(photo_url, photo_file_path)
                 if save_file_return["status"] == 1:
-                    self.temp_path_list.append(image_file_path)
-                    self.step("第%s张图片下载成功" % image_index)
-                    image_index += 1
+                    self.temp_path_list.append(photo_file_path)
+                    self.step("第%s张图片下载成功" % photo_index)
+                    photo_index += 1
                 elif save_file_return["status"] == 0 and save_file_return["code"] == 404:
-                    self.error("第%s张图片 %s 已被删除，跳过" % (image_index, image_url))
+                    self.error("第%s张图片 %s 已被删除，跳过" % (photo_index, photo_url))
                 else:
-                    self.error("第%s张图片 %s 下载失败，原因：%s" % (image_index, image_url, crawler.download_failre(save_file_return["code"])))
+                    self.error("第%s张图片 %s 下载失败，原因：%s" % (photo_index, photo_url, crawler.download_failre(save_file_return["code"])))
 
         # 视频下载
         video_index = int(self.account_info[3]) + 1
@@ -370,9 +370,9 @@ class Download(crawler.DownloadThread):
 
         # 媒体内图片和视频全部下载完毕
         self.temp_path_list = []  # 临时目录设置清除
-        self.total_image_count += (image_index - 1) - int(self.account_info[2])  # 计数累加
+        self.total_photo_count += (photo_index - 1) - int(self.account_info[2])  # 计数累加
         self.total_video_count += (video_index - 1) - int(self.account_info[3])  # 计数累加
-        self.account_info[2] = str(image_index - 1)  # 设置存档记录
+        self.account_info[2] = str(photo_index - 1)  # 设置存档记录
         self.account_info[3] = str(video_index - 1)  # 设置存档记录
         self.account_info[4] = str(media_info["blog_id"])
 
@@ -415,10 +415,10 @@ class Download(crawler.DownloadThread):
         # 保存最后的信息
         with self.thread_lock:
             tool.write_file("\t".join(self.account_info), self.main_thread.temp_save_data_path)
-            self.main_thread.total_image_count += self.total_image_count
+            self.main_thread.total_photo_count += self.total_photo_count
             self.main_thread.total_video_count += self.total_video_count
             self.main_thread.account_list.pop(self.account_name)
-        self.step("下载完毕，总共获得%s张图片和%s个视频" % (self.total_image_count, self.total_video_count))
+        self.step("下载完毕，总共获得%s张图片和%s个视频" % (self.total_photo_count, self.total_video_count))
         self.notify_main_thread()
 
 

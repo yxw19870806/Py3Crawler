@@ -62,7 +62,7 @@ def get_post_page(post_id):
     index_url = "https://api.prpr.tinydust.cn/v3/posts/%s" % post_id
     index_response = net.http_request(index_url, method="GET", json_decode=True)
     result = {
-        "image_url_list": [],  # 全部图片地址
+        "photo_url_list": [],  # 全部图片地址
         "video_url_list": [],  # 全部视频地址
     }
     if index_response.status != net.HTTP_RETURN_CODE_SUCCEED:
@@ -86,14 +86,14 @@ def get_post_page(post_id):
             raise crawler.CrawlerException("返回信息'type'字段类型不正确\n%s" % media_info)
         media_type = int(media_info["type"])
         if media_type == 0:
-            result["image_url_list"].append(media_info["url"])
+            result["photo_url_list"].append(media_info["url"])
         elif media_type == 1:
             if media_info["url"][0] != "?":
                 result["video_url_list"].append(media_info["url"])
             else:
                 if not crawler.check_sub_key(("thum",), media_info):
                     raise crawler.CrawlerException("返回信息'thum'字段不存在\n%s" % media_info)
-                result["image_url_list"].append(media_info["thum"]  )
+                result["photo_url_list"].append(media_info["thum"]  )
         else:
             raise crawler.CrawlerException("返回信息'type'字段取值不正确\n%s" % media_info)
     return result
@@ -121,7 +121,7 @@ class PrPr(crawler.Crawler):
 
         # 初始化参数
         sys_config = {
-            crawler.SYS_DOWNLOAD_IMAGE: True,
+            crawler.SYS_DOWNLOAD_PHOTO: True,
             crawler.SYS_DOWNLOAD_VIDEO: True,
             crawler.SYS_APP_CONFIG: (
                 ("IS_STEP_INVALID_RESOURCE", False, crawler.CONFIG_ANALYSIS_MODE_BOOLEAN),
@@ -167,7 +167,7 @@ class PrPr(crawler.Crawler):
         # 重新排序保存存档文件
         crawler.rewrite_save_file(self.temp_save_data_path, self.save_data_path)
 
-        log.step("全部下载完毕，耗时%s秒，共计图片%s张，视频%s个" % (self.get_run_time(), self.total_image_count, self.total_video_count))
+        log.step("全部下载完毕，耗时%s秒，共计图片%s张，视频%s个" % (self.get_run_time(), self.total_photo_count, self.total_video_count))
 
 
 class Download(crawler.DownloadThread):
@@ -227,38 +227,38 @@ class Download(crawler.DownloadThread):
             raise
 
         # 图片下载
-        image_index = 1
-        if self.main_thread.is_download_image:
-            for image_url in blog_response["image_url_list"]:
+        photo_index = 1
+        if self.main_thread.is_download_photo:
+            for photo_url in blog_response["photo_url_list"]:
                 self.main_thread_check()  # 检测主线程运行状态
-                log.step(self.account_name + " 作品%s 开始下载第%s张图片 %s" % (post_info["post_id"], image_index, image_url))
+                log.step(self.account_name + " 作品%s 开始下载第%s张图片 %s" % (post_info["post_id"], photo_index, photo_url))
 
-                origin_image_url, file_param = image_url.split("?", 1)
-                file_name_and_type = origin_image_url.split("/")[-1]
+                origin_photo_url, file_param = photo_url.split("?", 1)
+                file_name_and_type = origin_photo_url.split("/")[-1]
                 if file_param.find("/blur/") >= 0:
                     # 跳过
                     if IS_SKIP_BLUR:
-                        log.step(self.account_name + " 作品%s 第%s张图片 %s 跳过" % (post_info["post_id"], image_index, image_url))
+                        log.step(self.account_name + " 作品%s 第%s张图片 %s 跳过" % (post_info["post_id"], photo_index, photo_url))
                         continue
-                    image_file_path = os.path.join(self.main_thread.image_download_path, self.account_name, "blur", file_name_and_type)
+                    photo_file_path = os.path.join(self.main_thread.photo_download_path, self.account_name, "blur", file_name_and_type)
                 else:
-                    image_file_path = os.path.join(self.main_thread.image_download_path, self.account_name, file_name_and_type)
-                save_file_return = net.save_net_file(image_url, image_file_path, need_content_type=True)
+                    photo_file_path = os.path.join(self.main_thread.photo_download_path, self.account_name, file_name_and_type)
+                save_file_return = net.save_net_file(photo_url, photo_file_path, need_content_type=True)
                 if save_file_return["status"] == 1:
                     if check_invalid(save_file_return["file_path"]):
                         path.delete_dir_or_file(save_file_return["file_path"])
-                        error_message = self.account_name + " 作品%s 第%s张图片 %s 无效，已删除" % (post_info["post_id"], image_index, image_url)
+                        error_message = self.account_name + " 作品%s 第%s张图片 %s 无效，已删除" % (post_info["post_id"], photo_index, photo_url)
                         if IS_STEP_INVALID_RESOURCE:
                             log.step(error_message)
                         else:
                             log.error(error_message)
                     else:
                         # 设置临时目录
-                        self.temp_path_list.append(image_file_path)
-                        log.step(self.account_name + " 作品%s 第%s张图片 下载成功" % (post_info["post_id"], image_index))
-                        image_index += 1
+                        self.temp_path_list.append(photo_file_path)
+                        log.step(self.account_name + " 作品%s 第%s张图片 下载成功" % (post_info["post_id"], photo_index))
+                        photo_index += 1
                 else:
-                    log.error(self.account_name + " 作品%s 第%s张图片 %s 下载失败，原因：%s" % (post_info["post_id"], image_index, image_url, crawler.download_failre(save_file_return["code"])))
+                    log.error(self.account_name + " 作品%s 第%s张图片 %s 下载失败，原因：%s" % (post_info["post_id"], photo_index, photo_url, crawler.download_failre(save_file_return["code"])))
 
         # 视频下载
         video_index = 1
@@ -287,7 +287,7 @@ class Download(crawler.DownloadThread):
 
         # 媒体内图片和视频全部下载完毕
         self.temp_path_list = []  # 临时目录设置清除
-        self.total_image_count += (image_index - 1)  # 计数累加
+        self.total_photo_count += (photo_index - 1)  # 计数累加
         self.total_video_count += (video_index - 1)  # 计数累加
         self.account_info[1] = str(post_info["post_time"])  # 设置存档记录
 
@@ -316,10 +316,10 @@ class Download(crawler.DownloadThread):
         # 保存最后的信息
         with self.thread_lock:
             tool.write_file("\t".join(self.account_info), self.main_thread.temp_save_data_path)
-            self.main_thread.total_image_count += self.total_image_count
+            self.main_thread.total_photo_count += self.total_photo_count
             self.main_thread.total_video_count += self.total_video_count
             self.main_thread.account_list.pop(self.account_id)
-        log.step(self.account_name + " 下载完毕，总共获得%s张图片和%s个视频" % (self.total_image_count, self.total_video_count))
+        log.step(self.account_name + " 下载完毕，总共获得%s张图片和%s个视频" % (self.total_photo_count, self.total_video_count))
         self.notify_main_thread()
 
 

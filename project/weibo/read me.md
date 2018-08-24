@@ -14,6 +14,6 @@
 微博地址类似为**https://weibo.com/[1234567890]/ABCDEFGHI?xxxxx**，其中[]中的数字（实际不包括[]）就是账号的ID
 
 ## 配置参数
-1. 可配置是否单独下载图片和视频，参数：IS_DOWNLOAD_IMAGE、IS_DOWNLOAD_VIDEO
+1. 可配置是否单独下载图片和视频，参数：IS_DOWNLOAD_PHOTO、IS_DOWNLOAD_VIDEO
 2. 需配置浏览器类型，参数：BROWSER_TYPE、IS_AUTO_GET_COOKIE
 并使用该浏览器登陆自己的微博账号，否则无法下载

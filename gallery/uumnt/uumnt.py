@@ -45,7 +45,7 @@ def get_album_page(album_id):
     result = {
         "album_title": "",  # 图集标题
         "album_url": None,  # 图集首页地址
-        "image_url_list": [],  # 全部图片地址
+        "photo_url_list": [],  # 全部图片地址
     }
     while page_count <= max_page_count:
         if page_count == 1:
@@ -82,11 +82,11 @@ def get_album_page(album_id):
                 raise crawler.CrawlerException("最后页地址截取最后页失败\n%s" % album_pagination_response_content)
             max_page_count = int(max_page_count)
         # 获取图集图片地址
-        image_list_selector = pq(album_pagination_response_content).find(".bg-white>a img")
-        if image_list_selector.length == 0:
+        photo_list_selector = pq(album_pagination_response_content).find(".bg-white>a img")
+        if photo_list_selector.length == 0:
             raise crawler.CrawlerException("第%s页页面截取图片列表失败\n%s" % (page_count, album_pagination_response_content))
-        for image_index in range(0, image_list_selector.length):
-            result["image_url_list"].append(image_list_selector.eq(image_index).attr("src"))
+        for photo_index in range(0, photo_list_selector.length):
+            result["photo_url_list"].append(photo_list_selector.eq(photo_index).attr("src"))
         page_count += 1
     return result
 
@@ -98,7 +98,7 @@ class UUMNT(crawler.Crawler):
 
         # 初始化参数
         sys_config = {
-            crawler.SYS_DOWNLOAD_IMAGE: True,
+            crawler.SYS_DOWNLOAD_PHOTO: True,
             crawler.SYS_NOT_CHECK_SAVE_DATA: True,
         }
         crawler.Crawler.__init__(self, sys_config)
@@ -136,31 +136,31 @@ class UUMNT(crawler.Crawler):
                     log.error("图集%s解析失败，原因：%s" % (album_id, e.message))
                     raise
 
-                log.trace("图集%s《%s》 %s 解析的全部图片：%s" % (album_id, album_response["album_title"], album_response["album_url"], album_response["image_url_list"]))
-                log.step("图集%s《%s》 %s 解析获取%s张图片" % (album_id, album_response["album_title"], album_response["album_url"], len(album_response["image_url_list"])))
+                log.trace("图集%s《%s》 %s 解析的全部图片：%s" % (album_id, album_response["album_title"], album_response["album_url"], album_response["photo_url_list"]))
+                log.step("图集%s《%s》 %s 解析获取%s张图片" % (album_id, album_response["album_title"], album_response["album_url"], len(album_response["photo_url_list"])))
 
-                image_index = 1
+                photo_index = 1
                 # 过滤标题中不支持的字符
                 album_title = path.filter_text(album_response["album_title"])
                 if album_title:
-                    album_path = os.path.join(self.image_download_path, "%05d %s" % (album_id, album_title))
+                    album_path = os.path.join(self.photo_download_path, "%05d %s" % (album_id, album_title))
                 else:
-                    album_path = os.path.join(self.image_download_path, "%05d" % album_id)
+                    album_path = os.path.join(self.photo_download_path, "%05d" % album_id)
                 temp_path = album_path
-                for image_url in album_response["image_url_list"]:
+                for photo_url in album_response["photo_url_list"]:
                     if not self.is_running():
                         tool.process_exit(0)
-                    log.step("图集%s《%s》开始下载第%s张图片 %s" % (album_id, album_response["album_title"], image_index, image_url))
+                    log.step("图集%s《%s》开始下载第%s张图片 %s" % (album_id, album_response["album_title"], photo_index, photo_url))
 
-                    save_file_return = net.save_net_file(image_url, file_path, header_list={"Referer": "https://www.uumnt.cc/"})
+                    save_file_return = net.save_net_file(photo_url, file_path, header_list={"Referer": "https://www.uumnt.cc/"})
                     if save_file_return["status"] == 1:
-                        log.step("图集%s《%s》第%s张图片下载成功" % (album_id, album_response["album_title"], image_index))
+                        log.step("图集%s《%s》第%s张图片下载成功" % (album_id, album_response["album_title"], photo_index))
                     else:
-                        log.error("图集%s《%s》 %s 第%s张图片 %s 下载失败，原因：%s" % (album_id, album_response["album_title"], album_response["album_url"], image_index, image_url, crawler.download_failre(save_file_return["code"])))
-                    image_index += 1
+                        log.error("图集%s《%s》 %s 第%s张图片 %s 下载失败，原因：%s" % (album_id, album_response["album_title"], album_response["album_url"], photo_index, photo_url, crawler.download_failre(save_file_return["code"])))
+                    photo_index += 1
                 # 图集内图片全部下载完毕
                 temp_path = ""  # 临时目录设置清除
-                self.total_image_count += image_index - 1  # 计数累加
+                self.total_photo_count += photo_index - 1  # 计数累加
                 album_id += 1  # 设置存档记录
         except SystemExit as se:
             if se.code == 0:
@@ -176,7 +176,7 @@ class UUMNT(crawler.Crawler):
 
         # 重新保存存档文件
         tool.write_file(str(album_id), self.save_data_path, tool.WRITE_FILE_TYPE_REPLACE)
-        log.step("全部下载完毕，耗时%s秒，共计图片%s张" % (self.get_run_time(), self.total_image_count))
+        log.step("全部下载完毕，耗时%s秒，共计图片%s张" % (self.get_run_time(), self.total_photo_count))
 
 
 if __name__ == "__main__":

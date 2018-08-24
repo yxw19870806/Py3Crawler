@@ -19,7 +19,7 @@ def get_album_page(page_count):
     album_response = net.http_request(album_url, method="POST", fields=post_data, json_decode=True, is_random_ip=False)
     result = {
         "album_title": "",  # 相册标题
-        "image_url_list": [],  # 全部图片地址
+        "photo_url_list": [],  # 全部图片地址
         "is_skip": False,  # 是否需要跳过（没有内容，不需要下载）
     }
     if album_response.status != net.HTTP_RETURN_CODE_SUCCEED:
@@ -57,10 +57,10 @@ def get_album_page(page_count):
                 raise crawler.CrawlerException("返回数据'img'字段不存在\n%s" % album_response.json_data)
             if len(album_body["attr"]["img"]) == 0:
                 raise crawler.CrawlerException("返回数据'img'字段长度不正确\n%s" % album_response.json_data)
-            for image_data in album_body["attr"]["img"]:
-                if not crawler.check_sub_key(("url",), image_data):
+            for photo_data in album_body["attr"]["img"]:
+                if not crawler.check_sub_key(("url",), photo_data):
                     raise crawler.CrawlerException("返回数据'url'字段不存在\n%s" % album_response.json_data)
-                result["image_url_list"].append("http://www.zunguang.com/%s" % image_data["url"])
+                result["photo_url_list"].append("http://www.zunguang.com/%s" % photo_data["url"])
     return result
 
 
@@ -71,7 +71,7 @@ class ZunGuang(crawler.Crawler):
 
         # 初始化参数
         sys_config = {
-            crawler.SYS_DOWNLOAD_IMAGE: True,
+            crawler.SYS_DOWNLOAD_PHOTO: True,
             crawler.SYS_NOT_CHECK_SAVE_DATA: True,
         }
         crawler.Crawler.__init__(self, sys_config)
@@ -122,40 +122,40 @@ class ZunGuang(crawler.Crawler):
             # 过滤标题中不支持的字符
             album_title = path.filter_text(album_response["album_title"])
             if album_title:
-                image_path = os.path.join(self.image_download_path, "%04d %s" % (page_count, album_title))
+                photo_path = os.path.join(self.photo_download_path, "%04d %s" % (page_count, album_title))
             else:
-                image_path = os.path.join(self.image_download_path, "%04d" % page_count)
+                photo_path = os.path.join(self.photo_download_path, "%04d" % page_count)
 
-            log.trace("第%s页相册解析的全部图片：%s" % (page_count, album_response["image_url_list"]))
-            image_count = 1
-            for image_url in album_response["image_url_list"]:
+            log.trace("第%s页相册解析的全部图片：%s" % (page_count, album_response["photo_url_list"]))
+            photo_count = 1
+            for photo_url in album_response["photo_url_list"]:
                 if not self.is_running():
                     tool.process_exit(0)
-                log.step("开始下载第%s页第%s张图片 %s" % (page_count, image_count, image_url))
+                log.step("开始下载第%s页第%s张图片 %s" % (page_count, photo_count, photo_url))
 
-                file_path = os.path.join(image_path, "%03d.%s" % (image_count, net.get_file_type(image_url)))
+                file_path = os.path.join(photo_path, "%03d.%s" % (photo_count, net.get_file_type(photo_url)))
                 try:
-                    save_file_return = net.save_net_file(image_url, file_path, need_content_type=True)
+                    save_file_return = net.save_net_file(photo_url, file_path, need_content_type=True)
                     if save_file_return["status"] == 1:
-                        log.step("第%s页第%s张图片下载成功" % (page_count, image_count))
-                        image_count += 1
+                        log.step("第%s页第%s张图片下载成功" % (page_count, photo_count))
+                        photo_count += 1
                     else:
-                        log.error("第%s页第%s张图片 %s 下载失败，原因：%s" % (page_count, image_count, image_url, crawler.download_failre(save_file_return["code"])))
+                        log.error("第%s页第%s张图片 %s 下载失败，原因：%s" % (page_count, photo_count, photo_url, crawler.download_failre(save_file_return["code"])))
                 except SystemExit:
                     log.step("提前退出")
-                    path.delete_dir_or_file(image_path)
+                    path.delete_dir_or_file(photo_path)
                     is_over = True
                     break
 
             if not is_over:
-                self.total_image_count += image_count - 1
+                self.total_photo_count += photo_count - 1
                 page_count += 1
 
         # 重新保存存档文件
-        if self.total_image_count > 0:
+        if self.total_photo_count > 0:
             tool.write_file(str(page_count), self.save_data_path, tool.WRITE_FILE_TYPE_REPLACE)
 
-        log.step("全部下载完毕，耗时%s秒，共计图片%s张" % (self.get_run_time(), self.total_image_count))
+        log.step("全部下载完毕，耗时%s秒，共计图片%s张" % (self.get_run_time(), self.total_photo_count))
 
 
 if __name__ == "__main__":

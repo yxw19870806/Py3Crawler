@@ -100,7 +100,7 @@ def get_blog_page(account_name, blog_id):
     blog_url = "https://ameblo.jp/%s/entry-%s.html" % (account_name, blog_id)
     blog_response = net.http_request(blog_url, method="GET", cookies_list=COOKIE_INFO)
     result = {
-        "image_url_list": [],  # 全部图片地址
+        "photo_url_list": [],  # 全部图片地址
         "is_follow": False,  # 是否只有关注者可见
     }
     if blog_response.status != net.HTTP_RETURN_CODE_SUCCEED:
@@ -119,27 +119,27 @@ def get_blog_page(account_name, blog_id):
     if article_html_selector is None or article_html_selector.length == 0:
         raise crawler.CrawlerException("页面截取正文失败\n%s" % blog_response_content)
     # 获取图片地址
-    image_list_selector = article_html_selector.find("img")
-    for image_index in range(0, image_list_selector.length):
-        image_selector = image_list_selector.eq(image_index)
-        if image_selector.has_class("accessLog"):
+    photo_list_selector = article_html_selector.find("img")
+    for photo_index in range(0, photo_list_selector.length):
+        photo_selector = photo_list_selector.eq(photo_index)
+        if photo_selector.has_class("accessLog"):
             continue
-        image_url = image_selector.attr("src")
+        photo_url = photo_selector.attr("src")
         # 用户上传的图片
-        if image_url.find("//stat.ameba.jp/user_images/") > 0:
-            result["image_url_list"].append(image_url)
+        if photo_url.find("//stat.ameba.jp/user_images/") > 0:
+            result["photo_url_list"].append(photo_url)
         # 外部图片
-        elif image_url.find("//img-proxy.blog-video.jp/images?url=") > 0:
+        elif photo_url.find("//img-proxy.blog-video.jp/images?url=") > 0:
             pass
         # 表情
-        elif image_url.find("//emoji.ameba.jp/img/") > 0 or image_url.find("//stat.ameba.jp/blog/ucs/img/") > 0 \
-            or image_url.find("//stat.ameba.jp/mb/") > 0 or image_url.find("//stat.ameba.jp/common_style/") > 0 \
-            or image_url.find("//stat100.ameba.jp/blog/ucs/img/") > 0 or image_url.find("//stat100.ameba.jp/candy/"):
+        elif photo_url.find("//emoji.ameba.jp/img/") > 0 or photo_url.find("//stat.ameba.jp/blog/ucs/img/") > 0 \
+            or photo_url.find("//stat.ameba.jp/mb/") > 0 or photo_url.find("//stat.ameba.jp/common_style/") > 0 \
+            or photo_url.find("//stat100.ameba.jp/blog/ucs/img/") > 0 or photo_url.find("//stat100.ameba.jp/candy/"):
             pass
-        elif image_url.find("data:image/gif;base64,") == 0 or image_url.find("file://") == 0:
+        elif photo_url.find("data:image/gif;base64,") == 0 or photo_url.find("file://") == 0:
             pass
         else:
-            log.notice("未知图片地址：%s (%s)" % (image_url, blog_url))
+            log.notice("未知图片地址：%s (%s)" % (photo_url, blog_url))
     # todo 含有视频
     # https://ameblo.jp/kawasaki-nozomi/entry-12111279076.html
     return result
@@ -152,34 +152,34 @@ def get_blog_page(account_name, blog_id):
 # http://stat.ameba.jp/user_images/4b/90/10112135346_s.jpg
 # ->
 # http://stat.ameba.jp/user_images/4b/90/10112135346.jpg
-def get_origin_image_url(image_url):
-    if image_url.find("//stat.ameba.jp/user_images/") != -1:
-        # 最新的image_url使用?caw=指定显示分辨率，去除
+def get_origin_photo_url(photo_url):
+    if photo_url.find("//stat.ameba.jp/user_images/") != -1:
+        # 最新的photo_url使用?caw=指定显示分辨率，去除
         # http://stat.ameba.jp/user_images/20161220/12/akihabara48/fd/1a/j/o0768032013825427476.jpg?caw=800
-        image_url = image_url.split("?")[0]
-        temp_list = image_url.split("/")
-        image_name = temp_list[-1]
-        if image_name[0] != "o":
+        photo_url = photo_url.split("?")[0]
+        temp_list = photo_url.split("/")
+        photo_name = temp_list[-1]
+        if photo_name[0] != "o":
             # https://stat.ameba.jp/user_images/20110612/15/akihabara48/af/3e/j/t02200165_0800060011286009555.jpg
-            if image_name[0] == "t" and image_name.find("_") > 0:
-                temp_list[-1] = "o" + image_name.split("_", 1)[1]
-                image_url = "/".join(temp_list)
+            if photo_name[0] == "t" and photo_name.find("_") > 0:
+                temp_list[-1] = "o" + photo_name.split("_", 1)[1]
+                photo_url = "/".join(temp_list)
             # https://stat.ameba.jp/user_images/4b/90/10112135346_s.jpg
-            elif image_name.split(".")[0][-2:] == "_s":
-                temp_list[-1] = image_name.replace("_s", "")
-                image_url = "/".join(temp_list)
+            elif photo_name.split(".")[0][-2:] == "_s":
+                temp_list[-1] = photo_name.replace("_s", "")
+                photo_url = "/".join(temp_list)
             # https://stat.ameba.jp/user_images/2a/ce/10091204420.jpg
-            elif crawler.is_integer(image_name.split(".")[0]):
+            elif crawler.is_integer(photo_name.split(".")[0]):
                 pass
             else:
-                log.trace("无法解析的图片地址 %s" % image_url)
-    elif image_url.find("//stat100.ameba.jp/blog/img/") > 0:
+                log.trace("无法解析的图片地址 %s" % photo_url)
+    elif photo_url.find("//stat100.ameba.jp/blog/img/") > 0:
         pass
-    return image_url
+    return photo_url
 
 
 # 检测图片是否有效
-def check_image_invalid(file_path):
+def check_photo_invalid(file_path):
     file_size = os.path.getsize(file_path)
     # 文件小于1K
     if file_size < 1024:
@@ -206,7 +206,7 @@ class Ameblo(crawler.Crawler):
 
         # 初始化参数
         sys_config = {
-            crawler.SYS_DOWNLOAD_IMAGE: True,
+            crawler.SYS_DOWNLOAD_PHOTO: True,
             crawler.SYS_GET_COOKIE: {"ameba.jp": (), "mypage.ameba.jp": ()},
         }
         crawler.Crawler.__init__(self, sys_config)
@@ -215,7 +215,7 @@ class Ameblo(crawler.Crawler):
         COOKIE_INFO = self.cookie_value
 
         # 解析存档文件
-        # account_name  image_count  last_diary_time
+        # account_name  photo_count  last_diary_time
         self.account_list = crawler.read_save_data(self.save_data_path, 0, ["", "0", "0"])
 
         # 检测登录状态
@@ -259,7 +259,7 @@ class Ameblo(crawler.Crawler):
         # 重新排序保存存档文件
         crawler.rewrite_save_file(self.temp_save_data_path, self.save_data_path)
 
-        log.step("全部下载完毕，耗时%s秒，共计图片%s张" % (self.get_run_time(), self.total_image_count))
+        log.step("全部下载完毕，耗时%s秒，共计图片%s张" % (self.get_run_time(), self.total_photo_count))
 
 
 class Download(crawler.DownloadThread):
@@ -326,34 +326,34 @@ class Download(crawler.DownloadThread):
             self.error("日志%s需要关注后才能访问，请在 https://profile.ameba.jp/ameba/%s，选择'アメンバー申請'" % (blog_id, self.account_id))
             tool.process_exit()
 
-        self.trace("日志%s解析的全部图片：%s" % (blog_id, blog_response["image_url_list"]))
-        self.step("日志%s解析获取%s张图片" % (blog_id, len(blog_response["image_url_list"])))
+        self.trace("日志%s解析的全部图片：%s" % (blog_id, blog_response["photo_url_list"]))
+        self.step("日志%s解析获取%s张图片" % (blog_id, len(blog_response["photo_url_list"])))
 
-        image_index = int(self.account_info[1]) + 1
-        for image_url in blog_response["image_url_list"]:
+        photo_index = int(self.account_info[1]) + 1
+        for photo_url in blog_response["photo_url_list"]:
             self.main_thread_check()  # 检测主线程运行状态
             # 获取原始图片下载地址
-            image_url = get_origin_image_url(image_url)
-            self.step("开始下载第%s张图片 %s" % (image_index, image_url))
+            photo_url = get_origin_photo_url(photo_url)
+            self.step("开始下载第%s张图片 %s" % (photo_index, photo_url))
 
-            file_path = os.path.join(self.main_thread.image_download_path, self.account_id, "%04d.%s" % (image_index, net.get_file_type(image_url, "jpg")))
-            save_file_return = net.save_net_file(image_url, file_path)
+            file_path = os.path.join(self.main_thread.photo_download_path, self.account_id, "%04d.%s" % (photo_index, net.get_file_type(photo_url, "jpg")))
+            save_file_return = net.save_net_file(photo_url, file_path)
             if save_file_return["status"] == 1:
-                if check_image_invalid(file_path):
+                if check_photo_invalid(file_path):
                     path.delete_dir_or_file(file_path)
-                    self.step("第%s张图片 %s 不符合规则，删除" % (image_index, image_url))
+                    self.step("第%s张图片 %s 不符合规则，删除" % (photo_index, photo_url))
                 else:
                     # 设置临时目录
                     self.temp_path_list.append(file_path)
-                    self.step("第%s张图片下载成功" % image_index)
-                    image_index += 1
+                    self.step("第%s张图片下载成功" % photo_index)
+                    photo_index += 1
             else:
-                self.error("第%s张图片 %s 下载失败，原因：%s" % (image_index, image_url, crawler.download_failre(save_file_return["code"])))
+                self.error("第%s张图片 %s 下载失败，原因：%s" % (photo_index, photo_url, crawler.download_failre(save_file_return["code"])))
 
         # 日志内图片全部下载完毕
         self.temp_path_list = []  # 临时目录设置清除
-        self.total_image_count += (image_index - 1) - int(self.account_info[1])  # 计数累加
-        self.account_info[1] = str(image_index - 1)  # 设置存档记录
+        self.total_photo_count += (photo_index - 1) - int(self.account_info[1])  # 计数累加
+        self.account_info[1] = str(photo_index - 1)  # 设置存档记录
         self.account_info[2] = str(blog_id)  # 设置存档记录
 
     def run(self):
@@ -413,9 +413,9 @@ class Download(crawler.DownloadThread):
         # 保存最后的信息
         with self.thread_lock:
             tool.write_file("\t".join(self.account_info), self.main_thread.temp_save_data_path)
-            self.main_thread.total_image_count += self.total_image_count
+            self.main_thread.total_photo_count += self.total_photo_count
             self.main_thread.account_list.pop(self.account_id)
-        self.step("下载完毕，总共获得%s张图片" % self.total_image_count)
+        self.step("下载完毕，总共获得%s张图片" % self.total_photo_count)
         self.notify_main_thread()
 
 

@@ -13,7 +13,7 @@ import traceback
 from common import *
 from . import yasaxiCommon
 
-IMAGE_COUNT_PER_PAGE = 20
+PHOTO_COUNT_PER_PAGE = 20
 
 
 # 获取指定页数的全部日志
@@ -22,7 +22,7 @@ def get_one_page_photo(account_id, cursor):
     query_data = {
         "userId": account_id,
         "cursor": cursor,
-        "count": IMAGE_COUNT_PER_PAGE,
+        "count": PHOTO_COUNT_PER_PAGE,
     }
     header_list = {
         "x-access-token": yasaxiCommon.ACCESS_TOKEN,
@@ -56,7 +56,7 @@ def get_one_page_photo(account_id, cursor):
         for status_info in photo_pagination_response.json_data["data"]:
             result_status_info = {
                 "id": None,  # 状态id
-                "image_url_list": [],  # 全部图片地址
+                "photo_url_list": [],  # 全部图片地址
             }
             # 获取状态id
             if not crawler.check_sub_key(("statusId",), status_info):
@@ -84,16 +84,16 @@ def get_one_page_photo(account_id, cursor):
                     raise crawler.CrawlerException("媒体信息'mediaType'取值不正确\n%s" % media_info)
                 # 优先使用downloadUrl
                 if media_info["downloadUrl"]:
-                    result_status_info["image_url_list"].append(media_info["downloadUrl"])
+                    result_status_info["photo_url_list"].append(media_info["downloadUrl"])
                 # 前次使用downloadUrl
                 elif media_info["origin"]:
-                    result_status_info["image_url_list"].append(media_info["origin"])
+                    result_status_info["photo_url_list"].append(media_info["origin"])
                 else:
                     # 视频，可能只有预览图
                     if int(media_info["mediaType"]) == 2:
                         if not media_info["thumb"]:
                             raise crawler.CrawlerException("媒体信息'downloadUrl'、'origin'、'thumb'字段都没有值\n%s" % media_info)
-                        result_status_info["image_url_list"].append(media_info["thumb"])
+                        result_status_info["photo_url_list"].append(media_info["thumb"])
                     # 图片，不存在origin和downloadUrl，抛出异常
                     elif int(media_info["mediaType"]) == 1:
                         raise crawler.CrawlerException("媒体信息'origin'和'downloadUrl'字段都没有值\n%s" % media_info)
@@ -115,7 +115,7 @@ class Yasaxi(crawler.Crawler):
 
         # 初始化参数
         sys_config = {
-            crawler.SYS_DOWNLOAD_IMAGE: True,
+            crawler.SYS_DOWNLOAD_PHOTO: True,
             crawler.SYS_NOT_CHECK_SAVE_DATA: True,
         }
         crawler.Crawler.__init__(self, sys_config)
@@ -166,7 +166,7 @@ class Yasaxi(crawler.Crawler):
         # 重新排序保存存档文件
         crawler.rewrite_save_file(self.temp_save_data_path, self.save_data_path)
 
-        log.step("全部下载完毕，耗时%s秒，共计图片%s张" % (self.get_run_time(), self.total_image_count))
+        log.step("全部下载完毕，耗时%s秒，共计图片%s张" % (self.get_run_time(), self.total_photo_count))
 
 
 class Download(crawler.DownloadThread):
@@ -176,7 +176,7 @@ class Download(crawler.DownloadThread):
     def run(self):
         account_id = self.account_info[0]
         account_name = self.account_info[2]
-        image_count = 1
+        photo_count = 1
 
         try:
             log.step(account_name + " 开始")
@@ -184,7 +184,7 @@ class Download(crawler.DownloadThread):
             cursor = 0
             is_over = False
             first_status_id = None
-            image_path = os.path.join(self.main_thread.image_download_path, account_name)
+            photo_path = os.path.join(self.main_thread.photo_download_path, account_name)
             while not is_over:
                 self.main_thread_check()  # 检测主线程运行状态
                 log.step(account_name + " 开始解析cursor '%s'的图片" % cursor)
@@ -211,22 +211,22 @@ class Download(crawler.DownloadThread):
 
                     log.step(account_name + " 开始解析状态%s的图片" % status_info["id"])
 
-                    for image_url in status_info["image_url_list"]:
+                    for photo_url in status_info["photo_url_list"]:
                         self.main_thread_check()  # 检测主线程运行状态
-                        file_name_and_type = image_url.split("?")[0].split("/")[-1]
-                        resolution = image_url.split("?")[0].split("/")[-2]
+                        file_name_and_type = photo_url.split("?")[0].split("/")[-1]
+                        resolution = photo_url.split("?")[0].split("/")[-2]
                         file_name, file_type = file_name_and_type.split(".")
                         if file_name[-2:] != "_b" and resolution == "1080":
-                            image_file_path = os.path.join(image_path, "origin/%s.%s" % (file_name, file_type))
+                            photo_file_path = os.path.join(photo_path, "origin/%s.%s" % (file_name, file_type))
                         else:
-                            image_file_path = os.path.join(image_path, "other/%s.%s" % (file_name, file_type))
-                        log.step(account_name + " 开始下载第%s张图片 %s" % (image_count, image_url))
-                        save_file_return = net.save_net_file(image_url, image_file_path)
+                            photo_file_path = os.path.join(photo_path, "other/%s.%s" % (file_name, file_type))
+                        log.step(account_name + " 开始下载第%s张图片 %s" % (photo_count, photo_url))
+                        save_file_return = net.save_net_file(photo_url, photo_file_path)
                         if save_file_return["status"] == 1:
-                            log.step(account_name + " 第%s张图片下载成功" % image_count)
-                            image_count += 1
+                            log.step(account_name + " 第%s张图片下载成功" % photo_count)
+                            photo_count += 1
                         else:
-                            log.error(account_name + " 第%s张图片 %s 下载失败，原因：%s" % (image_count, image_url, crawler.download_failre(save_file_return["code"])))
+                            log.error(account_name + " 第%s张图片 %s 下载失败，原因：%s" % (photo_count, photo_url, crawler.download_failre(save_file_return["code"])))
 
                 if not is_over:
                     if photo_pagination_response["next_page_cursor"] is not None:
@@ -248,9 +248,9 @@ class Download(crawler.DownloadThread):
         # 保存最后的信息
         with self.thread_lock:
             tool.write_file("\t".join(self.account_info), self.main_thread.temp_save_data_path)
-            self.main_thread.total_image_count += image_count - 1
+            self.main_thread.total_photo_count += photo_count - 1
             self.main_thread.account_list.pop(account_id)
-        log.step(account_name + " 下载完毕，总共获得%s张图片" % (image_count - 1))
+        log.step(account_name + " 下载完毕，总共获得%s张图片" % (photo_count - 1))
         self.notify_main_thread()
 
 if __name__ == "__main__":

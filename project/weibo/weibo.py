@@ -16,7 +16,7 @@ from common import *
 from project.meipai import meipai
 from project.weibo import weiboCommon
 
-IMAGE_COUNT_PER_PAGE = 20  # 每次请求获取的图片数量
+PHOTO_COUNT_PER_PAGE = 20  # 每次请求获取的图片数量
 INIT_SINCE_ID = "9999999999999999"
 
 
@@ -25,13 +25,13 @@ def get_one_page_photo(account_id, page_count):
     photo_pagination_url = "http://photo.weibo.com/photos/get_all"
     query_data = {
         "uid": account_id,
-        "count": IMAGE_COUNT_PER_PAGE,
+        "count": PHOTO_COUNT_PER_PAGE,
         "page": page_count,
         "type": "3",
     }
     cookies_list = {"SUB": weiboCommon.COOKIE_INFO["SUB"]}
     result = {
-        "image_info_list": [],  # 全部图片信息
+        "photo_info_list": [],  # 全部图片信息
         "is_over": False,  # 是否最后一页图片
     }
     photo_pagination_response = net.http_request(photo_pagination_url, method="GET", fields=query_data, cookies_list=cookies_list, json_decode=True)
@@ -47,24 +47,24 @@ def get_one_page_photo(account_id, page_count):
         raise crawler.CrawlerException("返回数据'total'字段类型不正确\n%s" % photo_pagination_response.json_data)
     if not isinstance(photo_pagination_response.json_data["data"]["photo_list"], list):
         raise crawler.CrawlerException("返回数据'photo_list'字段类型不正确\n%s" % photo_pagination_response.json_data)
-    for image_info in photo_pagination_response.json_data["data"]["photo_list"]:
-        result_image_info = {
-            "image_time": None,  # 图片上传时间
-            "image_url": None,  # 图片地址
+    for photo_info in photo_pagination_response.json_data["data"]["photo_list"]:
+        result_photo_info = {
+            "photo_time": None,  # 图片上传时间
+            "photo_url": None,  # 图片地址
         }
         # 获取图片上传时间
-        if not crawler.check_sub_key(("timestamp",), image_info):
-            raise crawler.CrawlerException("图片信息'timestamp'字段不存在\n%s" % image_info)
-        if not crawler.check_sub_key(("timestamp",), image_info):
-            raise crawler.CrawlerException("图片信息'timestamp'字段类型不正确\n%s" % image_info)
-        result_image_info["image_time"] = int(image_info["timestamp"])
+        if not crawler.check_sub_key(("timestamp",), photo_info):
+            raise crawler.CrawlerException("图片信息'timestamp'字段不存在\n%s" % photo_info)
+        if not crawler.check_sub_key(("timestamp",), photo_info):
+            raise crawler.CrawlerException("图片信息'timestamp'字段类型不正确\n%s" % photo_info)
+        result_photo_info["photo_time"] = int(photo_info["timestamp"])
         # 获取图片地址
-        if not crawler.check_sub_key(("pic_host", "pic_name"), image_info):
-            raise crawler.CrawlerException("图片信息'pic_host'或者'pic_name'字段不存在\n%s" % image_info)
-        result_image_info["image_url"] = image_info["pic_host"] + "/large/" + image_info["pic_name"]
-        result["image_info_list"].append(result_image_info)
+        if not crawler.check_sub_key(("pic_host", "pic_name"), photo_info):
+            raise crawler.CrawlerException("图片信息'pic_host'或者'pic_name'字段不存在\n%s" % photo_info)
+        result_photo_info["photo_url"] = photo_info["pic_host"] + "/large/" + photo_info["pic_name"]
+        result["photo_info_list"].append(result_photo_info)
     # 检测是不是还有下一页 总的图片数量 / 每页显示的图片数量 = 总的页数
-    result["is_over"] = page_count >= (photo_pagination_response.json_data["data"]["total"] * 1.0 / IMAGE_COUNT_PER_PAGE)
+    result["is_over"] = page_count >= (photo_pagination_response.json_data["data"]["total"] * 1.0 / PHOTO_COUNT_PER_PAGE)
     return result
 
 
@@ -183,7 +183,7 @@ class Weibo(crawler.Crawler):
 
         # 初始化参数
         sys_config = {
-            crawler.SYS_DOWNLOAD_IMAGE: True,
+            crawler.SYS_DOWNLOAD_PHOTO: True,
             crawler.SYS_DOWNLOAD_VIDEO: True,
             crawler.SYS_GET_COOKIE: {
                 "sina.com.cn": (),
@@ -196,7 +196,7 @@ class Weibo(crawler.Crawler):
         weiboCommon.COOKIE_INFO.update(self.cookie_value)
 
         # 解析存档文件
-        # account_id  image_count  last_image_time  video_count  last_video_url  (account_name)
+        # account_id  photo_count  last_photo_time  video_count  last_video_url  (account_name)
         self.account_list = crawler.read_save_data(self.save_data_path, 0, ["", "0", "0", "0", ""])
 
         # 检测登录状态
@@ -237,7 +237,7 @@ class Weibo(crawler.Crawler):
         # 重新排序保存存档文件
         crawler.rewrite_save_file(self.temp_save_data_path, self.save_data_path)
 
-        log.step("全部下载完毕，耗时%s秒，共计图片%s张" % (self.get_run_time(), self.total_image_count))
+        log.step("全部下载完毕，耗时%s秒，共计图片%s张" % (self.get_run_time(), self.total_photo_count))
 
 
 class Download(crawler.DownloadThread):
@@ -251,10 +251,10 @@ class Download(crawler.DownloadThread):
         self.step("开始")
 
     # 获取所有可下载图片
-    def get_crawl_image_list(self):
+    def get_crawl_photo_list(self):
         page_count = 1
         unique_list = []
-        image_info_list = []
+        photo_info_list = []
         is_over = False
         # 获取全部还未下载过需要解析的图片
         while not is_over:
@@ -268,19 +268,19 @@ class Download(crawler.DownloadThread):
                 self.error("第%s页图片解析失败，原因：%s" % (page_count, e.message))
                 raise
 
-            self.trace("第%s页解析的全部图片：%s" % (page_count, photo_pagination_response["image_info_list"]))
-            self.step("第%s页解析获取%s张图片" % (page_count, len(photo_pagination_response["image_info_list"])))
+            self.trace("第%s页解析的全部图片：%s" % (page_count, photo_pagination_response["photo_info_list"]))
+            self.step("第%s页解析获取%s张图片" % (page_count, len(photo_pagination_response["photo_info_list"])))
 
             # 寻找这一页符合条件的图片
-            for image_info in photo_pagination_response["image_info_list"]:
+            for photo_info in photo_pagination_response["photo_info_list"]:
                 # 检查是否达到存档记录
-                if image_info["image_time"] > int(self.account_info[2]):
+                if photo_info["photo_time"] > int(self.account_info[2]):
                     # 新增图片导致的重复判断
-                    if image_info["image_url"] in unique_list:
+                    if photo_info["photo_url"] in unique_list:
                         continue
                     else:
-                        image_info_list.append(image_info)
-                        unique_list.append(image_info["image_url"])
+                        photo_info_list.append(photo_info)
+                        unique_list.append(photo_info["photo_url"])
                 else:
                     is_over = True
                     break
@@ -291,7 +291,7 @@ class Download(crawler.DownloadThread):
                 else:
                     page_count += 1
 
-        return image_info_list
+        return photo_info_list
 
     # 获取所有可下载视频
     def get_crawl_video_list(self):
@@ -343,34 +343,34 @@ class Download(crawler.DownloadThread):
         return video_play_url_list
 
     # 下载同一上传时间的所有图片
-    def crawl_image(self, image_info_list):
+    def crawl_photo(self, photo_info_list):
         # 同一上传时间的所有图片
-        image_index = int(self.account_info[1]) + 1
-        for image_info in image_info_list:
+        photo_index = int(self.account_info[1]) + 1
+        for photo_info in photo_info_list:
             self.main_thread_check()  # 检测主线程运行状态
-            self.step("开始下载第%s张图片 %s" % (image_index, image_info["image_url"]))
+            self.step("开始下载第%s张图片 %s" % (photo_index, photo_info["photo_url"]))
 
-            image_file_path = os.path.join(self.main_thread.image_download_path, self.display_name, "%04d.%s" % (image_index, net.get_file_type(image_info["image_url"], "jpg")))
-            save_file_return = net.save_net_file(image_info["image_url"], image_file_path)
+            photo_file_path = os.path.join(self.main_thread.photo_download_path, self.display_name, "%04d.%s" % (photo_index, net.get_file_type(photo_info["photo_url"], "jpg")))
+            save_file_return = net.save_net_file(photo_info["photo_url"], photo_file_path)
             if save_file_return["status"] == 1:
-                if weiboCommon.check_image_invalid(image_file_path):
-                    path.delete_dir_or_file(image_file_path)
-                    self.error("第%s张图片 %s 资源已被删除，跳过" % (image_index, image_info["image_url"]))
+                if weiboCommon.check_photo_invalid(photo_file_path):
+                    path.delete_dir_or_file(photo_file_path)
+                    self.error("第%s张图片 %s 资源已被删除，跳过" % (photo_index, photo_info["photo_url"]))
                     continue
                 else:
                     # 设置临时目录
-                    self.temp_path_list.append(image_file_path)
-                    self.step("第%s张图片下载成功" % image_index)
-                    image_index += 1
+                    self.temp_path_list.append(photo_file_path)
+                    self.step("第%s张图片下载成功" % photo_index)
+                    photo_index += 1
             else:
-                self.error("第%s张图片 %s 下载失败，原因：%s" % (image_index, image_info["image_url"], crawler.download_failre(save_file_return["code"])))
+                self.error("第%s张图片 %s 下载失败，原因：%s" % (photo_index, photo_info["photo_url"], crawler.download_failre(save_file_return["code"])))
                 continue
 
         # 图片下载完毕
         self.temp_path_list = []  # 临时目录设置清除
-        self.total_image_count += (image_index - 1) - int(self.account_info[1])  # 计数累加
-        self.account_info[1] = str(image_index - 1)  # 设置存档记录
-        self.account_info[2] = str(image_info_list[0]["image_time"])  # 设置存档记录
+        self.total_photo_count += (photo_index - 1) - int(self.account_info[1])  # 计数累加
+        self.account_info[1] = str(photo_index - 1)  # 设置存档记录
+        self.account_info[2] = str(photo_info_list[0]["photo_time"])  # 设置存档记录
 
     # 解析单个视频
     def crawl_video(self, video_play_url):
@@ -405,23 +405,23 @@ class Download(crawler.DownloadThread):
     def run(self):
         try:
             # 图片下载
-            if self.main_thread.is_download_image:
+            if self.main_thread.is_download_photo:
                 # 获取所有可下载图片
-                image_info_list = self.get_crawl_image_list()
-                self.step("需要下载的全部图片解析完毕，共%s张" % len(image_info_list))
+                photo_info_list = self.get_crawl_photo_list()
+                self.step("需要下载的全部图片解析完毕，共%s张" % len(photo_info_list))
 
                 # 从最早的图片开始下载
-                deal_image_info_list = []
-                while len(image_info_list) > 0:
-                    image_info = image_info_list.pop()
+                deal_photo_info_list = []
+                while len(photo_info_list) > 0:
+                    photo_info = photo_info_list.pop()
                     # 下一张图片的上传时间一致，合并下载
-                    deal_image_info_list.append(image_info)
-                    if len(image_info_list) > 0 and image_info_list[-1]["image_time"] == image_info["image_time"]:
+                    deal_photo_info_list.append(photo_info)
+                    if len(photo_info_list) > 0 and photo_info_list[-1]["photo_time"] == photo_info["photo_time"]:
                         continue
 
                     # 下载同一上传时间的所有图片
-                    self.crawl_image(deal_image_info_list)
-                    deal_image_info_list = []  # 累加图片地址清除
+                    self.crawl_photo(deal_photo_info_list)
+                    deal_photo_info_list = []  # 累加图片地址清除
                     self.main_thread_check()  # 检测主线程运行状态
 
             # 视频下载
@@ -450,9 +450,9 @@ class Download(crawler.DownloadThread):
         # 保存最后的信息
         with self.thread_lock:
             tool.write_file("\t".join(self.account_info), self.main_thread.temp_save_data_path)
-            self.main_thread.total_image_count += self.total_image_count
+            self.main_thread.total_photo_count += self.total_photo_count
             self.main_thread.account_list.pop(self.account_id)
-        self.step("下载完毕，总共获得%s张图片" % self.total_image_count)
+        self.step("下载完毕，总共获得%s张图片" % self.total_photo_count)
         self.notify_main_thread()
 
 

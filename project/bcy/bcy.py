@@ -177,7 +177,7 @@ def get_album_page(album_id):
     album_url = "https://bcy.net/item/detail/%s" % album_id
     album_response = net.http_request(album_url, method="GET", cookies_list=COOKIE_INFO)
     result = {
-        "image_url_list": [],  # 全部图片地址
+        "photo_url_list": [],  # 全部图片地址
         "is_only_follower": False,  # 是否只对粉丝显示
         "is_only_login": False,  # 是否只对登录用户显示
     }
@@ -212,24 +212,24 @@ def get_album_page(album_id):
             return result
 
     # 获取作品页面内的全部图片地址列表
-    image_list_selector = pq(album_response.data).find("div.post__content img.detail_std")
-    for image_index in range(0, image_list_selector.length):
-        image_selector = image_list_selector.eq(image_index)
+    photo_list_selector = pq(album_response.data).find("div.post__content img.detail_std")
+    for photo_index in range(0, photo_list_selector.length):
+        photo_selector = photo_list_selector.eq(photo_index)
         # 获取作品id
-        image_url = image_selector.attr("src")
-        if not image_url:
-            raise crawler.CrawlerException("图片信息截取图片地址失败\n%s" % image_selector.html())
-        result["image_url_list"].append(image_url)
+        photo_url = photo_selector.attr("src")
+        if not photo_url:
+            raise crawler.CrawlerException("图片信息截取图片地址失败\n%s" % photo_selector.html())
+        result["photo_url_list"].append(photo_url)
 
-    if not is_skip and len(result["image_url_list"]) == 0:
+    if not is_skip and len(result["photo_url_list"]) == 0:
         raise crawler.CrawlerException("页面匹配图片地址失败\n%s" % album_response.data)
 
     return result
 
 
 # 禁用指定分辨率
-def get_image_url(image_url):
-    return "/".join(image_url.split("/")[0:-1])
+def get_photo_url(photo_url):
+    return "/".join(photo_url.split("/")[0:-1])
 
 
 class Bcy(crawler.Crawler):
@@ -244,7 +244,7 @@ class Bcy(crawler.Crawler):
 
         # 初始化参数
         sys_config = {
-            crawler.SYS_DOWNLOAD_IMAGE: True,
+            crawler.SYS_DOWNLOAD_PHOTO: True,
             crawler.SYS_GET_COOKIE: {"bcy.net": ()},
             crawler.SYS_APP_CONFIG: (
                 ("IS_AUTO_FOLLOW", True, crawler.CONFIG_ANALYSIS_MODE_BOOLEAN),
@@ -317,7 +317,7 @@ class Bcy(crawler.Crawler):
         # 重新排序保存存档文件
         crawler.rewrite_save_file(self.temp_save_data_path, self.save_data_path)
 
-        log.step("全部下载完毕，耗时%s秒，共计图片%s张" % (self.get_run_time(), self.total_image_count))
+        log.step("全部下载完毕，耗时%s秒，共计图片%s张" % (self.get_run_time(), self.total_photo_count))
 
 
 class Download(crawler.DownloadThread):
@@ -405,36 +405,36 @@ class Download(crawler.DownloadThread):
                 self.error("关注失败，跳过作品%s" % album_id)
                 return
 
-        self.trace("作品%s解析的全部图片：%s" % (album_id, album_response["image_url_list"]))
-        self.step("作品%s解析获取%s张图" % (album_id, len(album_response["image_url_list"])))
+        self.trace("作品%s解析的全部图片：%s" % (album_id, album_response["photo_url_list"]))
+        self.step("作品%s解析获取%s张图" % (album_id, len(album_response["photo_url_list"])))
 
-        image_index = 1
-        album_path = os.path.join(self.main_thread.image_download_path, self.display_name, album_id)
+        photo_index = 1
+        album_path = os.path.join(self.main_thread.photo_download_path, self.display_name, album_id)
         # 设置临时目录
         self.temp_path_list.append(album_path)
-        for image_url in album_response["image_url_list"]:
+        for photo_url in album_response["photo_url_list"]:
             self.main_thread_check()  # 检测主线程运行状态
             # 禁用指定分辨率
-            image_url = get_image_url(image_url)
-            self.step("作品%s开始下载第%s张图片 %s" % (album_id, image_index, image_url))
+            photo_url = get_photo_url(photo_url)
+            self.step("作品%s开始下载第%s张图片 %s" % (album_id, photo_index, photo_url))
 
-            file_path = os.path.join(album_path, "%03d.%s" % (image_index, net.get_file_type(image_url, "jpg")))
+            file_path = os.path.join(album_path, "%03d.%s" % (photo_index, net.get_file_type(photo_url, "jpg")))
             while True:
-                save_file_return = net.save_net_file(image_url, file_path)
+                save_file_return = net.save_net_file(photo_url, file_path)
                 if save_file_return["status"] == 1:
-                    self.step("作品%s第%s张图片下载成功" % (album_id, image_index))
-                    image_index += 1
+                    self.step("作品%s第%s张图片下载成功" % (album_id, photo_index))
+                    photo_index += 1
                 else:
                     # 560报错，重新下载
                     if save_file_return["code"] == 560:
                         time.sleep(5)
                         continue
-                    self.error("作品%s第%s张图片 %s，下载失败，原因：%s" % (album_id, image_index, image_url, crawler.download_failre(save_file_return["code"])))
+                    self.error("作品%s第%s张图片 %s，下载失败，原因：%s" % (album_id, photo_index, photo_url, crawler.download_failre(save_file_return["code"])))
                 break
 
         # 作品内图片下全部载完毕
         self.temp_path_list = []  # 临时目录设置清除
-        self.total_image_count += image_index - 1  # 计数累加
+        self.total_photo_count += photo_index - 1  # 计数累加
         self.account_info[1] = album_id  # 设置存档记录
 
     def run(self):
@@ -463,9 +463,9 @@ class Download(crawler.DownloadThread):
         # 保存最后的信息
         with self.thread_lock:
             tool.write_file("\t".join(self.account_info), self.main_thread.temp_save_data_path)
-            self.main_thread.total_image_count += self.total_image_count
+            self.main_thread.total_photo_count += self.total_photo_count
             self.main_thread.account_list.pop(self.account_id)
-        self.step("下载完毕，总共获得%s张图片" % self.total_image_count)
+        self.step("下载完毕，总共获得%s张图片" % self.total_photo_count)
         self.notify_main_thread()
 
 

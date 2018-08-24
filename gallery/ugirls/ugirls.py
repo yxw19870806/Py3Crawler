@@ -36,7 +36,7 @@ def get_album_page(album_id):
     album_url = "http://www.ugirls.com/Content/List/Magazine-%s.html" % album_id
     album_response = net.http_request(album_url, method="GET")
     result = {
-        "image_url_list": [],  # 全部图片地址
+        "photo_url_list": [],  # 全部图片地址
         "is_delete": False,  # 是否已删除
         "model_name": "",  # 模特名字
     }
@@ -52,14 +52,14 @@ def get_album_page(album_id):
         raise crawler.CrawlerException("模特信息截取模特名字失败\n%s" % album_response_content)
     result["model_name"] = model_name.strip()
     # 获取所有图片地址
-    image_list_selector = pq(album_response_content).find("ul#myGallery li img")
-    if image_list_selector.length == 0:
+    photo_list_selector = pq(album_response_content).find("ul#myGallery li img")
+    if photo_list_selector.length == 0:
         raise crawler.CrawlerException("页面匹配图片地址失败\n%s" % album_response_content)
-    for image_index in range(0, image_list_selector.length):
-        image_url = image_list_selector.eq(image_index).attr("src")
-        if image_url.find("_magazine_web_m.") == -1:
-            raise crawler.CrawlerException("图片地址不符合规则\n%s" % image_url)
-        result["image_url_list"].append(image_url.replace("_magazine_web_m.", "_magazine_web_l."))
+    for photo_index in range(0, photo_list_selector.length):
+        photo_url = photo_list_selector.eq(photo_index).attr("src")
+        if photo_url.find("_magazine_web_m.") == -1:
+            raise crawler.CrawlerException("图片地址不符合规则\n%s" % photo_url)
+        result["photo_url_list"].append(photo_url.replace("_magazine_web_m.", "_magazine_web_l."))
     return result
 
 
@@ -70,7 +70,7 @@ class UGirls(crawler.Crawler):
 
         # 初始化参数
         sys_config = {
-            crawler.SYS_DOWNLOAD_IMAGE: True,
+            crawler.SYS_DOWNLOAD_PHOTO: True,
             crawler.SYS_NOT_CHECK_SAVE_DATA: True,
         }
         crawler.Crawler.__init__(self, sys_config)
@@ -113,26 +113,26 @@ class UGirls(crawler.Crawler):
                     album_id += 1
                     continue
 
-                log.trace("图集%s解析的全部图片：%s" % (album_id, album_response["image_url_list"]))
-                log.step("图集%s解析获取%s张图片" % (album_id, len(album_response["image_url_list"])))
+                log.trace("图集%s解析的全部图片：%s" % (album_id, album_response["photo_url_list"]))
+                log.step("图集%s解析获取%s张图片" % (album_id, len(album_response["photo_url_list"])))
 
-                image_index = 1
-                temp_path = album_path = os.path.join(self.image_download_path, "%04d %s" % (album_id, album_response["model_name"]))
-                for image_url in album_response["image_url_list"]:
+                photo_index = 1
+                temp_path = album_path = os.path.join(self.photo_download_path, "%04d %s" % (album_id, album_response["model_name"]))
+                for photo_url in album_response["photo_url_list"]:
                     if not self.is_running():
                         tool.process_exit(0)
-                    log.step("开始下载图集%s的第%s张图片 %s" % (album_id, image_index, image_url))
+                    log.step("开始下载图集%s的第%s张图片 %s" % (album_id, photo_index, photo_url))
 
-                    file_path = os.path.join(album_path, "%03d.%s" % (image_index, net.get_file_type(image_url)))
-                    save_file_return = net.save_net_file(image_url, file_path)
+                    file_path = os.path.join(album_path, "%03d.%s" % (photo_index, net.get_file_type(photo_url)))
+                    save_file_return = net.save_net_file(photo_url, file_path)
                     if save_file_return["status"] == 1:
-                        log.step("图集%s的第%s张图片下载成功" % (album_id, image_index))
-                        image_index += 1
+                        log.step("图集%s的第%s张图片下载成功" % (album_id, photo_index))
+                        photo_index += 1
                     else:
-                        log.error("图集%s的第%s张图片 %s 下载失败，原因：%s" % (album_id, image_index, image_url, crawler.download_failre(save_file_return["code"])))
+                        log.error("图集%s的第%s张图片 %s 下载失败，原因：%s" % (album_id, photo_index, photo_url, crawler.download_failre(save_file_return["code"])))
                 # 图集内图片全部下载完毕
                 temp_path = ""  # 临时目录设置清除
-                self.total_image_count += image_index - 1  # 计数累加
+                self.total_photo_count += photo_index - 1  # 计数累加
                 album_id += 1  # 设置存档记录
         except SystemExit as se:
             if se.code == 0:
@@ -148,7 +148,7 @@ class UGirls(crawler.Crawler):
 
         # 重新保存存档文件
         tool.write_file(str(album_id), self.save_data_path, tool.WRITE_FILE_TYPE_REPLACE)
-        log.step("全部下载完毕，耗时%s秒，共计图片%s张" % (self.get_run_time(), self.total_image_count))
+        log.step("全部下载完毕，耗时%s秒，共计图片%s张" % (self.get_run_time(), self.total_photo_count))
 
 
 if __name__ == "__main__":

@@ -19,7 +19,7 @@ def get_one_page_photo(page_count):
     query_data = {"p": page_count}
     photo_pagination_response = net.http_request(photo_pagination_url, method="GET", fields=query_data)
     result = {
-        "image_info_list": [],  # 全部图片信息
+        "photo_info_list": [],  # 全部图片信息
     }
     if photo_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(photo_pagination_response.status))
@@ -29,7 +29,7 @@ def get_one_page_photo(page_count):
         photo_selector_html = photo_selector.html()
         result_photo_info = {
             "account_name": "",  # twitter账号
-            "image_url_list": [],  # 图片地址
+            "photo_url_list": [],  # 图片地址
             "tweet_id": None,  # tweet id
             "tweet_time": None,  # tweet发布时间
         }
@@ -55,13 +55,13 @@ def get_one_page_photo(page_count):
         except ValueError:
             raise crawler.CrawlerException("tweet发布时间文本格式不正确\n%s" % tweet_time)
         # 获取图片地址
-        image_list_selector = photo_selector.find(".photo-link-outer a img")
-        for image_index in range(0, image_list_selector.length):
-            image_url = image_list_selector.eq(image_index).attr("src")
-            if not image_url:
-                raise crawler.CrawlerException("图片列表截取图片地址失败\n%s" % image_list_selector.eq(image_index).html())
-            result_photo_info["image_url_list"].append(image_url.strip())
-        result["image_info_list"].append(result_photo_info)
+        photo_list_selector = photo_selector.find(".photo-link-outer a img")
+        for photo_index in range(0, photo_list_selector.length):
+            photo_url = photo_list_selector.eq(photo_index).attr("src")
+            if not photo_url:
+                raise crawler.CrawlerException("图片列表截取图片地址失败\n%s" % photo_list_selector.eq(photo_index).html())
+            result_photo_info["photo_url_list"].append(photo_url.strip())
+        result["photo_info_list"].append(result_photo_info)
     return result
 
 
@@ -72,7 +72,7 @@ class Jigadori(crawler.Crawler):
 
         # 初始化参数
         sys_config = {
-            crawler.SYS_DOWNLOAD_IMAGE: True,
+            crawler.SYS_DOWNLOAD_PHOTO: True,
             crawler.SYS_SET_PROXY: True,
             crawler.SYS_NOT_CHECK_SAVE_DATA: True,
         }
@@ -80,7 +80,7 @@ class Jigadori(crawler.Crawler):
 
     def main(self):
         # 解析存档文件
-        # image_count  last_blog_time
+        # photo_count  last_blog_time
         save_info = ["0", "0"]
         if os.path.exists(self.save_data_path):
             file_save_info = tool.read_file(self.save_data_path).split("\t")
@@ -94,7 +94,7 @@ class Jigadori(crawler.Crawler):
         try:
             page_count = 1
             unique_list = []
-            image_info_list = []
+            photo_info_list = []
             is_over = False
             # 获取全部还未下载过需要解析的图片
             while not is_over:
@@ -110,22 +110,22 @@ class Jigadori(crawler.Crawler):
                     raise
 
                 # 没有图片了
-                if len(photo_pagination_response["image_info_list"]) == 0:
+                if len(photo_pagination_response["photo_info_list"]) == 0:
                     break
 
-                log.trace("第%s页解析的全部图片：%s" % (page_count, photo_pagination_response["image_info_list"]))
-                log.step("第%s页解析获取%s张图片" % (page_count, len(photo_pagination_response["image_info_list"])))
+                log.trace("第%s页解析的全部图片：%s" % (page_count, photo_pagination_response["photo_info_list"]))
+                log.step("第%s页解析获取%s张图片" % (page_count, len(photo_pagination_response["photo_info_list"])))
 
                 # 寻找这一页符合条件的图片
-                for image_info in photo_pagination_response["image_info_list"]:
+                for photo_info in photo_pagination_response["photo_info_list"]:
                     # 检查是否达到存档记录
-                    if image_info["tweet_time"] > int(save_info[1]):
+                    if photo_info["tweet_time"] > int(save_info[1]):
                         # 新增图片导致的重复判断
-                        if image_info["tweet_id"] in unique_list:
+                        if photo_info["tweet_id"] in unique_list:
                             continue
                         else:
-                            image_info_list.append(image_info)
-                            unique_list.append(image_info["tweet_id"])
+                            photo_info_list.append(photo_info)
+                            unique_list.append(photo_info["tweet_id"])
                     else:
                         is_over = True
                         break
@@ -133,33 +133,33 @@ class Jigadori(crawler.Crawler):
                 if not is_over:
                     page_count += 1
 
-            log.step("需要下载的全部图片解析完毕，共%s个" % len(image_info_list))
+            log.step("需要下载的全部图片解析完毕，共%s个" % len(photo_info_list))
 
             # 从最早的图片开始下载
-            while len(image_info_list) > 0:
-                image_info = image_info_list.pop()
-                log.step("开始解析tweet %s的图片" % image_info["tweet_id"])
+            while len(photo_info_list) > 0:
+                photo_info = photo_info_list.pop()
+                log.step("开始解析tweet %s的图片" % photo_info["tweet_id"])
 
-                image_index = int(save_info[0]) + 1
-                for image_url in image_info["image_url_list"]:
+                photo_index = int(save_info[0]) + 1
+                for photo_url in photo_info["photo_url_list"]:
                     if not self.is_running():
                         tool.process_exit(0)
-                    log.step("开始下载第%s张图片 %s" % (image_index, image_url))
+                    log.step("开始下载第%s张图片 %s" % (photo_index, photo_url))
 
-                    file_path = os.path.join(self.image_download_path, "%05d_%s.%s" % (image_index, image_info["account_name"], net.get_file_type(image_url, "jpg")))
-                    save_file_return = net.save_net_file(image_url, file_path)
+                    file_path = os.path.join(self.photo_download_path, "%05d_%s.%s" % (photo_index, photo_info["account_name"], net.get_file_type(photo_url, "jpg")))
+                    save_file_return = net.save_net_file(photo_url, file_path)
                     if save_file_return["status"] == 1:
                         # 设置临时目录
                         temp_path_list.append(file_path)
-                        log.step("第%s张图片下载成功" % image_index)
-                        image_index += 1
+                        log.step("第%s张图片下载成功" % photo_index)
+                        photo_index += 1
                     else:
-                        log.error("第%s张图片（account：%s) %s，下载失败，原因：%s" % (image_index, image_info["account_name"], image_url, crawler.download_failre(save_file_return["code"])))
+                        log.error("第%s张图片（account：%s) %s，下载失败，原因：%s" % (photo_index, photo_info["account_name"], photo_url, crawler.download_failre(save_file_return["code"])))
                 # tweet内图片全部下载完毕
                 temp_path_list = []  # 临时目录设置清除
-                self.total_image_count += (image_index - 1) - int(save_info[0])  # 计数累加
-                save_info[0] = str(image_index - 1)  # 设置存档记录
-                save_info[1] = str(image_info["tweet_time"])  # 设置存档记录
+                self.total_photo_count += (photo_index - 1) - int(save_info[0])  # 计数累加
+                save_info[0] = str(photo_index - 1)  # 设置存档记录
+                save_info[1] = str(photo_info["tweet_time"])  # 设置存档记录
         except SystemExit as se:
             if se.code == 0:
                 log.step("提前退出")
@@ -175,7 +175,7 @@ class Jigadori(crawler.Crawler):
 
         # 保存新的存档文件
         tool.write_file("\t".join(save_info), self.save_data_path, tool.WRITE_FILE_TYPE_REPLACE)
-        log.step("全部下载完毕，耗时%s秒，共计图片%s张" % (self.get_run_time(), self.total_image_count))
+        log.step("全部下载完毕，耗时%s秒，共计图片%s张" % (self.get_run_time(), self.total_photo_count))
 
 
 if __name__ == "__main__":

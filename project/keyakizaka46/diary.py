@@ -13,7 +13,7 @@ import time
 import traceback
 from common import *
 
-IMAGE_COUNT_PER_PAGE = 20
+PHOTO_COUNT_PER_PAGE = 20
 
 
 # 获取指定页数的全部日志
@@ -24,7 +24,7 @@ def get_one_page_blog(account_id, page_count):
         "cd": "member",
         "ct": "%02d" % int(account_id),
         "page": str(page_count - 1),
-        "rw": str(IMAGE_COUNT_PER_PAGE),
+        "rw": str(PHOTO_COUNT_PER_PAGE),
     }
     blog_pagination_response = net.http_request(blog_pagination_url, method="GET", fields=query_data)
     result = {
@@ -43,7 +43,7 @@ def get_one_page_blog(account_id, page_count):
     for blog_info in blog_list:
         result_blog_info = {
             "blog_id" : None,  # 日志id
-            "image_url_list": [],  # 全部图片地址
+            "photo_url_list": [],  # 全部图片地址
         }
         # 获取日志id
         blog_id = tool.find_sub_string(blog_info, "/diary/detail/", "?")
@@ -51,20 +51,20 @@ def get_one_page_blog(account_id, page_count):
             raise crawler.CrawlerException("日志页面截取日志id失败\n%s" % blog_info)
         result_blog_info["blog_id"] = int(blog_id)
         # 获取全部图片地址
-        result_blog_info["image_url_list"] = re.findall('<img[\S|\s]*?src="([^"]+)"', blog_info)
+        result_blog_info["photo_url_list"] = re.findall('<img[\S|\s]*?src="([^"]+)"', blog_info)
         result["blog_info_list"].append(result_blog_info)
     return result
 
 
 # 检测图片地址是否包含域名，如果没有则补上
-def get_image_url(image_url):
+def get_photo_url(photo_url):
     # 如果图片地址没有域名，表示直接使用当前域名下的资源，需要拼接成完整的地址
-    if image_url[:7] != "http://" and image_url[:8] != "https://":
-        if image_url[0] == "/":
-            image_url = "https://www.keyakizaka46.com%s" % image_url
+    if photo_url[:7] != "http://" and photo_url[:8] != "https://":
+        if photo_url[0] == "/":
+            photo_url = "https://www.keyakizaka46.com%s" % photo_url
         else:
-            image_url = "https://www.keyakizaka46.com/%s" % image_url
-    return image_url
+            photo_url = "https://www.keyakizaka46.com/%s" % photo_url
+    return photo_url
 
 
 class Diary(crawler.Crawler):
@@ -74,12 +74,12 @@ class Diary(crawler.Crawler):
 
         # 初始化参数
         sys_config = {
-            crawler.SYS_DOWNLOAD_IMAGE: True,
+            crawler.SYS_DOWNLOAD_PHOTO: True,
         }
         crawler.Crawler.__init__(self, sys_config)
 
         # 解析存档文件
-        # account_id  image_count  last_diary_time
+        # account_id  photo_count  last_diary_time
         self.account_list = crawler.read_save_data(self.save_data_path, 0, ["", "0", "0"])
 
     def main(self):
@@ -111,7 +111,7 @@ class Diary(crawler.Crawler):
         # 重新排序保存存档文件
         crawler.rewrite_save_file(self.temp_save_data_path, self.save_data_path)
 
-        log.step("全部下载完毕，耗时%s秒，共计图片%s张" % (self.get_run_time(), self.total_image_count))
+        log.step("全部下载完毕，耗时%s秒，共计图片%s张" % (self.get_run_time(), self.total_photo_count))
 
 
 class Download(crawler.DownloadThread):
@@ -164,26 +164,26 @@ class Download(crawler.DownloadThread):
 
     # 解析单个日志
     def crawl_blog(self, blog_info):
-        image_index = int(self.account_info[1]) + 1
-        for image_url in blog_info["image_url_list"]:
+        photo_index = int(self.account_info[1]) + 1
+        for photo_url in blog_info["photo_url_list"]:
             self.main_thread_check()  # 检测主线程运行状态
             # 检测图片地址是否包含域名
-            image_url = get_image_url(image_url)
-            self.step("开始下载第%s张图片 %s" % (image_index, image_url))
+            photo_url = get_photo_url(photo_url)
+            self.step("开始下载第%s张图片 %s" % (photo_index, photo_url))
 
-            file_path = os.path.join(self.main_thread.image_download_path, self.display_name, "%04d.%s" % (image_index, net.get_file_type(image_url)))
-            save_file_return = net.save_net_file(image_url, file_path)
+            file_path = os.path.join(self.main_thread.photo_download_path, self.display_name, "%04d.%s" % (photo_index, net.get_file_type(photo_url)))
+            save_file_return = net.save_net_file(photo_url, file_path)
             if save_file_return["status"] == 1:
                 self.temp_path_list.append(file_path)
-                self.step("第%s张图片下载成功" % image_index)
-                image_index += 1
+                self.step("第%s张图片下载成功" % photo_index)
+                photo_index += 1
             else:
-                self.error("第%s张图片 %s 下载失败，原因：%s" % (image_index, image_url, crawler.download_failre(save_file_return["code"])))
+                self.error("第%s张图片 %s 下载失败，原因：%s" % (photo_index, photo_url, crawler.download_failre(save_file_return["code"])))
 
         # 日志内图片全部下载完毕
         self.temp_path_list = []  # 临时目录设置清除
-        self.total_image_count += (image_index - 1) - int(self.account_info[1])  # 计数累加
-        self.account_info[1] = str(image_index - 1)  # 设置存档记录
+        self.total_photo_count += (photo_index - 1) - int(self.account_info[1])  # 计数累加
+        self.account_info[1] = str(photo_index - 1)  # 设置存档记录
         self.account_info[2] = str(blog_info["blog_id"])  # 设置存档记录
 
     def run(self):
@@ -196,7 +196,7 @@ class Download(crawler.DownloadThread):
             while len(blog_info_list) > 0:
                 blog_info =  blog_info_list.pop()
                 self.step("开始解析日志%s" % blog_info["blog_id"])
-                self.trace("日志%s解析的全部图片：%s" % (blog_info["blog_id"], blog_info["image_url_list"]))
+                self.trace("日志%s解析的全部图片：%s" % (blog_info["blog_id"], blog_info["photo_url_list"]))
                 self.crawl_blog(blog_info)
                 self.main_thread_check()  # 检测主线程运行状态
         except SystemExit as se:
@@ -213,9 +213,9 @@ class Download(crawler.DownloadThread):
          # 保存最后的信息
         with self.thread_lock:
             tool.write_file("\t".join(self.account_info), self.main_thread.temp_save_data_path)
-            self.main_thread.total_image_count += self.total_image_count
+            self.main_thread.total_photo_count += self.total_photo_count
             self.main_thread.account_list.pop(self.account_id)
-        self.step("下载完毕，总共获得%s张图片" % self.total_image_count)
+        self.step("下载完毕，总共获得%s张图片" % self.total_photo_count)
         self.notify_main_thread()
 
 

@@ -36,7 +36,7 @@ def get_album_page(album_id):
     page_count = max_page_count = 1
     result = {
         "album_title": "",  # 图集标题
-        "image_url_list": [],  # 全部图片地址
+        "photo_url_list": [],  # 全部图片地址
         "is_delete": False,  # 是否已删除
     }
     while page_count <= max_page_count:
@@ -55,14 +55,14 @@ def get_album_page(album_id):
             if not result["album_title"]:
                 raise crawler.CrawlerException("页面截取标题失败\n%s" % album_pagination_response_content)
         # 获取图集图片地址
-        image_list_selector = pq(album_pagination_response_content).find("div.articleV4Body a img")
-        if image_list_selector.length == 0:
+        photo_list_selector = pq(album_pagination_response_content).find("div.articleV4Body a img")
+        if photo_list_selector.length == 0:
             raise crawler.CrawlerException("第%s页页面匹配图片地址失败\n%s" % (page_count, album_pagination_response_content))
-        for image_index in range(0, image_list_selector.length):
-            image_url = image_list_selector.eq(image_index).attr("src")
-            if not image_url:
-                raise crawler.CrawlerException("图片信息截取图片地址失败\n%s" % image_list_selector.eq(image_index).html())
-            result["image_url_list"].append(image_url.replace("//pic1.youzi4.com/", "//res.youzi4.cc/"))
+        for photo_index in range(0, photo_list_selector.length):
+            photo_url = photo_list_selector.eq(photo_index).attr("src")
+            if not photo_url:
+                raise crawler.CrawlerException("图片信息截取图片地址失败\n%s" % photo_list_selector.eq(photo_index).html())
+            result["photo_url_list"].append(photo_url.replace("//pic1.youzi4.com/", "//res.youzi4.cc/"))
         # 获取总页数
         pagination_list_selector = pq(album_pagination_response_content).find("ul.articleV4Page a.page-a")
         if pagination_list_selector.length > 0:
@@ -84,7 +84,7 @@ class YouZi(crawler.Crawler):
 
         # 初始化参数
         sys_config = {
-            crawler.SYS_DOWNLOAD_IMAGE: True,
+            crawler.SYS_DOWNLOAD_PHOTO: True,
             crawler.SYS_NOT_CHECK_SAVE_DATA: True,
         }
         crawler.Crawler.__init__(self, sys_config)
@@ -127,32 +127,32 @@ class YouZi(crawler.Crawler):
                     album_id += 1
                     continue
 
-                log.trace("图集%s《%s》解析的全部图片：%s" % (album_id, album_response["album_title"], album_response["image_url_list"]))
-                log.step("图集%s《%s》解析获取%s张图片" % (album_id, album_response["album_title"], len(album_response["image_url_list"])))
+                log.trace("图集%s《%s》解析的全部图片：%s" % (album_id, album_response["album_title"], album_response["photo_url_list"]))
+                log.step("图集%s《%s》解析获取%s张图片" % (album_id, album_response["album_title"], len(album_response["photo_url_list"])))
 
-                image_index = 1
+                photo_index = 1
                 # 过滤标题中不支持的字符
                 album_title = path.filter_text(album_response["album_title"])
                 if album_title:
-                    album_path = os.path.join(self.image_download_path, "%05d %s" % (album_id, album_title))
+                    album_path = os.path.join(self.photo_download_path, "%05d %s" % (album_id, album_title))
                 else:
-                    album_path = os.path.join(self.image_download_path, "%05d" % str(album_id))
+                    album_path = os.path.join(self.photo_download_path, "%05d" % str(album_id))
                 temp_path = album_path
-                for image_url in album_response["image_url_list"]:
+                for photo_url in album_response["photo_url_list"]:
                     if not self.is_running():
                         tool.process_exit(0)
-                    log.step("图集%s 《%s》 开始下载第%s张图片 %s" % (album_id, album_response["album_title"], image_index, image_url))
+                    log.step("图集%s 《%s》 开始下载第%s张图片 %s" % (album_id, album_response["album_title"], photo_index, photo_url))
 
-                    file_path = os.path.join(album_path, "%03d.%s" % (image_index, net.get_file_type(image_url)))
-                    save_file_return = net.save_net_file(image_url, file_path)
+                    file_path = os.path.join(album_path, "%03d.%s" % (photo_index, net.get_file_type(photo_url)))
+                    save_file_return = net.save_net_file(photo_url, file_path)
                     if save_file_return["status"] == 1:
-                        log.step("图集%s 《%s》 第%s张图片下载成功" % (album_id, album_response["album_title"], image_index))
+                        log.step("图集%s 《%s》 第%s张图片下载成功" % (album_id, album_response["album_title"], photo_index))
                     else:
-                        log.error("图集%s 《%s》 第%s张图片 %s 下载失败，原因：%s" % (album_id, album_response["album_title"], image_index, image_url, crawler.download_failre(save_file_return["code"])))
-                    image_index += 1
+                        log.error("图集%s 《%s》 第%s张图片 %s 下载失败，原因：%s" % (album_id, album_response["album_title"], photo_index, photo_url, crawler.download_failre(save_file_return["code"])))
+                    photo_index += 1
                 # 图集内图片全部下载完毕
                 temp_path = ""  # 临时目录设置清除
-                self.total_image_count += image_index - 1  # 计数累加
+                self.total_photo_count += photo_index - 1  # 计数累加
                 album_id += 1  # 设置存档记录
         except SystemExit as se:
             if se.code == 0:
@@ -168,7 +168,7 @@ class YouZi(crawler.Crawler):
 
         # 重新保存存档文件
         tool.write_file(str(album_id), self.save_data_path, tool.WRITE_FILE_TYPE_REPLACE)
-        log.step("全部下载完毕，耗时%s秒，共计图片%s张" % (self.get_run_time(), self.total_image_count))
+        log.step("全部下载完毕，耗时%s秒，共计图片%s张" % (self.get_run_time(), self.total_photo_count))
 
 
 if __name__ == "__main__":

@@ -12,7 +12,7 @@ import time
 import traceback
 from common import *
 
-IMAGE_COUNT_PER_PAGE = 16
+PHOTO_COUNT_PER_PAGE = 16
 
 
 # 获取指定页数的全部图片
@@ -20,7 +20,7 @@ def get_one_page_photo(account_id, page_count):
     # https://worldcosplay.net/zh-hans/api/member/photos.json?limit=16&member_id=502191&p3_photo_list=true&page=1
     photo_pagination_url = "https://worldcosplay.net/zh-hans/api/member/photos.json"
     query_data = {
-        "limit": IMAGE_COUNT_PER_PAGE,
+        "limit": PHOTO_COUNT_PER_PAGE,
         "member_id": account_id,
         "p3_photo_list": "true",
         "page": page_count,
@@ -42,7 +42,7 @@ def get_one_page_photo(account_id, page_count):
     for photo_info in photo_pagination_response.json_data["list"]:
         result_photo_info = {
             "photo_id": None,  # 图片id
-            "image_url": None,  # 图片地址
+            "photo_url": None,  # 图片地址
         }
         if not crawler.check_sub_key(("photo",), photo_info):
             raise crawler.CrawlerException("图片信息'photo'字段不存在\n%s" % photo_info)
@@ -54,14 +54,14 @@ def get_one_page_photo(account_id, page_count):
         result_photo_info["photo_id"] = int(photo_info["photo"]["id"])
         # 获取图片地址
         if crawler.check_sub_key(("sq300_url",), photo_info["photo"]):
-            image_url = photo_info["photo"]["sq300_url"]
+            photo_url = photo_info["photo"]["sq300_url"]
         elif crawler.check_sub_key(("sq150_url",), photo_info["photo"]):
-            image_url = photo_info["photo"]["sq150_url"]
+            photo_url = photo_info["photo"]["sq150_url"]
         else:
             raise crawler.CrawlerException("图片信息'sq300_url'和'sq150_url'字段不存在\n%s" % photo_info)
-        if image_url.find("-350x600.") == -1:
-            raise crawler.CrawlerException("图片预览地址 %s 格式不正确\n" % image_url)
-        result_photo_info["image_url"] = image_url
+        if photo_url.find("-350x600.") == -1:
+            raise crawler.CrawlerException("图片预览地址 %s 格式不正确\n" % photo_url)
+        result_photo_info["photo_url"] = photo_url
         result["photo_info_list"].append(result_photo_info)
     # 判断是不是最后一页
     if not crawler.check_sub_key(("pager",), photo_pagination_response.json_data):
@@ -74,8 +74,8 @@ def get_one_page_photo(account_id, page_count):
 
 
 # 使用高分辨率的图片地址
-def get_image_url(image_url):
-    return image_url.replace("-350x600.", "-740.")
+def get_photo_url(photo_url):
+    return photo_url.replace("-350x600.", "-740.")
 
 
 class WorldCosplay(crawler.Crawler):
@@ -85,7 +85,7 @@ class WorldCosplay(crawler.Crawler):
 
         # 初始化参数
         sys_config = {
-            crawler.SYS_DOWNLOAD_IMAGE: True,
+            crawler.SYS_DOWNLOAD_PHOTO: True,
         }
         crawler.Crawler.__init__(self, sys_config)
 
@@ -122,7 +122,7 @@ class WorldCosplay(crawler.Crawler):
         # 重新排序保存存档文件
         crawler.rewrite_save_file(self.temp_save_data_path, self.save_data_path)
 
-        log.step("全部下载完毕，耗时%s秒，共计图片%s张" % (self.get_run_time(), self.total_image_count))
+        log.step("全部下载完毕，耗时%s秒，共计图片%s张" % (self.get_run_time(), self.total_photo_count))
 
 
 class Download(crawler.DownloadThread):
@@ -180,19 +180,19 @@ class Download(crawler.DownloadThread):
     # 解析单个图片
     def crawl_photo(self, photo_info):
         # 禁用指定分辨率
-        self.step("开始下载图片%s %s" % (photo_info["photo_id"], photo_info["image_url"]))
+        self.step("开始下载图片%s %s" % (photo_info["photo_id"], photo_info["photo_url"]))
 
-        image_url = get_image_url(photo_info["image_url"])
-        file_path = os.path.join(self.main_thread.image_download_path, self.display_name, "%08d.%s" % (photo_info["photo_id"], net.get_file_type(image_url)))
-        save_file_return = net.save_net_file(image_url, file_path)
+        photo_url = get_photo_url(photo_info["photo_url"])
+        file_path = os.path.join(self.main_thread.photo_download_path, self.display_name, "%08d.%s" % (photo_info["photo_id"], net.get_file_type(photo_url)))
+        save_file_return = net.save_net_file(photo_url, file_path)
         if save_file_return["status"] == 1:
             self.step("图片%s下载成功" % photo_info["photo_id"])
         else:
-            self.error("图片%s %s，下载失败，原因：%s" % (photo_info["photo_id"], photo_info["image_url"], crawler.download_failre(save_file_return["code"])))
+            self.error("图片%s %s，下载失败，原因：%s" % (photo_info["photo_id"], photo_info["photo_url"], crawler.download_failre(save_file_return["code"])))
 
         # 图片内图片下全部载完毕
         self.temp_path_list = []  # 临时目录设置清除
-        self.total_image_count += 1  # 计数累加
+        self.total_photo_count += 1  # 计数累加
         self.account_info[1] = str(photo_info["photo_id"])  # 设置存档记录
 
     def run(self):
@@ -220,9 +220,9 @@ class Download(crawler.DownloadThread):
         # 保存最后的信息
         with self.thread_lock:
             tool.write_file("\t".join(self.account_info), self.main_thread.temp_save_data_path)
-            self.main_thread.total_image_count += self.total_image_count
+            self.main_thread.total_photo_count += self.total_photo_count
             self.main_thread.account_list.pop(self.account_id)
-        self.step("下载完毕，总共获得%s张图片" % self.total_image_count)
+        self.step("下载完毕，总共获得%s张图片" % self.total_photo_count)
         self.notify_main_thread()
 
 

@@ -15,7 +15,7 @@ from common import *
 from common import crypto
 
 IS_LOCAL_SAVE_SESSION = False
-IMAGE_COUNT_PER_PAGE = 12
+PHOTO_COUNT_PER_PAGE = 12
 QUERY_ID = "17859156310193001"
 COOKIE_INFO = {"csrftoken": "", "mid": "", "sessionid": ""}
 SESSION_FILE_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), "session"))
@@ -113,7 +113,7 @@ def get_one_page_media(account_id, cursor):
     query_data = {
         "query_id": QUERY_ID,
         "id": account_id,
-        "first": IMAGE_COUNT_PER_PAGE,
+        "first": PHOTO_COUNT_PER_PAGE,
     }
     if cursor:
         query_data["after"] = cursor
@@ -145,7 +145,7 @@ def get_one_page_media(account_id, cursor):
             raise crawler.CrawlerException("返回数据'edges'字段长度不正确\n%s" % json_data)
     for media_info in media_data["edges"]:
         result_media_info = {
-            "image_url": None,  # 图片地址
+            "photo_url": None,  # 图片地址
             "is_group": False,  # 是不是图片/视频组
             "is_video": False,  # 是不是视频
             "page_id": None,  # 媒体详情界面id
@@ -159,7 +159,7 @@ def get_one_page_media(account_id, cursor):
         if media_info["node"]["__typename"] not in ["GraphImage", "GraphSidecar", "GraphVideo"]:
             raise crawler.CrawlerException("媒体信息'__typename'取值范围不正确\n%s" % media_info)
         # 获取图片地址
-        result_media_info["image_url"] = media_info["node"]["display_url"]
+        result_media_info["photo_url"] = media_info["node"]["display_url"]
         # 判断是不是图片/视频组
         result_media_info["is_group"] = media_info["node"]["__typename"] == "GraphSidecar"
         # 判断是否有视频
@@ -180,7 +180,7 @@ def get_media_page(page_id):
     media_url = "https://www.instagram.com/p/%s" % page_id
     media_response = net.http_request(media_url, method="GET", cookies_list=COOKIE_INFO)
     result = {
-        "image_url_list": [],  # 全部图片地址
+        "photo_url_list": [],  # 全部图片地址
         "video_url_list": [],  # 全部视频地址
     }
     if media_response.status != net.HTTP_RETURN_CODE_SUCCEED:
@@ -216,7 +216,7 @@ def get_media_page(page_id):
             if not crawler.check_sub_key(("__typename", "display_url"), edge["node"]):
                 raise crawler.CrawlerException("媒体节点'__typename'或'display_url'字段不存在\n%s" % edge)
             # 获取图片地址
-            result["image_url_list"].append(edge["node"]["display_url"])
+            result["photo_url_list"].append(edge["node"]["display_url"])
             # 获取视频地址
             if edge["node"]["__typename"] == "GraphVideo":
                 if not crawler.check_sub_key(("video_url",), edge["node"]):
@@ -243,7 +243,7 @@ class Instagram(crawler.Crawler):
 
         # 初始化参数
         sys_config = {
-            crawler.SYS_DOWNLOAD_IMAGE: True,
+            crawler.SYS_DOWNLOAD_PHOTO: True,
             crawler.SYS_DOWNLOAD_VIDEO: True,
             crawler.SYS_SET_PROXY: True,
             crawler.SYS_GET_COOKIE: {"instagram.com": ("csrftoken", "sessionid", "mid")},
@@ -258,7 +258,7 @@ class Instagram(crawler.Crawler):
         IS_LOCAL_SAVE_SESSION = self.app_config["IS_LOCAL_SAVE_SESSION"]
 
         # 解析存档文件
-        # account_name  account_id  image_count  video_count  last_created_time
+        # account_name  account_id  photo_count  video_count  last_created_time
         self.account_list = crawler.read_save_data(self.save_data_path, 0, ["", "", "0", "0", "0"])
 
         # 生成session信息
@@ -306,7 +306,7 @@ class Instagram(crawler.Crawler):
         # 重新排序保存存档文件
         crawler.rewrite_save_file(self.temp_save_data_path, self.save_data_path)
 
-        log.step("全部下载完毕，耗时%s秒，共计图片%s张，视频%s个" % (self.get_run_time(), self.total_image_count, self.total_video_count))
+        log.step("全部下载完毕，耗时%s秒，共计图片%s张，视频%s个" % (self.get_run_time(), self.total_photo_count, self.total_video_count))
 
 
 class Download(crawler.DownloadThread):
@@ -358,8 +358,8 @@ class Download(crawler.DownloadThread):
     def crawl_media(self, media_info):
         media_response = None
         # 图片下载
-        image_index = int(self.account_info[2]) + 1
-        if self.main_thread.is_download_image:
+        photo_index = int(self.account_info[2]) + 1
+        if self.main_thread.is_download_photo:
             # 多张图片
             if media_info["is_group"]:
                 # 获取媒体详细页
@@ -368,28 +368,28 @@ class Download(crawler.DownloadThread):
                 except crawler.CrawlerException as e:
                     self.error("媒体%s解析失败，原因：%s" % (media_info["page_id"], e.message))
                     raise
-                image_url_list = media_response["image_url_list"]
+                photo_url_list = media_response["photo_url_list"]
             # 单张图片 或者 视频的预览图片
             else:
-                image_url_list = [media_info["image_url"]]
+                photo_url_list = [media_info["photo_url"]]
 
-            self.trace("媒体%s解析的全部图片：%s" % (media_info["page_id"], image_url_list))
-            self.step("媒体%s解析获取%s张图片" % (media_info["page_id"], len(image_url_list)))
+            self.trace("媒体%s解析的全部图片：%s" % (media_info["page_id"], photo_url_list))
+            self.step("媒体%s解析获取%s张图片" % (media_info["page_id"], len(photo_url_list)))
 
-            for image_url in image_url_list:
+            for photo_url in photo_url_list:
                 self.main_thread_check()  # 检测主线程运行状态
                 # 去除特效，获取原始路径
-                self.step("开始下载第%s张图片 %s" % (image_index, image_url))
+                self.step("开始下载第%s张图片 %s" % (photo_index, photo_url))
 
-                image_file_path = os.path.join(self.main_thread.image_download_path, self.account_name, "%04d.%s" % (image_index, net.get_file_type(image_url)))
-                save_file_return = net.save_net_file(image_url, image_file_path)
+                photo_file_path = os.path.join(self.main_thread.photo_download_path, self.account_name, "%04d.%s" % (photo_index, net.get_file_type(photo_url)))
+                save_file_return = net.save_net_file(photo_url, photo_file_path)
                 if save_file_return["status"] == 1:
                     # 设置临时目录
-                    self.temp_path_list.append(image_file_path)
-                    self.step("第%s张图片下载成功" % image_index)
-                    image_index += 1
+                    self.temp_path_list.append(photo_file_path)
+                    self.step("第%s张图片下载成功" % photo_index)
+                    photo_index += 1
                 else:
-                    self.error("第%s张图片 %s 下载失败，原因：%s" % (image_index, image_url, crawler.download_failre(save_file_return["code"])))
+                    self.error("第%s张图片 %s 下载失败，原因：%s" % (photo_index, photo_url, crawler.download_failre(save_file_return["code"])))
 
         # 视频下载
         video_index = int(self.account_info[3]) + 1
@@ -423,9 +423,9 @@ class Download(crawler.DownloadThread):
 
         # 媒体内图片和视频全部下载完毕
         self.temp_path_list = []  # 临时目录设置清除
-        self.total_image_count += (image_index - 1) - int(self.account_info[2])  # 计数累加
+        self.total_photo_count += (photo_index - 1) - int(self.account_info[2])  # 计数累加
         self.total_video_count += (video_index - 1) - int(self.account_info[3])  # 计数累加
-        self.account_info[2] = str(image_index - 1)  # 设置存档记录
+        self.account_info[2] = str(photo_index - 1)  # 设置存档记录
         self.account_info[3] = str(video_index - 1)  # 设置存档记录
         self.account_info[4] = str(media_info["media_time"])
 
@@ -469,10 +469,10 @@ class Download(crawler.DownloadThread):
         # 保存最后的信息
         with self.thread_lock:
             tool.write_file("\t".join(self.account_info), self.main_thread.temp_save_data_path)
-            self.main_thread.total_image_count += self.total_image_count
+            self.main_thread.total_photo_count += self.total_photo_count
             self.main_thread.total_video_count += self.total_video_count
             self.main_thread.account_list.pop(self.account_name)
-        self.step("下载完毕，总共获得%s张图片和%s个视频" % (self.total_image_count, self.total_video_count))
+        self.step("下载完毕，总共获得%s张图片和%s个视频" % (self.total_photo_count, self.total_video_count))
         self.notify_main_thread()
 
 
