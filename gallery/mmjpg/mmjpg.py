@@ -59,10 +59,7 @@ def get_album_page(album_id):
                 raise crawler.CrawlerException("页面截取总页数失败\n%s" % album_response_content)
             max_page_count = int(max_page_count)
         # 获取图集图片地址
-        image_url = pq(album_response_content).find("#content img").attr("src")
-        if not image_url:
-            raise crawler.CrawlerException("页面截取图片地址失败\n%s" % album_response_content)
-        result["image_url_list"].append(image_url)
+        result["image_url_list"].append(pq(album_response_content).find("#content img").attr("src"))
         page_count += 1
     return result
 

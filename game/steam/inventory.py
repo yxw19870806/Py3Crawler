@@ -11,7 +11,7 @@ from game.steam import steamCommon
 
 CHECK_EXTRA_CARD = True  # 是否检测额外的交换卡（徽章等级大于5，并且还有卡牌）
 CHECK_DUPLICATE_BACKGROUND = True  # 是否检测重复的个人背景图
-CHECK_DUPLICATE_EMOTICON = True  # 是否检测重复的表情
+CHECK_DUPLICATE_EMOTICON = False  # 是否检测重复的表情
 
 
 # 获取当前account正在收集的徽章进度

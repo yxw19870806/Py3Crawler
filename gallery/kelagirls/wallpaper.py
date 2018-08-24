@@ -27,27 +27,25 @@ def get_one_page_photo(page_count):
     if photo_list_selector.length == 0:
         raise crawler.CrawlerException("页面匹配图片列失败\n%s" % photo_pagination_response_content)
     for photo_index in range(0, photo_list_selector.length):
+        photo_selector = photo_list_selector.eq(photo_index)
         result_image_info = {
             "image_id": None,  # 图片id
             "image_url": None,  # 图片地址
             "model_name": "",  # 模特名字
         }
         # 获取图片id
-        image_id = photo_list_selector.eq(photo_index).find(".bizhibigwrap").attr("id")
+        image_id = photo_selector.find(".bizhibigwrap").attr("id")
         if not image_id:
-            raise crawler.CrawlerException("图片列表匹配图片id失败\n%s" % photo_list_selector.eq(photo_index).html())
+            raise crawler.CrawlerException("图片列表匹配图片id失败\n%s" % photo_selector.html())
         if not (image_id[0:3] == "big" and crawler.is_integer(image_id[3:])):
-            raise crawler.CrawlerException("图片列表匹配的图片id格式不正确\n%s" % photo_list_selector.eq(photo_index).html())
+            raise crawler.CrawlerException("图片列表匹配的图片id格式不正确\n%s" % photo_selector.html())
         result_image_info["image_id"] = int(image_id[3:])
         # 获取图片地址
-        image_path = photo_list_selector.eq(photo_index).find(".bizhibig img").eq(1).attr("src")
-        if not image_path:
-            raise crawler.CrawlerException("图片列表匹配图片地址失败\n%s" % photo_list_selector.eq(photo_index).html())
-        result_image_info["image_url"] = "http://kelagirls.com/" + image_path
+        result_image_info["image_url"] = "http://kelagirls.com/" + photo_selector.find(".bizhibig img").eq(1).attr("src")
         # 获取模特名字
-        model_name = photo_list_selector.eq(photo_index).find(".bzwdown span:first").text()
+        model_name = photo_selector.find(".bzwdown span:first").text()
         if not model_name:
-            raise crawler.CrawlerException("图片列表匹配模特名字失败\n%s" % photo_list_selector.eq(photo_index).html())
+            raise crawler.CrawlerException("图片列表匹配模特名字失败\n%s" % photo_selector.html())
         result_image_info["model_name"] = model_name
         result["image_info_list"].append(result_image_info)
     # 判断是不是最后一页
