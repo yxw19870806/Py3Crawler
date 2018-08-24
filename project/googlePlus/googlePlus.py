@@ -110,10 +110,10 @@ def get_album_page(account_id, album_id):
     while continue_token:
         api_url = "https://get.google.com/_/AlbumArchiveUi/data"
         post_data = {"f.req": '[[[113305010,[{"113305010":["%s",null,24,"%s"]}],null,null,0]]]' % (user_key, continue_token)}
-        image_pagination_response = net.http_request(api_url, method="POST", fields=post_data, encode_multipart=False)
-        if image_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
+        photo_pagination_response = net.http_request(api_url, method="POST", fields=post_data, encode_multipart=False)
+        if photo_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
             raise crawler.CrawlerException(crawler.request_failre(album_response.status))
-        continue_data_html = tool.find_sub_string(image_pagination_response.data.decode(errors="ignore"), ")]}'", None).strip()
+        continue_data_html = tool.find_sub_string(photo_pagination_response.data.decode(errors="ignore"), ")]}'", None).strip()
         continue_data = tool.json_decode(continue_data_html)
         if continue_data is None:
             raise crawler.CrawlerException("相册信息加载失败\n%s" % continue_data_html)

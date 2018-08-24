@@ -25,7 +25,7 @@ SUB_PATH_LIST = {
 
 
 # 获取指定一页的图集
-def get_album_page(sub_path, page_count):
+def get_one_page_album(sub_path, page_count):
     album_pagination_url = "http://www.94xmn.com/%s/list_%s_%s.html" % (sub_path, SUB_PATH_LIST[sub_path], page_count)
     album_pagination_response = net.http_request(album_pagination_url, method="GET", header_list={"Host": "www.94xmn.com"})
     result = {
@@ -34,7 +34,7 @@ def get_album_page(sub_path, page_count):
     }
     if album_pagination_response.status == 409:
         time.sleep(5)
-        return get_album_page(sub_path, page_count)
+        return get_one_page_album(sub_path, page_count)
     elif album_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(album_pagination_response.status))
     # 页面编码
@@ -79,37 +79,37 @@ def get_album_page(sub_path, page_count):
 
 
 # 获取指定图集
-def get_album_photo(album_url):
+def get_album_page(album_url):
     page_count = max_page_count = 1
     result = {
         "image_url_list": [],  # 全部图片地址
     }
     while page_count <= max_page_count:
         if page_count == 1:
-            photo_pagination_url = album_url
+            pagination_album_url = album_url
         else:
-            photo_pagination_url = album_url.replace(".html", "_%s.html" % page_count)
-        photo_pagination_response = net.http_request(photo_pagination_url, method="GET", header_list={"Host": "www.94xmn.com"})
-        if photo_pagination_response.status == 409:
+            pagination_album_url = album_url.replace(".html", "_%s.html" % page_count)
+        album_response = net.http_request(pagination_album_url, method="GET", header_list={"Host": "www.94xmn.com"})
+        if album_response.status == 409:
             time.sleep(5)
             continue
-        elif photo_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
-            raise crawler.CrawlerException("第%s页" % page_count + crawler.request_failre(photo_pagination_response.status))
-        photo_pagination_content = photo_pagination_response.data.decode(errors="ignore")
+        elif album_response.status != net.HTTP_RETURN_CODE_SUCCEED:
+            raise crawler.CrawlerException("第%s页" % page_count + crawler.request_failre(album_response.status))
+        album_response_content = album_response.data.decode(errors="ignore")
         # 获取图片地址
-        image_list_selector = pq(photo_pagination_content).find("div.bbox a img")
+        image_list_selector = pq(album_response_content).find("div.bbox a img")
         if image_list_selector.length == 0:
-            raise crawler.CrawlerException("第%s页页面匹配图片地址失败\n%s" % (page_count, photo_pagination_content))
+            raise crawler.CrawlerException("第%s页页面匹配图片地址失败\n%s" % (page_count, album_response_content))
         for image_index in range(0, image_list_selector.length):
             result["image_url_list"].append("http://www.94xmn.com" + image_list_selector.eq(image_index).attr("src"))
         # 获取总页数
         if page_count == 1:
-            max_page_html = pq(photo_pagination_content).find("#fenye li:first a").html()
+            max_page_html = pq(album_response_content).find("#fenye li:first a").html()
             if not max_page_html:
-                raise crawler.CrawlerException("页面匹配总页数信息失败\n%s" % photo_pagination_content)
+                raise crawler.CrawlerException("页面匹配总页数信息失败\n%s" % album_response_content)
             max_page_count_find = re.findall("共(\d*)页: ", max_page_html)
             if len(max_page_count_find) == 0:
-                raise crawler.CrawlerException("总页数信息匹配总页数失败\n%s" % photo_pagination_content)
+                raise crawler.CrawlerException("总页数信息匹配总页数失败\n%s" % album_response_content)
             max_page_count = int(max_page_count_find[0])
         page_count += 1
     return result
@@ -186,7 +186,7 @@ class Download(crawler.DownloadThread):
 
             # 获取一页图集
             try:
-                album_response = get_album_page(self.sub_path, page_count)
+                album_response = get_one_page_album(self.sub_path, page_count)
             except crawler.CrawlerException as e:
                 self.error("第%s页图集解析失败，原因：%s" % (page_count, e.message))
                 raise
@@ -215,13 +215,13 @@ class Download(crawler.DownloadThread):
     def crawl_album(self, album_info):
         # 获取图集全部图片
         try:
-            photo_pagination_response = get_album_photo(album_info["album_url"])
+            album_response = get_album_page(album_info["album_url"])
         except crawler.CrawlerException as e:
             self.error("图集%s解析失败，原因：%s" % (album_info["album_id"], e.message))
             raise
 
-        self.trace("图集%s《%s》 %s 解析的全部图片：%s" % (album_info["album_id"], album_info["album_title"], album_info["album_url"], photo_pagination_response["image_url_list"]))
-        self.step("图集%s《%s》 %s 解析获取%s张图片" % (album_info["album_id"], album_info["album_title"], album_info["album_url"], len(photo_pagination_response["image_url_list"])))
+        self.trace("图集%s《%s》 %s 解析的全部图片：%s" % (album_info["album_id"], album_info["album_title"], album_info["album_url"], album_response["image_url_list"]))
+        self.step("图集%s《%s》 %s 解析获取%s张图片" % (album_info["album_id"], album_info["album_title"], album_info["album_url"], len(album_response["image_url_list"])))
 
         image_index = 1
         # 过滤标题中不支持的字符
@@ -232,7 +232,7 @@ class Download(crawler.DownloadThread):
             album_path = os.path.join(self.main_thread.image_download_path, "%04d" % album_info["album_id"])
         # 设置临时目录
         self.temp_path_list.append(album_path)
-        for image_url in photo_pagination_response["image_url_list"]:
+        for image_url in album_response["image_url_list"]:
             self.main_thread_check()  # 检测主线程运行状态
             self.step("图集%s《%s》开始下载第%s张图片 %s" % (album_info["album_id"], album_info["album_title"], image_index, image_url))
 
