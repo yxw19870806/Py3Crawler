@@ -25,7 +25,7 @@ def get_one_page_blog(account_id, page_count):
 # 获取指定日志
 def get_blog_page(account_id, blog_id):
     result = {
-        "image_url_list": [],  # 全部图片地址
+        "photo_url_list": [],  # 全部图片地址
     }
     return result
 
@@ -138,7 +138,7 @@ class Download(crawler.DownloadThread):
             log.step(self.account_name + " 开始下载第%s个视频 %s" % (video_index, video_url))
 
             file_type = net.get_file_type(video_url)
-            video_file_path = os.path.join(self.main_thread.image_download_path, self.account_name, "%04d.%s" % (video_index, file_type))
+            video_file_path = os.path.join(self.main_thread.photo_download_path, self.account_name, "%04d.%s" % (video_index, file_type))
             save_file_return = net.save_net_file(video_url, video_file_path)
             if save_file_return["status"] == 1:
                 # 设置临时目录

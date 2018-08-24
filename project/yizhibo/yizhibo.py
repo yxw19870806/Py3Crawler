@@ -15,45 +15,45 @@ from common import *
 
 
 # 获取全部图片地址列表
-def get_image_index_page(account_id):
+def get_photo_index_page(account_id):
     # https://www.yizhibo.com/member/personel/user_photos?memberid=6066534
-    image_index_url = "https://www.yizhibo.com/member/personel/user_photos"
+    photo_index_url = "https://www.yizhibo.com/member/personel/user_photos"
     query_data = {"memberid": account_id}
-    image_index_response = net.http_request(image_index_url, method="GET", fields=query_data)
+    photo_index_response = net.http_request(photo_index_url, method="GET", fields=query_data)
     result = {
-        "image_url_list": [],  # 全部图片地址
+        "photo_url_list": [],  # 全部图片地址
     }
-    if image_index_response.status != net.HTTP_RETURN_CODE_SUCCEED:
-        raise crawler.CrawlerException(crawler.request_failre(image_index_response.status))
-    image_index_response_content = image_index_response.data.decode(errors="ignore")
-    if image_index_response_content == '<script>window.location.href="/404.html";</script>':
+    if photo_index_response.status != net.HTTP_RETURN_CODE_SUCCEED:
+        raise crawler.CrawlerException(crawler.request_failre(photo_index_response.status))
+    photo_index_response_content = photo_index_response.data.decode(errors="ignore")
+    if photo_index_response_content == '<script>window.location.href="/404.html";</script>':
         raise crawler.CrawlerException("账号不存在")
     # 获取全部图片地址
-    if image_index_response_content.find("还没有照片哦") == -1:
-        result["image_url_list"] = re.findall('<img src="([^"]*)@[^"]*" alt="" class="index_img_main">', image_index_response_content)
-        if len(result["image_url_list"]) == 0:
-            raise crawler.CrawlerException("页面匹配图片地址失败\n%s" % image_index_response_content)
+    if photo_index_response_content.find("还没有照片哦") == -1:
+        result["photo_url_list"] = re.findall('<img src="([^"]*)@[^"]*" alt="" class="index_img_main">', photo_index_response_content)
+        if len(result["photo_url_list"]) == 0:
+            raise crawler.CrawlerException("页面匹配图片地址失败\n%s" % photo_index_response_content)
     return result
 
 
 #  获取图片的header
-def get_image_header(image_url):
-    image_head_response = net.http_request(image_url, method="HEAD")
+def get_photo_header(photo_url):
+    photo_head_response = net.http_request(photo_url, method="HEAD")
     result = {
-        "image_time": None,  # 图片上传时间
+        "photo_time": None,  # 图片上传时间
     }
-    if image_head_response.status == 404:
+    if photo_head_response.status == 404:
         return result
-    elif image_head_response.status != net.HTTP_RETURN_CODE_SUCCEED:
-        raise crawler.CrawlerException(crawler.request_failre(image_head_response.status))
-    last_modified = image_head_response.headers.get("Last-Modified")
+    elif photo_head_response.status != net.HTTP_RETURN_CODE_SUCCEED:
+        raise crawler.CrawlerException(crawler.request_failre(photo_head_response.status))
+    last_modified = photo_head_response.headers.get("Last-Modified")
     if last_modified is None:
-        raise crawler.CrawlerException("图片header'Last-Modified'字段不存在\n%s" % image_head_response.headers)
+        raise crawler.CrawlerException("图片header'Last-Modified'字段不存在\n%s" % photo_head_response.headers)
     try:
         last_modified_time = time.strptime(last_modified, "%a, %d %b %Y %H:%M:%S %Z")
     except ValueError:
         raise crawler.CrawlerException("图片上传时间文本格式不正确\n%s" % last_modified)
-    result["image_time"] = int(time.mktime(last_modified_time)) - time.timezone
+    result["photo_time"] = int(time.mktime(last_modified_time)) - time.timezone
     return result
 
 
@@ -129,13 +129,13 @@ class YiZhiBo(crawler.Crawler):
 
         # 初始化参数
         sys_config = {
-            crawler.SYS_DOWNLOAD_IMAGE: True,
+            crawler.SYS_DOWNLOAD_PHOTO: True,
             crawler.SYS_DOWNLOAD_VIDEO: True,
         }
         crawler.Crawler.__init__(self, sys_config)
 
         # 解析存档文件
-        # account_id  video_count  last_video_time  image_count  last_image_time(account_name)
+        # account_id  video_count  last_video_time  photo_count  last_photo_time(account_name)
         self.account_list = crawler.read_save_data(self.save_data_path, 0, ["", "0", "0", "0", "0"])
 
     def main(self):
@@ -167,7 +167,7 @@ class YiZhiBo(crawler.Crawler):
         # 重新排序保存存档文件
         crawler.rewrite_save_file(self.temp_save_data_path, self.save_data_path)
 
-        log.step("全部下载完毕，耗时%s秒，共计图片%s张，视频%s个" % (self.get_run_time(), self.total_image_count, self.total_video_count))
+        log.step("全部下载完毕，耗时%s秒，共计图片%s张，视频%s个" % (self.get_run_time(), self.total_photo_count, self.total_video_count))
 
 
 class Download(crawler.DownloadThread):
@@ -181,52 +181,52 @@ class Download(crawler.DownloadThread):
         self.step("开始")
 
     # 获取所有可下载图片
-    def get_crawl_image_list(self):
+    def get_crawl_photo_list(self):
         # 获取全部图片地址列表
         try:
-            image_index_response = get_image_index_page(self.account_id)
+            photo_index_response = get_photo_index_page(self.account_id)
         except crawler.CrawlerException as e:
             self.error("图片首页解析失败，原因：%s" % e.message)
             return []
 
-        self.trace("解析的全部图片：%s" % image_index_response["image_url_list"])
-        self.step("解析获取%s张图片" % len(image_index_response["image_url_list"]))
+        self.trace("解析的全部图片：%s" % photo_index_response["photo_url_list"])
+        self.step("解析获取%s张图片" % len(photo_index_response["photo_url_list"]))
 
         # 寻找这一页符合条件的图片
-        image_info_list = []
-        for image_url in image_index_response["image_url_list"]:
+        photo_info_list = []
+        for photo_url in photo_index_response["photo_url_list"]:
             self.main_thread_check()  # 检测主线程运行状态
-            self.step("开始解析图片%s" % image_url)
+            self.step("开始解析图片%s" % photo_url)
 
             try:
-                image_head_response = get_image_header(image_url)
+                photo_head_response = get_photo_header(photo_url)
             except crawler.CrawlerException as e:
-                self.error("图片%s解析失败，原因：%s" % (image_url, e.message))
+                self.error("图片%s解析失败，原因：%s" % (photo_url, e.message))
                 return []
 
             # 检查是否达到存档记录
-            if image_head_response["image_time"] > int(self.account_info[4]):
-                image_info_list.append({"image_url": image_url, "image_time": image_head_response["image_time"]})
+            if photo_head_response["photo_time"] > int(self.account_info[4]):
+                photo_info_list.append({"photo_url": photo_url, "photo_time": photo_head_response["photo_time"]})
             else:
                 break
 
-        return image_info_list
+        return photo_info_list
 
     # 解析单张图片
-    def crawl_image(self, image_info):
-        image_index = int(self.account_info[3]) + 1
-        image_file_path = os.path.join(self.main_thread.image_download_path, self.display_name, "%04d.%s" % (image_index, net.get_file_type(image_info["image_url"])))
-        save_file_return = net.save_net_file(image_info["image_url"], image_file_path)
+    def crawl_photo(self, photo_info):
+        photo_index = int(self.account_info[3]) + 1
+        photo_file_path = os.path.join(self.main_thread.photo_download_path, self.display_name, "%04d.%s" % (photo_index, net.get_file_type(photo_info["photo_url"])))
+        save_file_return = net.save_net_file(photo_info["photo_url"], photo_file_path)
         if save_file_return["status"] == 1:
-            self.step("第%s张图片下载成功" % image_index)
+            self.step("第%s张图片下载成功" % photo_index)
         else:
-            self.error("第%s张图片 %s 下载失败，原因：%s" % (image_index, image_info["image_url"], crawler.download_failre(save_file_return["code"])))
+            self.error("第%s张图片 %s 下载失败，原因：%s" % (photo_index, photo_info["photo_url"], crawler.download_failre(save_file_return["code"])))
             return
 
         # 图片下载完毕
-        self.total_image_count += 1  # 计数累加
-        self.account_info[3] = str(image_index)  # 设置存档记录
-        self.account_info[4] = str(image_info["image_time"])  # 设置存档记录
+        self.total_photo_count += 1  # 计数累加
+        self.account_info[3] = str(photo_index)  # 设置存档记录
+        self.account_info[4] = str(photo_info["photo_time"])  # 设置存档记录
 
     # 获取所有可下载视频
     def get_crawl_video_list(self):
@@ -280,16 +280,16 @@ class Download(crawler.DownloadThread):
     def run(self):
         try:
             # 图片下载
-            if self.main_thread.is_download_image:
+            if self.main_thread.is_download_photo:
                 # 获取所有可下载图片
-                image_info_list = self.get_crawl_image_list()
-                self.step("需要下载的全部图片解析完毕，共%s张" % len(image_info_list))
+                photo_info_list = self.get_crawl_photo_list()
+                self.step("需要下载的全部图片解析完毕，共%s张" % len(photo_info_list))
 
                 # 从最早的图片开始下载
-                while len(image_info_list) > 0:
-                    image_info = image_info_list.pop()
-                    self.step("开始下载第%s张图片 %s" % (int(self.account_info[3]) + 1, image_info["image_url"]))
-                    self.crawl_image(image_info)
+                while len(photo_info_list) > 0:
+                    photo_info = photo_info_list.pop()
+                    self.step("开始下载第%s张图片 %s" % (int(self.account_info[3]) + 1, photo_info["photo_url"]))
+                    self.crawl_photo(photo_info)
                     self.main_thread_check()  # 检测主线程运行状态
 
             # 视频下载
@@ -316,10 +316,10 @@ class Download(crawler.DownloadThread):
         # 保存最后的信息
         with self.thread_lock:
             tool.write_file("\t".join(self.account_info), self.main_thread.temp_save_data_path)
-            self.main_thread.total_image_count += self.total_image_count
+            self.main_thread.total_photo_count += self.total_photo_count
             self.main_thread.total_video_count += self.total_video_count
             self.main_thread.account_list.pop(self.account_id)
-        self.step("下载完毕，总共获得%s张图片和%s个视频" % (self.total_image_count, self.total_video_count))
+        self.step("下载完毕，总共获得%s张图片和%s个视频" % (self.total_photo_count, self.total_video_count))
         self.notify_main_thread()
 
 

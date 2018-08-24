@@ -25,7 +25,7 @@ def get_one_page_blog(account_id, page_count):
 # 获取指定日志
 def get_blog_page(account_id, blog_id):
     result = {
-        "image_url_list": [],  # 全部图片地址
+        "photo_url_list": [],  # 全部图片地址
         "video_url_list": [],  # 全部视频地址
     }
     return result
@@ -39,7 +39,7 @@ class Template(crawler.Crawler):
         # 初始化参数
         # todo 配置
         sys_config = {
-            crawler.SYS_DOWNLOAD_IMAGE: True,
+            crawler.SYS_DOWNLOAD_PHOTO: True,
             crawler.SYS_DOWNLOAD_VIDEO: True,
             crawler.SYS_SET_PROXY: True,
             crawler.SYS_NOT_CHECK_SAVE_DATA: True,
@@ -81,7 +81,7 @@ class Template(crawler.Crawler):
         crawler.rewrite_save_file(self.temp_save_data_path, self.save_data_path)
 
         # todo 是否需要下载图片或视频
-        log.step("全部下载完毕，耗时%s秒，共计图片%s张，视频%s个" % (self.get_run_time(), self.total_image_count, self.total_video_count))
+        log.step("全部下载完毕，耗时%s秒，共计图片%s张，视频%s个" % (self.get_run_time(), self.total_photo_count, self.total_video_count))
 
 
 class Download(crawler.DownloadThread):
@@ -135,22 +135,22 @@ class Download(crawler.DownloadThread):
 
         # todo 图片下载逻辑
         # 图片下载
-        image_index = self.account_info[1] + 1
-        if self.main_thread.is_download_image:
-            for image_url in blog_response["image_url_list"]:
+        photo_index = self.account_info[1] + 1
+        if self.main_thread.is_download_photo:
+            for photo_url in blog_response["photo_url_list"]:
                 self.main_thread_check()  # 检测主线程运行状态
-                log.step(self.account_name + " 开始下载第%s张图片 %s" % (image_index, image_url))
+                log.step(self.account_name + " 开始下载第%s张图片 %s" % (photo_index, photo_url))
 
-                file_type = net.get_file_type(image_url)
-                image_file_path = os.path.join(self.main_thread.image_download_path, self.account_name, "%04d.%s" % (image_index, file_type))
-                save_file_return = net.save_net_file(image_url, image_file_path)
+                file_type = net.get_file_type(photo_url)
+                photo_file_path = os.path.join(self.main_thread.photo_download_path, self.account_name, "%04d.%s" % (photo_index, file_type))
+                save_file_return = net.save_net_file(photo_url, photo_file_path)
                 if save_file_return["status"] == 1:
                     # 设置临时目录
-                    self.temp_path_list.append(image_file_path)
-                    log.step(self.account_name + " 第%s张图片下载成功" % image_index)
-                    image_index += 1
+                    self.temp_path_list.append(photo_file_path)
+                    log.step(self.account_name + " 第%s张图片下载成功" % photo_index)
+                    photo_index += 1
                 else:
-                    log.error(self.account_name + " 第%s张图片 %s 下载失败，原因：%s" % (image_index, image_url, crawler.download_failre(save_file_return["code"])))
+                    log.error(self.account_name + " 第%s张图片 %s 下载失败，原因：%s" % (photo_index, photo_url, crawler.download_failre(save_file_return["code"])))
 
         # todo 视频下载逻辑
         # 视频下载
@@ -173,9 +173,9 @@ class Download(crawler.DownloadThread):
 
         # 媒体内图片和视频全部下载完毕
         self.temp_path_list = []  # 临时目录设置清除
-        self.total_image_count += (image_index - 1) - int(self.account_info[1])  # 计数累加
+        self.total_photo_count += (photo_index - 1) - int(self.account_info[1])  # 计数累加
         self.total_video_count += (video_index - 1) - int(self.account_info[2])  # 计数累加
-        self.account_info[1] = str(image_index - 1)  # 设置存档记录
+        self.account_info[1] = str(photo_index - 1)  # 设置存档记录
         self.account_info[2] = str(video_index - 1)  # 设置存档记录
         self.account_info[3] = ""  # 设置存档记录
 
@@ -205,10 +205,10 @@ class Download(crawler.DownloadThread):
         # 保存最后的信息
         with self.thread_lock:
             tool.write_file("\t".join(self.account_info), self.main_thread.temp_save_data_path)
-            self.main_thread.total_image_count += self.total_image_count
+            self.main_thread.total_photo_count += self.total_photo_count
             self.main_thread.total_video_count += self.total_video_count
             self.main_thread.account_list.pop(self.account_id)
-        log.step(self.account_name + " 下载完毕，总共获得%s张图片和%s个视频" % (self.total_image_count, self.total_video_count))
+        log.step(self.account_name + " 下载完毕，总共获得%s张图片和%s个视频" % (self.total_photo_count, self.total_video_count))
         self.notify_main_thread()
 
 

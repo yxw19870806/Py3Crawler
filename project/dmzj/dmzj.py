@@ -72,7 +72,7 @@ def get_chapter_page(comic_id, page_id):
     chapter_url = "https://m.dmzj.com/view/%s/%s.html" % (comic_id, page_id)
     chapter_response = net.http_request(chapter_url, method="GET")
     result = {
-        "image_url_list": [],  # 全部漫画图片地址
+        "photo_url_list": [],  # 全部漫画图片地址
     }
     if chapter_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(chapter_response.status))
@@ -88,15 +88,15 @@ def get_chapter_page(comic_id, page_id):
         raise crawler.CrawlerException("章节信息'page_url'字段不存在\n%s" % chapter_info_data)
     if not isinstance(chapter_info_data["page_url"], list):
         raise crawler.CrawlerException("章节信息'id'字段类型不正确在\n%s" % chapter_info_data)
-    for image_url in chapter_info_data["page_url"]:
-        result["image_url_list"].append(image_url)
+    for photo_url in chapter_info_data["page_url"]:
+        result["photo_url_list"].append(photo_url)
     return result
 
 
 # 特殊符号转义
-def get_image_url(image_url):
-    image_url_split = urllib.parse.urlsplit(image_url)
-    return image_url_split[0] + "://" + image_url_split[1] + urllib.parse.quote(image_url_split[2])
+def get_photo_url(photo_url):
+    photo_url_split = urllib.parse.urlsplit(photo_url)
+    return photo_url_split[0] + "://" + photo_url_split[1] + urllib.parse.quote(photo_url_split[2])
 
 
 class DMZJ(crawler.Crawler):
@@ -106,7 +106,7 @@ class DMZJ(crawler.Crawler):
 
         # 初始化参数
         sys_config = {
-            crawler.SYS_DOWNLOAD_IMAGE: True,
+            crawler.SYS_DOWNLOAD_PHOTO: True,
             crawler.SYS_NOT_CHECK_SAVE_DATA: True,
         }
         crawler.Crawler.__init__(self, sys_config)
@@ -144,7 +144,7 @@ class DMZJ(crawler.Crawler):
         # 重新排序保存存档文件
         crawler.rewrite_save_file(self.temp_save_data_path, self.save_data_path)
 
-        log.step("全部下载完毕，耗时%s秒，共计图片%s张" % (self.get_run_time(), self.total_image_count))
+        log.step("全部下载完毕，耗时%s秒，共计图片%s张" % (self.get_run_time(), self.total_photo_count))
 
 
 class Download(crawler.DownloadThread):
@@ -193,26 +193,26 @@ class Download(crawler.DownloadThread):
             raise
 
         # 图片下载
-        image_index = 1
-        chapter_path = os.path.join(self.main_thread.image_download_path, self.display_name, comic_info["version_name"], "%06d %s" % (comic_info["page_id"], comic_info["chapter_name"]))
+        photo_index = 1
+        chapter_path = os.path.join(self.main_thread.photo_download_path, self.display_name, comic_info["version_name"], "%06d %s" % (comic_info["page_id"], comic_info["chapter_name"]))
         # 设置临时目录
         self.temp_path_list.append(chapter_path)
-        for image_url in chapter_response["image_url_list"]:
-            image_url = get_image_url(image_url)
+        for photo_url in chapter_response["photo_url_list"]:
+            photo_url = get_photo_url(photo_url)
             self.main_thread_check()  # 检测主线程运行状态
-            self.step("漫画%s %s《%s》开始下载第%s张图片 %s" % (comic_info["page_id"], comic_info["version_name"], comic_info["chapter_name"], image_index, image_url))
+            self.step("漫画%s %s《%s》开始下载第%s张图片 %s" % (comic_info["page_id"], comic_info["version_name"], comic_info["chapter_name"], photo_index, photo_url))
 
-            image_file_path = os.path.join(chapter_path, "%03d.%s" % (image_index, net.get_file_type(image_url)))
-            save_file_return = net.save_net_file(image_url, image_file_path, header_list={"Referer": "https://m.dmzj.com/"})
+            photo_file_path = os.path.join(chapter_path, "%03d.%s" % (photo_index, net.get_file_type(photo_url)))
+            save_file_return = net.save_net_file(photo_url, photo_file_path, header_list={"Referer": "https://m.dmzj.com/"})
             if save_file_return["status"] == 1:
-                self.step("漫画%s %s《%s》第%s张图片下载成功" % (comic_info["page_id"], comic_info["version_name"], comic_info["chapter_name"], image_index))
-                image_index += 1
+                self.step("漫画%s %s《%s》第%s张图片下载成功" % (comic_info["page_id"], comic_info["version_name"], comic_info["chapter_name"], photo_index))
+                photo_index += 1
             else:
-                self.error("漫画%s %s《%s》第%s张图片 %s 下载失败，原因：%s" % (comic_info["page_id"], comic_info["version_name"], comic_info["chapter_name"], image_index, image_url, crawler.download_failre(save_file_return["code"])))
+                self.error("漫画%s %s《%s》第%s张图片 %s 下载失败，原因：%s" % (comic_info["page_id"], comic_info["version_name"], comic_info["chapter_name"], photo_index, photo_url, crawler.download_failre(save_file_return["code"])))
 
         # 媒体内图片全部下载完毕
         self.temp_path_list = []  # 临时目录设置清除
-        self.total_image_count += image_index - 1  # 计数累加
+        self.total_photo_count += photo_index - 1  # 计数累加
         self.account_info[1] = str(comic_info["comic_id"])  # 设置存档记录
 
     def run(self):
@@ -241,9 +241,9 @@ class Download(crawler.DownloadThread):
         # 保存最后的信息
         with self.thread_lock:
             tool.write_file("\t".join(self.account_info), self.main_thread.temp_save_data_path)
-            self.main_thread.total_image_count += self.total_image_count
+            self.main_thread.total_photo_count += self.total_photo_count
             self.main_thread.account_list.pop(self.comic_id)
-        self.step("下载完毕，总共获得%s张图片" % self.total_image_count)
+        self.step("下载完毕，总共获得%s张图片" % self.total_photo_count)
         self.notify_main_thread()
 
 

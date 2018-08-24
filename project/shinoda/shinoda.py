@@ -34,17 +34,17 @@ def get_one_page_blog(page_count):
     for blog_html in blog_html_find:
         result_blog_info = {
             "blog_id": None,  # 日志id
-            "image_url_list": [],  # 图片地址列表
+            "photo_url_list": [],  # 图片地址列表
         }
-        image_name_list = re.findall('data-original="./([^"]*)"', blog_html)
-        if len(image_name_list) == 0:
+        photo_name_list = re.findall('data-original="./([^"]*)"', blog_html)
+        if len(photo_name_list) == 0:
             continue
-        blog_id = image_name_list[0].split("-")[0]
+        blog_id = photo_name_list[0].split("-")[0]
         if not crawler.is_integer(blog_id):
             raise crawler.CrawlerException("图片名字截取日志id失败\n%s" % blog_html)
         result_blog_info["blog_id"] = int(blog_id)
-        for image_name in image_name_list:
-            result_blog_info["image_url_list"].append("http://blog.mariko-shinoda.net/%s" % image_name)
+        for photo_name in photo_name_list:
+            result_blog_info["photo_url_list"].append("http://blog.mariko-shinoda.net/%s" % photo_name)
         result["blog_info_list"].append(result_blog_info)
     return result
 
@@ -56,14 +56,14 @@ class Blog(crawler.Crawler):
 
         # 初始化参数
         sys_config = {
-            crawler.SYS_DOWNLOAD_IMAGE: True,
+            crawler.SYS_DOWNLOAD_PHOTO: True,
             crawler.SYS_NOT_CHECK_SAVE_DATA: True,
         }
         crawler.Crawler.__init__(self, sys_config)
 
     def main(self):
         # 解析存档文件
-        # image_count  last_blog_id
+        # photo_count  last_blog_id
         save_info = ["0", "0"]
         if os.path.exists(self.save_data_path):
             file_save_info = tool.read_file(self.save_data_path).split("\t")
@@ -118,24 +118,24 @@ class Blog(crawler.Crawler):
                 blog_info = blog_info_list.pop()
                 log.step("开始解析日志 %s" % blog_info["blog_id"])
 
-                image_index = int(save_info[0]) + 1
-                for image_url in blog_info["image_url_list"]:
+                photo_index = int(save_info[0]) + 1
+                for photo_url in blog_info["photo_url_list"]:
                     if not self.is_running():
                         tool.process_exit(0)
-                    log.step("开始下载第%s张图片 %s" % (image_index, image_url))
+                    log.step("开始下载第%s张图片 %s" % (photo_index, photo_url))
 
-                    file_path = os.path.join(self.image_download_path, "%05d.%s" % (image_index, net.get_file_type(image_url)))
-                    save_file_return = net.save_net_file(image_url, file_path)
+                    file_path = os.path.join(self.photo_download_path, "%05d.%s" % (photo_index, net.get_file_type(photo_url)))
+                    save_file_return = net.save_net_file(photo_url, file_path)
                     if save_file_return["status"] == 1:
                         temp_path_list.append(file_path)
-                        log.step("第%s张图片下载成功" % image_index)
-                        image_index += 1
+                        log.step("第%s张图片下载成功" % photo_index)
+                        photo_index += 1
                     else:
-                        log.step("第%s张图片 %s 下载失败，原因：%s" % (image_index, image_url, crawler.download_failre(save_file_return["code"])))
+                        log.step("第%s张图片 %s 下载失败，原因：%s" % (photo_index, photo_url, crawler.download_failre(save_file_return["code"])))
                 # 日志内图片全部下载完毕
                 temp_path_list = []  # 临时目录设置清除
-                self.total_image_count += (image_index - 1) - int(save_info[0])  # 计数累加
-                save_info[0] = str(image_index - 1)  # 设置存档记录
+                self.total_photo_count += (photo_index - 1) - int(save_info[0])  # 计数累加
+                save_info[0] = str(photo_index - 1)  # 设置存档记录
                 save_info[1] = str(blog_info["blog_id"])  # 设置存档记录
         except SystemExit as se:
             if se.code == 0:
@@ -152,7 +152,7 @@ class Blog(crawler.Crawler):
 
         # 保存新的存档文件
         tool.write_file("\t".join(save_info), self.save_data_path, tool.WRITE_FILE_TYPE_REPLACE)
-        log.step("全部下载完毕，耗时%s秒，共计图片%s张" % (self.get_run_time(), self.total_image_count))
+        log.step("全部下载完毕，耗时%s秒，共计图片%s张" % (self.get_run_time(), self.total_photo_count))
 
 
 if __name__ == "__main__":

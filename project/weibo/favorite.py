@@ -50,7 +50,7 @@ def get_one_page_favorite(page_count):
             continue
         result_blog_info = {
             "blog_id": None,  # 日志id（mid）
-            "image_url_list": [],  # 所有图片地址
+            "photo_url_list": [],  # 所有图片地址
         }
         # 解析日志id
         blog_id = feed_selector.attr("mid")
@@ -67,15 +67,15 @@ def get_one_page_favorite(page_count):
             media_selector = feed_selector.find(".WB_feed_expand .WB_expand .WB_media_wrap")
         # 如果存在媒体
         if media_selector.length == 1:
-            thumb_image_url_list = re.findall('<img src="([^"]*)"/>', media_selector.html())
-            if len(thumb_image_url_list) > 0:
-                image_url_list = []
-                for image_url in thumb_image_url_list:
-                    temp_list = image_url.split("/")
+            thumb_photo_url_list = re.findall('<img src="([^"]*)"/>', media_selector.html())
+            if len(thumb_photo_url_list) > 0:
+                photo_url_list = []
+                for photo_url in thumb_photo_url_list:
+                    temp_list = photo_url.split("/")
                     temp_list[3] = "large"
-                    image_url_list.append("http:" + str("/".join(temp_list)))
-                result_blog_info["image_url_list"] = image_url_list
-        if len(result_blog_info["image_url_list"]) > 0:
+                    photo_url_list.append("http:" + str("/".join(temp_list)))
+                result_blog_info["photo_url_list"] = photo_url_list
+        if len(result_blog_info["photo_url_list"]) > 0:
             result["blog_info_list"].append(result_blog_info)
     # 最后一条feed是分页信息
     page_selector = children_selector.eq(children_selector.length - 1)
@@ -96,7 +96,7 @@ class Favorite(crawler.Crawler):
 
         # 初始化参数
         sys_config = {
-            crawler.SYS_DOWNLOAD_IMAGE: True,
+            crawler.SYS_DOWNLOAD_PHOTO: True,
             crawler.SYS_NOT_CHECK_SAVE_DATA: True,
             crawler.SYS_GET_COOKIE: {
                 "sina.com.cn": (),
@@ -135,33 +135,33 @@ class Favorite(crawler.Crawler):
             for blog_info in favorite_pagination_response["blog_info_list"]:
                 log.step("开始解析微博%s" % blog_info["blog_id"])
 
-                log.trace("微博%s解析的全部图片：%s" % (blog_info["blog_id"], blog_info["image_url_list"]))
-                log.step("微博%s解析获取%s张图片" % (blog_info["blog_id"], len(blog_info["image_url_list"])))
+                log.trace("微博%s解析的全部图片：%s" % (blog_info["blog_id"], blog_info["photo_url_list"]))
+                log.step("微博%s解析获取%s张图片" % (blog_info["blog_id"], len(blog_info["photo_url_list"])))
 
-                image_count = 1
-                image_path = os.path.join(self.image_download_path, blog_info["blog_id"])
-                for image_url in blog_info["image_url_list"]:
-                    log.step("微博%s开始下载第%s张图片 %s" % (blog_info["blog_id"], image_count, image_url))
+                photo_count = 1
+                photo_path = os.path.join(self.photo_download_path, blog_info["blog_id"])
+                for photo_url in blog_info["photo_url_list"]:
+                    log.step("微博%s开始下载第%s张图片 %s" % (blog_info["blog_id"], photo_count, photo_url))
 
-                    file_path = os.path.join(image_path, "%s.%s" % (image_count, net.get_file_type(image_url)))
-                    save_file_return = net.save_net_file(image_url, file_path)
+                    file_path = os.path.join(photo_path, "%s.%s" % (photo_count, net.get_file_type(photo_url)))
+                    save_file_return = net.save_net_file(photo_url, file_path)
                     if save_file_return["status"] == 1:
-                        if weiboCommon.check_image_invalid(file_path):
+                        if weiboCommon.check_photo_invalid(file_path):
                             path.delete_dir_or_file(file_path)
-                            log.error("微博%s的第%s张图片 %s 资源已被删除，跳过" % (blog_info["blog_id"], image_count, image_url))
+                            log.error("微博%s的第%s张图片 %s 资源已被删除，跳过" % (blog_info["blog_id"], photo_count, photo_url))
                         else:
-                            log.step("微博%s的第%s张图片下载成功" % (blog_info["blog_id"], image_count))
-                            image_count += 1
-                            self.total_image_count += 1
+                            log.step("微博%s的第%s张图片下载成功" % (blog_info["blog_id"], photo_count))
+                            photo_count += 1
+                            self.total_photo_count += 1
                     else:
-                        log.error("微博%s的第%s张图片 %s 下载失败，原因：%s" % (blog_info["blog_id"], image_count, image_url, crawler.download_failre(save_file_return["code"])))
+                        log.error("微博%s的第%s张图片 %s 下载失败，原因：%s" % (blog_info["blog_id"], photo_count, photo_url, crawler.download_failre(save_file_return["code"])))
 
             if favorite_pagination_response["is_over"]:
                 is_over = True
             else:
                 page_count += 1
 
-        log.step("全部下载完毕，耗时%s秒，共计图片%s张" % (self.get_run_time(), self.total_image_count))
+        log.step("全部下载完毕，耗时%s秒，共计图片%s张" % (self.get_run_time(), self.total_photo_count))
 
 
 if __name__ == "__main__":
