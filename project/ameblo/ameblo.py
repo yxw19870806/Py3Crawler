@@ -191,8 +191,8 @@ def check_image_invalid(file_path):
     # 长或宽任意小于20像素的
     if image.height <= 20 or image.width <= 20:
         return True
-    # 文件小于 5K 并且 长或宽任意小于50像素的
-    if file_size < 5120 and (image.height <= 50 or image.width <= 50):
+    # 文件小于 5K 并且 长或宽任意小于100像素的
+    if file_size < 5120 and (image.height <= 100 or image.width <= 100):
         return True
     return False
 
