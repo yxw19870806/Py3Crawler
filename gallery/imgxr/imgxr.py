@@ -1,6 +1,6 @@
 # -*- coding:UTF-8  -*-
 """
-http://www6.imgxr.com
+http://www6.imgxr.com/
 @author: hikaru
 email: hikaru870806@hotmail.com
 如有问题或建议请联系
@@ -111,7 +111,7 @@ class ImgXr(crawler.Crawler):
                 try:
                     album_pagination_response = get_one_page_album(1)
                 except crawler.CrawlerException as e:
-                    log.error("图集首页获取失败，原因：%s" % e.message)
+                    log.error("图集首页解析失败，原因：%s" % e.message)
                     raise
                 log.step("图集总页数：%s" % album_pagination_response["max_page_count"])
                 page_count = album_pagination_response["max_page_count"]
@@ -119,11 +119,15 @@ class ImgXr(crawler.Crawler):
             is_find = True if save_info[0] == "" else False
             while page_count > 0:
                 log.step("开始解析第%s页图集" % page_count)
+
                 try:
                     album_pagination_response = get_one_page_album(page_count)
                 except crawler.CrawlerException as e:
-                    log.error("第%s页图集获取失败，原因：%s" % (page_count, e.message))
+                    log.error("第%s页图集解析失败，原因：%s" % (page_count, e.message))
                     raise
+
+                log.trace("第%s页解析的全部图集：%s" % (page_count, album_pagination_response["album_url_list"]))
+                log.step("第%s页解析获取%s个图集" % (page_count, len(album_pagination_response["album_url_list"])))
 
                 # 从最早的图集开始下载
                 while len(album_pagination_response["album_url_list"]) > 0:
@@ -136,13 +140,16 @@ class ImgXr(crawler.Crawler):
                         continue
 
                     log.step("开始解析图集 %s" % album_url)
-
+                    
                     try:
                         album_response = get_album_page(album_url)
                     except crawler.CrawlerException as e:
-                        log.error("图集 %s 获取失败，原因：%s" % (album_url, e.message))
+                        log.error("图集 %s 解析失败，原因：%s" % (album_url, e.message))
                         raise
-                    album_response["image_url_list"] = []
+
+                    log.trace("图集 %s 解析的全部图片：%s" % (album_url, album_response["image_url_list"]))
+                    log.step("图集 %s 解析获取%s张图片" % (album_url, len(album_response["image_url_list"])))
+
                     album_path = os.path.join(self.image_download_path, "%05d %s" % (album_response["album_id"], path.filter_text(album_response["album_title"])))
                     image_index = 1
                     for image_url in album_response["image_url_list"]:
@@ -155,7 +162,6 @@ class ImgXr(crawler.Crawler):
                         else:
                             log.error("图集《%s》 %s 第%s张图片 %s 下载失败，原因：%s" % (album_response["album_title"], album_url, image_index, image_url, crawler.download_failre(save_file_return["code"])))
                         image_index += 1
-
                     # 图集内图片全部下载完毕
                     temp_path = ""  # 临时目录设置清除
                     self.total_image_count += image_index - 1  # 计数累加
