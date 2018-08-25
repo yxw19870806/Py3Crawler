@@ -82,7 +82,10 @@ def get_album_page(album_id):
             if len(page_count_find) != 0:
                 max_page_count = max(list(map(int, page_count_find)))
             else:
-                log.error("图集%s 第%s页分页异常" % (album_id, page_count))
+                if page_count == 1 and pq(album_pagination_response_content).find("#pages span").length == 1:
+                    pass
+                else:
+                    raise crawler.CrawlerException("图集%s 第%s页分页异常" % (album_id, page_count))
         page_count += 1
     # 判断页面上的总数和实际地址数量是否一致
     if photo_count != len(result["photo_url_list"]):
