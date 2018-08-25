@@ -46,6 +46,7 @@ def get_album_page(album_id):
         "album_title": "",  # 图集标题
         "album_url": None,  # 图集首页地址
         "photo_url_list": [],  # 全部图片地址
+        "is_delete": False,  # 是否已删除
     }
     while page_count <= max_page_count:
         if page_count == 1:
@@ -59,7 +60,10 @@ def get_album_page(album_id):
         else:
             album_pagination_url = "https://www.uumnt.cc/%s/%s_%s.html" % (sub_path, album_id, page_count)
             album_pagination_response = net.http_request(album_pagination_url, method="GET")
-        if album_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
+        if page_count == 1 and album_pagination_response.status == 404:
+            result["is_delete"] = True
+            return result
+        elif album_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
             raise crawler.CrawlerException(crawler.request_failre(album_pagination_response.status))
         album_pagination_response_content = album_pagination_response.data.decode(errors="ignore")
         if page_count == 1:
@@ -70,17 +74,19 @@ def get_album_page(album_id):
             result["album_title"] = album_title[:album_title.rfind("(")]
             # 获取总页数
             last_page_selector = pq(album_pagination_response_content).find(".page a:last")
-            if last_page_selector.length != 1:
-                raise crawler.CrawlerException("页面截取最后页失败\n%s" % album_pagination_response_content)
-            if last_page_selector.html() != "末页":
-                raise crawler.CrawlerException("页面截取最后页按钮文字不正确\n%s" % album_pagination_response_content)
-            last_pagination_url = last_page_selector.attr("href")
-            if last_pagination_url is None:
-                raise crawler.CrawlerException("页面截取最后页地址失败\n%s" % album_pagination_response_content)
-            max_page_count = tool.find_sub_string(last_pagination_url, "/%s/%s_" % (sub_path, album_id), ".html")
-            if not crawler.is_integer(max_page_count):
-                raise crawler.CrawlerException("最后页地址截取最后页失败\n%s" % album_pagination_response_content)
-            max_page_count = int(max_page_count)
+            if last_page_selector.length == 1:
+                if last_page_selector.html() != "末页":
+                    raise crawler.CrawlerException("页面截取最后页按钮文字不正确\n%s" % album_pagination_response_content)
+                last_pagination_url = last_page_selector.attr("href")
+                if last_pagination_url is None:
+                    raise crawler.CrawlerException("页面截取最后页地址失败\n%s" % album_pagination_response_content)
+                max_page_count = tool.find_sub_string(last_pagination_url, "/%s/%s_" % (sub_path, album_id), ".html")
+                if not crawler.is_integer(max_page_count):
+                    raise crawler.CrawlerException("最后页地址截取最后页失败\n%s" % album_pagination_response_content)
+                max_page_count = int(max_page_count)
+            else:
+                if pq(album_pagination_response_content).find(".page").length != 1:
+                    raise crawler.CrawlerException("页面截取最后页失败\n%s" % album_pagination_response_content)
         # 获取图集图片地址
         photo_list_selector = pq(album_pagination_response_content).find(".bg-white>a img")
         if photo_list_selector.length == 0:
@@ -136,6 +142,11 @@ class UUMNT(crawler.Crawler):
                     log.error("图集%s解析失败，原因：%s" % (album_id, e.message))
                     raise
 
+                if album_response["is_delete"]:
+                    log.step("图集%s不存在，跳过" % album_id)
+                    album_id += 1
+                    continue
+
                 log.trace("图集%s《%s》 %s 解析的全部图片：%s" % (album_id, album_response["album_title"], album_response["album_url"], album_response["photo_url_list"]))
                 log.step("图集%s《%s》 %s 解析获取%s张图片" % (album_id, album_response["album_title"], album_response["album_url"], len(album_response["photo_url_list"])))
 
@@ -152,6 +163,7 @@ class UUMNT(crawler.Crawler):
                         tool.process_exit(0)
                     log.step("图集%s《%s》开始下载第%s张图片 %s" % (album_id, album_response["album_title"], photo_index, photo_url))
 
+                    file_path = os.path.join(album_path, "%03d.%s" % (photo_index, net.get_file_type(photo_url)))
                     save_file_return = net.save_net_file(photo_url, file_path, header_list={"Referer": "https://www.uumnt.cc/"})
                     if save_file_return["status"] == 1:
                         log.step("图集%s《%s》第%s张图片下载成功" % (album_id, album_response["album_title"], photo_index))
