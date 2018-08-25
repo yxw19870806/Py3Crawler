@@ -305,9 +305,9 @@ def get_decrypt_step(js_file_url):
     # 加密方法入口
     # old k.sig?f.set("signature",k.sig):k.s&&f.set("signature",SJ(k.s));
     # new var l=k.sig;l?f.set("signature",l):k.s&&f.set("signature",CK(k.s));
-    main_function_name = tool.find_sub_string(js_file_response_content, 'var l=k.sig;l?f.set("signature",l):k.s&&f.set("signature",', "(k.s));")
+    main_function_name = tool.find_sub_string(js_file_response_content, 'f.set("signature",', "(k.s));")
     if not main_function_name:
-        main_function_name = tool.find_sub_string(js_file_response_content, 'if(k.url){f=new g.QJ(k.url);k.s&&f.set(k.sp||"signature",', "(k.s));")
+        main_function_name = tool.find_sub_string(js_file_response_content, 'f.set(k.sp||"signature",', "(k.s))")
     if not main_function_name:
         main_function_name = tool.find_sub_string(js_file_response_content, 'c&&(b||(b="signature"),d.set(b,', "(c))")
     if not main_function_name:
