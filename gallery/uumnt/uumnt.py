@@ -88,9 +88,10 @@ def get_album_page(album_id):
                 if pq(album_pagination_response_content).find(".page").length != 1:
                     raise crawler.CrawlerException("页面截取最后页失败\n%s" % album_pagination_response_content)
         # 获取图集图片地址
-        photo_list_selector = pq(album_pagination_response_content).find(".bg-white>a img")
+        photo_list_selector = pq(album_pagination_response_content).find(".imgac>a img")
         if photo_list_selector.length == 0:
-            raise crawler.CrawlerException("第%s页页面截取图片列表失败\n%s" % (page_count, album_pagination_response_content))
+            if pq(album_pagination_response_content).find(".imgac").length != 1:
+                raise crawler.CrawlerException("第%s页页面截取图片列表失败\n%s" % (page_count, album_pagination_response_content))
         for photo_index in range(0, photo_list_selector.length):
             result["photo_url_list"].append(photo_list_selector.eq(photo_index).attr("src"))
         page_count += 1
