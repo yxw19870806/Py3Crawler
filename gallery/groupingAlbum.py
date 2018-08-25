@@ -7,12 +7,13 @@ email: hikaru870806@hotmail.com
 import os
 from common import *
 
-ALBUM_ROOT_PATH = "D:\\album"
+ALBUM_ROOT_PATH = "V:\\"
 RESULT_FILE_PATH = "D:\\result"
+WEBSITE_NAME_LIST = ["88mm", "92mntu", "94xmn", "99mm", "aitaotu", "gtmm", "kelagirls", "meitulu", "meituri", "meituzz", "mm131", "mmjpg", "mmp_mmxyz", "mmxyz", "mzitu", "nvshens", "ugirls", "uumnt", "youzi"]
 
 
 def main():
-    for website_name in path.get_dir_files_name(ALBUM_ROOT_PATH):
+    for website_name in WEBSITE_NAME_LIST:
         website_path = os.path.join(ALBUM_ROOT_PATH, website_name)
         website_result_file_path = os.path.join(RESULT_FILE_PATH, "%s.txt" % website_name)
         for album_dir in path.get_dir_files_name(website_path, path.RETURN_FILE_LIST_ASC):
