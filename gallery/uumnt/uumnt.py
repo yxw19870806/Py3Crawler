@@ -154,6 +154,7 @@ class UUMNT(crawler.Crawler):
                         tool.process_exit(0)
                     log.step("图集%s《%s》开始下载第%s张图片 %s" % (album_id, album_response["album_title"], photo_index, photo_url))
 
+                    file_path = os.path.join(album_path, "%03d.%s" % (photo_index, net.get_file_type(photo_url)))
                     save_file_return = net.save_net_file(photo_url, file_path, header_list={"Referer": "https://www.uumnt.cc/"})
                     if save_file_return["status"] == 1:
                         log.step("图集%s《%s》第%s张图片下载成功" % (album_id, album_response["album_title"], photo_index))
