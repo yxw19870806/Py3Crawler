@@ -70,17 +70,19 @@ def get_album_page(album_id):
             result["album_title"] = album_title[:album_title.rfind("(")]
             # 获取总页数
             last_page_selector = pq(album_pagination_response_content).find(".page a:last")
-            if last_page_selector.length != 1:
-                raise crawler.CrawlerException("页面截取最后页失败\n%s" % album_pagination_response_content)
-            if last_page_selector.html() != "末页":
-                raise crawler.CrawlerException("页面截取最后页按钮文字不正确\n%s" % album_pagination_response_content)
-            last_pagination_url = last_page_selector.attr("href")
-            if last_pagination_url is None:
-                raise crawler.CrawlerException("页面截取最后页地址失败\n%s" % album_pagination_response_content)
-            max_page_count = tool.find_sub_string(last_pagination_url, "/%s/%s_" % (sub_path, album_id), ".html")
-            if not crawler.is_integer(max_page_count):
-                raise crawler.CrawlerException("最后页地址截取最后页失败\n%s" % album_pagination_response_content)
-            max_page_count = int(max_page_count)
+            if last_page_selector.length == 1:
+                if last_page_selector.html() != "末页":
+                    raise crawler.CrawlerException("页面截取最后页按钮文字不正确\n%s" % album_pagination_response_content)
+                last_pagination_url = last_page_selector.attr("href")
+                if last_pagination_url is None:
+                    raise crawler.CrawlerException("页面截取最后页地址失败\n%s" % album_pagination_response_content)
+                max_page_count = tool.find_sub_string(last_pagination_url, "/%s/%s_" % (sub_path, album_id), ".html")
+                if not crawler.is_integer(max_page_count):
+                    raise crawler.CrawlerException("最后页地址截取最后页失败\n%s" % album_pagination_response_content)
+                max_page_count = int(max_page_count)
+            else:
+                if pq(album_pagination_response_content).find(".page").length != 1:
+                    raise crawler.CrawlerException("页面截取最后页失败\n%s" % album_pagination_response_content)
         # 获取图集图片地址
         photo_list_selector = pq(album_pagination_response_content).find(".bg-white>a img")
         if photo_list_selector.length == 0:
