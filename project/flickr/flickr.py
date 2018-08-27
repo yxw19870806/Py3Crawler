@@ -72,7 +72,7 @@ def get_account_index_page(account_name):
     if not site_key:
         raise crawler.CrawlerException("页面截取root.auth失败\n%s" % account_index_response_content)
     csrf = tool.find_sub_string(root_auth, '"csrf":"', '",')
-    if not csrf:
+    if IS_LOGIN and not csrf:
         raise crawler.CrawlerException("页面截取csrf失败\n%s" % account_index_response_content)
     result["csrf"] = csrf
     # 获取cookie_session
