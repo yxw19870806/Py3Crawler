@@ -20,14 +20,12 @@ COOKIE_INFO = {}
 
 # 检测登录状态
 def check_login():
-    global IS_LOGIN
     if not COOKIE_INFO:
         return False
     index_url = "https://www.flickr.com/"
     index_response = net.http_request(index_url, method="GET", cookies_list=COOKIE_INFO)
     if index_response.status == net.HTTP_RETURN_CODE_SUCCEED:
         return index_response.data.decode(errors="ignore").find('data-track="gnYouMainClick"') >= 0
-    IS_LOGIN = False
     return False
 
 
@@ -74,7 +72,7 @@ def get_account_index_page(account_name):
     if not site_key:
         raise crawler.CrawlerException("页面截取root.auth失败\n%s" % account_index_response_content)
     csrf = tool.find_sub_string(root_auth, '"csrf":"', '",')
-    if not csrf:
+    if IS_LOGIN and not csrf:
         raise crawler.CrawlerException("页面截取csrf失败\n%s" % account_index_response_content)
     result["csrf"] = csrf
     # 获取cookie_session
@@ -192,6 +190,7 @@ def get_one_page_photo(user_id, page_count, api_key, csrf, request_id):
 class Flickr(crawler.Crawler):
     def __init__(self):
         global COOKIE_INFO
+        global IS_LOGIN
 
         # 设置APP目录
         tool.PROJECT_APP_PATH = os.path.abspath(os.path.dirname(__file__))
@@ -214,6 +213,7 @@ class Flickr(crawler.Crawler):
         # 检测登录状态
         console_string = ""
         if not check_login():
+            IS_LOGIN = False
             console_string = "没有检测到账号登录状态"
         # 检测safe search开启状态
         elif not check_safe_search():
@@ -224,6 +224,7 @@ class Flickr(crawler.Crawler):
             if input_str in ["e", "exit"]:
                 tool.process_exit()
             elif input_str in ["c", "continue"]:
+                COOKIE_INFO = {}
                 break
 
     def main(self):

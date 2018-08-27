@@ -1,7 +1,7 @@
 # -*- coding:UTF-8  -*-
 """
 新浪博客图片爬虫
-https://blog.sina.com.cn/
+http://blog.sina.com.cn/
 @author: hikaru
 email: hikaru870806@hotmail.com
 如有问题或建议请联系
@@ -18,8 +18,8 @@ from project.weibo import weiboCommon
 
 # 获取指定页数的全部日志
 def get_one_page_blog(account_id, page_count):
-    # https://moexia.lofter.com/?page=1
-    blog_pagination_url = "https://blog.sina.com.cn/s/articlelist_%s_0_%s.html" % (account_id, page_count)
+    # http://moexia.lofter.com/?page=1
+    blog_pagination_url = "http://blog.sina.com.cn/s/articlelist_%s_0_%s.html" % (account_id, page_count)
     blog_pagination_response = net.http_request(blog_pagination_url, method="GET")
     result = {
         "blog_info_list": [],  # 全部日志地址
@@ -60,14 +60,17 @@ def get_one_page_blog(account_id, page_count):
             raise crawler.CrawlerException("日志时间格式不正确\n%s" % blog_time)
         result["blog_info_list"].append(result_blog_info)
     # 获取分页信息
-    pagination_html = tool.find_sub_string(blog_pagination_response_content, '<div class="SG_page">', '</div>')
-    if not pagination_html:
-        result["is_over"] = True
+    pagination_selector = pq(blog_pagination_response_content).find("ul.SG_pages span")
+    if pagination_selector.length == 0:
+        if pq(blog_pagination_response_content).find("ul.SG_pages").length == 0:
+            raise crawler.CrawlerException("页面截取分页信息失败\n%s" % blog_pagination_response_content)
+        else:
+            result["is_over"] = True
     else:
-        max_page_count = tool.find_sub_string(pagination_html, "共", "页")
-        if not crawler.is_integer(max_page_count):
-            raise crawler.CrawlerException("分页信息截取总页数失败\n%s" % pagination_html)
-        result["is_over"] = page_count >= int(max_page_count)
+        max_page_count_find = re.findall("共(\d*)页", pagination_selector.html())
+        if len(max_page_count_find) != 1:
+            raise crawler.CrawlerException("分页信息截取总页数失败\n%s" % blog_pagination_response_content)
+        result["is_over"] = page_count >= int(max_page_count_find[0])
     return result
 
 

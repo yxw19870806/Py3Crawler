@@ -75,19 +75,19 @@ def get_one_page_album(account_id, post_time):
             raise crawler.CrawlerException("相册信息'title'字段不存在\n%s" % album_info)
         result_photo_info["album_title"] = album_info["title"]
         # 获取图片地址
-        if not crawler.check_sub_key(("photo_count", "images"), album_info):
+        if not crawler.check_sub_key(("image_count", "images"), album_info):
             raise crawler.CrawlerException("相册信息'photo_count'或'images'字段不存在\n%s" % album_info)
-        if not crawler.check_sub_key(("photo_count",), album_info):
-            raise crawler.CrawlerException("相册信息'photo_count'字段类型不正确\n%s" % album_info)
+        if not crawler.check_sub_key(("image_count",), album_info):
+            raise crawler.CrawlerException("相册信息'image_count'字段类型不正确\n%s" % album_info)
         if not isinstance(album_info["images"], list):
             raise crawler.CrawlerException("相册信息'images'字段类型不正确\n%s" % album_info)
-        if len(album_info["images"]) != int(album_info["photo_count"]):
+        if len(album_info["images"]) != int(album_info["image_count"]):
             raise crawler.CrawlerException("相册信息'images'长度和'photo_count'数值不匹配\n%s" % album_info)
         for photo_info in album_info["images"]:
             if not crawler.check_sub_key(("img_id",), photo_info):
                 raise crawler.CrawlerException("相册信息'img_id'字段不存在\n%s" % album_info)
             result_photo_info["photo_url_list"].append("https://photo.tuchong.com/%s/f/%s.jpg" % (account_id, photo_info["img_id"]))
-        if int(album_info["photo_count"]) > 0 and len(result_photo_info["photo_url_list"]) == 0:
+        if int(album_info["image_count"]) > 0 and len(result_photo_info["photo_url_list"]) == 0:
             raise crawler.CrawlerException("相册信息匹配图片地址失败\n%s" % album_info)
         # 获取相册创建时间
         if not crawler.check_sub_key(("published_at",), album_info):
