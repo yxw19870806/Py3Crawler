@@ -61,7 +61,7 @@ def get_one_page_audio(user_id, page_count):
             raise crawler.CrawlerException("歌曲信息'workid'字段不存在\n%s" % audio_info)
         if not crawler.is_integer(audio_info["workid"]):
             raise crawler.CrawlerException("歌曲信息'workid'字段类型不正确\n%s" % audio_info)
-        result_audio_info["audio_id"] = str(audio_info["workid"])
+        result_audio_info["audio_id"] = int(audio_info["workid"])
         # 获取歌曲标题
         if not crawler.check_sub_key(("songname",), audio_info):
             raise crawler.CrawlerException("歌曲信息'songname'字段不存在\n%s" % audio_info)
@@ -95,7 +95,7 @@ def get_audio_play_page(audio_en_word_id):
     audio_id = tool.find_sub_string(audio_play_response_content, "export_song.php?workid=", "&")
     if not crawler.is_integer(audio_id):
         raise crawler.CrawlerException("页面截取歌曲id失败\n%s" % audio_play_response_content)
-    result["audio_id"] = str(audio_id)
+    result["audio_id"] = int(audio_id)
     # 获取歌曲标题
     audio_title = tool.find_sub_string(audio_play_response_content, '<div class="title">', "</div>")
     if not audio_title:
