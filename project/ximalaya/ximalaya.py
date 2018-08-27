@@ -224,7 +224,7 @@ class Download(crawler.DownloadThread):
 
         # 音频下载完毕
         self.total_video_count += 1  # 计数累加
-        self.account_info[1] = audio_info["audio_id"]  # 设置存档记录
+        self.account_info[1] = str(audio_info["audio_id"])  # 设置存档记录
 
     def run(self):
         try:
