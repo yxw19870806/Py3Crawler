@@ -130,7 +130,7 @@ class Download(crawler.DownloadThread):
             raise
 
         self.trace("解析的全部相册：%s" % account_index_response["album_url_list"])
-        self.step("解析获取%s个相册：%s" % len(account_index_response["album_url_list"]))
+        self.step("解析获取%s个相册" % len(account_index_response["album_url_list"]))
 
         album_url_list = []
         # 获取全部还未下载过需要解析的相册
