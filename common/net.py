@@ -388,14 +388,13 @@ def save_net_file(file_url, file_path, need_content_type=False, header_list=None
                         new_file_type = content_type.split("/")[-1]
                     file_path = os.path.splitext(file_path)[0] + "." + new_file_type
 
-            # 如果是先调用HEAD方法的，需要重新获取完整数据
-            if head_check:
-                response = http_request(file_url, method="GET", header_list=header_list, cookies_list=cookies_list, is_auto_proxy=is_auto_proxy,
-                                        connection_timeout=HTTP_DOWNLOAD_CONNECTION_TIMEOUT, read_timeout=HTTP_DOWNLOAD_READ_TIMEOUT)
-                if response.status != HTTP_RETURN_CODE_SUCCEED:
-                    continue
-
             if not is_multi_thread:
+                # 如果是先调用HEAD方法的，需要重新获取完整数据
+                if head_check:
+                    response = http_request(file_url, method="GET", header_list=header_list, cookies_list=cookies_list, is_auto_proxy=is_auto_proxy,
+                                            connection_timeout=HTTP_DOWNLOAD_CONNECTION_TIMEOUT, read_timeout=HTTP_DOWNLOAD_READ_TIMEOUT)
+                    if response.status != HTTP_RETURN_CODE_SUCCEED:
+                        continue
                 # 下载
                 with open(file_path, "wb") as file_handle:
                     file_handle.write(response.data)
