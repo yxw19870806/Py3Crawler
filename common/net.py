@@ -22,8 +22,9 @@ urllib3.disable_warnings()
 # disable URLError: <urlopen error [SSL: CERTIFICATE_VERIFY_FAILED] certificate verify failed (_ssl.c:590)>
 ssl._create_default_https_context = ssl._create_unverified_context
 
-SIZE_KB = 2 ** 10  # 1MB = 多少字节
+SIZE_KB = 2 ** 10  # 1KB = 多少字节
 SIZE_MB = 2 ** 20  # 1MB = 多少字节
+SIZE_GB = 2 ** 30  # 1GB = 多少字节
 
 # 连接池
 HTTP_CONNECTION_POOL = None
@@ -41,8 +42,8 @@ HTTP_REQUEST_RETRY_COUNT = 10
 HTTP_DOWNLOAD_CONNECTION_TIMEOUT = 10
 HTTP_DOWNLOAD_READ_TIMEOUT = 60
 HTTP_DOWNLOAD_RETRY_COUNT = 10
-HTTP_DOWNLOAD_MAX_SIZE = 1024 * SIZE_MB  # 文件下载限制（字节）
-HTTP_DOWNLOAD_MULTI_THREAD_MIN_SIZE = 1 * SIZE_MB  # 开始使用多线程下载的文件体积
+HTTP_DOWNLOAD_MAX_SIZE = 1.5 * SIZE_GB  # 文件下载限制（字节）
+HTTP_DOWNLOAD_MULTI_THREAD_MIN_SIZE = 50 * SIZE_MB  # 开始使用多线程下载的文件体积
 MULTI_THREAD_MIN_BLOCK_SIZE = 10 * SIZE_MB  # 下载单线程文件最小多少
 MULTI_THREAD_MAX_BLOCK_SIZE = 100 * SIZE_MB  # 下载单线程文件最大多少
 
@@ -388,14 +389,13 @@ def save_net_file(file_url, file_path, need_content_type=False, header_list=None
                         new_file_type = content_type.split("/")[-1]
                     file_path = os.path.splitext(file_path)[0] + "." + new_file_type
 
-            # 如果是先调用HEAD方法的，需要重新获取完整数据
-            if head_check:
-                response = http_request(file_url, method="GET", header_list=header_list, cookies_list=cookies_list, is_auto_proxy=is_auto_proxy,
-                                        connection_timeout=HTTP_DOWNLOAD_CONNECTION_TIMEOUT, read_timeout=HTTP_DOWNLOAD_READ_TIMEOUT)
-                if response.status != HTTP_RETURN_CODE_SUCCEED:
-                    continue
-
             if not is_multi_thread:
+                # 如果是先调用HEAD方法的，需要重新获取完整数据
+                if head_check:
+                    response = http_request(file_url, method="GET", header_list=header_list, cookies_list=cookies_list, is_auto_proxy=is_auto_proxy,
+                                            connection_timeout=HTTP_DOWNLOAD_CONNECTION_TIMEOUT, read_timeout=HTTP_DOWNLOAD_READ_TIMEOUT)
+                    if response.status != HTTP_RETURN_CODE_SUCCEED:
+                        continue
                 # 下载
                 with open(file_path, "wb") as file_handle:
                     file_handle.write(response.data)
@@ -415,7 +415,6 @@ def save_net_file(file_url, file_path, need_content_type=False, header_list=None
                         end_pos = min(content_length, start_pos + multi_thread_block_size - 1)
                         # 创建一个副本
                         fd_handle = os.fdopen(os.dup(file_no), 'rb+', -1)
-                        print("%s -> %s" % (start_pos, end_pos))
                         thread = MultiThreadDownload(file_url, start_pos, end_pos, fd_handle)
                         thread.start()
                         thread_list.append(thread)
