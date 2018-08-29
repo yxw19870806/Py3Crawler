@@ -445,7 +445,7 @@ def save_net_file_list(file_url_list, file_path, header_list=None, cookies_list=
                 # 超过重试次数，直接退出
                 elif response.status == HTTP_RETURN_CODE_RETRY:
                     path.delete_dir_or_file(file_path)
-                    return {"status": 0, "code": -1}
+                    return {"status": 0, "code": -2}
                 # 其他http code，退出
                 else:
                     path.delete_dir_or_file(file_path)
