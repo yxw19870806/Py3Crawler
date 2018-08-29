@@ -467,3 +467,56 @@ def resume_request():
     if not thread_event.isSet():
         output.print_msg("resume process")
         thread_event.set()
+
+
+class MultiThreadDownload(threading.Thread):
+    def __init__(self, file_url, start_pos, end_pos, fd_handle):
+        threading.Thread.__init__(self)
+        self.file_url = file_url
+        self.start_pos = start_pos
+        self.end_pos = end_pos
+        self.fd_handle = fd_handle
+
+    def run(self):
+        headers_list = {"Range": "bytes=%s-%s" % (self.start_pos, self.end_pos)}
+        response = http_request(self.file_url, method="GET", header_list=headers_list)
+        if response.status == 206:
+            self.fd_handle.seek(self.start_pos)
+            self.fd_handle.write(response.data)
+
+
+def multi_thread_save_net_file(file_url, file_path, header_list=None, cookies_list=None):
+    # 判断保存目录是否存在
+    if not path.create_dir(os.path.dirname(file_path)):
+        return False
+    # 获取文件总大小
+    response = http_request(file_url, "HEAD", header_list=header_list, cookies_list=cookies_list)
+    if response.status != HTTP_RETURN_CODE_SUCCEED:
+        return {"status": 0, "code": response.status}
+    content_length = response.getheader("Content-Length")
+    if content_length is None:
+        return {"status": 0, "code": -10}
+    content_length = int(content_length)
+    # 单线程下载文件大小（100MB）
+    step = 100 * 2 ** 20
+    # 创建文件
+    with open(file_path, "w"):
+        pass
+    end_pos = -1
+    with open(file_path, 'rb+') as file_handle:
+        file_no = file_handle.fileno()
+        while end_pos < content_length -1:
+            start_pos = end_pos + 1
+            end_pos = start_pos + step - 1
+            end_pos = content_length if end_pos > content_length else end_pos
+            # 创建一个副本
+            fd_handle = os.fdopen(os.dup(file_no),'rb+',-1)
+            thread = MultiThreadDownload(file_url,start_pos,end_pos, fd_handle)
+            thread.start()
+            thread.join()
+    file_size = os.path.getsize(file_path)
+    if content_length == file_size:
+        return {"status": 1, "code": 0, "file_path": file_path}
+    # 删除临时文件
+    path.delete_dir_or_file(file_path)
+    return {"status": 0, "code": -2}
