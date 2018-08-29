@@ -6,13 +6,13 @@ email: hikaru870806@hotmail.com
 如有问题或建议请联系
 """
 import json
+import math
 import os
 import random
 import re
 import ssl
 import time
 import threading
-import traceback
 import urllib3
 from common import output, path, tool
 
@@ -21,6 +21,9 @@ from common import output, path, tool
 urllib3.disable_warnings()
 # disable URLError: <urlopen error [SSL: CERTIFICATE_VERIFY_FAILED] certificate verify failed (_ssl.c:590)>
 ssl._create_default_https_context = ssl._create_unverified_context
+
+SIZE_KB = 2 ** 10  # 1MB = 多少字节
+SIZE_MB = 2 ** 20  # 1MB = 多少字节
 
 # 连接池
 HTTP_CONNECTION_POOL = None
@@ -38,7 +41,11 @@ HTTP_REQUEST_RETRY_COUNT = 10
 HTTP_DOWNLOAD_CONNECTION_TIMEOUT = 10
 HTTP_DOWNLOAD_READ_TIMEOUT = 60
 HTTP_DOWNLOAD_RETRY_COUNT = 10
-HTTP_DOWNLOAD_MAX_SIZE = 512 * 2 ** 20  # 文件下载限制（字节）
+HTTP_DOWNLOAD_MAX_SIZE = 1024 * SIZE_MB  # 文件下载限制（字节）
+HTTP_DOWNLOAD_MULTI_THREAD_MIN_SIZE = 1 * SIZE_MB  # 开始使用多线程下载的文件体积
+MULTI_THREAD_MIN_BLOCK_SIZE = 10 * SIZE_MB  # 下载单线程文件最小多少
+MULTI_THREAD_MAX_BLOCK_SIZE = 100 * SIZE_MB  # 下载单线程文件最大多少
+
 # 网络访问返回值
 HTTP_RETURN_CODE_RETRY = 0
 HTTP_RETURN_CODE_URL_INVALID = -1  # 地址不符合规范（非http:// 或者 https:// 开头）
@@ -347,6 +354,7 @@ def save_net_file(file_url, file_path, need_content_type=False, header_list=None
     if not path.create_dir(os.path.dirname(file_path)):
         return False
     is_create_file = False
+    is_multi_thread = False
     return_code = {"status": 0, "code": -3}
     for retry_count in range(0, HTTP_DOWNLOAD_RETRY_COUNT):
         if head_check:
@@ -357,11 +365,16 @@ def save_net_file(file_url, file_path, need_content_type=False, header_list=None
         response = http_request(file_url, request_method, header_list=header_list, cookies_list=cookies_list, is_auto_proxy=is_auto_proxy,
                                 connection_timeout=HTTP_CONNECTION_TIMEOUT, read_timeout=HTTP_READ_TIMEOUT)
         if response.status == HTTP_RETURN_CODE_SUCCEED:
-            # todo 分段下载
             # 判断文件是不是过大
             content_length = response.getheader("Content-Length")
-            if content_length is not None and int(content_length) > HTTP_DOWNLOAD_MAX_SIZE:
-                return {"status": 0, "code": -4}
+            if content_length is not None:
+                content_length = int(content_length)
+                # 超过限制
+                if content_length > HTTP_DOWNLOAD_MAX_SIZE:
+                    return {"status": 0, "code": -4}
+                # 文件提交比较大，使用多线程下载
+                elif content_length > HTTP_DOWNLOAD_MULTI_THREAD_MIN_SIZE:
+                    is_multi_thread = True
             # response中的Content-Type作为文件后缀名
             if need_content_type:
                 content_type = response.getheader("Content-Type")
@@ -382,15 +395,39 @@ def save_net_file(file_url, file_path, need_content_type=False, header_list=None
                 if response.status != HTTP_RETURN_CODE_SUCCEED:
                     continue
 
-            # 下载
-            with open(file_path, "wb") as file_handle:
-                file_handle.write(response.data)
+            if not is_multi_thread:
+                # 下载
+                with open(file_path, "wb") as file_handle:
+                    file_handle.write(response.data)
+            else:
+                # 单线程下载文件大小（100MB）
+                multi_thread_block_size = int(math.ceil(content_length / 10 / SIZE_MB)) * SIZE_MB
+                multi_thread_block_size = min(MULTI_THREAD_MAX_BLOCK_SIZE, max(MULTI_THREAD_MIN_BLOCK_SIZE, multi_thread_block_size))
+                # 创建文件
+                with open(file_path, "w"):
+                    pass
+                end_pos = -1
+                thread_list = []
+                with open(file_path, 'rb+') as file_handle:
+                    file_no = file_handle.fileno()
+                    while end_pos < content_length - 1:
+                        start_pos = end_pos + 1
+                        end_pos = min(content_length, start_pos + multi_thread_block_size - 1)
+                        # 创建一个副本
+                        fd_handle = os.fdopen(os.dup(file_no), 'rb+', -1)
+                        print("%s -> %s" % (start_pos, end_pos))
+                        thread = MultiThreadDownload(file_url, start_pos, end_pos, fd_handle)
+                        thread.start()
+                        thread_list.append(thread)
+                # 等待所有线程下载完毕
+                for thread in thread_list:
+                    thread.join()
             is_create_file = True
             # 判断文件下载后的大小和response中的Content-Length是否一致
             if content_length is None:
                 return {"status": 1, "code": 0, "file_path": file_path}
             file_size = os.path.getsize(file_path)
-            if int(content_length) == file_size:
+            if content_length == file_size:
                 return {"status": 1, "code": 0, "file_path": file_path}
             else:
                 time.sleep(10)
