@@ -22,8 +22,9 @@ urllib3.disable_warnings()
 # disable URLError: <urlopen error [SSL: CERTIFICATE_VERIFY_FAILED] certificate verify failed (_ssl.c:590)>
 ssl._create_default_https_context = ssl._create_unverified_context
 
-SIZE_KB = 2 ** 10  # 1MB = 多少字节
+SIZE_KB = 2 ** 10  # 1KB = 多少字节
 SIZE_MB = 2 ** 20  # 1MB = 多少字节
+SIZE_GB = 2 ** 30  # 1GB = 多少字节
 
 # 连接池
 HTTP_CONNECTION_POOL = None
@@ -41,8 +42,8 @@ HTTP_REQUEST_RETRY_COUNT = 10
 HTTP_DOWNLOAD_CONNECTION_TIMEOUT = 10
 HTTP_DOWNLOAD_READ_TIMEOUT = 60
 HTTP_DOWNLOAD_RETRY_COUNT = 10
-HTTP_DOWNLOAD_MAX_SIZE = 1024 * SIZE_MB  # 文件下载限制（字节）
-HTTP_DOWNLOAD_MULTI_THREAD_MIN_SIZE = 1 * SIZE_MB  # 开始使用多线程下载的文件体积
+HTTP_DOWNLOAD_MAX_SIZE = 1.5 * SIZE_GB  # 文件下载限制（字节）
+HTTP_DOWNLOAD_MULTI_THREAD_MIN_SIZE = 50 * SIZE_MB  # 开始使用多线程下载的文件体积
 MULTI_THREAD_MIN_BLOCK_SIZE = 10 * SIZE_MB  # 下载单线程文件最小多少
 MULTI_THREAD_MAX_BLOCK_SIZE = 100 * SIZE_MB  # 下载单线程文件最大多少
 
