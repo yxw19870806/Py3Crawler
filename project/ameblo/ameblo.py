@@ -202,7 +202,7 @@ class Ameblo(crawler.Crawler):
         global COOKIE_INFO
 
         # 设置APP目录
-        tool.PROJECT_APP_PATH = os.path.abspath(os.path.dirname(__file__))
+        crawler.PROJECT_APP_PATH = os.path.abspath(os.path.dirname(__file__))
 
         # 初始化参数
         sys_config = {

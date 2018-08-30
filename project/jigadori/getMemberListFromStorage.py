@@ -10,7 +10,7 @@ import os
 from common import *
 
 # Twitter存档文件目录
-SAVE_DATA_PATH = os.path.abspath(os.path.join(tool.PROJECT_APP_ROOT_PATH, "twitter/info/save.data"))
+SAVE_DATA_PATH = os.path.abspath(os.path.join(crawler.PROJECT_APP_ROOT_PATH, "twitter/info/save.data"))
 # 图片下载后的保存目录
 FILE_STORAGE_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), "photo"))
 
