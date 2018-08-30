@@ -106,7 +106,7 @@ def check_invalid(file_path, is_video=False):
         if is_video:
             return True
         # 文件太大，肯定不在下面的文件列表里
-        if os.path.getsize(file_path) < 102400 and tool.get_file_md5(file_path) in INVALID_FILE_MD5_LIST:
+        if os.path.getsize(file_path) < 102400 and file.get_file_md5(file_path) in INVALID_FILE_MD5_LIST:
             return True
     return False
 
@@ -117,7 +117,7 @@ class PrPr(crawler.Crawler):
         global IS_STEP_INVALID_RESOURCE
 
         # 设置APP目录
-        tool.PROJECT_APP_PATH = os.path.abspath(os.path.dirname(__file__))
+        crawler.PROJECT_APP_PATH = os.path.abspath(os.path.dirname(__file__))
 
         # 初始化参数
         sys_config = {
@@ -140,12 +140,8 @@ class PrPr(crawler.Crawler):
 
     def main(self):
         # 循环下载每个id
-        main_thread_count = threading.activeCount()
+        thread_list = []
         for account_id in sorted(self.account_list.keys()):
-            # 检查正在运行的线程数
-            if threading.activeCount() >= self.thread_count + main_thread_count:
-                self.wait_sub_thread()
-
             # 提前结束
             if not self.is_running():
                 break
@@ -153,16 +149,17 @@ class PrPr(crawler.Crawler):
             # 开始下载
             thread = Download(self.account_list[account_id], self)
             thread.start()
+            thread_list.append(thread)
 
             time.sleep(1)
 
-        # 检查除主线程外的其他所有线程是不是全部结束了
-        while threading.activeCount() > main_thread_count:
-            self.wait_sub_thread()
+        # 等待子线程全部完成
+        while len(thread_list) > 0:
+            thread_list.pop().join()
 
         # 未完成的数据保存
         if len(self.account_list) > 0:
-            tool.write_file(tool.list_to_string(list(self.account_list.values())), self.temp_save_data_path)
+            file.write_file(tool.list_to_string(list(self.account_list.values())), self.temp_save_data_path)
 
         # 重新排序保存存档文件
         crawler.rewrite_save_file(self.temp_save_data_path, self.save_data_path)
@@ -315,7 +312,7 @@ class Download(crawler.DownloadThread):
 
         # 保存最后的信息
         with self.thread_lock:
-            tool.write_file("\t".join(self.account_info), self.main_thread.temp_save_data_path)
+            file.write_file("\t".join(self.account_info), self.main_thread.temp_save_data_path)
             self.main_thread.total_photo_count += self.total_photo_count
             self.main_thread.total_video_count += self.total_video_count
             self.main_thread.account_list.pop(self.account_id)

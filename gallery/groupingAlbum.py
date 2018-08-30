@@ -28,7 +28,7 @@ def main():
                 file_size += os.path.getsize(os.path.join(album_path, file_name))
                 file_count += 1
             # 图集id  图集名字  图片数量  图片总大小
-            tool.write_file("%s\t%s\t%s\t%s\t%s" % (str(int(album_id)), album_name, album_path, file_count, file_size), website_result_file_path)
+            file.write_file("%s\t%s\t%s\t%s\t%s" % (str(int(album_id)), album_name, album_path, file_count, file_size), website_result_file_path)
 
 
 if __name__ == "__main__":

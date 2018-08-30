@@ -123,7 +123,7 @@ def get_archive_page(archive_id):
 class IvSeek(crawler.Crawler):
     def __init__(self):
         # 设置APP目录
-        tool.PROJECT_APP_PATH = os.path.abspath(os.path.dirname(__file__))
+        crawler.PROJECT_APP_PATH = os.path.abspath(os.path.dirname(__file__))
 
         # 初始化参数
         sys_config = {
@@ -135,7 +135,7 @@ class IvSeek(crawler.Crawler):
 
     def main(self):
         save_id = 1
-        save_info_list = tool.read_file(self.save_data_path, tool.READ_FILE_TYPE_LINE)
+        save_info_list = file.read_file(self.save_data_path, file.READ_FILE_TYPE_LINE)
         if len(save_info_list) > 0:
             save_id = int(save_info_list[-1].split("\t")[0]) + 1
 
@@ -167,7 +167,7 @@ class IvSeek(crawler.Crawler):
 
                 for video_info in archive_response["video_info_list"]:
                     log.step("视频%s《%s》: %s" % (archive_id, archive_response["video_title"], video_info["video_url"]))
-                    tool.write_file("%s\t%s\t%s\t%s\t" % (archive_id, archive_response["video_title"], video_info["video_url"], video_info["account_id"]), self.save_data_path)
+                    file.write_file("%s\t%s\t%s\t%s\t" % (archive_id, archive_response["video_title"], video_info["video_url"], video_info["account_id"]), self.save_data_path)
 
                 # 提前结束
                 if not self.is_running():

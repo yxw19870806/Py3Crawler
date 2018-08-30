@@ -10,7 +10,7 @@ import os
 from common import *
 
 # Twitter存档文件目录
-SAVE_DATA_PATH = os.path.abspath(os.path.join(tool.PROJECT_APP_ROOT_PATH, "twitter/info/save.data"))
+SAVE_DATA_PATH = os.path.abspath(os.path.join(crawler.PROJECT_APP_ROOT_PATH, "twitter/info/save.data"))
 # 图片下载后的保存目录
 FILE_STORAGE_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), "photo"))
 
@@ -33,7 +33,7 @@ def main():
             if account_id not in account_list_from_save_data:
                 account_list_from_save_data[account_id] = [account_id, "", "", "", ""]
         temp_list = [account_list_from_save_data[key] for key in sorted(account_list_from_save_data.keys())]
-        tool.write_file(tool.list_to_string(temp_list), SAVE_DATA_PATH, tool.WRITE_FILE_TYPE_REPLACE)
+        file.write_file(tool.list_to_string(temp_list), SAVE_DATA_PATH, file.WRITE_FILE_TYPE_REPLACE)
 
 
 if __name__ == "__main__":

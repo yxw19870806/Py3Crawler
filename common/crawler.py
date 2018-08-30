@@ -13,7 +13,19 @@ import re
 import sys
 import threading
 import time
-from common import browser, keyboardEvent, log, net, output, path, portListenerEvent, tool
+# 项目根目录
+PROJECT_ROOT_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+# 全局config.ini路径
+PROJECT_CONFIG_PATH = os.path.abspath(os.path.join(PROJECT_ROOT_PATH, "common/config.ini"))
+# 应用程序（APP）根目录，下面包含多个应用
+PROJECT_APP_ROOT_PATH = os.path.abspath(os.path.join(PROJECT_ROOT_PATH, "project"))
+# 应用程序（APP）目录
+# 默认当前进程的工作目录，应用在初始化时应该对该变量进行赋值
+PROJECT_APP_PATH = os.getcwd()
+try:
+    from . import browser, keyboardEvent, log, net, output, path, portListenerEvent, tool
+except ImportError:
+    from common import browser, keyboardEvent, log, net, output, path, portListenerEvent, tool
 
 # 程序是否支持下载图片功能（会判断配置中是否需要下载图片，如全部是则创建图片下载目录）
 SYS_DOWNLOAD_PHOTO = "download_photo"
@@ -71,12 +83,12 @@ class Crawler(object):
             os.chdir(application_path)
             config_path = os.path.join(os.getcwd(), "data/config.ini")
         else:
-            config_path = tool.PROJECT_CONFIG_PATH
+            config_path = PROJECT_CONFIG_PATH
 
         # 程序配置
         config = read_config(config_path)
         # 应用配置
-        app_config_path = os.path.abspath(os.path.join(tool.PROJECT_APP_PATH, "app.ini"))
+        app_config_path = os.path.abspath(os.path.join(PROJECT_APP_PATH, "app.ini"))
         if os.path.exists(app_config_path):
             config.update(read_config(app_config_path))
         # 额外配置
@@ -223,7 +235,7 @@ class Crawler(object):
         # 线程数
         self.thread_count = analysis_config(config, "THREAD_COUNT", 10, CONFIG_ANALYSIS_MODE_INTEGER)
         self.thread_lock = threading.Lock()  # 线程锁，避免操作一些全局参数
-        self.thread_condition = threading.Condition()  # 线程数达到上限时等待wait()，直到任意线程唤醒notify()
+        self.thread_semaphore = threading.Semaphore(self.thread_count)  # 线程总数信号量
 
         # 启用线程监控是否需要暂停其他下载线程
         if analysis_config(config, "IS_PORT_LISTENER_ENVET", True, CONFIG_ANALYSIS_MODE_BOOLEAN):
@@ -280,11 +292,6 @@ class Crawler(object):
     def is_running(self):
         return self.process_status
 
-    def wait_sub_thread(self):
-        self.thread_condition.acquire()
-        self.thread_condition.wait()
-        self.thread_condition.release()
-
 
 class DownloadThread(threading.Thread):
     """Download sub-thread"""
@@ -296,17 +303,15 @@ class DownloadThread(threading.Thread):
         """
         :param account_info:
 
-        :param thread_lock:
-            threading.Lock() object in main thread
-
-        :param thread_event:
-            threading.Event() object in main thread, flag of process is running
+        :param main_thread:
+            object of main thread(class Crawler)
         """
         threading.Thread.__init__(self)
         self.account_info = account_info
         if isinstance(main_thread, Crawler):
             self.main_thread = main_thread
             self.thread_lock = main_thread.thread_lock
+            main_thread.thread_semaphore.acquire()
         else:
             output.print_msg("下载线程参数异常")
             tool.process_exit()
@@ -320,11 +325,10 @@ class DownloadThread(threading.Thread):
             self.notify_main_thread()
             tool.process_exit(0)
 
-    # 线程下完完成后唤醒主线程，开启新的线程
+    # 线程下完完成后唤醒主线程，开启新的线程（必须在线程完成后手动调用，否则会卡死主线程）
     def notify_main_thread(self):
-        self.main_thread.thread_condition.acquire()
-        self.main_thread.thread_condition.notify()
-        self.main_thread.thread_condition.release()
+        if isinstance(self.main_thread, Crawler):
+            self.main_thread.thread_semaphore.release()
 
     # 中途退出，删除临时文件/目录
     def clean_temp_path(self):
@@ -413,9 +417,9 @@ def analysis_config(config, key, default_value, mode=CONFIG_ANALYSIS_MODE_RAW):
             value = True
     elif mode == CONFIG_ANALYSIS_MODE_PATH:
         if value[:2] == "\\\\":  # \\ 开头，程序所在目录
-            value = os.path.join(tool.PROJECT_APP_PATH, value[2:])  # \\ 仅做标记使用，实际需要去除
+            value = os.path.join(PROJECT_APP_PATH, value[2:])  # \\ 仅做标记使用，实际需要去除
         elif value[0] == "\\":   # \ 开头，项目根目录（common目录上级）
-            value = os.path.join(tool.PROJECT_ROOT_PATH, value[1:])  # \ 仅做标记使用，实际需要去除
+            value = os.path.join(PROJECT_ROOT_PATH, value[1:])  # \ 仅做标记使用，实际需要去除
         value = os.path.abspath(value)
     return value
 
@@ -444,7 +448,7 @@ def read_save_data(save_data_path, key_index=0, default_value_list=[], check_dup
     result_list = {}
     if not os.path.exists(save_data_path):
         return result_list
-    for single_save_data in tool.read_file(save_data_path, tool.READ_FILE_TYPE_LINE):
+    for single_save_data in file.read_file(save_data_path, file.READ_FILE_TYPE_LINE):
         single_save_data = single_save_data.replace("\n", "").replace("\r", "")
         if len(single_save_data) == 0:
             continue
@@ -477,7 +481,7 @@ def read_save_data(save_data_path, key_index=0, default_value_list=[], check_dup
 def rewrite_save_file(temp_save_data_path, save_data_path):
     account_list = read_save_data(temp_save_data_path, 0, [])
     temp_list = [account_list[key] for key in sorted(account_list.keys())]
-    tool.write_file(tool.list_to_string(temp_list), save_data_path, tool.WRITE_FILE_TYPE_REPLACE)
+    file.write_file(tool.list_to_string(temp_list), save_data_path, file.WRITE_FILE_TYPE_REPLACE)
     path.delete_dir_or_file(temp_save_data_path)
 
 
@@ -639,8 +643,8 @@ def quickly_get_all_cookies_from_browser(config=None):
 
 
 def _get_config():
-    config = read_config(tool.PROJECT_CONFIG_PATH)
-    app_config_path = os.path.abspath(os.path.join(tool.PROJECT_APP_PATH, "app.ini"))
+    config = read_config(PROJECT_CONFIG_PATH)
+    app_config_path = os.path.abspath(os.path.join(PROJECT_APP_PATH, "app.ini"))
     if os.path.exists(app_config_path):
         app_config = read_config(app_config_path)
         config.update(app_config)

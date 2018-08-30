@@ -81,7 +81,7 @@ def get_album_page(album_url):
 class ImgXr(crawler.Crawler):
     def __init__(self):
         # 设置APP目录
-        tool.PROJECT_APP_PATH = os.path.abspath(os.path.dirname(__file__))
+        crawler.PROJECT_APP_PATH = os.path.abspath(os.path.dirname(__file__))
 
         # 初始化参数
         sys_config = {
@@ -95,7 +95,7 @@ class ImgXr(crawler.Crawler):
         # last_album_url  last_album_page_count
         save_info = ["", "0"]
         if os.path.exists(self.save_data_path):
-            file_save_info = tool.read_file(self.save_data_path).split("\t")
+            file_save_info = file.read_file(self.save_data_path).split("\t")
             if len(file_save_info) >= 2 and crawler.is_integer(file_save_info[1]):
                 save_info = file_save_info
             else:
@@ -197,7 +197,7 @@ class ImgXr(crawler.Crawler):
             log.error(str(e) + "\n" + traceback.format_exc())
 
         # 重新保存存档文件
-        tool.write_file("\t".join(save_info), self.save_data_path, tool.WRITE_FILE_TYPE_REPLACE)
+        file.write_file("\t".join(save_info), self.save_data_path, file.WRITE_FILE_TYPE_REPLACE)
         log.step("全部下载完毕，耗时%s秒，共计图片%s张" % (self.get_run_time(), self.total_photo_count))
 
 

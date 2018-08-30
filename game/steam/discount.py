@@ -25,7 +25,7 @@ MAX_SELLING_PERCENT = 1  # 显示价格小等于这个数字的游戏
 
 # 打折游戏列表保存到文件
 def save_discount_list(discount_game_list):
-    tool.write_file(json.dumps(discount_game_list), DISCOUNT_DATA_PATH, tool.WRITE_FILE_TYPE_REPLACE)
+    file.write_file(json.dumps(discount_game_list), DISCOUNT_DATA_PATH, file.WRITE_FILE_TYPE_REPLACE)
 
 
 # 获取文件中的打折列表
@@ -45,7 +45,7 @@ def load_discount_list():
     if os.path.getmtime(DISCOUNT_DATA_PATH) < last_api_update_time < time.time():
         output.print_msg("discount game list expired")
         return discount_game_list
-    discount_game_list = tool.json_decode(tool.read_file(DISCOUNT_DATA_PATH), discount_game_list)
+    discount_game_list = tool.json_decode(file.read_file(DISCOUNT_DATA_PATH), discount_game_list)
     return discount_game_list
 
 

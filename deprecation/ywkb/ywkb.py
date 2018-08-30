@@ -45,7 +45,7 @@ def get_one_page_photo(page_count):
 class YWKB(crawler.Crawler):
     def __init__(self):
         # 设置APP目录
-        tool.PROJECT_APP_PATH = os.path.abspath(os.path.dirname(__file__))
+        crawler.PROJECT_APP_PATH = os.path.abspath(os.path.dirname(__file__))
 
         # 初始化参数
         sys_config = {
@@ -58,7 +58,7 @@ class YWKB(crawler.Crawler):
         # 解析存档文件，获取上一次的图片id
         last_photo_id = 0
         if os.path.exists(self.save_data_path):
-            file_save_info = tool.read_file(self.save_data_path)
+            file_save_info = file.read_file(self.save_data_path)
             if not crawler.is_integer(file_save_info):
                 log.error("存档内数据格式不正确")
                 tool.process_exit()
@@ -127,7 +127,7 @@ class YWKB(crawler.Crawler):
             log.error(str(e) + "\n" + traceback.format_exc())
 
         # 保存新的存档文件
-        tool.write_file(str(last_photo_id), self.save_data_path, tool.WRITE_FILE_TYPE_REPLACE)
+        file.write_file(str(last_photo_id), self.save_data_path, file.WRITE_FILE_TYPE_REPLACE)
         log.step("全部下载完毕，耗时%s秒，共计图片%s张" % (self.get_run_time(), self.total_photo_count))
 
 

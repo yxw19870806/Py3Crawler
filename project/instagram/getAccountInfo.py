@@ -56,7 +56,7 @@ def main():
         except crawler.CrawlerException as e:
             output.print_msg(account + "解析信息失败，原因：%s" % e.message)
             continue
-        tool.write_file("%s\t%s\t%s" % (account, account_index_response["account_info"], account_index_response["external_url"]), result_file_path)
+        file.write_file("%s\t%s\t%s" % (account, account_index_response["account_info"], account_index_response["external_url"]), result_file_path)
 
 if __name__ == "__main__":
     main()

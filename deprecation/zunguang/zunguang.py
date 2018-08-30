@@ -67,7 +67,7 @@ def get_album_page(page_count):
 class ZunGuang(crawler.Crawler):
     def __init__(self):
         # 设置APP目录
-        tool.PROJECT_APP_PATH = os.path.abspath(os.path.dirname(__file__))
+        crawler.PROJECT_APP_PATH = os.path.abspath(os.path.dirname(__file__))
 
         # 初始化参数
         sys_config = {
@@ -81,7 +81,7 @@ class ZunGuang(crawler.Crawler):
     def main(self):
         # 解析存档文件，获取上一次的page count
         if os.path.exists(self.save_data_path):
-            page_count = int(tool.read_file(self.save_data_path))
+            page_count = int(file.read_file(self.save_data_path))
         else:
             page_count = 1
 
@@ -153,7 +153,7 @@ class ZunGuang(crawler.Crawler):
 
         # 重新保存存档文件
         if self.total_photo_count > 0:
-            tool.write_file(str(page_count), self.save_data_path, tool.WRITE_FILE_TYPE_REPLACE)
+            file.write_file(str(page_count), self.save_data_path, file.WRITE_FILE_TYPE_REPLACE)
 
         log.step("全部下载完毕，耗时%s秒，共计图片%s张" % (self.get_run_time(), self.total_photo_count))
 
