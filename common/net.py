@@ -65,7 +65,7 @@ class ErrorResponse(object):
     """Default http_request() response object(exception return)"""
     def __init__(self, status=-1):
         self.status = status
-        self.data = None
+        self.data = b''
         self.headers = {}
         self.json_data = []
 
