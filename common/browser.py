@@ -8,8 +8,7 @@ email: hikaru870806@hotmail.com
 import os
 import platform
 import sqlite3
-if platform.system() == "Windows":
-    import win32crypt
+import win32crypt
 from common import output
 
 BROWSER_TYPE_IE = 1
