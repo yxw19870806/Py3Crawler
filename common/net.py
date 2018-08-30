@@ -14,7 +14,7 @@ import ssl
 import time
 import threading
 import urllib3
-from common import output, path, tool
+from common import file, output, path, tool
 
 # https://www.python.org/dev/peps/pep-0476/
 # disable urllib3 HTTPS warning
@@ -382,7 +382,7 @@ def save_net_file(file_url, file_path, need_content_type=False, header_list=None
                 if content_type is not None and content_type != "octet-stream":
                     global MIME_DICTIONARY
                     if MIME_DICTIONARY is None:
-                        MIME_DICTIONARY = tool.json_decode(tool.read_file(os.path.join(os.path.dirname(__file__), "mime.json")), {})
+                        MIME_DICTIONARY = tool.json_decode(file.read_file(os.path.join(os.path.dirname(__file__), "mime.json")), {})
                     if content_type in MIME_DICTIONARY:
                         new_file_type = MIME_DICTIONARY[content_type]
                     else:

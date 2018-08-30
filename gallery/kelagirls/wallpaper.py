@@ -71,7 +71,7 @@ class Wallpaper(crawler.Crawler):
     def main(self):
         last_photo_id = 0
         if os.path.exists(self.save_data_path):
-            file_save_info = tool.read_file(self.save_data_path)
+            file_save_info = file.read_file(self.save_data_path)
             if not crawler.is_integer(file_save_info):
                 log.error("存档内数据格式不正确")
                 tool.process_exit()
@@ -147,7 +147,7 @@ class Wallpaper(crawler.Crawler):
             log.error(str(e) + "\n" + traceback.format_exc())
 
         # 重新保存存档文件
-        tool.write_file(str(last_photo_id), self.save_data_path, tool.WRITE_FILE_TYPE_REPLACE)
+        file.write_file(str(last_photo_id), self.save_data_path, file.WRITE_FILE_TYPE_REPLACE)
         log.step("全部下载完毕，耗时%s秒，共计图片%s张" % (self.get_run_time(), self.total_photo_count))
 
 

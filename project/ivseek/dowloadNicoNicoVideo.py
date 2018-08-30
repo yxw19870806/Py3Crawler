@@ -69,7 +69,7 @@ def main():
         # 增加已处理标记
         single_save_list[4] = ivseekCommon.DONE_SING
         # 保存记录
-        tool.write_file(tool.list_to_string(save_data_list), save_data_path, tool.WRITE_FILE_TYPE_REPLACE)
+        file.write_file(tool.list_to_string(save_data_list), save_data_path, file.WRITE_FILE_TYPE_REPLACE)
 
 
 if __name__ == "__main__":

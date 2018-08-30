@@ -159,7 +159,7 @@ class YiZhiBo(crawler.Crawler):
 
         # 未完成的数据保存
         if len(self.account_list) > 0:
-            tool.write_file(tool.list_to_string(list(self.account_list.values())), self.temp_save_data_path)
+            file.write_file(tool.list_to_string(list(self.account_list.values())), self.temp_save_data_path)
 
         # 重新排序保存存档文件
         crawler.rewrite_save_file(self.temp_save_data_path, self.save_data_path)
@@ -312,7 +312,7 @@ class Download(crawler.DownloadThread):
 
         # 保存最后的信息
         with self.thread_lock:
-            tool.write_file("\t".join(self.account_info), self.main_thread.temp_save_data_path)
+            file.write_file("\t".join(self.account_info), self.main_thread.temp_save_data_path)
             self.main_thread.total_photo_count += self.total_photo_count
             self.main_thread.total_video_count += self.total_video_count
             self.main_thread.account_list.pop(self.account_id)

@@ -24,7 +24,7 @@ ACCOUNT_ID_FILE_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), "
 
 # 从文件中读取account id，如果不存在提示输入
 def get_account_id_from_file():
-    account_id = tool.read_file(ACCOUNT_ID_FILE_PATH)
+    account_id = file.read_file(ACCOUNT_ID_FILE_PATH)
     while not account_id:
         console_account_id = input(crawler.get_time() + " 请输入STEAM账号ID: ")
         while True:
@@ -32,7 +32,7 @@ def get_account_id_from_file():
             input_str = input_str.lower()
             if input_str in ["y", "yes"]:
                 account_id = console_account_id
-                tool.write_file(console_account_id, ACCOUNT_ID_FILE_PATH, tool.WRITE_FILE_TYPE_REPLACE)
+                file.write_file(console_account_id, ACCOUNT_ID_FILE_PATH, file.WRITE_FILE_TYPE_REPLACE)
                 break
             elif input_str in ["n", "no"]:
                 break

@@ -439,7 +439,7 @@ def read_save_data(save_data_path, key_index=0, default_value_list=[], check_dup
     result_list = {}
     if not os.path.exists(save_data_path):
         return result_list
-    for single_save_data in tool.read_file(save_data_path, tool.READ_FILE_TYPE_LINE):
+    for single_save_data in file.read_file(save_data_path, file.READ_FILE_TYPE_LINE):
         single_save_data = single_save_data.replace("\n", "").replace("\r", "")
         if len(single_save_data) == 0:
             continue
@@ -472,7 +472,7 @@ def read_save_data(save_data_path, key_index=0, default_value_list=[], check_dup
 def rewrite_save_file(temp_save_data_path, save_data_path):
     account_list = read_save_data(temp_save_data_path, 0, [])
     temp_list = [account_list[key] for key in sorted(account_list.keys())]
-    tool.write_file(tool.list_to_string(temp_list), save_data_path, tool.WRITE_FILE_TYPE_REPLACE)
+    file.write_file(tool.list_to_string(temp_list), save_data_path, file.WRITE_FILE_TYPE_REPLACE)
     path.delete_dir_or_file(temp_save_data_path)
 
 

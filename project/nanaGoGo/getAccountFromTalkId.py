@@ -52,7 +52,7 @@ def main():
         for account_id in member_list:
             if account_id not in account_list:
                 output.print_msg("%s %s" % (account_id, member_list[account_id]))
-                tool.write_file("%s\t%s" % (account_id, member_list[account_id]), ACCOUNT_ID_FILE_PATH)
+                file.write_file("%s\t%s" % (account_id, member_list[account_id]), ACCOUNT_ID_FILE_PATH)
                 account_list.append(account_id)
 
 

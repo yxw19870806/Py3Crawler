@@ -16,7 +16,7 @@ REVIEW_DATA_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), "data
 
 # 保存评测记录到文件
 def save_discount_list(review_data):
-    tool.write_file(json.dumps(review_data), REVIEW_DATA_PATH, tool.WRITE_FILE_TYPE_REPLACE)
+    file.write_file(json.dumps(review_data), REVIEW_DATA_PATH, file.WRITE_FILE_TYPE_REPLACE)
 
 
 # 获取历史评测记录
@@ -28,7 +28,7 @@ def load_review_list():
     }
     if not os.path.exists(REVIEW_DATA_PATH):
         return review_data
-    review_data = tool.json_decode(tool.read_file(REVIEW_DATA_PATH), review_data)
+    review_data = tool.json_decode(file.read_file(REVIEW_DATA_PATH), review_data)
     return review_data
 
 

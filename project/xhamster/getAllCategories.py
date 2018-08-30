@@ -42,7 +42,7 @@ def main():
             category_list += get_one_page_categories(orientation, category_index)
         if len(category_list) > 0:
             category_file_path = os.path.join(os.path.dirname(__file__), "category\\%s.data" % orientation)
-            tool.write_file("\n".join(category_list), category_file_path, tool.WRITE_FILE_TYPE_REPLACE)
+            file.write_file("\n".join(category_list), category_file_path, file.WRITE_FILE_TYPE_REPLACE)
 
 
 if __name__ == "__main__":

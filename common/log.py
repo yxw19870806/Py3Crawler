@@ -28,7 +28,7 @@ def error(msg):
         output.print_msg(msg, False)
     if ERROR_LOG_PATH != "":
         with thread_lock:
-            tool.write_file(msg, ERROR_LOG_PATH)
+            file.write_file(msg, ERROR_LOG_PATH)
 
 
 def step(msg):
@@ -38,7 +38,7 @@ def step(msg):
         output.print_msg(msg, False)
     if STEP_LOG_PATH != "":
         with thread_lock:
-            tool.write_file(msg, STEP_LOG_PATH)
+            file.write_file(msg, STEP_LOG_PATH)
 
 
 def trace(msg):
@@ -48,7 +48,7 @@ def trace(msg):
         output.print_msg(msg, False)
     if TRACE_LOG_PATH != "":
         with thread_lock:
-            tool.write_file(msg, TRACE_LOG_PATH)
+            file.write_file(msg, TRACE_LOG_PATH)
 
 
 def notice(msg):
@@ -58,7 +58,7 @@ def notice(msg):
         output.print_msg(msg, False)
     if NOTICE_LOG_PATH != "":
         with thread_lock:
-            tool.write_file(msg, NOTICE_LOG_PATH)
+            file.write_file(msg, NOTICE_LOG_PATH)
 
 
 def _get_time():

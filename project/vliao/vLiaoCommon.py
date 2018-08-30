@@ -21,7 +21,7 @@ def check_login():
     global USER_ID, USER_KEY
     # 文件存在，检查格式是否正确
     if os.path.exists(token_file_path):
-        api_info = tool.json_decode(crypto.Crypto().decrypt(tool.read_file(token_file_path)))
+        api_info = tool.json_decode(crypto.Crypto().decrypt(file.read_file(token_file_path)))
         if crawler.check_sub_key(("user_id", "user_key"), api_info):
             # 验证token是否有效
             if check_token(api_info["user_id"], api_info["user_key"]):
@@ -57,7 +57,7 @@ def check_login():
             USER_ID = user_id
             USER_KEY = user_key
         # 加密保存到文件中
-        tool.write_file(crypto.Crypto().encrypt(json.dumps({"user_id": USER_ID, "user_key": USER_KEY})), token_file_path, tool.WRITE_FILE_TYPE_REPLACE)
+        file.write_file(crypto.Crypto().encrypt(json.dumps({"user_id": USER_ID, "user_key": USER_KEY})), token_file_path, file.WRITE_FILE_TYPE_REPLACE)
         return True
     return False
 
