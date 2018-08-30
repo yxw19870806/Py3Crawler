@@ -4,14 +4,12 @@
 email: hikaru870806@hotmail.com
 如有问题或建议请联系
 """
-import hashlib
 import json
 import os
 import platform
 import random
 import string
 import sys
-from common import path
 
 # if sys.stdout.encoding != "UTF-8":
 #     raise Exception("项目编码必须是UTF-8，请在IDE中修改相关设置")

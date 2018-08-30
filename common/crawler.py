@@ -291,11 +291,8 @@ class DownloadThread(threading.Thread):
         """
         :param account_info:
 
-        :param thread_lock:
-            threading.Lock() object in main thread
-
-        :param thread_event:
-            threading.Event() object in main thread, flag of process is running
+        :param main_thread:
+            object of main thread(class Crawler)
         """
         threading.Thread.__init__(self)
         self.account_info = account_info
