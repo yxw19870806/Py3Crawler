@@ -10,7 +10,7 @@ import os
 from common import *
 from project.ivseek import ivseekCommon
 
-YOUTUBE_SAVE_DATA_PATH = os.path.abspath(os.path.join(tool.PROJECT_APP_ROOT_PATH, "youtube/info/save.data"))
+YOUTUBE_SAVE_DATA_PATH = os.path.abspath(os.path.join(crawler.PROJECT_APP_ROOT_PATH, "youtube/info/save.data"))
 
 
 def main():

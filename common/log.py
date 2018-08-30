@@ -8,16 +8,16 @@ email: hikaru870806@hotmail.com
 import os
 import threading
 import time
-from common import output, tool
+from common import crawler, file, output
 
 IS_SHOW_ERROR = True
 IS_SHOW_STEP = False
 IS_SHOW_TRACE = False
 IS_SHOW_NOTICE = False
-ERROR_LOG_PATH = os.path.abspath(os.path.join(tool.PROJECT_ROOT_PATH, 'log\\errorLog.txt'))
-STEP_LOG_PATH = os.path.abspath(os.path.join(tool.PROJECT_ROOT_PATH, 'log\\stepLog.txt'))
-TRACE_LOG_PATH = os.path.abspath(os.path.join(tool.PROJECT_ROOT_PATH, 'log\\traceLog.txt'))
-NOTICE_LOG_PATH = os.path.abspath(os.path.join(tool.PROJECT_ROOT_PATH, 'log\\debugLog.txt'))
+ERROR_LOG_PATH = os.path.abspath(os.path.join(crawler.PROJECT_ROOT_PATH, 'log\\errorLog.txt'))
+STEP_LOG_PATH = os.path.abspath(os.path.join(crawler.PROJECT_ROOT_PATH, 'log\\stepLog.txt'))
+TRACE_LOG_PATH = os.path.abspath(os.path.join(crawler.PROJECT_ROOT_PATH, 'log\\traceLog.txt'))
+NOTICE_LOG_PATH = os.path.abspath(os.path.join(crawler.PROJECT_ROOT_PATH, 'log\\debugLog.txt'))
 thread_lock = threading.Lock()
 
 
