@@ -12,7 +12,10 @@ import time
 import win32api
 import win32con
 import win32gui
-from common import keyboardEvent
+try:
+    from . import keyboardEvent
+except ImportError:
+    from common import keyboardEvent
 
 
 class WindowsApplication:

@@ -8,7 +8,10 @@ email: hikaru870806@hotmail.com
 import os
 import threading
 import time
-from common import crawler, file, output
+try:
+    from . import crawler, file, output
+except ImportError:
+    from common import crawler, file, output
 
 IS_SHOW_ERROR = True
 IS_SHOW_STEP = False

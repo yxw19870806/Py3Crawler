@@ -7,7 +7,10 @@ email: hikaru870806@hotmail.com
 """
 import hashlib
 import os
-from common import path
+try:
+    from . import path
+except ImportError:
+    from common import path
 
 READ_FILE_TYPE_FULL = 1  # 读取整个文件 ，返回字符串
 READ_FILE_TYPE_LINE = 2  # 按行读取，返回list

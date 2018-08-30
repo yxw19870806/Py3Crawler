@@ -1,9 +1,6 @@
-from common import crawler
-from common import file
-from common import log
-from common import net
-from common import output
-from common import path
-from common import tool
+try:
+    from . import crawler, file, log, net, output, path, tool
+except ImportError:
+    from common import crawler, file, log, net, output, path, tool
 
 __all__ = ["crawler", "file", "log", "net", "output", "path", "tool"]
