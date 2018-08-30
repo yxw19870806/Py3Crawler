@@ -223,7 +223,6 @@ class Crawler(object):
         # 线程数
         self.thread_count = analysis_config(config, "THREAD_COUNT", 10, CONFIG_ANALYSIS_MODE_INTEGER)
         self.thread_lock = threading.Lock()  # 线程锁，避免操作一些全局参数
-        self.thread_condition = threading.Condition()  # 线程数达到上限时等待wait()，直到任意线程唤醒notify()
         self.thread_semaphore = threading.Semaphore(self.thread_count)  # 线程总数信号量
 
         # 启用线程监控是否需要暂停其他下载线程
@@ -280,11 +279,6 @@ class Crawler(object):
 
     def is_running(self):
         return self.process_status
-
-    def wait_sub_thread(self):
-        self.thread_condition.acquire()
-        self.thread_condition.wait()
-        self.thread_condition.release()
 
 
 class DownloadThread(threading.Thread):
