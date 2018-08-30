@@ -415,7 +415,7 @@ def save_net_file(file_url, file_path, need_content_type=False, header_list=None
                     file_no = file_handle.fileno()
                     while end_pos < content_length - 1:
                         start_pos = end_pos + 1
-                        end_pos = min(content_length, start_pos + multi_thread_block_size - 1)
+                        end_pos = min(content_length - 1, start_pos + multi_thread_block_size - 1)
                         # 创建一个副本
                         fd_handle = os.fdopen(os.dup(file_no), 'rb+', -1)
                         thread = MultiThreadDownload(file_url, start_pos, end_pos, fd_handle)
