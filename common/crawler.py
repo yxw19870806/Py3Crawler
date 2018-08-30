@@ -224,6 +224,7 @@ class Crawler(object):
         self.thread_count = analysis_config(config, "THREAD_COUNT", 10, CONFIG_ANALYSIS_MODE_INTEGER)
         self.thread_lock = threading.Lock()  # 线程锁，避免操作一些全局参数
         self.thread_condition = threading.Condition()  # 线程数达到上限时等待wait()，直到任意线程唤醒notify()
+        self.thread_semaphore = threading.Semaphore(self.thread_count)  # 线程总数信号量
 
         # 启用线程监控是否需要暂停其他下载线程
         if analysis_config(config, "IS_PORT_LISTENER_ENVET", True, CONFIG_ANALYSIS_MODE_BOOLEAN):
@@ -307,6 +308,7 @@ class DownloadThread(threading.Thread):
         if isinstance(main_thread, Crawler):
             self.main_thread = main_thread
             self.thread_lock = main_thread.thread_lock
+            main_thread.thread_semaphore.acquire()
         else:
             output.print_msg("下载线程参数异常")
             tool.process_exit()
@@ -320,11 +322,10 @@ class DownloadThread(threading.Thread):
             self.notify_main_thread()
             tool.process_exit(0)
 
-    # 线程下完完成后唤醒主线程，开启新的线程
+    # 线程下完完成后唤醒主线程，开启新的线程（必须在线程完成后手动调用，否则会卡死主线程）
     def notify_main_thread(self):
-        self.main_thread.thread_condition.acquire()
-        self.main_thread.thread_condition.notify()
-        self.main_thread.thread_condition.release()
+        if isinstance(self.main_thread, Crawler):
+            self.main_thread.thread_semaphore.release()
 
     # 中途退出，删除临时文件/目录
     def clean_temp_path(self):
