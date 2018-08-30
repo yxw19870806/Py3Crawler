@@ -46,9 +46,9 @@ HTTP_DOWNLOAD_CONNECTION_TIMEOUT = 10
 HTTP_DOWNLOAD_READ_TIMEOUT = 60
 HTTP_DOWNLOAD_RETRY_COUNT = 10
 HTTP_DOWNLOAD_MAX_SIZE = 1.5 * SIZE_GB  # 文件下载限制（字节）
-HTTP_DOWNLOAD_MULTI_THREAD_MIN_SIZE = 50 * SIZE_MB  # 开始使用多线程下载的文件体积
-MULTI_THREAD_MIN_BLOCK_SIZE = 10 * SIZE_MB  # 下载单线程文件最小多少
-MULTI_THREAD_MAX_BLOCK_SIZE = 100 * SIZE_MB  # 下载单线程文件最大多少
+HTTP_DOWNLOAD_MULTI_THREAD_MIN_SIZE = 1 * SIZE_MB  # 开始使用多线程下载的文件体积
+MULTI_THREAD_MIN_BLOCK_SIZE = 200 * SIZE_KB  # 下载单线程文件最小多少
+MULTI_THREAD_MAX_BLOCK_SIZE = 500 * SIZE_KB  # 下载单线程文件最大多少
 
 # 网络访问返回值
 HTTP_RETURN_CODE_RETRY = 0
@@ -399,6 +399,7 @@ def save_net_file(file_url, file_path, need_content_type=False, header_list=None
                                             connection_timeout=HTTP_DOWNLOAD_CONNECTION_TIMEOUT, read_timeout=HTTP_DOWNLOAD_READ_TIMEOUT)
                     if response.status != HTTP_RETURN_CODE_SUCCEED:
                         continue
+                is_create_file = True
                 # 下载
                 with open(file_path, "wb") as file_handle:
                     file_handle.write(response.data)
@@ -406,11 +407,13 @@ def save_net_file(file_url, file_path, need_content_type=False, header_list=None
                 # 单线程下载文件大小（100MB）
                 multi_thread_block_size = int(math.ceil(content_length / 10 / SIZE_MB)) * SIZE_MB
                 multi_thread_block_size = min(MULTI_THREAD_MAX_BLOCK_SIZE, max(MULTI_THREAD_MIN_BLOCK_SIZE, multi_thread_block_size))
+                is_create_file = True
                 # 创建文件
                 with open(file_path, "w"):
                     pass
                 end_pos = -1
                 thread_list = []
+                error_flag = []
                 with open(file_path, 'rb+') as file_handle:
                     file_no = file_handle.fileno()
                     while end_pos < content_length - 1:
@@ -418,13 +421,15 @@ def save_net_file(file_url, file_path, need_content_type=False, header_list=None
                         end_pos = min(content_length - 1, start_pos + multi_thread_block_size - 1)
                         # 创建一个副本
                         fd_handle = os.fdopen(os.dup(file_no), 'rb+', -1)
-                        thread = MultiThreadDownload(file_url, start_pos, end_pos, fd_handle)
+                        thread = MultiThreadDownload(file_url, start_pos, end_pos, fd_handle, error_flag)
                         thread.start()
                         thread_list.append(thread)
                 # 等待所有线程下载完毕
                 for thread in thread_list:
                     thread.join()
-            is_create_file = True
+                # 有任意一个线程下载失败了，跳出
+                if len(error_flag) > 0:
+                    break
             # 判断文件下载后的大小和response中的Content-Length是否一致
             if content_length is None:
                 return {"status": 1, "code": 0, "file_path": file_path}
@@ -509,19 +514,27 @@ def resume_request():
 
 
 class MultiThreadDownload(threading.Thread):
-    def __init__(self, file_url, start_pos, end_pos, fd_handle):
+    def __init__(self, file_url, start_pos, end_pos, fd_handle, error_flag):
         threading.Thread.__init__(self)
         self.file_url = file_url
         self.start_pos = start_pos
         self.end_pos = end_pos
         self.fd_handle = fd_handle
+        self.error_flag = error_flag
 
     def run(self):
         headers_list = {"Range": "bytes=%s-%s" % (self.start_pos, self.end_pos)}
-        response = http_request(self.file_url, method="GET", header_list=headers_list)
-        if response.status == 206:
-            self.fd_handle.seek(self.start_pos)
-            self.fd_handle.write(response.data)
+        range_size = self.end_pos - self.start_pos + 1
+        for retry_count in range(0, HTTP_DOWNLOAD_RETRY_COUNT):
+            response = http_request(self.file_url, method="GET", header_list=headers_list)
+            if response.status == 206:
+                if len(response.data) != range_size:
+                    output.print_msg("网络文件%s：range %s - %s实际下载大小 %s 不一致" % (self.file_url, self.start_pos, self.end_pos, len(response.data)))
+                else:
+                    self.fd_handle.seek(self.start_pos)
+                    self.fd_handle.write(response.data)
+                    return
+        self.error_flag.append(self)
 
 
 def multi_thread_save_net_file(file_url, file_path, header_list=None, cookies_list=None):
