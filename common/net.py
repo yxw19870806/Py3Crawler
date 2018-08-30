@@ -78,7 +78,7 @@ def init_http_connection_pool():
 
 def set_proxy(ip, port):
     """init urllib3 proxy connection pool"""
-    if int(port) <= 0:
+    if not str(port).isdigit() or int(port) <= 0:
         return
     match = re.match("((25[0-5]|2[0-4]\d|((1\d{2})|([1-9]?\d)))\.){3}(25[0-5]|2[0-4]\d|((1\d{2})|([1-9]?\d)))", ip)
     if not match or match.group() != ip:
