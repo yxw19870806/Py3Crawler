@@ -13,7 +13,10 @@ import re
 import sys
 import threading
 import time
-from common import browser, keyboardEvent, log, net, output, path, portListenerEvent, tool
+try:
+    from . import browser, keyboardEvent, log, net, output, path, portListenerEvent, tool
+except ImportError:
+    from common import browser, keyboardEvent, log, net, output, path, portListenerEvent, tool
 
 # 项目根目录
 PROJECT_ROOT_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))

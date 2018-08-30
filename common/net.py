@@ -14,7 +14,10 @@ import ssl
 import time
 import threading
 import urllib3
-from common import file, output, path, tool
+try:
+    from . import file, output, path, tool
+except ImportError:
+    from common import file, output, path, tool
 
 # https://www.python.org/dev/peps/pep-0476/
 # disable urllib3 HTTPS warning

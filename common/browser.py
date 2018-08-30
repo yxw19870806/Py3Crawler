@@ -9,7 +9,10 @@ import os
 import platform
 import sqlite3
 import win32crypt
-from common import output
+try:
+    from . import output
+except ImportError:
+    from common import output
 
 BROWSER_TYPE_IE = 1
 BROWSER_TYPE_FIREFOX = 2
