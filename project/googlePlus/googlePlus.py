@@ -149,12 +149,8 @@ class GooglePlus(crawler.Crawler):
 
     def main(self):
         # 循环下载每个id
-        main_thread_count = threading.activeCount()
+        thread_list = []
         for account_id in sorted(self.account_list.keys()):
-            # 检查正在运行的线程数
-            if threading.activeCount() >= self.thread_count + main_thread_count:
-                self.wait_sub_thread()
-
             # 提前结束
             if not self.is_running():
                 break
@@ -162,12 +158,13 @@ class GooglePlus(crawler.Crawler):
             # 开始下载
             thread = Download(self.account_list[account_id], self)
             thread.start()
+            thread_list.append(thread)
 
             time.sleep(1)
 
-        # 检查除主线程外的其他所有线程是不是全部结束了
-        while threading.activeCount() > main_thread_count:
-            self.wait_sub_thread()
+        # 等待子线程全部完成
+        while len(thread_list) > 0:
+            thread_list.pop().join()
 
         # 未完成的数据保存
         if len(self.account_list) > 0:
