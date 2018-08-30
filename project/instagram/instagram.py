@@ -41,7 +41,7 @@ def init_session():
 def check_login():
     if not COOKIE_INFO["sessionid"]:
         # 从文件中读取账号密码
-        account_data = tool.json_decode(crypto.Crypto().decrypt(tool.read_file(SESSION_FILE_PATH)), {})
+        account_data = tool.json_decode(crypto.Crypto().decrypt(file.read_file(SESSION_FILE_PATH)), {})
         if crawler.check_sub_key(("email", "password"), account_data):
             if _do_login(account_data["email"], account_data["password"]):
                 return True
@@ -65,7 +65,7 @@ def login_from_console():
             if input_str in ["y", "yes"]:
                 if _do_login(email, password):
                     if IS_LOCAL_SAVE_SESSION:
-                        tool.write_file(crypto.Crypto().encrypt(json.dumps({"email": email, "password": password})), SESSION_FILE_PATH, tool.WRITE_FILE_TYPE_REPLACE)
+                        file.write_file(crypto.Crypto().encrypt(json.dumps({"email": email, "password": password})), SESSION_FILE_PATH, file.WRITE_FILE_TYPE_REPLACE)
                     return True
                 return False
             elif input_str in ["n", "no"]:
@@ -298,7 +298,7 @@ class Instagram(crawler.Crawler):
 
         # 未完成的数据保存
         if len(self.account_list) > 0:
-            tool.write_file(tool.list_to_string(list(self.account_list.values())), self.temp_save_data_path)
+            file.write_file(tool.list_to_string(list(self.account_list.values())), self.temp_save_data_path)
 
         # 重新排序保存存档文件
         crawler.rewrite_save_file(self.temp_save_data_path, self.save_data_path)
@@ -465,7 +465,7 @@ class Download(crawler.DownloadThread):
 
         # 保存最后的信息
         with self.thread_lock:
-            tool.write_file("\t".join(self.account_info), self.main_thread.temp_save_data_path)
+            file.write_file("\t".join(self.account_info), self.main_thread.temp_save_data_path)
             self.main_thread.total_photo_count += self.total_photo_count
             self.main_thread.total_video_count += self.total_video_count
             self.main_thread.account_list.pop(self.account_name)

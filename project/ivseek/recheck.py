@@ -20,7 +20,7 @@ def main():
             if single_save_list[4] != ivseekCommon.DONE_SING:
                 single_save_list[4] = ivseekCommon.DONE_SING
                 output.print_msg("new done account " + str(single_save_list))
-    tool.write_file(tool.list_to_string(save_data), save_data_path, tool.WRITE_FILE_TYPE_REPLACE)
+    file.write_file(tool.list_to_string(save_data), save_data_path, file.WRITE_FILE_TYPE_REPLACE)
 
 
 if __name__ == "__main__":

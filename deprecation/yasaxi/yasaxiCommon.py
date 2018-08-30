@@ -19,7 +19,7 @@ account_file_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "ses
 
 # 从文件中获取用户信息
 def get_token_from_file():
-    account_data = tool.json_decode(crypto.Crypto().decrypt(tool.read_file(account_file_path)))
+    account_data = tool.json_decode(crypto.Crypto().decrypt(file.read_file(account_file_path)))
     if account_data is None:
         return False
     if crawler.check_sub_key(("access_token", "auth_token", "zhezhe_info"), account_data):
@@ -43,4 +43,4 @@ def set_token_to_file():
         "auth_token": auth_token,
         "zhezhe_info": zhezhe_info,
     }
-    tool.write_file(crypto.Crypto().encrypt(json.dumps(account_data)), account_file_path, tool.WRITE_FILE_TYPE_REPLACE)
+    file.write_file(crypto.Crypto().encrypt(json.dumps(account_data)), account_file_path, file.WRITE_FILE_TYPE_REPLACE)

@@ -31,8 +31,8 @@ def main():
     for account_id in account_id_list:
         if account_id not in youtube_save_data_list:
             youtube_save_data_list[account_id] = [account_id]
-    tool.write_file(tool.list_to_string(save_data_list), save_data_path, tool.WRITE_FILE_TYPE_REPLACE)
-    tool.write_file(tool.list_to_string(youtube_save_data_list.values()), YOUTUBE_SAVE_DATA_PATH, tool.WRITE_FILE_TYPE_REPLACE)
+    file.write_file(tool.list_to_string(save_data_list), save_data_path, file.WRITE_FILE_TYPE_REPLACE)
+    file.write_file(tool.list_to_string(youtube_save_data_list.values()), YOUTUBE_SAVE_DATA_PATH, file.WRITE_FILE_TYPE_REPLACE)
 
 
 if __name__ == "__main__":

@@ -66,7 +66,7 @@ class Blog(crawler.Crawler):
         # photo_count  last_blog_id
         save_info = ["0", "0"]
         if os.path.exists(self.save_data_path):
-            file_save_info = tool.read_file(self.save_data_path).split("\t")
+            file_save_info = file.read_file(self.save_data_path).split("\t")
             if len(file_save_info) >= 2 and crawler.is_integer(file_save_info[0]) and crawler.is_integer(file_save_info[1]):
                 save_info = file_save_info
             else:
@@ -151,7 +151,7 @@ class Blog(crawler.Crawler):
             log.error(str(e) + "\n" + traceback.format_exc())
 
         # 保存新的存档文件
-        tool.write_file("\t".join(save_info), self.save_data_path, tool.WRITE_FILE_TYPE_REPLACE)
+        file.write_file("\t".join(save_info), self.save_data_path, file.WRITE_FILE_TYPE_REPLACE)
         log.step("全部下载完毕，耗时%s秒，共计图片%s张" % (self.get_run_time(), self.total_photo_count))
 
 

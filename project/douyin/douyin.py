@@ -41,10 +41,10 @@ def get_account_index_page(account_id):
         raise crawler.CrawlerException("页面截取dytk参数失败\n%s" % account_index_response_content)
     result["dytk"] = script_dytk
     # 读取模板并替换相关参数
-    template_html = tool.read_file(TEMPLATE_HTML_PATH)
+    template_html = file.read_file(TEMPLATE_HTML_PATH)
     template_html = template_html.replace("%%USER_AGENT%%", USER_AGENT).replace("%%TAC%%", script_tac).replace("%%UID%%", str(account_id))
     cache_html = os.path.join(CACHE_FILE_PATH, "%s.html" % account_id)
-    tool.write_file(template_html, cache_html, tool.WRITE_FILE_TYPE_REPLACE)
+    file.write_file(template_html, cache_html, file.WRITE_FILE_TYPE_REPLACE)
     # 使用抖音的加密JS方法算出signature的值
     chrome_options = webdriver.chrome.options.Options()
     chrome_options.add_argument('--headless')  # 不打开浏览器
@@ -156,7 +156,7 @@ class DouYin(crawler.Crawler):
 
         # 未完成的数据保存
         if len(self.account_list) > 0:
-            tool.write_file(tool.list_to_string(list(self.account_list.values())), self.temp_save_data_path)
+            file.write_file(tool.list_to_string(list(self.account_list.values())), self.temp_save_data_path)
 
         # 重新排序保存存档文件
         crawler.rewrite_save_file(self.temp_save_data_path, self.save_data_path)
@@ -257,7 +257,7 @@ class Download(crawler.DownloadThread):
 
         # 保存最后的信息
         with self.thread_lock:
-            tool.write_file("\t".join(self.account_info), self.main_thread.temp_save_data_path)
+            file.write_file("\t".join(self.account_info), self.main_thread.temp_save_data_path)
             self.main_thread.total_video_count += self.total_video_count
             self.main_thread.account_list.pop(self.account_id)
         self.step("下载完毕，总共获得%s个视频" % self.total_video_count)
