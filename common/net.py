@@ -361,86 +361,15 @@ def save_net_file(file_url, file_path, need_content_type=False, header_list=None
     is_multi_thread = False
     return_code = {"status": 0, "code": -3}
     for retry_count in range(0, HTTP_DOWNLOAD_RETRY_COUNT):
-        if head_check:
+        if head_check and retry_count == 0:
             request_method = "HEAD"
         else:
             request_method = "GET"
         # 获取头信息
         response = http_request(file_url, request_method, header_list=header_list, cookies_list=cookies_list, is_auto_proxy=is_auto_proxy,
                                 connection_timeout=HTTP_CONNECTION_TIMEOUT, read_timeout=HTTP_READ_TIMEOUT)
-        if response.status == HTTP_RETURN_CODE_SUCCEED:
-            # 判断文件是不是过大
-            content_length = response.getheader("Content-Length")
-            if content_length is not None:
-                content_length = int(content_length)
-                # 超过限制
-                if content_length > HTTP_DOWNLOAD_MAX_SIZE:
-                    return {"status": 0, "code": -4}
-                # 文件提交比较大，使用多线程下载
-                elif content_length > HTTP_DOWNLOAD_MULTI_THREAD_MIN_SIZE:
-                    is_multi_thread = True
-            # response中的Content-Type作为文件后缀名
-            if need_content_type:
-                content_type = response.getheader("Content-Type")
-                if content_type is not None and content_type != "octet-stream":
-                    global MIME_DICTIONARY
-                    if MIME_DICTIONARY is None:
-                        MIME_DICTIONARY = tool.json_decode(file.read_file(os.path.join(os.path.dirname(__file__), "mime.json")), {})
-                    if content_type in MIME_DICTIONARY:
-                        new_file_type = MIME_DICTIONARY[content_type]
-                    else:
-                        new_file_type = content_type.split("/")[-1]
-                    file_path = os.path.splitext(file_path)[0] + "." + new_file_type
-
-            if not is_multi_thread:
-                # 如果是先调用HEAD方法的，需要重新获取完整数据
-                if head_check:
-                    response = http_request(file_url, method="GET", header_list=header_list, cookies_list=cookies_list, is_auto_proxy=is_auto_proxy,
-                                            connection_timeout=HTTP_DOWNLOAD_CONNECTION_TIMEOUT, read_timeout=HTTP_DOWNLOAD_READ_TIMEOUT)
-                    if response.status != HTTP_RETURN_CODE_SUCCEED:
-                        continue
-                is_create_file = True
-                # 下载
-                with open(file_path, "wb") as file_handle:
-                    file_handle.write(response.data)
-            else:
-                # 单线程下载文件大小（100MB）
-                multi_thread_block_size = int(math.ceil(content_length / 10 / SIZE_MB)) * SIZE_MB
-                multi_thread_block_size = min(MULTI_THREAD_MAX_BLOCK_SIZE, max(MULTI_THREAD_MIN_BLOCK_SIZE, multi_thread_block_size))
-                is_create_file = True
-                # 创建文件
-                with open(file_path, "w"):
-                    pass
-                end_pos = -1
-                thread_list = []
-                error_flag = []
-                with open(file_path, 'rb+') as file_handle:
-                    file_no = file_handle.fileno()
-                    while end_pos < content_length - 1:
-                        start_pos = end_pos + 1
-                        end_pos = min(content_length - 1, start_pos + multi_thread_block_size - 1)
-                        # 创建一个副本
-                        fd_handle = os.fdopen(os.dup(file_no), 'rb+', -1)
-                        thread = MultiThreadDownload(file_url, start_pos, end_pos, fd_handle, error_flag)
-                        thread.start()
-                        thread_list.append(thread)
-                # 等待所有线程下载完毕
-                for thread in thread_list:
-                    thread.join()
-                # 有任意一个线程下载失败了，跳出
-                if len(error_flag) > 0:
-                    break
-            # 判断文件下载后的大小和response中的Content-Length是否一致
-            if content_length is None:
-                return {"status": 1, "code": 0, "file_path": file_path}
-            file_size = os.path.getsize(file_path)
-            if content_length == file_size:
-                return {"status": 1, "code": 0, "file_path": file_path}
-            else:
-                time.sleep(10)
-                output.print_msg("本地文件%s：%s和网络文件%s：%s不一致" % (file_path, content_length, file_url, file_size))
         # 其他返回状态，退出
-        else:
+        if response.status != HTTP_RETURN_CODE_SUCCEED:
             # URL格式不正确
             if response.status == HTTP_RETURN_CODE_URL_INVALID:
                 return_code = {"status": 0, "code": -1}
@@ -451,6 +380,78 @@ def save_net_file(file_url, file_path, need_content_type=False, header_list=None
             else:
                 return_code = {"status": 0, "code": response.status}
             break
+
+        # 判断文件是不是过大
+        content_length = response.getheader("Content-Length")
+        if content_length is not None:
+            content_length = int(content_length)
+            # 超过限制
+            if content_length > HTTP_DOWNLOAD_MAX_SIZE:
+                return {"status": 0, "code": -4}
+            # 文件比较大，使用多线程下载（必须是head_check=True的情况下，否则整个文件内容都已经返回了）
+            elif head_check and content_length > HTTP_DOWNLOAD_MULTI_THREAD_MIN_SIZE:
+                is_multi_thread = True
+
+        # response中的Content-Type作为文件后缀名
+        if need_content_type:
+            content_type = response.getheader("Content-Type")
+            if content_type is not None and content_type != "octet-stream":
+                global MIME_DICTIONARY
+                if MIME_DICTIONARY is None:
+                    MIME_DICTIONARY = tool.json_decode(file.read_file(os.path.join(os.path.dirname(__file__), "mime.json")), {})
+                if content_type in MIME_DICTIONARY:
+                    new_file_type = MIME_DICTIONARY[content_type]
+                else:
+                    new_file_type = content_type.split("/")[-1]
+                file_path = os.path.splitext(file_path)[0] + "." + new_file_type
+
+        if not is_multi_thread:  # 单线程下载
+            # 如果是先调用HEAD方法的，需要重新获取完整数据
+            if head_check:
+                response = http_request(file_url, method="GET", header_list=header_list, cookies_list=cookies_list, is_auto_proxy=is_auto_proxy,
+                                        connection_timeout=HTTP_DOWNLOAD_CONNECTION_TIMEOUT, read_timeout=HTTP_DOWNLOAD_READ_TIMEOUT)
+                if response.status != HTTP_RETURN_CODE_SUCCEED:
+                    continue
+            # 下载
+            with open(file_path, "wb") as file_handle:
+                is_create_file = True
+                file_handle.write(response.data)
+        else:  # 多线程下载
+            # 单线程下载文件大小（100MB）
+            multi_thread_block_size = int(math.ceil(content_length / 10 / SIZE_MB)) * SIZE_MB
+            multi_thread_block_size = min(MULTI_THREAD_MAX_BLOCK_SIZE, max(MULTI_THREAD_MIN_BLOCK_SIZE, multi_thread_block_size))
+            # 创建文件
+            with open(file_path, "w"):
+                is_create_file = True
+            thread_list = []
+            error_flag = []
+            with open(file_path, "rb+") as file_handle:
+                file_no = file_handle.fileno()
+                end_pos = -1
+                while end_pos < content_length - 1:
+                    start_pos = end_pos + 1
+                    end_pos = min(content_length - 1, start_pos + multi_thread_block_size - 1)
+                    # 创建一个副本
+                    fd_handle = os.fdopen(os.dup(file_no), "rb+", -1)
+                    thread = MultiThreadDownload(file_url, start_pos, end_pos, fd_handle, error_flag)
+                    thread.start()
+                    thread_list.append(thread)
+            # 等待所有线程下载完毕
+            for thread in thread_list:
+                thread.join()
+            # 有任意一个线程下载失败了，跳出（重试机制在MultiThreadDownload类中有）
+            if len(error_flag) > 0:
+                return_code = {"status": 0, "code": -2}
+                break
+        if content_length is None:
+            return {"status": 1, "code": 0, "file_path": file_path}
+        # 判断文件下载后的大小和response中的Content-Length是否一致
+        file_size = os.path.getsize(file_path)
+        if content_length == file_size:
+            return {"status": 1, "code": 0, "file_path": file_path}
+        else:
+            output.print_msg("本地文件%s：%s和网络文件%s：%s不一致" % (file_path, content_length, file_url, file_size))
+            time.sleep(10)
     if is_create_file:
         path.delete_dir_or_file(file_path)
     return return_code
@@ -528,9 +529,12 @@ class MultiThreadDownload(threading.Thread):
         for retry_count in range(0, HTTP_DOWNLOAD_RETRY_COUNT):
             response = http_request(self.file_url, method="GET", header_list=headers_list)
             if response.status == 206:
+                # 下载的文件和请求的文件大小不一致
                 if len(response.data) != range_size:
                     output.print_msg("网络文件%s：range %s - %s实际下载大小 %s 不一致" % (self.file_url, self.start_pos, self.end_pos, len(response.data)))
+                    time.sleep(10)
                 else:
+                    # 写入本地文件后退出
                     self.fd_handle.seek(self.start_pos)
                     self.fd_handle.write(response.data)
                     return
