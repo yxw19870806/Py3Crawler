@@ -6,11 +6,11 @@ email: hikaru870806@hotmail.com
 如有问题或建议请联系
 """
 import pythoncom
+import threading
 try:
     import PyHook3 as pyHook
 except ModuleNotFoundError:
     import pyHook
-import threading
 
 SUPPORT_KEYBOARD_LIST = ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z",
                          "0", "1", "2", "3", "4", "5", "6", "7", "8", "9",
@@ -29,7 +29,7 @@ SUPPORT_SUB_KEYBOARD_LIST = {
 
 class KeyboardEvent(threading.Thread):
     """Keyboard Event Listener Class"""
-    key_down_list ={
+    key_down_list = {
         "LSHIFT": False,
         "RSHIFT": False,
         "LCONTROL": False,

@@ -14,6 +14,7 @@ import ssl
 import time
 import threading
 import urllib3
+
 try:
     from . import file, output, path, tool
 except ImportError:
@@ -134,7 +135,7 @@ def get_file_type(file_url, default_file_type=""):
         return file_name_and_type[-1]
 
 
-def http_request(url, method="GET", fields=None, binary_data=None, header_list=None, cookies_list=None, encode_multipart=False, is_auto_proxy = True, is_auto_redirect=True,
+def http_request(url, method="GET", fields=None, binary_data=None, header_list=None, cookies_list=None, encode_multipart=False, is_auto_proxy=True, is_auto_redirect=True,
                  is_auto_retry=True, connection_timeout=NET_CONFIG["HTTP_CONNECTION_TIMEOUT"], read_timeout=NET_CONFIG["HTTP_READ_TIMEOUT"], is_random_ip=True, json_decode=False):
     """Http request via urllib3
 
@@ -234,9 +235,9 @@ def http_request(url, method="GET", fields=None, binary_data=None, header_list=N
                 response = connection_pool.request(method, url, headers=header_list, redirect=is_auto_redirect, timeout=timeout, fields=fields)
             else:
                 if binary_data is None:
-                    response = connection_pool.request(method, url, headers=header_list, redirect=is_auto_redirect, timeout=timeout, fields=fields, encode_multipart=encode_multipart)
+                    response = connection_pool.request(method, url, fields=fields, encode_multipart=encode_multipart, headers=header_list, redirect=is_auto_redirect, timeout=timeout)
                 else:
-                    response = connection_pool.request(method, url, headers=header_list, redirect=is_auto_redirect, timeout=timeout, body=binary_data, encode_multipart=encode_multipart)
+                    response = connection_pool.request(method, url, body=binary_data, encode_multipart=encode_multipart, headers=header_list, redirect=is_auto_redirect, timeout=timeout)
             if response.status == HTTP_RETURN_CODE_SUCCEED and json_decode:
                 try:
                     response.json_data = json.loads(response.data.decode())
