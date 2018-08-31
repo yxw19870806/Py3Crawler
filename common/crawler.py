@@ -23,9 +23,9 @@ PROJECT_APP_ROOT_PATH = os.path.abspath(os.path.join(PROJECT_ROOT_PATH, "project
 # 默认当前进程的工作目录，应用在初始化时应该对该变量进行赋值
 PROJECT_APP_PATH = os.getcwd()
 try:
-    from . import browser, keyboardEvent, log, net, output, path, portListenerEvent, tool
+    from . import browser, file, keyboardEvent, log, net, output, path, portListenerEvent, tool
 except ImportError:
-    from common import browser, keyboardEvent, log, net, output, path, portListenerEvent, tool
+    from common import browser, file, keyboardEvent, log, net, output, path, portListenerEvent, tool
 
 # 程序是否支持下载图片功能（会判断配置中是否需要下载图片，如全部是则创建图片下载目录）
 SYS_DOWNLOAD_PHOTO = "download_photo"
