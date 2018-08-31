@@ -225,13 +225,6 @@ class Crawler(object):
                                 continue
                             self.cookie_value[cookie_name] = all_cookie_from_browser[check_domain][cookie_name]
 
-        # Http Setting
-        net.HTTP_CONNECTION_TIMEOUT = analysis_config(config, "HTTP_CONNECTION_TIMEOUT", 10, CONFIG_ANALYSIS_MODE_INTEGER)
-        net.HTTP_READ_TIMEOUT = analysis_config(config, "HTTP_READ_TIMEOUT", 10, CONFIG_ANALYSIS_MODE_INTEGER)
-        net.HTTP_DOWNLOAD_CONNECTION_TIMEOUT = analysis_config(config, "HTTP_DOWLOAD_CONNECTION_TIMEOUT", 10, CONFIG_ANALYSIS_MODE_INTEGER)
-        net.HTTP_DOWNLOAD_READ_TIMEOUT = analysis_config(config, "HTTP_DOWLOAD_READ_TIMEOUT", 60, CONFIG_ANALYSIS_MODE_INTEGER)
-        net.HTTP_REQUEST_RETRY_COUNT = analysis_config(config, "HTTP_REQUEST_RETRY_COUNT", 10, CONFIG_ANALYSIS_MODE_INTEGER)
-
         # 线程数
         self.thread_count = analysis_config(config, "THREAD_COUNT", 10, CONFIG_ANALYSIS_MODE_INTEGER)
         self.thread_lock = threading.Lock()  # 线程锁，避免操作一些全局参数
