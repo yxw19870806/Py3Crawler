@@ -16,6 +16,7 @@ PROCESS_STATUS_STOP = 2  # 进程立刻停止，删除还未完成的数据
 
 class PortListenerEvent(threading.Thread):
     """program status controller Class"""
+
     def __init__(self, port, event_list=None):
         threading.Thread.__init__(self)
         self.ip = SERVER_IP

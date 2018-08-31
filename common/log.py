@@ -8,6 +8,7 @@ email: hikaru870806@hotmail.com
 import os
 import threading
 import time
+
 try:
     from . import crawler, file, output
 except ImportError:
