@@ -23,9 +23,9 @@ PROJECT_APP_ROOT_PATH = os.path.abspath(os.path.join(PROJECT_ROOT_PATH, "project
 # 默认当前进程的工作目录，应用在初始化时应该对该变量进行赋值
 PROJECT_APP_PATH = os.getcwd()
 try:
-    from . import browser, keyboardEvent, log, net, output, path, portListenerEvent, tool
+    from . import browser, file, keyboardEvent, log, net, output, path, portListenerEvent, tool
 except ImportError:
-    from common import browser, keyboardEvent, log, net, output, path, portListenerEvent, tool
+    from common import browser, file, keyboardEvent, log, net, output, path, portListenerEvent, tool
 
 # 程序是否支持下载图片功能（会判断配置中是否需要下载图片，如全部是则创建图片下载目录）
 SYS_DOWNLOAD_PHOTO = "download_photo"
@@ -225,13 +225,6 @@ class Crawler(object):
                                 continue
                             self.cookie_value[cookie_name] = all_cookie_from_browser[check_domain][cookie_name]
 
-        # Http Setting
-        net.HTTP_CONNECTION_TIMEOUT = analysis_config(config, "HTTP_CONNECTION_TIMEOUT", 10, CONFIG_ANALYSIS_MODE_INTEGER)
-        net.HTTP_READ_TIMEOUT = analysis_config(config, "HTTP_READ_TIMEOUT", 10, CONFIG_ANALYSIS_MODE_INTEGER)
-        net.HTTP_DOWNLOAD_CONNECTION_TIMEOUT = analysis_config(config, "HTTP_DOWLOAD_CONNECTION_TIMEOUT", 10, CONFIG_ANALYSIS_MODE_INTEGER)
-        net.HTTP_DOWNLOAD_READ_TIMEOUT = analysis_config(config, "HTTP_DOWLOAD_READ_TIMEOUT", 60, CONFIG_ANALYSIS_MODE_INTEGER)
-        net.HTTP_REQUEST_RETRY_COUNT = analysis_config(config, "HTTP_REQUEST_RETRY_COUNT", 10, CONFIG_ANALYSIS_MODE_INTEGER)
-
         # 线程数
         self.thread_count = analysis_config(config, "THREAD_COUNT", 10, CONFIG_ANALYSIS_MODE_INTEGER)
         self.thread_lock = threading.Lock()  # 线程锁，避免操作一些全局参数
@@ -418,7 +411,7 @@ def analysis_config(config, key, default_value, mode=CONFIG_ANALYSIS_MODE_RAW):
     elif mode == CONFIG_ANALYSIS_MODE_PATH:
         if value[:2] == "\\\\":  # \\ 开头，程序所在目录
             value = os.path.join(PROJECT_APP_PATH, value[2:])  # \\ 仅做标记使用，实际需要去除
-        elif value[0] == "\\":   # \ 开头，项目根目录（common目录上级）
+        elif value[0] == "\\":  # \ 开头，项目根目录（common目录上级）
             value = os.path.join(PROJECT_ROOT_PATH, value[1:])  # \ 仅做标记使用，实际需要去除
         value = os.path.abspath(value)
     return value
