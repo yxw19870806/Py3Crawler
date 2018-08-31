@@ -42,8 +42,11 @@ def create_dir(dir_path, create_mode=CREATE_DIR_MODE_IGNORE_IF_EXIST):
                 if not os.listdir(dir_path):
                     return True
         delete_dir_or_file(dir_path)
-    os.makedirs(dir_path)
-    if os.path.isdir(dir_path):
+    try:
+        os.makedirs(dir_path)
+    except FileExistsError:
+        return True
+    if os.path.exists(dir_path) and os.path.isdir(dir_path):
         return True
     return False
 
