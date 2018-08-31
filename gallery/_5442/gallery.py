@@ -120,7 +120,7 @@ class Gallery(crawler.Crawler):
         try:
             page_count = 1
             album_id_to_url_list = {}
-            is_over = True
+            is_over = False
             while not is_over:
                 if not self.is_running():
                     tool.process_exit(0)
