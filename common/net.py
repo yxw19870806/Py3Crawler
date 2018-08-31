@@ -29,27 +29,31 @@ SIZE_KB = 2 ** 10  # 1KB = 多少字节
 SIZE_MB = 2 ** 20  # 1MB = 多少字节
 SIZE_GB = 2 ** 30  # 1GB = 多少字节
 
+# 读取网络相关配置
+DEFAULT_NET_CONFIG = {
+    "HTTP_CONNECTION_TIMEOUT": 10,  # 网络访问连接超时的秒数
+    "HTTP_READ_TIMEOUT": 30,  # 网络访问读取超时的秒数
+    "HTTP_REQUEST_RETRY_COUNT": 10,  # 网络访问自动重试次数
+    "DOWNLOAD_CONNECTION_TIMEOUT": 10,  # 下载文件连接超时的秒数
+    "DOWNLOAD_READ_TIMEOUT": 60,  # 下载文件读取超时的秒数
+    "DOWNLOAD_RETRY_COUNT": 10,  # 下载文件自动重试次数
+    "DOWNLOAD_LIMIT_SIZE": 1.5 * SIZE_GB,  # 下载文件超过多少字节跳过不下载
+    "DOWNLOAD_MULTI_THREAD_MIN_SIZE": 50 * SIZE_MB,  # 下载文件超过多少字节后开始使用多线程下载
+    "DOWNLOAD_MULTI_THREAD_MIN_BLOCK_SIZE": 10 * SIZE_MB,  # 多线程下载中单个线程下载的字节数下限（线程总数下限=文件大小/单个线程下载的字节数下限）
+    "DOWNLOAD_MULTI_THREAD_MAX_BLOCK_SIZE": 100 * SIZE_MB,  # 多线程下载中单个线程下载的字节数上限（线程总数上限=文件大小/单个线程下载的字节数上限）
+}
+NET_CONFIG = tool.json_decode(file.read_file(os.path.join(os.path.dirname(__file__), "net_config.json")), DEFAULT_NET_CONFIG)
+
 # 连接池
 HTTP_CONNECTION_POOL = None
 PROXY_HTTP_CONNECTION_POOL = None
 # 网络访问相关阻塞/继续事件
 thread_event = threading.Event()
 thread_event.set()
+# 退出标志
 EXIT_FLAG = False
 # response header中Content-Type对应的Mime字典
 MIME_DICTIONARY = None
-# 网络访问相关配置
-HTTP_CONNECTION_TIMEOUT = 10
-HTTP_READ_TIMEOUT = 30
-HTTP_REQUEST_RETRY_COUNT = 10
-HTTP_DOWNLOAD_CONNECTION_TIMEOUT = 10
-HTTP_DOWNLOAD_READ_TIMEOUT = 60
-HTTP_DOWNLOAD_RETRY_COUNT = 10
-HTTP_DOWNLOAD_MAX_SIZE = 1.5 * SIZE_GB  # 文件下载限制（字节）
-HTTP_DOWNLOAD_MULTI_THREAD_MIN_SIZE = 100 * SIZE_MB  # 开始使用多线程下载的文件体积
-MULTI_THREAD_MIN_BLOCK_SIZE = 10 * SIZE_MB  # 下载单线程文件最小多少
-MULTI_THREAD_MAX_BLOCK_SIZE = 100 * SIZE_MB  # 下载单线程文件最大多少
-
 # 网络访问返回值
 HTTP_RETURN_CODE_RETRY = 0
 HTTP_RETURN_CODE_URL_INVALID = -1  # 地址不符合规范（非http:// 或者 https:// 开头）
@@ -131,7 +135,7 @@ def get_file_type(file_url, default_file_type=""):
 
 
 def http_request(url, method="GET", fields=None, binary_data=None, header_list=None, cookies_list=None, encode_multipart=False, is_auto_proxy = True, is_auto_redirect=True,
-                 is_auto_retry=True, connection_timeout=HTTP_CONNECTION_TIMEOUT, read_timeout=HTTP_READ_TIMEOUT, is_random_ip=True, json_decode=False):
+                 is_auto_retry=True, connection_timeout=NET_CONFIG["HTTP_CONNECTION_TIMEOUT"], read_timeout=NET_CONFIG["HTTP_READ_TIMEOUT"], is_random_ip=True, json_decode=False):
     """Http request via urllib3
 
     :param url:
@@ -257,7 +261,7 @@ def http_request(url, method="GET", fields=None, binary_data=None, header_list=N
                 time.sleep(30)
                 continue
             elif response.status in [500, 502, 503, 504] and is_auto_retry:  # 服务器临时性错误，重试
-                if retry_count < HTTP_REQUEST_RETRY_COUNT:
+                if retry_count < NET_CONFIG["HTTP_REQUEST_RETRY_COUNT"]:
                     retry_count += 1
                     time.sleep(30)
                     continue
@@ -283,7 +287,7 @@ def http_request(url, method="GET", fields=None, binary_data=None, header_list=N
             time.sleep(5)
 
         retry_count += 1
-        if retry_count >= HTTP_REQUEST_RETRY_COUNT:
+        if retry_count >= NET_CONFIG["HTTP_REQUEST_RETRY_COUNT"]:
             output.print_msg("无法访问页面：" + url)
             return ErrorResponse(HTTP_RETURN_CODE_RETRY)
 
@@ -360,14 +364,14 @@ def save_net_file(file_url, file_path, need_content_type=False, header_list=None
     is_create_file = False
     is_multi_thread = False
     return_code = {"status": 0, "code": -3}
-    for retry_count in range(0, HTTP_DOWNLOAD_RETRY_COUNT):
+    for retry_count in range(0, NET_CONFIG["DOWNLOAD_RETRY_COUNT"]):
         if head_check and retry_count == 0:
             request_method = "HEAD"
         else:
             request_method = "GET"
         # 获取头信息
         response = http_request(file_url, request_method, header_list=header_list, cookies_list=cookies_list, is_auto_proxy=is_auto_proxy,
-                                connection_timeout=HTTP_CONNECTION_TIMEOUT, read_timeout=HTTP_READ_TIMEOUT)
+                                connection_timeout=NET_CONFIG["HTTP_CONNECTION_TIMEOUT"], read_timeout=NET_CONFIG["HTTP_READ_TIMEOUT"])
         # 其他返回状态，退出
         if response.status != HTTP_RETURN_CODE_SUCCEED:
             # URL格式不正确
@@ -386,10 +390,10 @@ def save_net_file(file_url, file_path, need_content_type=False, header_list=None
         if content_length is not None:
             content_length = int(content_length)
             # 超过限制
-            if content_length > HTTP_DOWNLOAD_MAX_SIZE:
+            if content_length > NET_CONFIG["DOWNLOAD_LIMIT_SIZE"]:
                 return {"status": 0, "code": -4}
             # 文件比较大，使用多线程下载（必须是head_check=True的情况下，否则整个文件内容都已经返回了）
-            elif head_check and content_length > HTTP_DOWNLOAD_MULTI_THREAD_MIN_SIZE:
+            elif head_check and content_length > NET_CONFIG["DOWNLOAD_MULTI_THREAD_MIN_SIZE"]:
                 is_multi_thread = True
 
         # response中的Content-Type作为文件后缀名
@@ -409,7 +413,7 @@ def save_net_file(file_url, file_path, need_content_type=False, header_list=None
             # 如果是先调用HEAD方法的，需要重新获取完整数据
             if head_check:
                 response = http_request(file_url, method="GET", header_list=header_list, cookies_list=cookies_list, is_auto_proxy=is_auto_proxy,
-                                        connection_timeout=HTTP_DOWNLOAD_CONNECTION_TIMEOUT, read_timeout=HTTP_DOWNLOAD_READ_TIMEOUT)
+                                        connection_timeout=NET_CONFIG["DOWNLOAD_CONNECTION_TIMEOUT"], read_timeout=NET_CONFIG["DOWNLOAD_READ_TIMEOUT"])
                 if response.status != HTTP_RETURN_CODE_SUCCEED:
                     continue
             # 下载
@@ -419,7 +423,7 @@ def save_net_file(file_url, file_path, need_content_type=False, header_list=None
         else:  # 多线程下载
             # 单线程下载文件大小（100MB）
             multi_thread_block_size = int(math.ceil(content_length / 10 / SIZE_MB)) * SIZE_MB
-            multi_thread_block_size = min(MULTI_THREAD_MAX_BLOCK_SIZE, max(MULTI_THREAD_MIN_BLOCK_SIZE, multi_thread_block_size))
+            multi_thread_block_size = min(NET_CONFIG["DOWNLOAD_MULTI_THREAD_MIN_BLOCK_SIZE"], max(NET_CONFIG["DOWNLOAD_MULTI_THREAD_MAX_BLOCK_SIZE"], multi_thread_block_size))
             # 创建文件
             with open(file_path, "w"):
                 is_create_file = True
@@ -479,12 +483,12 @@ def save_net_file_list(file_url_list, file_path, header_list=None, cookies_list=
     # 判断保存目录是否存在
     if not path.create_dir(os.path.dirname(file_path)):
         return False
-    for retry_count in range(0, HTTP_DOWNLOAD_RETRY_COUNT):
+    for retry_count in range(0, NET_CONFIG["DOWNLOAD_RETRY_COUNT"]):
         # 下载
         with open(file_path, "wb") as file_handle:
             for file_url in file_url_list:
                 response = http_request(file_url, header_list=header_list, cookies_list=cookies_list,
-                                        connection_timeout=HTTP_DOWNLOAD_CONNECTION_TIMEOUT, read_timeout=HTTP_DOWNLOAD_READ_TIMEOUT)
+                                        connection_timeout=NET_CONFIG["DOWNLOAD_CONNECTION_TIMEOUT"], read_timeout=NET_CONFIG["DOWNLOAD_READ_TIMEOUT"])
                 if response.status == HTTP_RETURN_CODE_SUCCEED:
                     file_handle.write(response.data)
                 # 超过重试次数，直接退出
@@ -526,7 +530,7 @@ class MultiThreadDownload(threading.Thread):
     def run(self):
         headers_list = {"Range": "bytes=%s-%s" % (self.start_pos, self.end_pos)}
         range_size = self.end_pos - self.start_pos + 1
-        for retry_count in range(0, HTTP_DOWNLOAD_RETRY_COUNT):
+        for retry_count in range(0, NET_CONFIG["DOWNLOAD_RETRY_COUNT"]):
             response = http_request(self.file_url, method="GET", header_list=headers_list)
             if response.status == 206:
                 # 下载的文件和请求的文件大小不一致
