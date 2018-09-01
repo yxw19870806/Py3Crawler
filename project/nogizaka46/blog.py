@@ -91,7 +91,10 @@ def check_big_photo(photo_url, big_2_small_list):
                 # 检测是不是已经过期删除
                 temp_photo_url = tool.find_sub_string(big_photo_response.data, '<img src="', '"')
                 if temp_photo_url != "/img/expired.gif":
-                    result["photo_url"] = temp_photo_url
+                    if temp_photo_url.find("://") >= 0:
+                        result["photo_url"] = temp_photo_url
+                    else:
+                        result["photo_url"] = "http://dcimg.awalker.jp" + temp_photo_url
                 else:
                     result["is_over"] = True
                 # 获取cookies
