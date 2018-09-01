@@ -66,6 +66,7 @@ def main():
         "initialdir": os.path.abspath(os.path.join(crawler.PROJECT_APP_ROOT_PATH, "twitter/info")),
         "initialfile": "save.data",
         "filetypes": [("data file", "*.data"), ("all files", "*")],
+        "parent": gui,
     }
     save_data_path = tkinter.filedialog.askopenfile(**options)
     if not save_data_path:
