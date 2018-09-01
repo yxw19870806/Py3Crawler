@@ -46,6 +46,7 @@ def main():
             "initialdir": os.path.join(os.path.dirname(__file__), "video"),
             "initialfile": "%010d.mp4" % int(video_id),
             "filetypes": [("mp4", ".mp4")],
+            "parent": gui,
         }
         file_path = tkinter.filedialog.asksaveasfilename(**options)
         if not file_path:

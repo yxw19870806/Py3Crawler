@@ -45,6 +45,7 @@ def main():
             "initialdir": os.path.join(os.path.dirname(__file__), "video"),
             "initialfile": "%010d - %s.%s" % (audio_response["audio_id"], path.filter_text(audio_response["audio_title"]), file_type),
             "filetypes": [(file_type, "." + file_type)],
+            "parent": gui,
         }
         file_path = tkinter.filedialog.asksaveasfilename(**options)
         if not file_path:
