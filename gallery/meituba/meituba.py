@@ -85,6 +85,8 @@ def get_album_page(album_id):
         # 获取图集图片地址
         photo_list_selector = pq(album_pagination_response_content).find("div.photo>a img")
         if photo_list_selector.length == 0:
+            photo_list_selector = pq(album_pagination_response_content).find("div.photo>p>a img")
+        if photo_list_selector.length == 0:
             raise crawler.CrawlerException("第%s页页面匹配图片地址失败\n%s" % (page_count, album_pagination_response_content))
         for photo_index in range(0, photo_list_selector.length):
             result["photo_url_list"].append(photo_list_selector.eq(photo_index).attr("src"))
