@@ -92,7 +92,9 @@ def get_album_page(album_id):
         if photo_list_selector.length == 0:
             raise crawler.CrawlerException(" %s 页面匹配图片地址失败\n%s" % (album_pagination_url, album_pagination_response_content))
         for photo_index in range(0, photo_list_selector.length):
-            result["photo_url_list"].append(photo_list_selector.eq(photo_index).attr("src"))
+            photo_url = photo_list_selector.eq(photo_index).attr("src")
+            if photo_url:
+                result["photo_url_list"].append(photo_url)
         page_count += 1
     return result
 
