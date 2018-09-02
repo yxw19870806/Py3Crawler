@@ -41,6 +41,7 @@ def get_album_page(album_id):
         "album_url": None,  # 图集首页地址
         "photo_url_list": [],  # 全部图片地址
     }
+    album_pagination_url = ""
     album_pagination_response = None
     for sub_path in SUB_PATH_LIST:
         album_pagination_url = "http://www.99mm.me/%s/%s.html" % (sub_path, album_id)
@@ -55,29 +56,29 @@ def get_album_page(album_id):
     # 获取图集标题
     album_title = pq(album_pagination_response_content).find(".title span h2").html()
     if not album_title:
-        raise crawler.CrawlerException("页面截取标题失败\n%s" % album_pagination_response_content)
+        raise crawler.CrawlerException(" %s 页面截取标题失败\n%s" % (album_pagination_url, album_pagination_response_content))
     result["album_title"] = album_title.strip()
     # 获取图集图片地址（逻辑解析来自页面JS文件http://www.99mm.me/css/content.js）
     js_string = tool.find_sub_string(album_pagination_response_content, "var iaStr = '", "'")
     if not js_string:
-        raise crawler.CrawlerException("页面截取页面参数'iaStr'失败\n%s" % album_pagination_response_content)
+        raise crawler.CrawlerException(" %s 页面截取页面参数'iaStr'失败\n%s" % (album_pagination_url, album_pagination_response_content))
     var_list = js_string.split(",")
     if len(var_list) < 8:
-        raise crawler.CrawlerException("'iaStr'参数长度不正确\n%s" % album_pagination_response_content)
+        raise crawler.CrawlerException(" %s 'iaStr'参数长度不正确\n%s" % (album_pagination_url, album_pagination_response_content))
     if not crawler.is_integer(var_list[2]):
-        raise crawler.CrawlerException("图片数量类型不正确\n%s" % album_pagination_response_content)
+        raise crawler.CrawlerException(" %s 图片数量类型不正确\n%s" % (album_pagination_url, album_pagination_response_content))
     photo_count = int(var_list[2])
     if len(var_list) != photo_count + 8:
-        log.error("图集%s'iaStr'参数长度不正确\n%s" % (album_id, var_list))
+        log.error(" %s 'iaStr'参数长度不正确\n%s" % (album_pagination_url, var_list))
     path_list = []
     path_string = tool.find_sub_string(album_pagination_response_content, "var iaOther = '", "'")
     if path_string:
         path_list = path_string.split(",")
         if len(path_list) != photo_count:
-            raise crawler.CrawlerException("iaOther参数长度不正确\n%s" % album_pagination_response_content)
+            raise crawler.CrawlerException(" %s iaOther参数长度不正确\n%s" % (album_pagination_url, album_pagination_response_content))
     for photo_index in range(1, int(photo_count) + 1):
         if photo_index >= len(var_list) - 7:
-            log.error("图集%s第%s张图片已被跳过" % (album_id, photo_index))
+            log.error(" %s 第%s张图片已被跳过" % (album_pagination_url, photo_index))
             continue
         host_name = "file" if len(path_list) == photo_count and path_list[photo_index - 1] == "1" else "fj"
         result["photo_url_list"].append("http://%s.kanmengmei.com/%s/%s/%s-%s.jpg" % (host_name, var_list[4], album_id, photo_index, var_list[photo_index + 7]))

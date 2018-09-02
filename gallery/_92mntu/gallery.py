@@ -39,6 +39,7 @@ def get_index_page():
 def get_album_page(album_id):
     page_count = max_page_count = 1
     sub_path = ""
+    album_pagination_url = ""
     album_pagination_response = None
     result = {
         "album_title": "",  # 图集标题
@@ -71,18 +72,18 @@ def get_album_page(album_id):
             # 获取图集标题
             album_title = pq(album_pagination_response_content).find("#entry h1").html()
             if not album_title:
-                raise crawler.CrawlerException("页面截取标题失败\n%s" % album_pagination_response_content)
+                raise crawler.CrawlerException(" %s 页面截取标题失败\n%s" % (album_pagination_url, album_pagination_response_content))
             result["album_title"] = album_title.strip()
         # 获取图集图片地址
         photo_list_selector = pq(album_pagination_response_content).find("#postarea #bigpic img")
         if photo_list_selector.length == 0:
-            raise crawler.CrawlerException("第%s页页面截取图片列表失败\n%s" % (page_count, album_pagination_response_content))
+            raise crawler.CrawlerException(" %s 页面截取图片列表失败\n%s" % (album_pagination_url, album_pagination_response_content))
         for photo_index in range(0, photo_list_selector.length):
             result["photo_url_list"].append("http://92mntu.com" + photo_list_selector.eq(photo_index).attr("src"))
         # 判断是不是最后一页
         max_page_count = pq(album_pagination_response_content).find(".pageart ul li").eq(-2).find("a").html()
         if not crawler.is_integer(max_page_count):
-            raise crawler.CrawlerException("第%s页页面截取最大页数失败\n%s" % (page_count, album_pagination_response_content))
+            raise crawler.CrawlerException(" %s 页面截取最大页数失败\n%s" % (album_pagination_url, album_pagination_response_content))
         max_page_count = int(max_page_count)
         page_count += 1
     return result
