@@ -15,8 +15,6 @@ from project.youtube import youtube
 
 def main():
     config = crawler._get_config()
-    # 设置日志路径
-    crawler.quicky_set_log_path(config)
     # 获取cookies
     all_cookie_from_browser = crawler.quickly_get_all_cookies_from_browser(config)
     if "youtube.com" in all_cookie_from_browser:

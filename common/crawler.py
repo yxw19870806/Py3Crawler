@@ -546,38 +546,6 @@ def quickly_set_proxy(config=None, is_auto=True):
     net.set_proxy(proxy_ip, proxy_port)
 
 
-# 读取配置文件，快速设置日志路径
-def quicky_set_log_path(config=None):
-    if not isinstance(config, configparser.SafeConfigParser):
-        config = _get_config()
-    log.IS_SHOW_ERROR = analysis_config(config, "IS_SHOW_ERROR", True, CONFIG_ANALYSIS_MODE_BOOLEAN)
-    log.IS_SHOW_STEP = analysis_config(config, "IS_SHOW_STEP", True, CONFIG_ANALYSIS_MODE_BOOLEAN)
-    log.IS_SHOW_TRACE = analysis_config(config, "IS_SHOW_TRACE", False, CONFIG_ANALYSIS_MODE_BOOLEAN)
-    log.ERROR_LOG_PATH = replace_path(analysis_config(config, "ERROR_LOG_PATH", "\\log/errorLog.txt", CONFIG_ANALYSIS_MODE_PATH))
-    error_log_dir = os.path.dirname(log.ERROR_LOG_PATH)
-    if not path.create_dir(error_log_dir):
-        output.print_msg("创建错误日志目录 %s 失败" % error_log_dir)
-        tool.process_exit()
-    if not analysis_config(config, "IS_LOG_STEP", True, CONFIG_ANALYSIS_MODE_BOOLEAN):
-        log.STEP_LOG_PATH = ""
-    else:
-        log.STEP_LOG_PATH = replace_path(analysis_config(config, "STEP_LOG_PATH", "\\log/stepLog.txt", CONFIG_ANALYSIS_MODE_PATH))
-        # 日志文件保存目录
-        step_log_dir = os.path.dirname(log.STEP_LOG_PATH)
-        if not path.create_dir(step_log_dir):
-            output.print_msg("创建步骤日志目录 %s 失败" % step_log_dir)
-            tool.process_exit()
-    if not analysis_config(config, "IS_LOG_TRACE", True, CONFIG_ANALYSIS_MODE_BOOLEAN):
-        log.TRACE_LOG_PATH = ""
-    else:
-        log.TRACE_LOG_PATH = replace_path(analysis_config(config, "TRACE_LOG_PATH", "\\log/traceLog.txt", CONFIG_ANALYSIS_MODE_PATH))
-        # 日志文件保存目录
-        trace_log_dir = os.path.dirname(log.TRACE_LOG_PATH)
-        if not path.create_dir(trace_log_dir):
-            output.print_msg("创建调试日志目录 %s 失败" % trace_log_dir)
-            tool.process_exit()
-
-
 # 读取配置文件，返回存档文件所在路径
 def quickly_get_save_data_path(config=None):
     if not isinstance(config, configparser.SafeConfigParser):
