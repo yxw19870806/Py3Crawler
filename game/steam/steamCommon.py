@@ -360,17 +360,17 @@ def get_account_badges(account_id):
         for badge_index in range(0, badge_list_selector.length):
             badge_selector = badge_list_selector.eq(badge_index)
             # 获取game id
-            detail_badge_url = badge_selector.find('a.badge_row_overlay').attr("href")
-            if detail_badge_url is None:
+            badge_detail_url = badge_selector.find('a.badge_row_overlay').attr("href")
+            if badge_detail_url is None:
                 raise crawler.CrawlerException("页面截取徽章详情地址失败\n%s" % badge_selector.html())
             # 非游戏徽章
-            if detail_badge_url.find("/badges/") >= 0:
+            if badge_detail_url.find("/badges/") >= 0:
                 continue
-            elif detail_badge_url.find("/gamecards/") == -1:
-                raise crawler.CrawlerException("页面截取的徽章详情地址 %s 格式不正确" % detail_badge_url)
-            game_id = detail_badge_url.split("/")[-2]
+            elif badge_detail_url.find("/gamecards/") == -1:
+                raise crawler.CrawlerException("页面截取的徽章详情地址 %s 格式不正确" % badge_detail_url)
+            game_id = badge_detail_url.split("/")[-2]
             if not crawler.is_integer(game_id):
-                raise crawler.CrawlerException("徽章详情地址 %s 截取游戏id失败" % detail_badge_url)
+                raise crawler.CrawlerException("徽章详情地址 %s 截取游戏id失败" % badge_detail_url)
             # 获取徽章等级
             badge_info_text = badge_selector.find('div.badge_content div.badge_info_description div').eq(1).html()
             if badge_info_text is None:
