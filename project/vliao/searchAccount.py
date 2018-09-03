@@ -51,9 +51,6 @@ def search_account(account_name, search_type):
 
 
 def main():
-    # 设置日志路径
-    crawler.quicky_set_log_path()
-    
     # 检测登录状态
     try:
         vLiaoCommon.check_login()
