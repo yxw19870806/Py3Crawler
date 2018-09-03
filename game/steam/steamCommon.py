@@ -172,25 +172,58 @@ def get_game_store_index(game_id):
 
 
 # 获取全部已经没有剩余卡牌掉落且还没有收集完毕的徽章详细地址
-def get_self_account_badges(account_id):
+def get_self_uncompleted_account_badges(account_id):
     # 徽章第一页
-    badges_index_url = "https://steamcommunity.com/profiles/%s/badges/" % account_id
-    badges_index_response = net.http_request(badges_index_url, method="GET", cookies_list=COOKIE_INFO)
-    if badges_index_response.status != net.HTTP_RETURN_CODE_SUCCEED:
-        raise crawler.CrawlerException(crawler.request_failre(badges_index_response.status))
     badges_detail_url_list = []
-    # 徽章div
-    badges_selector = pq(badges_index_response.data.decode(errors="ignore")).find(".maincontent .badges_sheet .badge_row")
-    for index in range(0, badges_selector.length):
-        badge_selector = badges_selector.eq(index)
-        # 已经掉落全部卡牌的徽章
-        if badge_selector.find("span.progress_info_bold").html() == "无剩余卡牌掉落":
-            # 徽章详细信息页面地址
-            badge_detail_url = badge_selector.find("a.badge_row_overlay").attr("href")
-            if not badge_detail_url:
-                raise crawler.CrawlerException("徽章信息截取徽章详细界面地址失败\n%s" % badge_selector.html())
+    page_count = 1
+    while True:
+        output.print_msg("开始解析第%s页徽章" % page_count)
+        badges_pagination_url = "https://steamcommunity.com/profiles/%s/badges/" % account_id
+        query_data = {"p": page_count}
+        badges_pagination_response = net.http_request(badges_pagination_url, method="GET", fields=query_data, cookies_list=COOKIE_INFO)
+        if badges_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
+            raise crawler.CrawlerException("第%s页徽章访问失败，原因：%s" % (page_count, crawler.request_failre(badges_pagination_response.status)))
+        badges_pagination_response_content = badges_pagination_response.data.decode(errors="ignore")
+        # 徽章div
+        badges_selector = pq(badges_pagination_response_content).find(".maincontent .badges_sheet .badge_row")
+        for index in range(0, badges_selector.length):
+            badge_selector = badges_selector.eq(index)
+            # 闪亮徽章，跳过
+            if badge_selector.find(".badge_title").html().find("- 闪亮徽章") >= 0:
+                continue
+            # 获取game id
+            badge_detail_url = badge_selector.find('a.badge_row_overlay').attr("href")
+            if badge_detail_url is None:
+                raise crawler.CrawlerException("徽章信息截取徽章详情地址失败\n%s" % badge_selector.html())
+            # 非游戏徽章
+            if badge_detail_url.find("/badges/") >= 0:
+                continue
+            elif badge_detail_url.find("/gamecards/") == -1:
+                raise crawler.CrawlerException("页面截取的徽章详情地址 %s 格式不正确" % badge_detail_url)
+            # 没有任何当前徽章的卡牌，并且有徽章等级
+            if badge_selector.find("span.progress_info_bold").length == 0:
+                badge_level_html = badge_selector.find(".badge_info_description div").eq(1).text()
+                if not badge_level_html:
+                    raise crawler.CrawlerException("徽章信息截取徽章等级信息失败\n%s" % badge_selector.html())
+                badge_level_find = re.findall("(\d*) 级,", badge_level_html)
+                if len(badge_level_find) == 1 and crawler.is_integer(badge_level_find[0]):
+                    if int(badge_level_find[0]) == 5:
+                        continue
+                else:
+                    raise crawler.CrawlerException("徽章信息截取徽章等级失败\n%s" % badge_level_html)
+            else:
+                # 还有掉落的卡牌，跳过
+                if badge_selector.find("span.progress_info_bold").html() != "无剩余卡牌掉落":
+                    continue
             badges_detail_url_list.append(badge_detail_url)
-    # ['https://steamcommunity.com/profiles/76561198172925593/gamecards/459820/', 'https://steamcommunity.com/profiles/76561198172925593/gamecards/357200/', 'https://steamcommunity.com/profiles/76561198172925593/gamecards/502740/', 'https://steamcommunity.com/profiles/76561198172925593/gamecards/359600/', 'https://steamcommunity.com/profiles/76561198172925593/gamecards/354380/', 'https://steamcommunity.com/profiles/76561198172925593/gamecards/359670/', 'https://steamcommunity.com/profiles/76561198172925593/gamecards/525300/', 'https://steamcommunity.com/profiles/76561198172925593/gamecards/337980/', 'https://steamcommunity.com/profiles/76561198172925593/gamecards/591420/']
+        # 判断是不是还有下一页
+        next_page_selector = pq(badges_pagination_response_content).find("div.profile_paging div.pageLinks a.pagelink:last")
+        if next_page_selector.length == 0:
+            break
+        if page_count >= int(next_page_selector.attr("href").split("?p=")[-1]):
+            break
+        page_count += 1
+    # ['https://steamcommunity.com/profiles/76561198172925593/gamecards/459820/', 'https://steamcommunity.com/profiles/76561198172925593/gamecards/357200/']
     return badges_detail_url_list
 
 

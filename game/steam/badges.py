@@ -24,7 +24,7 @@ def main(account_id):
         raise
     # 获取全部没有收到恒宇卡牌掉落且还可以升级的徽章
     try:
-        badges_detail_url_list = steamCommon.get_self_account_badges(account_id)
+        badges_detail_url_list = steamCommon.get_self_uncompleted_account_badges(account_id)
     except crawler.CrawlerException as e:
         output.print_msg("个人徽章首页解析失败，原因：%s" % e.message)
         raise
