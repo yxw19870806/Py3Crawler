@@ -102,42 +102,6 @@ class Crawler(object):
                 if len(app_config_template) == 3:
                     self.app_config[app_config_template[0]] = analysis_config(config, app_config_template[0], app_config_template[1], app_config_template[2])
 
-        # 日志
-        log.IS_SHOW_ERROR = self.is_show_error = analysis_config(config, "IS_SHOW_ERROR", True, CONFIG_ANALYSIS_MODE_BOOLEAN)
-        log.IS_SHOW_STEP = self.is_show_step = analysis_config(config, "IS_SHOW_STEP", True, CONFIG_ANALYSIS_MODE_BOOLEAN)
-        log.IS_SHOW_TRACE = self.is_show_trace = analysis_config(config, "IS_SHOW_TRACE", False, CONFIG_ANALYSIS_MODE_BOOLEAN)
-        error_log_path = analysis_config(config, "ERROR_LOG_PATH", "\\log/errorLog.txt", CONFIG_ANALYSIS_MODE_PATH)
-        log.ERROR_LOG_PATH = self.error_log_path = replace_path(error_log_path)
-        error_log_dir = os.path.dirname(self.error_log_path)
-        if not path.create_dir(error_log_dir):
-            self.print_msg("创建错误日志目录 %s 失败" % error_log_dir)
-            tool.process_exit()
-            return
-        is_log_step = analysis_config(config, "IS_LOG_STEP", True, CONFIG_ANALYSIS_MODE_BOOLEAN)
-        if not is_log_step:
-            log.STEP_LOG_PATH = self.step_log_path = ""
-        else:
-            step_log_path = analysis_config(config, "STEP_LOG_PATH", "\\log/stepLog.txt", CONFIG_ANALYSIS_MODE_PATH)
-            log.STEP_LOG_PATH = self.step_log_path = replace_path(step_log_path)
-            # 日志文件保存目录
-            step_log_dir = os.path.dirname(self.step_log_path)
-            if not path.create_dir(step_log_dir):
-                self.print_msg("创建步骤日志目录 %s 失败" % step_log_dir)
-                tool.process_exit()
-                return
-        is_log_trace = analysis_config(config, "IS_LOG_TRACE", True, CONFIG_ANALYSIS_MODE_BOOLEAN)
-        if not is_log_trace:
-            log.TRACE_LOG_PATH = self.trace_log_path = ""
-        else:
-            trace_log_path = analysis_config(config, "TRACE_LOG_PATH", "\\log/traceLog.txt", CONFIG_ANALYSIS_MODE_PATH)
-            log.TRACE_LOG_PATH = self.trace_log_path = replace_path(trace_log_path)
-            # 日志文件保存目录
-            trace_log_dir = os.path.dirname(self.trace_log_path)
-            if not path.create_dir(trace_log_dir):
-                self.print_msg("创建调试日志目录 %s 失败" % trace_log_dir)
-                tool.process_exit()
-                return
-
         # 是否下载
         self.is_download_photo = analysis_config(config, "IS_DOWNLOAD_PHOTO", True, CONFIG_ANALYSIS_MODE_BOOLEAN) and sys_download_photo
         self.is_download_video = analysis_config(config, "IS_DOWNLOAD_VIDEO", True, CONFIG_ANALYSIS_MODE_BOOLEAN) and sys_download_video
