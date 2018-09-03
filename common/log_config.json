@@ -1,0 +1,14 @@
+{
+  "IS_SHOW_ERROR": true,
+  "IS_SHOW_STEP": true,
+  "IS_SHOW_TRACE": false,
+  "IS_SHOW_NOTICE": true,
+  "IS_LOG_ERROR": true,
+  "IS_LOG_STEP": false,
+  "IS_LOG_TRACE": false,
+  "IS_LOG_NOTICE": true,
+  "ERROR_LOG_PATH": "../log/errorLog.txt",
+  "STEP_LOG_PATH": "../log/errorLog.txt",
+  "TRACE_LOG_PATH": "../log/errorLog.txt",
+  "NOTICE_LOG_PATH": "../log/errorLog.txt"
+}
