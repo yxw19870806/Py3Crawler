@@ -16,8 +16,6 @@ from project.dailymotion import dailymotion
 
 def main():
     config = crawler._get_config()
-    # 设置日志路径
-    crawler.quicky_set_log_path(config)
     # 设置代理
     crawler.quickly_set_proxy(config)
     # GUI窗口
