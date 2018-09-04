@@ -135,10 +135,7 @@ class Article(crawler.Crawler):
         # 初始化参数
         sys_config = {
             crawler.SYS_DOWNLOAD_PHOTO: True,
-            crawler.SYS_GET_COOKIE: {
-                "sina.com.cn": (),
-                "login.sina.com.cn": (),
-            },
+           crawler.SYS_GET_COOKIE: ("sina.com.cn", "login.sina.com.cn"),
         }
         crawler.Crawler.__init__(self, sys_config, extra_config)
 

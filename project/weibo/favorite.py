@@ -98,10 +98,7 @@ class Favorite(crawler.Crawler):
         sys_config = {
             crawler.SYS_DOWNLOAD_PHOTO: True,
             crawler.SYS_NOT_CHECK_SAVE_DATA: True,
-            crawler.SYS_GET_COOKIE: {
-                "sina.com.cn": (),
-                "login.sina.com.cn": (),
-            },
+            crawler.SYS_GET_COOKIE: ("sina.com.cn", "login.sina.com.cn"),
         }
         crawler.Crawler.__init__(self, sys_config, extra_config)
 
