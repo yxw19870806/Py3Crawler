@@ -158,7 +158,7 @@ class MMP_MMXYZ(crawler.Crawler):
                 thread_list = []
                 for photo_url in album_response["photo_url_list"]:
                     if not self.is_running():
-                        tool.process_exit(0)
+                        break
                     photo_url_split = urllib.parse.urlsplit(photo_url)
                     photo_url = photo_url_split[0] + "://" + photo_url_split[1] + urllib.parse.quote(photo_url_split[2])
                     log.step("图集%s《%s》开始下载第%s张图片 %s" % (album_info["album_id"], album_info["album_title"], photo_index, photo_url))

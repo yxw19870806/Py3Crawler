@@ -121,7 +121,7 @@ class UGirls(crawler.Crawler):
                 thread_list = []
                 for photo_url in album_response["photo_url_list"]:
                     if not self.is_running():
-                        tool.process_exit(0)
+                        break
                     log.step("开始下载图集%s的第%s张图片 %s" % (album_id, photo_index, photo_url))
 
                     # 开始下载

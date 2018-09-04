@@ -118,7 +118,7 @@ class MMJpg(crawler.Crawler):
                 thread_list = []
                 for photo_url in album_response["photo_url_list"]:
                     if not self.is_running():
-                        tool.process_exit(0)
+                        break
                     log.step("图集%s《%s》开始下载第%s张图片 %s" % (album_id, album_response["album_title"], photo_index, photo_url))
 
                     # 开始下载
