@@ -177,10 +177,7 @@ class Crawler(object):
                     check_domain_list.append(cookie_domain[1:])
                 for check_domain in check_domain_list:
                     if check_domain in all_cookie_from_browser:
-                        for cookie_name in all_cookie_from_browser[check_domain]:
-                            if sys_config[SYS_GET_COOKIE][cookie_domain] and cookie_name not in sys_config[SYS_GET_COOKIE][cookie_domain]:
-                                continue
-                            self.cookie_value[cookie_name] = all_cookie_from_browser[check_domain][cookie_name]
+                        self.cookie_value.update(all_cookie_from_browser[check_domain])
 
         # 线程数
         self.thread_count = analysis_config(config, "THREAD_COUNT", 10, CONFIG_ANALYSIS_MODE_INTEGER)

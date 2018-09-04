@@ -137,7 +137,7 @@ class NicoNico(crawler.Crawler):
         sys_config = {
             crawler.SYS_DOWNLOAD_VIDEO: True,
             crawler.SYS_SET_PROXY: True,
-            crawler.SYS_GET_COOKIE: {"nicovideo.jp": ()},
+            crawler.SYS_GET_COOKIE: ("nicovideo.jp",),
         }
         crawler.Crawler.__init__(self, sys_config)
 
