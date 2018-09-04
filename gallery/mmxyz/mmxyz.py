@@ -159,22 +159,19 @@ class MMXYZ(crawler.Crawler):
                     log.error("图集%s《%s》 %s解析失败，原因：%s" % (album_info["album_id"], album_info["album_title"], album_info["album_url"], e.message))
                     raise
 
-                # 过滤标题中不支持的字符
-                album_title = path.filter_text(album_info["album_title"])
-                if album_title:
-                    album_path = os.path.join(self.photo_download_path, "%06d %s" % (album_info["album_id"], album_title))
-                else:
-                    album_path = os.path.join(self.photo_download_path, "%06d" % album_info["album_id"])
+                log.trace("图集%s《%s》 %s 解析的全部图片：%s" % (album_info["album_id"], album_response["album_title"], album_info["album_url"], album_response["photo_url_list"]))
+                log.step("图集%s《%s》 %s 解析获取%s张图片" % (album_info["album_id"], album_response["album_title"], album_info["album_url"], len(album_response["photo_url_list"])))
 
-                temp_path = album_path
                 photo_index = 1
+                # 过滤标题中不支持的字符
+                temp_path = album_path = os.path.join(self.photo_download_path, "%06d %s" % (album_info["album_id"], path.filter_text(album_info["album_title"])))
                 thread_list = []
                 for photo_url in album_response["photo_url_list"]:
                     if not self.is_running():
                         tool.process_exit(0)
                     photo_url_split = urllib.parse.urlsplit(photo_url)
                     photo_url = photo_url_split[0] + "://" + photo_url_split[1] + urllib.parse.quote(photo_url_split[2])
-                    log.step("图集%s《%s》 开始下载第%s张图片 %s" % (album_info["album_id"], album_info["album_title"], photo_index, photo_url))
+                    log.step("图集%s《%s》开始下载第%s张图片 %s" % (album_info["album_id"], album_info["album_title"], photo_index, photo_url))
 
                     # 开始下载
                     file_path = os.path.join(album_path, "%03d.%s" % (photo_index, net.get_file_type(photo_url)))
@@ -190,7 +187,7 @@ class MMXYZ(crawler.Crawler):
                     if save_file_return["status"] != 1:
                         log.error("图集%s《%s》 %s 第%s张图片 %s 下载失败，原因：%s" % (album_id, album_info["album_title"], album_info["album_url"], thread.photo_index, thread.photo_url, crawler.download_failre(save_file_return["code"])))
                 if self.is_running():
-                    log.step("图集%s《%s》 %s 全部图片下载完毕" % (album_id, album_info["album_title"], album_info["album_url"]))
+                    log.step("图集%s《%s》全部图片下载完毕" % (album_id, album_info["album_title"]))
                 else:
                     tool.process_exit(0)
 
