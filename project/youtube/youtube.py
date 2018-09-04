@@ -392,7 +392,7 @@ class Youtube(crawler.Crawler):
         sys_config = {
             crawler.SYS_DOWNLOAD_VIDEO: True,
             crawler.SYS_SET_PROXY: True,
-            crawler.SYS_GET_COOKIE: {"youtube.com": ()},
+            crawler.SYS_GET_COOKIE: ("youtube.com",),
             crawler.SYS_APP_CONFIG: (
                 ("VIDEO_QUALITY", 6, crawler.CONFIG_ANALYSIS_MODE_INTEGER),
             ),

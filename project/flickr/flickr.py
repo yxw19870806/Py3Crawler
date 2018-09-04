@@ -199,7 +199,7 @@ class Flickr(crawler.Crawler):
         sys_config = {
             crawler.SYS_DOWNLOAD_PHOTO: True,
             crawler.SYS_SET_PROXY: True,
-            crawler.SYS_GET_COOKIE: {"flickr.com": ()}
+            crawler.SYS_GET_COOKIE: ("flickr.com",),
         }
         crawler.Crawler.__init__(self, sys_config)
 

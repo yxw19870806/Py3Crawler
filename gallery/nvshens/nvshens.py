@@ -148,33 +148,31 @@ class Nvshens(crawler.Crawler):
 
                 photo_index = 1
                 # 过滤标题中不支持的字符
-                album_title = path.filter_text(album_response["album_title"])
-                if album_title:
-                    album_path = os.path.join(self.photo_download_path, "%s %s" % (album_id, album_title))
-                else:
-                    album_path = os.path.join(self.photo_download_path, str(album_id))
-                temp_path = album_path
+                temp_path = album_path = os.path.join(self.photo_download_path, "%s %s" % (album_id, path.filter_text(album_response["album_title"])))
+                thread_list = []
                 for photo_url in album_response["photo_url_list"]:
                     if not self.is_running():
-                        tool.process_exit(0)
+                        break
                     log.step("图集%s《%s》开始下载第%s张图片 %s" % (album_id, album_response["album_title"], photo_index, photo_url))
 
+                    # 开始下载
                     file_path = os.path.join(album_path, "%03d.%s" % (photo_index, net.get_file_type(photo_url)))
-                    header_list = {"Referer": "https://www.nvshens.com/g/%s/" % album_id}
-                    save_file_return = net.save_net_file(photo_url, file_path, header_list=header_list)
-                    if save_file_return["status"] == 0 and save_file_return["code"] == 404:
-                        new_photo_url = None
-                        if photo_url.find("/0.jpg") >= 0:
-                            new_photo_url = photo_url.replace("/0.jpg", "/000.jpg")
-                        elif photo_url.find("/s/") >= 0:
-                            new_photo_url = photo_url.replace("/s/", "/")
-                        if new_photo_url is not None:
-                            save_file_return = net.save_net_file(new_photo_url, file_path, header_list=header_list)
-                    if save_file_return["status"] == 1:
-                        log.step("图集%s《%s》第%s张图片下载成功" % (album_id, album_response["album_title"], photo_index))
-                    else:
-                        log.error("图集%s《%s》第%s张图片 %s 下载失败，原因：%s" % (album_id, album_response["album_title"], photo_index, photo_url, crawler.download_failre(save_file_return["code"])))
+                    thread = Download(self, file_path, photo_url, photo_index)
+                    thread.start()
+                    thread_list.append(thread)
                     photo_index += 1
+
+                # 等待所有线程下载完毕
+                for thread in thread_list:
+                    thread.join()
+                    save_file_return = thread.get_result()
+                    if self.is_running() and save_file_return["status"] != 1:
+                        log.error("图集%s《%s》第%s张图片 %s 下载失败，原因：%s" % (album_id, album_response["album_title"], thread.photo_index, thread.photo_url, crawler.download_failre(save_file_return["code"])))
+                if self.is_running():
+                    log.step("图集%s《%s》全部图片下载完毕" % (album_id, album_response["album_title"]))
+                else:
+                    tool.process_exit(0)
+
                 # 图集内图片全部下载完毕
                 temp_path = ""  # 临时目录设置清除
                 self.total_photo_count += photo_index - 1  # 计数累加
@@ -194,6 +192,31 @@ class Nvshens(crawler.Crawler):
         # 重新保存存档文件
         file.write_file(str(album_id), self.save_data_path, file.WRITE_FILE_TYPE_REPLACE)
         log.step("全部下载完毕，耗时%s秒，共计图片%s张" % (self.get_run_time(), self.total_photo_count))
+
+
+class Download(crawler.DownloadThread):
+    def __init__(self, main_thread, file_path, photo_url, photo_index):
+        crawler.DownloadThread.__init__(self, [], main_thread)
+        self.file_path = file_path
+        self.photo_url = photo_url
+        self.photo_index = photo_index
+        self.result = None
+
+    def run(self):
+        header_list = {"Referer": "https://www.nvshens.com/"}
+        self.result = net.save_net_file(self.photo_url, self.file_path, header_list=header_list)
+        if self.result["status"] == 0 and self.result["code"] == 404:
+            new_photo_url = None
+            if self.photo_url.find("/0.jpg") >= 0:
+                new_photo_url = self.photo_url.replace("/0.jpg", "/000.jpg")
+            elif self.photo_url.find("/s/") >= 0:
+                new_photo_url = self.photo_url.replace("/s/", "/")
+            if new_photo_url is not None:
+                self.result = net.save_net_file(new_photo_url, self.file_path, header_list=header_list)
+        self.notify_main_thread()
+
+    def get_result(self):
+        return self.result
 
 
 if __name__ == "__main__":
