@@ -173,7 +173,7 @@ class ImgXr(crawler.Crawler):
                     for thread in thread_list:
                         thread.join()
                         save_file_return = thread.get_result()
-                        if save_file_return["status"] != 1:
+                        if self.is_running() and save_file_return["status"] != 1:
                             log.error("图集《%s》 %s 第%s张图片 %s 下载失败，原因：%s" % (album_response["album_title"], album_url, thread.photo_index, thread.photo_url, crawler.download_failre(save_file_return["code"])))
                     if self.is_running():
                         log.step("图集《%s》 %s 全部图片下载完毕" % (album_response["album_title"], album_url))

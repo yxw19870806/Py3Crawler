@@ -149,8 +149,8 @@ class MMP_MMXYZ(crawler.Crawler):
                     log.error("图集%s《%s》 %s解析失败，原因：%s" % (album_info["album_id"], album_info["album_title"], album_info["album_url"], e.message))
                     raise
 
-                log.trace("图集%s《%s》 %s 解析的全部图片：%s" % (album_info["album_id"], album_response["album_title"], album_info["album_url"], album_response["photo_url_list"]))
-                log.step("图集%s《%s》 %s 解析获取%s张图片" % (album_info["album_id"], album_response["album_title"], album_info["album_url"], len(album_response["photo_url_list"])))
+                log.trace("图集%s《%s》 %s 解析的全部图片：%s" % (album_info["album_id"], album_info["album_title"], album_info["album_url"], album_response["photo_url_list"]))
+                log.step("图集%s《%s》 %s 解析获取%s张图片" % (album_info["album_id"], album_info["album_title"], album_info["album_url"], len(album_response["photo_url_list"])))
 
                 photo_index = 1
                 # 过滤标题中不支持的字符
@@ -174,10 +174,10 @@ class MMP_MMXYZ(crawler.Crawler):
                 for thread in thread_list:
                     thread.join()
                     save_file_return = thread.get_result()
-                    if save_file_return["status"] != 1:
-                        log.error("图集%s《%s》 %s 第%s张图片 %s 下载失败，原因：%s" % (album_id, album_response["album_title"], album_info["album_url"], thread.photo_index, thread.photo_url, crawler.download_failre(save_file_return["code"])))
+                    if self.is_running() and save_file_return["status"] != 1:
+                        log.error("图集%s《%s》 %s 第%s张图片 %s 下载失败，原因：%s" % (album_id, album_info["album_title"], album_info["album_url"], thread.photo_index, thread.photo_url, crawler.download_failre(save_file_return["code"])))
                 if self.is_running():
-                    log.step("图集%s《%s》全部图片下载完毕" % (album_id, album_response["album_title"]))
+                    log.step("图集%s《%s》全部图片下载完毕" % (album_id, album_info["album_title"]))
                 else:
                     tool.process_exit(0)
 
