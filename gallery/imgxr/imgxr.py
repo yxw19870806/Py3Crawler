@@ -151,8 +151,8 @@ class ImgXr(crawler.Crawler):
                         log.error("图集 %s 解析失败，原因：%s" % (album_url, e.message))
                         raise
 
-                    log.trace("图集 %s 解析的全部图片：%s" % (album_url, album_response["photo_url_list"]))
-                    log.step("图集 %s 解析获取%s张图片" % (album_url, len(album_response["photo_url_list"])))
+                    log.trace("图集《%s》 %s 解析的全部图片：%s" % (album_response["album_title"], album_url, album_response["photo_url_list"]))
+                    log.step("图集《%s》 %s 解析获取%s张图片" % (album_response["album_title"], album_url, len(album_response["photo_url_list"])))
 
                     temp_path = album_path = os.path.join(self.photo_download_path, "%05d %s" % (album_response["album_id"], path.filter_text(album_response["album_title"])))
                     photo_index = 1

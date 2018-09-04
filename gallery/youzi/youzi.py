@@ -130,15 +130,9 @@ class YouZi(crawler.Crawler):
                 log.trace("图集%s《%s》解析的全部图片：%s" % (album_id, album_response["album_title"], album_response["photo_url_list"]))
                 log.step("图集%s《%s》解析获取%s张图片" % (album_id, album_response["album_title"], len(album_response["photo_url_list"])))
 
-                # 过滤标题中不支持的字符
-                album_title = path.filter_text(album_response["album_title"])
-                if album_title:
-                    album_path = os.path.join(self.photo_download_path, "%05d %s" % (album_id, album_title))
-                else:
-                    album_path = os.path.join(self.photo_download_path, "%05d" % str(album_id))
-
-                temp_path = album_path
                 photo_index = 1
+                # 过滤标题中不支持的字符
+                temp_path = album_path = os.path.join(self.photo_download_path, "%05d %s" % (album_id, path.filter_text(album_response["album_title"])))
                 thread_list = []
                 for photo_url in album_response["photo_url_list"]:
                     if not self.is_running():
