@@ -54,20 +54,13 @@ class Crawler(object):
     thread_event = None
     process_status = True  # 主进程是否在运行
 
-    # 输出错误日志
-    def print_msg(self, msg):
-        if self.print_function is None:
-            output.print_msg(msg, True)
-        else:
-            self.print_function(msg)
-
     # 程序全局变量的设置
     def __init__(self, sys_config, extra_config=None):
         self.start_time = time.time()
 
         # 程序启动配置
         if not isinstance(sys_config, dict):
-            self.print_msg("程序启动配置不存在，请检查代码！")
+            output.print_msg("程序启动配置不存在，请检查代码！")
             tool.process_exit()
             return
         sys_download_photo = SYS_DOWNLOAD_PHOTO in sys_config
@@ -108,7 +101,7 @@ class Crawler(object):
 
         if not sys_not_download and not self.is_download_photo and not self.is_download_video:
             if sys_download_photo or sys_download_video:
-                self.print_msg("所有支持的下载都没有开启，请检查配置！")
+                output.print_msg("所有支持的下载都没有开启，请检查配置！")
                 tool.process_exit()
                 return
 
@@ -116,14 +109,14 @@ class Crawler(object):
         self.save_data_path = analysis_config(config, "SAVE_DATA_PATH", "\\\\info/save.data", CONFIG_ANALYSIS_MODE_PATH)
         if not sys_not_check_save_data and not os.path.exists(self.save_data_path):
             # 存档文件不存在
-            self.print_msg("存档文件%s不存在！" % self.save_data_path)
+            output.print_msg("存档文件%s不存在！" % self.save_data_path)
             tool.process_exit()
             return
         temp_file_name = time.strftime("%m-%d_%H_%M_", time.localtime(time.time())) + os.path.basename(self.save_data_path)
         self.temp_save_data_path = os.path.join(os.path.dirname(self.save_data_path), temp_file_name)
         if os.path.exists(self.temp_save_data_path):
             # 临时文件已存在
-            self.print_msg("存档临时文件%s已存在！" % self.temp_save_data_path)
+            output.print_msg("存档临时文件%s已存在！" % self.temp_save_data_path)
             tool.process_exit()
             return
 
@@ -136,7 +129,7 @@ class Crawler(object):
             self.photo_download_path = analysis_config(config, "PHOTO_DOWNLOAD_PATH", "\\\\photo", CONFIG_ANALYSIS_MODE_PATH)
             if not path.create_dir(self.photo_download_path):
                 # 图片保存目录创建失败
-                self.print_msg("图片保存目录%s创建失败！" % self.photo_download_path)
+                output.print_msg("图片保存目录%s创建失败！" % self.photo_download_path)
                 tool.process_exit()
                 return
         else:
@@ -147,7 +140,7 @@ class Crawler(object):
             self.video_download_path = analysis_config(config, "VIDEO_DOWNLOAD_PATH", "\\\\video", CONFIG_ANALYSIS_MODE_PATH)
             if not path.create_dir(self.video_download_path):
                 # 视频保存目录创建失败
-                self.print_msg("视频保存目录%s创建失败！" % self.video_download_path)
+                output.print_msg("视频保存目录%s创建失败！" % self.video_download_path)
                 tool.process_exit()
                 return
         else:
@@ -233,7 +226,7 @@ class Crawler(object):
         self.total_photo_count = 0
         self.total_video_count = 0
 
-        self.print_msg("初始化完成")
+        output.print_msg("初始化完成")
 
     def stop_process(self):
         output.print_msg("stop process")
