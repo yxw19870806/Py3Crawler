@@ -245,7 +245,7 @@ class Bcy(crawler.Crawler):
         # 初始化参数
         sys_config = {
             crawler.SYS_DOWNLOAD_PHOTO: True,
-            crawler.SYS_GET_COOKIE: {"bcy.net": ()},
+            crawler.SYS_GET_COOKIE: ("bcy.net",),
             crawler.SYS_APP_CONFIG: (
                 ("IS_AUTO_FOLLOW", True, crawler.CONFIG_ANALYSIS_MODE_BOOLEAN),
                 ("IS_LOCAL_SAVE_SESSION", False, crawler.CONFIG_ANALYSIS_MODE_BOOLEAN)
