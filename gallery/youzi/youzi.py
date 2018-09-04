@@ -150,7 +150,7 @@ class YouZi(crawler.Crawler):
                 for thread in thread_list:
                     thread.join()
                     save_file_return = thread.get_result()
-                    if save_file_return["status"] != 1:
+                    if self.is_running() and save_file_return["status"] != 1:
                         log.error("图集%s《%s》第%s张图片 %s 下载失败，原因：%s" % (album_id, album_response["album_title"], thread.photo_index, thread.photo_url, crawler.download_failre(save_file_return["code"])))
                 if self.is_running():
                     log.step("图集%s《%s》全部图片下载完毕" % (album_id, album_response["album_title"]))
@@ -187,7 +187,7 @@ class Download(crawler.DownloadThread):
         self.result = None
 
     def run(self):
-        self.result = net.save_net_file(self.photo_url, self.file_path, header_list={"Referer": "https://www.uumnt.cc/"})
+        self.result = net.save_net_file(self.photo_url, self.file_path)
         self.notify_main_thread()
 
     def get_result(self):

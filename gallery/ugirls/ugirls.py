@@ -40,7 +40,10 @@ def get_album_page(album_id):
         "is_delete": False,  # 是否已删除
         "model_name": "",  # 模特名字
     }
-    if album_response.status != net.HTTP_RETURN_CODE_SUCCEED:
+    if album_response.status == 404:
+        result["is_delete"] = True
+        return result
+    elif album_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(album_response.status))
     album_response_content = album_response.data.decode(errors="ignore")
     if album_response_content.find("该页面不存在,或者已经被删除!") >= 0:
@@ -135,7 +138,7 @@ class UGirls(crawler.Crawler):
                 for thread in thread_list:
                     thread.join()
                     save_file_return = thread.get_result()
-                    if save_file_return["status"] != 1:
+                    if self.is_running() and save_file_return["status"] != 1:
                         log.error("图集%s第%s张图片 %s 下载失败，原因：%s" % (album_id, thread.photo_index, thread.photo_url, crawler.download_failre(save_file_return["code"])))
                 if self.is_running():
                     log.step("图集%s全部图片下载完毕" % album_id)
