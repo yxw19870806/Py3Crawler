@@ -65,19 +65,8 @@ def get_one_page_blog(account_name, page_count):
             result["is_over"] = True
             return result
     # 判断是不是最后一页
-    # https://ameblo.jp/48orii48/
-    if pq(blog_pagination_response_content).find("div.page").length > 0:
-        pagination_selector = pq(blog_pagination_response_content).find("div.page").eq(0).find("a")
-        find_page_count_list = []
-        for pagination_index in range(0, pagination_selector.length):
-            temp_page_count = tool.find_sub_string(pagination_selector.eq(pagination_index).attr("href"), "/page-", ".html")
-            if crawler.is_integer(temp_page_count):
-                find_page_count_list.append(int(temp_page_count))
-        if len(find_page_count_list) == 0:
-            raise crawler.CrawlerException("页面截取分页信息失败\n%s" % blog_pagination_response_content)
-        result["is_over"] = page_count >= max(find_page_count_list)
     # https://ameblo.jp/18prokonan/
-    elif pq(blog_pagination_response_content).find("div.pagingArea").length > 0:
+    if pq(blog_pagination_response_content).find("div.pagingArea").length > 0:
         if pq(blog_pagination_response_content).find("div.pagingArea a.pagingNext").length == 0:
             if pq(blog_pagination_response_content).find("div.pagingArea a.pagingPrev").length == 0:
                 raise crawler.CrawlerException("页面截取分页信息div.pagingArea失败\n%s" % blog_pagination_response_content)
@@ -90,6 +79,17 @@ def get_one_page_blog(account_name, page_count):
                 raise crawler.CrawlerException("页面截取分页信息ul.skin-paging失败\n%s" % blog_pagination_response_content)
             else:
                 result["is_over"] = True
+    # https://ameblo.jp/48orii48/
+    elif pq(blog_pagination_response_content).find("div.page").length > 0:
+        pagination_selector = pq(blog_pagination_response_content).find("div.page").eq(0).find("a")
+        find_page_count_list = []
+        for pagination_index in range(0, pagination_selector.length):
+            temp_page_count = tool.find_sub_string(pagination_selector.eq(pagination_index).attr("href"), "/page-", ".html")
+            if crawler.is_integer(temp_page_count):
+                find_page_count_list.append(int(temp_page_count))
+        if len(find_page_count_list) == 0:
+            raise crawler.CrawlerException("页面截取分页信息失败\n%s" % blog_pagination_response_content)
+        result["is_over"] = page_count >= max(find_page_count_list)
     return result
 
 
