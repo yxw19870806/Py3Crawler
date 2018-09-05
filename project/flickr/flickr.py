@@ -213,8 +213,8 @@ class Flickr(crawler.Crawler):
         COOKIE_INFO = self.cookie_value
 
         # 解析存档文件
-        # account_id  photo_count  last_photo_time
-        self.account_list = crawler.read_save_data(self.save_data_path, 0, ["", "0", "0"])
+        # account_id  last_photo_time
+        self.account_list = crawler.read_save_data(self.save_data_path, 0, ["", "0"])
 
         # 检测登录状态
         console_string = ""
@@ -295,7 +295,7 @@ class Download(crawler.DownloadThread):
             for photo_info in photo_pagination_response["photo_info_list"]:
                 # 检查是否达到存档记录
                 # photo_id是唯一的，但并不是递增的（分表主键），无法作为存档的判断依据
-                if photo_info["photo_time"] > int(self.account_info[2]):
+                if photo_info["photo_time"] > int(self.account_info[1]):
                     photo_info_list.append(photo_info)
                 else:
                     is_over = True
@@ -311,25 +311,22 @@ class Download(crawler.DownloadThread):
 
     # 下载同一上传时间的所有图片
     def crawl_photo(self, photo_info_list):
-        photo_index = int(self.account_info[1]) + 1
         for photo_info in photo_info_list:
             self.main_thread_check()  # 检测主线程运行状态
-            self.step("开始下载第%s张图片 %s" % (photo_index, photo_info["photo_url"]))
+            self.step("开始下载图片%s %s" % (photo_info["photo_id"], photo_info["photo_url"]))
             file_path = os.path.join(self.main_thread.photo_download_path, self.account_name, "%011d.%s" % (photo_info["photo_id"], net.get_file_type(photo_info["photo_url"])))
             save_file_return = net.save_net_file(photo_info["photo_url"], file_path)
             if save_file_return["status"] == 1:
                 # 设置临时目录
                 self.temp_path_list.append(file_path)
-                self.step("第%s张图片下载成功" % photo_index)
-                photo_index += 1
+                self.step("图片%s下载成功" % photo_info["photo_id"])
             else:
-                self.error("第%s张图片 %s 下载失败，原因：%s" % (photo_index, photo_info["photo_url"], crawler.download_failre(save_file_return["code"])))
+                self.error("图片%s %s 下载失败，原因：%s" % (photo_info["photo_id"], photo_info["photo_url"], crawler.download_failre(save_file_return["code"])))
 
         # 图片下载完毕
         self.temp_path_list = []  # 临时目录设置清除
-        self.total_photo_count += (photo_index - 1) - int(self.account_info[1])  # 计数累加
-        self.account_info[1] = str(photo_index - 1)  # 设置存档记录
-        self.account_info[2] = str(photo_info_list[0]["photo_time"])  # 设置存档记
+        self.total_photo_count += len(photo_info_list)  # 计数累加
+        self.account_info[1] = str(photo_info_list[0]["photo_time"])  # 设置存档记
 
     def run(self):
         try:
