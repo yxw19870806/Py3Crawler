@@ -32,7 +32,8 @@ def get_photo_index_page(account_id):
     if pq(photo_index_response_content).find("index_all_list p").html() != "还没有照片哦":
         video_list_selector = pq(photo_index_response_content).find("img.index_img_main")
         for video_index in range(0, video_list_selector.length):
-            result["photo_url_list"].append(video_list_selector.eq(video_index).attr("src"))
+            photo_url = video_list_selector.eq(video_index).attr("src")
+            result["photo_url_list"].append(photo_url.split("@")[0])
         if len(result["photo_url_list"]) == 0:
             raise crawler.CrawlerException("页面匹配图片地址失败\n%s" % photo_index_response_content)
     return result
