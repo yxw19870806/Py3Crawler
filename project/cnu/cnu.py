@@ -22,6 +22,7 @@ def get_album_page(album_id):
     }
     if album_response.status == 404:
         result["is_delete"] = True
+        return result
     elif album_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(album_response.status))
     album_response_content = album_response.data.decode(errors="ignore")
