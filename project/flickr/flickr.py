@@ -152,9 +152,16 @@ def get_one_page_photo(user_id, page_count, api_key, csrf, request_id):
     # 获取图片信息
     for photo_info in photo_pagination_response.json_data["photos"]["photo"]:
         result_photo_info = {
+            "photo_id": None,  # 图片id
             "photo_time": None,  # 图片上传时间
             "photo_url": None,  # 图片地址
         }
+        # 获取图片id
+        if not crawler.check_sub_key(("id",), photo_info):
+            raise crawler.CrawlerException("图片信息'id'字段不存在\n%s" % photo_info)
+        if not crawler.is_integer(photo_info["id"]):
+            raise crawler.CrawlerException("图片信息'id'字段类型不正确\n%s" % photo_info)
+        result_photo_info["photo_id"] = int(photo_info["id"])
         # 获取图片上传时间
         if not crawler.check_sub_key(("dateupload",), photo_info):
             raise crawler.CrawlerException("图片信息'dateupload'字段不存在\n%s" % photo_info)
@@ -287,6 +294,7 @@ class Download(crawler.DownloadThread):
             # 寻找这一页符合条件的图片
             for photo_info in photo_pagination_response["photo_info_list"]:
                 # 检查是否达到存档记录
+                # photo_id是唯一的，但并不是递增的（分表主键），无法作为存档的判断依据
                 if photo_info["photo_time"] > int(self.account_info[2]):
                     photo_info_list.append(photo_info)
                 else:
@@ -307,7 +315,7 @@ class Download(crawler.DownloadThread):
         for photo_info in photo_info_list:
             self.main_thread_check()  # 检测主线程运行状态
             self.step("开始下载第%s张图片 %s" % (photo_index, photo_info["photo_url"]))
-            file_path = os.path.join(self.main_thread.photo_download_path, self.account_name, "%04d.%s" % (photo_index, net.get_file_type(photo_info["photo_url"])))
+            file_path = os.path.join(self.main_thread.photo_download_path, self.account_name, "%011d.%s" % (photo_info["photo_id"], net.get_file_type(photo_info["photo_url"])))
             save_file_return = net.save_net_file(photo_info["photo_url"], file_path)
             if save_file_return["status"] == 1:
                 # 设置临时目录
