@@ -8,7 +8,6 @@ email: hikaru870806@hotmail.com
 """
 import html
 import os
-import threading
 import time
 import traceback
 from pyquery import PyQuery as pq
