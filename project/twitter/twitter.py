@@ -72,7 +72,7 @@ def get_account_index_page(account_name):
     return result
 
 
-# 获取一页的媒体信息
+# 获取一页的推特信息
 def get_one_page_media(account_name, position_blog_id):
     media_pagination_url = "https://twitter.com/i/profiles/show/%s/media_timeline" % account_name
     query_data = {
@@ -83,8 +83,8 @@ def get_one_page_media(account_name, position_blog_id):
     header_list = {"referer": "https://twitter.com/%s" % account_name}
     media_pagination_response = net.http_request(media_pagination_url, method="GET", fields=query_data, cookies_list=COOKIE_INFO, header_list=header_list, json_decode=True)
     result = {
-        "is_over": False,  # 是否最后一页媒体（没有获取到任何内容）
-        "media_info_list": [],  # 全部媒体信息
+        "is_over": False,  # 是否最后一页推特（没有获取到任何内容）
+        "media_info_list": [],  # 全部推特信息
         "next_page_position": None  # 下一页指针
     }
     if media_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
@@ -122,11 +122,11 @@ def get_one_page_media(account_name, position_blog_id):
         raise crawler.CrawlerException("tweet分组数量和返回数据中不一致\n%s\n%s" % (media_pagination_response.json_data["items_html"], media_pagination_response.json_data["new_latent_count"]))
     for tweet_data in tweet_data_list:
         result_media_info = {
-            "blog_id": None,  # 日志id
+            "blog_id": None,  # 推特id
             "has_video": False,  # 是不是包含视频
             "photo_url_list": [],  # 全部图片地址
         }
-        # 获取日志id
+        # 获取推特id
         blog_id = tool.find_sub_string(tweet_data, 'data-tweet-id="', '"')
         if not crawler.is_integer(blog_id):
             raise crawler.CrawlerException("tweet内容中截取tweet id失败\n%s" % tweet_data)
@@ -268,33 +268,33 @@ class Download(crawler.DownloadThread):
         self.display_name = self.account_name
         self.step("开始")
 
-    # 获取所有可下载媒体
+    # 获取所有可下载推特
     def get_crawl_list(self):
         position_blog_id = self.init_position_blog_id
         media_info_list = []
         is_over = False
-        # 获取全部还未下载过需要解析的媒体
+        # 获取全部还未下载过需要解析的推特
         while not is_over:
             self.main_thread_check()  # 检测主线程运行状态
-            self.step("开始解析position：%s页媒体" % position_blog_id)
+            self.step("开始解析position：%s页推特" % position_blog_id)
 
             # 获取指定时间点后的一页图片信息
             try:
                 media_pagination_response = get_one_page_media(self.account_name, position_blog_id)
             except crawler.CrawlerException as e:
-                self.error("position：%s页媒体解析失败，原因：%s" % (position_blog_id, e.message))
+                self.error("position：%s页推特解析失败，原因：%s" % (position_blog_id, e.message))
                 raise
 
             if media_pagination_response["is_over"]:
                 break
 
-            self.trace("position：%s页解析的全部媒体：%s" % (position_blog_id, media_pagination_response["media_info_list"]))
-            self.step("position：%s页解析获取%s个媒体" % (position_blog_id, len(media_pagination_response["media_info_list"])))
+            self.trace("position：%s页解析的全部推特：%s" % (position_blog_id, media_pagination_response["media_info_list"]))
+            self.step("position：%s页解析获取%s个推特" % (position_blog_id, len(media_pagination_response["media_info_list"])))
 
-            # 寻找这一页符合条件的媒体
+            # 寻找这一页符合条件的推特
             for media_info in media_pagination_response["media_info_list"]:
                 # 检查是否达到存档记录
-                if media_info["blog_id"] > int(self.account_info[4]):
+                if media_info["blog_id"] > int(self.account_info[2]):
                     media_info_list.append(media_info)
                 else:
                     is_over = True
@@ -310,68 +310,67 @@ class Download(crawler.DownloadThread):
 
         return media_info_list
 
-    # 解析单个媒体
+    # 解析单个推特
     def crawl_media(self, media_info):
         # 图片下载
-        photo_index = int(self.account_info[2]) + 1
+        photo_index = 1
         if self.main_thread.is_download_photo:
-            self.trace("媒体%s解析的全部图片：%s" % (media_info["blog_id"], media_info["photo_url_list"]))
-            self.step("媒体%s解析获取%s张图片" % (media_info["blog_id"], len(media_info["photo_url_list"])))
+            self.trace("推特%s解析的全部图片：%s" % (media_info["blog_id"], media_info["photo_url_list"]))
+            self.step("推特%s解析获取%s张图片" % (media_info["blog_id"], len(media_info["photo_url_list"])))
 
             for photo_url in media_info["photo_url_list"]:
                 self.main_thread_check()  # 检测主线程运行状态
-                self.step("开始下载第%s张图片 %s" % (photo_index, photo_url))
+                self.step("开始下载推特%s的第%s张图片 %s" % (media_info["blog_id"], photo_index, photo_url))
 
-                photo_file_path = os.path.join(self.main_thread.photo_download_path, self.account_name, "%04d.%s" % (photo_index, net.get_file_type(photo_url)))
+                photo_file_path = os.path.join(self.main_thread.photo_download_path, self.account_name, "%019d_%02d.%s" % (media_info["blog_id"], photo_index, net.get_file_type(photo_url)))
                 save_file_return = net.save_net_file(photo_url, photo_file_path)
                 if save_file_return["status"] == 1:
                     self.temp_path_list.append(photo_file_path)
-                    self.step("第%s张图片下载成功" % photo_index)
-                    photo_index += 1
-                elif save_file_return["status"] == 0 and save_file_return["code"] == 404:
-                    self.error("第%s张图片 %s 已被删除，跳过" % (photo_index, photo_url))
+                    self.step("推特%s的第%s张图片下载成功" % (media_info["blog_id"], photo_index))
                 else:
-                    self.error("第%s张图片 %s 下载失败，原因：%s" % (photo_index, photo_url, crawler.download_failre(save_file_return["code"])))
+                    self.error("推特%s的第%s张图片 %s 下载失败，原因：%s" % (media_info["blog_id"], photo_index, photo_url, crawler.download_failre(save_file_return["code"])))
+                photo_index += 1
 
         # 视频下载
-        video_index = int(self.account_info[3]) + 1
+        download_complete = False
         if self.main_thread.is_download_video and media_info["has_video"]:
             self.main_thread_check()  # 检测主线程运行状态
             # 获取视频播放地址
             try:
                 video_play_response = get_video_play_page(media_info["blog_id"])
             except crawler.CrawlerException as e:
-                self.error("日志%s的视频解析失败，原因：%s" % (media_info["blog_id"], e.message))
+                self.error("推特%s的视频解析失败，原因：%s" % (media_info["blog_id"], e.message))
                 raise
 
             if video_play_response["video_url"] is None:
-                self.error("日志%s的视频无法访问，跳过" % media_info["blog_id"])
+                self.error("推特%s的视频无法访问，跳过" % media_info["blog_id"])
             else:
+                self.trace("推特%s解析的视频：%s" % (media_info["blog_id"], video_play_response["video_url"]))
+
                 self.main_thread_check()  # 检测主线程运行状态
-                self.step("开始下载第%s个视频 %s" % (video_index, video_play_response["video_url"]))
+                self.step("开始下载推特%s的视频 %s" % (media_info["blog_id"], video_play_response["video_url"]))
                 
                 # 分割后的ts格式视频
                 if isinstance(video_play_response["video_url"], list):
-                    video_file_path = os.path.join(self.main_thread.video_download_path, self.account_name, "%04d.ts" % video_index)
+                    video_file_path = os.path.join(self.main_thread.video_download_path, self.account_name, "%019d.ts" % media_info["blog_id"])
                     save_file_return = net.save_net_file_list(video_play_response["video_url"], video_file_path)
                 # 其他格式的视频
                 else:
-                    video_file_path = os.path.join(self.main_thread.video_download_path, self.account_name, "%04d.%s" % (video_index, net.get_file_type(video_play_response["video_url"])))
+                    video_file_path = os.path.join(self.main_thread.video_download_path, self.account_name, "%019d.%s" % (media_info["blog_id"], net.get_file_type(video_play_response["video_url"])))
                     save_file_return = net.save_net_file(video_play_response["video_url"], video_file_path)
                 if save_file_return["status"] == 1:
                     self.temp_path_list.append(video_file_path)
-                    self.step("第%s个视频下载成功" % video_index)
-                    video_index += 1
+                    self.step("推特%s的视频下载成功" % media_info["blog_id"])
+                    download_complete = True
                 else:
-                    self.error("第%s个视频 %s 下载失败" % (video_index, video_play_response["video_url"]))
+                    self.error("推特%s的视频 %s 下载失败，原因：%s" % (media_info["blog_id"], video_play_response["video_url"], crawler.download_failre(save_file_return["code"])))
 
-        # 媒体内图片和视频全部下载完毕
+        # 推特内图片和视频全部下载完毕
         self.temp_path_list = []  # 临时目录设置清除
-        self.total_photo_count += (photo_index - 1) - int(self.account_info[2])  # 计数累加
-        self.total_video_count += (video_index - 1) - int(self.account_info[3])  # 计数累加
-        self.account_info[2] = str(photo_index - 1)  # 设置存档记录
-        self.account_info[3] = str(video_index - 1)  # 设置存档记录
-        self.account_info[4] = str(media_info["blog_id"])
+        self.total_photo_count += photo_index - 1  # 计数累加
+        if download_complete:
+            self.total_video_count += 1  # 计数累加
+        self.account_info[2] = str(media_info["blog_id"])
 
     def run(self):
         try:
@@ -388,14 +387,14 @@ class Download(crawler.DownloadThread):
                     self.error("account id 不符合，原账号已改名")
                     tool.process_exit()
 
-            # 获取所有可下载媒体
+            # 获取所有可下载推特
             media_info_list = self.get_crawl_list()
-            self.step("需要下载的全部媒体解析完毕，共%s个" % len(media_info_list))
+            self.step("需要下载的全部推特解析完毕，共%s个" % len(media_info_list))
 
-            # 从最早的媒体开始下载
+            # 从最早的推特开始下载
             while len(media_info_list) > 0:
                 media_info = media_info_list.pop()
-                self.step("开始解析媒体%s" % media_info["blog_id"])
+                self.step("开始解析推特%s" % media_info["blog_id"])
                 self.crawl_media(media_info)
                 self.main_thread_check()  # 检测主线程运行状态
         except SystemExit as se:

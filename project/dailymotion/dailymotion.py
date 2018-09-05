@@ -9,7 +9,6 @@ email: hikaru870806@hotmail.com
 import json
 import os
 import random
-import threading
 import time
 import traceback
 from common import *
