@@ -213,8 +213,8 @@ class Ameblo(crawler.Crawler):
         COOKIE_INFO = self.cookie_value
 
         # 解析存档文件
-        # account_name  photo_count  last_diary_time
-        self.account_list = crawler.read_save_data(self.save_data_path, 0, ["", "0", "0"])
+        # account_name  last_blog_id
+        self.account_list = crawler.read_save_data(self.save_data_path, 0, ["", "0"])
 
         # 检测登录状态
         if not check_login():
@@ -263,8 +263,8 @@ class Download(crawler.DownloadThread):
     def __init__(self, account_info, main_thread):
         crawler.DownloadThread.__init__(self, account_info, main_thread)
         self.account_id = self.account_info[0]
-        if len(self.account_info) >= 4 and self.account_info[3]:
-            self.display_name = self.account_info[3]
+        if len(self.account_info) >= 3 and self.account_info[2]:
+            self.display_name = self.account_info[2]
         else:
             self.display_name = self.account_info[0]
         self.step("开始")
@@ -290,7 +290,7 @@ class Download(crawler.DownloadThread):
 
             for blog_id in blog_pagination_response["blog_id_list"]:
                 # 检查是否达到存档记录
-                if blog_id > int(self.account_info[2]):
+                if blog_id > int(self.account_info[1]):
                     # 新增日志导致的重复判断
                     if blog_id in blog_id_list:
                         continue
@@ -324,32 +324,32 @@ class Download(crawler.DownloadThread):
         self.trace("日志%s解析的全部图片：%s" % (blog_id, blog_response["photo_url_list"]))
         self.step("日志%s解析获取%s张图片" % (blog_id, len(blog_response["photo_url_list"])))
 
-        photo_index = int(self.account_info[1]) + 1
+        photo_index = 1
         for photo_url in blog_response["photo_url_list"]:
             self.main_thread_check()  # 检测主线程运行状态
             # 获取原始图片下载地址
             photo_url = get_origin_photo_url(photo_url)
-            self.step("开始下载第%s张图片 %s" % (photo_index, photo_url))
+            self.step("开始下载日志%s的第%s张图片 %s" % (blog_id, photo_index, photo_url))
 
             file_path = os.path.join(self.main_thread.photo_download_path, self.account_id, "%011d_%02d.%s" % (blog_id, photo_index, net.get_file_type(photo_url, "jpg")))
             save_file_return = net.save_net_file(photo_url, file_path)
             if save_file_return["status"] == 1:
                 if check_photo_invalid(file_path):
                     path.delete_dir_or_file(file_path)
-                    self.step("第%s张图片 %s 不符合规则，删除" % (photo_index, photo_url))
+                    self.step("日志%s的第%s张图片 %s 不符合规则，删除" % (blog_id, photo_index, photo_url))
+                    continue
                 else:
                     # 设置临时目录
                     self.temp_path_list.append(file_path)
-                    self.step("第%s张图片下载成功" % photo_index)
-                    photo_index += 1
+                    self.step("日志%s的第%s张图片下载成功" % (blog_id, photo_index))
             else:
-                self.error("第%s张图片 %s 下载失败，原因：%s" % (photo_index, photo_url, crawler.download_failre(save_file_return["code"])))
+                self.error("日志%s的第%s张图片 %s 下载失败，原因：%s" % (blog_id, photo_index, photo_url, crawler.download_failre(save_file_return["code"])))
+            photo_index += 1
 
         # 日志内图片全部下载完毕
         self.temp_path_list = []  # 临时目录设置清除
-        self.total_photo_count += (photo_index - 1) - int(self.account_info[1])  # 计数累加
-        self.account_info[1] = str(photo_index - 1)  # 设置存档记录
-        self.account_info[2] = str(blog_id)  # 设置存档记录
+        self.total_photo_count += photo_index - 1  # 计数累加
+        self.account_info[1] = str(blog_id)  # 设置存档记录
 
     def run(self):
         try:
@@ -372,7 +372,7 @@ class Download(crawler.DownloadThread):
                     break
 
                 # 这页已经匹配到存档点，返回上一个节点
-                if blog_pagination_response["blog_id_list"][-1] < int(self.account_info[2]):
+                if blog_pagination_response["blog_id_list"][-1] < int(self.account_info[1]):
                     start_page_count -= self.EACH_LOOP_MAX_PAGE_COUNT
                     break
 
