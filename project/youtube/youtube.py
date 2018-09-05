@@ -8,7 +8,6 @@ email: hikaru870806@hotmail.com
 """
 import os
 import re
-import threading
 import time
 import traceback
 import urllib.parse

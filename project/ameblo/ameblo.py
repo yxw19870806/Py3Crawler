@@ -8,10 +8,8 @@ email: hikaru870806@hotmail.com
 """
 import os
 import re
-import threading
 import time
 import traceback
-import urllib.parse
 from PIL import Image
 from pyquery import PyQuery as pq
 from common import *

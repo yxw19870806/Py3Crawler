@@ -8,7 +8,6 @@ email: hikaru870806@hotmail.com
 """
 import base64
 import os
-import threading
 import time
 import traceback
 from functools import reduce
