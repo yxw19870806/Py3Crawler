@@ -61,7 +61,7 @@ class CNU(crawler.Crawler):
 
     def main(self):
         # 解析存档文件，获取上一次的album id
-        album_id = 1
+        album_id = 105000
         if os.path.exists(self.save_data_path):
             file_save_info = file.read_file(self.save_data_path)
             if not crawler.is_integer(file_save_info):
@@ -82,16 +82,16 @@ class CNU(crawler.Crawler):
                 try:
                     album_response = get_album_page(album_id)
                 except crawler.CrawlerException as e:
-                    log.error("第%s页作品解析失败，原因：%s" % (album_id, e.message))
+                    log.error("作品%s解析失败，原因：%s" % (album_id, e.message))
                     raise
 
                 if album_response["is_delete"]:
-                    log.step("第%s页作品已被删除，跳过" % album_id)
+                    log.step("作品%s已被删除，跳过" % album_id)
                     album_id += 1
                     continue
 
-                log.trace("第%s页作品解析的全部图片：%s" % (album_id, album_response["photo_url_list"]))
-                log.step("第%s页作品解析获取%s张图片" % (album_id, len(album_response["photo_url_list"])))
+                log.trace("作品%s解析的全部图片：%s" % (album_id, album_response["photo_url_list"]))
+                log.step("作品%s解析获取%s张图片" % (album_id, len(album_response["photo_url_list"])))
 
                 photo_index = 1
                 # 过滤标题中不支持的字符
