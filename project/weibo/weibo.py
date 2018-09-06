@@ -199,8 +199,8 @@ class Weibo(crawler.Crawler):
         weiboCommon.COOKIE_INFO.update(self.cookie_value)
 
         # 解析存档文件
-        # account_id  photo_count  last_photo_time  video_count  last_video_url  (account_name)
-        self.account_list = crawler.read_save_data(self.save_data_path, 0, ["", "0", "0", "0", ""])
+        # account_id  last_photo_id  video_count  last_video_url  (account_name)
+        self.account_list = crawler.read_save_data(self.save_data_path, 0, ["", "0", "0", ""])
 
         # 检测登录状态
         if not weiboCommon.check_login():
