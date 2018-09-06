@@ -123,6 +123,8 @@ def get_blog_page(account_name, blog_id):
         if photo_selector.has_class("accessLog"):
             continue
         photo_url = photo_selector.attr("src")
+        if photo_url is None:
+            continue
         # 用户上传的图片
         if photo_url.find("//stat.ameba.jp/user_images/") > 0:
             result["photo_url_list"].append(photo_url)
