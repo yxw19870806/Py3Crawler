@@ -99,9 +99,13 @@ def get_blog_page(account_name, blog_id):
     blog_response = net.http_request(blog_url, method="GET", cookies_list=COOKIE_INFO)
     result = {
         "photo_url_list": [],  # 全部图片地址
+        "is_delete": False,  # 是否已删除
         "is_follow": False,  # 是否只有关注者可见
     }
-    if blog_response.status != net.HTTP_RETURN_CODE_SUCCEED:
+    if blog_response.status == 404:
+        result["is_delete"] = True
+        return result
+    elif blog_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(blog_response.status))
     blog_response_content = blog_response.data.decode(errors="ignore")
     if blog_response_content.find('この記事はアメンバーさん限定です。') >= 0:
@@ -317,6 +321,11 @@ class Download(crawler.DownloadThread):
         except crawler.CrawlerException as e:
             self.error("日志%s解析失败，原因：%s" % (blog_id, e.message))
             raise
+
+        # 日志只对关注者可见
+        if blog_response["is_delete"]:
+            self.error("日志%s已被删除，跳过" % blog_id)
+            return
 
         # 日志只对关注者可见
         if blog_response["is_follow"]:
