@@ -213,8 +213,8 @@ class Twitter(crawler.Crawler):
             COOKIE_INFO = {}
 
         # 解析存档文件
-        # account_name  photo_count  last_photo_time
-        self.account_list = crawler.read_save_data(self.save_data_path, 0, ["", "", "0", "0", "0"])
+        # account_name  account_id  last_tweet_id
+        self.account_list = crawler.read_save_data(self.save_data_path, 0, ["", "", "0"])
 
         # 生成authorization，用于访问视频页
         try:
