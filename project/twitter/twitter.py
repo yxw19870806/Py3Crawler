@@ -75,8 +75,7 @@ def get_account_index_page(account_name):
 
 # 获取一页的推特信息
 def get_one_page_media(account_name, position_blog_id):
-    # media_pagination_url = "https://twitter.com/i/profiles/show/%s/media_timeline" % account_name
-    media_pagination_url = "https://twitter.com/i/profiles/show/%s/timeline" % account_name
+    media_pagination_url = "https://twitter.com/i/profiles/show/%s/media_timeline" % account_name
     query_data = {
         "include_available_features": "1",
         "include_entities": "1",
@@ -107,7 +106,7 @@ def get_one_page_media(account_name, position_blog_id):
     if int(media_pagination_response.json_data["new_latent_count"]) == 0 and not media_pagination_response.json_data["items_html"].strip():
         result["is_skip"] = True
         return result
-    tweet_list_selector = pq(media_pagination_response.json_data["items_html"].strip()).children("li.stream-item")
+    tweet_list_selector = pq("<ul id=\"py3crawler\">" + media_pagination_response.json_data["items_html"].strip() + "</ul>").children("li.js-stream-item")
     if int(media_pagination_response.json_data["new_latent_count"]) != tweet_list_selector.length:
         raise crawler.CrawlerException("tweet分组数量和返回数据中不一致\n%s\n%s" % (tweet_list_selector.length, media_pagination_response.json_data["new_latent_count"]))
     for tweet_index in range(0, tweet_list_selector.length):
