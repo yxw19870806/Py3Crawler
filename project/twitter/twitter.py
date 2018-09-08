@@ -12,6 +12,7 @@ import threading
 import time
 import traceback
 import urllib.parse
+from pyquery import PyQuery as pq
 from common import *
 
 COOKIE_INFO = {}
@@ -74,7 +75,8 @@ def get_account_index_page(account_name):
 
 # 获取一页的推特信息
 def get_one_page_media(account_name, position_blog_id):
-    media_pagination_url = "https://twitter.com/i/profiles/show/%s/media_timeline" % account_name
+    # media_pagination_url = "https://twitter.com/i/profiles/show/%s/media_timeline" % account_name
+    media_pagination_url = "https://twitter.com/i/profiles/show/%s/timeline" % account_name
     query_data = {
         "include_available_features": "1",
         "include_entities": "1",
@@ -105,36 +107,27 @@ def get_one_page_media(account_name, position_blog_id):
     if int(media_pagination_response.json_data["new_latent_count"]) == 0 and not media_pagination_response.json_data["items_html"].strip():
         result["is_skip"] = True
         return result
-    # tweet信息分组
-    temp_tweet_data_list = media_pagination_response.json_data["items_html"].replace("\n", "").replace('<li class="js-stream-item stream-item stream-item"', '\n<li class="js-stream-item stream-item stream-item"').split("\n")
-    tweet_data_list = []
-    for tweet_data in temp_tweet_data_list:
-        if len(tweet_data) < 50:
-            continue
-        # 被圈出来的用户，追加到前面的页面中
-        if tweet_data.find('<div class="account  js-actionable-user js-profile-popup-actionable') >= 0:
-            tweet_data_list[-1] += tweet_data
-        else:
-            tweet_data_list.append(tweet_data)
-    if len(tweet_data_list) == 0:
-        raise crawler.CrawlerException("tweet分组失败\n%s" % media_pagination_response.json_data["items_html"])
-    if int(media_pagination_response.json_data["new_latent_count"]) != len(tweet_data_list):
-        raise crawler.CrawlerException("tweet分组数量和返回数据中不一致\n%s\n%s" % (media_pagination_response.json_data["items_html"], media_pagination_response.json_data["new_latent_count"]))
-    for tweet_data in tweet_data_list:
+    tweet_list_selector = pq(media_pagination_response.json_data["items_html"].strip()).children("li.stream-item")
+    if int(media_pagination_response.json_data["new_latent_count"]) != tweet_list_selector.length:
+        raise crawler.CrawlerException("tweet分组数量和返回数据中不一致\n%s\n%s" % (tweet_list_selector.length, media_pagination_response.json_data["new_latent_count"]))
+    for tweet_index in range(0, tweet_list_selector.length):
         result_media_info = {
             "blog_id": None,  # 推特id
             "has_video": False,  # 是不是包含视频
             "photo_url_list": [],  # 全部图片地址
         }
+        tweet_selector = tweet_list_selector.eq(tweet_index)
         # 获取推特id
-        blog_id = tool.find_sub_string(tweet_data, 'data-tweet-id="', '"')
-        if not crawler.is_integer(blog_id):
-            raise crawler.CrawlerException("tweet内容中截取tweet id失败\n%s" % tweet_data)
-        result_media_info["blog_id"] = int(blog_id)
+        tweet_id = tweet_selector.attr("data-item-id")
+        if not crawler.is_integer(tweet_id):
+            raise crawler.CrawlerException("推特信息截取推特id败\n%s" % tweet_selector.html())
+        result_media_info["blog_id"] = int(tweet_id)
         # 获取图片地址
-        result_media_info["photo_url_list"] = re.findall('data-image-url="([^"]*)"', tweet_data)
+        photo_list_selector = tweet_selector.find("div.js-adaptive-photo")
+        for photo_index in range(0, photo_list_selector.length):
+            result_media_info["photo_url_list"].append(photo_list_selector.eq(photo_index).attr("data-image-url"))
         # 判断是不是有视频
-        result_media_info["has_video"] = tweet_data.find("PlayableMedia--video") >= 0
+        result_media_info["has_video"] = tweet_selector.find("div.AdaptiveMedia-video").length > 0
         result["media_info_list"].append(result_media_info)
     # 判断是不是还有下一页
     if media_pagination_response.json_data["has_more_items"]:

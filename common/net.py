@@ -259,7 +259,7 @@ def http_request(url, method="GET", fields=None, binary_data=None, header_list=N
                         response.status = HTTP_RETURN_CODE_JSON_DECODE_ERROR
             elif response.status == 429:  # Too Many Requests
                 output.print_msg(url + " Too Many Requests, sleep")
-                time.sleep(30)
+                time.sleep(60)
                 continue
             elif response.status in [500, 502, 503, 504] and is_auto_retry:  # 服务器临时性错误，重试
                 if retry_count < NET_CONFIG["HTTP_REQUEST_RETRY_COUNT"]:
