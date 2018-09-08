@@ -11,3 +11,6 @@
 ## 配置参数
 1. 为访问已被保护的推文，需要配置浏览器类型，参数：BROWSER_TYPE、IS_AUTO_GET_COOKIE、COOKIE_PATH
 并在浏览器中手动关注该账号（通过对方的审核）
+
+## 程序限制
+Twitter API限制，只能查询最近800条推特
