@@ -75,8 +75,7 @@ def get_account_index_page(account_name):
 
 # 获取一页的推特信息
 def get_one_page_media(account_name, position_blog_id):
-    # media_pagination_url = "https://twitter.com/i/profiles/show/%s/media_timeline" % account_name
-    media_pagination_url = "https://twitter.com/i/profiles/show/%s/timeline" % account_name
+    media_pagination_url = "https://twitter.com/i/profiles/show/%s/media_timeline" % account_name
     query_data = {
         "include_available_features": "1",
         "include_entities": "1",
