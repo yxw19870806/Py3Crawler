@@ -502,10 +502,12 @@ def save_net_file_list(file_url_list, file_path, header_list=None, cookies_list=
                     file_handle.write(response.data)
                 # 超过重试次数，直接退出
                 elif response.status == HTTP_RETURN_CODE_RETRY:
+                    file_handle.close()
                     path.delete_dir_or_file(file_path)
                     return {"status": 0, "code": -2}
                 # 其他http code，退出
                 else:
+                    file_handle.close()
                     path.delete_dir_or_file(file_path)
                     return {"status": 0, "code": response.status}
         return {"status": 1, "code": 0}
