@@ -56,6 +56,6 @@ def get_account_index_page(account_id):
 # 检测图片是不是被微博自动删除的文件
 def check_photo_invalid(file_path):
     file_md5 = file.get_file_md5(file_path)
-    if file_md5 in ["14f2559305a6c96608c474f4ca47e6b0", "37b9e6dec174b68a545c852c63d4645a", "7bd88df2b5be33e1a79ac91e7d0376b5"]:
+    if file_md5 in ["14f2559305a6c96608c474f4ca47e6b0", "37b9e6dec174b68a545c852c63d4645a", "7bd88df2b5be33e1a79ac91e7d0376b5", "82af4714a8b2a5eea3b44726cfc9920d"]:
         return True
     return False
