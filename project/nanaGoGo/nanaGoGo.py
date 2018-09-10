@@ -102,8 +102,8 @@ class NanaGoGo(crawler.Crawler):
         crawler.Crawler.__init__(self, sys_config)
 
         # 解析存档文件
-        # account_name  photo_count  video_count  last_post_id
-        self.account_list = crawler.read_save_data(self.save_data_path, 0, ["", "0", "0", "0"])
+        # account_name  last_post_id
+        self.account_list = crawler.read_save_data(self.save_data_path, 0, ["", "0"])
 
     def main(self):
         # 循环下载每个id
@@ -168,7 +168,7 @@ class Download(crawler.DownloadThread):
             # 寻找这一页符合条件的日志
             for blog_info in blog_pagination_response["blog_info_list"]:
                 # 检查是否达到存档记录
-                if blog_info["blog_id"] > int(self.account_info[3]):
+                if blog_info["blog_id"] > int(self.account_info[1]):
                     blog_info_list.append(blog_info)
                     # 设置下一页指针
                     target_id = blog_info["blog_id"]
@@ -181,50 +181,48 @@ class Download(crawler.DownloadThread):
     # 解析单个日志
     def crawl_blog(self, blog_info):
         # 图片下载
-        photo_index = int(self.account_info[1]) + 1
+        photo_index = 1
         if self.main_thread.is_download_photo:
             self.trace("日志%s解析的全部图片：%s" % (blog_info["blog_id"], blog_info["photo_url_list"]))
             self.step("日志%s解析获取%s张图片" % (blog_info["blog_id"], len(blog_info["photo_url_list"])))
 
             for photo_url in blog_info["photo_url_list"]:
                 self.main_thread_check()  # 检测主线程运行状态
-                self.step("开始下载第%s张图片 %s" % (photo_index, photo_url))
+                self.step("开始下载日志%s的第%s张图片 %s" % (blog_info["blog_id"], photo_index, photo_url))
 
-                photo_file_path = os.path.join(self.main_thread.photo_download_path, self.account_name, "%04d.%s" % (photo_index, net.get_file_type(photo_url)))
+                photo_file_path = os.path.join(self.main_thread.photo_download_path, self.account_name, "%05d_%02d.%s" % (blog_info["blog_id"], photo_index, net.get_file_type(photo_url)))
                 save_file_return = net.save_net_file(photo_url, photo_file_path)
                 if save_file_return["status"] == 1:
                     self.temp_path_list.append(photo_file_path)
-                    self.step("第%s张图片下载成功" % photo_index)
-                    photo_index += 1
+                    self.step("日志%s的第%s张图片下载成功" % (blog_info["blog_id"], photo_index))
                 else:
-                    self.error("第%s张图片 %s 下载失败，原因：%s" % (photo_index, photo_url, crawler.download_failre(save_file_return["code"])))
+                    self.error("日志%s第%s张图片 %s 下载失败，原因：%s" % (blog_info["blog_id"], photo_index, photo_url, crawler.download_failre(save_file_return["code"])))
+                photo_index += 1
 
         # 视频下载
-        video_index = int(self.account_info[2]) + 1
+        video_index = 1
         if self.main_thread.is_download_video:
             self.trace("日志%s解析的全部视频：%s" % (blog_info["blog_id"], blog_info["video_url_list"]))
             self.step("日志%s解析获取%s个视频" % (blog_info["blog_id"], len(blog_info["video_url_list"])))
 
             for video_url in blog_info["video_url_list"]:
                 self.main_thread_check()  # 检测主线程运行状态
-                self.step("开始下载第%s个视频 %s" % (video_index, video_url))
+                self.step("开始下载日志%s的第%s个视频 %s" % (blog_info["blog_id"], video_index, video_url))
 
-                video_file_path = os.path.join(self.main_thread.video_download_path, self.account_name, "%04d.%s" % (video_index, net.get_file_type(video_url)))
+                video_file_path = os.path.join(self.main_thread.video_download_path, self.account_name, "%05d_%02d.%s" % (blog_info["blog_id"], video_index, net.get_file_type(video_url)))
                 save_file_return = net.save_net_file(video_url, video_file_path)
                 if save_file_return["status"] == 1:
                     self.temp_path_list.append(video_file_path)
-                    self.step("第%s个视频下载成功" % video_index)
-                    video_index += 1
+                    self.step("日志%s的第%s个视频下载成功" % (blog_info["blog_id"], video_index))
                 else:
-                    self.error("第%s个视频 %s 下载失败，原因：%s" % (video_index, video_url, crawler.download_failre(save_file_return["code"])))
+                    self.error("日志%s的第%s个视频 %s 下载失败，原因：%s" % (blog_info["blog_id"], video_index, video_url, crawler.download_failre(save_file_return["code"])))
+                video_index += 1
 
         # 日志内图片和视频全部下载完毕
         self.temp_path_list = []  # 临时目录设置清除
-        self.total_photo_count += (photo_index - 1) - int(self.account_info[1])  # 计数累加
-        self.total_video_count += (video_index - 1) - int(self.account_info[2])  # 计数累加
-        self.account_info[1] = str(photo_index - 1)  # 设置存档记录
-        self.account_info[2] = str(video_index - 1)  # 设置存档记录
-        self.account_info[3] = str(blog_info["blog_id"])
+        self.total_photo_count += photo_index - 1  # 计数累加
+        self.total_video_count += video_index - 1  # 计数累加
+        self.account_info[1] = str(blog_info["blog_id"])
 
     def run(self):
         try:
