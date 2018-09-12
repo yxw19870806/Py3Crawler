@@ -130,8 +130,8 @@ class Blog(crawler.Crawler):
         crawler.Crawler.__init__(self, sys_config)
 
         # 解析存档文件
-        # account_id  photo_count  last_blog_time
-        self.account_list = crawler.read_save_data(self.save_data_path, 0, ["", "0", "0"])
+        # account_id  last_blog_id
+        self.account_list = crawler.read_save_data(self.save_data_path, 0, ["", "0"])
 
     def main(self):
         # 循环下载每个id
@@ -166,8 +166,8 @@ class Download(crawler.DownloadThread):
     def __init__(self, account_info, main_thread):
         crawler.DownloadThread.__init__(self, account_info, main_thread)
         self.account_id = self.account_info[0]
-        if len(self.account_info) >= 4 and self.account_info[3]:
-            self.display_name = self.account_info[3]
+        if len(self.account_info) >= 3 and self.account_info[2]:
+            self.display_name = self.account_info[2]
         else:
             self.display_name = self.account_info[0]
         self.step("开始")
@@ -195,7 +195,7 @@ class Download(crawler.DownloadThread):
             # 寻找这一页符合条件的日志
             for blog_info in blog_pagination_response["blog_info_list"]:
                 # 检查是否达到存档记录
-                if blog_info["blog_id"] > int(self.account_info[2]):
+                if blog_info["blog_id"] > int(self.account_info[1]):
                     blog_info_list.append(blog_info)
                 else:
                     is_over = True
@@ -214,33 +214,33 @@ class Download(crawler.DownloadThread):
         self.trace("日志%s解析的全部图片：%s" % (blog_info["blog_id"], blog_info["photo_url_list"]))
         self.step("日志%s解析获取%s张图片" % (blog_info["blog_id"], len(blog_info["photo_url_list"])))
 
-        photo_index = int(self.account_info[1]) + 1
+        photo_index = 1
         for photo_url in blog_info["photo_url_list"]:
             self.main_thread_check()  # 检测主线程运行状态
             # 检查是否存在大图可以下载
             big_photo_response = check_big_photo(photo_url, blog_info["big_2_small_photo_lust"])
             if big_photo_response["photo_url"] is not None:
                 photo_url = big_photo_response["photo_url"]
-            self.step("开始下载第%s张图片 %s" % (photo_index, photo_url))
+            self.step("开始下载日志%s的第%s张图片 %s" % (blog_info["blog_id"], photo_index, photo_url))
 
-            file_path = os.path.join(self.main_thread.photo_download_path, self.display_name, "%04d.%s" % (photo_index, net.get_file_type(photo_url, "jpg")))
+            file_path = os.path.join(self.main_thread.photo_download_path, self.display_name, "%06d_%02d.%s" % (blog_info["blog_id"], photo_index, net.get_file_type(photo_url, "jpg")))
             save_file_return = net.save_net_file(photo_url, file_path, cookies_list=big_photo_response["cookies"])
             if save_file_return["status"] == 1:
                 if check_photo_invalid(file_path):
                     path.delete_dir_or_file(file_path)
-                    self.step("第%s张图片 %s 不符合规则，删除" % (photo_index, photo_url))
+                    self.step("日志%s的第%s张图片 %s 不符合规则，删除" % (blog_info["blog_id"], photo_index, photo_url))
+                    continue
                 else:
                     self.temp_path_list.append(file_path)
-                    self.step("第%s张图片下载成功" % photo_index)
-                    photo_index += 1
+                    self.step("日志%s的第%s张图片下载成功" % (blog_info["blog_id"], photo_index))
             else:
-                self.error("第%s张图片 %s 下载失败，原因：%s" % (photo_index, photo_url, crawler.download_failre(save_file_return["code"])))
+                self.error("日志%s的第%s张图片 %s 下载失败，原因：%s" % (blog_info["blog_id"], photo_index, photo_url, crawler.download_failre(save_file_return["code"])))
+            photo_index += 1
 
         # 日志内图片全部下载完毕
         self.temp_path_list = []  # 临时目录设置清除
-        self.total_photo_count += (photo_index - 1) - int(self.account_info[1])  # 计数累加
-        self.account_info[1] = str(photo_index - 1)  # 设置存档记录
-        self.account_info[2] = str(blog_info["blog_id"])  # 设置存档记录
+        self.total_photo_count += photo_index - 1  # 计数累加
+        self.account_info[1] = str(blog_info["blog_id"])  # 设置存档记录
 
     def run(self):
         try:
