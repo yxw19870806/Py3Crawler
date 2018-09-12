@@ -229,12 +229,13 @@ class Download(crawler.DownloadThread):
                 if check_photo_invalid(file_path):
                     path.delete_dir_or_file(file_path)
                     self.step("日志%s的第%s张图片 %s 不符合规则，删除" % (blog_info["blog_id"], photo_index, photo_url))
+                    continue
                 else:
                     self.temp_path_list.append(file_path)
                     self.step("日志%s的第%s张图片下载成功" % (blog_info["blog_id"], photo_index))
-                    photo_index += 1
             else:
                 self.error("日志%s的第%s张图片 %s 下载失败，原因：%s" % (blog_info["blog_id"], photo_index, photo_url, crawler.download_failre(save_file_return["code"])))
+            photo_index += 1
 
         # 日志内图片全部下载完毕
         self.temp_path_list = []  # 临时目录设置清除
