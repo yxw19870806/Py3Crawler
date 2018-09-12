@@ -78,8 +78,8 @@ class Diary(crawler.Crawler):
         crawler.Crawler.__init__(self, sys_config)
 
         # 解析存档文件
-        # account_id  photo_count  last_diary_time
-        self.account_list = crawler.read_save_data(self.save_data_path, 0, ["", "0", "0"])
+        # account_id  last_blog_id
+        self.account_list = crawler.read_save_data(self.save_data_path, 0, ["", "0"])
 
     def main(self):
         # 循环下载每个id
@@ -147,7 +147,7 @@ class Download(crawler.DownloadThread):
             # 寻找这一页符合条件的日志
             for blog_info in blog_pagination_response["blog_info_list"]:
                 # 检查是否达到存档记录
-                if blog_info["blog_id"] > int(self.account_info[2]):
+                if blog_info["blog_id"] > int(self.account_info[1]):
                     blog_info_list.append(blog_info)
                 else:
                     is_over = True
@@ -160,27 +160,26 @@ class Download(crawler.DownloadThread):
 
     # 解析单个日志
     def crawl_blog(self, blog_info):
-        photo_index = int(self.account_info[1]) + 1
+        photo_index = 1
         for photo_url in blog_info["photo_url_list"]:
             self.main_thread_check()  # 检测主线程运行状态
             # 检测图片地址是否包含域名
             photo_url = get_photo_url(photo_url)
-            self.step("开始下载第%s张图片 %s" % (photo_index, photo_url))
+            self.step("开始下载日志%s的第%s张图片 %s" % (blog_info["blog_id"], photo_index, photo_url))
 
-            file_path = os.path.join(self.main_thread.photo_download_path, self.display_name, "%04d.%s" % (photo_index, net.get_file_type(photo_url)))
+            file_path = os.path.join(self.main_thread.photo_download_path, self.display_name, "%05d_%02d.%s" % (blog_info["blog_id"], photo_index, net.get_file_type(photo_url)))
             save_file_return = net.save_net_file(photo_url, file_path)
             if save_file_return["status"] == 1:
                 self.temp_path_list.append(file_path)
-                self.step("第%s张图片下载成功" % photo_index)
-                photo_index += 1
+                self.step("日志%s的第%s张图片下载成功" % (blog_info["blog_id"], photo_index))
             else:
-                self.error("第%s张图片 %s 下载失败，原因：%s" % (photo_index, photo_url, crawler.download_failre(save_file_return["code"])))
+                self.error("日志%s的第%s张图片 %s 下载失败，原因：%s" % (blog_info["blog_id"], photo_index, photo_url, crawler.download_failre(save_file_return["code"])))
+            photo_index += 1
 
         # 日志内图片全部下载完毕
         self.temp_path_list = []  # 临时目录设置清除
-        self.total_photo_count += (photo_index - 1) - int(self.account_info[1])  # 计数累加
-        self.account_info[1] = str(photo_index - 1)  # 设置存档记录
-        self.account_info[2] = str(blog_info["blog_id"])  # 设置存档记录
+        self.total_photo_count += photo_index - 1  # 计数累加
+        self.account_info[1] = str(blog_info["blog_id"])  # 设置存档记录
 
     def run(self):
         try:
