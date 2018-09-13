@@ -20,11 +20,11 @@ def main():
         "filetypes": [("data", ".data"), ("all file", "*")],
         "title": "原始存档文件",
     }
-    save_data_file_path = tkinter.filedialog.askopenfile(**options)
+    save_data_file_path = tkinter.filedialog.askopenfilename(**options)
     if not save_data_file_path:
         return
     options["title"] = "临时存档文件"
-    temp_save_data_file_path = tkinter.filedialog.askopenfile(**options)
+    temp_save_data_file_path = tkinter.filedialog.askopenfilename(**options)
     if not save_data_file_path:
         return
     if save_data_file_path == temp_save_data_file_path:
