@@ -7,9 +7,9 @@ email: hikaru870806@hotmail.com
 如有问题或建议请联系
 """
 import os
-import re
 import time
 import traceback
+from pyquery import PyQuery as pq
 from common import *
 
 PHOTO_COUNT_PER_PAGE = 20
@@ -28,42 +28,46 @@ def get_one_page_blog(account_id, page_count):
     blog_pagination_response = net.http_request(blog_pagination_url, method="GET", fields=query_data)
     result = {
         "blog_info_list": [],  # 全部日志信息
+        "is_over": False,  # 是不是最后页日志
     }
     if blog_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(blog_pagination_response.status))
     blog_pagination_response_content = blog_pagination_response.data.decode(errors="ignore")
-    if len(tool.find_sub_string(blog_pagination_response_content, '<div class="box-profile">', "</div>").strip()) < 10:
+    account_info_html = pq(blog_pagination_response_content).find(".box-profile").html()
+    if account_info_html is None or not account_info_html.strip():
         raise crawler.CrawlerException("账号不存在")
     # 日志正文部分
-    blog_article_html = tool.find_sub_string(blog_pagination_response_content, '<div class="box-main">', '<div class="box-sideMember">')
-    if not blog_article_html:
-        raise crawler.CrawlerException("页面正文截取失败\n%s" % blog_pagination_response_content)
-    blog_list = re.findall("<article>([\s|\S]*?)</article>", blog_article_html)
-    for blog_info in blog_list:
+    blog_list_selector = pq(blog_pagination_response_content).find(".box-main article")
+    if blog_list_selector.length == 0:
+        raise crawler.CrawlerException("页面截取日志列表失败\n%s" % blog_pagination_response_content)
+    for blog_index in range(0, blog_list_selector.length):
         result_blog_info = {
             "blog_id" : None,  # 日志id
             "photo_url_list": [],  # 全部图片地址
         }
+        blog_selector = blog_list_selector.eq(blog_index)
         # 获取日志id
-        blog_id = tool.find_sub_string(blog_info, "/diary/detail/", "?")
+        blog_url = blog_selector.find(".box-ttl h3 a").attr("href")
+        if not blog_url:
+            raise crawler.CrawlerException("日志信息截取日志地址失败\n%s" % blog_selector.html())
+        blog_id = blog_url.split("/")[-1].split("?")[0]
         if not crawler.is_integer(blog_id):
-            raise crawler.CrawlerException("日志页面截取日志id失败\n%s" % blog_info)
+            raise crawler.CrawlerException("日志地址截取日志id失败\n%s" % blog_url)
         result_blog_info["blog_id"] = int(blog_id)
-        # 获取全部图片地址
-        result_blog_info["photo_url_list"] = re.findall('<img[\S|\s]*?src="([^"]+)"', blog_info)
+        # 获取图片地址
+        photo_list_selector = pq(blog_selector).find("img")
+        for photo_index in range(0, photo_list_selector.length):
+            photo_selector = photo_list_selector.eq(photo_index)
+            # 跳过表情
+            if photo_selector.has_class("emoji"):
+                continue
+            result_blog_info["photo_url_list"].append(photo_selector.attr("src"))
         result["blog_info_list"].append(result_blog_info)
+    last_pagination_html = pq(blog_pagination_response_content).find(".pager li:last").text()
+    if not last_pagination_html:
+        raise crawler.CrawlerException("页面截取下一页按钮失败\n%s" % blog_pagination_response_content)
+    result["is_over"] = last_pagination_html != ">"
     return result
-
-
-# 检测图片地址是否包含域名，如果没有则补上
-def get_photo_url(photo_url):
-    # 如果图片地址没有域名，表示直接使用当前域名下的资源，需要拼接成完整的地址
-    if photo_url[:7] != "http://" and photo_url[:8] != "https://":
-        if photo_url[0] == "/":
-            photo_url = "https://www.keyakizaka46.com%s" % photo_url
-        else:
-            photo_url = "https://www.keyakizaka46.com/%s" % photo_url
-    return photo_url
 
 
 class Diary(crawler.Crawler):
@@ -137,10 +141,6 @@ class Download(crawler.DownloadThread):
                 self.error("第%s页日志解析失败，原因：%s" % (page_count, e.message))
                 raise
 
-            # 没有获取到任何日志，全部日志已经全部获取完毕了
-            if len(blog_pagination_response["blog_info_list"]) == 0:
-                break
-
             self.trace("第%s页解析的全部日志：%s" % (page_count, blog_pagination_response["blog_info_list"]))
             self.step("第%s页解析获取%s个日志" % (page_count, len(blog_pagination_response["blog_info_list"])))
 
@@ -154,7 +154,10 @@ class Download(crawler.DownloadThread):
                     break
 
             if not is_over:
-                page_count += 1
+                if blog_pagination_response["is_over"]:
+                    is_over = True
+                else:
+                    page_count += 1
 
         return blog_info_list
 
@@ -163,8 +166,6 @@ class Download(crawler.DownloadThread):
         photo_index = 1
         for photo_url in blog_info["photo_url_list"]:
             self.main_thread_check()  # 检测主线程运行状态
-            # 检测图片地址是否包含域名
-            photo_url = get_photo_url(photo_url)
             self.step("开始下载日志%s的第%s张图片 %s" % (blog_info["blog_id"], photo_index, photo_url))
 
             file_path = os.path.join(self.main_thread.photo_download_path, self.display_name, "%05d_%02d.%s" % (blog_info["blog_id"], photo_index, net.get_file_type(photo_url)))
