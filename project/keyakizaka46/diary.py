@@ -61,7 +61,10 @@ def get_one_page_blog(account_id, page_count):
             # 跳过表情
             if photo_selector.has_class("emoji"):
                 continue
-            result_blog_info["photo_url_list"].append(photo_selector.attr("src"))
+            photo_url = photo_selector.attr("src")
+            if not photo_url:
+                continue
+            result_blog_info["photo_url_list"].append(photo_url)
         result["blog_info_list"].append(result_blog_info)
     last_pagination_html = pq(blog_pagination_response_content).find(".pager li:last").text()
     if not last_pagination_html:
