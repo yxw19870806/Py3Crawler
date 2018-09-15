@@ -162,8 +162,8 @@ def get_video_play_page(tweet_id):
         file_url_protocol, file_url_path = urllib.parse.splittype(file_url)
         file_url_host = urllib.parse.splithost(file_url_path)[0]
         m3u8_file_response = net.http_request(file_url, method="GET")
-        # 没有权限，可能是地域限制
-        if m3u8_file_response.status == 403:
+        # 没有权限（可能是地域限制）或者已删除
+        if m3u8_file_response.status in [403, 404]:
             return result
         elif m3u8_file_response.status != net.HTTP_RETURN_CODE_SUCCEED:
             raise crawler.CrawlerException("m3u8文件 %s 访问失败，%s" % (file_url, crawler.request_failre(m3u8_file_response.status)))
