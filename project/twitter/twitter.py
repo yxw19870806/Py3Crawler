@@ -12,6 +12,7 @@ import threading
 import time
 import traceback
 import urllib.parse
+import xml.etree.ElementTree as ElementTree
 from pyquery import PyQuery as pq
 from common import *
 
@@ -142,6 +143,7 @@ def get_video_play_page(tweet_id):
     header_list = {
         "authorization": "Bearer " + AUTHORIZATION,
         "x-csrf-token": COOKIE_INFO["ct0"],
+        "x-twitter-auth-type": "OAuth2Session",
     }
     video_play_response = net.http_request(video_play_url, method="GET", cookies_list=COOKIE_INFO, header_list=header_list, json_decode=True)
     result = {
@@ -152,9 +154,12 @@ def get_video_play_page(tweet_id):
         raise crawler.CrawlerException(crawler.request_failre(video_play_response.status))
     if not crawler.check_sub_key(("track",), video_play_response.json_data):
         raise crawler.CrawlerException("返回信息'track'字段不存在\n%s" % video_play_response.json_data)
-    if not crawler.check_sub_key(("playbackUrl",), video_play_response.json_data["track"]):
+    if crawler.check_sub_key(("playbackUrl",), video_play_response.json_data["track"]) and video_play_response.json_data["track"]["playbackUrl"] is not None:
+        file_url = video_play_response.json_data["track"]["playbackUrl"]
+    elif crawler.check_sub_key(("vmapUrl",), video_play_response.json_data["track"]) and video_play_response.json_data["track"]["vmapUrl"] is not None:
+        file_url = video_play_response.json_data["track"]["vmapUrl"]
+    else:
         raise crawler.CrawlerException("返回信息'playbackUrl'字段不存在\n%s" % video_play_response.json_data["track"])
-    file_url = video_play_response.json_data["track"]["playbackUrl"]
     file_type = net.get_file_type(file_url)
     # m3u8文件，需要再次访问获取真实视频地址
     # https://api.twitter.com/1.1/videos/tweet/config/996368816174084097.json
@@ -183,6 +188,29 @@ def get_video_play_page(tweet_id):
         result["video_url"] = []
         for ts_file_path in ts_url_find:
             result["video_url"].append("%s://%s%s" % (file_url_protocol, file_url_host, ts_file_path))
+    elif file_type == "vmap":
+        vmap_file_response = net.http_request(file_url, method="GET")
+        if vmap_file_response.status != net.HTTP_RETURN_CODE_SUCCEED:
+            raise crawler.CrawlerException("vmap文件 %s 访问失败，%s" % (file_url, crawler.request_failre(vmap_file_response.status)))
+        vmap_file_response_content = vmap_file_response.data.decode(errors="ignore")
+        tw_namespace = tool.find_sub_string(vmap_file_response_content, 'xmlns:tw="', '"')
+        if not tw_namespace:
+            raise crawler.CrawlerException("vmap文件 %s 截取xmlns:tw命名空间失败\n%s" % (file_url, vmap_file_response_content))
+        media_file_elements = ElementTree.fromstring(vmap_file_response_content.strip()).iter("{%s}videoVariant" % tw_namespace)
+        # 获取最高bit rate的视频地址
+        bit_rate_to_url = {}
+        for media_file_element in media_file_elements:
+            # 没有bit rate可能是m3u8文件
+            bit_rate = media_file_element.get("bit_rate")
+            if not crawler.is_integer(bit_rate):
+                continue
+            url = media_file_element.get("url")
+            if not url:
+                raise crawler.CrawlerException("视频节点解析url失败\n%s" % vmap_file_response_content)
+            bit_rate_to_url[int(bit_rate)] = urllib.parse.unquote(url)
+        if len(bit_rate_to_url) == 0:
+            raise crawler.CrawlerException("vmap文件 %s 解析全部视频文件失败\n%s" % (file_url, vmap_file_response_content))
+        result["video_url"] = bit_rate_to_url[max(bit_rate_to_url)]
     # 直接是视频地址
     # https://api.twitter.com/1.1/videos/tweet/config/996368816174084097.json
     else:
