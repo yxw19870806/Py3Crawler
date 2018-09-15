@@ -301,19 +301,20 @@ def get_decrypt_step(js_file_url):
     if js_file_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException("播放器JS文件 %s 访问失败，原因：%s" % (js_file_url, crawler.request_failre(js_file_response.status)))
     js_file_response_content = js_file_response.data.decode(errors="ignore")
-    # 加密方法入口
-    # old k.sig?f.set("signature",k.sig):k.s&&f.set("signature",SJ(k.s));
-    # new var l=k.sig;l?f.set("signature",l):k.s&&f.set("signature",CK(k.s));
-    main_function_name = tool.find_sub_string(js_file_response_content, 'f.set("signature",', "(k.s));")
-    if not main_function_name:
-        main_function_name = tool.find_sub_string(js_file_response_content, 'f.set(k.sp||"signature",', "(k.s))")
-    if not main_function_name:
-        main_function_name = tool.find_sub_string(js_file_response_content, 'c&&(b||(b="signature"),d.set(b,', "(c))")
-    if not main_function_name:
-        raise crawler.CrawlerException("播放器JS文件 %s，加密方法名截取失败" % js_file_url)
-    # 加密方法体（包含子加密方法的调用参数&顺序）
-    # SJ=function(a){a=a.split("");RJ.yF(a,48);RJ.It(a,31);RJ.yF(a,24);RJ.It(a,74);return a.join("")};
-    main_function_body = tool.find_sub_string(js_file_response_content, '%s=function(a){a=a.split("");' % main_function_name, 'return a.join("")};')
+    # # 加密方法入口
+    # # old k.sig?f.set("signature",k.sig):k.s&&f.set("signature",SJ(k.s));
+    # # new var l=k.sig;l?f.set("signature",l):k.s&&f.set("signature",CK(k.s));
+    # main_function_name = tool.find_sub_string(js_file_response_content, 'f.set("signature",', "(k.s));")
+    # if not main_function_name:
+    #     main_function_name = tool.find_sub_string(js_file_response_content, 'f.set(k.sp||"signature",', "(k.s))")
+    # if not main_function_name:
+    #     main_function_name = tool.find_sub_string(js_file_response_content, 'c&&(b||(b="signature"),d.set(b,', "(c))")
+    # if not main_function_name:
+    #     raise crawler.CrawlerException("播放器JS文件 %s，加密方法名截取失败" % js_file_url)
+    # # 加密方法体（包含子加密方法的调用参数&顺序）
+    # # SJ=function(a){a=a.split("");RJ.yF(a,48);RJ.It(a,31);RJ.yF(a,24);RJ.It(a,74);return a.join("")};
+    # main_function_body = tool.find_sub_string(js_file_response_content, '%s=function(a){a=a.split("");' % main_function_name, 'return a.join("")};')
+    main_function_body = tool.find_sub_string(js_file_response_content, 'function(a){a=a.split("");', 'return a.join("")};')
     if not main_function_body:
         raise crawler.CrawlerException("播放器JS文件 %s，加密方法体截取失败" % js_file_url)
     # 子加密方法所在的变量名字
