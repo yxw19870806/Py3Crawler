@@ -49,6 +49,9 @@ def get_album_page(album_id):
         "photo_url_list": [],  # 全部图片地址
         "is_delete": False,  # 是否已删除
     }
+    has_error = False
+    # 每页有多少张图片，如果页面有异常时尝试进行图片地址修正
+    photo_count_each_page = 1
     while page_count <= max_page_count:
         if page_count == 1:
             for sub_path in SUB_PATH_LIST:
@@ -67,7 +70,11 @@ def get_album_page(album_id):
         elif album_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
             raise crawler.CrawlerException(crawler.request_failre(album_pagination_response.status))
         album_pagination_response_content = album_pagination_response.data.decode(errors="ignore")
-        if page_count == 1:
+        if album_pagination_response_content.find("[1040] Too many connections") >= 0:
+            has_error = True
+            page_count += 1
+            continue
+        if result["album_title"] is None:
             # 获取图集标题
             album_title = pq(album_pagination_response_content).find("h1.center").html()
             if not album_title:
@@ -94,8 +101,39 @@ def get_album_page(album_id):
             if pq(album_pagination_response_content).find(".imgac").length != 1:
                 raise crawler.CrawlerException(" %s 页面截取图片列表失败\n%s" % (album_pagination_url, album_pagination_response_content))
         for photo_index in range(0, photo_list_selector.length):
-            result["photo_url_list"].append(photo_list_selector.eq(photo_index).attr("src"))
+            photo_url = photo_list_selector.eq(photo_index).attr("src")
+            # 之前页有异常，无法访问，通过图片规则修正这些丢失的图片地址
+            if has_error:
+                temp_list = photo_url.split("/")
+                # 之前正常的图片id
+                if len(result["photo_url_list"]) > 0:
+                    last_photo_url = result["photo_url_list"][-1]
+                    last_photo_id = last_photo_url.split("/")[-1].split(".")[0]
+                    if not crawler.is_integer(last_photo_id):
+                        raise crawler.CrawlerException("修正异常图片时解析上一张图片id失败 %s" % last_photo_url)
+                else:
+                    last_photo_id = 1
+                this_photo_id, photo_file_type = temp_list[-1].split(".")
+                if not crawler.is_integer(this_photo_id):
+                    raise crawler.CrawlerException("修正异常图片时解析当前图片id失败 %s" % photo_url)
+                # 补上之间缺失的id
+                for photo_id in range(int(last_photo_id) + 1, int(this_photo_id)):
+                    temp_list[-1] = "%02d.%s" % (photo_id, photo_file_type)
+                    result["photo_url_list"].append("/".join(temp_list))
+                has_error = False
+            result["photo_url_list"].append(photo_url)
         page_count += 1
+    # 最后页有异常，无法访问，通过图片规则修正这些丢失的图片地址
+    if has_error:
+        if len(result["photo_url_list"]) == 0:
+            raise crawler.CrawlerException("所有页访问异常")
+        last_photo_url = result["photo_url_list"][-1]
+        temp_list = last_photo_url.split("/")
+        last_photo_id, photo_file_type = temp_list[-1].split(".")
+        # 上限 = 总页数 * 平均每页的图片数量
+        for photo_id in range(int(last_photo_id) + 1, max_page_count * photo_count_each_page + 1):
+            temp_list[-1] = "%02d.%s" % (photo_id, photo_file_type)
+            result["photo_url_list"].append("/".join(temp_list))
     return result
 
 
