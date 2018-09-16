@@ -31,21 +31,13 @@ def get_index_page():
 
 # 获取指定id的图集
 def get_album_page(album_id):
-    page_count = 1
+    page_count = max_page_count = 1
     result = {
         "album_title": "",  # 图集标题
         "photo_url_list": [],  # 全部图片地址
         "is_delete": False,  # 是否已删除
     }
-    while True:
-        if album_id == 57773:
-            if page_count == 40:
-                page_count += 1
-                continue
-            elif page_count == 41:
-                result["photo_url_list"].append("http://i.meizitu.net/2016/01/25f40.jpg")
-                page_count += 1
-                continue
+    while page_count <= max_page_count:
         if page_count == 1:
             album_pagination_url = "http://www.mzitu.com/%s" % album_id
         else:
@@ -62,21 +54,20 @@ def get_album_page(album_id):
             album_title = pq(album_pagination_response_content).find(".main-title").html()
             if not album_title:
                 raise crawler.CrawlerException("页面截取标题失败\n%s" % album_pagination_response_content)
+            max_page_count = pq(album_pagination_response_content).find(".pagenavi span").eq(-2).html()
             result["album_title"] = album_title.strip()
+            # 获取总页数
+            if not crawler.is_integer(max_page_count):
+                raise crawler.CrawlerException("页面截取总页数失败\n%s" % album_pagination_response_content)
+            max_page_count = int(max_page_count)
         # 获取图集图片地址
         photo_list_selector = pq(album_pagination_response_content).find(".main-image img")
         if photo_list_selector.length == 0:
-            raise crawler.CrawlerException("第%s页页面截取图片列表失败\n%s" % (page_count, album_pagination_response_content))
+            if pq(album_pagination_response_content).find(".main-image").length == 0:
+                raise crawler.CrawlerException("第%s页页面截取图片列表失败\n%s" % (page_count, album_pagination_response_content))
         for photo_index in range(0, photo_list_selector.length):
             result["photo_url_list"].append(photo_list_selector.eq(photo_index).attr("src"))
-        # 判断是不是最后一页
-        next_pagination_html = pq(album_pagination_response_content).find(".pagenavi a:last span").html()
-        if next_pagination_html == "下一页»":
-            page_count += 1
-        elif next_pagination_html == "下一组»":
-            break
-        else:
-            raise crawler.CrawlerException("第%s页页面截取分页信息失败\n%s" % (page_count, album_pagination_response_content))
+        page_count += 1
     return result
 
 
