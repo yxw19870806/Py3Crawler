@@ -20,5 +20,5 @@ if __name__ == "__main__":
         # key down
         win32api.PostMessage(window_handle, win32con.WM_KEYDOWN, KEYBOARD, 0)
         # key up
-        win32api.PostMessage(window_handle, win32con.WM_KEYUP, win32con.VK_LEFT, 0)
+        win32api.PostMessage(window_handle, win32con.WM_KEYUP, KEYBOARD, 0)
         time.sleep(0.3)

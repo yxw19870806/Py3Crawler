@@ -18,6 +18,9 @@ try:
 except ImportError:
     from common import keyboardEvent
 
+CLICK_TYPE_LEFT_BUTTON = "left"
+CLICK_TYPE_RIGHT_BUTTON = "right"
+
 
 class WindowsApplication:
     window_title = ""
@@ -94,20 +97,19 @@ class WindowsApplication:
         win32gui.SetWindowPos(self.window_handle, 0, pos_x, pos_y, 0, 0, win32con.SWP_NOSIZE | win32con.SWP_NOZORDER)
 
     # 自动点击窗口某个坐标（窗口可以不在最顶端）
-    def auto_click(self, pos_x, pos_y, click_time=0):
+    def auto_click(self, pos_x, pos_y, click_type=CLICK_TYPE_LEFT_BUTTON, click_time=0):
         tmp = win32api.MAKELONG(pos_x, pos_y)
         win32gui.SendMessage(self.window_handle, win32con.WM_ACTIVATE, win32con.WA_ACTIVE, 0)
-        win32gui.SendMessage(self.window_handle, win32con.WM_LBUTTONDOWN, win32con.MK_LBUTTON, tmp)
-        if click_time > 0:
-            time.sleep(click_time)
-        win32gui.SendMessage(self.window_handle, win32con.WM_LBUTTONUP, win32con.MK_LBUTTON, tmp)
-
-    def move_click(self, pos_x, pos_y, click_time=0):
-        win32api.SetCursorPos((pos_x, pos_y))
-        win32api.mouse_event(win32con.MOUSEEVENTF_LEFTDOWN, 0, 0)
-        if click_time > 0:
-            time.sleep(click_time)
-        win32api.mouse_event(win32con.MOUSEEVENTF_LEFTUP, 0, 0)
+        if click_type == CLICK_TYPE_LEFT_BUTTON:
+            win32gui.SendMessage(self.window_handle, win32con.WM_LBUTTONDOWN, win32con.MK_LBUTTON, tmp)
+            if click_time > 0:
+                time.sleep(click_time)
+            win32gui.SendMessage(self.window_handle, win32con.WM_LBUTTONUP, win32con.MK_LBUTTON, tmp)
+        elif click_type == CLICK_TYPE_RIGHT_BUTTON:
+            win32gui.SendMessage(self.window_handle, win32con.WM_RBUTTONDOWN, win32con.MK_RBUTTON, tmp)
+            if click_time > 0:
+                time.sleep(click_time)
+            win32gui.SendMessage(self.window_handle, win32con.WM_RBUTTONUP, win32con.MK_RBUTTON, tmp)
 
     # 自动向窗口发送按键指令（必须在前台激活窗口）
     def send_key(self, keyboard):
@@ -142,3 +144,34 @@ def get_file_version(file_path):
     ms = info['FileVersionMS']
     ls = info['FileVersionLS']
     return "%d.%d.%d.%04d" % (win32api.HIWORD(ms), win32api.LOWORD(ms), win32api.HIWORD(ls), win32api.LOWORD(ls))
+
+
+# 前台输入指定按键
+def keyboard_event(self, keyboard):
+    win32api.keybd_event(keyboard, 0, 0, 0)
+    win32api.keybd_event(keyboard, 0, win32con.KEYEVENTF_KEYUP, 0)
+
+
+# 鼠标移动到指定坐标后点击左右键
+def mouse_click(self, pos_x, pos_y, click_type=CLICK_TYPE_LEFT_BUTTON, click_time=0):
+    win32api.SetCursorPos((pos_x, pos_y))
+    if click_type == CLICK_TYPE_LEFT_BUTTON:
+        win32api.mouse_event(win32con.MOUSEEVENTF_LEFTDOWN, 0, 0)
+        if click_time > 0:
+            time.sleep(click_time)
+        win32api.mouse_event(win32con.MOUSEEVENTF_LEFTUP, 0, 0)
+    elif click_type == CLICK_TYPE_RIGHT_BUTTON:
+        win32api.mouse_event(win32con.MOUSEEVENTF_RIGHTDOWN, 0, 0)
+        if click_time > 0:
+            time.sleep(click_time)
+        win32api.mouse_event(win32con.MOUSEEVENTF_RIGHTUP, 0, 0)
+
+
+# 根据窗口标题寻找窗口句柄
+def find_window_by_title(window_title):
+    return win32gui.FindWindow(None, window_title)
+
+
+# 根据窗口类寻找窗口句柄
+def find_window_by_class_name(class_name):
+    return win32gui.FindWindow(class_name, None)
