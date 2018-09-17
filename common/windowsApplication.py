@@ -142,3 +142,10 @@ def get_file_version(file_path):
     ms = info['FileVersionMS']
     ls = info['FileVersionLS']
     return "%d.%d.%d.%04d" % (win32api.HIWORD(ms), win32api.LOWORD(ms), win32api.HIWORD(ls), win32api.LOWORD(ls))
+
+
+# 前台输入指定按键
+def keyboard_event(self, keyboard):
+    win32api.keybd_event(keyboard, 0, 0, 0)
+    win32api.keybd_event(keyboard, 0, win32con.KEYEVENTF_KEYUP, 0)
+
