@@ -18,6 +18,9 @@ try:
 except ImportError:
     from common import keyboardEvent
 
+CLICK_TYPE_LEFT_BUTTON = "left"
+CLICK_TYPE_RIGHT_BUTTON = "right"
+
 
 class WindowsApplication:
     window_title = ""
@@ -94,13 +97,19 @@ class WindowsApplication:
         win32gui.SetWindowPos(self.window_handle, 0, pos_x, pos_y, 0, 0, win32con.SWP_NOSIZE | win32con.SWP_NOZORDER)
 
     # 自动点击窗口某个坐标（窗口可以不在最顶端）
-    def auto_click(self, pos_x, pos_y, click_time=0):
+    def auto_click(self, pos_x, pos_y, click_type=CLICK_TYPE_LEFT_BUTTON, click_time=0):
         tmp = win32api.MAKELONG(pos_x, pos_y)
         win32gui.SendMessage(self.window_handle, win32con.WM_ACTIVATE, win32con.WA_ACTIVE, 0)
-        win32gui.SendMessage(self.window_handle, win32con.WM_LBUTTONDOWN, win32con.MK_LBUTTON, tmp)
-        if click_time > 0:
-            time.sleep(click_time)
-        win32gui.SendMessage(self.window_handle, win32con.WM_LBUTTONUP, win32con.MK_LBUTTON, tmp)
+        if click_type == CLICK_TYPE_LEFT_BUTTON:
+            win32gui.SendMessage(self.window_handle, win32con.WM_LBUTTONDOWN, win32con.MK_LBUTTON, tmp)
+            if click_time > 0:
+                time.sleep(click_time)
+            win32gui.SendMessage(self.window_handle, win32con.WM_LBUTTONUP, win32con.MK_LBUTTON, tmp)
+        elif click_type == CLICK_TYPE_RIGHT_BUTTON:
+            win32gui.SendMessage(self.window_handle, win32con.WM_RBUTTONDOWN, win32con.MK_RBUTTON, tmp)
+            if click_time > 0:
+                time.sleep(click_time)
+            win32gui.SendMessage(self.window_handle, win32con.WM_RBUTTONUP, win32con.MK_RBUTTON, tmp)
 
     def move_click(self, pos_x, pos_y, click_time=0):
         win32api.SetCursorPos((pos_x, pos_y))
