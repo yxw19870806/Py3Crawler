@@ -77,12 +77,14 @@ def get_album_page(album_url):
             result["album_title"] = album_title.strip()
             # 获取总页数
             max_page_count_html = pq(album_response_content).find("#aplist ul li:first a").html()
-            if not max_page_count_html:
-                raise crawler.CrawlerException("页面截取图集总页数信息失败\n%s" % album_response_content)
-            max_page_count_find = re.findall("共(\d*)页: ", max_page_count_html)
-            if len(max_page_count_find) != 1:
-                raise crawler.CrawlerException("图集总页数信息截取图集总页数失败\n%s" % album_response_content)
-            max_page_count = int(max_page_count_find[0])
+            if max_page_count_html:
+                max_page_count_find = re.findall("共(\d*)页: ", max_page_count_html)
+                if len(max_page_count_find) != 1:
+                    raise crawler.CrawlerException("图集总页数信息截取图集总页数失败\n%s" % album_response_content)
+                max_page_count = int(max_page_count_find[0])
+            else:
+                if pq(album_response_content).find("#aplist ul").length == 0:
+                    raise crawler.CrawlerException("页面截取图集总页数信息失败\n%s" % album_response_content)
         # 获取图片地址
         photo_list_selector = pq(album_response_content).find(".arcBody #contents a img")
         if photo_list_selector.length == 0:
