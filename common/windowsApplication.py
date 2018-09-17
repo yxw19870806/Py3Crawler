@@ -165,3 +165,13 @@ def mouse_click(self, pos_x, pos_y, click_type=CLICK_TYPE_LEFT_BUTTON, click_tim
         if click_time > 0:
             time.sleep(click_time)
         win32api.mouse_event(win32con.MOUSEEVENTF_RIGHTUP, 0, 0)
+
+
+# 根据窗口标题寻找窗口句柄
+def find_window_by_title(window_title):
+    return win32gui.FindWindow(None, window_title)
+
+
+# 根据窗口类寻找窗口句柄
+def find_window_by_class_name(class_name):
+    return win32gui.FindWindow(class_name, None)
