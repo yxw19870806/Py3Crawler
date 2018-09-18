@@ -35,7 +35,7 @@ def get_video_page(video_id):
         raise crawler.CrawlerException(crawler.request_failre(video_play_response.status))
     video_play_response_content = video_play_response.data.decode(errors="ignore")
     # 获取视频不同
-    video_title = tool.find_sub_string(video_play_response_content, "html5player.setVideoTitle('", " - XoticDate.com');")
+    video_title = tool.find_sub_string(video_play_response_content, "html5player.setVideoTitle('", "');")
     if not video_title:
         raise crawler.CrawlerException("页面截取视频标题失败\n%s" % video_play_response_content)
     result["video_title"] = video_title.strip()
