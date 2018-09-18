@@ -194,7 +194,6 @@ class Xhamster(crawler.Crawler):
                 log.error("存档内数据格式不正确")
                 tool.process_exit()
             video_id = int(file_save_info)
-        temp_path = ""
 
         try:
             while video_id:
@@ -238,9 +237,6 @@ class Xhamster(crawler.Crawler):
                 log.step("提前退出")
             else:
                 log.error("异常退出")
-            # 如果临时目录变量不为空，表示某个图集正在下载中，需要把下载了部分的内容给清理掉
-            if temp_path:
-                path.delete_dir_or_file(temp_path)
         except Exception as e:
             log.error("未知异常")
             log.error(str(e) + "\n" + traceback.format_exc())
