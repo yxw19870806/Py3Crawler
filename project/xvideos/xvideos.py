@@ -49,8 +49,6 @@ def get_video_page(video_id):
     result["video_url"] = video_url
     # 过滤视频category
     category_list_selector = pq(video_play_response_content).find(".video-tags-list ul li a")
-    if category_list_selector.length == 0:
-        raise crawler.CrawlerException("页面截取视频标签失败\n%s" % video_play_response_content)
     category_list = []
     for category_index in range(1, category_list_selector.length):
         category_selector = category_list_selector.eq(category_index)
