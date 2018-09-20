@@ -28,7 +28,7 @@ def get_video_page(video_id):
         "video_title": "",  # 视频标题
         "video_url": None,  # 视频地址
     }
-    if video_play_response.status == 404 or video_play_response.status == 410 or video_play_response.status == 423:
+    if video_play_response.status == 404 or video_play_response.status == 403:
         result["is_delete"] = True
         return result
     if video_play_response.status != net.HTTP_RETURN_CODE_SUCCEED:
