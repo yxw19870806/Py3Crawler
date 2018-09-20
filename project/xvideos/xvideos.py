@@ -12,6 +12,7 @@ import traceback
 from pyquery import PyQuery as pq
 from common import *
 
+COOKIE_INFO = {}
 VIDEO_QUALITY = 2
 CATEGORY_WHITELIST = ""
 CATEGORY_BLACKLIST = ""
@@ -45,6 +46,13 @@ def get_video_page(video_id):
     else:
         video_url = tool.find_sub_string("html5player.setVideoUrlLow('", "');")
     if not video_url:
+        video_info_url = "https://www.xvideos.com/video-download/%s" % video_id
+        video_info_response = net.http_request(video_info_url, method="GET", cookies_list=COOKIE_INFO, json_decode=True)
+        if VIDEO_QUALITY == 2 and crawler.check_sub_key(("URL", ), video_info_response.json_data):
+            video_url = video_info_response.json_data["URL"]
+        elif VIDEO_QUALITY == 1 and crawler.check_sub_key(("URL_LOW", ), video_info_response.json_data):
+            video_url = video_info_response.json_data["URL_LOW"]
+    if not video_url:
         raise crawler.CrawlerException("页面截取视频地址失败\n%s" % video_play_response_content)
     result["video_url"] = video_url
     # 过滤视频category
@@ -73,6 +81,7 @@ def get_video_page(video_id):
 
 class XVideos(crawler.Crawler):
     def __init__(self):
+        global COOKIE_INFO
         global VIDEO_QUALITY
         global CATEGORY_WHITELIST
         global CATEGORY_BLACKLIST
@@ -85,6 +94,7 @@ class XVideos(crawler.Crawler):
             crawler.SYS_DOWNLOAD_VIDEO: True,
             crawler.SYS_SET_PROXY: True,
             crawler.SYS_NOT_CHECK_SAVE_DATA: True,
+            crawler.SYS_GET_COOKIE: ("xvideos.com",),
             crawler.SYS_APP_CONFIG: (
                 ("VIDEO_QUALITY", 2, crawler.CONFIG_ANALYSIS_MODE_INTEGER),
                 ("CATEGORY_WHITELIST", "", crawler.CONFIG_ANALYSIS_MODE_RAW),
@@ -93,6 +103,8 @@ class XVideos(crawler.Crawler):
         }
         crawler.Crawler.__init__(self, sys_config)
 
+        # 设置全局变量，供子线程调用
+        COOKIE_INFO = self.cookie_value
         VIDEO_QUALITY = self.app_config["VIDEO_QUALITY"]
         if VIDEO_QUALITY not in [1, 2]:
             VIDEO_QUALITY = 2
