@@ -35,26 +35,6 @@ def get_video_page(video_id):
     if video_play_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(video_play_response.status))
     video_play_response_content = video_play_response.data.decode(errors="ignore")
-    # 获取视频不同
-    video_title = tool.find_sub_string(video_play_response_content, "html5player.setVideoTitle('", "');")
-    if not video_title:
-        raise crawler.CrawlerException("页面截取视频标题失败\n%s" % video_play_response_content)
-    result["video_title"] = video_title.strip()
-    # 获取视频地址
-    if VIDEO_QUALITY == 2:
-        video_url = tool.find_sub_string(video_play_response_content, "html5player.setVideoUrlHigh('", "');")
-    else:
-        video_url = tool.find_sub_string("html5player.setVideoUrlLow('", "');")
-    if not video_url:
-        video_info_url = "https://www.xvideos.com/video-download/%s" % video_id
-        video_info_response = net.http_request(video_info_url, method="GET", cookies_list=COOKIE_INFO, json_decode=True)
-        if VIDEO_QUALITY == 2 and crawler.check_sub_key(("URL", ), video_info_response.json_data):
-            video_url = video_info_response.json_data["URL"]
-        elif VIDEO_QUALITY == 1 and crawler.check_sub_key(("URL_LOW", ), video_info_response.json_data):
-            video_url = video_info_response.json_data["URL_LOW"]
-    if not video_url:
-        raise crawler.CrawlerException("页面截取视频地址失败\n%s" % video_play_response_content)
-    result["video_url"] = video_url
     # 过滤视频category
     category_list_selector = pq(video_play_response_content).find(".video-tags-list ul li a")
     category_list = []
@@ -76,6 +56,26 @@ def get_video_page(video_id):
         if is_skip:
             result["is_skip"] = True
             return result
+    # 获取视频标题
+    video_title = tool.find_sub_string(video_play_response_content, "html5player.setVideoTitle('", "');")
+    if not video_title:
+        raise crawler.CrawlerException("页面截取视频标题失败\n%s" % video_play_response_content)
+    result["video_title"] = video_title.strip()
+    # 获取视频地址
+    if VIDEO_QUALITY == 2:
+        video_url = tool.find_sub_string(video_play_response_content, "html5player.setVideoUrlHigh('", "');")
+    else:
+        video_url = tool.find_sub_string("html5player.setVideoUrlLow('", "');")
+    if not video_url:
+        video_info_url = "https://www.xvideos.com/video-download/%s" % video_id
+        video_info_response = net.http_request(video_info_url, method="GET", cookies_list=COOKIE_INFO, json_decode=True)
+        if VIDEO_QUALITY == 2 and crawler.check_sub_key(("URL", ), video_info_response.json_data):
+            video_url = video_info_response.json_data["URL"]
+        elif VIDEO_QUALITY == 1 and crawler.check_sub_key(("URL_LOW", ), video_info_response.json_data):
+            video_url = video_info_response.json_data["URL_LOW"]
+    if not video_url:
+        raise crawler.CrawlerException("页面截取视频地址失败\n%s" % video_play_response_content)
+    result["video_url"] = video_url
     return result
 
 
