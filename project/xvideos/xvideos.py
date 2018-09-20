@@ -44,7 +44,7 @@ def get_video_page(video_id):
         video_url = tool.find_sub_string(video_play_response_content, "html5player.setVideoUrlHigh('", "');")
     else:
         video_url = tool.find_sub_string("html5player.setVideoUrlLow('", "');")
-    if not video_title:
+    if not video_url:
         raise crawler.CrawlerException("页面截取视频地址失败\n%s" % video_play_response_content)
     result["video_url"] = video_url
     # 过滤视频category
