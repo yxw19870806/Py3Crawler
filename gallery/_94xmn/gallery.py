@@ -37,11 +37,11 @@ def get_one_page_album(sub_path, page_count):
     elif album_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(album_pagination_response.status))
     # 页面编码
-    album_pagination_html = album_pagination_response.data.decode(errors="ignore")
+    album_pagination_response_content = album_pagination_response.data.decode(errors="ignore")
     # 获取图集信息，存在两种页面样式
-    album_list_selector = pq(album_pagination_html).find(".wf-main .wf-cld a")
+    album_list_selector = pq(album_pagination_response_content).find(".wf-main .wf-cld a")
     if album_list_selector.length == 0:
-        raise crawler.CrawlerException("页面截取图集列表失败\n%s" % album_pagination_html)
+        raise crawler.CrawlerException("页面截取图集列表失败\n%s" % album_pagination_response_content)
     for album_index in range(0, album_list_selector.length):
         result_album_info = {
             "album_id": None,  # 图集id
@@ -70,9 +70,9 @@ def get_one_page_album(sub_path, page_count):
         result_album_info["album_title"] = album_title
         result["album_info_list"][result_album_info["album_id"]] = result_album_info
     # 判断是不是最后一页
-    max_page_count = pq(album_pagination_html).find("div.page li:last span.pageinfo strong:first").html()
+    max_page_count = pq(album_pagination_response_content).find("div.page li:last span.pageinfo strong:first").html()
     if not crawler.is_integer(max_page_count):
-        raise crawler.CrawlerException("页面截取总页数失败\n%s" % album_pagination_html)
+        raise crawler.CrawlerException("页面截取总页数失败\n%s" % album_pagination_response_content)
     result["is_over"] = page_count >= int(max_page_count)
     return result
 
