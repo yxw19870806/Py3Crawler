@@ -1,7 +1,7 @@
 # -*- coding:UTF-8  -*-
 """
 ameblo图片爬虫
-http://ameblo.jp/
+https://ameblo.jp/
 @author: hikaru
 email: hikaru870806@hotmail.com
 如有问题或建议请联系
@@ -22,7 +22,7 @@ def check_login():
     global COOKIE_INFO
     if not COOKIE_INFO:
         return False
-    account_index_url = "http://mypage.ameba.jp/"
+    account_index_url = "https://www.ameba.jp/home"
     index_response = net.http_request(account_index_url, method="GET", cookies_list=COOKIE_INFO, is_auto_redirect=False)
     if index_response.status == 200:
         return True
@@ -150,12 +150,12 @@ def get_blog_page(account_name, blog_id):
 
 
 # 获取原始图片下载地址
-# http://stat.ameba.jp/user_images/20110612/15/akihabara48/af/3e/j/t02200165_0800060011286009555.jpg
+# https://stat.ameba.jp/user_images/20110612/15/akihabara48/af/3e/j/t02200165_0800060011286009555.jpg
 # ->
-# http://stat.ameba.jp/user_images/20110612/15/akihabara48/af/3e/j/o0800060011286009555.jpg
-# http://stat.ameba.jp/user_images/4b/90/10112135346_s.jpg
+# https://stat.ameba.jp/user_images/20110612/15/akihabara48/af/3e/j/o0800060011286009555.jpg
+# https://stat.ameba.jp/user_images/4b/90/10112135346_s.jpg
 # ->
-# http://stat.ameba.jp/user_images/4b/90/10112135346.jpg
+# https://stat.ameba.jp/user_images/4b/90/10112135346.jpg
 def get_origin_photo_url(photo_url):
     if photo_url.find("//stat.ameba.jp/user_images/") != -1:
         # 最新的photo_url使用?caw=指定显示分辨率，去除
@@ -211,7 +211,7 @@ class Ameblo(crawler.Crawler):
         # 初始化参数
         sys_config = {
             crawler.SYS_DOWNLOAD_PHOTO: True,
-            crawler.SYS_GET_COOKIE: ("ameba.jp", "mypage.ameba.jp"),
+            crawler.SYS_GET_COOKIE: ("ameba.jp", "www.ameba.jp"),
         }
         crawler.Crawler.__init__(self, sys_config)
 
