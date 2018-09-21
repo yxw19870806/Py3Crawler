@@ -92,7 +92,7 @@ def get_album_page(album_url):
                 raise crawler.CrawlerException("第%s页页面截取图片信息失败\n%s" % (page_count, album_response_content))
         for photo_index in range(0, photo_list_selector.length):
             # http://pic.ytqmx.com:82/2014/0621/07/02.jpg!960.jpg -> http://pic.ytqmx.com:82/2014/0621/07/02.jpg
-            result["photo_url_list"].append(photo_list_selector.eq(photo_index).attr("src").split("!")[0])
+            result["photo_url_list"].append(photo_list_selector.eq(photo_index).attr("src").split("!")[0].replace(".com :", ".com:"))
         page_count += 1
     return result
 
