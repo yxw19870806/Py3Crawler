@@ -1,45 +1,36 @@
 # -*- coding:UTF-8  -*-
 """
-http://www.94xmn.com/
+http://www.27270.com/
 @author: hikaru
 email: hikaru870806@hotmail.com
 如有问题或建议请联系
 """
 import os
-import re
 import time
 import traceback
 from pyquery import PyQuery as pq
 from common import *
 
 SUB_PATH_LIST = {
-    "xiaoqingxin": "1",
-    "xingganmeinv": "2",
-    "siwameitui": "3",
-    "ribenmeinv": "4",
-    "hanguomeinv": "5",
-    "xioumeinv": "6",
-    "jiepai": "8",
+    "ent/lianglimeimo": "12",
+    "ent/meinvtupian": "11",
+    "ent/rentiyishu": "32",
+    "game/cosplaymeitu": "20",
 }
 
 
-# 获取指定一页的图集
+# 获取图集首页
 def get_one_page_album(sub_path, page_count):
-    album_pagination_url = "http://www.94xmn.com/%s/list_%s_%s.html" % (sub_path, SUB_PATH_LIST[sub_path], page_count)
-    album_pagination_response = net.http_request(album_pagination_url, method="GET", header_list={"Host": "www.94xmn.com"})
+    album_pagination_url = "http://www.27270.com/%s/list_%s_%s.html" % (sub_path, SUB_PATH_LIST[sub_path], page_count)
+    album_pagination_response = net.http_request(album_pagination_url, method="GET", is_auto_redirect=False)
     result = {
         "album_info_list": {},  # 全部图集信息
         "is_over": False,  # 是否最后一页图集
     }
-    if album_pagination_response.status == 409:
-        time.sleep(5)
-        return get_one_page_album(sub_path, page_count)
-    elif album_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
+    if album_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(album_pagination_response.status))
-    # 页面编码
-    album_pagination_response_content = album_pagination_response.data.decode(errors="ignore")
-    # 获取图集信息，存在两种页面样式
-    album_list_selector = pq(album_pagination_response_content).find(".wf-main .wf-cld a")
+    album_pagination_response_content = album_pagination_response.data.decode("GBK", errors="ignore")
+    album_list_selector = pq(album_pagination_response_content).find(".MeinvTuPianBox ul li")
     if album_list_selector.length == 0:
         raise crawler.CrawlerException("页面截取图集列表失败\n%s" % album_pagination_response_content)
     for album_index in range(0, album_list_selector.length):
@@ -50,67 +41,56 @@ def get_one_page_album(sub_path, page_count):
         }
         album_selector = album_list_selector.eq(album_index)
         # 获取图集地址
-        album_url = album_selector.attr("href")
+        album_url = album_selector.children("a").attr("href")
         if not album_url:
             raise crawler.CrawlerException("图集列表截取图集地址失败\n%s" % album_selector.html())
         result_album_info["album_url"] = album_url
         # 获取图集id
-        # http://www.94xmn.com/plus/view.php?aid=25
-        if album_url.find("/view.php?") > 0:
-            album_id = album_url.split("aid=")[-1]
-        else:
-            album_id = album_url.split("/")[-1].split(".")[0]
+        # http://www.27270.com/game/cosplaymeitu/2017/172714.html
+        album_id = album_url.split("/")[-1].split(".")[0]
         if not crawler.is_integer(album_id):
             raise crawler.CrawlerException("图集地址截取图集id失败\n%s" % album_url)
         result_album_info["album_id"] = int(album_id)
         # 获取图集标题
-        album_title = album_selector.attr("title")
+        album_title = album_selector.children("a").attr("title")
         if not album_title:
             raise crawler.CrawlerException("图集列表截取图集标题失败\n%s" % album_url)
         result_album_info["album_title"] = album_title
         result["album_info_list"][result_album_info["album_id"]] = result_album_info
     # 判断是不是最后一页
-    max_page_count = pq(album_pagination_response_content).find("div.page li:last span.pageinfo strong:first").html()
-    if not crawler.is_integer(max_page_count):
-        raise crawler.CrawlerException("页面截取总页数失败\n%s" % album_pagination_response_content)
-    result["is_over"] = page_count >= int(max_page_count)
+    result["is_over"] = pq(album_pagination_response_content).find("div.NewPages li:last a").attr("href") is None
     return result
 
 
 # 获取指定图集
-def get_album_page(album_url):
-    page_count = max_page_count = 1
+def get_album_page(album_url, album_id):
+    page_count = 1
     result = {
         "photo_url_list": [],  # 全部图片地址
     }
-    while page_count <= max_page_count:
+    while True:
         if page_count == 1:
             pagination_album_url = album_url
         else:
             pagination_album_url = album_url.replace(".html", "_%s.html" % page_count)
-        album_response = net.http_request(pagination_album_url, method="GET", header_list={"Host": "www.94xmn.com"})
-        if album_response.status == 409:
-            time.sleep(5)
-            continue
-        elif album_response.status != net.HTTP_RETURN_CODE_SUCCEED:
+        album_response = net.http_request(pagination_album_url, method="GET")
+        if album_response.status != net.HTTP_RETURN_CODE_SUCCEED:
             raise crawler.CrawlerException("第%s页" % page_count + crawler.request_failre(album_response.status))
         album_response_content = album_response.data.decode(errors="ignore")
         # 获取图片地址
-        photo_list_selector = pq(album_response_content).find("div.bbox a img")
+        photo_list_selector = pq(album_response_content).find("#picBody a img")
         if photo_list_selector.length == 0:
             raise crawler.CrawlerException("第%s页页面匹配图片地址失败\n%s" % (page_count, album_response_content))
         for photo_index in range(0, photo_list_selector.length):
-            result["photo_url_list"].append("http://www.94xmn.com" + photo_list_selector.eq(photo_index).attr("src"))
-        # 获取总页数
-        if page_count == 1:
-            max_page_html = pq(album_response_content).find("#fenye li:first a").html()
-            if not max_page_html:
-                raise crawler.CrawlerException("页面匹配总页数信息失败\n%s" % album_response_content)
-            max_page_count_find = re.findall("共(\d*)页: ", max_page_html)
-            if len(max_page_count_find) == 0:
-                raise crawler.CrawlerException("总页数信息匹配总页数失败\n%s" % album_response_content)
-            max_page_count = int(max_page_count_find[0])
-        page_count += 1
+            result["photo_url_list"].append(photo_list_selector.eq(photo_index).attr("src"))
+        next_page_url_path = pq(album_response_content).find(".page-tag #nl a").attr("href")
+        # 判断是不是最后一页
+        if next_page_url_path == "%s_%s.html" % (album_id, page_count + 1):
+            page_count += 1
+        elif next_page_url_path == "##":
+            break
+        else:
+            raise crawler.CrawlerException("第%s页页面截取下一页地址失败\n%s" % (page_count, album_response_content))
     return result
 
 
@@ -211,9 +191,9 @@ class Download(crawler.DownloadThread):
     def crawl_album(self, album_info):
         # 获取图集全部图片
         try:
-            album_response = get_album_page(album_info["album_url"])
+            album_response = get_album_page(album_info["album_url"], album_info["album_id"])
         except crawler.CrawlerException as e:
-            self.error("图集%s解析失败，原因：%s" % (album_info["album_id"], e.message))
+            self.error("图集%s解析失败，原因：%s" % (album_info["album_url"], e.message))
             raise
 
         self.trace("图集%s《%s》 %s 解析的全部图片：%s" % (album_info["album_id"], album_info["album_title"], album_info["album_url"], album_response["photo_url_list"]))
@@ -238,7 +218,7 @@ class Download(crawler.DownloadThread):
                 self.step("图集%s《%s》第%s张图片下载成功" % (album_info["album_id"], album_info["album_title"], photo_index))
                 photo_index += 1
             else:
-                self.error("图集%s《%s》 %s 第%s张图片 %s 下载失败，原因：%s" % (album_info["album_id"], album_info["album_title"], album_info["album_url"], photo_index, photo_url, crawler.download_failre(save_file_return["code"])))
+                self.error("图集%s《%s》 %s 第%s张图片 %s 下载失败，原因：%s" % (album_info["album_url"], album_info["album_title"], album_info["album_url"], photo_index, photo_url, crawler.download_failre(save_file_return["code"])))
 
         # 图集内图片全部下载完毕
         self.temp_path_list = []  # 临时目录设置清除
@@ -270,7 +250,7 @@ class Download(crawler.DownloadThread):
 
         # 保存最后的信息
         with self.thread_lock:
-            file.write_file("\t".join(self.account_info), self.main_thread.temp_save_data_path)
+            # file.write_file("\t".join(self.account_info), self.main_thread.temp_save_data_path)
             self.main_thread.total_photo_count += self.total_photo_count
             self.main_thread.account_list.pop(self.sub_path)
         self.step("下载完毕，总共获得%s张图片" % self.total_photo_count)
