@@ -22,7 +22,7 @@ def check_login():
     global COOKIE_INFO
     if not COOKIE_INFO:
         return False
-    account_index_url = "http://mypage.ameba.jp/"
+    account_index_url = "https://www.ameba.jp/home"
     index_response = net.http_request(account_index_url, method="GET", cookies_list=COOKIE_INFO, is_auto_redirect=False)
     if index_response.status == 200:
         return True
@@ -211,7 +211,7 @@ class Ameblo(crawler.Crawler):
         # 初始化参数
         sys_config = {
             crawler.SYS_DOWNLOAD_PHOTO: True,
-            crawler.SYS_GET_COOKIE: ("ameba.jp", "mypage.ameba.jp"),
+            crawler.SYS_GET_COOKIE: ("ameba.jp", "www.ameba.jp"),
         }
         crawler.Crawler.__init__(self, sys_config)
 
