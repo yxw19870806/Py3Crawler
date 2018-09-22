@@ -8,12 +8,14 @@ email: hikaru870806@hotmail.com
 """
 import os
 import re
+import time
 import traceback
 from pyquery import PyQuery as pq
 from common import *
 
 COOKIE_INFO = {}
 VIDEO_QUALITY = 2
+ACTION_WHEN_BLOCK_HD_QUALITY = 2
 CATEGORY_WHITELIST = ""
 CATEGORY_BLACKLIST = ""
 
@@ -64,21 +66,31 @@ def get_video_page(video_id):
     # 获取视频地址
     if VIDEO_QUALITY == 2:
         video_url = tool.find_sub_string(video_play_response_content, "html5player.setVideoUrlHigh('", "');")
+        # 被屏蔽了高质量视频
+        if not video_url:
+            if ACTION_WHEN_BLOCK_HD_QUALITY == 1:
+                video_url = tool.find_sub_string("html5player.setVideoUrlLow('", "');")
+            elif ACTION_WHEN_BLOCK_HD_QUALITY == 2:
+                log.error("高质量视频地址已被暂时屏蔽，等待10分钟")
+                time.sleep(600)
+                return get_video_page(video_id)
+            else:
+                raise crawler.CrawlerException("高质量视频地址已被暂时屏蔽")
     else:
         video_url = tool.find_sub_string("html5player.setVideoUrlLow('", "');")
-    if not video_url:
-        video_info_url = "https://www.xvideos.com/video-download/%s" % video_id
-        video_info_response = net.http_request(video_info_url, method="GET", cookies_list=COOKIE_INFO, json_decode=True)
-        if video_info_response.status != net.HTTP_RETURN_CODE_SUCCEED:
-            raise crawler.CrawlerException("视频下载请求，" + crawler.request_failre(video_info_response.status))
-        if VIDEO_QUALITY == 2:
-            if not crawler.check_sub_key(("URL",), video_info_response.json_data):
-                raise crawler.CrawlerException("视频下载信息，'URL'字段不存在\n%s" % video_info_response.json_data)
-            video_url = video_info_response.json_data["URL"]
-        else:
-            if not crawler.check_sub_key(("URL_LOW",), video_info_response.json_data):
-                raise crawler.CrawlerException("视频下载信息，'URL_LOW'字段不存在\n%s" % video_info_response.json_data)
-            video_url = video_info_response.json_data["URL_LOW"]
+    # if not video_url:
+    #     video_info_url = "https://www.xvideos.com/video-download/%s" % video_id
+    #     video_info_response = net.http_request(video_info_url, method="GET", cookies_list=COOKIE_INFO, json_decode=True)
+    #     if video_info_response.status != net.HTTP_RETURN_CODE_SUCCEED:
+    #         raise crawler.CrawlerException("视频下载请求，" + crawler.request_failre(video_info_response.status))
+    #     if VIDEO_QUALITY == 2:
+    #         if not crawler.check_sub_key(("URL",), video_info_response.json_data):
+    #             raise crawler.CrawlerException("视频下载信息，'URL'字段不存在\n%s" % video_info_response.json_data)
+    #         video_url = video_info_response.json_data["URL"]
+    #     else:
+    #         if not crawler.check_sub_key(("URL_LOW",), video_info_response.json_data):
+    #             raise crawler.CrawlerException("视频下载信息，'URL_LOW'字段不存在\n%s" % video_info_response.json_data)
+    #         video_url = video_info_response.json_data["URL_LOW"]
     if not video_url:
         raise crawler.CrawlerException("页面截取视频地址失败\n%s" % video_play_response_content)
     result["video_url"] = video_url
@@ -89,6 +101,7 @@ class XVideos(crawler.Crawler):
     def __init__(self):
         global COOKIE_INFO
         global VIDEO_QUALITY
+        global ACTION_WHEN_BLOCK_HD_QUALITY
         global CATEGORY_WHITELIST
         global CATEGORY_BLACKLIST
 
@@ -103,6 +116,7 @@ class XVideos(crawler.Crawler):
             crawler.SYS_GET_COOKIE: ("xvideos.com",),
             crawler.SYS_APP_CONFIG: (
                 ("VIDEO_QUALITY", 2, crawler.CONFIG_ANALYSIS_MODE_INTEGER),
+                ("ACTION_WHEN_BLOCK_HD_QUALITY", 2, crawler.CONFIG_ANALYSIS_MODE_INTEGER),
                 ("CATEGORY_WHITELIST", "", crawler.CONFIG_ANALYSIS_MODE_RAW),
                 ("CATEGORY_BLACKLIST", "", crawler.CONFIG_ANALYSIS_MODE_RAW),
             ),
@@ -115,6 +129,11 @@ class XVideos(crawler.Crawler):
         if VIDEO_QUALITY not in [1, 2]:
             VIDEO_QUALITY = 2
             log.error("配置文件config.ini中key为'video_quality'的值必须是1或2，使用程序默认设置")
+
+        ACTION_WHEN_BLOCK_HD_QUALITY = self.app_config["ACTION_WHEN_BLOCK_HD_QUALITY"]
+        if ACTION_WHEN_BLOCK_HD_QUALITY not in [1, 2, 3]:
+            ACTION_WHEN_BLOCK_HD_QUALITY = 2
+            log.error("配置文件config.ini中key为'ACTION_WHEN_BLOCK_HD_QUALITY'的值必须是1至3之间的整数，使用程序默认设置")
 
         category_whitelist = self.app_config["CATEGORY_WHITELIST"]
         if category_whitelist:
