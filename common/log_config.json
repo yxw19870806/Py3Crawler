@@ -8,7 +8,7 @@
   "IS_LOG_TRACE": false,
   "IS_LOG_NOTICE": true,
   "ERROR_LOG_PATH": "../log/errorLog.txt",
-  "STEP_LOG_PATH": "../log/errorLog.txt",
-  "TRACE_LOG_PATH": "../log/errorLog.txt",
-  "NOTICE_LOG_PATH": "../log/errorLog.txt"
+  "STEP_LOG_PATH": "../log/stepLog.txt",
+  "TRACE_LOG_PATH": "../log/traceLog.txt",
+  "NOTICE_LOG_PATH": "../log/noticeLog.txt"
 }
