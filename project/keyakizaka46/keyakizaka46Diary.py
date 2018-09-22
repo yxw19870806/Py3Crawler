@@ -73,7 +73,7 @@ def get_one_page_blog(account_id, page_count):
     return result
 
 
-class Diary(crawler.Crawler):
+class Keyakizaka46Diary(crawler.Crawler):
     def __init__(self):
         # 设置APP目录
         crawler.PROJECT_APP_PATH = os.path.abspath(os.path.dirname(__file__))
@@ -219,4 +219,4 @@ class Download(crawler.DownloadThread):
 
 
 if __name__ == "__main__":
-    Diary().main()
+    Keyakizaka46Diary().main()
