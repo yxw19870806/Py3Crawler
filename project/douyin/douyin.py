@@ -26,8 +26,8 @@ def get_account_index_page(account_id):
     }
     account_index_response = net.http_request(account_index_url, method="GET", header_list=header_list)
     result = {
-        "dytk": "a7c57cbc452668bcf4827f3665381a71",  # 账号dytk值（请求参数）
-        "signature": "alr0uRAaMTSdKhxrhHrIQWpa9K",  # 加密串（请求参数）
+        "dytk": "",  # 账号dytk值（请求参数）
+        "signature": "",  # 加密串（请求参数）
     }
     if account_index_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(account_index_response.status))
@@ -48,7 +48,7 @@ def get_account_index_page(account_id):
     chrome_options = webdriver.chrome.options.Options()
     chrome_options.add_argument('--headless')  # 不打开浏览器
     chrome_options.add_argument("user-agent=" + USER_AGENT)  # 使用指定UA
-    chrome = webdriver.Chrome(chrome_options=chrome_options)
+    chrome = webdriver.Chrome(options=chrome_options)
     chrome.get("file:///" + os.path.realpath(cache_html))
     signature = chrome.find_element_by_id("result").text
     chrome.close()
