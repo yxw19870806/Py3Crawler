@@ -103,7 +103,7 @@ def get_photo_url(photo_url):
     return photo_url
 
 
-class Blog(crawler.Crawler):
+class SinaBlog(crawler.Crawler):
     def __init__(self):
         # 设置APP目录
         crawler.PROJECT_APP_PATH = os.path.abspath(os.path.dirname(__file__))
@@ -277,4 +277,4 @@ class Download(crawler.DownloadThread):
 
 
 if __name__ == "__main__":
-    Blog().main()
+    SinaBlog().main()
