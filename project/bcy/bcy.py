@@ -444,17 +444,17 @@ class Download(crawler.DownloadThread):
             self.step("作品%s开始下载第%s张图片 %s" % (album_id, photo_index, photo_url))
 
             file_path = os.path.join(album_path, "%03d.%s" % (photo_index, net.get_file_type(photo_url, "jpg")))
-            while True:
+            for retry_count in range(0, 10):
                 save_file_return = net.save_net_file(photo_url, file_path)
                 if save_file_return["status"] == 1:
                     self.step("作品%s第%s张图片下载成功" % (album_id, photo_index))
-                    photo_index += 1
                 else:
                     # 560报错，重新下载
-                    if save_file_return["code"] == 560:
+                    if save_file_return["code"] == 404 and retry_count < 4:
                         time.sleep(5)
                         continue
                     self.error("作品%s第%s张图片 %s，下载失败，原因：%s" % (album_id, photo_index, photo_url, crawler.download_failre(save_file_return["code"])))
+                photo_index += 1
                 break
 
         # 作品内图片下全部载完毕
