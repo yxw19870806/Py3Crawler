@@ -250,7 +250,14 @@ def get_album_page(album_id):
 
 # 禁用指定分辨率
 def get_photo_url(photo_url):
-    return "/".join(photo_url.split("/")[0:-1])
+    temp_list = photo_url.split("/")
+    # https://img5.bcyimg.com/user/16876/item/web/4bsb/ca1f5d30b3d111e8b9c639207079d5a4.jpg/w650
+    # ->
+    # https://img5.bcyimg.com/user/16876/item/web/4bsb/ca1f5d30b3d111e8b9c639207079d5a4.jpg
+    if temp_list[-1][0] == 'w':
+        return "/".join(temp_list[0:-1])
+    else:
+        return photo_url
 
 
 class Bcy(crawler.Crawler):
