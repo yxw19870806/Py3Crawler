@@ -110,7 +110,7 @@ def get_album_page(album_url):
     for photo_url in photo_url_list:
         photo_name, file_type = photo_url.split("/")[-1].split(".")
         # 存在非自增数字命名的图片
-        if not crawler.is_integer(photo_name) or len(photo_name) > 3:
+        if not crawler.is_integer(photo_name) or int(photo_name) > 100 + len(photo_url_list):
             extra_photo_list.append(photo_url)
         else:
             # 自增的图片
