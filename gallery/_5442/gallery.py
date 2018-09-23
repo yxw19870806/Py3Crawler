@@ -156,32 +156,43 @@ class Gallery(crawler.Crawler):
 
         try:
             page_count = 1
+            cache_file_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "cache.json"))
             album_id_to_url_list = {}
-            is_over = False
-            while not is_over:
-                if not self.is_running():
-                    tool.process_exit(0)
-                log.step("开始解析第%s页图集" % page_count)
+            # 从缓存文件中读取
+            cache_album_id_to_url_list = tool.json_decode(file.read_file(cache_file_path))
+            if cache_album_id_to_url_list is None:
+                is_over = False
+                while not is_over:
+                    if not self.is_running():
+                        tool.process_exit(0)
+                    log.step("开始解析第%s页图集" % page_count)
 
-                # 获取第一页图集
-                try:
-                    album_pagination_response = get_one_page_album(page_count)
-                except crawler.CrawlerException as e:
-                    log.error("第%s页图集解析失败，原因：%s" % (page_count, e.message))
-                    raise
+                    # 获取第一页图集
+                    try:
+                        album_pagination_response = get_one_page_album(page_count)
+                    except crawler.CrawlerException as e:
+                        log.error("第%s页图集解析失败，原因：%s" % (page_count, e.message))
+                        raise
 
-                log.trace("第%s页解析的全部图集：%s" % (page_count, album_pagination_response["album_info_list"]))
-                log.step("第%s页解析获取%s个图集" % (page_count, len(album_pagination_response["album_info_list"])))
+                    log.trace("第%s页解析的全部图集：%s" % (page_count, album_pagination_response["album_info_list"]))
+                    log.step("第%s页解析获取%s个图集" % (page_count, len(album_pagination_response["album_info_list"])))
 
-                # 寻找这一页符合条件的图集
-                for album_info in album_pagination_response["album_info_list"]:
-                    album_id_to_url_list[album_info["album_id"]] = album_info["album_url"]
+                    # 寻找这一页符合条件的图集
+                    for album_info in album_pagination_response["album_info_list"]:
+                        album_id_to_url_list[album_info["album_id"]] = album_info["album_url"]
 
-                if not is_over:
-                    is_over = album_pagination_response["is_over"]
-                    page_count += 1
+                    if not is_over:
+                        is_over = album_pagination_response["is_over"]
+                        page_count += 1
 
-            while album_id <= max(album_id_to_url_list):
+                # 保存到缓存文件中
+                file.write_file(json.dumps(album_id_to_url_list), cache_file_path, file.WRITE_FILE_TYPE_REPLACE)
+            else:
+                # 写入文件后key变成string类型了
+                for temp in cache_album_id_to_url_list:
+                    album_id_to_url_list[int(temp)] = cache_album_id_to_url_list[temp]
+
+            while album_id <= 45465:#max(album_id_to_url_list):
                 if not self.is_running():
                     tool.process_exit(0)
                 # 如果图集id在列表页存在的
