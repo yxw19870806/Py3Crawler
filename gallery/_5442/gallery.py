@@ -5,6 +5,7 @@ http://www.5442.com/
 email: hikaru870806@hotmail.com
 如有问题或建议请联系
 """
+import json
 import os
 import re
 import traceback
@@ -59,6 +60,7 @@ def get_album_page(album_url):
         "is_delete": False,  # 是否已删除
         "photo_url_list": [],  # 全部图片地址
     }
+    photo_url_list = []
     while page_count <= max_page_count:
         if page_count == 1:
             pagination_album_url = album_url
@@ -96,8 +98,36 @@ def get_album_page(album_url):
                 raise crawler.CrawlerException("第%s页页面截取图片信息失败\n%s" % (page_count, album_response_content))
         for photo_index in range(0, photo_list_selector.length):
             # http://pic.ytqmx.com:82/2014/0621/07/02.jpg!960.jpg -> http://pic.ytqmx.com:82/2014/0621/07/02.jpg
-            result["photo_url_list"].append(photo_list_selector.eq(photo_index).attr("src").split("!")[0].replace(".com :", ".com:"))
+            photo_url_list.append(photo_list_selector.eq(photo_index).attr("src").split("!")[0].replace(".com :", ".com:"))
         page_count += 1
+    # 根据自增命名、尝试补上那些确实的图片
+    # http://www.5442.com/meinv/20161026/36948.html
+    photo_index_list = {}  # 数字命名的图片
+    extra_photo_list = []  # 非数字命名的图片
+    is_format = True  # 是不是使用0填充命名
+    temp_list = photo_url_list[0].split("/")
+    file_type = "jpg"
+    for photo_url in photo_url_list:
+        photo_name, file_type = photo_url.split("/")[-1].split(".")
+        # 存在非自增数字命名的图片
+        if not crawler.is_integer(photo_name) or len(photo_name) > 3:
+            extra_photo_list.append(photo_url)
+        else:
+            # 自增的图片
+            photo_index_list[int(photo_name)] = 1
+            if is_format and len(photo_name) == 1:
+                is_format = False
+    if len(photo_index_list) > 0 and (max(photo_index_list) != len(photo_url_list) or len(photo_index_list) != len(photo_url_list)):
+        result["is_reset"] = True
+        for photo_index in range(1, max(photo_index_list) + 2):  # 多一张
+            if is_format:
+                temp_list[-1] = "%02d.%s" % (photo_index, file_type)
+            else:
+                temp_list[-1] = "%s.%s" % (photo_index, file_type)
+            result["photo_url_list"].append("/".join(temp_list))
+        result["photo_url_list"] += extra_photo_list
+    else:
+        result["photo_url_list"] = photo_url_list
     return result
 
 
@@ -126,32 +156,43 @@ class Gallery(crawler.Crawler):
 
         try:
             page_count = 1
+            cache_file_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "cache.json"))
             album_id_to_url_list = {}
-            is_over = False
-            while not is_over:
-                if not self.is_running():
-                    tool.process_exit(0)
-                log.step("开始解析第%s页图集" % page_count)
+            # 从缓存文件中读取
+            cache_album_id_to_url_list = tool.json_decode(file.read_file(cache_file_path))
+            if cache_album_id_to_url_list is None:
+                is_over = False
+                while not is_over:
+                    if not self.is_running():
+                        tool.process_exit(0)
+                    log.step("开始解析第%s页图集" % page_count)
 
-                # 获取第一页图集
-                try:
-                    album_pagination_response = get_one_page_album(page_count)
-                except crawler.CrawlerException as e:
-                    log.error("第%s页图集解析失败，原因：%s" % (page_count, e.message))
-                    raise
+                    # 获取第一页图集
+                    try:
+                        album_pagination_response = get_one_page_album(page_count)
+                    except crawler.CrawlerException as e:
+                        log.error("第%s页图集解析失败，原因：%s" % (page_count, e.message))
+                        raise
 
-                log.trace("第%s页解析的全部图集：%s" % (page_count, album_pagination_response["album_info_list"]))
-                log.step("第%s页解析获取%s个图集" % (page_count, len(album_pagination_response["album_info_list"])))
+                    log.trace("第%s页解析的全部图集：%s" % (page_count, album_pagination_response["album_info_list"]))
+                    log.step("第%s页解析获取%s个图集" % (page_count, len(album_pagination_response["album_info_list"])))
 
-                # 寻找这一页符合条件的图集
-                for album_info in album_pagination_response["album_info_list"]:
-                    album_id_to_url_list[album_info["album_id"]] = album_info["album_url"]
+                    # 寻找这一页符合条件的图集
+                    for album_info in album_pagination_response["album_info_list"]:
+                        album_id_to_url_list[album_info["album_id"]] = album_info["album_url"]
 
-                if not is_over:
-                    is_over = album_pagination_response["is_over"]
-                    page_count += 1
+                    if not is_over:
+                        is_over = album_pagination_response["is_over"]
+                        page_count += 1
 
-            while album_id <= max(album_id_to_url_list):
+                # 保存到缓存文件中
+                file.write_file(json.dumps(album_id_to_url_list), cache_file_path, file.WRITE_FILE_TYPE_REPLACE)
+            else:
+                # 写入文件后key变成string类型了
+                for temp in cache_album_id_to_url_list:
+                    album_id_to_url_list[int(temp)] = cache_album_id_to_url_list[temp]
+
+            while album_id <= 45465:#max(album_id_to_url_list):
                 if not self.is_running():
                     tool.process_exit(0)
                 # 如果图集id在列表页存在的
@@ -234,6 +275,13 @@ class Download(crawler.DownloadThread):
 
     def run(self):
         self.result = net.save_net_file(self.photo_url, self.file_path)
+        if self.result["status"] == 0 and self.result["code"] == 404:
+            temp_List = self.photo_url.split("/")
+            photo_name, file_type = temp_List[-1].split(".")
+            if crawler.is_integer(photo_name) and int(photo_name) < 10 and len(photo_name) == 2:
+                temp_List[-1] = "%s.%s" % (int(photo_name), file_type)
+                photo_url = "/".join(temp_List)
+                self.result = net.save_net_file(photo_url, self.file_path)
         self.notify_main_thread()
 
     def get_result(self):
