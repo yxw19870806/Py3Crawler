@@ -192,7 +192,7 @@ class Gallery(crawler.Crawler):
                 for temp in cache_album_id_to_url_list:
                     album_id_to_url_list[int(temp)] = cache_album_id_to_url_list[temp]
 
-            while album_id <= 45465:#max(album_id_to_url_list):
+            while album_id <= max(album_id_to_url_list):
                 if not self.is_running():
                     tool.process_exit(0)
                 # 如果图集id在列表页存在的
