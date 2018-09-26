@@ -10,7 +10,6 @@ import os
 import re
 import time
 import traceback
-import urllib.parse
 from pyquery import PyQuery as pq
 from common import *
 
@@ -143,8 +142,7 @@ def get_one_page_post(account_id, page_count, is_https, is_safe_mode):
             # 获取日志地址
             if not crawler.check_sub_key(("url",), post_info):
                 raise crawler.CrawlerException("日志信息'url'字段不存在\n%s" % page_data)
-            post_url_split = urllib.parse.urlsplit(post_info["url"])
-            result_post_info["post_url"] = post_url_split[0] + "://" + post_url_split[1] + urllib.parse.quote(post_url_split[2])
+            result_post_info["post_url"] = net.url_encode(post_info["url"])
             # 获取日志id
             post_id = tool.find_sub_string(result_post_info["post_url"], "/post/").split("/")[0]
             if not crawler.is_integer(post_id):
@@ -205,8 +203,7 @@ def get_one_page_private_blog(account_id, page_count):
         }
         if not crawler.check_sub_key(("post_url",), post_info):
             raise crawler.CrawlerException("日志信息'post_url'字段不存在\n%s" % post_info)
-        post_url_split = urllib.parse.urlsplit(post_info["post_url"])
-        result_post_info["post_url"] = post_url_split[0] + "://" + post_url_split[1] + urllib.parse.quote(post_url_split[2])
+        result_post_info["post_url"] = net.url_encode(post_info["post_url"])
         if not crawler.check_sub_key(("type",), post_info):
             raise crawler.CrawlerException("日志信息'type'字段不存在\n%s" % post_info)
         # 视频
