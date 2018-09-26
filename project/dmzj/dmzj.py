@@ -9,7 +9,6 @@ email: hikaru870806@hotmail.com
 import os
 import time
 import traceback
-import urllib.parse
 from common import *
 
 
@@ -90,12 +89,6 @@ def get_chapter_page(comic_id, page_id):
     for photo_url in chapter_info_data["page_url"]:
         result["photo_url_list"].append(photo_url)
     return result
-
-
-# 特殊符号转义
-def get_photo_url(photo_url):
-    photo_url_split = urllib.parse.urlsplit(photo_url)
-    return photo_url_split[0] + "://" + photo_url_split[1] + urllib.parse.quote(photo_url_split[2])
 
 
 class DMZJ(crawler.Crawler):
@@ -194,12 +187,11 @@ class Download(crawler.DownloadThread):
         # 设置临时目录
         self.temp_path_list.append(chapter_path)
         for photo_url in chapter_response["photo_url_list"]:
-            photo_url = get_photo_url(photo_url)
             self.main_thread_check()  # 检测主线程运行状态
             self.step("漫画%s %s《%s》开始下载第%s张图片 %s" % (comic_info["page_id"], comic_info["version_name"], comic_info["chapter_name"], photo_index, photo_url))
 
             photo_file_path = os.path.join(chapter_path, "%03d.%s" % (photo_index, net.get_file_type(photo_url)))
-            save_file_return = net.save_net_file(photo_url, photo_file_path, header_list={"Referer": "https://m.dmzj.com/"})
+            save_file_return = net.save_net_file(net.url_encode(photo_url), photo_file_path, header_list={"Referer": "https://m.dmzj.com/"})
             if save_file_return["status"] == 1:
                 self.step("漫画%s %s《%s》第%s张图片下载成功" % (comic_info["page_id"], comic_info["version_name"], comic_info["chapter_name"], photo_index))
                 photo_index += 1
