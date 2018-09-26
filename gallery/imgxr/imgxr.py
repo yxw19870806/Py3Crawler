@@ -51,6 +51,7 @@ def get_album_page(album_url):
     result = {
         "album_id": None,  # 图集id
         "album_title": "",  # 图集标题
+        "is_video": False,  # 是否是视频
         "photo_url_list": [],  # 全部图片地址
     }
     if album_response.status != net.HTTP_RETURN_CODE_SUCCEED:
@@ -69,7 +70,10 @@ def get_album_page(album_url):
     # 获取图片地址
     photo_list_selector = pq(album_response_content).find(".post span.photoThum a")
     if photo_list_selector.length == 0:
-        raise crawler.CrawlerException("页面截取图片信息失败\n%s" % album_response_content)
+        if pq(album_response_content).find(".post #jwplayer_1").length == 1:
+            result["is_video"] = True
+        else:
+            raise crawler.CrawlerException("页面截取图片信息失败\n%s" % album_response_content)
     for photo_index in range(0, photo_list_selector.length):
         photo_url = photo_list_selector.eq(photo_index).attr("href")
         if not photo_url:
@@ -150,6 +154,10 @@ class ImgXr(crawler.Crawler):
                     except crawler.CrawlerException as e:
                         log.error("图集 %s 解析失败，原因：%s" % (album_url, e.message))
                         raise
+
+                    if album_response["is_video"]:
+                        log.error("图集 %s 是视频，跳过" % album_url)
+                        continue
 
                     log.trace("图集《%s》 %s 解析的全部图片：%s" % (album_response["album_title"], album_url, album_response["photo_url_list"]))
                     log.step("图集《%s》 %s 解析获取%s张图片" % (album_response["album_title"], album_url, len(album_response["photo_url_list"])))
