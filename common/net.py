@@ -142,7 +142,7 @@ def url_encode(url):
 
 
 def http_request(url, method="GET", fields=None, binary_data=None, header_list=None, cookies_list=None, encode_multipart=False, json_decode=False,
-                 is_auto_proxy=True, is_auto_redirect=True, is_gzip=True, is_auto_retry=True, is_random_ip=True,
+                 is_auto_proxy=True, is_auto_redirect=True, is_gzip=True, is_url_encode=True, is_auto_retry=True, is_random_ip=True,
                  connection_timeout=NET_CONFIG["HTTP_CONNECTION_TIMEOUT"], read_timeout=NET_CONFIG["HTTP_READ_TIMEOUT"]):
     """Http request via urllib3
 
@@ -200,6 +200,8 @@ def http_request(url, method="GET", fields=None, binary_data=None, header_list=N
     connection_pool = HTTP_CONNECTION_POOL
     if PROXY_HTTP_CONNECTION_POOL is not None and is_auto_proxy:
         connection_pool = PROXY_HTTP_CONNECTION_POOL
+    if is_url_encode:
+        url = url_encode(url)
 
     if header_list is None:
         header_list = {}
@@ -243,13 +245,15 @@ def http_request(url, method="GET", fields=None, binary_data=None, header_list=N
                 response = connection_pool.request(method, url, headers=header_list, redirect=is_auto_redirect, timeout=timeout, fields=fields)
             else:
                 if binary_data is None:
-                    response = connection_pool.request(method, url, fields=fields, encode_multipart=encode_multipart, headers=header_list, redirect=is_auto_redirect, timeout=timeout)
+                    response = connection_pool.request(method, url, fields=fields, encode_multipart=encode_multipart, headers=header_list,
+                                                       redirect=is_auto_redirect, timeout=timeout)
                 else:
-                    response = connection_pool.request(method, url, body=binary_data, encode_multipart=encode_multipart, headers=header_list, redirect=is_auto_redirect, timeout=timeout)
+                    response = connection_pool.request(method, url, body=binary_data, encode_multipart=encode_multipart, headers=header_list,
+                                                       redirect=is_auto_redirect, timeout=timeout)
             if response.status == HTTP_RETURN_CODE_SUCCEED and json_decode:
                 try:
                     response.json_data = json.loads(response.data.decode())
-                except ValueError as ve:
+                except ValueError:
                     is_error = True
                     content_type = response.getheader("Content-Type")
                     if content_type is not None:
@@ -294,7 +298,8 @@ def http_request(url, method="GET", fields=None, binary_data=None, header_list=N
                 if message.find("'Received response with content-encoding: gzip, but failed to decode it.'") >= 0:
                     return http_request(url, method=method, fields=fields, binary_data=binary_data, header_list=header_list, cookies_list=cookies_list,
                                         encode_multipart=encode_multipart, json_decode=json_decode, is_auto_proxy=is_auto_proxy, is_auto_redirect=is_auto_redirect,
-                                        is_gzip=False, is_auto_retry=is_auto_retry, is_random_ip=is_random_ip, connection_timeout=connection_timeout, read_timeout=read_timeout)
+                                        is_gzip=False, is_url_encode=False, is_auto_retry=is_auto_retry, is_random_ip=is_random_ip,
+                                        connection_timeout=connection_timeout, read_timeout=read_timeout)
             # import traceback
             # output.print_msg(message)
             # output.print_msg(traceback.format_exc())
