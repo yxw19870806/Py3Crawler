@@ -125,7 +125,7 @@ class Wallpaper(crawler.Crawler):
                 log.step("开始下载第%s张图片 %s" % (photo_info["photo_id"], photo_info["photo_url"]))
 
                 file_path = os.path.join(self.photo_download_path, "%03d %s.%s" % (photo_info["photo_id"], path.filter_text(photo_info["model_name"]), net.get_file_type(photo_info["photo_url"])))
-                save_file_return = net.save_net_file(net.url_encode(photo_info["photo_url"]), file_path)
+                save_file_return = net.save_net_file(photo_info["photo_url"], file_path)
                 if save_file_return["status"] == 1:
                     log.step("第%s张图片下载成功" % photo_info["photo_id"])
                 else:

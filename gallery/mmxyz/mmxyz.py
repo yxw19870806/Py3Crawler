@@ -172,7 +172,7 @@ class MMXYZ(crawler.Crawler):
 
                     # 开始下载
                     file_path = os.path.join(album_path, "%03d.%s" % (photo_index, net.get_file_type(photo_url)))
-                    thread = Download(self, file_path, net.url_encode(photo_url), photo_index)
+                    thread = Download(self, file_path, photo_url, photo_index)
                     thread.start()
                     thread_list.append(thread)
                     photo_index += 1
