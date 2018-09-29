@@ -174,7 +174,7 @@ def jkt(file_handle):
 
 
 def get_all_member_list():
-    with open("member.txt", "w") as file_handle:
+    with open("member.txt", "w", encoding="UTF-8") as file_handle:
         akb(file_handle)
         ske(file_handle)
         nmb(file_handle)

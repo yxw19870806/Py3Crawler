@@ -69,7 +69,7 @@ def get_all_cookie_from_browser(browser_type, file_path):
         for cookie_name in os.listdir(file_path):
             if cookie_name.find(".txt") == -1:
                 continue
-            with open(os.path.join(file_path, cookie_name), "r") as cookie_file:
+            with open(os.path.join(file_path, cookie_name), "r", encoding="UTF-8") as cookie_file:
                 cookie_info = cookie_file.read()
             for cookies in cookie_info.split("*"):
                 cookie_list = cookies.strip("\n").split("\n")

@@ -72,7 +72,7 @@ def main():
         except crawler.CrawlerException as e:
             output.print_msg(account_id + " 获取talk列表失败，原因：%s" % e.message)
     if len(talk_list) > 0:
-        with open(TALK_ID_FILE_PATH, "w") as file_handle:
+        with open(TALK_ID_FILE_PATH, "w", encoding="UTF-8") as file_handle:
             for talk_id in talk_list:
                 file_handle.write("%s\t%s\t%s\t%s\n" % (talk_id, talk_list[talk_id]["talk_name"], talk_list[talk_id]["talk_description"], " & ".join(talk_list[talk_id]["account_list"])))
 
