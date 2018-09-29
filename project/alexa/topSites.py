@@ -91,10 +91,9 @@ def get_top_sites_by_category(category_href, category_name, sites_count):
         for site_index in range(0, site_list_selector.length):
             site_selector = site_list_selector.eq(site_index)
             ranking = site_selector.find(".number").text()
-            site_info = site_selector.find(".DescriptionCell>p>a").attr("href")
             site_name = site_selector.find(".DescriptionCell>p>a").text()
             print("category:%s, rank:%s, site:%s" % (category_name, ranking, site_name))
-            result.append([ranking, site_name, site_info])
+            result.append([ranking, site_name])
     return result
 
 
@@ -149,8 +148,9 @@ class TopSites(crawler.Crawler):
 
         with open(CATEGORIES_CACHE_FILE_PATH, "r", encoding="UTF-8") as cache_file_handle:
             with open(CATEGORY_SITES_RESULT_FILE_PATH, "a", newline="", encoding="UTF-8") as result_file_handle:
-                csv_writer = csv.writer(result_file_handle)
+                result_csv_writer = csv.writer(result_file_handle)
                 for category_info in csv.reader(cache_file_handle):
+                    print("start get: %s(%s)" % (category_info[1], category_info[2]))
                     site_count = int(category_info[2])
                     try:
                         site_list = get_top_sites_by_category(category_info[1], category_info[0], site_count)
@@ -158,7 +158,7 @@ class TopSites(crawler.Crawler):
                         print("分类%s的site列表获取失败，原因：%s" % (category_info[0], e.message))
                         raise
                     for ranking, site_name in site_list:
-                        csv_writer.writerow([category_info[0], ranking, site_name.lower()])
+                        result_csv_writer.writerow([category_info[0], ranking, site_name.lower()])
 
 
 if __name__ == "__main__":
