@@ -12,6 +12,8 @@ import traceback
 from pyquery import PyQuery as pq
 from common import *
 
+CACHE_FILE_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), "cache.json"))
+
 
 # 获取指定一页图集
 def get_one_page_album(page_count):
@@ -131,7 +133,7 @@ def get_album_page(album_url):
     return result
 
 
-class Gallery(crawler.Crawler):
+class Album(crawler.Crawler):
     def __init__(self):
         # 设置APP目录
         crawler.PROJECT_APP_PATH = os.path.abspath(os.path.dirname(__file__))
@@ -156,10 +158,9 @@ class Gallery(crawler.Crawler):
 
         try:
             page_count = 1
-            cache_file_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "cache.json"))
             album_id_to_url_list = {}
             # 从缓存文件中读取
-            cache_album_id_to_url_list = tool.json_decode(file.read_file(cache_file_path))
+            cache_album_id_to_url_list = tool.json_decode(file.read_file(CACHE_FILE_PATH))
             if cache_album_id_to_url_list is None:
                 is_over = False
                 while not is_over:
@@ -186,7 +187,7 @@ class Gallery(crawler.Crawler):
                         page_count += 1
 
                 # 保存到缓存文件中
-                file.write_file(json.dumps(album_id_to_url_list), cache_file_path, file.WRITE_FILE_TYPE_REPLACE)
+                file.write_file(json.dumps(album_id_to_url_list), CACHE_FILE_PATH, file.WRITE_FILE_TYPE_REPLACE)
             else:
                 # 写入文件后key变成string类型了
                 for temp in cache_album_id_to_url_list:
@@ -292,4 +293,4 @@ class Download(crawler.DownloadThread):
 
 
 if __name__ == "__main__":
-    Gallery().main()
+    Album().main()
