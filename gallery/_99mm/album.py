@@ -85,7 +85,7 @@ def get_album_page(album_id):
     return result
 
 
-class Gallery(crawler.Crawler):
+class Album(crawler.Crawler):
     def __init__(self):
         # 设置APP目录
         crawler.PROJECT_APP_PATH = os.path.abspath(os.path.dirname(__file__))
@@ -198,4 +198,4 @@ class Download(crawler.DownloadThread):
 
 
 if __name__ == "__main__":
-    Gallery().main()
+    Album().main()
