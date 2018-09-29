@@ -16,6 +16,7 @@ COOKIE_INFO = {}
 CATEGORIES_CACHE_FILE_PATH = os.path.join(os.path.dirname(__file__), "categories.csv")
 COUNTRY_SITES_RESULT_FILE_PATH = os.path.join(os.path.dirname(__file__), "country_sites.csv")
 CATEGORY_SITES_RESULT_FILE_PATH = os.path.join(os.path.dirname(__file__), "category_sites.csv")
+DUPLICATE_RESULT_FILE_PATH = os.path.join(os.path.dirname(__file__), "sites.csv")
 
 
 def get_countries():
@@ -160,7 +161,22 @@ class TopSites(crawler.Crawler):
                     for ranking, site_name in site_list:
                         result_csv_writer.writerow([category_info[0], ranking, site_name.lower()])
 
+    @staticmethod
+    def duplicate():
+        result_list = {}
+        if os.path.exists(COUNTRY_SITES_RESULT_FILE_PATH):
+            for result in csv.reader(COUNTRY_SITES_RESULT_FILE_PATH):
+                result_list[result[2]] = 1
+
+        if os.path.exists(CATEGORY_SITES_RESULT_FILE_PATH):
+            for result in csv.reader(CATEGORY_SITES_RESULT_FILE_PATH):
+                result_list[result[2]] = 1
+
+        file.write_file("\n".join(result_list.keys()), DUPLICATE_RESULT_FILE_PATH, file.WRITE_FILE_TYPE_REPLACE)
+
 
 if __name__ == "__main__":
-    TopSites().country()
-    TopSites().category()
+    ts = TopSites()
+    ts.country()
+    ts.category()
+    ts.duplicate()
