@@ -26,6 +26,8 @@ def main():
         video_id = None
         if video_url.find("//xhamster.com/videos/") > 0:
             video_id = video_url.split("/")[-1].split("-")[-1]
+        elif crawler.is_integer(video_url):
+            video_id = video_url
         # 无效的视频地址
         if not crawler.is_integer(video_id):
             log.step("错误的视频地址，正确的地址格式如：https://xhamster.com/videos/xxx-xxx-xxx-123456")
