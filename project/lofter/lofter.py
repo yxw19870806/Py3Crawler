@@ -18,10 +18,13 @@ def get_one_page_blog(account_name, page_count):
     # http://moexia.lofter.com/?page=1
     blog_pagination_url = "http://%s.lofter.com" % account_name
     query_data = {"page": page_count}
-    blog_pagination_response = net.http_request(blog_pagination_url, method="GET", fields=query_data)
+    blog_pagination_response = net.http_request(blog_pagination_url, method="GET", fields=query_data, is_auto_redirect=False)
     result = {
         "blog_url_list": [],  # 全部日志地址
     }
+    if blog_pagination_response.status == 302:
+        set_cookie = net.get_cookies_from_response_header(blog_pagination_response)
+        blog_pagination_response = net.http_request(blog_pagination_response.getheader("Location"), method="GET", cookies_list=set_cookie)
     if page_count == 1 and blog_pagination_response.status == 404:
         raise crawler.CrawlerException("账号不存在")
     elif blog_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
