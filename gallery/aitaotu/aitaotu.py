@@ -88,7 +88,7 @@ def get_album_page(album_id):
                 last_pagination_url = last_page_selector.attr("href")
                 if last_pagination_url is None:
                     raise crawler.CrawlerException("页面截取最后页地址失败\n%s" % album_pagination_response_content)
-                max_page_count = tool.find_sub_string(last_pagination_url, "/%s/%s_" % (sub_path, album_id), ".html")
+                max_page_count = tool.find_sub_string(last_pagination_url, "/%s_" % album_id, ".html")
                 if not crawler.is_integer(max_page_count):
                     raise crawler.CrawlerException("最后页地址截取最后页失败\n%s" % album_pagination_response_content)
                 max_page_count = int(max_page_count)
