@@ -90,7 +90,7 @@ def get_archive_page(archive_id):
             # 获取视频发布账号
             video_play_response = net.http_request(result_video_info["video_url"], method="GET", header_list={"accept-language": "en-US"})
             if video_play_response.status != net.HTTP_RETURN_CODE_SUCCEED:
-                raise crawler.CrawlerException("视频播放页%s，%s" % (result["video_url"], crawler.request_failre(video_play_response.status)))
+                raise crawler.CrawlerException("视频播放页%s，%s" % (result_video_info["video_url"], crawler.request_failre(video_play_response.status)))
             account_id = tool.find_sub_string(video_play_response.data.decode(errors="ignore"), '<a href="/user/', '"')
             if crawler.is_integer(account_id):
                 result_video_info["account_id"] = account_id
