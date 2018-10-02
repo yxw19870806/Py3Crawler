@@ -70,7 +70,7 @@ def get_album_page(album_id):
             has_error = True
             page_count += 1
             continue
-        if result["album_title"] is None:
+        if not result["album_title"]:
             # 获取图集标题
             album_title = pq(album_pagination_response_content).find("#photos h1").children().empty().parent().text()
             if not album_title:
