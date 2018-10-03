@@ -80,6 +80,14 @@ def get_photo_url(photo_url):
     return photo_url
 
 
+# 检测图片是不是已被屏蔽
+def check_photo_invalid(file_path):
+    # http://imglf.nosdn.127.net/img/WWpvYmlBb3BlNCt0clU3WUNVb2U5UmhjMW56ZEh1TVFuc1BMVTI4aUR4OG0rNUdIK2xTbzNRPT0.jpg
+    if os.path.getsize(file_path) == 31841 and file.get_file_md5(file_path) == "e4e09c4989d0f4db68610195b97688bf":
+        return True
+    return False
+
+
 class Lofter(crawler.Crawler):
     def __init__(self):
         # 设置APP目录
@@ -201,8 +209,12 @@ class Download(crawler.DownloadThread):
             file_path = os.path.join(self.main_thread.photo_download_path, self.account_name, "%09d_%02d.%s" % (blog_id, photo_index, net.get_file_type(photo_url)))
             save_file_return = net.save_net_file(photo_url, file_path)
             if save_file_return["status"] == 1:
-                self.temp_path_list.append(file_path)
-                self.step("日志%s的第%s张图片下载成功" % (blog_id, photo_index))
+                if check_photo_invalid(save_file_return["file_path"]):
+                    path.delete_dir_or_file(save_file_return["file_path"])
+                    self.error("日志 %s (%s) 第%s张图片 %s 已被屏蔽，删除" % (blog_id, blog_url, photo_index, photo_url))
+                else:
+                    self.temp_path_list.append(file_path)
+                    self.step("日志%s的第%s张图片下载成功" % (blog_id, photo_index))
             else:
                 self.error("日志 %s (%s) 第%s张图片 %s 下载失败，原因：%s" % (blog_id, blog_url, photo_index, photo_url, crawler.download_failre(save_file_return["code"])))
             photo_index += 1
