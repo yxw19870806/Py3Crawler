@@ -13,6 +13,17 @@ import traceback
 from common import *
 
 USER_AGENT = net._random_user_agent()
+COOKIE_INFO = {}
+
+
+def init_session():
+    index_url = "http://www.lofter.com"
+    header_list = {
+        "User-Agent": USER_AGENT,
+    }
+    index_response = net.http_request(index_url, method="GET", header_list=header_list, is_auto_redirect=False, is_random_ip=False)
+    if index_response.status in [net.HTTP_RETURN_CODE_SUCCEED, 302]:
+        COOKIE_INFO.update(net.get_cookies_from_response_header(index_response.headers))
 
 
 # 获取指定页数的全部日志
@@ -23,13 +34,13 @@ def get_one_page_blog(account_name, page_count):
     header_list = {
         "User-Agent": USER_AGENT,
     }
-    blog_pagination_response = net.http_request(blog_pagination_url, method="GET", fields=query_data, header_list=header_list, is_auto_redirect=False, is_random_ip=False)
+    blog_pagination_response = net.http_request(blog_pagination_url, method="GET", fields=query_data, header_list=header_list, cookies_list=COOKIE_INFO, is_auto_redirect=False, is_random_ip=False)
     result = {
         "blog_url_list": [],  # 全部日志地址
     }
     if blog_pagination_response.status == 302:
-        set_cookie = net.get_cookies_from_response_header(blog_pagination_response.headers)
-        blog_pagination_response = net.http_request(blog_pagination_response.getheader("Location"), method="GET", header_list=header_list, cookies_list=set_cookie, is_random_ip=False)
+        COOKIE_INFO.update(net.get_cookies_from_response_header(blog_pagination_response.headers))
+        return get_one_page_blog(account_name, page_count)
     if page_count == 1 and blog_pagination_response.status == 404:
         raise crawler.CrawlerException("账号不存在")
     elif blog_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
@@ -43,7 +54,10 @@ def get_one_page_blog(account_name, page_count):
 
 # 获取日志
 def get_blog_page(blog_url):
-    blog_response = net.http_request(blog_url, method="GET")
+    header_list = {
+        "User-Agent": USER_AGENT,
+    }
+    blog_response = net.http_request(blog_url, method="GET", header_list=header_list, cookies_list=COOKIE_INFO, is_random_ip=False)
     result = {
         "photo_url_list": [],  # 全部图片地址
     }
