@@ -187,11 +187,6 @@ class Download(crawler.DownloadThread):
             self.error("日志 %s 解析失败，原因：%s" % (blog_url, e.message))
             raise
 
-        # 获取图片下载地址列表
-        if len(blog_response["photo_url_list"]) == 0:
-            self.error("日志 %s 中没有找到图片" % blog_url)
-            return
-
         self.trace("日志 %s 解析的全部图片：%s" % (blog_url, blog_response["photo_url_list"]))
         self.step("日志 %s 解析获取%s张图片" % (blog_url, len(blog_response["photo_url_list"])))
 
