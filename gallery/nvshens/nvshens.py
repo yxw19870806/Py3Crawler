@@ -74,7 +74,7 @@ def get_album_page(album_id):
         if photo_list_selector.length == 0:
             raise crawler.CrawlerException("第%s页页面匹配图片地址失败\n%s" % (page_count, album_pagination_response_content))
         for photo_index in range(0, photo_list_selector.length):
-            result["photo_url_list"].append(photo_list_selector.eq(photo_index).attr("src"))
+            result["photo_url_list"].append(photo_list_selector.eq(photo_index).attr("src").replace("/s/", "/"))
         # 获取总页数
         pagination_html = pq(album_pagination_response_content).find("#pages").html()
         if pagination_html:
@@ -206,12 +206,8 @@ class Download(crawler.DownloadThread):
         header_list = {"Referer": "https://www.nvshens.com/"}
         self.result = net.save_net_file(self.photo_url, self.file_path, header_list=header_list)
         if self.result["status"] == 0 and self.result["code"] == 404:
-            new_photo_url = None
             if self.photo_url.find("/0.jpg") >= 0:
                 new_photo_url = self.photo_url.replace("/0.jpg", "/000.jpg")
-            elif self.photo_url.find("/s/") >= 0:
-                new_photo_url = self.photo_url.replace("/s/", "/")
-            if new_photo_url is not None:
                 self.result = net.save_net_file(new_photo_url, self.file_path, header_list=header_list)
         self.notify_main_thread()
 
