@@ -127,22 +127,22 @@ class Crawler(object):
         if self.is_download_photo:
             # 图片保存目录
             self.photo_download_path = analysis_config(config, "PHOTO_DOWNLOAD_PATH", "\\\\photo", CONFIG_ANALYSIS_MODE_PATH)
-            if not path.create_dir(self.photo_download_path):
-                # 图片保存目录创建失败
-                output.print_msg("图片保存目录%s创建失败！" % self.photo_download_path)
-                tool.process_exit()
-                return
+            # if not path.create_dir(self.photo_download_path):
+                # # 图片保存目录创建失败
+                # output.print_msg("图片保存目录%s创建失败！" % self.photo_download_path)
+                # tool.process_exit()
+                # return
         else:
             self.photo_download_path = ""
         # 是否需要下载视频
         if self.is_download_video:
             # 视频保存目录
             self.video_download_path = analysis_config(config, "VIDEO_DOWNLOAD_PATH", "\\\\video", CONFIG_ANALYSIS_MODE_PATH)
-            if not path.create_dir(self.video_download_path):
-                # 视频保存目录创建失败
-                output.print_msg("视频保存目录%s创建失败！" % self.video_download_path)
-                tool.process_exit()
-                return
+            # if not path.create_dir(self.video_download_path):
+            #     # 视频保存目录创建失败
+            #     output.print_msg("视频保存目录%s创建失败！" % self.video_download_path)
+            #     tool.process_exit()
+            #     return
         else:
             self.video_download_path = ""
 
