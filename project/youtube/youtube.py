@@ -550,7 +550,6 @@ class Download(crawler.DownloadThread):
         video_file_path = os.path.join(self.main_thread.video_download_path, self.display_name, "%s - %s.mp4" % (video_id, path.filter_text(video_response["video_title"])))
         save_file_return = net.save_net_file(video_response["video_url"], video_file_path, head_check=True)
         if save_file_return["status"] == 1:
-            # 设置临时目录
             self.step("视频%s《%s》下载成功" % (video_id, video_response["video_title"]))
         else:
             self.error("视频%s《%s》 %s 下载失败，原因：%s" % (video_id, video_response["video_title"], video_response["video_url"], crawler.download_failre(save_file_return["code"])))
