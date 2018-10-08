@@ -69,6 +69,8 @@ def get_top_sites_by_country(country_code):
         if pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
             raise crawler.CrawlerException("第%s页，" + crawler.request_failre(pagination_response.status))
         pagination_response_content = pagination_response.data.decode(errors="ignore")
+        if page_count > 0 and pq(pagination_response_content).find(".profile").length == 0:
+            raise crawler.CrawlerException("登录状态已丢失")
         site_list_selector = pq(pagination_response_content).find("div.site-listing")
         for site_index in range(0, site_list_selector.length):
             site_selector = site_list_selector.eq(site_index)
@@ -88,6 +90,8 @@ def get_top_sites_by_category(category_href, category_name, sites_count):
         if pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
             raise crawler.CrawlerException("第%s页，" + crawler.request_failre(pagination_response.status))
         pagination_response_content = pagination_response.data.decode(errors="ignore")
+        if page_count > 0 and pq(pagination_response_content).find(".profile").length == 0:
+            raise crawler.CrawlerException("登录状态已丢失")
         site_list_selector = pq(pagination_response_content).find("div.site-listing")
         for site_index in range(0, site_list_selector.length):
             site_selector = site_list_selector.eq(site_index)
