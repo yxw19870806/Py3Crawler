@@ -161,12 +161,30 @@ class TopSites(crawler.Crawler):
                     print("category列表获取失败，原因：%s" % e.message)
                     raise
 
+        last_category_href = ""
+        if os.path.exists(CATEGORY_SITES_RESULT_FILE_PATH):
+            with open(CATEGORY_SITES_RESULT_FILE_PATH, "r", encoding="UTF-8") as file_handle:
+                temp = []
+                for temp in csv.reader(file_handle):
+                    pass
+                if len(temp) > 0:
+                    last_category_href = "/topsites/category" + temp[0]
+
         with open(CATEGORIES_CACHE_FILE_PATH, "r", encoding="UTF-8") as cache_file_handle, \
                 open(CATEGORY_SITES_RESULT_FILE_PATH, "a", newline="", encoding="UTF-8") as result_file_handle:
             result_csv_writer = csv.writer(result_file_handle)
+            is_skip = True
             for category_info in csv.reader(cache_file_handle):
+                if last_category_href and category_info[1] == last_category_href:
+                    is_skip = False
+                if is_skip:
+                    continue
                 print("start get: %s(%s)" % (category_info[1], category_info[2]))
                 site_count = int(category_info[2])
+                # 只有一页的
+                # todo test
+                if site_count <= 25:
+                    continue
                 try:
                     site_list = get_top_sites_by_category(category_info[1], category_info[0], site_count)
                 except crawler.CrawlerException as e:
