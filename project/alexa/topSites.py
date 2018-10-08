@@ -13,9 +13,13 @@ from pyquery import PyQuery as pq
 from common import *
 
 COOKIE_INFO = {}
+# 所有分类目录
 CATEGORIES_CACHE_FILE_PATH = os.path.join(os.path.dirname(__file__), "categories.csv")
+# 国家排名
 COUNTRY_SITES_RESULT_FILE_PATH = os.path.join(os.path.dirname(__file__), "country_sites.csv")
+# 分类排名
 CATEGORY_SITES_RESULT_FILE_PATH = os.path.join(os.path.dirname(__file__), "category_sites.csv")
+# 国家排名和分类排名去重后的domain
 DUPLICATE_RESULT_FILE_PATH = os.path.join(os.path.dirname(__file__), "sites.csv")
 
 
@@ -175,12 +179,14 @@ class TopSites(crawler.Crawler):
     def duplicate():
         result_list = {}
         if os.path.exists(COUNTRY_SITES_RESULT_FILE_PATH):
-            for result in csv.reader(COUNTRY_SITES_RESULT_FILE_PATH):
-                result_list[result[2]] = 1
+            with open(COUNTRY_SITES_RESULT_FILE_PATH, "r", encoding="UTF-8") as file_handle:
+                for result in csv.reader(file_handle):
+                    result_list[result[3]] = 1
 
         if os.path.exists(CATEGORY_SITES_RESULT_FILE_PATH):
-            for result in csv.reader(CATEGORY_SITES_RESULT_FILE_PATH):
-                result_list[result[2]] = 1
+            with open(COUNTRY_SITES_RESULT_FILE_PATH, "r", encoding="UTF-8") as file_handle:
+                for result in csv.reader(file_handle):
+                    result_list[result[2]] = 1
 
         file.write_file("\n".join(result_list.keys()), DUPLICATE_RESULT_FILE_PATH, file.WRITE_FILE_TYPE_REPLACE)
 
