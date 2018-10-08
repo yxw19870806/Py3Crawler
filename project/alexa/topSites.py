@@ -84,8 +84,14 @@ def get_top_sites_by_country(country_code):
 def get_top_sites_by_category(category_href, category_name, sites_count):
     result = []
     sub_category_href = tool.find_sub_string(category_href, "/topsites/category")
-    for page_count in range(0, int(math.ceil(sites_count / 25))):
-        pagination_url = "https://www.alexa.com/topsites/category;%s/%s" % (page_count, sub_category_href)
+    max_page_count = 1
+    if COOKIE_INFO:
+        max_page_count = int(math.ceil(sites_count / 25))
+    for page_count in range(0, max_page_count):
+        if COOKIE_INFO:
+            pagination_url = "https://www.alexa.com/topsites/category;%s%s" % (page_count, sub_category_href)
+        else:
+            pagination_url = "https://www.alexa.com/%s" % category_href
         pagination_response = net.http_request(pagination_url, method="GET", cookies_list=COOKIE_INFO)
         if pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
             raise crawler.CrawlerException("第%s页，" + crawler.request_failre(pagination_response.status))
