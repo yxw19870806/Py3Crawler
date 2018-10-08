@@ -13,9 +13,13 @@ from pyquery import PyQuery as pq
 from common import *
 
 COOKIE_INFO = {}
+# 所有分类目录
 CATEGORIES_CACHE_FILE_PATH = os.path.join(os.path.dirname(__file__), "categories.csv")
+# 国家排名
 COUNTRY_SITES_RESULT_FILE_PATH = os.path.join(os.path.dirname(__file__), "country_sites.csv")
+# 分类排名
 CATEGORY_SITES_RESULT_FILE_PATH = os.path.join(os.path.dirname(__file__), "category_sites.csv")
+# 国家排名和分类排名去重后的domain
 DUPLICATE_RESULT_FILE_PATH = os.path.join(os.path.dirname(__file__), "sites.csv")
 
 
@@ -69,6 +73,8 @@ def get_top_sites_by_country(country_code):
         if pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
             raise crawler.CrawlerException("第%s页，" + crawler.request_failre(pagination_response.status))
         pagination_response_content = pagination_response.data.decode(errors="ignore")
+        if page_count > 0 and pq(pagination_response_content).find(".profile").length == 0:
+            raise crawler.CrawlerException("登录状态已丢失")
         site_list_selector = pq(pagination_response_content).find("div.site-listing")
         for site_index in range(0, site_list_selector.length):
             site_selector = site_list_selector.eq(site_index)
@@ -82,12 +88,20 @@ def get_top_sites_by_country(country_code):
 def get_top_sites_by_category(category_href, category_name, sites_count):
     result = []
     sub_category_href = tool.find_sub_string(category_href, "/topsites/category")
-    for page_count in range(0, int(math.ceil(sites_count / 25))):
-        pagination_url = "https://www.alexa.com/topsites/category;%s/%s" % (page_count, sub_category_href)
+    max_page_count = 1
+    if COOKIE_INFO:
+        max_page_count = int(math.ceil(sites_count / 25))
+    for page_count in range(0, max_page_count):
+        if COOKIE_INFO:
+            pagination_url = "https://www.alexa.com/topsites/category;%s%s" % (page_count, sub_category_href)
+        else:
+            pagination_url = "https://www.alexa.com/%s" % category_href
         pagination_response = net.http_request(pagination_url, method="GET", cookies_list=COOKIE_INFO)
         if pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
             raise crawler.CrawlerException("第%s页，" + crawler.request_failre(pagination_response.status))
         pagination_response_content = pagination_response.data.decode(errors="ignore")
+        if page_count > 0 and pq(pagination_response_content).find(".profile").length == 0:
+            raise crawler.CrawlerException("登录状态已丢失")
         site_list_selector = pq(pagination_response_content).find("div.site-listing")
         for site_index in range(0, site_list_selector.length):
             site_selector = site_list_selector.eq(site_index)
@@ -147,30 +161,50 @@ class TopSites(crawler.Crawler):
                     print("category列表获取失败，原因：%s" % e.message)
                     raise
 
-        with open(CATEGORIES_CACHE_FILE_PATH, "r", encoding="UTF-8") as cache_file_handle:
-            with open(CATEGORY_SITES_RESULT_FILE_PATH, "a", newline="", encoding="UTF-8") as result_file_handle:
-                result_csv_writer = csv.writer(result_file_handle)
-                for category_info in csv.reader(cache_file_handle):
-                    print("start get: %s(%s)" % (category_info[1], category_info[2]))
-                    site_count = int(category_info[2])
-                    try:
-                        site_list = get_top_sites_by_category(category_info[1], category_info[0], site_count)
-                    except crawler.CrawlerException as e:
-                        print("分类%s的site列表获取失败，原因：%s" % (category_info[0], e.message))
-                        raise
-                    for ranking, site_name in site_list:
-                        result_csv_writer.writerow([category_info[0], ranking, site_name.lower()])
+        last_category_href = ""
+        if os.path.exists(CATEGORY_SITES_RESULT_FILE_PATH):
+            with open(CATEGORY_SITES_RESULT_FILE_PATH, "r", encoding="UTF-8") as file_handle:
+                temp = []
+                for temp in csv.reader(file_handle):
+                    pass
+                if len(temp) > 0:
+                    last_category_href = "/topsites/category" + temp[0]
+
+        with open(CATEGORIES_CACHE_FILE_PATH, "r", encoding="UTF-8") as cache_file_handle, \
+                open(CATEGORY_SITES_RESULT_FILE_PATH, "a", newline="", encoding="UTF-8") as result_file_handle:
+            result_csv_writer = csv.writer(result_file_handle)
+            is_skip = True
+            for category_info in csv.reader(cache_file_handle):
+                if last_category_href and category_info[1] == last_category_href:
+                    is_skip = False
+                if is_skip:
+                    continue
+                print("start get: %s(%s)" % (category_info[1], category_info[2]))
+                site_count = int(category_info[2])
+                # 只有一页的
+                # todo test
+                if site_count <= 25:
+                    continue
+                try:
+                    site_list = get_top_sites_by_category(category_info[1], category_info[0], site_count)
+                except crawler.CrawlerException as e:
+                    print("分类%s的site列表获取失败，原因：%s" % (category_info[0], e.message))
+                    raise
+                for ranking, site_name in site_list:
+                    result_csv_writer.writerow([category_info[1].replace("/topsites/category", ""), ranking, site_name.lower()])
 
     @staticmethod
     def duplicate():
         result_list = {}
         if os.path.exists(COUNTRY_SITES_RESULT_FILE_PATH):
-            for result in csv.reader(COUNTRY_SITES_RESULT_FILE_PATH):
-                result_list[result[2]] = 1
+            with open(COUNTRY_SITES_RESULT_FILE_PATH, "r", encoding="UTF-8") as file_handle:
+                for result in csv.reader(file_handle):
+                    result_list[result[3]] = 1
 
         if os.path.exists(CATEGORY_SITES_RESULT_FILE_PATH):
-            for result in csv.reader(CATEGORY_SITES_RESULT_FILE_PATH):
-                result_list[result[2]] = 1
+            with open(CATEGORY_SITES_RESULT_FILE_PATH, "r", encoding="UTF-8") as file_handle:
+                for result in csv.reader(file_handle):
+                    result_list[result[2]] = 1
 
         file.write_file("\n".join(result_list.keys()), DUPLICATE_RESULT_FILE_PATH, file.WRITE_FILE_TYPE_REPLACE)
 

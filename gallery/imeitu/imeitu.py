@@ -130,7 +130,7 @@ class IMeitu(crawler.Crawler):
 
                 if self.is_download_photo and len(album_response["photo_url_list"]) > 0:
                     photo_index = 1
-                    temp_path = album_path = os.path.join(self.photo_download_path, "%04d %s" % (album_id, album_response["album_title"]))
+                    temp_path = album_path = os.path.join(self.photo_download_path, "%04d %s" % (album_id, path.filter_text(album_response["album_title"])))
                     for photo_url in album_response["photo_url_list"]:
                         photo_file_path = os.path.join(album_path, "%02d.%s" % (photo_index, net.get_file_type(photo_url)))
                         save_file_return = net.save_net_file(photo_url, photo_file_path)
@@ -142,7 +142,7 @@ class IMeitu(crawler.Crawler):
                     self.total_photo_count += photo_index - 1  # 计数累加
 
                 if self.is_download_video and album_response["video_url"] is not None:
-                    video_file_path = os.path.join(self.video_download_path, "%04d %s.%s" % (album_id, album_response["album_title"], net.get_file_type(album_response["video_url"])))
+                    video_file_path = os.path.join(self.video_download_path, "%04d %s.%s" % (album_id, path.filter_text(album_response["album_title"]), net.get_file_type(album_response["video_url"])))
                     save_file_return = net.save_net_file(album_response["video_url"], video_file_path)
                     if save_file_return["status"] == 1:
                         log.step("作品%s视频下载成功" % album_id)
