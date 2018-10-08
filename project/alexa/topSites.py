@@ -184,7 +184,7 @@ class TopSites(crawler.Crawler):
                     result_list[result[3]] = 1
 
         if os.path.exists(CATEGORY_SITES_RESULT_FILE_PATH):
-            with open(COUNTRY_SITES_RESULT_FILE_PATH, "r", encoding="UTF-8") as file_handle:
+            with open(CATEGORY_SITES_RESULT_FILE_PATH, "r", encoding="UTF-8") as file_handle:
                 for result in csv.reader(file_handle):
                     result_list[result[2]] = 1
 
