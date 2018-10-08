@@ -161,19 +161,19 @@ class TopSites(crawler.Crawler):
                     print("category列表获取失败，原因：%s" % e.message)
                     raise
 
-        with open(CATEGORIES_CACHE_FILE_PATH, "r", encoding="UTF-8") as cache_file_handle:
-            with open(CATEGORY_SITES_RESULT_FILE_PATH, "a", newline="", encoding="UTF-8") as result_file_handle:
-                result_csv_writer = csv.writer(result_file_handle)
-                for category_info in csv.reader(cache_file_handle):
-                    print("start get: %s(%s)" % (category_info[1], category_info[2]))
-                    site_count = int(category_info[2])
-                    try:
-                        site_list = get_top_sites_by_category(category_info[1], category_info[0], site_count)
-                    except crawler.CrawlerException as e:
-                        print("分类%s的site列表获取失败，原因：%s" % (category_info[0], e.message))
-                        raise
-                    for ranking, site_name in site_list:
-                        result_csv_writer.writerow([category_info[0], ranking, site_name.lower()])
+        with open(CATEGORIES_CACHE_FILE_PATH, "r", encoding="UTF-8") as cache_file_handle, \
+                open(CATEGORY_SITES_RESULT_FILE_PATH, "a", newline="", encoding="UTF-8") as result_file_handle:
+            result_csv_writer = csv.writer(result_file_handle)
+            for category_info in csv.reader(cache_file_handle):
+                print("start get: %s(%s)" % (category_info[1], category_info[2]))
+                site_count = int(category_info[2])
+                try:
+                    site_list = get_top_sites_by_category(category_info[1], category_info[0], site_count)
+                except crawler.CrawlerException as e:
+                    print("分类%s的site列表获取失败，原因：%s" % (category_info[0], e.message))
+                    raise
+                for ranking, site_name in site_list:
+                    result_csv_writer.writerow([category_info[1].replace("/topsites/category", ""), ranking, site_name.lower()])
 
     @staticmethod
     def duplicate():
