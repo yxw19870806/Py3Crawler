@@ -41,8 +41,6 @@ class SiteInfo(crawler.Crawler):
         }
         crawler.Crawler.__init__(self, sys_config)
 
-        self.thread_count = 20
-
     def main(self):
         # 之前的记录
         done_list = {}
