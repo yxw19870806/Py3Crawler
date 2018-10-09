@@ -138,7 +138,7 @@ def get_file_type(file_url, default_file_type=""):
 
 def url_encode(url):
     # encode url(Percent-encoding), e.g. 'http://www.example.com/测 试/' -> 'http://www.example.com/%E6%B5%8B%20%E8%AF%95/'
-    return urllib.parse.quote(url, safe=";/?:@&=+$,")
+    return urllib.parse.quote(url, safe=";/?:@&=+$,%")
 
 
 def http_request(url, method="GET", fields=None, binary_data=None, header_list=None, cookies_list=None, encode_multipart=False, json_decode=False,
