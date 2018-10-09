@@ -14,7 +14,7 @@ from common import *
 def get_latest_album_id():
     max_album_id = 0
     for category_type in [1, 2]:
-        api_url = "https://api.meitu22.com/api/dynamic/getCategoryDynamic"
+        api_url = "https://api.shen100.com/api/dynamic/getCategoryDynamic"
         query_data = {
             "type": category_type,  # 1 图片， 2 视频
             "categoryId": "1",  # 最新
@@ -42,7 +42,7 @@ def get_latest_album_id():
 
 # 获取指定图集
 def get_album_page(album_id):
-    api_url = "https://api.meitu22.com/api/dynamic/getDynamicDetail"
+    api_url = "https://api.shen100.com/api/dynamic/getDynamicDetail"
     query_data = {
         "id": album_id,
     }
