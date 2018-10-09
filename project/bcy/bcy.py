@@ -160,7 +160,7 @@ def get_one_page_album(account_id, page_count):
         album_id = album_url.split("/")[-1]
         if not crawler.is_integer(album_id):
             raise crawler.CrawlerException("作品地址 %s 截取作品id失败\n%s" % (album_url, album_selector.html()))
-        result["album_id_list"].append(album_id)
+        result["album_id_list"].append(int(album_id))
     # 判断是不是最后一页
     last_pagination_selector = pq(album_pagination_content).find("ul.pager li:last a")
     if last_pagination_selector.length == 1:
@@ -378,7 +378,7 @@ class Download(crawler.DownloadThread):
             # 寻找这一页符合条件的作品
             for album_id in album_pagination_response["album_id_list"]:
                 # 检查是否达到存档记录
-                if int(album_id) > int(self.account_info[1]):
+                if album_id > int(self.account_info[1]):
                     # 新增作品导致的重复判断
                     if album_id in unique_list:
                         continue
@@ -460,7 +460,7 @@ class Download(crawler.DownloadThread):
         # 作品内图片下全部载完毕
         self.temp_path_list = []  # 临时目录设置清除
         self.total_photo_count += photo_index - 1  # 计数累加
-        self.account_info[1] = album_id  # 设置存档记录
+        self.account_info[1] = str(album_id)  # 设置存档记录
 
     def run(self):
         try:

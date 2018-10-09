@@ -16,11 +16,11 @@ COOKIE_INFO = {}
 # 所有分类目录
 CATEGORIES_CACHE_FILE_PATH = os.path.join(os.path.dirname(__file__), "categories.csv")
 # 国家排名
-COUNTRY_SITES_RESULT_FILE_PATH = os.path.join(os.path.dirname(__file__), "country_sites.csv")
+COUNTRY_SITES_RESULT_FILE_PATH = os.path.join(os.path.dirname(__file__), "country_top_sites.csv")
 # 分类排名
-CATEGORY_SITES_RESULT_FILE_PATH = os.path.join(os.path.dirname(__file__), "category_sites.csv")
+CATEGORY_SITES_RESULT_FILE_PATH = os.path.join(os.path.dirname(__file__), "category_top_sites.csv")
 # 国家排名和分类排名去重后的domain
-DUPLICATE_RESULT_FILE_PATH = os.path.join(os.path.dirname(__file__), "sites.csv")
+DUPLICATE_RESULT_FILE_PATH = os.path.join(os.path.dirname(__file__), "duplicate_sites.csv")
 
 
 def get_countries():
