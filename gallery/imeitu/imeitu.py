@@ -72,7 +72,6 @@ def get_album_page(album_id):
         result["photo_url_list"] = api_response.json_data["data"]["url"].split(",")
     # 视频
     elif album_type == 2:
-        print(1111)
         result["video_url"] = api_response.json_data["data"]["url"]
     else:
         raise crawler.CrawlerException("返回信息'type'字段取值不正确\n%s" % api_response.json_data)
