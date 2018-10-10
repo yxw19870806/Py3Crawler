@@ -82,7 +82,8 @@ def get_archive_page(archive_id):
             if video_url.find("embed.nicovideo.jp/watch") >= 0:
                 video_id = video_url.split("/")[-2]
             # http://ext.nicovideo.jp/thumb_watch/sm21088018?w=490&#038;h=307
-            elif video_url.find("ext.nicovideo.jp/thumb_watch/") >= 0:
+            # https://ext.nicovideo.jp/thumb/sm31656014
+            elif video_url.find("ext.nicovideo.jp/thumb_watch/") >= 0 or video_url.find("ext.nicovideo.jp/thumb/") >= 0:
                 video_id = video_url.split("/")[-1].split("?")[0]
             else:
                 raise crawler.CrawlerException("未知视频来源" + video_url)
