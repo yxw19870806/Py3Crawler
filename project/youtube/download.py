@@ -14,20 +14,11 @@ from project.youtube import youtube
 
 
 def main():
-    config = crawler._get_config()
-    # 获取cookies
-    all_cookie_from_browser = crawler.quickly_get_all_cookies_from_browser(config)
-    if "youtube.com" in all_cookie_from_browser:
-        for cookie_key in all_cookie_from_browser["youtube.com"]:
-            youtube.COOKIE_INFO[cookie_key] = all_cookie_from_browser["youtube.com"][cookie_key]
-    if ".youtube.com" in all_cookie_from_browser:
-        for cookie_key in all_cookie_from_browser[".youtube.com"]:
-            youtube.COOKIE_INFO[cookie_key] = all_cookie_from_browser[".youtube.com"][cookie_key]
-    if len(youtube.COOKIE_INFO) == 0 or not youtube.check_login():
+    # 初始化
+    youtube.Youtube()
+    if not youtube.check_login():
         log.error("没有检测到登录信息")
         youtube.IS_LOGIN = False
-    # 设置代理
-    crawler.quickly_set_proxy(config)
     # GUI窗口
     gui = tkinter.Tk()
     gui.withdraw()
