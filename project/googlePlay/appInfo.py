@@ -25,16 +25,25 @@ def get_app_info(package_name):
     }
     app_info_response = net.http_request(app_info_url, method="GET", fields=query_data)
     result = {
-        "score_count": 0,  # 打分人数
-        "install_count": 0,  # 安装人数
+        "update_time": None,  # 最后更新时间
+        "file_size": None,  # 安装包大小
+        "install_count": None,  # 安装数
+        "score_count": None,  # 打分人数
     }
-    if app_info_response.status == 404:
-        result["install_count"] = -1
-        result["score_count"] = -1
-        return result
     if app_info_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(app_info_response.status))
     app_info_response_content = app_info_response.data.decode(errors="ignore")
+    label_list_selector = pq(app_info_response_content).find(".xyOfqd .hAyfc")
+    for label_index in range(0, label_list_selector.length):
+        label_selector = label_list_selector.eq(label_index)
+        label_text = label_selector.find(".BgcNfc").text()
+        label_value = label_selector.find("span.htlgb>div>span.htlgb").text()
+        if label_text == "Updated":
+            result["update_time"] = label_value
+        elif label_text == "Size":
+            result["file_size"] = label_value
+        elif label_text == "Installs":
+            result["install_count"] = label_value.replace(",", "").replace("+", "")
     # 获取评价人数
     score_count_text = pq(app_info_response_content).find(".AYi5wd.TBRnV span:first").text()
     if not score_count_text:
@@ -43,21 +52,6 @@ def get_app_info(package_name):
     if not crawler.is_integer(score_count):
         raise crawler.CrawlerException("打分人数转换失败%s" % score_count_text)
     result["score_count"] = score_count
-    # 获取安装人数
-    install_label_index = 2
-    install_label_text = pq(app_info_response_content).find(".xyOfqd .hAyfc").eq(install_label_index).find(".BgcNfc").text()
-    if install_label_text == "Size":
-        install_label_index = 3
-        install_label_text = pq(app_info_response_content).find(".xyOfqd .hAyfc").eq(install_label_index).find(".BgcNfc").text()
-    if install_label_text != "Installs":
-        raise crawler.CrawlerException("安装人数标签查找失败")
-    install_count_text = pq(app_info_response_content).find(".xyOfqd .hAyfc").eq(install_label_index).find("span.htlgb>div>span.htlgb").text()
-    if not install_count_text:
-        raise crawler.CrawlerException("页面截取安装人数失败")
-    install_count = install_count_text.replace(",", "").replace("+", "")
-    if not crawler.is_integer(install_count):
-        raise crawler.CrawlerException("安装人数转换失败%s" % install_count_text)
-    result["install_count"] = install_count
     return result
 
 
@@ -75,6 +69,10 @@ class GooglePlayApps(crawler.Crawler):
         crawler.Crawler.__init__(self, sys_config)
 
     def main(self):
+        # 需要查找的包所在文件不存在
+        if not os.path.exists(SOURCE_FILE_PATH):
+            return
+
         # 之前的记录
         done_list = {}
         if os.path.exists(RESULT_FILE_PATH):
@@ -124,6 +122,7 @@ class AppsInfo(crawler.DownloadThread):
             with self.thread_lock:
                 self.csv_writer.writerow([self.package_name, app_info["install_count"], app_info["score_count"]])
         self.notify_main_thread()
+
 
 if __name__ == "__main__":
     GooglePlayApps().main()
