@@ -14,7 +14,11 @@ from project.nicoNico import nicoNico
 
 
 def main():
-    config = crawler._get_config()
+    # 初始化
+    nicoNico.NicoNico()
+    if not nicoNico.check_login():
+        log.error("没有检测到登录信息")
+        nicoNico.COOKIE_INFO = {}
     # GUI窗口
     gui = tkinter.Tk()
     gui.withdraw()
