@@ -129,10 +129,6 @@ class Download(crawler.DownloadThread):
                 self.error("第%s页视频解析失败，原因：%s" % (page_count, e.message))
                 raise
 
-            # 已经没有视频了
-            if len(video_pagination_response["video_info_list"]) == 0:
-                break
-
             self.trace("第%s页解析的全部视频：%s" % (page_count, video_pagination_response["video_info_list"]))
             self.step("第%s页解析获取%s个视频" % (page_count, len(video_pagination_response["video_info_list"])))
 
@@ -151,7 +147,7 @@ class Download(crawler.DownloadThread):
                     break
 
             if not is_over:
-                if len(video_pagination_response["video_info_list"]) >= EACH_PAGE_VIDEO_COUNT:
+                if 0 < len(video_pagination_response["video_info_list"]) >= EACH_PAGE_VIDEO_COUNT:
                     page_count += 1
                 else:
                     # 获取的数量小于请求的数量，已经没有剩余视频了

@@ -108,12 +108,12 @@ class Jigadori(crawler.Crawler):
                     log.error("第%s页图片解析失败，原因：%s" % (page_count, e.message))
                     raise
 
-                # 没有图片了
-                if len(photo_pagination_response["photo_info_list"]) == 0:
-                    break
-
                 log.trace("第%s页解析的全部图片：%s" % (page_count, photo_pagination_response["photo_info_list"]))
                 log.step("第%s页解析获取%s张图片" % (page_count, len(photo_pagination_response["photo_info_list"])))
+
+                # 已经没有图片了
+                if len(photo_pagination_response["photo_info_list"]) == 0:
+                    break
 
                 # 寻找这一页符合条件的图片
                 for photo_info in photo_pagination_response["photo_info_list"]:

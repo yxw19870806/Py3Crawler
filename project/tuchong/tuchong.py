@@ -164,12 +164,12 @@ class Download(crawler.DownloadThread):
                 self.error("%s后一页相册解析失败，原因：%s" % (post_time, e.message))
                 raise
 
-            # 如果为空，表示已经取完了
-            if len(album_pagination_response["album_info_list"]) == 0:
-                break
-
             self.trace("%s后一页解析的全部相册：%s" % (post_time, album_pagination_response["album_info_list"]))
             self.step("%s后一页解析获取%s个相册" % (post_time, len(album_pagination_response["album_info_list"])))
+
+            # 已经没有相册了
+            if len(album_pagination_response["album_info_list"]) == 0:
+                break
 
             # 寻找这一页符合条件的相册
             for album_info in album_pagination_response["album_info_list"]:

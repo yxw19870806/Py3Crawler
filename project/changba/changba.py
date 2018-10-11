@@ -182,7 +182,7 @@ class ChangBa(crawler.Crawler):
 
 
 class Download(crawler.DownloadThread):
-    AUDIO_COUNT_PER_PAGE = 20  # 每页歌曲数量上限
+    EACH_PAGE_AUDIO_COUNT = 20  # 每页歌曲数量上限（请求数量是无法修改的，只做判断使用）
 
     def __init__(self, account_info, main_thread):
         crawler.DownloadThread.__init__(self, account_info, main_thread)
@@ -211,10 +211,6 @@ class Download(crawler.DownloadThread):
                 self.error("第%s页歌曲解析失败，原因：%s" % (page_count, e.message))
                 raise
 
-            # 如果为空，表示已经取完了
-            if len(audit_pagination_response["audio_info_list"]) == 0:
-                break
-
             self.trace("第%s页解析的全部歌曲：%s" % (page_count, audit_pagination_response["audio_info_list"]))
             self.step("第%s页解析获取%s首歌曲" % (page_count, len(audit_pagination_response["audio_info_list"])))
 
@@ -235,7 +231,7 @@ class Download(crawler.DownloadThread):
             if not is_over:
                 # 获取的歌曲数量少于1页的上限，表示已经到结束了
                 # 如果歌曲数量正好是页数上限的倍数，则由下一页获取是否为空判断
-                if len(audit_pagination_response["audio_info_list"]) < self.AUDIO_COUNT_PER_PAGE:
+                if 0 < len(audit_pagination_response["audio_info_list"]) < self.EACH_PAGE_AUDIO_COUNT:
                     is_over = True
                 else:
                     page_count += 1

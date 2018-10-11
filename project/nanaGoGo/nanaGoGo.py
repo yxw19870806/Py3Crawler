@@ -158,12 +158,12 @@ class Download(crawler.DownloadThread):
                 self.error("target：%s页解析失败，原因：%s" % (target_id, e.message))
                 raise
 
-            # 如果为空，表示已经取完了
-            if len(blog_pagination_response["blog_info_list"]) == 0:
-                break
-
             self.trace("target：%s页解析的全部日志：%s" % (target_id, blog_pagination_response["blog_info_list"]))
             self.step("target：%s页解析获取%s个日志" % (target_id, len(blog_pagination_response["blog_info_list"])))
+
+            # 已经没有日志了
+            if len(blog_pagination_response["blog_info_list"]) == 0:
+                break
 
             # 寻找这一页符合条件的日志
             for blog_info in blog_pagination_response["blog_info_list"]:

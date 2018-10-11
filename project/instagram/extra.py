@@ -8,7 +8,7 @@ email: hikaru870806@hotmail.com
 """
 from common import *
 
-USER_COUNT_PER_PAGE = 50
+EACH_PAGE_ACCOUNT_COUNT = 50  # 每次请求获取的账号数量
 COOKIE_INFO = {}
 
 
@@ -21,9 +21,9 @@ def get_follow_by_list(account_id):
         api_url = "https://www.instagram.com/query/"
         # node支持的字段：id,is_verified,followed_by_viewer,requested_by_viewer,full_name,profile_pic_url,username
         if cursor is None:
-            post_data = {"q": "ig_user(%s){followed_by.first(%s){nodes{username},page_info}}" % (account_id, USER_COUNT_PER_PAGE)}
+            post_data = {"q": "ig_user(%s){followed_by.first(%s){nodes{username},page_info}}" % (account_id, EACH_PAGE_ACCOUNT_COUNT)}
         else:
-            post_data = {"q": "ig_user(%s){followed_by.after(%s,%s){nodes{username},page_info}}" % (account_id, cursor, USER_COUNT_PER_PAGE)}
+            post_data = {"q": "ig_user(%s){followed_by.after(%s,%s){nodes{username},page_info}}" % (account_id, cursor, EACH_PAGE_ACCOUNT_COUNT)}
         header_list = {"Referer": "https://www.instagram.com/", "X-CSRFToken": COOKIE_INFO["csrftoken"]}
         follow_by_pagination_response = net.http_request(api_url, method="POST", fields=post_data, header_list=header_list, cookies_list=COOKIE_INFO, json_decode=True)
         if follow_by_pagination_response.status == net.HTTP_RETURN_CODE_SUCCEED:
@@ -48,9 +48,9 @@ def get_follow_list(account_id):
         api_url = "https://www.instagram.com/query/"
         # node支持的字段：id,is_verified,followed_by_viewer,requested_by_viewer,full_name,profile_pic_url,username
         if cursor is None:
-            post_data = {"q": "ig_user(%s){follows.first(%s){nodes{username},page_info}}" % (account_id, USER_COUNT_PER_PAGE)}
+            post_data = {"q": "ig_user(%s){follows.first(%s){nodes{username},page_info}}" % (account_id, EACH_PAGE_ACCOUNT_COUNT)}
         else:
-            post_data = {"q": "ig_user(%s){follows.after(%s,%s){nodes{username},page_info}}" % (account_id, cursor, USER_COUNT_PER_PAGE)}
+            post_data = {"q": "ig_user(%s){follows.after(%s,%s){nodes{username},page_info}}" % (account_id, cursor, EACH_PAGE_ACCOUNT_COUNT)}
         header_list = {"Referer": "https://www.instagram.com/", "X-CSRFToken": COOKIE_INFO["csrftoken"]}
         follow_pagination_response = net.http_request(api_url, method="POST", fields=post_data, header_list=header_list, cookies_list=COOKIE_INFO, json_decode=True)
         if follow_pagination_response.status == net.HTTP_RETURN_CODE_SUCCEED:
