@@ -15,15 +15,15 @@ from common import crypto
 
 USER_ID = ""
 USER_KEY = ""
-token_file_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "info\\session"))
+SESSION_DATA_PATH = None
 
 
 # 检查登录信息
 def check_login():
     global USER_ID, USER_KEY
     # 文件存在，检查格式是否正确
-    if os.path.exists(token_file_path):
-        api_info = tool.json_decode(crypto.Crypto().decrypt(file.read_file(token_file_path)))
+    if os.path.exists(SESSION_DATA_PATH):
+        api_info = tool.json_decode(crypto.Crypto().decrypt(file.read_file(SESSION_DATA_PATH)))
         if crawler.check_sub_key(("user_id", "user_key"), api_info):
             # 验证token是否有效
             if check_token(api_info["user_id"], api_info["user_key"]):
@@ -33,7 +33,7 @@ def check_login():
                 return True
             log.step("登录信息已过期")
         # token已经无效了，删除掉
-        path.delete_dir_or_file(token_file_path)
+        path.delete_dir_or_file(SESSION_DATA_PATH)
     while True:
         input_str = input(crawler.get_time() + " 未检测到api信息，是否手动输入手机号码+密码登录(1)、或者直接输入api信息进行验证(2)、或者退出程序(E)xit？").lower()
         if input_str in ["e", "exit"]:
@@ -177,6 +177,8 @@ def get_video_info_page(account_id, video_id):
 
 class VLiao(crawler.Crawler):
     def __init__(self):
+        global SESSION_DATA_PATH
+
         # 设置APP目录
         crawler.PROJECT_APP_PATH = os.path.abspath(os.path.dirname(__file__))
 
@@ -185,6 +187,9 @@ class VLiao(crawler.Crawler):
             crawler.SYS_DOWNLOAD_VIDEO: True,
         }
         crawler.Crawler.__init__(self, sys_config)
+
+        # 设置全局变量，供子线程调用
+        SESSION_DATA_PATH = self.session_data_path
 
         # 解析存档文件
         # account_id  video_id
