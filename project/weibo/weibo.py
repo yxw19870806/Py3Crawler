@@ -13,10 +13,60 @@ import traceback
 import urllib.parse
 from common import *
 from project.meipai import meipai
-from project.weibo import weiboCommon
 
 EACH_PAGE_PHOTO_COUNT = 20  # 每次请求获取的图片数量
 INIT_SINCE_ID = "9999999999999999"
+COOKIE_INFO = {"SUB": ""}
+
+
+# 检测登录状态
+def check_login():
+    if "SUB" not in COOKIE_INFO or not COOKIE_INFO["SUB"]:
+        return False
+    cookies_list = {"SUB": COOKIE_INFO["SUB"]}
+    index_url = "https://weibo.com/"
+    index_response = net.http_request(index_url, method="GET", cookies_list=cookies_list)
+    if index_response.status == net.HTTP_RETURN_CODE_SUCCEED:
+        return index_response.data.decode(errors="ignore").find("$CONFIG['islogin']='1';") >= 0
+    return False
+
+
+# 使用浏览器保存的cookie模拟登录请求，获取一个session级别的访问cookie
+def init_session():
+    login_url = "https://login.sina.com.cn/sso/login.php"
+    query_data = {"url": "https://weibo.com"}
+    login_response = net.http_request(login_url, method="GET", fields=query_data, cookies_list=COOKIE_INFO)
+    if login_response.status == net.HTTP_RETURN_CODE_SUCCEED:
+        COOKIE_INFO.update(net.get_cookies_from_response_header(login_response.headers))
+        return True
+    return False
+
+
+# 获取账号首页
+def get_account_index_page(account_id):
+    account_index_url = "https://weibo.com/u/%s" % account_id
+    cookies_list = {"SUB": tool.generate_random_string(30)}
+    result = {
+        "account_page_id": None,  # 账号page id
+    }
+    account_index_response = net.http_request(account_index_url, method="GET", cookies_list=cookies_list)
+    if account_index_response.status == net.HTTP_RETURN_CODE_SUCCEED:
+        # 获取账号page id
+        account_page_id = tool.find_sub_string(account_index_response.data.decode(errors="ignore"), "$CONFIG['page_id']='", "'")
+        if not crawler.is_integer(account_page_id):
+            raise crawler.CrawlerException("账号不存在")
+        result["account_page_id"] = account_page_id
+    else:
+        raise crawler.CrawlerException(crawler.request_failre(account_index_response.status))
+    return result
+
+
+# 检测图片是不是被微博自动删除的文件
+def check_photo_invalid(file_path):
+    file_md5 = file.get_file_md5(file_path)
+    if file_md5 in ["14f2559305a6c96608c474f4ca47e6b0", "37b9e6dec174b68a545c852c63d4645a", "7bd88df2b5be33e1a79ac91e7d0376b5", "82af4714a8b2a5eea3b44726cfc9920d"]:
+        return True
+    return False
 
 
 # 获取一页的图片信息
@@ -28,7 +78,7 @@ def get_one_page_photo(account_id, page_count):
         "page": page_count,
         "type": "3",
     }
-    cookies_list = {"SUB": weiboCommon.COOKIE_INFO["SUB"]}
+    cookies_list = {"SUB": COOKIE_INFO["SUB"]}
     result = {
         "photo_info_list": [],  # 全部图片信息
         "is_over": False,  # 是否最后一页图片
@@ -86,7 +136,7 @@ def get_one_page_video(account_page_id, since_id):
         "ajax_call": "1",
         "__rnd": int(time.time() * 1000),
     }
-    cookies_list = {"SUB": weiboCommon.COOKIE_INFO["SUB"]}
+    cookies_list = {"SUB": COOKIE_INFO["SUB"]}
     result = {
         "next_page_since_id": None,  # 下一页视频指针
         "video_play_url_list": [],  # 全部视频地址
@@ -142,7 +192,7 @@ def get_video_url(video_play_url):
             raise crawler.CrawlerException("返回信息匹配视频地址失败\n%s" % video_info_response.json_data)
     # https://video.weibo.com/show?fid=1034:e608e50d5fa95410748da61a7dfa2bff
     elif video_play_url.find("video.weibo.com/show?fid=") >= 0:  # 微博视频
-        cookies_list = {"SUB": weiboCommon.COOKIE_INFO["SUB"]}
+        cookies_list = {"SUB": COOKIE_INFO["SUB"]}
         video_play_response = net.http_request(video_play_url, method="GET", cookies_list=cookies_list)
         if video_play_response.status == net.HTTP_RETURN_CODE_SUCCEED:
             video_play_response_content = video_play_response.data.decode(errors="ignore")
@@ -196,16 +246,16 @@ class Weibo(crawler.Crawler):
         crawler.Crawler.__init__(self, sys_config, extra_config)
 
         # 设置全局变量，供子线程调用
-        weiboCommon.COOKIE_INFO.update(self.cookie_value)
+        COOKIE_INFO.update(self.cookie_value)
 
         # 解析存档文件
         # account_id  last_photo_id  video_count  last_video_url  (account_name)
         self.account_list = crawler.read_save_data(self.save_data_path, 0, ["", "0", "0", ""])
 
         # 检测登录状态
-        if not weiboCommon.check_login():
+        if not check_login():
             # 如果没有获得登录相关的cookie，则模拟登录并更新cookie
-            if weiboCommon.init_session() and weiboCommon.check_login():
+            if init_session() and check_login():
                 pass
             else:
                 log.error("没有检测到登录信息")
@@ -297,7 +347,7 @@ class Download(crawler.DownloadThread):
     def get_crawl_video_list(self):
         # 获取账号首页
         try:
-            account_index_response = weiboCommon.get_account_index_page(self.account_id)
+            account_index_response = get_account_index_page(self.account_id)
         except crawler.CrawlerException as e:
             self.error("首页解析失败，原因：%s" % e.message)
             raise
@@ -347,7 +397,7 @@ class Download(crawler.DownloadThread):
         photo_file_path = os.path.join(self.main_thread.photo_download_path, self.display_name, "%16d.%s" % (photo_info["photo_id"], net.get_file_type(photo_info["photo_url"], "jpg")))
         save_file_return = net.save_net_file(photo_info["photo_url"], photo_file_path)
         if save_file_return["status"] == 1:
-            if weiboCommon.check_photo_invalid(photo_file_path):
+            if check_photo_invalid(photo_file_path):
                 path.delete_dir_or_file(photo_file_path)
                 self.error("图片%s %s 资源已被删除，跳过" % (photo_info["photo_id"], photo_info["photo_url"]))
             else:
