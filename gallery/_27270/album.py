@@ -31,6 +31,9 @@ def get_one_page_album(sub_path, page_count):
         raise crawler.CrawlerException(crawler.request_failre(album_pagination_response.status))
     album_pagination_response_content = album_pagination_response.data.decode("GBK", errors="ignore")
     album_list_selector = pq(album_pagination_response_content).find(".MeinvTuPianBox ul li")
+    # 另一种样式
+    if album_list_selector.length == 0:
+        album_list_selector = pq(album_pagination_response_content).find("ul.pic_list li")
     if album_list_selector.length == 0:
         raise crawler.CrawlerException("页面截取图集列表失败\n%s" % album_pagination_response_content)
     for album_index in range(0, album_list_selector.length):
