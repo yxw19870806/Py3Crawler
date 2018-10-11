@@ -11,7 +11,7 @@ import time
 import traceback
 from common import *
 
-PHOTO_COUNT_PER_PAGE = 16
+EACH_PAGE_PHOTO_COUNT = 16  # 每次请求获取的图片数量
 
 
 # 获取指定页数的全部图片
@@ -19,7 +19,7 @@ def get_one_page_photo(account_id, page_count):
     # https://worldcosplay.net/zh-hans/api/member/photos.json?limit=16&member_id=502191&p3_photo_list=true&page=1
     photo_pagination_url = "https://worldcosplay.net/zh-hans/api/member/photos.json"
     query_data = {
-        "limit": PHOTO_COUNT_PER_PAGE,
+        "limit": EACH_PAGE_PHOTO_COUNT,
         "member_id": account_id,
         "p3_photo_list": "true",
         "page": page_count,

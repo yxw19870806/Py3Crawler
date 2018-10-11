@@ -13,7 +13,7 @@ import traceback
 from pyquery import PyQuery as pq
 from common import *
 
-EACH_PAGE_COUNT = 100
+EACH_PAGE_BLOG_COUNT = 100  # 每次请求获取的日志数量
 COOKIE_INFO = {}
 USER_AGENT = None
 IS_STEP_ERROR_403_AND_404 = False
@@ -158,8 +158,8 @@ def get_one_page_post(account_id, page_count, is_https, is_safe_mode):
 def get_one_page_private_blog(account_id, page_count):
     post_pagination_url = "https://www.tumblr.com/svc/indash_blog"
     query_data = {
-        "limit": EACH_PAGE_COUNT,
-        "offset": (page_count - 1) * EACH_PAGE_COUNT,
+        "limit": EACH_PAGE_BLOG_COUNT,
+        "offset": (page_count - 1) * EACH_PAGE_BLOG_COUNT,
         "post_id": "",
         "should_bypass_safemode": "false",
         "should_bypass_tagfiltering": "false",
@@ -237,7 +237,7 @@ def get_one_page_private_blog(account_id, page_count):
                     raise crawler.CrawlerException("图片信息'url'字段不存在\n%s" % photo_info)
                 result_post_info["photo_url_list"].append(photo_info["original_size"]["url"])
         result["post_info_list"].append(result_post_info)
-    if len(post_pagination_response.json_data["response"]["posts"]) < EACH_PAGE_COUNT:
+    if len(post_pagination_response.json_data["response"]["posts"]) < EACH_PAGE_BLOG_COUNT:
         result["is_over"] = True
     return result
 

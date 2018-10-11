@@ -13,7 +13,6 @@ from common import *
 from project.dailymotion import dailymotion
 
 
-
 def main():
     config = crawler._get_config()
     # 设置代理

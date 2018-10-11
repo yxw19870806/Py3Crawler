@@ -8,6 +8,7 @@ email: hikaru870806@hotmail.com
 """
 import os
 from common import *
+from project.nanaGoGo import nanaGoGo
 
 # 存放解析出的账号文件路径
 ACCOUNT_ID_FILE_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), "info/account.data"))
@@ -39,11 +40,12 @@ def get_member_from_talk(talk_id):
 
 
 def main():
+    # 初始化类
+    nanaGoGo_obj = nanaGoGo.NanaGoGo()
+
     # 存档位置
-    save_data_path = crawler.quickly_get_save_data_path()
-    save_data = crawler.read_save_data(save_data_path, 0, [])
-    account_list =  list(crawler.read_save_data(ACCOUNT_ID_FILE_PATH, 0, []).keys())
-    for talk_id in save_data:
+    account_list = list(crawler.read_save_data(ACCOUNT_ID_FILE_PATH, 0, []).keys())
+    for talk_id in nanaGoGo_obj.account_list:
         try:
             member_list = get_member_from_talk(talk_id)
         except crawler.CrawlerException as e:
