@@ -79,7 +79,7 @@ def get_album_page(album_url, album_id):
         album_response = net.http_request(pagination_album_url, method="GET")
         if album_response.status != net.HTTP_RETURN_CODE_SUCCEED:
             raise crawler.CrawlerException("第%s页" % page_count + crawler.request_failre(album_response.status))
-        album_response_content = album_response.data.decode(errors="ignore")
+        album_response_content = album_response.data.decode("GBK", errors="ignore")
         # 获取图片地址
         photo_list_selector = pq(album_response_content).find("#picBody a img")
         if photo_list_selector.length == 0:
