@@ -8,6 +8,7 @@ email: hikaru870806@hotmail.com
 """
 import os
 from common import *
+from project.instagram import instagram
 
 
 # 获取账号首页
@@ -41,16 +42,11 @@ def get_account_index_page(account_name):
 
 
 def main():
-    config = crawler._get_config()
-    # 存档位置
-    save_data_path = crawler.quickly_get_save_data_path(config)
-    # 读取存档文件
-    account_list = crawler.read_save_data(save_data_path, 0, [])
-    # 设置代理
-    crawler.quickly_set_proxy(config)
+    # 初始化类
+    instagram_obj = instagram.Instagram()
 
     result_file_path = os.path.join(os.path.dirname(__file__), "info/account_info.data")
-    for account in sorted(account_list.keys()):
+    for account in sorted(instagram_obj.account_list.keys()):
         try:
             account_index_response = get_account_index_page(account)
         except crawler.CrawlerException as e:

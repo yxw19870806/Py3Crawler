@@ -6,7 +6,7 @@ email: hikaru870806@hotmail.com
 如有问题或建议请联系
 """
 from common import *
-from . import yasaxiCommon
+from deprecation.yasaxi import yasaxi, yasaxiCommon
 
 
 # 调用推荐API获取全部推荐账号
@@ -33,29 +33,22 @@ def get_account_from_api():
 
 
 def main():
-    if not yasaxiCommon.get_token_from_file():
-        while True:
-            input_str = input(crawler.get_time() + " 未检测到api token，是否手动输入(y)es / (N)o：").lower()
-            if input_str in ["y", "yes"]:
-                yasaxiCommon.set_token_to_file()
-                break
-            elif input_str in ["n", "no"]:
-                return
+    # 初始化类
+    yasaxi_obj = yasaxi.Yasaxi()
 
     # 存档位置
-    save_data_path = crawler.quickly_get_save_data_path()
     try:
         account_list_from_api = get_account_from_api()
     except crawler.CrawlerException as e:
         output.print_msg("推荐账号解析失败，原因：%s" % e.message)
         raise
     if len(account_list_from_api) > 0:
-        account_list_from_save_data = crawler.read_save_data(save_data_path, 0, [])
         for account_id in account_list_from_api:
-            if account_id not in account_list_from_save_data:
-                account_list_from_save_data[account_id] = [account_id, "", account_list_from_api[account_id]]
-        temp_list = [account_list_from_save_data[key] for key in sorted(account_list_from_save_data.keys())]
-        file.write_file(tool.list_to_string(temp_list), save_data_path, file.WRITE_FILE_TYPE_REPLACE)
+            if account_id not in yasaxi_obj.account_list:
+                yasaxi_obj.account_list[account_id] = [account_id, "", account_list_from_api[account_id]]
+        temp_list = [yasaxi_obj.account_list[key] for key in sorted(yasaxi_obj.account_list.keys())]
+        file.write_file(tool.list_to_string(temp_list), yasaxi_obj.save_data_path, file.WRITE_FILE_TYPE_REPLACE)
+
 
 if __name__ == "__main__":
     main()

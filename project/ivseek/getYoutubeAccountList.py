@@ -8,14 +8,16 @@ email: hikaru870806@hotmail.com
 """
 import os
 from common import *
-from project.ivseek import ivseekCommon
-
-YOUTUBE_SAVE_DATA_PATH = os.path.abspath(os.path.join(crawler.PROJECT_APP_ROOT_PATH, "youtube/info/save.data"))
+from project.ivseek import ivseek, ivseekCommon
+from project.youtube import youtube
 
 
 def main():
-    save_data_path = crawler.quickly_get_save_data_path()
-    save_data_list = ivseekCommon.read_save_data(save_data_path)
+    # 初始化类
+    youtube_obj = youtube.Youtube()
+    ivseek_obj = ivseek.IvSeek()
+
+    save_data_list = ivseekCommon.read_save_data(ivseek_obj.save_data_path)
     account_id_list = []
     for single_save_list in save_data_list:
         if single_save_list[2].find("//www.youtube.com") >= 0:
@@ -27,12 +29,12 @@ def main():
                 account_id_list.append(single_save_list[3])
             # 增加已完成标记
             single_save_list[4] = ivseekCommon.DONE_SING
-    youtube_save_data_list = crawler.read_save_data(YOUTUBE_SAVE_DATA_PATH, 0, [])
+    youtube_save_data_list = crawler.read_save_data(youtube_obj.save_data_path, 0, [])
     for account_id in account_id_list:
         if account_id not in youtube_save_data_list:
             youtube_save_data_list[account_id] = [account_id]
-    file.write_file(tool.list_to_string(save_data_list), save_data_path, file.WRITE_FILE_TYPE_REPLACE)
-    file.write_file(tool.list_to_string(youtube_save_data_list.values()), YOUTUBE_SAVE_DATA_PATH, file.WRITE_FILE_TYPE_REPLACE)
+    file.write_file(tool.list_to_string(save_data_list), ivseek_obj.save_data_path, file.WRITE_FILE_TYPE_REPLACE)
+    file.write_file(tool.list_to_string(youtube_save_data_list.values()), youtube_obj.save_data_path, file.WRITE_FILE_TYPE_REPLACE)
 
 
 if __name__ == "__main__":

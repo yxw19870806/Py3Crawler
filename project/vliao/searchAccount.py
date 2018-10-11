@@ -7,7 +7,7 @@ email: hikaru870806@hotmail.com
 如有问题或建议请联系
 """
 from common import *
-from project.vliao import vLiaoCommon
+from project.vliao import vLiao, vLiaoCommon
 
 SEARCH_TYPE_MATCH = "1"
 SEARCH_TYPE_LOOKUP = "2"
@@ -51,12 +51,8 @@ def search_account(account_name, search_type):
 
 
 def main():
-    # 检测登录状态
-    try:
-        vLiaoCommon.check_login()
-    except crawler.CrawlerException as e:
-        log.error("登录失败，原因：%s" % e.message)
-        tool.process_exit()
+    # 初始化类
+    vLiao.VLiao()
 
     while True:
         search_type = input(crawler.get_time() + " 查找方式：完全匹配(1) / 模糊查找(2)：").lower()

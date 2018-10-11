@@ -7,7 +7,7 @@ email: hikaru870806@hotmail.com
 """
 import time
 from common import *
-from project.weibo import weiboCommon
+from project.weibo import weibo, weiboCommon
 
 
 # 关注指定账号
@@ -44,22 +44,8 @@ def follow_account(account_id):
 
 
 def main():
-    config = crawler._get_config()
-
-    # 获取cookies
-    all_cookie_from_browser = crawler.quickly_get_all_cookies_from_browser(config)
-    if ".sina.com.cn" in all_cookie_from_browser:
-        for cookie_key in all_cookie_from_browser[".sina.com.cn"]:
-            weiboCommon.COOKIE_INFO[cookie_key] = all_cookie_from_browser[".sina.com.cn"][cookie_key]
-    else:
-        output.print_msg("没有检测到登录信息")
-        tool.process_exit()
-    if ".login.sina.com.cn" in all_cookie_from_browser:
-        for cookie_key in all_cookie_from_browser[".login.sina.com.cn"]:
-            weiboCommon.COOKIE_INFO[cookie_key] = all_cookie_from_browser[".login.sina.com.cn"][cookie_key]
-    else:
-        output.print_msg("没有检测到登录信息")
-        tool.process_exit()
+    # 初始化类
+    weibo_obj = weibo.Weibo()
 
     # 检测登录状态
     if not weiboCommon.check_login():
@@ -70,15 +56,13 @@ def main():
             log.error("没有检测到登录信息")
             tool.process_exit()
 
-    # 存档位置
-    save_data_path = crawler.quickly_get_save_data_path(config)
     # 读取存档文件
-    account_list = crawler.read_save_data(save_data_path, 0, [])
-    for account_id in sorted(account_list.keys()):
+    for account_id in sorted(weibo_obj.account_list.keys()):
         while not follow_account(account_id):
             pass
 
     output.print_msg("关注完成")
+
 
 if __name__ == "__main__":
     main()
