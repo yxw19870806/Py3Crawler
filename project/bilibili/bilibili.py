@@ -1,6 +1,6 @@
 # -*- coding:UTF-8  -*-
 """
-bilibili用户相簿爬虫
+bili bili用户投稿视频/相册爬虫
 https://www.bilibili.com/
 @author: hikaru
 email: hikaru870806@hotmail.com
