@@ -7,7 +7,7 @@ email: hikaru870806@hotmail.com
 如有问题或建议请联系
 """
 from common import *
-from project.vliao import vLiaoCommon
+from project.vliao import vLiao, vLiaoCommon
 
 TAG_ID_LIST = [1]
 
@@ -73,24 +73,17 @@ def get_tag_account_list(tag_id):
 
 
 def main():
-    # 检测登录状态
-    try:
-        vLiaoCommon.check_login()
-    except crawler.CrawlerException as e:
-        log.error("登录失败，原因：%s" % e.message)
-        tool.process_exit()
+    # 初始化类
+    vLiao_obj = vLiao.VLiao()
 
     account_list_from_api = get_account_list_from_api()
-
     if len(account_list_from_api) > 0:
         # 存档位置
-        save_data_path = crawler.quickly_get_save_data_path()
-        account_list_from_save_data = crawler.read_save_data(save_data_path, 0, [])
         for account_id in account_list_from_api:
-            if account_id not in account_list_from_save_data:
-                account_list_from_save_data[account_id] = [account_id, "", account_list_from_api[account_id]]
-        temp_list = [account_list_from_save_data[key] for key in sorted(account_list_from_save_data.keys())]
-        file.write_file(tool.list_to_string(temp_list), save_data_path, file.WRITE_FILE_TYPE_REPLACE)
+            if account_id not in vLiao_obj.account_list:
+                vLiao_obj.account_list[account_id] = [account_id, "0", account_list_from_api[account_id]]
+        temp_list = [vLiao_obj.account_list[key] for key in sorted(vLiao_obj.account_list.keys())]
+        file.write_file(tool.list_to_string(temp_list), vLiao_obj.account_list, file.WRITE_FILE_TYPE_REPLACE)
 
 
 if __name__ == "__main__":
