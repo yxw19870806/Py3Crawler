@@ -12,7 +12,7 @@ import time
 import traceback
 from common import *
 
-VIDEO_COUNT_PER_PAGE = 5
+EACH_PAGE_VIDEO_COUNT = 5  # 每次请求获取的视频数量
 
 
 # 获取指定一页的视频信息
@@ -20,7 +20,7 @@ def get_one_page_video(account_id, page_time):
     video_pagination_url = "http://wsm.qq.com/weishi/t/other.php"
     query_data = {
         "uid": account_id,
-        "reqnum": VIDEO_COUNT_PER_PAGE,
+        "reqnum": EACH_PAGE_VIDEO_COUNT,
     }
     if page_time > 0:
         query_data["pageflag"] = "02"

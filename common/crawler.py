@@ -13,6 +13,7 @@ import re
 import sys
 import threading
 import time
+
 # 项目根目录
 PROJECT_ROOT_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 # 全局config.ini路径
@@ -27,10 +28,12 @@ try:
 except ImportError:
     from common import browser, file, keyboardEvent, log, net, output, path, portListenerEvent, tool
 
-# 程序是否支持下载图片功能（会判断配置中是否需要下载图片，如全部是则创建图片下载目录）
+# 程序是否支持下载图片功能
 SYS_DOWNLOAD_PHOTO = "download_photo"
-# 程序是否支持下载视频功能（会判断配置中是否需要下载视频，如全部是则创建视频下载目录）
+# 程序是否支持下载视频功能
 SYS_DOWNLOAD_VIDEO = "download_video"
+# 程序是否支持下载音频功能
+SYS_DOWNLOAD_AUDIO = "download_audio"
 # 程序是否默认需要设置代理
 SYS_SET_PROXY = "set_proxy"
 # 程序是否支持不需要存档文件就可以开始运行
@@ -65,6 +68,7 @@ class Crawler(object):
             return
         sys_download_photo = SYS_DOWNLOAD_PHOTO in sys_config
         sys_download_video = SYS_DOWNLOAD_VIDEO in sys_config
+        sys_download_audio = SYS_DOWNLOAD_AUDIO in sys_config
         sys_set_proxy = SYS_SET_PROXY in sys_config
         sys_get_cookie = SYS_GET_COOKIE in sys_config
         sys_not_check_save_data = SYS_NOT_CHECK_SAVE_DATA in sys_config
@@ -98,9 +102,10 @@ class Crawler(object):
         # 是否下载
         self.is_download_photo = analysis_config(config, "IS_DOWNLOAD_PHOTO", True, CONFIG_ANALYSIS_MODE_BOOLEAN) and sys_download_photo
         self.is_download_video = analysis_config(config, "IS_DOWNLOAD_VIDEO", True, CONFIG_ANALYSIS_MODE_BOOLEAN) and sys_download_video
+        self.is_download_audio = analysis_config(config, "IS_DOWNLOAD_AUDIO", True, CONFIG_ANALYSIS_MODE_BOOLEAN) and sys_download_audio
 
-        if not sys_not_download and not self.is_download_photo and not self.is_download_video:
-            if sys_download_photo or sys_download_video:
+        if not sys_not_download and not self.is_download_photo and not self.is_download_video and not self.is_download_audio:
+            if sys_download_photo or sys_download_video or sys_download_audio:
                 output.print_msg("所有支持的下载都没有开启，请检查配置！")
                 tool.process_exit()
                 return
@@ -127,24 +132,20 @@ class Crawler(object):
         if self.is_download_photo:
             # 图片保存目录
             self.photo_download_path = analysis_config(config, "PHOTO_DOWNLOAD_PATH", "\\\\photo", CONFIG_ANALYSIS_MODE_PATH)
-            # if not path.create_dir(self.photo_download_path):
-                # # 图片保存目录创建失败
-                # output.print_msg("图片保存目录%s创建失败！" % self.photo_download_path)
-                # tool.process_exit()
-                # return
         else:
             self.photo_download_path = ""
         # 是否需要下载视频
         if self.is_download_video:
             # 视频保存目录
             self.video_download_path = analysis_config(config, "VIDEO_DOWNLOAD_PATH", "\\\\video", CONFIG_ANALYSIS_MODE_PATH)
-            # if not path.create_dir(self.video_download_path):
-            #     # 视频保存目录创建失败
-            #     output.print_msg("视频保存目录%s创建失败！" % self.video_download_path)
-            #     tool.process_exit()
-            #     return
         else:
             self.video_download_path = ""
+        # 是否需要下载音频
+        if self.is_download_audio:
+            # 音频保存目录
+            self.audio_download_path = analysis_config(config, "AUDIO_DOWNLOAD_PATH", "\\\\audio", CONFIG_ANALYSIS_MODE_PATH)
+        else:
+            self.audio_download_path = ""
 
         # 代理
         is_proxy = analysis_config(config, "IS_PROXY", 2, CONFIG_ANALYSIS_MODE_INTEGER)
@@ -222,6 +223,7 @@ class Crawler(object):
 
         self.total_photo_count = 0
         self.total_video_count = 0
+        self.total_audio_count = 0
 
         output.print_msg("初始化完成")
 
@@ -264,6 +266,7 @@ class DownloadThread(threading.Thread):
             tool.process_exit()
         self.total_photo_count = 0
         self.total_video_count = 0
+        self.total_audio_count = 0
         self.temp_path_list = []
 
     # 检测主线程是否已经结束（外部中断）

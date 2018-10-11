@@ -8,7 +8,7 @@ email: hikaru870806@hotmail.com
 """
 import os
 from common import *
-from project.ivseek import ivseekCommon
+from project.ivseek import ivseek
 from project.nicoNico import nicoNico
 
 NICONICO_VIDEO_DOWNLOAD_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), "niconico_video"))
@@ -30,13 +30,13 @@ def main():
         tool.process_exit()
 
     save_data_path = crawler.quickly_get_save_data_path(config)
-    save_data_list = ivseekCommon.read_save_data(save_data_path)
+    save_data_list = ivseek.read_save_data(save_data_path)
     for single_save_list in save_data_list:
         if single_save_list[2].find(".nicovideo.jp/") == -1:
             continue
 
         # 已完成
-        if single_save_list[4] == ivseekCommon.DONE_SING:
+        if single_save_list[4] == ivseek.DONE_SING:
             continue
 
         output.print_msg("开始解析视频%s" % single_save_list[2])
@@ -67,7 +67,7 @@ def main():
             continue
 
         # 增加已处理标记
-        single_save_list[4] = ivseekCommon.DONE_SING
+        single_save_list[4] = ivseek.DONE_SING
         # 保存记录
         file.write_file(tool.list_to_string(save_data_list), save_data_path, file.WRITE_FILE_TYPE_REPLACE)
 

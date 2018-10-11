@@ -8,8 +8,29 @@ email: hikaru870806@hotmail.com
 """
 import os
 import re
+import time
 import traceback
+from pyquery import PyQuery as pq
 from common import *
+from project.nicoNico import nicoNico
+
+DONE_SING = "~"
+
+
+# 读取存档文件
+def read_save_data(save_data_path):
+    result_list = []
+    if not os.path.exists(save_data_path):
+        return result_list
+    for single_save_data in file.read_file(save_data_path, file.READ_FILE_TYPE_LINE):
+        single_save_data = single_save_data.replace("\xef\xbb\xbf", "").replace("\n", "").replace("\r", "")
+        if len(single_save_data) == 0:
+            continue
+        single_save_list = single_save_data.split("\t")
+        while len(single_save_list) < 5:
+            single_save_list.append("")
+        result_list.append(single_save_list)
+    return result_list
 
 
 # 获取首页
@@ -63,7 +84,7 @@ def get_archive_page(archive_id):
             # 获取视频发布账号
             video_play_response = net.http_request(result_video_info["video_url"], method="GET", header_list={"accept-language": "en-US"})
             if video_play_response.status != net.HTTP_RETURN_CODE_SUCCEED:
-                raise crawler.CrawlerException("视频播放页%s，%s" % (result_video_info["video_url"], crawler.request_failre(video_play_response.status)))
+                raise crawler.CrawlerException("视频播放页 %s，%s" % (result_video_info["video_url"], crawler.request_failre(video_play_response.status)))
             video_play_response_content = video_play_response.data.decode(errors="ignore")
             # 账号已被删除，跳过
             if video_play_response_content.find('"reason":"This video is no longer available because the YouTube account associated with this video has been terminated."') >= 0:
@@ -89,12 +110,21 @@ def get_archive_page(archive_id):
                 raise crawler.CrawlerException("未知视频来源" + video_url)
             result_video_info["video_url"] = "http://www.nicovideo.jp/watch/%s" % video_id
             # 获取视频发布账号
-            video_play_response = net.http_request(result_video_info["video_url"], method="GET", header_list={"accept-language": "en-US"})
+            video_play_response = net.http_request(result_video_info["video_url"], method="GET", cookies_list=nicoNico.COOKIE_INFO)
+            while video_play_response.status == 403:
+                time.sleep(60)
+                video_play_response = net.http_request(result_video_info["video_url"], method="GET", cookies_list=nicoNico.COOKIE_INFO)
             if video_play_response.status != net.HTTP_RETURN_CODE_SUCCEED:
-                raise crawler.CrawlerException("视频播放页%s，%s" % (result_video_info["video_url"], crawler.request_failre(video_play_response.status)))
-            account_id = tool.find_sub_string(video_play_response.data.decode(errors="ignore"), '<a href="/user/', '"')
-            if crawler.is_integer(account_id):
-                result_video_info["account_id"] = account_id
+                raise crawler.CrawlerException("视频播放页 %s，%s" % (result_video_info["video_url"], crawler.request_failre(video_play_response.status)))
+            video_play_response_content = video_play_response.data.decode(errors="ignore")
+            js_data = tool.json_decode(pq(video_play_response_content).find("#js-initial-watch-data").attr("data-api-data"))
+            if js_data is None or not crawler.check_sub_key(("owner",), js_data):
+                raise crawler.CrawlerException("视频播放页 %s 截取视频信息失败，%s" % (result_video_info["video_url"], crawler.request_failre(video_play_response.status)))
+            if js_data["owner"] is not None:
+                if crawler.check_sub_key(("id",), js_data["owner"]):
+                    result_video_info["account_id"] = js_data["owner"]["id"]
+                else:
+                    log.notice("视频 %s 发布账号截取失败\n%s" % (result_video_info["video_url"], video_play_response_content))
         # http://www.dailymotion.com/embed/video/x5oi0x
         elif video_url.find("//www.dailymotion.com/") >= 0:
             video_url = video_url.replace("http://", "https://")
@@ -123,6 +153,9 @@ def get_archive_page(archive_id):
 
 class IvSeek(crawler.Crawler):
     def __init__(self):
+        # 初始化相关cookies
+        nicoNico.NicoNico()
+
         # 设置APP目录
         crawler.PROJECT_APP_PATH = os.path.abspath(os.path.dirname(__file__))
 

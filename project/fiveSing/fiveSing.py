@@ -83,7 +83,7 @@ class FiveSing(crawler.Crawler):
 
         # 初始化参数
         sys_config = {
-            crawler.SYS_DOWNLOAD_VIDEO: True,
+            crawler.SYS_DOWNLOAD_AUDIO: True,
         }
         crawler.Crawler.__init__(self, sys_config)
 
@@ -117,11 +117,11 @@ class FiveSing(crawler.Crawler):
         # 重新排序保存存档文件
         crawler.rewrite_save_file(self.temp_save_data_path, self.save_data_path)
 
-        log.step("全部下载完毕，耗时%s秒，共计歌曲%s首" % (self.get_run_time(), self.total_video_count))
+        log.step("全部下载完毕，耗时%s秒，共计歌曲%s首" % (self.get_run_time(), self.total_audio_count))
 
 
 class Download(crawler.DownloadThread):
-    AUDIO_COUNT_PER_PAGE = 20  # 每页歌曲数量上限
+    EACH_PAGE_AUDIO_COUNT = 20  # 每页歌曲数量上限（请求数量是无法修改的，只做判断使用）
     AUDIO_TYPE_YC = "yc"  # 歌曲类型：原唱
     AUDIO_TYPE_FC = "fc"  # 歌曲类型：翻唱
     # 原创、翻唱
@@ -158,10 +158,6 @@ class Download(crawler.DownloadThread):
                 self.error("第%s页%s歌曲解析失败，原因：%s" % (page_count, audio_type_name, e.message))
                 break
 
-            # 如果为空，表示已经取完了
-            if len(audio_pagination_response["audio_info_list"]) == 0:
-                break
-
             self.trace("第%s页%s解析的全部歌曲：%s" % (page_count, audio_type_name, audio_pagination_response["audio_info_list"]))
             self.step("第%s页%s解析获取%s首歌曲" % (page_count, audio_type_name, len(audio_pagination_response["audio_info_list"])))
 
@@ -182,7 +178,7 @@ class Download(crawler.DownloadThread):
             if not is_over:
                 # 获取的歌曲数量少于1页的上限，表示已经到结束了
                 # 如果歌曲数量正好是页数上限的倍数，则由下一页获取是否为空判断
-                if len(audio_pagination_response["audio_info_list"]) < self.AUDIO_COUNT_PER_PAGE:
+                if len(audio_pagination_response["audio_info_list"]) < self.EACH_PAGE_AUDIO_COUNT:
                     is_over = True
                 else:
                     page_count += 1
@@ -204,7 +200,7 @@ class Download(crawler.DownloadThread):
         self.step("开始下载%s歌曲%s《%s》 %s" % (audio_type_name, audio_info["audio_id"], audio_info["audio_title"], audio_info_response["audio_url"]))
 
         file_type = net.get_file_type(audio_info_response["audio_url"])
-        file_path = os.path.join(self.main_thread.video_download_path, self.display_name, audio_type_name, "%08d - %s.%s" % (audio_info["audio_id"], path.filter_text(audio_info["audio_title"]), file_type))
+        file_path = os.path.join(self.main_thread.audio_download_path, self.display_name, audio_type_name, "%08d - %s.%s" % (audio_info["audio_id"], path.filter_text(audio_info["audio_title"]), file_type))
         save_file_return = net.save_net_file(audio_info_response["audio_url"], file_path)
         if save_file_return["status"] == 1:
             self.step("%s歌曲%s《%s》下载成功" % (audio_type_name, audio_info["audio_id"], audio_info["audio_title"]))
@@ -213,7 +209,7 @@ class Download(crawler.DownloadThread):
             return
 
         # 歌曲下载完毕
-        self.total_video_count += 1  # 计数累加
+        self.total_audio_count += 1  # 计数累加
         self.account_info[self.audio_type_to_index_dict[audio_type]] = str(audio_info["audio_id"])  # 设置存档记录
 
     def run(self):
@@ -243,9 +239,9 @@ class Download(crawler.DownloadThread):
         # 保存最后的信息
         with self.thread_lock:
             file.write_file("\t".join(self.account_info), self.main_thread.temp_save_data_path)
-            self.main_thread.total_video_count += self.total_video_count
+            self.main_thread.total_audio_count += self.total_audio_count
             self.main_thread.account_list.pop(self.account_id)
-        self.step("下载完毕，总共获得%s首歌曲" % self.total_video_count)
+        self.step("下载完毕，总共获得%s首歌曲" % self.total_audio_count)
         self.notify_main_thread()
 
 
