@@ -157,11 +157,11 @@ class Album(crawler.Crawler):
         temp_path = ""
 
         try:
-            page_count = 1
             album_id_to_url_list = {}
             # 从缓存文件中读取
             cache_album_id_to_url_list = tool.json_decode(file.read_file(CACHE_FILE_PATH))
             if cache_album_id_to_url_list is None:
+                page_count = 1
                 is_over = False
                 while not is_over:
                     if not self.is_running():
