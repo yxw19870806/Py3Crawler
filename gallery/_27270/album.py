@@ -217,11 +217,7 @@ class Download(crawler.DownloadThread):
 
         photo_index = 1
         # 过滤标题中不支持的字符
-        album_title = path.filter_text(album_info["album_title"])
-        if album_title:
-            album_path = os.path.join(self.main_thread.photo_download_path, "%04d %s" % (album_info["album_id"], album_title))
-        else:
-            album_path = os.path.join(self.main_thread.photo_download_path, "%04d" % album_info["album_id"])
+        album_path = os.path.join(self.main_thread.photo_download_path, "%06d %s" % (album_info["album_id"], path.filter_text(album_info["album_title"])))
         # 设置临时目录
         self.temp_path_list.append(album_path)
         for photo_url in album_response["photo_url_list"]:
