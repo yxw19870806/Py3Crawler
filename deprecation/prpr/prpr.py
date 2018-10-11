@@ -10,7 +10,7 @@ import time
 import traceback
 from common import *
 
-POST_COUNT_PER_PAGE = 10  # 每次获取的作品数量（貌似无效）
+EACH_PAGE_POST_COUNT = 10  # 每次获取的作品数量（貌似无效）
 IS_SKIP_BLUR = False
 IS_STEP_INVALID_RESOURCE = False
 INVALID_FILE_MD5_LIST = ["72f7b6abc4dcf3472e8947671f777af0", "74d76058bab15418059fb38b45c40f81", "a0792e03453f9a5386291ded7ed41df7", "c95c5abfad14eb2075eea1d30d4fc9cd",
@@ -23,7 +23,7 @@ def get_one_page_post(account_id, timestamp):
     query_data = {
         "timestamp": timestamp,
         "userId": account_id,
-        "limit": POST_COUNT_PER_PAGE,
+        "limit": EACH_PAGE_POST_COUNT,
     }
     index_response = net.http_request(post_pagination_url, method="GET", fields=query_data, json_decode=True)
     result = {
@@ -208,7 +208,7 @@ class Download(crawler.DownloadThread):
                     break
 
             if not is_over:
-                if len(post_pagination_response["post_info_list"]) < POST_COUNT_PER_PAGE:
+                if len(post_pagination_response["post_info_list"]) < EACH_PAGE_POST_COUNT:
                     is_over = True
 
         return post_id_list

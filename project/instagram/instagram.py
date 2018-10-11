@@ -14,7 +14,7 @@ from common import *
 from common import crypto
 
 IS_LOCAL_SAVE_SESSION = False
-PHOTO_COUNT_PER_PAGE = 12
+EACH_PAGE_PHOTO_COUNT = 12  # 每次请求获取的媒体数量
 QUERY_ID = "17859156310193001"
 COOKIE_INFO = {"csrftoken": "", "mid": "", "sessionid": ""}
 SESSION_FILE_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), "session"))
@@ -112,7 +112,7 @@ def get_one_page_media(account_id, cursor):
     query_data = {
         "query_id": QUERY_ID,
         "id": account_id,
-        "first": PHOTO_COUNT_PER_PAGE,
+        "first": EACH_PAGE_PHOTO_COUNT,
     }
     if cursor:
         query_data["after"] = cursor

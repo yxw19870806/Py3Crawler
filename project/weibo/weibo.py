@@ -15,7 +15,7 @@ from common import *
 from project.meipai import meipai
 from project.weibo import weiboCommon
 
-PHOTO_COUNT_PER_PAGE = 20  # 每次请求获取的图片数量
+EACH_PAGE_PHOTO_COUNT = 20  # 每次请求获取的图片数量
 INIT_SINCE_ID = "9999999999999999"
 
 
@@ -24,7 +24,7 @@ def get_one_page_photo(account_id, page_count):
     photo_pagination_url = "http://photo.weibo.com/photos/get_all"
     query_data = {
         "uid": account_id,
-        "count": PHOTO_COUNT_PER_PAGE,
+        "count": EACH_PAGE_PHOTO_COUNT,
         "page": page_count,
         "type": "3",
     }
@@ -70,7 +70,7 @@ def get_one_page_photo(account_id, page_count):
         result_photo_info["photo_url"] = photo_info["pic_host"] + "/large/" + photo_info["pic_name"]
         result["photo_info_list"].append(result_photo_info)
     # 检测是不是还有下一页 总的图片数量 / 每页显示的图片数量 = 总的页数
-    result["is_over"] = page_count >= (photo_pagination_response.json_data["data"]["total"] * 1.0 / PHOTO_COUNT_PER_PAGE)
+    result["is_over"] = page_count >= (photo_pagination_response.json_data["data"]["total"] * 1.0 / EACH_PAGE_PHOTO_COUNT)
     return result
 
 

@@ -11,7 +11,7 @@ import time
 import traceback
 from common import *
 
-PHOTO_COUNT_PER_PAGE = 20  # 每次请求获取的图片数量
+EACH_PAGE_PHOTO_COUNT = 20  # 每次请求获取的图片数量
 
 
 # 获取账号首页
@@ -45,7 +45,7 @@ def get_account_index_page(account_name):
 def get_one_page_album(account_id, post_time):
     # https://deer-vision.tuchong.com/rest/sites/1186455/posts/2016-11-11%2011:11:11?limit=20
     album_pagination_url = "https://www.tuchong.com/rest/sites/%s/posts/%s" % (account_id, post_time)
-    query_data = {"limit": PHOTO_COUNT_PER_PAGE}
+    query_data = {"limit": EACH_PAGE_PHOTO_COUNT}
     album_pagination_response = net.http_request(album_pagination_url, method="GET", fields=query_data, json_decode=True)
     result = {
         "album_info_list": [],  # 全部图片信息

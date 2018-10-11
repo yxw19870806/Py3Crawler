@@ -11,7 +11,7 @@ import time
 import traceback
 from common import *
 
-AUDIO_COUNT_PER_PAGE = 8
+EACH_PAGE_AUDIO_COUNT = 8  # 每次请求获取的歌曲数量
 
 
 # 获取指定页数的一页歌曲信息
@@ -22,7 +22,7 @@ def get_one_page_audio(account_id, page_count):
         "format": "json",
         "share_uid": account_id,
         "start": page_count,
-        "num": AUDIO_COUNT_PER_PAGE,
+        "num": EACH_PAGE_AUDIO_COUNT,
     }
     audio_pagination_response = net.http_request(audio_pagination_url, method="GET", fields=query_data, json_decode=True)
     result = {
