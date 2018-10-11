@@ -7,7 +7,7 @@ email: hikaru870806@hotmail.com
 """
 import time
 from common import *
-from project.weibo import weibo, weiboCommon
+from project.weibo import weibo
 
 
 # 关注指定账号
@@ -18,7 +18,7 @@ def follow_account(account_id):
         "refer_flag": "1005050001_",
     }
     header_list = {"Referer": "http://weibo.com/%s/follow" % account_id}
-    cookies_list = {"SUB": weiboCommon.COOKIE_INFO["SUB"]}
+    cookies_list = {"SUB": weibo.COOKIE_INFO["SUB"]}
     follow_response = net.http_request(api_url, method="POST", fields=post_data, header_list=header_list, cookies_list=cookies_list, json_decode=True)
     if follow_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         output.print_msg("关注%s失败，请求返回结果：%s" % (account_id, crawler.request_failre(follow_response.status)))
@@ -48,9 +48,9 @@ def main():
     weibo_obj = weibo.Weibo()
 
     # 检测登录状态
-    if not weiboCommon.check_login():
+    if not weibo.check_login():
         # 如果没有获得登录相关的cookie，则模拟登录并更新cookie
-        if weiboCommon.init_session() and weiboCommon.check_login():
+        if weibo.init_session() and weibo.check_login():
             pass
         else:
             log.error("没有检测到登录信息")

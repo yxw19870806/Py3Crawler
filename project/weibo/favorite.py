@@ -10,7 +10,7 @@ import os
 import re
 from pyquery import PyQuery as pq
 from common import *
-from project.weibo import weiboCommon
+from project.weibo import weibo
 
 
 # 获取一页的收藏微博ge
@@ -18,7 +18,7 @@ def get_one_page_favorite(page_count):
     # https://www.weibo.com/fav?page=1
     favorite_pagination_url = "http://www.weibo.com/fav"
     query_data = {"page": page_count}
-    cookies_list = {"SUB": weiboCommon.COOKIE_INFO["SUB"]}
+    cookies_list = {"SUB": weibo.COOKIE_INFO["SUB"]}
     favorite_pagination_response = net.http_request(favorite_pagination_url, method="GET", fields=query_data, cookies_list=cookies_list)
     result = {
         "blog_info_list": [],  # 所有微博信息
@@ -103,12 +103,12 @@ class Favorite(crawler.Crawler):
         crawler.Crawler.__init__(self, sys_config, extra_config)
 
         # 设置全局变量，供子线程调用
-        weiboCommon.COOKIE_INFO.update(self.cookie_value)
+        weibo.COOKIE_INFO.update(self.cookie_value)
 
         # 检测登录状态
-        if not weiboCommon.check_login():
+        if not weibo.check_login():
             # 如果没有获得登录相关的cookie，则模拟登录并更新cookie
-            if weiboCommon.init_session() and weiboCommon.check_login():
+            if weibo.init_session() and weibo.check_login():
                 pass
             else:
                 log.error("没有检测到登录信息")
@@ -143,7 +143,7 @@ class Favorite(crawler.Crawler):
                     file_path = os.path.join(photo_path, "%s.%s" % (photo_count, net.get_file_type(photo_url)))
                     save_file_return = net.save_net_file(photo_url, file_path)
                     if save_file_return["status"] == 1:
-                        if weiboCommon.check_photo_invalid(file_path):
+                        if weibo.check_photo_invalid(file_path):
                             path.delete_dir_or_file(file_path)
                             log.error("微博%s的第%s张图片 %s 资源已被删除，跳过" % (blog_info["blog_id"], photo_count, photo_url))
                         else:

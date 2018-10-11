@@ -12,7 +12,7 @@ import time
 import traceback
 from pyquery import PyQuery as pq
 from common import *
-from project.weibo import weiboCommon
+from project.weibo import weibo
 
 
 # 获取指定页数的全部日志
@@ -229,7 +229,7 @@ class Download(crawler.DownloadThread):
             file_path = os.path.join(photo_path, "%02d.%s" % (photo_index, net.get_file_type(photo_url, "jpg")))
             save_file_return = net.save_net_file(photo_url, file_path)
             if save_file_return["status"] == 1:
-                if weiboCommon.check_photo_invalid(file_path):
+                if weibo.check_photo_invalid(file_path):
                     path.delete_dir_or_file(file_path)
                     self.error("第%s张图片 %s 资源已被删除，跳过" % (photo_index, photo_url))
                     continue
