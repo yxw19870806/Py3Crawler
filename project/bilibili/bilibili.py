@@ -234,6 +234,7 @@ class Download(crawler.DownloadThread):
                 if 0 < len(album_pagination_response["video_info_list"]) < EACH_PAGE_COUNT:
                     page_count += 1
                 else:
+                    # 获取的数量小于请求的数量，已经没有剩余视频了
                     is_over = True
 
         return video_info_list

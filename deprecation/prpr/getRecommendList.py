@@ -7,6 +7,8 @@ email: hikaru870806@hotmail.com
 """
 from common import *
 
+EACH_PAGE_ACCOUNT_COUNT = 50
+
 
 # 从API获取所有推荐账号
 def get_account_list_from_api():
@@ -54,13 +56,12 @@ def get_channel_from_api():
 # 调用推荐API获取全部推荐账号
 def get_channel_account_from_api(channel_id):
     page_count = 1
-    account_per_page = 50
     account_list = {}
     while True:
         api_url = "https://api.prpr.tinydust.cn/v3/channels/%s/girls" % channel_id
         query_data = {
             "page": page_count,
-            "limit": account_per_page,
+            "limit": EACH_PAGE_ACCOUNT_COUNT,
         }
         api_response = net.http_request(api_url, method="GET", fields=query_data, json_decode=True)
         if api_response.status != net.HTTP_RETURN_CODE_SUCCEED:
