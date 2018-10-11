@@ -54,10 +54,12 @@ def get_archive_page(archive_id):
     archive_url = "http://www.ivseek.com/archives/%s.html" % archive_id
     archive_response = net.http_request(archive_url, method="GET")
     result = {
+        "is_delete": "",  # 是否已删除
         "video_title": "",  # 标题
         "video_info_list": [],  # 全部视频信息
     }
     if archive_response.status == 404:
+        result["is_delete"] = True
         return result
     elif archive_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(archive_response.status))
@@ -193,10 +195,9 @@ class IvSeek(crawler.Crawler):
                     archive_response = get_archive_page(archive_id)
                 except crawler.CrawlerException as e:
                     log.error("第%s个视频解析失败，原因：%s" % (archive_id, e.message))
-                    archive_id += 1
                     continue
 
-                if len(archive_response["video_info_list"]) == 0:
+                if archive_response["is_delete"]:
                     continue
 
                 for video_info in archive_response["video_info_list"]:
