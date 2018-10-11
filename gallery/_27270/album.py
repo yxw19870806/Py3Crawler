@@ -5,6 +5,7 @@ http://www.27270.com/
 email: hikaru870806@hotmail.com
 如有问题或建议请联系
 """
+import json
 import os
 import time
 import traceback
@@ -17,6 +18,7 @@ SUB_PATH_LIST = {
     "ent/rentiyishu": "32",
     "game/cosplaymeitu": "20",
 }
+CACHE_FILE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "cache"))
 
 
 # 获取图集首页
@@ -154,37 +156,48 @@ class Download(crawler.DownloadThread):
 
     # 获取所有可下载图集
     def get_crawl_list(self):
-        page_count = 1
         album_info_list = []
-        temp_album_info_list = {}
-        is_over = False
-        # 获取全部图集
-        while not is_over:
-            self.main_thread_check()  # 检测主线程运行状态
-            self.step("开始解析第%s页图集" % page_count)
+        album_id_to_url_list = {}
+        # 从缓存文件中读取
+        cache_file_path = os.path.join(CACHE_FILE_DIR, "%s.json" % SUB_PATH_LIST[self.sub_path])
+        cache_album_id_to_url_list = tool.json_decode(file.read_file(cache_file_path))
+        if cache_album_id_to_url_list is None:
+            page_count = 1
+            is_over = False
+            # 获取全部图集
+            while not is_over:
+                self.main_thread_check()  # 检测主线程运行状态
+                self.step("开始解析第%s页图集" % page_count)
 
-            # 获取一页图集
-            try:
-                album_response = get_one_page_album(self.sub_path, page_count)
-            except crawler.CrawlerException as e:
-                self.error("第%s页图集解析失败，原因：%s" % (page_count, e.message))
-                raise
+                # 获取一页图集
+                try:
+                    album_response = get_one_page_album(self.sub_path, page_count)
+                except crawler.CrawlerException as e:
+                    self.error("第%s页图集解析失败，原因：%s" % (page_count, e.message))
+                    raise
 
-            self.trace("第%s页解析的全部图集：%s" % (page_count, album_response["album_info_list"]))
-            self.step("第%s页解析获取%s个图集" % (page_count, len(album_response["album_info_list"])))
+                self.trace("第%s页解析的全部图集：%s" % (page_count, album_response["album_info_list"]))
+                self.step("第%s页解析获取%s个图集" % (page_count, len(album_response["album_info_list"])))
 
-            temp_album_info_list.update(album_response["album_info_list"])
+                album_id_to_url_list.update(album_response["album_info_list"])
 
-            if album_response["is_over"]:
-                is_over = True
-            else:
-                page_count += 1
+                if album_response["is_over"]:
+                    is_over = True
+                else:
+                    page_count += 1
+
+            # 保存到缓存文件中
+            file.write_file(json.dumps(album_id_to_url_list), cache_file_path, file.WRITE_FILE_TYPE_REPLACE)
+        else:
+            # 写入文件后key变成string类型了
+            for temp in cache_album_id_to_url_list:
+                album_id_to_url_list[int(temp)] = cache_album_id_to_url_list[temp]
 
         # 获取全部还未下载过需要解析的图集
-        for album_id in sorted(temp_album_info_list.keys(), reverse=True):
+        for album_id in sorted(album_id_to_url_list.keys(), reverse=True):
             # 检查是否达到存档记录
             if album_id > int(self.account_info[1]):
-                album_info_list.append(temp_album_info_list[album_id])
+                album_info_list.append(album_id_to_url_list[album_id])
             else:
                 break
 
