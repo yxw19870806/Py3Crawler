@@ -144,7 +144,7 @@ class ChangBa(crawler.Crawler):
 
         # 初始化参数
         sys_config = {
-            crawler.SYS_DOWNLOAD_VIDEO: True,
+            crawler.SYS_DOWNLOAD_AUDIO: True,
         }
         crawler.Crawler.__init__(self, sys_config)
 
@@ -178,7 +178,7 @@ class ChangBa(crawler.Crawler):
         # 重新排序保存存档文件
         crawler.rewrite_save_file(self.temp_save_data_path, self.save_data_path)
 
-        log.step("全部下载完毕，耗时%s秒，共计歌曲%s首" % (self.get_run_time(), self.total_video_count))
+        log.step("全部下载完毕，耗时%s秒，共计歌曲%s首" % (self.get_run_time(), self.total_audio_count))
 
 
 class Download(crawler.DownloadThread):
@@ -260,7 +260,7 @@ class Download(crawler.DownloadThread):
         self.step("开始下载歌曲%s《%s》 %s" % (audio_info["audio_key"], audio_info["audio_title"], audio_play_response["audio_url"]))
 
         file_type = audio_play_response["audio_url"].split(".")[-1]
-        file_path = os.path.join(self.main_thread.video_download_path, self.display_name, "%010d - %s.%s" % (audio_info["audio_id"], path.filter_text(audio_info["audio_title"]), file_type))
+        file_path = os.path.join(self.main_thread.audio_download_path, self.display_name, "%010d - %s.%s" % (audio_info["audio_id"], path.filter_text(audio_info["audio_title"]), file_type))
         save_file_return = net.save_net_file(audio_play_response["audio_url"], file_path)
         if save_file_return["status"] == 1:
             self.step("歌曲%s《%s》下载成功" % (audio_info["audio_key"], audio_info["audio_title"]))
@@ -270,7 +270,7 @@ class Download(crawler.DownloadThread):
 
         # 歌曲下载完毕
         if save_file_return["status"] == 1:
-            self.total_video_count += 1  # 计数累加
+            self.total_audio_count += 1  # 计数累加
         self.account_info[1] = str(audio_info["audio_id"])  # 设置存档
 
     def run(self):
@@ -304,9 +304,9 @@ class Download(crawler.DownloadThread):
         # 保存最后的信息
         with self.thread_lock:
             file.write_file("\t".join(self.account_info), self.main_thread.temp_save_data_path)
-            self.main_thread.total_video_count += self.total_video_count
+            self.main_thread.total_audio_count += self.total_audio_count
             self.main_thread.account_list.pop(self.account_id)
-        self.step("下载完毕，总共获得%s首歌曲" % self.total_video_count)
+        self.step("下载完毕，总共获得%s首歌曲" % self.total_audio_count)
         self.notify_main_thread()
 
 
