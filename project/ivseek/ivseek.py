@@ -14,6 +14,24 @@ from pyquery import PyQuery as pq
 from common import *
 from project.nicoNico import nicoNico
 
+DONE_SING = "~"
+
+
+# 读取存档文件
+def read_save_data(save_data_path):
+    result_list = []
+    if not os.path.exists(save_data_path):
+        return result_list
+    for single_save_data in file.read_file(save_data_path, file.READ_FILE_TYPE_LINE):
+        single_save_data = single_save_data.replace("\xef\xbb\xbf", "").replace("\n", "").replace("\r", "")
+        if len(single_save_data) == 0:
+            continue
+        single_save_list = single_save_data.split("\t")
+        while len(single_save_list) < 5:
+            single_save_list.append("")
+        result_list.append(single_save_list)
+    return result_list
+
 
 # 获取首页
 def get_index_page():
