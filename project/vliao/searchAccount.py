@@ -7,7 +7,7 @@ email: hikaru870806@hotmail.com
 如有问题或建议请联系
 """
 from common import *
-from project.vliao import vLiao, vLiaoCommon
+from project.vliao import vLiao
 
 SEARCH_TYPE_MATCH = "1"
 SEARCH_TYPE_LOOKUP = "2"
@@ -17,8 +17,8 @@ SEARCH_TYPE_LOOKUP = "2"
 def _search_account(account_name):
     search_url = "http://sp41.vliao12.com/user/search"
     post_data = {
-        "userId": vLiaoCommon.USER_ID,
-        "userKey": vLiaoCommon.USER_KEY,
+        "userId": vLiao.USER_ID,
+        "userKey": vLiao.USER_KEY,
         "keyword": account_name,
     }
     search_response = net.http_request(search_url, method="POST", fields=post_data, json_decode=True)

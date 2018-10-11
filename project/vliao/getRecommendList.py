@@ -7,7 +7,7 @@ email: hikaru870806@hotmail.com
 如有问题或建议请联系
 """
 from common import *
-from project.vliao import vLiao, vLiaoCommon
+from project.vliao import vLiao
 
 TAG_ID_LIST = [1]
 
@@ -36,8 +36,8 @@ def get_tag_account_list(tag_id):
         log.step("开始解析tag %s第%s页推荐账号" % (tag_id, page_count))
         account_pagination_url = "http://v3.vliao3.xyz/v31/homepage"
         post_data = {
-            "userId": vLiaoCommon.USER_ID,
-            "userKey": vLiaoCommon.USER_KEY,
+            "userId": vLiao.USER_ID,
+            "userKey": vLiao.USER_KEY,
             "tagId": tag_id,
             "page": page_count,
         }
