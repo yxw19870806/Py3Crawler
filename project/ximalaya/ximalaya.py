@@ -103,7 +103,7 @@ class XiMaLaYa(crawler.Crawler):
 
         # 初始化参数
         sys_config = {
-            crawler.SYS_DOWNLOAD_VIDEO: True,
+            crawler.SYS_DOWNLOAD_AUDIO: True,
         }
         crawler.Crawler.__init__(self, sys_config)
 
@@ -137,7 +137,7 @@ class XiMaLaYa(crawler.Crawler):
         # 重新排序保存存档文件
         crawler.rewrite_save_file(self.temp_save_data_path, self.save_data_path)
 
-        log.step("全部下载完毕，耗时%s秒，共计音频%s首" % (self.get_run_time(), self.total_video_count))
+        log.step("全部下载完毕，耗时%s秒，共计音频%s首" % (self.get_run_time(), self.total_audio_count))
 
 
 class Download(crawler.DownloadThread):
@@ -148,7 +148,7 @@ class Download(crawler.DownloadThread):
             self.display_name = self.account_info[2]
         else:
             self.display_name = self.account_info[0]
-        self.total_video_count = 0
+        self.total_audio_count = 0
         self.step("开始")
 
     # 获取所有可下载音频
@@ -210,7 +210,7 @@ class Download(crawler.DownloadThread):
         audio_url = audio_play_response["audio_url"]
         self.step("开始下载音频%s《%s》 %s" % (audio_info["audio_id"], audio_info["audio_title"], audio_url))
 
-        file_path = os.path.join(self.main_thread.video_download_path, self.display_name, "%09d - %s.%s" % (audio_info["audio_id"], path.filter_text(audio_info["audio_title"]), net.get_file_type(audio_url)))
+        file_path = os.path.join(self.main_thread.audio_download_path, self.display_name, "%09d - %s.%s" % (audio_info["audio_id"], path.filter_text(audio_info["audio_title"]), net.get_file_type(audio_url)))
         save_file_return = net.save_net_file(audio_url, file_path)
         if save_file_return["status"] == 1:
             self.step("音频%s《%s》下载成功" % (audio_info["audio_id"], audio_info["audio_title"]))
@@ -219,7 +219,7 @@ class Download(crawler.DownloadThread):
             return
 
         # 音频下载完毕
-        self.total_video_count += 1  # 计数累加
+        self.total_audio_count += 1  # 计数累加
         self.account_info[1] = str(audio_info["audio_id"])  # 设置存档记录
 
     def run(self):
@@ -246,9 +246,9 @@ class Download(crawler.DownloadThread):
         # 保存最后的信息
         with self.thread_lock:
             file.write_file("\t".join(self.account_info), self.main_thread.temp_save_data_path)
-            self.main_thread.total_video_count += self.total_video_count
+            self.main_thread.total_audio_count += self.total_audio_count
             self.main_thread.account_list.pop(self.account_id)
-        self.step("下载完毕，总共获得%s首音频" % self.total_video_count)
+        self.step("下载完毕，总共获得%s首音频" % self.total_audio_count)
         self.notify_main_thread()
 
 
