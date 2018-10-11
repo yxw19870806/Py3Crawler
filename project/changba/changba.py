@@ -231,7 +231,7 @@ class Download(crawler.DownloadThread):
             if not is_over:
                 # 获取的歌曲数量少于1页的上限，表示已经到结束了
                 # 如果歌曲数量正好是页数上限的倍数，则由下一页获取是否为空判断
-                if 0 < len(audit_pagination_response["audio_info_list"]) < self.EACH_PAGE_AUDIO_COUNT:
+                if len(audit_pagination_response["audio_info_list"]) < self.EACH_PAGE_AUDIO_COUNT:
                     is_over = True
                 else:
                     page_count += 1

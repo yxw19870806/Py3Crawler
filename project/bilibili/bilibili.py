@@ -231,11 +231,12 @@ class Download(crawler.DownloadThread):
                     break
 
             if not is_over:
-                if 0 < len(album_pagination_response["video_info_list"]) < EACH_PAGE_COUNT:
-                    page_count += 1
-                else:
-                    # 获取的数量小于请求的数量，已经没有剩余视频了
+                # 获取的视频数量少于1页的上限，表示已经到结束了
+                # 如果视频数量正好是页数上限的倍数，则由下一页获取是否为空判断
+                if len(album_pagination_response["video_info_list"]) < EACH_PAGE_COUNT:
                     is_over = True
+                else:
+                    page_count += 1
 
         return video_info_list
 
@@ -274,10 +275,12 @@ class Download(crawler.DownloadThread):
                     break
 
             if not is_over:
-                if 0 < len(album_pagination_response["album_id_list"]) < EACH_PAGE_COUNT:
-                    page_count += 1
-                else:
+                # 获取的相册数量少于1页的上限，表示已经到结束了
+                # 如果相册数量正好是页数上限的倍数，则由下一页获取是否为空判断
+                if len(album_pagination_response["album_id_list"]) < EACH_PAGE_COUNT:
                     is_over = True
+                else:
+                    page_count += 1
 
         return album_id_list
 
