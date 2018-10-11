@@ -11,7 +11,7 @@ import time
 import traceback
 from common import *
 
-PHOTO_COUNT_PER_PAGE = 20  # 每次请求获取的图片数量
+EACH_PAGE_PHOTO_COUNT = 20  # 每次请求获取的图片数量
 
 
 # 获取账号首页
@@ -45,7 +45,7 @@ def get_account_index_page(account_name):
 def get_one_page_album(account_id, post_time):
     # https://deer-vision.tuchong.com/rest/sites/1186455/posts/2016-11-11%2011:11:11?limit=20
     album_pagination_url = "https://www.tuchong.com/rest/sites/%s/posts/%s" % (account_id, post_time)
-    query_data = {"limit": PHOTO_COUNT_PER_PAGE}
+    query_data = {"limit": EACH_PAGE_PHOTO_COUNT}
     album_pagination_response = net.http_request(album_pagination_url, method="GET", fields=query_data, json_decode=True)
     result = {
         "album_info_list": [],  # 全部图片信息
@@ -164,12 +164,12 @@ class Download(crawler.DownloadThread):
                 self.error("%s后一页相册解析失败，原因：%s" % (post_time, e.message))
                 raise
 
-            # 如果为空，表示已经取完了
-            if len(album_pagination_response["album_info_list"]) == 0:
-                break
-
             self.trace("%s后一页解析的全部相册：%s" % (post_time, album_pagination_response["album_info_list"]))
             self.step("%s后一页解析获取%s个相册" % (post_time, len(album_pagination_response["album_info_list"])))
+
+            # 已经没有相册了
+            if len(album_pagination_response["album_info_list"]) == 0:
+                break
 
             # 寻找这一页符合条件的相册
             for album_info in album_pagination_response["album_info_list"]:

@@ -12,7 +12,7 @@ import traceback
 from pyquery import PyQuery as pq
 from common import *
 
-PHOTO_COUNT_PER_PAGE = 50
+EACH_PAGE_PHOTO_COUNT = 50  # 每次请求获取的图片数量
 IS_LOGIN = True
 COOKIE_INFO = {}
 
@@ -125,7 +125,7 @@ def get_one_page_photo(user_id, page_count, api_key, csrf, request_id):
         "safe_search": 3,
         "content_type": 7,
         "get_user_info": 0,
-        "per_page": PHOTO_COUNT_PER_PAGE,
+        "per_page": EACH_PAGE_PHOTO_COUNT,
         "page": page_count,
         "user_id": user_id,
         "api_key": api_key,

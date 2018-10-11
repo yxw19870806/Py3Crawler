@@ -8,6 +8,7 @@ email: hikaru870806@hotmail.com
 """
 import time
 from common import *
+from project.nanaGoGo import nanaGoGo
 
 COOKIE_INFO = {}
 
@@ -47,11 +48,11 @@ def main():
         output.print_msg("没有检测到登录信息")
         tool.process_exit()
 
-    # 读取存档文件
-    account_list = crawler.read_save_data(crawler.quickly_get_save_data_path(), 0, [])
+    # 初始化类
+    nanaGoGo_obj = nanaGoGo.NanaGoGo()
 
     count = 0
-    for account_id in account_list:
+    for account_id in nanaGoGo_obj.account_list:
         if follow_account(account_id):
             count += 1
         time.sleep(0.1)

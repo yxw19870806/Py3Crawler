@@ -14,7 +14,7 @@ from functools import reduce
 from pyquery import PyQuery as pq
 from common import *
 
-VIDEO_COUNT_PER_PAGE = 20  # 每次请求获取的视频数量
+EACH_PAGE_VIDEO_COUNT = 20  # 每次请求获取的视频数量
 
 
 # 获取指定页数的全部视频
@@ -24,7 +24,7 @@ def get_one_page_video(account_id, page_count):
     query_data = {
         "uid": account_id,
         "page": page_count,
-        "count": VIDEO_COUNT_PER_PAGE,
+        "count": EACH_PAGE_VIDEO_COUNT,
         "single_column": 1,
     }
     video_pagination_response = net.http_request(video_pagination_url, method="GET", fields=query_data, json_decode=True)
@@ -193,10 +193,6 @@ class Download(crawler.DownloadThread):
                 self.error("第%s页视频解析失败，原因：%s" % (page_count, e.message))
                 raise
 
-            # 已经没有视频了
-            if len(video_pagination_response["video_info_list"]) == 0:
-                break
-
             self.trace("第%s页解析的全部视频：%s" % (page_count, video_pagination_response["video_info_list"]))
             self.step("第%s页解析获取%s个视频" % (page_count, len(video_pagination_response["video_info_list"])))
 
@@ -215,11 +211,12 @@ class Download(crawler.DownloadThread):
                     break
 
             if not is_over:
-                if len(video_pagination_response["video_info_list"]) >= VIDEO_COUNT_PER_PAGE:
-                    page_count += 1
-                else:
-                    # 获取的数量小于请求的数量，已经没有剩余视频了
+                # 获取的视频数量少于1页的上限，表示已经到结束了
+                # 如果视频数量正好是页数上限的倍数，则由下一页获取是否为空判断
+                if len(video_pagination_response["video_info_list"]) < EACH_PAGE_VIDEO_COUNT:
                     is_over = True
+                else:
+                    page_count += 1
 
         return video_info_list
 

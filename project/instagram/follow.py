@@ -8,15 +8,15 @@ email: hikaru870806@hotmail.com
 """
 import time
 from common import *
+from project.instagram import instagram
 
-COOKIE_INFO = {}
 IS_FOLLOW_PRIVATE_ACCOUNT = False  # 是否对私密账号发出关注请求
 
 
 # 获取账号首页
 def get_account_index_page(account_name):
     account_index_url = "https://www.instagram.com/%s" % account_name
-    account_index_response = net.http_request(account_index_url, method="GET", cookies_list=COOKIE_INFO)
+    account_index_response = net.http_request(account_index_url, method="GET", cookies_list=instagram.COOKIE_INFO)
     result = {
         "is_follow": False,  # 是否已经关注
         "is_private": False,  # 是否私密账号
@@ -42,8 +42,8 @@ def get_account_index_page(account_name):
 # 关注指定账号
 def follow_account(account_name, account_id):
     follow_api_url = "https://www.instagram.com/web/friendships/%s/follow/" % account_id
-    header_list = {"Referer": "https://www.instagram.com/", "x-csrftoken": COOKIE_INFO["csrftoken"], "X-Instagram-AJAX": 1}
-    follow_response = net.http_request(follow_api_url, method="POST", header_list=header_list, cookies_list=COOKIE_INFO, json_decode=True)
+    header_list = {"Referer": "https://www.instagram.com/", "x-csrftoken": instagram.COOKIE_INFO["csrftoken"], "X-Instagram-AJAX": 1}
+    follow_response = net.http_request(follow_api_url, method="POST", header_list=header_list, cookies_list=instagram.COOKIE_INFO, json_decode=True)
     if follow_response.status == net.HTTP_RETURN_CODE_SUCCEED:
         if not crawler.check_sub_key(("status", "result"), follow_response.json_data):
             output.print_msg("关注%s失败，返回内容不匹配\n%s" % (account_name, follow_response.json_data))
@@ -65,24 +65,11 @@ def follow_account(account_name, account_id):
 
 
 def main():
-    config = crawler._get_config()
-    # 获取cookies
-    all_cookie_from_browser = crawler.quickly_get_all_cookies_from_browser(config)
-    if "www.instagram.com" in all_cookie_from_browser:
-        for cookie_key in all_cookie_from_browser["www.instagram.com"]:
-            COOKIE_INFO[cookie_key] = all_cookie_from_browser["www.instagram.com"][cookie_key]
-    else:
-        output.print_msg("没有检测到登录信息")
-        tool.process_exit()
-    # 设置代理
-    crawler.quickly_set_proxy(config)
-    # 存档位置
-    save_data_path = crawler.quickly_get_save_data_path(config)
-    # 读取存档文件
-    account_list = crawler.read_save_data(save_data_path, 0, [])
+    # 初始化类
+    instagram_obj = instagram.Instagram()
 
     count = 0
-    for account_name in sorted(account_list.keys()):
+    for account_name in sorted(instagram_obj.account_list.keys()):
         try:
             account_index_response = get_account_index_page(account_name)
         except crawler.CrawlerException as e:

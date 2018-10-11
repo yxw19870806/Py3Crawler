@@ -12,7 +12,7 @@ import traceback
 from pyquery import PyQuery as pq
 from common import *
 
-PHOTO_COUNT_PER_PAGE = 20
+EACH_PAGE_BLOG_COUNT = 20  # 每次请求获取的日志数量
 
 
 # 获取指定页数的全部日志
@@ -23,7 +23,7 @@ def get_one_page_blog(account_id, page_count):
         "cd": "member",
         "ct": "%02d" % int(account_id),
         "page": str(page_count - 1),
-        "rw": str(PHOTO_COUNT_PER_PAGE),
+        "rw": str(EACH_PAGE_BLOG_COUNT),
     }
     blog_pagination_response = net.http_request(blog_pagination_url, method="GET", fields=query_data)
     result = {
