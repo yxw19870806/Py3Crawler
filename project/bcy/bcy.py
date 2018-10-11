@@ -48,7 +48,7 @@ def check_login():
             if home_response.data.decode(errors="ignore").find('<a href="/login">登录</a>') == -1:
                 return True
     # 没有浏览器cookies，尝试读取文件
-    else:
+    elif SESSION_DATA_PATH is not None:
         # 从文件中读取账号密码
         account_data = tool.json_decode(crypto.Crypto().decrypt(file.read_file(SESSION_DATA_PATH)), {})
         if crawler.check_sub_key(("email", "password"), account_data):
@@ -68,7 +68,7 @@ def login_from_console():
             input_str = input_str.lower()
             if input_str in ["y", "yes"]:
                 if _do_login(email, password):
-                    if IS_LOCAL_SAVE_SESSION:
+                    if IS_LOCAL_SAVE_SESSION and SESSION_DATA_PATH is not None:
                         file.write_file(crypto.Crypto().encrypt(json.dumps({"email": email, "password": password})), SESSION_DATA_PATH, file.WRITE_FILE_TYPE_REPLACE)
                     return True
                 return False

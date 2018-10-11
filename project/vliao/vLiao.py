@@ -22,7 +22,7 @@ SESSION_DATA_PATH = None
 def check_login():
     global USER_ID, USER_KEY
     # 文件存在，检查格式是否正确
-    if os.path.exists(SESSION_DATA_PATH):
+    if SESSION_DATA_PATH is not None:
         api_info = tool.json_decode(crypto.Crypto().decrypt(file.read_file(SESSION_DATA_PATH)))
         if crawler.check_sub_key(("user_id", "user_key"), api_info):
             # 验证token是否有效
