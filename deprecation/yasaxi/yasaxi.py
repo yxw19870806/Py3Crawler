@@ -12,7 +12,7 @@ import traceback
 from common import *
 from . import yasaxiCommon
 
-PHOTO_COUNT_PER_PAGE = 20
+EACH_PAGE_PHOTO_COUNT = 20  # 每次请求获取的图片数量
 
 
 # 获取指定页数的全部日志
@@ -21,7 +21,7 @@ def get_one_page_photo(account_id, cursor):
     query_data = {
         "userId": account_id,
         "cursor": cursor,
-        "count": PHOTO_COUNT_PER_PAGE,
+        "count": EACH_PAGE_PHOTO_COUNT,
     }
     header_list = {
         "x-access-token": yasaxiCommon.ACCESS_TOKEN,

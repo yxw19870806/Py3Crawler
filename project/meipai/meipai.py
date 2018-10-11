@@ -14,7 +14,7 @@ from functools import reduce
 from pyquery import PyQuery as pq
 from common import *
 
-VIDEO_COUNT_PER_PAGE = 20  # 每次请求获取的视频数量
+EACH_PAGE_VIDEO_COUNT = 20  # 每次请求获取的视频数量
 
 
 # 获取指定页数的全部视频
@@ -24,7 +24,7 @@ def get_one_page_video(account_id, page_count):
     query_data = {
         "uid": account_id,
         "page": page_count,
-        "count": VIDEO_COUNT_PER_PAGE,
+        "count": EACH_PAGE_VIDEO_COUNT,
         "single_column": 1,
     }
     video_pagination_response = net.http_request(video_pagination_url, method="GET", fields=query_data, json_decode=True)
@@ -215,7 +215,7 @@ class Download(crawler.DownloadThread):
                     break
 
             if not is_over:
-                if len(video_pagination_response["video_info_list"]) >= VIDEO_COUNT_PER_PAGE:
+                if len(video_pagination_response["video_info_list"]) >= EACH_PAGE_VIDEO_COUNT:
                     page_count += 1
                 else:
                     # 获取的数量小于请求的数量，已经没有剩余视频了

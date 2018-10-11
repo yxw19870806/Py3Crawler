@@ -11,7 +11,7 @@ import time
 import traceback
 from common import *
 
-VIDEO_COUNT_PER_PAGE = 10  # 每次请求获取的视频数量
+EACH_PAGE_VIDEO_COUNT = 10  # 每次请求获取的视频数量
 
 
 # 获取指定页数的全部视频
@@ -19,7 +19,7 @@ def get_one_page_video(account_id, page_count):
     # https://v.xiaokaxiu.com/video/web/get_member_videos?memberid=562273&limit=10&page=1
     video_pagination_url = "https://v.xiaokaxiu.com/video/web/get_member_videos"
     query_data = {
-        "limit": VIDEO_COUNT_PER_PAGE,
+        "limit": EACH_PAGE_VIDEO_COUNT,
         "memberid": account_id,
         "page": page_count,
     }
@@ -151,7 +151,7 @@ class Download(crawler.DownloadThread):
                     break
 
             if not is_over:
-                if len(video_pagination_response["video_info_list"]) >= VIDEO_COUNT_PER_PAGE:
+                if len(video_pagination_response["video_info_list"]) >= EACH_PAGE_VIDEO_COUNT:
                     page_count += 1
                 else:
                     # 获取的数量小于请求的数量，已经没有剩余视频了

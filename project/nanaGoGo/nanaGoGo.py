@@ -12,7 +12,7 @@ import traceback
 from common import *
 
 INIT_TARGET_ID = "99999"
-MESSAGE_COUNT_PER_PAGE = 30
+EACH_PAGE_BLOG_COUNT = 30  # 每次请求获取的日志数量
 
 
 # 获取talk首页
@@ -29,7 +29,7 @@ def get_one_page_blog(account_name, target_id):
     blog_pagination_url = "https://api.7gogo.jp/web/v2/talks/%s/images" % account_name
     query_data = {
         "targetId": target_id,
-        "limit": MESSAGE_COUNT_PER_PAGE,
+        "limit": EACH_PAGE_BLOG_COUNT,
         "direction": "PREV",
     }
     blog_pagination_response = net.http_request(blog_pagination_url, method="GET", fields=query_data, json_decode=True)
