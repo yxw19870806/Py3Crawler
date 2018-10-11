@@ -47,15 +47,6 @@ def main():
     # 初始化类
     weibo_obj = weibo.Weibo()
 
-    # 检测登录状态
-    if not weibo.check_login():
-        # 如果没有获得登录相关的cookie，则模拟登录并更新cookie
-        if weibo.init_session() and weibo.check_login():
-            pass
-        else:
-            log.error("没有检测到登录信息")
-            tool.process_exit()
-
     # 读取存档文件
     for account_id in sorted(weibo_obj.account_list.keys()):
         while not follow_account(account_id):
