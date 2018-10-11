@@ -178,7 +178,6 @@ class Download(crawler.DownloadThread):
 
     # 获取所有可下载作品
     def get_crawl_list(self):
-        page_count = 1
         post_id_list = []
         is_over = False
         timestamp = int(time.time() * 1000)
@@ -194,7 +193,8 @@ class Download(crawler.DownloadThread):
                 log.error(self.account_name + " 首页解析失败，原因：%s" % e.message)
                 raise
 
-            log.trace(self.account_name + " 第%s页解析的全部作品：%s" % (page_count, post_pagination_response["post_info_list"]))
+            log.trace(self.account_name + " %s后一页解析的全部作品：%s" % (timestamp, post_pagination_response["post_info_list"]))
+            log.step(self.account_name + " %s后一页解析获取%s个作品" % (timestamp, len(post_pagination_response["post_info_list"])))
 
             # 寻找这一页符合条件的媒体
             for post_info in post_pagination_response["post_info_list"]:
