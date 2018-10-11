@@ -6,13 +6,45 @@ http://share.yasaxi.com/share.html
 email: hikaru870806@hotmail.com
 如有问题或建议请联系
 """
+import json
 import os
 import time
 import traceback
 from common import *
-from . import yasaxiCommon
+from common import crypto
 
 EACH_PAGE_PHOTO_COUNT = 20  # 每次请求获取的图片数量
+ACCESS_TOKEN = ""
+AUTH_TOKEN = ""
+ZHEZHE_INFO = ""
+session_file_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "session"))
+
+
+# 从文件中获取用户信息
+def get_token_from_file():
+    account_data = tool.json_decode(crypto.Crypto().decrypt(file.read_file(session_file_path)))
+    if account_data is None:
+        return False
+    if crawler.check_sub_key(("access_token", "auth_token", "zhezhe_info"), account_data):
+        global ACCESS_TOKEN, AUTH_TOKEN, ZHEZHE_INFO
+        ACCESS_TOKEN = account_data["access_token"]
+        AUTH_TOKEN = account_data["auth_token"]
+        ZHEZHE_INFO = account_data["zhezhe_info"]
+        return True
+    return False
+
+
+# 输入token并加密保存到文件中
+def set_token_to_file():
+    access_token = input(crawler.get_time() + " 请输入access_token: ")
+    auth_token = input(crawler.get_time() + " 请输入auth_token: ")
+    zhezhe_info = input(crawler.get_time() + " 请输入zhezhe_info: ")
+    account_data = {
+        "access_token": access_token,
+        "auth_token": auth_token,
+        "zhezhe_info": zhezhe_info,
+    }
+    file.write_file(crypto.Crypto().encrypt(json.dumps(account_data)), session_file_path, file.WRITE_FILE_TYPE_REPLACE)
 
 
 # 获取指定页数的全部日志
@@ -24,9 +56,9 @@ def get_one_page_photo(account_id, cursor):
         "count": EACH_PAGE_PHOTO_COUNT,
     }
     header_list = {
-        "x-access-token": yasaxiCommon.ACCESS_TOKEN,
-        "x-auth-token": yasaxiCommon.AUTH_TOKEN,
-        "x-zhezhe-info": yasaxiCommon.ZHEZHE_INFO,
+        "x-access-token": ACCESS_TOKEN,
+        "x-auth-token": AUTH_TOKEN,
+        "x-zhezhe-info": ZHEZHE_INFO,
         "User-Agent": "User-Agent: Dalvik/1.6.0 (Linux; U; Android 4.4.2; Nexus 6 Build/KOT49H)",
     }
     result = {
@@ -127,11 +159,11 @@ class Yasaxi(crawler.Crawler):
         self.account_list = crawler.read_save_data(self.save_data_path, 0, ["", ""])
 
         # 从文件中宏读取账号信息（访问token）
-        if not yasaxiCommon.get_token_from_file():
+        if not get_token_from_file():
             while True:
                 input_str = input(crawler.get_time() + " 未检测到api token，是否手动输入(y)es / (N)o：").lower()
                 if input_str in ["y", "yes"]:
-                    yasaxiCommon.set_token_to_file()
+                    set_token_to_file()
                     break
                 elif input_str in ["n", "no"]:
                     return

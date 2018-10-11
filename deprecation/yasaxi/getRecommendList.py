@@ -6,7 +6,7 @@ email: hikaru870806@hotmail.com
 如有问题或建议请联系
 """
 from common import *
-from deprecation.yasaxi import yasaxi, yasaxiCommon
+from deprecation.yasaxi import yasaxi
 
 
 # 调用推荐API获取全部推荐账号
@@ -14,8 +14,8 @@ def get_account_from_api():
     api_url = "https://api.yasaxi.com/users/recommend"
     query_data = {"tag": ""}
     header_list = {
-        "x-auth-token": yasaxiCommon.AUTH_TOKEN,
-        "x-zhezhe-info": yasaxiCommon.ZHEZHE_INFO
+        "x-auth-token": yasaxi.AUTH_TOKEN,
+        "x-zhezhe-info": yasaxi.ZHEZHE_INFO
     }
     account_list = {}
     api_response = net.http_request(api_url, method="GET", fields=query_data, header_list=header_list, json_decode=True)
