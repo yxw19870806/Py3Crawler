@@ -28,12 +28,11 @@ def main():
                 account_id_list.append(single_save_list[3])
             # 增加已完成标记
             single_save_list[4] = ivseek.DONE_SING
-    youtube_save_data_list = crawler.read_save_data(youtube_obj.save_data_path, 0, [])
     for account_id in account_id_list:
-        if account_id not in youtube_save_data_list:
-            youtube_save_data_list[account_id] = [account_id]
+        if account_id not in youtube_obj.account_list:
+            youtube_obj.account_list[account_id] = [account_id]
     file.write_file(tool.list_to_string(save_data_list), ivseek_obj.save_data_path, file.WRITE_FILE_TYPE_REPLACE)
-    file.write_file(tool.list_to_string(youtube_save_data_list.values()), youtube_obj.save_data_path, file.WRITE_FILE_TYPE_REPLACE)
+    file.write_file(tool.list_to_string(youtube_obj.account_list.values()), youtube_obj.save_data_path, file.WRITE_FILE_TYPE_REPLACE)
 
 
 if __name__ == "__main__":
