@@ -101,8 +101,11 @@ def get_archive_page(archive_id):
             js_data = tool.json_decode(pq(video_play_response_content).find("#js-initial-watch-data").attr("data-api-data"))
             if js_data is None or not crawler.check_sub_key(("owner",), js_data):
                 raise crawler.CrawlerException("视频播放页 %s 截取视频信息失败，%s" % (result_video_info["video_url"], crawler.request_failre(video_play_response.status)))
-            if js_data["owner"] is not None and crawler.check_sub_key(("id",), js_data["owner"]):
-                result_video_info["account_id"] = js_data["owner"]["id"]
+            if js_data["owner"] is not None:
+                if crawler.check_sub_key(("id",), js_data["owner"]):
+                    result_video_info["account_id"] = js_data["owner"]["id"]
+                else:
+                    log.notice("视频 %s 发布账号截取失败\n%s" % (result_video_info["video_url"], video_play_response_content))
         # http://www.dailymotion.com/embed/video/x5oi0x
         elif video_url.find("//www.dailymotion.com/") >= 0:
             video_url = video_url.replace("http://", "https://")
