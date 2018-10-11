@@ -17,12 +17,12 @@ EACH_PAGE_PHOTO_COUNT = 20  # 每次请求获取的图片数量
 ACCESS_TOKEN = ""
 AUTH_TOKEN = ""
 ZHEZHE_INFO = ""
-session_file_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "session"))
+SESSION_DATA_PATH = None
 
 
 # 从文件中获取用户信息
 def get_token_from_file():
-    account_data = tool.json_decode(crypto.Crypto().decrypt(file.read_file(session_file_path)))
+    account_data = tool.json_decode(crypto.Crypto().decrypt(file.read_file(SESSION_DATA_PATH)))
     if account_data is None:
         return False
     if crawler.check_sub_key(("access_token", "auth_token", "zhezhe_info"), account_data):
@@ -44,7 +44,7 @@ def set_token_to_file():
         "auth_token": auth_token,
         "zhezhe_info": zhezhe_info,
     }
-    file.write_file(crypto.Crypto().encrypt(json.dumps(account_data)), session_file_path, file.WRITE_FILE_TYPE_REPLACE)
+    file.write_file(crypto.Crypto().encrypt(json.dumps(account_data)), SESSION_DATA_PATH, file.WRITE_FILE_TYPE_REPLACE)
 
 
 # 获取指定页数的全部日志
@@ -141,6 +141,8 @@ def get_one_page_photo(account_id, cursor):
 
 class Yasaxi(crawler.Crawler):
     def __init__(self):
+        global SESSION_DATA_PATH
+
         # 设置APP目录
         crawler.PROJECT_APP_PATH = os.path.abspath(os.path.dirname(__file__))
 
@@ -151,6 +153,8 @@ class Yasaxi(crawler.Crawler):
         }
         crawler.Crawler.__init__(self, sys_config)
 
+        # 设置全局变量，供子线程调用
+        SESSION_DATA_PATH = self.session_data_path
         # 服务器有请求数量限制，所以取消多线程
         self.thread_count = 1
 
