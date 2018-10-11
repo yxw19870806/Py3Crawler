@@ -17,7 +17,7 @@ IS_LOCAL_SAVE_SESSION = False
 EACH_PAGE_PHOTO_COUNT = 12  # 每次请求获取的媒体数量
 QUERY_ID = "17859156310193001"
 COOKIE_INFO = {"csrftoken": "", "mid": "", "sessionid": ""}
-SESSION_FILE_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), "session"))
+SESSION_DATA_PATH = None
 
 
 # 生成session cookies
@@ -38,9 +38,9 @@ def init_session():
 
 # 检测登录状态
 def check_login():
-    if not COOKIE_INFO["sessionid"]:
+    if not COOKIE_INFO["sessionid"] and SESSION_DATA_PATH is not None:
         # 从文件中读取账号密码
-        account_data = tool.json_decode(crypto.Crypto().decrypt(file.read_file(SESSION_FILE_PATH)), {})
+        account_data = tool.json_decode(crypto.Crypto().decrypt(file.read_file(SESSION_DATA_PATH)), {})
         if crawler.check_sub_key(("email", "password"), account_data):
             if _do_login(account_data["email"], account_data["password"]):
                 return True
@@ -63,8 +63,8 @@ def login_from_console():
             input_str = input_str.lower()
             if input_str in ["y", "yes"]:
                 if _do_login(email, password):
-                    if IS_LOCAL_SAVE_SESSION:
-                        file.write_file(crypto.Crypto().encrypt(json.dumps({"email": email, "password": password})), SESSION_FILE_PATH, file.WRITE_FILE_TYPE_REPLACE)
+                    if IS_LOCAL_SAVE_SESSION and SESSION_DATA_PATH is not None:
+                        file.write_file(crypto.Crypto().encrypt(json.dumps({"email": email, "password": password})), SESSION_DATA_PATH, file.WRITE_FILE_TYPE_REPLACE)
                     return True
                 return False
             elif input_str in ["n", "no"]:
@@ -236,6 +236,7 @@ class Instagram(crawler.Crawler):
     def __init__(self, extra_config=None):
         global COOKIE_INFO
         global IS_LOCAL_SAVE_SESSION
+        global SESSION_DATA_PATH
 
         # 设置APP目录
         crawler.PROJECT_APP_PATH = os.path.abspath(os.path.dirname(__file__))
@@ -255,6 +256,7 @@ class Instagram(crawler.Crawler):
         # 设置全局变量，供子线程调用
         COOKIE_INFO.update(self.cookie_value)
         IS_LOCAL_SAVE_SESSION = self.app_config["IS_LOCAL_SAVE_SESSION"]
+        SESSION_DATA_PATH = self.session_data_path
 
         # 解析存档文件
         # account_name  account_id  photo_count  video_count  last_created_time
