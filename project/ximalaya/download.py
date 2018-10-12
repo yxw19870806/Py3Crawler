@@ -6,7 +6,6 @@ https://www.ximalaya.com/
 email: hikaru870806@hotmail.com
 如有问题或建议请联系
 """
-import os
 import tkinter
 from tkinter import filedialog
 from common import *
@@ -14,9 +13,8 @@ from project.ximalaya import ximalaya
 
 
 def main():
-    config = crawler._get_config()
-    # 设置代理
-    crawler.quickly_set_proxy(config)
+    # 初始化
+    ximalaya_obj = ximalaya.XiMaLaYa()
     # GUI窗口
     gui = tkinter.Tk()
     gui.withdraw()
@@ -43,7 +41,7 @@ def main():
         # 选择下载目录
         file_type = net.get_file_type(audio_response["audio_url"])
         options = {
-            "initialdir": os.path.join(os.path.dirname(__file__), "audio"),
+            "initialdir": ximalaya_obj.audio_download_path,
             "initialfile": "%s - %s.%s" % (audio_id, path.filter_text(audio_response["audio_title"]), file_type),
             "filetypes": [(file_type, "." + file_type)],
             "parent": gui,
