@@ -125,6 +125,9 @@ class Crawler(object):
             tool.process_exit()
             return
 
+        # cache
+        self.cache_data_path = analysis_config(config, "CACHE_DATA_PATH", "\\\\cache", CONFIG_ANALYSIS_MODE_PATH)
+
         # session
         self.session_data_path = analysis_config(config, "SESSION_DATA_PATH", "\\\\info/session.data", CONFIG_ANALYSIS_MODE_PATH)
 
