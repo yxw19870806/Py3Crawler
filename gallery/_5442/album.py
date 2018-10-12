@@ -277,11 +277,11 @@ class Download(crawler.DownloadThread):
         self.result = net.save_net_file(self.photo_url, self.file_path)
         if self.result["status"] == 0:
             if self.result["code"] == 404:
-                temp_List = self.photo_url.split("/")
-                photo_name, file_type = temp_List[-1].split(".")
+                temp_list = self.photo_url.split("/")
+                photo_name, file_type = temp_list[-1].split(".")
                 if crawler.is_integer(photo_name) and int(photo_name) < 10 and len(photo_name) == 2:
-                    temp_List[-1] = "%s.%s" % (int(photo_name), file_type)
-                    photo_url = "/".join(temp_List)
+                    temp_list[-1] = "%s.%s" % (int(photo_name), file_type)
+                    photo_url = "/".join(temp_list)
                     self.result = net.save_net_file(photo_url, self.file_path)
             elif self.result["code"] == 514:
                 return self.run()
