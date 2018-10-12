@@ -6,7 +6,6 @@ http://www.meipai.com/
 email: hikaru870806@hotmail.com
 如有问题或建议请联系
 """
-import os
 import tkinter
 from tkinter import filedialog
 from common import *
@@ -14,9 +13,8 @@ from project.meipai import meipai
 
 
 def main():
-    config = crawler._get_config()
-    # 设置代理
-    crawler.quickly_set_proxy(config)
+    # 初始化
+    meipai_obj = meipai.MeiPai()
     # GUI窗口
     gui = tkinter.Tk()
     gui.withdraw()
@@ -41,7 +39,7 @@ def main():
             continue
         # 选择下载目录
         options = {
-            "initialdir": os.path.join(os.path.dirname(__file__), "video"),
+            "initialdir": meipai_obj.video_download_path,
             "initialfile": "%010d.mp4" % int(video_id),
             "filetypes": [("mp4", ".mp4")],
             "parent": gui,
