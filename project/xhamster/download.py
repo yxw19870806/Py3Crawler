@@ -6,7 +6,6 @@ https://xhamster.com/
 email: hikaru870806@hotmail.com
 如有问题或建议请联系
 """
-import os
 import tkinter
 from tkinter import filedialog
 from common import *
@@ -14,9 +13,8 @@ from project.xhamster import xhamster
 
 
 def main():
-    config = crawler._get_config()
-    # 设置代理
-    crawler.quickly_set_proxy(config)
+    # 初始化
+    xhamster_obj = xhamster.Xhamster()
     # GUI窗口
     gui = tkinter.Tk()
     gui.withdraw()
@@ -46,7 +44,7 @@ def main():
             continue
         # 选择下载目录
         options = {
-            "initialdir": os.path.join(os.path.dirname(__file__), "video"),
+            "initialdir": xhamster_obj.video_download_path,
             "initialfile": "%08d - %s.mp4" % (int(video_id), path.filter_text(video_response["video_title"])),
             "filetypes": [("mp4", ".mp4")],
             "parent": gui,
