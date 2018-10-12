@@ -85,7 +85,8 @@ def get_album_page(album_url, album_id):
         # 获取图片地址
         photo_list_selector = pq(album_response_content).find("#picBody a img")
         if photo_list_selector.length == 0:
-            raise crawler.CrawlerException("第%s页页面匹配图片地址失败\n%s" % (page_count, album_response_content))
+            if pq(album_response_content).find("#picBody").length != 1:
+                raise crawler.CrawlerException("第%s页页面匹配图片地址失败\n%s" % (page_count, album_response_content))
         for photo_index in range(0, photo_list_selector.length):
             result["photo_url_list"].append(photo_list_selector.eq(photo_index).attr("src"))
         next_page_url_path = pq(album_response_content).find(".page-tag #nl a").attr("href")
@@ -229,7 +230,7 @@ class Download(crawler.DownloadThread):
             if save_file_return["status"] == 1:
                 self.step("图集%s《%s》第%s张图片下载成功" % (album_info["album_id"], album_info["album_title"], photo_index))
             else:
-                self.error("图集%s《%s》 %s 第%s张图片 %s 下载失败，原因：%s" % (album_info["album_url"], album_info["album_title"], album_info["album_url"], photo_index, photo_url, crawler.download_failre(save_file_return["code"])))
+                self.error("图集%s《%s》 %s 第%s张图片 %s 下载失败，原因：%s" % (album_info["album_id"], album_info["album_title"], album_info["album_url"], photo_index, photo_url, crawler.download_failre(save_file_return["code"])))
             photo_index += 1
 
         # 图集内图片全部下载完毕
