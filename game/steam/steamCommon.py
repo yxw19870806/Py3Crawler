@@ -271,21 +271,26 @@ def get_self_account_badge_card(badge_detail_url):
 # 获取某个游戏的集换式卡牌市场售价
 def get_market_game_trade_card_price(game_id):
     market_search_url = "https://steamcommunity.com/market/search/render/"
-    market_search_url += "?query=&count=20&appid=753&category_753_Game[0]=tag_app_%s&category_753_cardborder[0]=tag_cardborder_0" % game_id
-    market_search_response = net.http_request(market_search_url, method="GET", cookies_list=COOKIE_INFO, json_decode=True)
+    query_data = {
+        "query": "",
+        "count": "20",
+        "appid": "753",
+        "category_753_Game[0]": "tag_app_%s" % game_id,
+        "category_753_cardborder[0]": "tag_cardborder_0",
+        "norender": "1",
+    }
+    market_search_response = net.http_request(market_search_url, method="GET", fields=query_data, cookies_list=COOKIE_INFO, json_decode=True, is_url_encode=False)
     if market_search_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(market_search_response.status))
     market_item_list = {}
-    if not crawler.check_sub_key(("success", "results_html"), market_search_response.json_data):
-        raise crawler.CrawlerException("返回信息'success'或'results_html'字段不存在\n%s" % market_search_response.json_data)
-    if market_search_response.json_data["success"] is not True:
-        raise crawler.CrawlerException("返回信息'success'字段取值不正确\n%s" % market_search_response.json_data)
-    card_selector = pq(market_search_response.json_data["results_html"]).find(".market_listing_row_link")
-    for index in range(0, card_selector.length):
-        card_name = card_selector.eq(index).find(".market_listing_item_name").text()
-        card_min_price = card_selector.eq(index).find("span.normal_price span.normal_price").text().replace("¥ ", "")
-        market_item_list[card_name] = card_min_price
-    # {'Pamu': '1.77', 'Fumi (Trading Card)': '2.14', 'Mio (Trading Card)': '1.33', 'Bonnibel (Trading Card)': '1.49', 'Groupshot': '1.87', 'Q-Piddy': '1.35', 'Elle (Trading Card)': '1.19', 'Quill': '1.50', 'Iro (Trading Card)': '1.42', 'Bearverly (Trading Card)': '1.27', 'Cassie (Trading Card)': '1.35'}
+    if not crawler.check_sub_key(("success", "results"), market_search_response.json_data):
+        raise crawler.CrawlerException("返回信息'success'或'results'字段不存在\n%s" % market_search_response.json_data)
+    if not isinstance(market_search_response.json_data["results"], list):
+        raise crawler.CrawlerException("返回信息'result'字段类型不正确\n%s" % market_search_response.json_data)
+    for item_info in market_search_response.json_data["results"]:
+        if not crawler.check_sub_key(("hash_name", "sell_price_text"), item_info):
+            raise crawler.CrawlerException("返回信息'success'或'results'字段不存在\n%s" % market_search_response.json_data)
+        market_item_list[item_info["hash_name"].split("-", 1)[1]] = item_info["sell_price_text"].replace("¥", "").strip()
     return market_item_list
 
 
