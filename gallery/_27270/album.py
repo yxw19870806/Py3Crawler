@@ -18,7 +18,6 @@ SUB_PATH_LIST = {
     "ent/rentiyishu": "32",
     "game/cosplaymeitu": "20",
 }
-CACHE_FILE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "cache"))
 
 
 # 获取图集首页
@@ -160,7 +159,7 @@ class Download(crawler.DownloadThread):
         album_info_list = []
         album_id_to_url_list = {}
         # 从缓存文件中读取
-        cache_file_path = os.path.join(CACHE_FILE_DIR, "%s.json" % SUB_PATH_LIST[self.sub_path])
+        cache_file_path = os.path.join(self.main_thread.cache_data_path, "%s.json" % SUB_PATH_LIST[self.sub_path])
         cache_album_id_to_url_list = tool.json_decode(file.read_file(cache_file_path))
         if cache_album_id_to_url_list is None:
             page_count = 1

@@ -12,8 +12,6 @@ import traceback
 from pyquery import PyQuery as pq
 from common import *
 
-CACHE_FILE_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), "cache.json"))
-
 
 # 获取指定一页图集
 def get_one_page_album(page_count):
@@ -159,7 +157,8 @@ class Album(crawler.Crawler):
         try:
             album_id_to_url_list = {}
             # 从缓存文件中读取
-            cache_album_id_to_url_list = tool.json_decode(file.read_file(CACHE_FILE_PATH))
+            cache_file_path = os.path.join(self.cache_data_path, "cache.json")
+            cache_album_id_to_url_list = tool.json_decode(file.read_file(cache_file_path))
             if cache_album_id_to_url_list is None:
                 page_count = 1
                 is_over = False
@@ -187,7 +186,7 @@ class Album(crawler.Crawler):
                         page_count += 1
 
                 # 保存到缓存文件中
-                file.write_file(json.dumps(album_id_to_url_list), CACHE_FILE_PATH, file.WRITE_FILE_TYPE_REPLACE)
+                file.write_file(json.dumps(album_id_to_url_list), cache_file_path, file.WRITE_FILE_TYPE_REPLACE)
             else:
                 # 写入文件后key变成string类型了
                 for temp in cache_album_id_to_url_list:
@@ -278,11 +277,11 @@ class Download(crawler.DownloadThread):
         self.result = net.save_net_file(self.photo_url, self.file_path)
         if self.result["status"] == 0:
             if self.result["code"] == 404:
-                temp_List = self.photo_url.split("/")
-                photo_name, file_type = temp_List[-1].split(".")
+                temp_list = self.photo_url.split("/")
+                photo_name, file_type = temp_list[-1].split(".")
                 if crawler.is_integer(photo_name) and int(photo_name) < 10 and len(photo_name) == 2:
-                    temp_List[-1] = "%s.%s" % (int(photo_name), file_type)
-                    photo_url = "/".join(temp_List)
+                    temp_list[-1] = "%s.%s" % (int(photo_name), file_type)
+                    photo_url = "/".join(temp_list)
                     self.result = net.save_net_file(photo_url, self.file_path)
             elif self.result["code"] == 514:
                 return self.run()
