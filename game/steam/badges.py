@@ -44,21 +44,22 @@ def main(account_id):
             except crawler.CrawlerException as e:
                 output.print_msg("游戏id%s的市场解析失败，原因：%s" % (game_id, e.message))
                 continue
-            card_real_name_dict = {}
-            for card_read_name in market_card_list:
-                card_name = card_read_name.replace(" (Trading Card)", "")
-                card_real_name_dict[card_name] = card_read_name
+            card_hash_name_dict = {}
+            for card_hash_name in market_card_list:
+                card_name = card_hash_name.replace(" (Trading Card)", "")
+                card_hash_name_dict[card_name] = card_hash_name
             for card_name in wanted_card_list:
-                if card_name in card_real_name_dict:
-                    card_read_name = card_real_name_dict[card_name]
+                if card_name in card_hash_name_dict:
+                    card_hash_name = card_hash_name_dict[card_name]
                 else:
-                    card_read_name = card_name
-                if card_read_name in market_card_list:
-                    if MIN_CARD_PRICE < float(market_card_list[card_read_name]) <= MAX_CARD_PRICE:
-                        market_link = "http://steamcommunity.com/market/listings/753/%s-%s" % (game_id, urllib.parse.quote(card_read_name))
-                        output.print_msg("card: %s, wanted %s, min price: %s, link: %s" % (card_name, wanted_card_list[card_name], market_card_list[card_read_name], market_link), False)
+                    card_hash_name = card_name
+                if card_hash_name in market_card_list:
+                    if MIN_CARD_PRICE < float(market_card_list[card_hash_name]) <= MAX_CARD_PRICE:
+                        market_link = "http://steamcommunity.com/market/listings/753/%s-%s" % (game_id, urllib.parse.quote(card_hash_name))
+                        output.print_msg("card: %s, wanted %s, min price: %s, link: %s" % (card_name, wanted_card_list[card_name], market_card_list[card_hash_name], market_link), False)
                 else:
-                    output.print_msg("card: %s, wanted %s, not found price in market" % (card_name, wanted_card_list[card_read_name]), False)
+                    market_link = "http://steamcommunity.com/market/listings/753/%s-%s" % (game_id, urllib.parse.quote(card_hash_name))
+                    output.print_msg("card: %s, wanted %s, not found price in market, link: %s" % (card_name, wanted_card_list[card_hash_name], market_link), False)
 
 
 if __name__ == "__main__":
