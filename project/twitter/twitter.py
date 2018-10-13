@@ -16,24 +16,28 @@ import xml.etree.ElementTree as ElementTree
 from pyquery import PyQuery as pq
 from common import *
 
-COOKIE_INFO = {}
 AUTHORIZATION = ""
+COOKIE_INFO = {}
+IS_LOGIN = False
 thread_event = threading.Event()
 thread_event.set()
 
 
-# 初始化session。获取authorization
-def init_session():
+# 初始化session。获取authorization。并检测登录状态
+def check_login():
     global AUTHORIZATION
     global COOKIE_INFO
+    global IS_LOGIN
     index_url = "https://twitter.com/"
     index_page_response = net.http_request(index_url, method="GET", cookies_list=COOKIE_INFO, header_list={"referer": "https://twitter.com"})
     if index_page_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(index_page_response.status))
     index_page_response_content = index_page_response.data.decode(errors="ignore")
-    # 没有登录状态
-    if not COOKIE_INFO or index_page_response_content.find('<div class="StaticLoggedOutHomePage-login">') >= 0:
-        COOKIE_INFO = net.get_cookies_from_response_header(index_page_response.headers)
+    # 有登录状态
+    if pq(index_page_response_content).find(".DashboardProfileCard").length == 1:
+        IS_LOGIN = True
+    # 更新cookies
+    COOKIE_INFO.update(net.get_cookies_from_response_header(index_page_response.headers))
     init_js_url_find = re.findall('<script src="(https://abs.twimg.com/k/[^/]*/init.[^\.]*.[\w]*.js)" async></script>', index_page_response_content)
     if len(init_js_url_find) != 1:
         raise crawler.CrawlerException("初始化JS地址截取失败\n%s" % index_page_response_content)
@@ -45,6 +49,7 @@ def init_session():
     if not authorization_string:
         raise crawler.CrawlerException("初始化JS中截取authorization失败\n%s" % init_js_response_content)
     AUTHORIZATION = "AAAAAAAAAA" + authorization_string
+    return IS_LOGIN
 
 
 # 根据账号名字获得账号id（字母账号->数字账号)
@@ -143,8 +148,9 @@ def get_video_play_page(tweet_id):
     header_list = {
         "authorization": "Bearer " + AUTHORIZATION,
         "x-csrf-token": COOKIE_INFO["ct0"],
-        "x-twitter-auth-type": "OAuth2Session",
     }
+    if IS_LOGIN:
+        header_list["x-twitter-auth-type"] = "OAuth2Session"
     video_play_response = net.http_request(video_play_url, method="GET", cookies_list=COOKIE_INFO, header_list=header_list, json_decode=True)
     result = {
         "video_url": None,  # 视频地址
@@ -245,7 +251,14 @@ class Twitter(crawler.Crawler):
 
         # 生成authorization，用于访问视频页
         try:
-            init_session()
+            if not check_login():
+                while True:
+                    input_str = input(crawler.get_time() + " 没有检测到账号登录状态，是否继续(C)ontinue？或者退出程序(E)xit？:")
+                    input_str = input_str.lower()
+                    if input_str in ["c", "yes"]:
+                        break
+                    elif input_str in ["e", "exit"]:
+                        tool.process_exit()
         except crawler.CrawlerException as e:
             log.error("生成authorization失败，原因：%s" % e.message)
             raise
