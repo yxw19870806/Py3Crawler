@@ -59,7 +59,7 @@ def check_login():
             USER_ID = user_id
             USER_KEY = user_key
         # 加密保存到文件中
-        file.write_file(crypto.Crypto().encrypt(json.dumps({"user_id": USER_ID, "user_key": USER_KEY})), token_file_path, file.WRITE_FILE_TYPE_REPLACE)
+        file.write_file(crypto.Crypto().encrypt(json.dumps({"user_id": USER_ID, "user_key": USER_KEY})), SESSION_DATA_PATH, file.WRITE_FILE_TYPE_REPLACE)
         return True
     return False
 
