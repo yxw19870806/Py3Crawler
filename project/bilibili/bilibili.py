@@ -310,6 +310,7 @@ class Download(crawler.DownloadThread):
                 self.temp_path_list.append(file_path)
             else:
                 self.error("视频%s《%s》第%s个视频 %s，下载失败，原因：%s" % (video_info["video_id"], video_info["video_title"], video_index, video_url, crawler.download_failre(save_file_return["code"])))
+            video_index += 1
 
         # 相簿内图片下全部载完毕
         self.temp_path_list = []  # 临时目录设置清除
@@ -342,6 +343,7 @@ class Download(crawler.DownloadThread):
                 self.temp_path_list.append(file_path)
             else:
                 self.error("相簿%s第%s张图片 %s，下载失败，原因：%s" % (album_id, photo_index, photo_url, crawler.download_failre(save_file_return["code"])))
+            photo_index += 1
 
         # 相簿内图片下全部载完毕
         self.temp_path_list = []  # 临时目录设置清除
