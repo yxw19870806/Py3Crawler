@@ -61,7 +61,7 @@ def get_one_page_album(account_id, page_count):
     api_url = "https://api.vc.bilibili.com/link_draw/v1/doc/doc_list"
     query_data = {
         "uid": account_id,
-        "page_num": page_count,
+        "page_num": page_count - 1,
         "page_size": EACH_PAGE_COUNT,
         "biz": "all",
     }
