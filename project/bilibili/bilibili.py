@@ -11,6 +11,8 @@ import time
 import traceback
 from common import *
 
+IS_DOWNLOAD_CONTRIBUTION_VIDEO = True
+IS_DOWNLOAD_SHORT_VIDEO = True
 EACH_PAGE_COUNT = 30
 
 
@@ -39,7 +41,7 @@ def get_one_page_video(account_id, page_count):
     for video_info in api_response.json_data["data"]["vlist"]:
         result_video_info = {
             "video_id": None,  # 视频id
-            "video_title": None,  # 视频标题
+            "video_title": "",  # 视频标题
         }
         # 获取视频id
         if not crawler.check_sub_key(("aid",), video_info):
@@ -51,6 +53,56 @@ def get_one_page_video(account_id, page_count):
         if not crawler.check_sub_key(("title",), video_info):
             raise crawler.CrawlerException("视频信息'title'字段不存在\n%s" % video_info)
         result_video_info["video_title"] = video_info["title"]
+        result["video_info_list"].append(result_video_info)
+    return result
+
+
+# 获取指定页数的全部短视频
+def get_one_page_short_video(account_id, nex_offset):
+    # http://api.vc.bilibili.com/clip/v1/video/blist?uid=21687662&next_offset=413361
+    api_url = "http://api.vc.bilibili.com/clip/v1/video/blist"
+    query_data = {
+        "uid": account_id,
+        "next_offset": nex_offset,
+    }
+    api_response = net.http_request(api_url, method="GET", fields=query_data, json_decode=True)
+    result = {
+        "video_info_list": [],  # 全部视频信息
+        "next_page_offset": None,  # 下一页指针
+    }
+    if api_response.status != net.HTTP_RETURN_CODE_SUCCEED:
+        raise crawler.CrawlerException(crawler.request_failre(api_response.status))
+    if not crawler.check_sub_key(("msg",), api_response.json_data):
+        raise crawler.CrawlerException("返回信息'msg'字段不存在\n%s" % api_response.json_data)
+    if api_response.json_data["msg"] != "success":
+        raise crawler.CrawlerException("返回信息'msg'字段取值不正确\n%s" % api_response.json_data)
+    if not crawler.check_sub_key(("data",), api_response.json_data):
+        raise crawler.CrawlerException("返回信息'data'字段不存在\n%s" % api_response.json_data)
+    # 获取下一页指针
+    if not crawler.check_sub_key(("next_offset",), api_response.json_data["data"]):
+        raise crawler.CrawlerException("返回信息'items'字段不存在\n%s" % api_response.json_data)
+    result["next_page_offset"] = api_response.json_data["data"]["next_offset"]
+    if not crawler.check_sub_key(("items",), api_response.json_data["data"]):
+        raise crawler.CrawlerException("返回信息'items'字段不存在\n%s" % api_response.json_data)
+    for video_info in api_response.json_data["data"]["items"]:
+        result_video_info = {
+            "video_id": None,  # 视频id
+            "video_url": None,  # 视频标题
+        }
+        # 获取视频id
+        if not crawler.check_sub_key(("id",), video_info):
+            raise crawler.CrawlerException("视频信息'aid'字段不存在\n%s" % video_info)
+        if not crawler.is_integer(video_info["id"]):
+            raise crawler.CrawlerException("视频信息'aid'字段类型不正确\n%s" % video_info)
+        result_video_info["video_id"] = int(video_info["id"])
+        # 获取视频标题
+        if not crawler.check_sub_key(("title",), video_info):
+            raise crawler.CrawlerException("视频信息'title'字段不存在\n%s" % video_info)
+        result_video_info["video_title"] = video_info["title"]
+        # 获取视频地址
+        if not crawler.check_sub_key(("playurl",), video_info):
+            raise crawler.CrawlerException("视频信息'playurl'字段不存在\n%s" % video_info)
+        result_video_info["video_url"] = video_info["playurl"]
         result["video_info_list"].append(result_video_info)
     return result
 
@@ -140,6 +192,8 @@ def get_album_page(album_id):
 
 class BiliBili(crawler.Crawler):
     def __init__(self):
+        global IS_DOWNLOAD_CONTRIBUTION_VIDEO
+        global IS_DOWNLOAD_SHORT_VIDEO
         # 设置APP目录
         crawler.PROJECT_APP_PATH = os.path.abspath(os.path.dirname(__file__))
 
@@ -147,15 +201,23 @@ class BiliBili(crawler.Crawler):
         sys_config = {
             crawler.SYS_DOWNLOAD_PHOTO: True,
             crawler.SYS_DOWNLOAD_VIDEO: True,
+             crawler.SYS_APP_CONFIG: (
+                ("IS_DOWNLOAD_CONTRIBUTION_VIDEO", True, crawler.CONFIG_ANALYSIS_MODE_BOOLEAN),
+                ("IS_DOWNLOAD_SHORT_VIDEO", True, crawler.CONFIG_ANALYSIS_MODE_BOOLEAN),
+            ),
         }
         crawler.Crawler.__init__(self, sys_config)
+
+        # 设置全局变量，供子线程调用
+        IS_DOWNLOAD_CONTRIBUTION_VIDEO = self.app_config["IS_DOWNLOAD_CONTRIBUTION_VIDEO"]
+        IS_DOWNLOAD_SHORT_VIDEO = self.app_config["IS_DOWNLOAD_SHORT_VIDEO"]
 
         # todo 登录cookies
         # todo 不同分辨率
 
         # 解析存档文件
-        # account_name  last_video_id  last_album_id
-        self.account_list = crawler.read_save_data(self.save_data_path, 0, ["", "0", "0"])
+        # account_name  last_video_id  last_short_video_id  last_audio_id  last_album_id
+        self.account_list = crawler.read_save_data(self.save_data_path, 0, ["", "0", "0", "0", "0"])
 
     def main(self):
         # 循环下载每个id
@@ -190,8 +252,8 @@ class Download(crawler.DownloadThread):
     def __init__(self, account_info, main_thread):
         crawler.DownloadThread.__init__(self, account_info, main_thread)
         self.account_id = self.account_info[0]
-        if len(self.account_info) >= 4 and self.account_info[3]:
-            self.display_name = self.account_info[3]
+        if len(self.account_info) >= 6 and self.account_info[5]:
+            self.display_name = self.account_info[5]
         else:
             self.display_name = self.account_info[0]
         self.step("开始")
@@ -216,7 +278,7 @@ class Download(crawler.DownloadThread):
             self.trace("第%s页解析的全部视频：%s" % (page_count, album_pagination_response["video_info_list"]))
             self.step("第%s页解析获取%s个视频" % (page_count, len(album_pagination_response["video_info_list"])))
 
-            # 寻找这一页符合条件的相簿
+            # 寻找这一页符合条件的视频
             for video_info in album_pagination_response["video_info_list"]:
                 # 检查是否达到存档记录
                 if video_info["video_id"] > int(self.account_info[1]):
@@ -239,6 +301,45 @@ class Download(crawler.DownloadThread):
                     page_count += 1
 
         return video_info_list
+
+
+    # 获取所有可下载短视频
+    def get_crawl_short_video_list(self):
+        page_offset = 0
+        video_info_list = []
+        is_over = False
+        while not is_over:
+            self.main_thread_check()  # 检测主线程运行状态
+            self.step("开始解析offset %s后一页视频" % page_offset)
+
+            # 获取一页相簿
+            try:
+                album_pagination_response = get_one_page_short_video(self.account_id, page_offset)
+            except crawler.CrawlerException as e:
+                self.error("offset %s后一页视频解析失败，原因：%s" % (page_offset, e.message))
+                raise
+
+            self.trace("offset %s后一页解析的全部视频：%s" % (page_offset, album_pagination_response["video_info_list"]))
+            self.step("offset %s后一页解析获取%s个视频" % (page_offset, len(album_pagination_response["video_info_list"])))
+
+            # 寻找这一页符合条件的视频
+            for video_info in album_pagination_response["video_info_list"]:
+                # 检查是否达到存档记录
+                if video_info["video_id"] > int(self.account_info[2]):
+                    video_info_list.append(video_info)
+                else:
+                    is_over = True
+                    break
+
+            if not is_over:
+                # 获取的视频数量等于0，表示已经到结束了
+                if len(album_pagination_response["video_info_list"]) == 0:
+                    is_over = True
+                else:
+                    page_offset = album_pagination_response["next_page_offset"]
+
+        return video_info_list
+
 
     # 获取所有可下载相簿
     def get_crawl_photo_list(self):
@@ -263,7 +364,7 @@ class Download(crawler.DownloadThread):
             # 寻找这一页符合条件的相簿
             for album_id in album_pagination_response["album_id_list"]:
                 # 检查是否达到存档记录
-                if album_id > int(self.account_info[2]):
+                if album_id > int(self.account_info[4]):
                     # 新增相簿导致的重复判断
                     if album_id in unique_list:
                         continue
@@ -302,7 +403,7 @@ class Download(crawler.DownloadThread):
             self.main_thread_check()  # 检测主线程运行状态
             self.step("视频%s《%s》开始下载第%s个视频 %s" % (video_info["video_id"], video_info["video_title"], video_index, video_url))
 
-            file_path = os.path.join(self.main_thread.photo_download_path, self.display_name, "%08d_%s %s.%s" % (video_info["video_id"], video_index, video_info["video_title"], net.get_file_type(video_url)))
+            file_path = os.path.join(self.main_thread.video_download_path, self.display_name, "%08d_%s %s.%s" % (video_info["video_id"], video_index, video_info["video_title"], net.get_file_type(video_url)))
             save_file_return = net.save_net_file(video_url, file_path)
             if save_file_return["status"] == 1:
                 self.step("视频%s《%s》第%s个视频下载成功" % (video_info["video_id"], video_info["video_title"], video_index))
@@ -316,6 +417,27 @@ class Download(crawler.DownloadThread):
         self.temp_path_list = []  # 临时目录设置清除
         self.total_photo_count += len(video_play_response["video_url_list"])  # 计数累加
         self.account_info[1] = str(video_info["video_id"])  # 设置存档记录
+
+
+    # 解析单个短视频
+    def crawl_short_video(self, video_info):
+        self.main_thread_check()  # 检测主线程运行状态
+
+        self.step("开始下载短视频%s %s" % (video_info["video_id"], video_info["video_url"]))
+        file_path = os.path.join(self.main_thread.video_download_path, self.display_name, "%07d.%s" % (video_info["video_id"], net.get_file_type(video_info["video_url"])))
+        save_file_return = net.save_net_file(video_info["video_url"], file_path)
+        if save_file_return["status"] == 1:
+            self.step("短视频%s下载成功" % video_info["video_id"])
+            # 设置临时目录
+            self.temp_path_list.append(file_path)
+        else:
+            self.error("短视频%s  %s，下载失败，原因：%s" % (video_info["video_id"], video_info["video_url"], crawler.download_failre(save_file_return["code"])))
+
+        # 相簿内图片下全部载完毕
+        self.temp_path_list = []  # 临时目录设置清除
+        self.total_photo_count += 1  # 计数累加
+        self.account_info[2] = str(video_info["video_id"])  # 设置存档记录
+
 
     # 解析单个相簿
     def crawl_photo(self, album_id):
@@ -348,7 +470,7 @@ class Download(crawler.DownloadThread):
         # 相簿内图片下全部载完毕
         self.temp_path_list = []  # 临时目录设置清除
         self.total_photo_count += photo_index - 1  # 计数累加
-        self.account_info[2] = str(album_id)  # 设置存档记录
+        self.account_info[4] = str(album_id)  # 设置存档记录
 
     def run(self):
         try:
@@ -365,9 +487,20 @@ class Download(crawler.DownloadThread):
                     self.crawl_video(video_info)
                     self.main_thread_check()  # 检测主线程运行状态
 
+                # 获取所有可下载短视频
+                video_info_list = self.get_crawl_short_video_list()
+                self.step("需要下载的全部短视频解析完毕，共%s个" % len(video_info_list))
+
+                # 从最早的视频开始下载
+                while len(video_info_list) > 0:
+                    video_info = video_info_list.pop()
+                    self.step("开始解析视频%s" % video_info["video_id"])
+                    self.crawl_short_video(video_info)
+                    self.main_thread_check()  # 检测主线程运行状态
+
             # 图片下载
             if self.main_thread.is_download_photo:
-                # 获取所有可下载日志
+                # 获取所有可下载相簿
                 album_id_list = self.get_crawl_photo_list()
                 self.step("需要下载的全部相簿解析完毕，共%s个" % len(album_id_list))
 
