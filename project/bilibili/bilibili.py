@@ -11,6 +11,8 @@ import time
 import traceback
 from common import *
 
+IS_DOWNLOAD_CONTRIBUTION_VIDEO = True
+IS_DOWNLOAD_SHORT_VIDEO = True
 EACH_PAGE_COUNT = 30
 
 
@@ -190,6 +192,8 @@ def get_album_page(album_id):
 
 class BiliBili(crawler.Crawler):
     def __init__(self):
+        global IS_DOWNLOAD_CONTRIBUTION_VIDEO
+        global IS_DOWNLOAD_SHORT_VIDEO
         # 设置APP目录
         crawler.PROJECT_APP_PATH = os.path.abspath(os.path.dirname(__file__))
 
@@ -197,8 +201,16 @@ class BiliBili(crawler.Crawler):
         sys_config = {
             crawler.SYS_DOWNLOAD_PHOTO: True,
             crawler.SYS_DOWNLOAD_VIDEO: True,
+             crawler.SYS_APP_CONFIG: (
+                ("IS_DOWNLOAD_CONTRIBUTION_VIDEO", True, crawler.CONFIG_ANALYSIS_MODE_BOOLEAN),
+                ("IS_DOWNLOAD_SHORT_VIDEO", True, crawler.CONFIG_ANALYSIS_MODE_BOOLEAN),
+            ),
         }
         crawler.Crawler.__init__(self, sys_config)
+
+        # 设置全局变量，供子线程调用
+        IS_DOWNLOAD_CONTRIBUTION_VIDEO = self.app_config["IS_DOWNLOAD_CONTRIBUTION_VIDEO"]
+        IS_DOWNLOAD_SHORT_VIDEO = self.app_config["IS_DOWNLOAD_SHORT_VIDEO"]
 
         # todo 登录cookies
         # todo 不同分辨率
