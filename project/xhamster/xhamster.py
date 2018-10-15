@@ -157,6 +157,7 @@ class Xhamster(crawler.Crawler):
         }
         crawler.Crawler.__init__(self, sys_config)
 
+        # 设置全局变量，供子线程调用
         video_quality = self.app_config["VIDEO_QUALITY"]
         if video_quality == 1:
             FIRST_CHOICE_RESOLUTION = 240
