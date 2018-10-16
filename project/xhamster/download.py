@@ -14,7 +14,7 @@ from project.xhamster import xhamster
 
 def main():
     # 初始化
-    xhamster_obj = xhamster.Xhamster()
+    xhamster_obj = xhamster.Xhamster(extra_config={crawler.SYS_NOT_CHECK_SAVE_DATA: True})
     # GUI窗口
     gui = tkinter.Tk()
     gui.withdraw()

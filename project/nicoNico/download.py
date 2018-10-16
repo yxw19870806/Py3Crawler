@@ -15,7 +15,7 @@ from project.nicoNico import nicoNico
 
 def main():
     # 初始化
-    nicoNico.NicoNico()
+    nicoNico.NicoNico(extra_config={crawler.SYS_NOT_CHECK_SAVE_DATA: True})
     if not nicoNico.check_login():
         log.error("没有检测到登录信息")
         nicoNico.COOKIE_INFO = {}

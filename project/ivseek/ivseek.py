@@ -154,7 +154,7 @@ def get_archive_page(archive_id):
 
 
 class IvSeek(crawler.Crawler):
-    def __init__(self):
+    def __init__(self, **kwargs):
         # 初始化相关cookies
         nicoNico.NicoNico()
 
@@ -167,7 +167,7 @@ class IvSeek(crawler.Crawler):
             crawler.SYS_NOT_DOWNLOAD: True,
             crawler.SYS_SET_PROXY: True,
         }
-        crawler.Crawler.__init__(self, sys_config)
+        crawler.Crawler.__init__(self, sys_config, **kwargs)
 
     def main(self):
         save_id = 1

@@ -92,7 +92,7 @@ def get_chapter_page(comic_id, page_id):
 
 
 class DMZJ(crawler.Crawler):
-    def __init__(self):
+    def __init__(self, **kwargs):
         # 设置APP目录
         crawler.PROJECT_APP_PATH = os.path.abspath(os.path.dirname(__file__))
 
@@ -101,7 +101,7 @@ class DMZJ(crawler.Crawler):
             crawler.SYS_DOWNLOAD_PHOTO: True,
             crawler.SYS_NOT_CHECK_SAVE_DATA: True,
         }
-        crawler.Crawler.__init__(self, sys_config)
+        crawler.Crawler.__init__(self, sys_config, **kwargs)
 
         # 解析存档文件
         # comic_name  last_page_id

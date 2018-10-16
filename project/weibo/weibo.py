@@ -233,7 +233,7 @@ def get_video_url(video_play_url):
 
 
 class Weibo(crawler.Crawler):
-    def __init__(self, extra_config=None):
+    def __init__(self, **kwargs):
         # 设置APP目录
         crawler.PROJECT_APP_PATH = os.path.abspath(os.path.dirname(__file__))
 
@@ -243,7 +243,7 @@ class Weibo(crawler.Crawler):
             crawler.SYS_DOWNLOAD_VIDEO: True,
             crawler.SYS_GET_COOKIE: ("sina.com.cn", "login.sina.com.cn"),
         }
-        crawler.Crawler.__init__(self, sys_config, extra_config)
+        crawler.Crawler.__init__(self, sys_config, **kwargs)
 
         # 设置全局变量，供子线程调用
         COOKIE_INFO.update(self.cookie_value)

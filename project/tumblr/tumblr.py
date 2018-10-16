@@ -405,7 +405,7 @@ def get_video_play_page(account_id, post_id, is_https):
 
 
 class Tumblr(crawler.Crawler):
-    def __init__(self):
+    def __init__(self, **kwargs):
         global COOKIE_INFO
         global USER_AGENT
         global IS_STEP_ERROR_403_AND_404
@@ -424,7 +424,7 @@ class Tumblr(crawler.Crawler):
                 ("IS_STEP_ERROR_403_AND_404", False, crawler.CONFIG_ANALYSIS_MODE_BOOLEAN)
             ),
         }
-        crawler.Crawler.__init__(self, sys_config)
+        crawler.Crawler.__init__(self, sys_config, **kwargs)
 
         # 设置全局变量，供子线程调用
         COOKIE_INFO = self.cookie_value

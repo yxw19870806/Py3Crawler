@@ -97,7 +97,7 @@ def get_video_info_page(video_vid, video_id):
 
 
 class WeiShi(crawler.Crawler):
-    def __init__(self):
+    def __init__(self, **kwargs):
         # 设置APP目录
         crawler.PROJECT_APP_PATH = os.path.abspath(os.path.dirname(__file__))
 
@@ -105,7 +105,7 @@ class WeiShi(crawler.Crawler):
         sys_config = {
             crawler.SYS_DOWNLOAD_VIDEO: True,
         }
-        crawler.Crawler.__init__(self, sys_config)
+        crawler.Crawler.__init__(self, sys_config, **kwargs)
 
         # 解析存档文件
         # account_id  video_count  last_video_time

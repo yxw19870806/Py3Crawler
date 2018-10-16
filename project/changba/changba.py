@@ -138,7 +138,7 @@ def get_audio_play_page(audio_en_word_id):
 
 
 class ChangBa(crawler.Crawler):
-    def __init__(self):
+    def __init__(self, **kwargs):
         # 设置APP目录
         crawler.PROJECT_APP_PATH = os.path.abspath(os.path.dirname(__file__))
 
@@ -146,7 +146,7 @@ class ChangBa(crawler.Crawler):
         sys_config = {
             crawler.SYS_DOWNLOAD_AUDIO: True,
         }
-        crawler.Crawler.__init__(self, sys_config)
+        crawler.Crawler.__init__(self, sys_config, **kwargs)
 
         # 解析存档文件
         # account_id  last_audio_id

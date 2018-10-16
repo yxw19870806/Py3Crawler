@@ -176,7 +176,7 @@ def get_video_info_page(account_id, video_id):
 
 
 class VLiao(crawler.Crawler):
-    def __init__(self):
+    def __init__(self, **kwargs):
         global SESSION_DATA_PATH
 
         # 设置APP目录
@@ -186,7 +186,7 @@ class VLiao(crawler.Crawler):
         sys_config = {
             crawler.SYS_DOWNLOAD_VIDEO: True,
         }
-        crawler.Crawler.__init__(self, sys_config)
+        crawler.Crawler.__init__(self, sys_config, **kwargs)
 
         # 设置全局变量，供子线程调用
         SESSION_DATA_PATH = self.session_data_path

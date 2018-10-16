@@ -98,7 +98,7 @@ def get_video_page(video_id):
 
 
 class XVideos(crawler.Crawler):
-    def __init__(self):
+    def __init__(self, **kwargs):
         global COOKIE_INFO
         global VIDEO_QUALITY
         global ACTION_WHEN_BLOCK_HD_QUALITY
@@ -121,7 +121,7 @@ class XVideos(crawler.Crawler):
                 ("CATEGORY_BLACKLIST", "", crawler.CONFIG_ANALYSIS_MODE_RAW),
             ),
         }
-        crawler.Crawler.__init__(self, sys_config)
+        crawler.Crawler.__init__(self, sys_config, **kwargs)
 
         # 设置全局变量，供子线程调用
         COOKIE_INFO = self.cookie_value

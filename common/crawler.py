@@ -58,7 +58,7 @@ class Crawler(object):
     process_status = True  # 主进程是否在运行
 
     # 程序全局变量的设置
-    def __init__(self, sys_config, extra_config=None):
+    def __init__(self, sys_config, **kwargs):
         self.start_time = time.time()
 
         # 程序启动配置
@@ -88,9 +88,9 @@ class Crawler(object):
         app_config_path = os.path.abspath(os.path.join(PROJECT_APP_PATH, "app.ini"))
         if os.path.exists(app_config_path):
             config.update(read_config(app_config_path))
-        # 额外配置
-        if isinstance(extra_config, dict):
-            config.update(extra_config)
+        # 额外配置（直接通过实例化中传入，可覆盖配置文件中参数）
+        if "extra_config" in kwargs and isinstance(kwargs["extra_config"], dict):
+            config.update(kwargs["extra_config"])
 
         # 应用配置
         self.app_config = {}
