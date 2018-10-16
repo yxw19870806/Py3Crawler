@@ -15,7 +15,7 @@ from project.youtube import youtube
 
 def main():
     # 初始化
-    youtube.Youtube()
+    youtube.Youtube(extra_config={crawler.SYS_NOT_CHECK_SAVE_DATA: True})
     if not youtube.check_login():
         log.error("没有检测到登录信息")
         youtube.IS_LOGIN = False
