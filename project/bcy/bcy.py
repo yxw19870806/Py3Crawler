@@ -261,7 +261,7 @@ def get_photo_url(photo_url):
 
 
 class Bcy(crawler.Crawler):
-    def __init__(self):
+    def __init__(self, **kwargs):
         global COOKIE_INFO
         global IS_AUTO_FOLLOW
         global IS_LOCAL_SAVE_SESSION
@@ -279,7 +279,7 @@ class Bcy(crawler.Crawler):
                 ("IS_LOCAL_SAVE_SESSION", False, crawler.CONFIG_ANALYSIS_MODE_BOOLEAN)
             ),
         }
-        crawler.Crawler.__init__(self, sys_config)
+        crawler.Crawler.__init__(self, sys_config, **kwargs)
 
         # 设置全局变量，供子线程调用
         COOKIE_INFO = self.cookie_value

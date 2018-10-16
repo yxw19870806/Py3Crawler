@@ -191,7 +191,7 @@ def get_album_page(album_id):
 
 
 class BiliBili(crawler.Crawler):
-    def __init__(self):
+    def __init__(self, **kwargs):
         global IS_DOWNLOAD_CONTRIBUTION_VIDEO
         global IS_DOWNLOAD_SHORT_VIDEO
         # 设置APP目录
@@ -206,7 +206,7 @@ class BiliBili(crawler.Crawler):
                 ("IS_DOWNLOAD_SHORT_VIDEO", True, crawler.CONFIG_ANALYSIS_MODE_BOOLEAN),
             ),
         }
-        crawler.Crawler.__init__(self, sys_config)
+        crawler.Crawler.__init__(self, sys_config, **kwargs)
 
         # 设置全局变量，供子线程调用
         IS_DOWNLOAD_CONTRIBUTION_VIDEO = self.app_config["IS_DOWNLOAD_CONTRIBUTION_VIDEO"]

@@ -65,7 +65,7 @@ def get_one_page_photo(page_count):
 
 
 class Jigadori(crawler.Crawler):
-    def __init__(self):
+    def __init__(self, **kwargs):
         # 设置APP目录
         crawler.PROJECT_APP_PATH = os.path.abspath(os.path.dirname(__file__))
 
@@ -75,7 +75,7 @@ class Jigadori(crawler.Crawler):
             crawler.SYS_SET_PROXY: True,
             crawler.SYS_NOT_CHECK_SAVE_DATA: True,
         }
-        crawler.Crawler.__init__(self, sys_config)
+        crawler.Crawler.__init__(self, sys_config, **kwargs)
 
     def main(self):
         # 解析存档文件

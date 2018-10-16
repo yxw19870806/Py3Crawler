@@ -111,7 +111,7 @@ def check_invalid(file_path, is_video=False):
 
 
 class PrPr(crawler.Crawler):
-    def __init__(self):
+    def __init__(self, **kwargs):
         global IS_SKIP_BLUR
         global IS_STEP_INVALID_RESOURCE
 
@@ -127,7 +127,7 @@ class PrPr(crawler.Crawler):
                 ("IS_SKIP_BLUR", False, crawler.CONFIG_ANALYSIS_MODE_BOOLEAN),
             ),
         }
-        crawler.Crawler.__init__(self, sys_config)
+        crawler.Crawler.__init__(self, sys_config, **kwargs)
 
         # 设置全局变量，供子线程调用
         IS_SKIP_BLUR = self.app_config["IS_SKIP_BLUR"]

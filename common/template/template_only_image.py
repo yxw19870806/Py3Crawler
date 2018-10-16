@@ -30,7 +30,7 @@ def get_blog_page(account_id, blog_id):
 
 
 class Template(crawler.Crawler):
-    def __init__(self):
+    def __init__(self, **kwargs):
         # 设置APP目录
         crawler.PROJECT_APP_PATH = os.path.abspath(os.path.dirname(__file__))
 
@@ -41,7 +41,7 @@ class Template(crawler.Crawler):
             crawler.SYS_SET_PROXY: True,
             crawler.SYS_NOT_CHECK_SAVE_DATA: True,
         }
-        crawler.Crawler.__init__(self, sys_config)
+        crawler.Crawler.__init__(self, sys_config, **kwargs)
 
         # todo 存档文件格式
         # 解析存档文件

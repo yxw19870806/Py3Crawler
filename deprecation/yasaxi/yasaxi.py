@@ -140,7 +140,7 @@ def get_one_page_photo(account_id, cursor):
 
 
 class Yasaxi(crawler.Crawler):
-    def __init__(self):
+    def __init__(self, **kwargs):
         global SESSION_DATA_PATH
 
         # 设置APP目录
@@ -151,7 +151,7 @@ class Yasaxi(crawler.Crawler):
             crawler.SYS_DOWNLOAD_PHOTO: True,
             crawler.SYS_NOT_CHECK_SAVE_DATA: True,
         }
-        crawler.Crawler.__init__(self, sys_config)
+        crawler.Crawler.__init__(self, sys_config, **kwargs)
 
         # 设置全局变量，供子线程调用
         SESSION_DATA_PATH = self.session_data_path

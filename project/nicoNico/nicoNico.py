@@ -126,7 +126,7 @@ def get_video_info(video_id):
 
 
 class NicoNico(crawler.Crawler):
-    def __init__(self):
+    def __init__(self, **kwargs):
         global COOKIE_INFO
 
         # 设置APP目录
@@ -138,7 +138,7 @@ class NicoNico(crawler.Crawler):
             crawler.SYS_SET_PROXY: True,
             crawler.SYS_GET_COOKIE: ("nicovideo.jp",),
         }
-        crawler.Crawler.__init__(self, sys_config)
+        crawler.Crawler.__init__(self, sys_config, **kwargs)
 
         # 设置全局变量，供子线程调用
         COOKIE_INFO = self.cookie_value

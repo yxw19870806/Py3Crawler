@@ -184,7 +184,7 @@ def get_video_page(video_id):
 
 
 class DailyMotion(crawler.Crawler):
-    def __init__(self):
+    def __init__(self, **kwargs):
         global FIRST_CHOICE_RESOLUTION
 
         # 设置APP目录
@@ -197,7 +197,7 @@ class DailyMotion(crawler.Crawler):
                 ("VIDEO_QUALITY", 6, crawler.CONFIG_ANALYSIS_MODE_INTEGER),
             ),
         }
-        crawler.Crawler.__init__(self, sys_config)
+        crawler.Crawler.__init__(self, sys_config, **kwargs)
 
         # 设置全局变量，供子线程调用
         video_quality = self.app_config["VIDEO_QUALITY"]
