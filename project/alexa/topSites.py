@@ -113,7 +113,7 @@ def get_top_sites_by_category(category_href, category_name, sites_count):
 
 
 class TopSites(crawler.Crawler):
-    def __init__(self):
+    def __init__(self, **kwargs):
         global COOKIE_INFO
 
         # 设置APP目录
@@ -124,7 +124,7 @@ class TopSites(crawler.Crawler):
             crawler.SYS_NOT_CHECK_SAVE_DATA: True,
             crawler.SYS_GET_COOKIE: ("alexa.com", "www.alexa.com"),
         }
-        crawler.Crawler.__init__(self, sys_config)
+        crawler.Crawler.__init__(self, sys_config, **kwargs)
 
         # 设置全局变量，供子线程调用
         COOKIE_INFO = self.cookie_value

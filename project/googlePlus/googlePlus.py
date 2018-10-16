@@ -131,7 +131,7 @@ def filter_photo_url(photo_url):
 
 
 class GooglePlus(crawler.Crawler):
-    def __init__(self):
+    def __init__(self, **kwargs):
         # 设置APP目录
         crawler.PROJECT_APP_PATH = os.path.abspath(os.path.dirname(__file__))
 
@@ -140,7 +140,7 @@ class GooglePlus(crawler.Crawler):
             crawler.SYS_DOWNLOAD_PHOTO: True,
             crawler.SYS_SET_PROXY: True,
         }
-        crawler.Crawler.__init__(self, sys_config)
+        crawler.Crawler.__init__(self, sys_config, **kwargs)
 
         # 解析存档文件
         # account_id  photo_count  album_id  (account_name)  (file_path)

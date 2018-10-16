@@ -225,7 +225,7 @@ def get_video_play_page(tweet_id):
 
 
 class Twitter(crawler.Crawler):
-    def __init__(self, extra_config=None):
+    def __init__(self, **kwargs):
         global COOKIE_INFO
 
         # 设置APP目录
@@ -238,7 +238,7 @@ class Twitter(crawler.Crawler):
             crawler.SYS_SET_PROXY: True,
             crawler.SYS_GET_COOKIE: ("twitter.com",),
         }
-        crawler.Crawler.__init__(self, sys_config, extra_config)
+        crawler.Crawler.__init__(self, sys_config, **kwargs)
 
         # 设置全局变量，供子线程调用
         COOKIE_INFO = self.cookie_value

@@ -90,7 +90,7 @@ def get_one_page_favorite(page_count):
 
 
 class Favorite(crawler.Crawler):
-    def __init__(self, extra_config=None):
+    def __init__(self, **kwargs):
         # 设置APP目录
         crawler.PROJECT_APP_PATH = os.path.abspath(os.path.dirname(__file__))
 
@@ -100,7 +100,7 @@ class Favorite(crawler.Crawler):
             crawler.SYS_NOT_CHECK_SAVE_DATA: True,
             crawler.SYS_GET_COOKIE: ("sina.com.cn", "login.sina.com.cn"),
         }
-        crawler.Crawler.__init__(self, sys_config, extra_config)
+        crawler.Crawler.__init__(self, sys_config, **kwargs)
 
         # 设置全局变量，供子线程调用
         weibo.COOKIE_INFO.update(self.cookie_value)

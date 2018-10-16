@@ -202,7 +202,7 @@ def check_photo_invalid(file_path):
 
 
 class Ameblo(crawler.Crawler):
-    def __init__(self):
+    def __init__(self, **kwargs):
         global COOKIE_INFO
 
         # 设置APP目录
@@ -213,7 +213,7 @@ class Ameblo(crawler.Crawler):
             crawler.SYS_DOWNLOAD_PHOTO: True,
             crawler.SYS_GET_COOKIE: ("ameba.jp", "www.ameba.jp"),
         }
-        crawler.Crawler.__init__(self, sys_config)
+        crawler.Crawler.__init__(self, sys_config, **kwargs)
 
         # 设置全局变量，供子线程调用
         COOKIE_INFO = self.cookie_value

@@ -381,7 +381,7 @@ def _decrypt_function3(a, b):
 
 
 class Youtube(crawler.Crawler):
-    def __init__(self):
+    def __init__(self, **kwargs):
         global COOKIE_INFO
         global FIRST_CHOICE_RESOLUTION
 
@@ -397,7 +397,7 @@ class Youtube(crawler.Crawler):
                 ("VIDEO_QUALITY", 6, crawler.CONFIG_ANALYSIS_MODE_INTEGER),
             ),
         }
-        crawler.Crawler.__init__(self, sys_config)
+        crawler.Crawler.__init__(self, sys_config, **kwargs)
 
         # 设置全局变量，供子线程调用
         COOKIE_INFO = self.cookie_value

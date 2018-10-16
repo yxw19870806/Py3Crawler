@@ -76,7 +76,7 @@ def get_video_info_page(video_id):
 
 
 class Vine(crawler.Crawler):
-    def __init__(self):
+    def __init__(self, **kwargs):
         # 设置APP目录
         crawler.PROJECT_APP_PATH = os.path.abspath(os.path.dirname(__file__))
 
@@ -85,7 +85,7 @@ class Vine(crawler.Crawler):
             crawler.SYS_DOWNLOAD_VIDEO: True,
             crawler.SYS_SET_PROXY: True,
         }
-        crawler.Crawler.__init__(self, sys_config)
+        crawler.Crawler.__init__(self, sys_config, **kwargs)
 
         # 解析存档文件
         # account_id  video_count video_string_id  video_number_id

@@ -77,7 +77,7 @@ def get_audio_play_page(audio_id, song_type):
 
 
 class FiveSing(crawler.Crawler):
-    def __init__(self):
+    def __init__(self, **kwargs):
         # 设置APP目录
         crawler.PROJECT_APP_PATH = os.path.abspath(os.path.dirname(__file__))
 
@@ -85,7 +85,7 @@ class FiveSing(crawler.Crawler):
         sys_config = {
             crawler.SYS_DOWNLOAD_AUDIO: True,
         }
-        crawler.Crawler.__init__(self, sys_config)
+        crawler.Crawler.__init__(self, sys_config, **kwargs)
 
         # 解析存档文件
         # account_id  last_yc_audio_id  last_fc_audio_id

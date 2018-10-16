@@ -233,7 +233,7 @@ def get_media_page(page_id):
 
 
 class Instagram(crawler.Crawler):
-    def __init__(self, extra_config=None):
+    def __init__(self, **kwargs):
         global COOKIE_INFO
         global IS_LOCAL_SAVE_SESSION
         global SESSION_DATA_PATH
@@ -251,7 +251,7 @@ class Instagram(crawler.Crawler):
                 ("IS_LOCAL_SAVE_SESSION", False, crawler.CONFIG_ANALYSIS_MODE_BOOLEAN),
             ),
         }
-        crawler.Crawler.__init__(self, sys_config, extra_config)
+        crawler.Crawler.__init__(self, sys_config, **kwargs)
 
         # 设置全局变量，供子线程调用
         COOKIE_INFO.update(self.cookie_value)

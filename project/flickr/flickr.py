@@ -194,7 +194,7 @@ def get_one_page_photo(user_id, page_count, api_key, csrf, request_id):
 
 
 class Flickr(crawler.Crawler):
-    def __init__(self):
+    def __init__(self, **kwargs):
         global COOKIE_INFO
         global IS_LOGIN
 
@@ -207,7 +207,7 @@ class Flickr(crawler.Crawler):
             crawler.SYS_SET_PROXY: True,
             crawler.SYS_GET_COOKIE: ("flickr.com",),
         }
-        crawler.Crawler.__init__(self, sys_config)
+        crawler.Crawler.__init__(self, sys_config, **kwargs)
 
         # 设置全局变量，供子线程调用
         COOKIE_INFO = self.cookie_value
