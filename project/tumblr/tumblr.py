@@ -243,7 +243,7 @@ def get_one_page_private_blog(account_id, page_count):
 
 
 # 获取日志页面
-def get_post_page(post_url, is_safe_mode):
+def get_post_page(post_url, post_id, is_safe_mode):
     if is_safe_mode:
         header_list = {"User-Agent": USER_AGENT}
         cookies_list = COOKIE_INFO
@@ -254,6 +254,7 @@ def get_post_page(post_url, is_safe_mode):
     result = {
         "has_video": False,  # 是不是包含视频
         "photo_url_list": [],  # 全部图片地址
+        "video_url": None,  # 视频地址
     }
     if post_response.status in [503, 504, net.HTTP_RETURN_CODE_RETRY]:
         # 服务器错误，跳过这页
@@ -275,6 +276,11 @@ def get_post_page(post_url, is_safe_mode):
         photo_url = tool.find_sub_string(post_page_head, '<meta property="og:image" content="', '" />')
         if photo_url and photo_url.find("assets.tumblr.com/images/og/fb_landscape_share.png") == -1:
             result["photo_url_list"].append(photo_url)
+        post_selector = pq(post_response_content).find("article[data-post-id='%s']" % post_id)
+        if post_selector.length == 1:
+            video_url = post_selector.find("source").attr("src")
+            if video_url is not None:
+                result["video_url"] = video_url
     elif not og_type:
         script_data_string = tool.find_sub_string(post_page_head, '<script type="application/ld+json">', "</script>").strip()
         if not script_data_string:
@@ -547,22 +553,22 @@ class Download(crawler.DownloadThread):
         if self.is_private:
             has_video = post_info["has_video"]
             photo_url_list = post_info["photo_url_list"]
+            video_url = post_info["video_url"]
         else:
             # 获取日志
             try:
-                post_response = get_post_page(post_info["post_url"], self.is_safe_mode)
+                post_response = get_post_page(post_info["post_url"], post_info["post_id"], self.is_safe_mode)
             except crawler.CrawlerException as e:
                 self.error("日志 %s 解析失败，原因：%s" % (post_url, e.message))
                 raise
             has_video = post_response["has_video"]
             photo_url_list = post_response["photo_url_list"]
+            video_url = post_response["video_url"]
 
         # 视频下载
         video_index = 1
         while self.main_thread.is_download_video and has_video:
-            if self.is_private:
-                video_url = post_info["video_url"]
-            else:
+            if video_url is None:
                 self.main_thread_check()  # 检测主线程运行状态
                 try:
                     video_play_response = get_video_play_page(self.account_id, post_info["post_id"], self.is_https)
