@@ -151,12 +151,14 @@ class Yasaxi(crawler.Crawler):
             crawler.SYS_DOWNLOAD_PHOTO: True,
             crawler.SYS_NOT_CHECK_SAVE_DATA: True,
         }
+        if "extra_config" not in kwargs:
+            kwargs["extra_config"] = {}
+        # 服务器有请求数量限制，所以取消多线程
+        kwargs["extra_config"]["thread_count"] = 1
         crawler.Crawler.__init__(self, sys_config, **kwargs)
 
         # 设置全局变量，供子线程调用
         SESSION_DATA_PATH = self.session_data_path
-        # 服务器有请求数量限制，所以取消多线程
-        self.thread_count = 1
 
         # 解析存档文件
         # account_id  status_id
