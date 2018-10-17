@@ -27,6 +27,41 @@ def check_login():
     return False
 
 
+# 获取指定账号下的所有视频列表
+def get_account_mylist(account_id):
+    account_mylist_url = "https://www.nicovideo.jp/user/%s/mylist" % account_id
+    account_mylist_response = net.http_request(account_mylist_url, method="GET", is_auto_retry=False)
+    result = {
+        "list_id_list": [],  # 全部视频列表id
+        "is_private": False,  # 是否未公开
+    }
+    if account_mylist_response.status in [404, 500]:
+        raise crawler.CrawlerException("账号不存在")
+    elif account_mylist_response.status != net.HTTP_RETURN_CODE_SUCCEED:
+        raise crawler.CrawlerException(crawler.request_failre(account_mylist_response.status))
+    account_mylist_response_content = account_mylist_response.data.decode(errors="ignore")
+    if pq(account_mylist_response_content).find(".articleBody .noListMsg").length == 1:
+        message = pq(account_mylist_response_content).find(".articleBody .noListMsg .att").text()
+        if message == "非公開です":
+            result["is_private"] = True
+            return result
+        elif message == "公開マイリストはありません":
+            return result
+        else:
+            raise crawler.CrawlerException("未知视频列表状态 %s" % message)
+    mylist_list_selector = pq(account_mylist_response_content).find(".articleBody .outer")
+    for mylist_index in range(0, mylist_list_selector.length):
+        mylist_selector = mylist_list_selector.eq(mylist_index)
+        mylist_url = mylist_selector.find(".section h4 a").attr("href")
+        if mylist_url is None:
+            raise crawler.CrawlerException("视频列表信息截取视频列表地址失败\n%s" % mylist_selector.html())
+        list_id = tool.find_sub_string(mylist_url, "mylist/")
+        if not crawler.is_integer(list_id):
+            raise crawler.CrawlerException("视频列表地址截取视频列表id失败\n%s" % mylist_selector.html())
+        result["list_id_list"].append(int(list_id))
+    return result
+
+
 # 获取视频列表全部视频信息
 # list_id => 15614906
 def get_mylist_index(list_id):
