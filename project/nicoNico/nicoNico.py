@@ -27,28 +27,113 @@ def check_login():
     return False
 
 
+# 获取指定账号下的所有视频列表
+def get_account_mylist(account_id):
+    account_mylist_url = "https://www.nicovideo.jp/user/%s/mylist" % account_id
+    account_mylist_response = net.http_request(account_mylist_url, method="GET", is_auto_retry=False)
+    result = {
+        "list_id_list": [],  # 全部视频列表id
+        "is_private": False,  # 是否未公开
+    }
+    if account_mylist_response.status in [404, 500]:
+        raise crawler.CrawlerException("账号不存在")
+    elif account_mylist_response.status != net.HTTP_RETURN_CODE_SUCCEED:
+        raise crawler.CrawlerException(crawler.request_failre(account_mylist_response.status))
+    account_mylist_response_content = account_mylist_response.data.decode(errors="ignore")
+    if pq(account_mylist_response_content).find(".articleBody .noListMsg").length == 1:
+        message = pq(account_mylist_response_content).find(".articleBody .noListMsg .att").text()
+        if message == "非公開です":
+            result["is_private"] = True
+            return result
+        elif message == "公開マイリストはありません":
+            return result
+        else:
+            raise crawler.CrawlerException("未知视频列表状态 %s" % message)
+    mylist_list_selector = pq(account_mylist_response_content).find(".articleBody .outer")
+    for mylist_index in range(0, mylist_list_selector.length):
+        mylist_selector = mylist_list_selector.eq(mylist_index)
+        mylist_url = mylist_selector.find(".section h4 a").attr("href")
+        if mylist_url is None:
+            raise crawler.CrawlerException("视频列表信息截取视频列表地址失败\n%s" % mylist_selector.html())
+        list_id = tool.find_sub_string(mylist_url, "mylist/")
+        if not crawler.is_integer(list_id):
+            raise crawler.CrawlerException("视频列表地址截取视频列表id失败\n%s" % mylist_selector.html())
+        result["list_id_list"].append(int(list_id))
+    return result
+
+
+# 获取指定账号下的一页投稿视频
+def get_one_page_account_video(account_id, page_count):
+    video_index_url = "https://www.nicovideo.jp/user/%s/video" % account_id
+    query_data = {"page": page_count}
+    video_index_response = net.http_request(video_index_url, method="GET", fields=query_data)
+    result = {
+        "video_info_list": [],  # 全部视频信息
+        "is_over": False,  # 是否最后页
+        "is_private": False,  # 是否未公开
+    }
+    if video_index_response.status == 404:
+        raise crawler.CrawlerException("账号不存在")
+    elif video_index_response.status != net.HTTP_RETURN_CODE_SUCCEED:
+        raise crawler.CrawlerException(crawler.request_failre(video_index_response.status))
+    video_index_response_content = video_index_response.data.decode(errors="ignore")
+    if pq(video_index_response_content).find(".articleBody .noListMsg").length == 1:
+        message = pq(video_index_response_content).find(".articleBody .noListMsg .att").text()
+        if message == "非公開です":
+            result["is_private"] = True
+            return result
+        else:
+            raise crawler.CrawlerException("未知视频列表状态 %s" % message)
+    video_list_selector = pq(video_index_response_content).find(".articleBody .outer")
+    # 第一个是排序选择框，跳过
+    for video_index in range(1, video_list_selector.length):
+        result_video_info = {
+            "video_id": None,  # 视频id
+            "video_title": "",  # 视频标题
+        }
+        video_selector = video_list_selector.eq(video_index)
+        # 获取视频id
+        video_url = video_selector.find(".section h5 a").attr("href")
+        if video_url is None:
+            raise crawler.CrawlerException("视频信息截取视频地址失败\n%s" % video_selector.html())
+        video_id = tool.find_sub_string(video_url, "watch/sm", "?")
+        if not crawler.is_integer(video_id):
+            raise crawler.CrawlerException("视频地址截取视频id失败\n%s" % video_selector.html())
+        result_video_info["video_id"] = int(video_id)
+        # 获取视频标题
+        video_title = video_selector.find(".section h5 a").text()
+        if not video_title:
+            raise crawler.CrawlerException("视频信息截取视频标题失败\n%s" % video_selector.html())
+        result_video_info["video_title"] = video_title
+        result["video_info_list"].append(result_video_info)
+    # 判断是不是最后页
+    if pq(video_index_response_content).find(".articleBody .pager a:last").text() != "次へ":
+        result["is_over"] = True
+    return result
+
+
 # 获取视频列表全部视频信息
-# account_id => 15614906
-def get_mylist_index(account_id):
+# list_id => 15614906
+def get_mylist_index(list_id):
     # http://www.nicovideo.jp/mylist/15614906
-    account_index_url = "http://www.nicovideo.jp/mylist/%s" % account_id
-    account_index_response = net.http_request(account_index_url, method="GET")
+    mylist_index_url = "http://www.nicovideo.jp/mylist/%s" % list_id
+    mylist_index_response = net.http_request(mylist_index_url, method="GET")
     result = {
         "video_info_list": [],  # 全部视频信息
     }
-    if account_index_response.status == 404:
+    if mylist_index_response.status == 404:
         raise crawler.CrawlerException("视频列表不存在")
-    elif account_index_response.status == 403:
+    elif mylist_index_response.status == 403:
         raise crawler.CrawlerException("视频列表未公开")
-    elif account_index_response.status != net.HTTP_RETURN_CODE_SUCCEED:
-        raise crawler.CrawlerException(crawler.request_failre(account_index_response.status))
-    account_index_response_content = account_index_response.data.decode(errors="ignore")
-    all_video_info = tool.find_sub_string(account_index_response_content, "Mylist.preload(%s," % account_id, ");").strip()
+    elif mylist_index_response.status != net.HTTP_RETURN_CODE_SUCCEED:
+        raise crawler.CrawlerException(crawler.request_failre(mylist_index_response.status))
+    mylist_index_response_content = mylist_index_response.data.decode(errors="ignore")
+    all_video_info = tool.find_sub_string(mylist_index_response_content, "Mylist.preload(%s," % list_id, ");").strip()
     if not all_video_info:
-        raise crawler.CrawlerException("截取视频列表失败\n%s" % account_index_response_content)
+        raise crawler.CrawlerException("截取视频列表失败\n%s" % mylist_index_response_content)
     all_video_info = tool.json_decode(all_video_info)
     if all_video_info is None:
-        raise crawler.CrawlerException("视频列表加载失败\n%s" % account_index_response_content)
+        raise crawler.CrawlerException("视频列表加载失败\n%s" % mylist_index_response_content)
     # 倒序排列，时间越晚的越前面
     all_video_info.reverse()
     for video_info in all_video_info:
@@ -155,13 +240,13 @@ class NicoNico(crawler.Crawler):
     def main(self):
         # 循环下载每个id
         thread_list = []
-        for account_id in sorted(self.account_list.keys()):
+        for list_id in sorted(self.account_list.keys()):
             # 提前结束
             if not self.is_running():
                 break
 
             # 开始下载
-            thread = Download(self.account_list[account_id], self)
+            thread = Download(self.account_list[list_id], self)
             thread.start()
             thread_list.append(thread)
 
@@ -184,7 +269,7 @@ class NicoNico(crawler.Crawler):
 class Download(crawler.DownloadThread):
     def __init__(self, account_info, main_thread):
         crawler.DownloadThread.__init__(self, account_info, main_thread)
-        self.account_id = self.account_info[0]
+        self.list_id = self.account_info[0]
         if len(self.account_info) >= 3 and self.account_info[2]:
             self.display_name = self.account_info[2]
         else:
@@ -195,17 +280,17 @@ class Download(crawler.DownloadThread):
     def get_crawl_list(self):
         # 获取视频信息列表
         try:
-            account_index_response = get_mylist_index(self.account_id)
+            mylist_index_response = get_mylist_index(self.list_id)
         except crawler.CrawlerException as e:
             self.error("视频列表解析失败，原因：%s" % e.message)
             raise
 
-        self.trace("解析的全部视频：%s" % account_index_response["video_info_list"])
-        self.step("解析获取%s个视频" % len(account_index_response["video_info_list"]))
+        self.trace("解析的全部视频：%s" % mylist_index_response["video_info_list"])
+        self.step("解析获取%s个视频" % len(mylist_index_response["video_info_list"]))
 
         video_info_list = []
         # 寻找这一页符合条件的视频
-        for video_info in account_index_response["video_info_list"]:
+        for video_info in mylist_index_response["video_info_list"]:
             self.main_thread_check()  # 检测主线程运行状态
             # 检查是否达到存档记录
             if video_info["video_id"] > int(self.account_info[1]):
@@ -273,7 +358,7 @@ class Download(crawler.DownloadThread):
         with self.thread_lock:
             file.write_file("\t".join(self.account_info), self.main_thread.temp_save_data_path)
             self.main_thread.total_video_count += self.total_video_count
-            self.main_thread.account_list.pop(self.account_id)
+            self.main_thread.account_list.pop(self.list_id)
         self.step("完成")
         self.notify_main_thread()
 
