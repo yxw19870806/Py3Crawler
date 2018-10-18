@@ -15,22 +15,11 @@ NICONICO_VIDEO_DOWNLOAD_PATH = os.path.abspath(os.path.join(os.path.dirname(__fi
 
 
 def main():
-    config = crawler._get_config()
-    # 获取cookies
-    all_cookie_from_browser = crawler.quickly_get_all_cookies_from_browser(config)
-    if ".nicovideo.jp" in all_cookie_from_browser:
-        for cookie_key in all_cookie_from_browser[".nicovideo.jp"]:
-            nicoNico.COOKIE_INFO[cookie_key] = all_cookie_from_browser[".nicovideo.jp"][cookie_key]
-    # 设置代理
-    crawler.quickly_set_proxy(config)
+    # 初始化类
+    nicoNico.NicoNico()
+    ivseek_obj = ivseek.IvSeek()
 
-    # 检测登录状态
-    if not nicoNico.check_login():
-        output.print_msg("没有检测到账号登录状态，退出程序！")
-        tool.process_exit()
-
-    save_data_path = crawler.quickly_get_save_data_path(config)
-    save_data_list = ivseek.read_save_data(save_data_path)
+    save_data_list = ivseek.read_save_data(ivseek_obj.save_data_path)
     for single_save_list in save_data_list:
         if single_save_list[2].find(".nicovideo.jp/") == -1:
             continue
@@ -69,7 +58,7 @@ def main():
         # 增加已处理标记
         single_save_list[4] = ivseek.DONE_SING
         # 保存记录
-        file.write_file(tool.list_to_string(save_data_list), save_data_path, file.WRITE_FILE_TYPE_REPLACE)
+        file.write_file(tool.list_to_string(save_data_list), ivseek_obj.save_data_path, file.WRITE_FILE_TYPE_REPLACE)
 
 
 if __name__ == "__main__":
