@@ -276,7 +276,9 @@ def get_post_page(post_url, post_id, is_safe_mode):
         photo_url = tool.find_sub_string(post_page_head, '<meta property="og:image" content="', '" />')
         if photo_url and photo_url.find("assets.tumblr.com/images/og/fb_landscape_share.png") == -1:
             result["photo_url_list"].append(photo_url)
-        post_selector = pq(post_response_content).find("article[data-post-id='%s']" % post_id)
+        post_selector = pq(post_response_content).find("article")
+        if post_selector.length > 1:
+            post_selector = pq(post_response_content).find("article[data-post-id='%s']" % post_id)
         if post_selector.length == 1:
             video_url = post_selector.find("source").attr("src")
             if video_url is not None:
