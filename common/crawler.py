@@ -324,8 +324,8 @@ def read_config(config_path):
     """Read config file"""
     config = {}
     with codecs.open(config_path, encoding="UTF-8-SIG") as file_handle:
-        config_file = configparser.SafeConfigParser()
-        config_file.readfp(file_handle)
+        config_file = configparser.ConfigParser()
+        config_file.read_file(file_handle)
         for key, value in config_file.items("setting"):
             config[key] = value
     return config
