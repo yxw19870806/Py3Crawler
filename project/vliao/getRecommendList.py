@@ -74,7 +74,7 @@ def get_tag_account_list(tag_id):
 
 def main():
     # 初始化类
-    vLiao_obj = vLiao.VLiao(extra_config={crawler.SYS_NOT_CHECK_SAVE_DATA: True})
+    vLiao_obj = vLiao.VLiao(extra_sys_config={crawler.SYS_NOT_CHECK_SAVE_DATA: True})
 
     account_list_from_api = get_account_list_from_api()
     if len(account_list_from_api) > 0:

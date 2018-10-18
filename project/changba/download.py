@@ -14,7 +14,7 @@ from project.changba import changba
 
 def main():
     # 初始化
-    changba_obj = changba.ChangBa(extra_config={crawler.SYS_NOT_CHECK_SAVE_DATA: True})
+    changba_obj = changba.ChangBa(extra_sys_config={crawler.SYS_NOT_CHECK_SAVE_DATA: True})
     # GUI窗口
     gui = tkinter.Tk()
     gui.withdraw()

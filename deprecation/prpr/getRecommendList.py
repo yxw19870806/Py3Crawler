@@ -89,7 +89,7 @@ def get_channel_account_from_api(channel_id):
 
 def main():
     # 初始化类
-    prpr_obj = prpr.PrPr(extra_config={crawler.SYS_NOT_CHECK_SAVE_DATA: True})
+    prpr_obj = prpr.PrPr(extra_sys_config={crawler.SYS_NOT_CHECK_SAVE_DATA: True})
 
     account_list_from_api = get_account_list_from_api()
     if len(account_list_from_api) > 0:

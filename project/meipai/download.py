@@ -14,7 +14,7 @@ from project.meipai import meipai
 
 def main():
     # 初始化
-    meipai_obj = meipai.MeiPai(extra_config={crawler.SYS_NOT_CHECK_SAVE_DATA: True})
+    meipai_obj = meipai.MeiPai(extra_sys_config={crawler.SYS_NOT_CHECK_SAVE_DATA: True})
     # GUI窗口
     gui = tkinter.Tk()
     gui.withdraw()

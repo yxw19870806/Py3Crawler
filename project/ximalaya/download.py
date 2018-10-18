@@ -14,7 +14,7 @@ from project.ximalaya import ximalaya
 
 def main():
     # 初始化
-    ximalaya_obj = ximalaya.XiMaLaYa(extra_config={crawler.SYS_NOT_CHECK_SAVE_DATA: True})
+    ximalaya_obj = ximalaya.XiMaLaYa(extra_sys_config={crawler.SYS_NOT_CHECK_SAVE_DATA: True})
     # GUI窗口
     gui = tkinter.Tk()
     gui.withdraw()

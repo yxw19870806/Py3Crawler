@@ -39,7 +39,7 @@ def get_account_from_index():
 
 def main():
     # 初始化类
-    keyakizaka46Diary_obj = keyakizaka46Diary.Keyakizaka46Diary(extra_config={crawler.SYS_NOT_CHECK_SAVE_DATA: True})
+    keyakizaka46Diary_obj = keyakizaka46Diary.Keyakizaka46Diary(extra_sys_config={crawler.SYS_NOT_CHECK_SAVE_DATA: True})
 
     # 存档位置
     account_list_from_api = get_account_from_index()

@@ -14,7 +14,7 @@ from project.xvideos import xvideos
 
 def main():
     # 初始化
-    xvideos_obj = xvideos.XVideos(extra_config={crawler.SYS_NOT_CHECK_SAVE_DATA: True})
+    xvideos_obj = xvideos.XVideos(extra_sys_config={crawler.SYS_NOT_CHECK_SAVE_DATA: True})
     # GUI窗口
     gui = tkinter.Tk()
     gui.withdraw()
