@@ -137,8 +137,8 @@ def get_blog_page(account_name, blog_id):
             pass
         # 表情
         elif photo_url.find("//emoji.ameba.jp/img/") > 0 or photo_url.find("//stat.ameba.jp/blog/ucs/img/") > 0 \
-            or photo_url.find("//stat.ameba.jp/mb/") > 0 or photo_url.find("//stat.ameba.jp/common_style/") > 0 \
-            or photo_url.find("//stat100.ameba.jp/blog/ucs/img/") > 0 or photo_url.find("//stat100.ameba.jp/candy/"):
+                or photo_url.find("//stat.ameba.jp/mb/") > 0 or photo_url.find("//stat.ameba.jp/common_style/") > 0 \
+                or photo_url.find("//stat100.ameba.jp/blog/ucs/img/") > 0 or photo_url.find("//stat100.ameba.jp/candy/"):
             pass
         elif photo_url.find("data:image/gif;base64,") == 0 or photo_url.find("file://") == 0:
             pass
