@@ -14,8 +14,8 @@ from project.nicoNico import nicoNico
 
 def main():
     # 初始化类
-    youtube_obj = youtube.Youtube(extra_config={crawler.SYS_NOT_CHECK_SAVE_DATA: True})
-    nicoNico_obj = nicoNico.NicoNico(extra_config={crawler.SYS_NOT_CHECK_SAVE_DATA: True})
+    youtube_obj = youtube.Youtube(extra_sys_config={crawler.SYS_NOT_CHECK_SAVE_DATA: True})
+    nicoNico_obj = nicoNico.NicoNico(extra_sys_config={crawler.SYS_NOT_CHECK_SAVE_DATA: True})
     ivseek_obj = ivseek.IvSeek()
 
     save_data_list = ivseek.read_save_data(ivseek_obj.save_data_path)

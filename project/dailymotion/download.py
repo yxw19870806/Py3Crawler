@@ -14,7 +14,7 @@ from project.dailymotion import dailymotion
 
 def main():
     # 初始化
-    dailymotion_obj = dailymotion.DailyMotion(extra_config={crawler.SYS_NOT_CHECK_SAVE_DATA: True})
+    dailymotion_obj = dailymotion.DailyMotion(extra_sys_config={crawler.SYS_NOT_CHECK_SAVE_DATA: True})
     # GUI窗口
     gui = tkinter.Tk()
     gui.withdraw()

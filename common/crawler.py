@@ -66,6 +66,9 @@ class Crawler(object):
             output.print_msg("程序启动配置不存在，请检查代码！")
             tool.process_exit()
             return
+        # 额外初始化配置（直接通过实例化中传入，可覆盖子类__init__方法传递的sys_config参数）
+        if "extra_sys_config" in kwargs and isinstance(kwargs["extra_sys_config"], dict):
+            sys_config.update(kwargs["extra_sys_config"])
         sys_download_photo = SYS_DOWNLOAD_PHOTO in sys_config
         sys_download_video = SYS_DOWNLOAD_VIDEO in sys_config
         sys_download_audio = SYS_DOWNLOAD_AUDIO in sys_config
@@ -88,9 +91,9 @@ class Crawler(object):
         app_config_path = os.path.abspath(os.path.join(PROJECT_APP_PATH, "app.ini"))
         if os.path.exists(app_config_path):
             config.update(read_config(app_config_path))
-        # 额外配置（直接通过实例化中传入，可覆盖配置文件中参数）
-        if "extra_config" in kwargs and isinstance(kwargs["extra_config"], dict):
-            config.update(kwargs["extra_config"])
+        # 额外应用配置（直接通过实例化中传入，可覆盖配置文件中参数）
+        if "extra_app_config" in kwargs and isinstance(kwargs["extra_app_config"], dict):
+            config.update(kwargs["extra_app_config"])
 
         # 应用配置
         self.app_config = {}

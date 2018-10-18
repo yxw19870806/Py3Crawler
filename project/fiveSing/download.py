@@ -14,7 +14,7 @@ from project.fiveSing import fiveSing
 
 def main():
     # 初始化
-    fiveSing_obj = fiveSing.FiveSing(extra_config={crawler.SYS_NOT_CHECK_SAVE_DATA: True})
+    fiveSing_obj = fiveSing.FiveSing(extra_sys_config={crawler.SYS_NOT_CHECK_SAVE_DATA: True})
     # GUI窗口
     gui = tkinter.Tk()
     gui.withdraw()
