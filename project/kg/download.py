@@ -14,7 +14,7 @@ from project.kg import kg
 
 def main():
     # 初始化
-    kg_obj = kg.KG(extra_config={crawler.SYS_NOT_CHECK_SAVE_DATA: True})
+    kg_obj = kg.KG(extra_sys_config={crawler.SYS_NOT_CHECK_SAVE_DATA: True})
     # GUI窗口
     gui = tkinter.Tk()
     gui.withdraw()

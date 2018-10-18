@@ -6,6 +6,8 @@ http://www.ivseek.com/
 email: hikaru870806@hotmail.com
 如有问题或建议请联系
 """
+import json
+import os
 from common import *
 from project.ivseek import ivseek
 from project.youtube import youtube
@@ -14,8 +16,8 @@ from project.nicoNico import nicoNico
 
 def main():
     # 初始化类
-    youtube_obj = youtube.Youtube(extra_config={crawler.SYS_NOT_CHECK_SAVE_DATA: True})
-    nicoNico_obj = nicoNico.NicoNico(extra_config={crawler.SYS_NOT_CHECK_SAVE_DATA: True})
+    youtube_obj = youtube.Youtube(extra_sys_config={crawler.SYS_NOT_CHECK_SAVE_DATA: True})
+    nicoNico_obj = nicoNico.NicoNico(extra_sys_config={crawler.SYS_NOT_CHECK_SAVE_DATA: True})
     ivseek_obj = ivseek.IvSeek()
 
     save_data_list = ivseek.read_save_data(ivseek_obj.save_data_path)
@@ -33,20 +35,37 @@ def main():
             account_id_list["niconico"][single_save_list[3]] = 1
         else:
             continue
-        # single_save_list[4] = ivseek.DONE_SING
-    for type in account_id_list:
-        for account_id in account_id_list[type]:
-            if type == "youtube":
-                if account_id not in youtube_obj.account_list:
-                    youtube_obj.account_list[account_id] = [account_id]
-            elif type == "niconico":
-                if not crawler.is_integer(account_id):
-                    continue
-                # if account_id not in nicoNico_obj.account_list:
-                #     nicoNico_obj.account_list[account_id] = [account_id]
-    file.write_file(tool.list_to_string(save_data_list), ivseek_obj.save_data_path, file.WRITE_FILE_TYPE_REPLACE)
+
+    # 获取niconico账号下的所有视频列表
+    niconico_mylist_cache_path = os.path.join(ivseek_obj.cache_data_path, "niconico_mylist.json")
+    niconico_mylist_list = tool.json_decode(file.read_file(niconico_mylist_cache_path), {})
+    for account_id in account_id_list["niconico"]:
+        if account_id in niconico_mylist_list:
+            continue
+        if not crawler.is_integer(account_id):
+            continue
+        try:
+            account_mylist_response = nicoNico.get_account_mylist(account_id)
+        except crawler.CrawlerException as e:
+            print("niconico账号%s的视频列表解析失败，原因：%s" % (account_id, e.message))
+            continue
+        niconico_mylist_list[account_id] = account_mylist_response["list_id_list"]
+        file.write_file(json.dumps(niconico_mylist_list), niconico_mylist_cache_path, file.WRITE_FILE_TYPE_REPLACE)
+
+    # 更新youtube的存档文件
+    for account_id in account_id_list["youtube"]:
+        if account_id not in youtube_obj.account_list:
+            youtube_obj.account_list[account_id] = [account_id]
     file.write_file(tool.list_to_string(youtube_obj.account_list.values()), youtube_obj.save_data_path, file.WRITE_FILE_TYPE_REPLACE)
-    # file.write_file(tool.list_to_string(nicoNico_obj.account_list.values()), nicoNico_obj.save_data_path, file.WRITE_FILE_TYPE_REPLACE)
+
+    # 更新niconico的存档文件
+    for account_id in niconico_mylist_list:
+        for mylist_id in niconico_mylist_list[account_id]:
+            if mylist_id not in nicoNico_obj.account_list:
+                nicoNico_obj.account_list[mylist_id] = [mylist_id]
+    file.write_file(tool.list_to_string(nicoNico_obj.account_list.values()), nicoNico_obj.save_data_path, file.WRITE_FILE_TYPE_REPLACE)
+
+    file.write_file(tool.list_to_string(save_data_list), ivseek_obj.save_data_path, file.WRITE_FILE_TYPE_REPLACE)
 
 
 if __name__ == "__main__":

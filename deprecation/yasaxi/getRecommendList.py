@@ -34,7 +34,7 @@ def get_account_from_api():
 
 def main():
     # 初始化类
-    yasaxi_obj = yasaxi.Yasaxi(extra_config={crawler.SYS_NOT_CHECK_SAVE_DATA: True})
+    yasaxi_obj = yasaxi.Yasaxi(extra_sys_config={crawler.SYS_NOT_CHECK_SAVE_DATA: True})
 
     # 存档位置
     try:
