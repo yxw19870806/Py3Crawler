@@ -201,9 +201,16 @@ def get_one_page_private_blog(account_id, page_count):
             "post_url": None,  # 日志地址
             "video_url": None,  # 视频地址
         }
+        # 获取日志地址
         if not crawler.check_sub_key(("post_url",), post_info):
             raise crawler.CrawlerException("日志信息'post_url'字段不存在\n%s" % post_info)
         result_post_info["post_url"] = net.url_encode(post_info["post_url"])
+        # 获取日志id
+        post_id = tool.find_sub_string(result_post_info["post_url"], "/post/").split("/")[0]
+        if not crawler.is_integer(post_id):
+            crawler.CrawlerException("日志地址截取日志id失败\n%s" % result_post_info["post_url"])
+        result_post_info["post_id"] = int(post_id)
+        # 日志类型
         if not crawler.check_sub_key(("type",), post_info):
             raise crawler.CrawlerException("日志信息'type'字段不存在\n%s" % post_info)
         # 视频
