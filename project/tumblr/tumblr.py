@@ -403,7 +403,11 @@ def get_video_play_page(account_id, post_id, is_https):
         video_play_url = video_play_response.getheader("Location")
         if video_play_url is not None:
             video_play_response = net.http_request(video_play_url, method="GET")
-    if video_play_response.status != net.HTTP_RETURN_CODE_SUCCEED:
+    if video_play_response.status in [403, 404]:
+        log.step("日志%s视频信息页访问异常，重试" % post_id)
+        time.sleep(30)
+        return get_video_play_page(account_id, post_id, is_https)
+    elif video_play_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(video_play_response.status))
     video_play_response_content = video_play_response.data.decode(errors="ignore")
     video_url_find = re.findall('<source src="(http[s]?://' + account_id + '.tumblr.com/video_file/[^"]*)" type="[^"]*"', video_play_response_content)
