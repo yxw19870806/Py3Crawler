@@ -47,6 +47,7 @@ def get_album_page(album_id):
             result["is_delete"] = True
             return result
         elif album_pagination_response.status == 409:
+            log.step("图集分页 %s 访问异常，重试" % album_pagination_url)
             time.sleep(5)
             continue
         elif album_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:

@@ -74,7 +74,8 @@ def get_one_page_photo(account_id, cursor):
         if photo_pagination_response.json_data["meta"]["code"] == "NoMoreDataError":
             result["is_over"] = True
         elif photo_pagination_response.json_data["meta"]["code"] == "TooManyRequests":
-            time.sleep(30)
+            log.step("请求过于频繁，等待并重试")
+            time.sleep(60)
             return get_one_page_photo(account_id, cursor)
         else:
             raise crawler.CrawlerException("返回信息'code'字段取值不正确\n%s" % photo_pagination_response.json_data)
