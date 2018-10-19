@@ -32,6 +32,7 @@ def get_one_page_album(sub_path, page_count):
         "is_over": False,  # 是否最后一页图集
     }
     if album_pagination_response.status == 409:
+        log.step("分页图集 %s 访问异常，重试" % album_pagination_url)
         time.sleep(5)
         return get_one_page_album(sub_path, page_count)
     elif album_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
@@ -90,6 +91,7 @@ def get_album_page(album_url):
             pagination_album_url = album_url.replace(".html", "_%s.html" % page_count)
         album_response = net.http_request(pagination_album_url, method="GET", header_list={"Host": "www.94xmn.com"})
         if album_response.status == 409:
+            log.step("图集分页 %s 访问异常，重试" % pagination_album_url)
             time.sleep(5)
             continue
         elif album_response.status != net.HTTP_RETURN_CODE_SUCCEED:

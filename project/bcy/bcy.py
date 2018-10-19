@@ -451,6 +451,7 @@ class Download(crawler.DownloadThread):
                 else:
                     # 560报错，重新下载
                     if save_file_return["code"] == 404 and retry_count < 4:
+                        log.step("图片 %s 访问异常，重试" % photo_url)
                         time.sleep(5)
                         continue
                     self.error("作品%s第%s张图片 %s，下载失败，原因：%s" % (album_id, photo_index, photo_url, crawler.download_failre(save_file_return["code"])))

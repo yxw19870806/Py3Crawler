@@ -114,6 +114,7 @@ def get_archive_page(archive_id):
             # 获取视频发布账号
             video_play_response = net.http_request(result_video_info["video_url"], method="GET", cookies_list=nicoNico.COOKIE_INFO)
             while video_play_response.status == 403:
+                log.step("视频%s访问异常，重试" % video_id)
                 time.sleep(60)
                 video_play_response = net.http_request(result_video_info["video_url"], method="GET", cookies_list=nicoNico.COOKIE_INFO)
             if video_play_response.status != net.HTTP_RETURN_CODE_SUCCEED:
