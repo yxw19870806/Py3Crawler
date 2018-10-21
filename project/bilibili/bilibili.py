@@ -157,6 +157,9 @@ def get_one_page_audio(account_id, page_count):
         raise crawler.CrawlerException("返回信息'data'字段不存在\n%s" % api_response.json_data)
     if not crawler.check_sub_key(("data",), api_response.json_data["data"]):
         raise crawler.CrawlerException("返回信息'data'字段不存在\n%s" % api_response.json_data)
+    # 没有任何音频
+    if api_response.json_data["data"]["data"] is None:
+        return result
     for audio_info in api_response.json_data["data"]["data"]:
         result_audio_info = {
             "audio_id": None,  # 音频id
