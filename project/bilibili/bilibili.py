@@ -594,27 +594,29 @@ class Download(crawler.DownloadThread):
         try:
             # 视频下载
             if self.main_thread.is_download_video:
-                # 获取所有可下载视频
-                video_info_list = self.get_crawl_video_list()
-                self.step("需要下载的全部视频解析完毕，共%s个" % len(video_info_list))
+                if IS_DOWNLOAD_CONTRIBUTION_VIDEO:
+                    # 获取所有可下载视频
+                    video_info_list = self.get_crawl_video_list()
+                    self.step("需要下载的全部视频解析完毕，共%s个" % len(video_info_list))
 
-                # 从最早的视频开始下载
-                while len(video_info_list) > 0:
-                    video_info = video_info_list.pop()
-                    self.step("开始解析视频%s" % video_info["video_id"])
-                    self.crawl_video(video_info)
-                    self.main_thread_check()  # 检测主线程运行状态
+                    # 从最早的视频开始下载
+                    while len(video_info_list) > 0:
+                        video_info = video_info_list.pop()
+                        self.step("开始解析视频%s" % video_info["video_id"])
+                        self.crawl_video(video_info)
+                        self.main_thread_check()  # 检测主线程运行状态
 
-                # 获取所有可下载短视频
-                video_info_list = self.get_crawl_short_video_list()
-                self.step("需要下载的全部短视频解析完毕，共%s个" % len(video_info_list))
+                if IS_DOWNLOAD_SHORT_VIDEO:
+                    # 获取所有可下载短视频
+                    video_info_list = self.get_crawl_short_video_list()
+                    self.step("需要下载的全部短视频解析完毕，共%s个" % len(video_info_list))
 
-                # 从最早的视频开始下载
-                while len(video_info_list) > 0:
-                    video_info = video_info_list.pop()
-                    self.step("开始解析视频%s" % video_info["video_id"])
-                    self.crawl_short_video(video_info)
-                    self.main_thread_check()  # 检测主线程运行状态
+                    # 从最早的视频开始下载
+                    while len(video_info_list) > 0:
+                        video_info = video_info_list.pop()
+                        self.step("开始解析视频%s" % video_info["video_id"])
+                        self.crawl_short_video(video_info)
+                        self.main_thread_check()  # 检测主线程运行状态
 
             # 音频下载
             if self.main_thread.is_download_audio:
