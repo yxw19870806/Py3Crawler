@@ -35,6 +35,9 @@ def deal_one_group(check_list):
         file_path = os.path.join(row[2], row[1])
         if file_path in unique_list:
             continue
+        # 相似度
+        if int(row[3].replace("%", "")) < 45:
+            continue
         unique_list[file_path] = 1
         if row[5].find(" B") > 0:
             file_size = float(row[5].replace(" B", "").strip())
