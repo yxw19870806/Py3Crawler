@@ -61,6 +61,7 @@ def main():
     # 更新niconico的存档文件
     for account_id in niconico_mylist_list:
         for mylist_id in niconico_mylist_list[account_id]:
+            mylist_id = str(mylist_id)
             if mylist_id not in nicoNico_obj.account_list:
                 nicoNico_obj.account_list[mylist_id] = [mylist_id]
     file.write_file(tool.list_to_string(nicoNico_obj.account_list.values()), nicoNico_obj.save_data_path, file.WRITE_FILE_TYPE_REPLACE)
