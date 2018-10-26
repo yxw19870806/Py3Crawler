@@ -68,7 +68,7 @@ def main():
         "filetypes": [("data file", "*.data"), ("all files", "*")],
         "parent": gui,
     }
-    save_data_path = tkinter.filedialog.askopenfile(**options)
+    save_data_path = tkinter.filedialog.asksaveasfilename(**options)
     if not save_data_path:
         tool.process_exit()
 
