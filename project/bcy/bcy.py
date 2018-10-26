@@ -11,10 +11,10 @@ import os
 import time
 import traceback
 import urllib.parse
-from pyquery import PyQuery as pq
 from common import *
 from common import crypto
 
+EACH_PAGE_ALBUM_COUNT = 20
 COOKIE_INFO = {}
 IS_AUTO_FOLLOW = True
 IS_LOCAL_SAVE_SESSION = False
@@ -129,45 +129,31 @@ def unfollow(account_id):
 
 
 # 获取指定页数的全部作品
-def get_one_page_album(account_id, page_count):
-    # https://bcy.net/u/50220/post/cos?&p=1
-    album_pagination_url = "https://bcy.net/u/%s/post?&p=%s" % (account_id, page_count)
-    query_data = {"p": page_count}
-    album_pagination_response = net.http_request(album_pagination_url, method="GET", fields=query_data, cookies_list=COOKIE_INFO)
+def get_one_page_album(account_id, since_id):
+    # https://bcy.net/home/timeline/loaduserposts?since=0&grid_type=timeline&uid=12218&limit=20
+    api_url = "https://bcy.net/home/timeline/loaduserposts"
+    query_data = {
+        "since": since_id,
+        "grid_type": "timeline",
+        "uid": account_id,
+        "limit": EACH_PAGE_ALBUM_COUNT,
+    }
+    api_response = net.http_request(api_url, method="GET", fields=query_data, cookies_list=COOKIE_INFO, json_decode=True)
     result = {
         "album_id_list": [],  # 全部作品id
-        "is_over": False,  # 是不是最后一页作品
     }
-    if album_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
-        raise crawler.CrawlerException(crawler.request_failre(album_pagination_response.status))
-    album_pagination_content = album_pagination_response.data.decode(errors="ignore")
-    if page_count == 1 and album_pagination_content.find("<h2>用户不存在</h2>") >= 0:
-        raise crawler.CrawlerException("账号不存在")
-    # 没有作品
-    if album_pagination_content.find("<h2>尚未发布作品</h2>") >= 0:
-        result["is_over"] = True
-        return result
-    # 获取作品信息
-    if pq(album_pagination_content).find("ul.gridList").length == 0:
-        raise crawler.CrawlerException("页面截取作品列表失败\n%s" % album_pagination_content)
-    album_list_selector = pq(album_pagination_content).find("ul.gridList li.js-smallCards")
-    for album_index in range(0, album_list_selector.length):
-        album_selector = album_list_selector.eq(album_index)
-        # 获取作品id
-        album_url = album_selector.find("a.posr").attr("href")
-        if not album_url:
-            raise crawler.CrawlerException("作品信息截取作品地址失败\n%s" % album_selector.html())
-        album_id = album_url.split("/")[-1]
-        if not crawler.is_integer(album_id):
-            raise crawler.CrawlerException("作品地址 %s 截取作品id失败\n%s" % (album_url, album_selector.html()))
-        result["album_id_list"].append(int(album_id))
-    # 判断是不是最后一页
-    last_pagination_selector = pq(album_pagination_content).find("ul.pager li:last a")
-    if last_pagination_selector.length == 1:
-        max_page_count = int(last_pagination_selector.attr("href").strip().split("&p=")[-1])
-        result["is_over"] = page_count >= max_page_count
-    else:
-        result["is_over"] = True
+    if api_response.status != net.HTTP_RETURN_CODE_SUCCEED:
+        raise crawler.CrawlerException(crawler.request_failre(api_response.status))
+    if not crawler.check_sub_key(("data",), api_response.json_data):
+        raise crawler.CrawlerException("返回信息'data'字段不存在\n%s" % api_response.json_data)
+    for album_info in api_response.json_data["data"]:
+        if not crawler.check_sub_key(("item_detail",), album_info):
+            raise crawler.CrawlerException("作品信息'item_detail'字段不存在\n%s" % album_info)
+        if not crawler.check_sub_key(("item_id",), album_info["item_detail"]):
+            raise crawler.CrawlerException("作品信息'item_id'字段不存在\n%s" % album_info)
+        if not crawler.is_integer(album_info["item_detail"]["item_id"]):
+            raise crawler.CrawlerException("作品信息'item_id'字段类型不正确\n%s" % album_info)
+        result["album_id_list"].append(int(album_info["item_detail"]["item_id"]))
     return result
 
 
@@ -190,7 +176,6 @@ def get_album_page(album_id):
     album_info = tool.json_decode(tool.json_decode(album_info_html))
     if not album_info:
         raise crawler.CrawlerException("作品信息加载失败\n%s" % album_response_content)
-
     if not crawler.check_sub_key(("detail",), album_info):
         raise crawler.CrawlerException("作品信息'detail'字段不存在\n%s" % album_info)
     if not crawler.check_sub_key(("post_data",), album_info["detail"]):
@@ -199,7 +184,6 @@ def get_album_page(album_id):
         raise crawler.CrawlerException("作品信息'type'字段不存在\n%s" % album_info)
     if not crawler.check_sub_key(("multi",), album_info["detail"]["post_data"]):
         raise crawler.CrawlerException("作品信息'multi'字段不存在\n%s" % album_info)
-
     is_skip = False
     # 问题
     # https://bcy.net/item/detail/6115326868729126670
@@ -357,43 +341,36 @@ class Download(crawler.DownloadThread):
 
     # 获取所有可下载作品
     def get_crawl_list(self):
-        page_count = 1
-        unique_list = []
+        page_since_id = 0
         album_id_list = []
         is_over = False
         while not is_over:
             self.main_thread_check()  # 检测主线程运行状态
-            self.step("开始解析第%s页作品" % page_count)
+            self.step("开始解析since %s后一页作品" % page_since_id)
 
             # 获取一页作品
             try:
-                album_pagination_response = get_one_page_album(self.account_id, page_count)
+                album_pagination_response = get_one_page_album(self.account_id, page_since_id)
             except crawler.CrawlerException as e:
-                self.error("第%s页作品解析失败，原因：%s" % (page_count, e.message))
+                self.error("since %s后一页作品解析失败，原因：%s" % (page_since_id, e.message))
                 raise
 
-            self.trace("第%s页解析的全部作品：%s" % (page_count, album_pagination_response["album_id_list"]))
-            self.step("第%s页解析获取%s个作品" % (page_count, len(album_pagination_response["album_id_list"])))
+            self.trace("since %s后一页解析的全部作品：%s" % (page_since_id, album_pagination_response["album_id_list"]))
+            self.step("since %s后一页解析获取%s个作品" % (page_since_id, len(album_pagination_response["album_id_list"])))
 
             # 寻找这一页符合条件的作品
             for album_id in album_pagination_response["album_id_list"]:
                 # 检查是否达到存档记录
                 if album_id > int(self.account_info[1]):
-                    # 新增作品导致的重复判断
-                    if album_id in unique_list:
-                        continue
-                    else:
-                        album_id_list.append(album_id)
-                        unique_list.append(album_id)
+                    album_id_list.append(album_id)
+                    page_since_id = str(album_id)
                 else:
                     is_over = True
                     break
 
             if not is_over:
-                if album_pagination_response["is_over"]:
+                if len(album_pagination_response["album_id_list"]) < EACH_PAGE_ALBUM_COUNT:
                     is_over = True
-                else:
-                    page_count += 1
 
         return album_id_list
 
@@ -434,7 +411,7 @@ class Download(crawler.DownloadThread):
         self.step("作品%s解析获取%s张图" % (album_id, len(album_response["photo_url_list"])))
 
         photo_index = 1
-        album_path = os.path.join(self.main_thread.photo_download_path, self.display_name, album_id)
+        album_path = os.path.join(self.main_thread.photo_download_path, self.display_name, str(album_id))
         # 设置临时目录
         self.temp_path_list.append(album_path)
         for photo_url in album_response["photo_url_list"]:
