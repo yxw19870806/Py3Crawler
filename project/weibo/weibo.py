@@ -45,11 +45,10 @@ def init_session():
 # 获取账号首页
 def get_account_index_page(account_id):
     account_index_url = "https://weibo.com/u/%s" % account_id
-    cookies_list = {"SUB": tool.generate_random_string(30)}
     result = {
         "account_page_id": None,  # 账号page id
     }
-    account_index_response = net.http_request(account_index_url, method="GET", cookies_list=cookies_list)
+    account_index_response = net.http_request(account_index_url, method="GET", cookies_list=COOKIE_INFO)
     if account_index_response.status == net.HTTP_RETURN_CODE_SUCCEED:
         # 获取账号page id
         account_page_id = tool.find_sub_string(account_index_response.data.decode(errors="ignore"), "$CONFIG['page_id']='", "'")
