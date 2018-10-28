@@ -238,10 +238,12 @@ def get_video_url(video_play_url):
         if video_play_response.status != net.HTTP_RETURN_CODE_SUCCEED:
             raise crawler.CrawlerException(crawler.request_failre(video_play_response.status))
         video_play_response_content = video_play_response.data.decode(errors="ignore")
-        if video_play_response_content.decode().find('<p class="error-p">为建设清朗网络空间，视频正在审核中，暂时无法播放。</p>') > 0:
+        if video_play_response_content.find('<p class="error-p">为建设清朗网络空间，视频正在审核中，暂时无法播放。</p>') > 0:
+            video_url = ""
+        elif video_play_response_content.find('<p class="error-p">可能已被删除或网址输入错误,请再核对下吧~</p>') > 0:
             video_url = ""
         else:
-            video_url_find = re.findall('<meta content="([^"]*)" property="og:video:url">', video_play_response_content)
+            video_url_find = re.findall('<meta content="([^"]*)" property="og:video:url"', video_play_response_content)
             if len(video_url_find) != 1:
                 raise crawler.CrawlerException("页面匹配加密视频信息失败\n%s" % video_play_response_content)
             video_url = meipai.decrypt_video_url(video_url_find[0])
