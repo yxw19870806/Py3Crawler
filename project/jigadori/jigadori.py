@@ -139,21 +139,21 @@ class Jigadori(crawler.Crawler):
                 photo_info = photo_info_list.pop()
                 log.step("开始解析tweet %s的图片" % photo_info["tweet_id"])
 
-                photo_index = int(save_info[0]) + 1
+                photo_index = 1
                 for photo_url in photo_info["photo_url_list"]:
                     if not self.is_running():
                         tool.process_exit(0)
-                    log.step("开始下载第%s张图片 %s" % (photo_index, photo_url))
+                    log.step("开始下载tweet%s的第%s张图片 %s" % (photo_info["tweet_id"], photo_index, photo_url))
 
-                    file_path = os.path.join(self.photo_download_path, "%05d_%s.%s" % (photo_index, photo_info["account_name"], net.get_file_type(photo_url, "jpg")))
+                    file_path = os.path.join(self.photo_download_path, "%s_%019d_%02d.%s" % (photo_info["account_name"], photo_info["tweet_id"], photo_index, net.get_file_type(photo_url, "jpg")))
                     save_file_return = net.save_net_file(photo_url, file_path)
                     if save_file_return["status"] == 1:
                         # 设置临时目录
                         temp_path_list.append(file_path)
-                        log.step("第%s张图片下载成功" % photo_index)
+                        log.step("tweet%s的第%s张图片下载成功" % (photo_info["tweet_id"], photo_index))
                         photo_index += 1
                     else:
-                        log.error("第%s张图片（account：%s) %s，下载失败，原因：%s" % (photo_index, photo_info["account_name"], photo_url, crawler.download_failre(save_file_return["code"])))
+                        log.error("tweet%s的第%s张图片（account：%s) %s，下载失败，原因：%s" % (photo_info["tweet_id"], photo_index, photo_info["account_name"], photo_url, crawler.download_failre(save_file_return["code"])))
                 # tweet内图片全部下载完毕
                 temp_path_list = []  # 临时目录设置清除
                 self.total_photo_count += (photo_index - 1) - int(save_info[0])  # 计数累加
