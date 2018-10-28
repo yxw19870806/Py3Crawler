@@ -228,7 +228,7 @@ def get_video_url(video_play_url):
             video_url = urllib.parse.unquote(video_url)
             if video_url.find("//") == 0:
                 video_url = "https:" + video_url
-        elif video_play_response.status == 404:
+        elif video_play_response.status in [404, net.HTTP_RETURN_CODE_TOO_MANY_REDIRECTS]:
             video_url = ""
         else:
             raise crawler.CrawlerException(crawler.request_failre(video_play_response.status))
