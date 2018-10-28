@@ -169,25 +169,49 @@ def get_one_page_video(account_page_id, since_id):
 def get_video_url(video_play_url):
     video_url = None
     # http://miaopai.com/show/Gmd7rwiNrc84z5h6S9DhjQ__.htm
-    if video_play_url.find("miaopai.com/show/") >= 0:  # 秒拍
-        video_id = tool.find_sub_string(video_play_url, "miaopai.com/show/", ".")
-        video_info_url = "http://gslb.miaopai.com/stream/%s.json" % video_id
-        query_data = {"token": ""}
-        video_info_response = net.http_request(video_info_url, method="GET", fields=query_data, json_decode=True)
-        if video_info_response.status != net.HTTP_RETURN_CODE_SUCCEED:
-            raise crawler.CrawlerException(crawler.request_failre(video_info_response.status))
-        if not crawler.check_sub_key(("status", "result"), video_info_response.json_data):
-            raise crawler.CrawlerException("返回信息'status'或'result'字段不存在\n%s" % video_info_response.json_data)
-        if not crawler.is_integer(video_info_response.json_data["status"]):
-            raise crawler.CrawlerException("返回信息'status'字段类型不正确\n%s" % video_info_response.json_data)
-        if int(video_info_response.json_data["status"]) != 200:
-            raise crawler.CrawlerException("返回信息'status'字段取值不正确\n%s" % video_info_response.json_data)
-        if len(video_info_response.json_data["result"]) == 0:
-            raise crawler.CrawlerException("返回信息'result'字段长度不正确\n%s" % video_info_response.json_data)
-        for video_info in video_info_response.json_data["result"]:
-            if crawler.check_sub_key(("path", "host", "scheme"), video_info):
-                video_url = video_info["scheme"] + video_info["host"] + video_info["path"]
-                break
+    if video_play_url.find("miaopai.com/") >= 0:  # 秒拍
+        if video_play_url.find("miaopai.com/show/") >= 0:
+            video_id = tool.find_sub_string(video_play_url, "miaopai.com/show/", ".htm")
+            video_info_url = "http://gslb.miaopai.com/stream/%s.json" % video_id
+            query_data = {"token": ""}
+            video_info_response = net.http_request(video_info_url, method="GET", fields=query_data, json_decode=True)
+            if video_info_response.status != net.HTTP_RETURN_CODE_SUCCEED:
+                raise crawler.CrawlerException(crawler.request_failre(video_info_response.status))
+            if not crawler.check_sub_key(("status", "result"), video_info_response.json_data):
+                raise crawler.CrawlerException("返回信息'status'或'result'字段不存在\n%s" % video_info_response.json_data)
+            if not crawler.is_integer(video_info_response.json_data["status"]):
+                raise crawler.CrawlerException("返回信息'status'字段类型不正确\n%s" % video_info_response.json_data)
+            if int(video_info_response.json_data["status"]) != 200:
+                raise crawler.CrawlerException("返回信息'status'字段取值不正确\n%s" % video_info_response.json_data)
+            if len(video_info_response.json_data["result"]) == 0:
+                raise crawler.CrawlerException("返回信息'result'字段长度不正确\n%s" % video_info_response.json_data)
+            for video_info in video_info_response.json_data["result"]:
+                if crawler.check_sub_key(("path", "host", "scheme"), video_info):
+                    video_url = video_info["scheme"] + video_info["host"] + video_info["path"]
+                    break
+        # http://n.miaopai.com/media/SJ9InO25bxrtVhOfGA3KoniJM3gP2XX0.htm
+        elif video_play_url.find("miaopai.com/media/") >= 0:
+            video_id = tool.find_sub_string(video_play_url, "miaopai.com/media/", ".htm")
+            video_info_url = "https://n.miaopai.com/api/aj_media/info.json"
+            query_data = {"smid": video_id}
+            video_info_response = net.http_request(video_info_url, method="GET", fields=query_data, json_decode=True, is_gzip=False)
+            if video_info_response.status != net.HTTP_RETURN_CODE_SUCCEED:
+                raise crawler.CrawlerException(crawler.request_failre(video_info_response.status))
+            if not crawler.check_sub_key(("data",), video_info_response.json_data):
+                raise crawler.CrawlerException("返回信息'data'字段不存在\n%s" % video_info_response.json_data)
+            if not crawler.check_sub_key(("meta_data",), video_info_response.json_data["data"]):
+                raise crawler.CrawlerException("返回信息'meta_data'字段不存在\n%s" % video_info_response.json_data)
+            if len(video_info_response.json_data["data"]["meta_data"]) != 1:
+                raise crawler.CrawlerException("返回信息'meta_data'字段长度不正确\n%s" % video_info_response.json_data)
+            if not crawler.check_sub_key(("play_urls",), video_info_response.json_data["data"]["meta_data"][0]):
+                raise crawler.CrawlerException("返回信息'play_urls'字段不存在\n%s" % video_info_response.json_data)
+            if len(video_info_response.json_data["data"]["meta_data"][0]["play_urls"]) != 1:
+                raise crawler.CrawlerException("返回信息'play_urls'字段长度不正确\n%s" % video_info_response.json_data)
+            if not crawler.check_sub_key(("n",), video_info_response.json_data["data"]["meta_data"][0]["play_urls"]):
+                raise crawler.CrawlerException("返回信息'n'字段不存在\n%s" % video_info_response.json_data)
+            video_url = video_info_response.json_data["data"]["meta_data"][0]["play_urls"]["n"]
+        else:
+            raise crawler.CrawlerException("未知的第三方视频\n%s" % video_play_url)
         if video_url is None:
             raise crawler.CrawlerException("返回信息匹配视频地址失败\n%s" % video_info_response.json_data)
     # https://video.weibo.com/show?fid=1034:e608e50d5fa95410748da61a7dfa2bff
