@@ -78,16 +78,14 @@ class Jigadori(crawler.Crawler):
         crawler.Crawler.__init__(self, sys_config, **kwargs)
 
     def main(self):
-        # 解析存档文件
-        # photo_count  last_blog_time
-        save_info = ["0", "0"]
+        # 解析存档文件，获取上一次的tweet id
+        last_tweet_id = 0
         if os.path.exists(self.save_data_path):
-            file_save_info = file.read_file(self.save_data_path).split("\t")
-            if len(file_save_info) >= 2 and crawler.is_integer(file_save_info[0]) and crawler.is_integer(file_save_info[1]):
-                save_info = file_save_info
-            else:
+            file_save_info = file.read_file(self.save_data_path)
+            if not crawler.is_integer(file_save_info):
                 log.error("存档内数据格式不正确")
                 tool.process_exit()
+            last_tweet_id = int(file_save_info)
         temp_path_list = []
 
         try:
@@ -118,7 +116,7 @@ class Jigadori(crawler.Crawler):
                 # 寻找这一页符合条件的图片
                 for photo_info in photo_pagination_response["photo_info_list"]:
                     # 检查是否达到存档记录
-                    if photo_info["tweet_time"] > int(save_info[1]):
+                    if photo_info["tweet_id"] > last_tweet_id:
                         # 新增图片导致的重复判断
                         if photo_info["tweet_id"] in unique_list:
                             continue
@@ -156,9 +154,8 @@ class Jigadori(crawler.Crawler):
                         log.error("tweet%s的第%s张图片（account：%s) %s，下载失败，原因：%s" % (photo_info["tweet_id"], photo_index, photo_info["account_name"], photo_url, crawler.download_failre(save_file_return["code"])))
                 # tweet内图片全部下载完毕
                 temp_path_list = []  # 临时目录设置清除
-                self.total_photo_count += (photo_index - 1) - int(save_info[0])  # 计数累加
-                save_info[0] = str(photo_index - 1)  # 设置存档记录
-                save_info[1] = str(photo_info["tweet_time"])  # 设置存档记录
+                self.total_photo_count += photo_index - 1  # 计数累加
+                last_tweet_id = photo_info["tweet_id"]  # 设置存档记录
         except SystemExit as se:
             if se.code == 0:
                 log.step("提前退出")
@@ -173,7 +170,7 @@ class Jigadori(crawler.Crawler):
             log.error(str(e) + "\n" + traceback.format_exc())
 
         # 保存新的存档文件
-        file.write_file("\t".join(save_info), self.save_data_path, file.WRITE_FILE_TYPE_REPLACE)
+        file.write_file(str(last_tweet_id), self.save_data_path, file.WRITE_FILE_TYPE_REPLACE)
         log.step("全部下载完毕，耗时%s秒，共计图片%s张" % (self.get_run_time(), self.total_photo_count))
 
 
