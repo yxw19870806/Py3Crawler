@@ -71,7 +71,8 @@ def deal_one_group(check_list):
     for file_path in delete_list:
         path.delete_dir_or_file(file_path)
         output.print_msg("delete " + file_path)
-    output.print_msg("keep " + cache_file_path)
+    if cache_file_path:
+        output.print_msg("keep " + cache_file_path)
 
 
 if __name__ == "__main__":
