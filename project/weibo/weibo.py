@@ -141,6 +141,10 @@ def get_one_page_video(account_page_id, since_id):
         "video_play_url_list": [],  # 全部视频地址
     }
     video_pagination_response = net.http_request(video_pagination_url, method="GET", fields=query_data, cookies_list=cookies_list, json_decode=True)
+    if video_pagination_response.status == net.HTTP_RETURN_CODE_JSON_DECODE_ERROR:
+        time.sleep(5)
+        log.step("since_id：%s页视频解返回异常" % since_id)
+        return get_one_page_video(account_page_id, since_id)
     if video_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(video_pagination_response.status))
     if not crawler.check_sub_key(("code", "data"), video_pagination_response.json_data):
