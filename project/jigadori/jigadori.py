@@ -12,6 +12,8 @@ import traceback
 from pyquery import PyQuery as pq
 from common import *
 
+EACH_LOOP_MAX_PAGE_COUNT = 50  # 单次缓存多少页的图片
+
 
 # 获取指定页数的全部图片
 def get_one_page_photo(page_count):
@@ -89,73 +91,101 @@ class Jigadori(crawler.Crawler):
         temp_path_list = []
 
         try:
-            page_count = 1
-            unique_list = []
-            photo_info_list = []
-            is_over = False
-            # 获取全部还未下载过需要解析的图片
-            while not is_over:
-                if not self.is_running():
-                    tool.process_exit(0)
-                log.step("开始解析第%s页图片" % page_count)
-
-                # 获取一页图片
+            # 查询当前任务大致需要从多少页开始爬取
+            start_page_count = 1
+            while EACH_LOOP_MAX_PAGE_COUNT > 0:
+                start_page_count += EACH_LOOP_MAX_PAGE_COUNT
                 try:
-                    photo_pagination_response = get_one_page_photo(page_count)
+                    photo_pagination_response = get_one_page_photo(start_page_count)
                 except crawler.CrawlerException as e:
-                    log.error("第%s页图片解析失败，原因：%s" % (page_count, e.message))
+                    log.error("第%s页图片解析失败，原因：%s" % (start_page_count, e.message))
                     raise
 
-                log.trace("第%s页解析的全部图片：%s" % (page_count, photo_pagination_response["photo_info_list"]))
-                log.step("第%s页解析获取%s张图片" % (page_count, len(photo_pagination_response["photo_info_list"])))
-
-                # 已经没有图片了
+                # 这页没有任何内容，返回上一个检查节点
                 if len(photo_pagination_response["photo_info_list"]) == 0:
+                    start_page_count -= EACH_LOOP_MAX_PAGE_COUNT
                     break
 
-                # 寻找这一页符合条件的图片
-                for photo_info in photo_pagination_response["photo_info_list"]:
-                    # 检查是否达到存档记录
-                    if photo_info["tweet_id"] > last_tweet_id:
-                        # 新增图片导致的重复判断
-                        if photo_info["tweet_id"] in unique_list:
-                            continue
-                        else:
-                            photo_info_list.append(photo_info)
-                            unique_list.append(photo_info["tweet_id"])
-                    else:
-                        is_over = True
-                        break
+                # 这页已经匹配到存档点，返回上一个节点
+                if photo_pagination_response["photo_info_list"][-1]["tweet_id"] < last_tweet_id:
+                    start_page_count -= EACH_LOOP_MAX_PAGE_COUNT
+                    break
 
-                if not is_over:
-                    page_count += 1
+                log.step("前%s页图片全部符合条件，跳过%s页后继续查询" % (start_page_count, EACH_LOOP_MAX_PAGE_COUNT))
 
-            log.step("需要下载的全部图片解析完毕，共%s个" % len(photo_info_list))
-
-            # 从最早的图片开始下载
-            while len(photo_info_list) > 0:
-                photo_info = photo_info_list.pop()
-                log.step("开始解析tweet %s的图片" % photo_info["tweet_id"])
-
-                photo_index = 1
-                for photo_url in photo_info["photo_url_list"]:
+            while True:
+                page_count = start_page_count
+                unique_list = []
+                photo_info_list = []
+                is_over = False
+                # 获取全部还未下载过需要解析的图片
+                while not is_over:
                     if not self.is_running():
                         tool.process_exit(0)
-                    log.step("开始下载tweet%s的第%s张图片 %s" % (photo_info["tweet_id"], photo_index, photo_url))
+                    log.step("开始解析第%s页图片" % page_count)
 
-                    file_path = os.path.join(self.photo_download_path, "%s_%019d_%02d.%s" % (photo_info["account_name"], photo_info["tweet_id"], photo_index, net.get_file_type(photo_url, "jpg")))
-                    save_file_return = net.save_net_file(photo_url, file_path)
-                    if save_file_return["status"] == 1:
-                        # 设置临时目录
-                        temp_path_list.append(file_path)
-                        log.step("tweet%s的第%s张图片下载成功" % (photo_info["tweet_id"], photo_index))
-                        photo_index += 1
-                    else:
-                        log.error("tweet%s的第%s张图片（account：%s) %s，下载失败，原因：%s" % (photo_info["tweet_id"], photo_index, photo_info["account_name"], photo_url, crawler.download_failre(save_file_return["code"])))
-                # tweet内图片全部下载完毕
-                temp_path_list = []  # 临时目录设置清除
-                self.total_photo_count += photo_index - 1  # 计数累加
-                last_tweet_id = photo_info["tweet_id"]  # 设置存档记录
+                    # 获取一页图片
+                    try:
+                        photo_pagination_response = get_one_page_photo(page_count)
+                    except crawler.CrawlerException as e:
+                        log.error("第%s页图片解析失败，原因：%s" % (page_count, e.message))
+                        raise
+
+                    log.trace("第%s页解析的全部图片：%s" % (page_count, photo_pagination_response["photo_info_list"]))
+                    log.step("第%s页解析获取%s张图片" % (page_count, len(photo_pagination_response["photo_info_list"])))
+
+                    # 已经没有图片了
+                    if len(photo_pagination_response["photo_info_list"]) == 0:
+                        break
+
+                    # 寻找这一页符合条件的图片
+                    for photo_info in photo_pagination_response["photo_info_list"]:
+                        # 检查是否达到存档记录
+                        if photo_info["tweet_id"] > last_tweet_id:
+                            # 新增图片导致的重复判断
+                            if photo_info["tweet_id"] in unique_list:
+                                continue
+                            else:
+                                photo_info_list.append(photo_info)
+                                unique_list.append(photo_info["tweet_id"])
+                        else:
+                            is_over = True
+                            break
+
+                    if not is_over:
+                        page_count += 1
+
+                log.step("需要下载的全部图片解析完毕，共%s个" % len(photo_info_list))
+
+                # 从最早的图片开始下载
+                while len(photo_info_list) > 0:
+                    photo_info = photo_info_list.pop()
+                    log.step("开始解析tweet %s的图片" % photo_info["tweet_id"])
+
+                    photo_index = 1
+                    for photo_url in photo_info["photo_url_list"]:
+                        if not self.is_running():
+                            tool.process_exit(0)
+                        log.step("开始下载tweet%s的第%s张图片 %s" % (photo_info["tweet_id"], photo_index, photo_url))
+
+                        file_path = os.path.join(self.photo_download_path, "%s_%019d_%02d.%s" % (photo_info["account_name"], photo_info["tweet_id"], photo_index, net.get_file_type(photo_url, "jpg")))
+                        save_file_return = net.save_net_file(photo_url, file_path)
+                        if save_file_return["status"] == 1:
+                            # 设置临时目录
+                            temp_path_list.append(file_path)
+                            log.step("tweet%s的第%s张图片下载成功" % (photo_info["tweet_id"], photo_index))
+                            photo_index += 1
+                        else:
+                            log.error("tweet%s的第%s张图片（account：%s) %s，下载失败，原因：%s" % (photo_info["tweet_id"], photo_index, photo_info["account_name"], photo_url, crawler.download_failre(save_file_return["code"])))
+                    # tweet内图片全部下载完毕
+                    temp_path_list = []  # 临时目录设置清除
+                    self.total_photo_count += photo_index - 1  # 计数累加
+                    last_tweet_id = photo_info["tweet_id"]  # 设置存档记录
+
+                if start_page_count == 1:
+                    break
+                else:
+                    start_page_count -= EACH_LOOP_MAX_PAGE_COUNT
         except SystemExit as se:
             if se.code == 0:
                 log.step("提前退出")
