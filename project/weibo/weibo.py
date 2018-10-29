@@ -501,8 +501,6 @@ class Download(crawler.DownloadThread):
                 self.step("提前退出")
             else:
                 self.error("异常退出")
-            # 如果临时目录变量不为空，表示同一时间的图片正在下载中，需要把下载了部分的内容给清理掉
-            self.clean_temp_path()
         except Exception as e:
             self.error("未知异常")
             self.error(str(e) + "\n" + traceback.format_exc(), False)

@@ -187,7 +187,6 @@ class Download(crawler.DownloadThread):
             self.error("图片%s %s，下载失败，原因：%s" % (photo_info["photo_id"], photo_info["photo_url"], crawler.download_failre(save_file_return["code"])))
 
         # 图片内图片下全部载完毕
-        self.temp_path_list = []  # 临时目录设置清除
         self.total_photo_count += 1  # 计数累加
         self.account_info[1] = str(photo_info["photo_id"])  # 设置存档记录
 
@@ -207,8 +206,6 @@ class Download(crawler.DownloadThread):
                 self.step("提前退出")
             else:
                 self.error("异常退出")
-            # 如果临时目录变量不为空，表示某个图集正在下载中，需要把下载了部分的内容给清理掉
-            self.clean_temp_path()
         except Exception as e:
             self.error("未知异常")
             self.error(str(e) + "\n" + traceback.format_exc(), False)

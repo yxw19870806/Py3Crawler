@@ -219,7 +219,7 @@ class Album(crawler.Crawler):
 
                 photo_index = 1
                 # 过滤标题中不支持的字符
-                album_path = temp_path = os.path.join(self.photo_download_path, "%05d %s" % (album_id, path.filter_text(album_response["album_title"])))
+                temp_path = album_path = os.path.join(self.photo_download_path, "%05d %s" % (album_id, path.filter_text(album_response["album_title"])))
                 thread_list = []
                 for photo_url in album_response["photo_url_list"]:
                     if not self.is_running():
