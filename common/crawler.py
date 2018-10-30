@@ -453,25 +453,26 @@ def get_time():
 
 # 获取一个json文件的指定字段
 # arg如果是字母，取字典对应key；如果是整数，取列表对应下标
-def get_json_value(json_data, *args, default_value=None, is_raise_exception=True):
-    temp_data = json_data
+def get_json_value(json_data, *args, default_value=None, is_raise_exception=True, original_data=None):
+    if original_data is None:
+        original_data = json_data
     last_arg = ""
     exception_string = ""
     for arg in args:
         if isinstance(arg, str):
-            if not isinstance(temp_data, dict):
-                exception_string = "'%s'字段不是字典\n%s" % (last_arg, json_data)
-            elif arg not in temp_data:
-                exception_string = "'%s'字段不存在\n%s" % (arg, json_data)
+            if not isinstance(json_data, dict):
+                exception_string = "'%s'字段不是字典\n%s" % (last_arg, original_data)
+            elif arg not in json_data:
+                exception_string = "'%s'字段不存在\n%s" % (arg, original_data)
             else:
-                temp_data = temp_data[arg]
+                json_data = json_data[arg]
         elif isinstance(arg, int):
-            if not isinstance(temp_data, list):
-                exception_string =  "'%s'字段不是列表\n%s" % (last_arg, json_data)
-            elif len(temp_data) <= arg:
-                exception_string = "'%s'字段长度不正确\n%s" % (last_arg, json_data)
+            if not isinstance(json_data, list):
+                exception_string =  "'%s'字段不是列表\n%s" % (last_arg, original_data)
+            elif len(json_data) <= arg:
+                exception_string = "'%s'字段长度不正确\n%s" % (last_arg, original_data)
             else:
-                temp_data = temp_data[arg]
+                json_data = json_data[arg]
         else:
             exception_string = "arg: %s类型不正确" % arg
         if exception_string:
@@ -480,7 +481,7 @@ def get_json_value(json_data, *args, default_value=None, is_raise_exception=True
             else:
                 return default_value
         last_arg = arg
-    return temp_data
+    return json_data
 
 
 # 判断类型是否为字典，并且检测是否存在指定的key
