@@ -58,6 +58,7 @@ def get_one_page_video(account_id, token):
         if index_response_content.find('<button id="a11y-skip-nav" class="skip-nav"') >= 0:
             log.step("首页 %s 访问出现跳转，再次访问" % index_url)
             return get_one_page_video(account_id, token)
+        # 获取频道名字
         result["channel_name"] = tool.find_sub_string(index_response_content, '<meta property="og:title" content="', '">').replace("- YouTube", "").strip()
         if index_response_content.find('{"alertRenderer":{"type":"ERROR",') != -1:
             reason = tool.find_sub_string(tool.find_sub_string(index_response_content, '{"alertRenderer":{"type":"ERROR",', '}],'), '{"simpleText":"', '"}')
@@ -65,32 +66,26 @@ def get_one_page_video(account_id, token):
                 raise crawler.CrawlerException("账号不存在")
             else:
                 raise crawler.CrawlerException("账号无法访问，原因：%s" % reason)
+        # 获取首页所有标签
         script_data_html = tool.find_sub_string(index_response_content, 'window["ytInitialData"] =', ";\n").strip()
         if not script_data_html:
             raise crawler.CrawlerException("页面截取视频信息失败\n%s" % index_response_content)
         script_data = tool.json_decode(script_data_html)
         if script_data is None:
             raise crawler.CrawlerException("视频信息加载失败\n%s" % script_data_html)
-        try:
-            channel_tab_data = script_data["contents"]["twoColumnBrowseResultsRenderer"]["tabs"]
-        except KeyError:
-            raise crawler.CrawlerException("页面解析频道标签失败\n%s" % script_data)
+        channel_tab_data = crawler.get_json_value(script_data, "contents", "twoColumnBrowseResultsRenderer", "tabs")
         # 没有视频标签
         if len(channel_tab_data) < 2:
             return result
+        response_contents = crawler.get_json_value(channel_tab_data, 1, "tabRenderer", "content", "sectionListRenderer", "contents", 0,
+                                                   "itemSectionRenderer", "contents", 0, original_data=script_data)
         try:
-            temp_data = channel_tab_data[1]["tabRenderer"]["content"]["sectionListRenderer"]["contents"][0]["itemSectionRenderer"]["contents"][0]
-        except KeyError:
-            raise crawler.CrawlerException("页面解析视频信息失败\n%s" % script_data)
-        if not crawler.check_sub_key(("gridRenderer",), temp_data):
-            try:
-                # 没有上传过任何视频
-                if temp_data["messageRenderer"]["text"]["simpleText"] == "This channel has no videos.":
-                    return result
-            except KeyError:
-                pass
-            raise crawler.CrawlerException("视频列表信息'gridRenderer'字段不存在\n%s" % temp_data)
-        video_list_data = temp_data["gridRenderer"]
+            video_list_data = crawler.get_json_value(response_contents, "gridRenderer", original_data=script_data)
+        except crawler.CrawlerException:
+            # 没有上传过任何视频
+            if crawler.get_json_value(response_contents, "messageRenderer", "text", "simpleText", is_raise_exception=False) == "This channel has no videos.":
+                return result
+            raise
     else:
         query_url = "https://www.youtube.com/browse_ajax"
         query_data = {"ctoken": token}
@@ -102,27 +97,12 @@ def get_one_page_video(account_id, token):
         video_pagination_response = net.http_request(query_url, method="GET", fields=query_data, header_list=header_list, json_decode=True)
         if video_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
             raise crawler.CrawlerException(crawler.request_failre(video_pagination_response.status))
-        try:
-            video_list_data = video_pagination_response.json_data[1]["response"]["continuationContents"]["gridContinuation"]
-        except KeyError:
-            raise crawler.CrawlerException("返回信息解析视频信息失败\n%s" % video_pagination_response.json_data)
-        except IndexError:
-            raise crawler.CrawlerException("返回信息解析视频信息失败\n%s" % video_pagination_response.json_data)
-    if not crawler.check_sub_key(("items",), video_list_data):
-        raise crawler.CrawlerException("视频列表信息'items'字段不存在\n%s" % video_list_data)
-    for item in video_list_data["items"]:
-        if not crawler.check_sub_key(("gridVideoRenderer",), item):
-            raise crawler.CrawlerException("视频信息'gridVideoRenderer'字段不存在\n%s" % item)
-        if not crawler.check_sub_key(("videoId",), item["gridVideoRenderer"]):
-            raise crawler.CrawlerException("视频信息'gridVideoRenderer'字段不存在\n%s" % item)
-        result["video_id_list"].append(item["gridVideoRenderer"]["videoId"])
+        video_list_data = crawler.get_json_value(video_pagination_response.json_data, 1, "response", "continuationContents", "gridContinuation")
+    # 获取所有video id
+    for item in crawler.get_json_value(video_list_data, "items"):
+        result["video_id_list"].append(crawler.get_json_value(item, "gridVideoRenderer", "videoId"))
     # 获取下一页token
-    try:
-        result["next_page_token"] = video_list_data["continuations"][0]["nextContinuationData"]["continuation"]
-    except KeyError:
-        pass
-    except IndexError:
-        pass
+    result["next_page_token"] = crawler.get_json_value(video_list_data, "continuations", 0, "nextContinuationData", "continuation", is_raise_exception=False)
     return result
 
 
@@ -163,20 +143,12 @@ def get_video_page(video_id):
     video_info_data = tool.json_decode(video_info_string)
     if video_info_data is None:
         raise crawler.CrawlerException("视频信息格式不正确\n%s" % video_info_string)
-    if not crawler.check_sub_key(("args",), video_info_data):
-        raise crawler.CrawlerException("视频信息'args'字段不存在\n%s" % video_info_data)
     # 获取视频标题
-    if not crawler.check_sub_key(("title",), video_info_data["args"]):
-        raise crawler.CrawlerException("视频信息'title'字段不存在\n%s" % video_info_data)
-    result["video_title"] = video_info_data["args"]["title"]
+    result["video_title"] = crawler.get_json_value(video_info_data, "args", "title")
     # 获取视频地址
-    if not crawler.check_sub_key(("url_encoded_fmt_stream_map",), video_info_data["args"]):
-        raise crawler.CrawlerException("视频信息'url_encoded_fmt_stream_map'字段不存在\n%s" % video_info_data["args"])
-    # 各个分辨率下的视频地址
-    resolution_to_url = {}
-    # signature生成步骤
-    decrypt_function_step = []
-    for sub_url_encoded_fmt_stream_map in video_info_data["args"]["url_encoded_fmt_stream_map"].split(","):
+    resolution_to_url = {}  # 各个分辨率下的视频地址
+    decrypt_function_step = []  # signature生成步骤
+    for sub_url_encoded_fmt_stream_map in crawler.get_json_value(video_info_data, "args", "url_encoded_fmt_stream_map").split(","):
         video_resolution = video_url = signature = None
         is_skip = False
         for sub_param in sub_url_encoded_fmt_stream_map.split("&"):
