@@ -22,10 +22,7 @@ def get_latest_album_id():
             "length": "1",
         }
         api_response = net.http_request(api_url, method="GET", fields=query_data, json_decode=True)
-        category_max_album_id = crawler.get_json_value(api_response.json_data, "data", "list", 0, "id")
-        if not crawler.is_integer(category_max_album_id):
-            raise crawler.CrawlerException("'id'字段类型不正确\n%s" % api_response.json_data)
-        max_album_id = max(max_album_id, int(category_max_album_id))
+        max_album_id = max(max_album_id, crawler.get_json_value(api_response.json_data, "data", "list", 0, "id", type_check=int))
     return max_album_id
 
 
@@ -45,22 +42,22 @@ def get_album_page(album_id):
     if api_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(api_response.status))
     try:
-        response_data = crawler.get_json_value(api_response.json_data, "data")
+        response_data = crawler.get_json_value(api_response.json_data, "data", type_check=dict)
     except crawler.CrawlerException:
-        if crawler.get_json_value(api_response.json_data, "msg", is_raise_exception=False) == "该动态已被删除":
+        if crawler.get_json_value(api_response.json_data, "msg", is_raise_exception=False, type_check=str) == "该动态已被删除":
             result["is_delete"] = True
             return result
         raise
     # 图集类型（图片/视频）
-    album_type = crawler.get_json_value(response_data, "type", original_data=api_response.json_data)
+    album_type = crawler.get_json_value(response_data, "type", original_data=api_response.json_data, type_check=int)
     if album_type == 1:  # 图片
-        result["photo_url_list"] = crawler.get_json_value(response_data, "url", original_data=api_response.json_data).split(",")
+        result["photo_url_list"] = crawler.get_json_value(response_data, "url", original_data=api_response.json_data, type_check=str).split(",")
     elif album_type == 2:  # 视频
-        result["video_url"] = crawler.get_json_value(response_data, "url", original_data=api_response.json_data)
+        result["video_url"] = crawler.get_json_value(response_data, "url", original_data=api_response.json_data, type_check=str)
     else:
-        raise crawler.CrawlerException("'type'字段取值不正确\n%s" % api_response.json_data)
+        raise crawler.CrawlerException("未知的图集类型\n%s" % api_response.json_data)
     # 获取作品标题
-    result["album_title"] = crawler.get_json_value(response_data, "title", original_data=api_response.json_data)
+    result["album_title"] = crawler.get_json_value(response_data, "title", original_data=api_response.json_data, type_check=str)
     return result
 
 

@@ -98,12 +98,9 @@ def get_video_info_page(video_id):
     if video_info_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(video_info_response.status))
     # 获取视频上传时间
-    video_time = crawler.get_json_value(video_info_response.json_data, "data", "createtime")
-    if not crawler.is_integer(video_time):
-        raise crawler.CrawlerException("返回信息'createtime'字段类型不正确\n%s" % video_info_response.json_data)
-    result["video_time"] = int(video_time)
+    result["video_time"] = crawler.get_json_value(video_info_response.json_data, "data", "createtime", type_check=int)
     # 获取视频地址所在文件地址
-    video_file_url = crawler.get_json_value(video_info_response.json_data, "data", "linkurl")
+    video_file_url = crawler.get_json_value(video_info_response.json_data, "data", "linkurl", type_check=str)
     video_file_response = net.http_request(video_file_url, method="GET")
     if video_file_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(video_info_response.status))
