@@ -464,23 +464,22 @@ def get_json_value(json_data, *args, default_value=None, is_raise_exception=True
                 exception_string = "'%s'字段不是字典\n%s" % (last_arg, original_data)
             elif arg not in json_data:
                 exception_string = "'%s'字段不存在\n%s" % (arg, original_data)
-            else:
-                json_data = json_data[arg]
         elif isinstance(arg, int):
             if not isinstance(json_data, list):
                 exception_string =  "'%s'字段不是列表\n%s" % (last_arg, original_data)
             elif len(json_data) <= arg:
                 exception_string = "'%s'字段长度不正确\n%s" % (last_arg, original_data)
-            else:
-                json_data = json_data[arg]
         else:
             exception_string = "arg: %s类型不正确" % arg
         if exception_string:
-            if is_raise_exception:
-                raise CrawlerException(exception_string)
-            else:
-                return default_value
+            break
         last_arg = arg
+        json_data = json_data[arg]
+    if exception_string:
+        if is_raise_exception:
+            raise CrawlerException(exception_string)
+        else:
+            return default_value
     return json_data
 
 
