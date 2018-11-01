@@ -499,9 +499,8 @@ def check_sub_key(needles, haystack):
 def is_integer(number):
     if isinstance(number, int):
         return True
-    elif str(number).isdigit():
-        return True
-    return False
+    else:
+        return re.compile('^[-+]?[0-9]+$').match(number)
 
 
 # 替换文本中的表情符号
