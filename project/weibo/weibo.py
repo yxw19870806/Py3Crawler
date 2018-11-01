@@ -87,39 +87,21 @@ def get_one_page_photo(account_id, page_count):
         raise crawler.CrawlerException("账号不存在")
     elif photo_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(photo_pagination_response.status))
-    if not crawler.check_sub_key(("data",), photo_pagination_response.json_data):
-        raise crawler.CrawlerException("返回数据'data'字段不存在\n%s" % photo_pagination_response.json_data)
-    if not crawler.check_sub_key(("total", "photo_list"), photo_pagination_response.json_data["data"]):
-        raise crawler.CrawlerException("返回数据'data'字段格式不正确\n%s" % photo_pagination_response.json_data)
-    if not crawler.is_integer(photo_pagination_response.json_data["data"]["total"]):
-        raise crawler.CrawlerException("返回数据'total'字段类型不正确\n%s" % photo_pagination_response.json_data)
-    if not isinstance(photo_pagination_response.json_data["data"]["photo_list"], list):
-        raise crawler.CrawlerException("返回数据'photo_list'字段类型不正确\n%s" % photo_pagination_response.json_data)
-    for photo_info in photo_pagination_response.json_data["data"]["photo_list"]:
+    for photo_info in crawler.get_json_value(photo_pagination_response.json_data, "data", "photo_list", type_check=list):
         result_photo_info = {
             "photo_time": None,  # 图片上传时间
             "photo_id": None,  # 图片上传时间
             "photo_url": None,  # 图片地址
         }
         # 获取图片上传时间
-        if not crawler.check_sub_key(("timestamp",), photo_info):
-            raise crawler.CrawlerException("图片信息'timestamp'字段不存在\n%s" % photo_info)
-        if not crawler.is_integer(photo_info["timestamp"]):
-            raise crawler.CrawlerException("图片信息'timestamp'字段类型不正确\n%s" % photo_info)
-        result_photo_info["photo_time"] = int(photo_info["timestamp"])
+        result_photo_info["photo_time"] = crawler.get_json_value(photo_info, "timestamp", type_check=int)
         # 获取图片id
-        if not crawler.check_sub_key(("photo_id",), photo_info):
-            raise crawler.CrawlerException("图片信息'photo_id'字段不存在\n%s" % photo_info)
-        if not crawler.is_integer(photo_info["photo_id"]):
-            raise crawler.CrawlerException("图片信息'photo_id'字段类型不正确\n%s" % photo_info)
-        result_photo_info["photo_id"] = int(photo_info["photo_id"])
+        result_photo_info["photo_id"] = crawler.get_json_value(photo_info, "photo_id", type_check=int)
         # 获取图片地址
-        if not crawler.check_sub_key(("pic_host", "pic_name"), photo_info):
-            raise crawler.CrawlerException("图片信息'pic_host'或者'pic_name'字段不存在\n%s" % photo_info)
-        result_photo_info["photo_url"] = photo_info["pic_host"] + "/large/" + photo_info["pic_name"]
+        result_photo_info["photo_url"] = crawler.get_json_value(photo_info, "pic_host", type_check=str) + "/large/" + crawler.get_json_value(photo_info, "pic_name", type_check=str)
         result["photo_info_list"].append(result_photo_info)
     # 检测是不是还有下一页 总的图片数量 / 每页显示的图片数量 = 总的页数
-    result["is_over"] = page_count >= (photo_pagination_response.json_data["data"]["total"] * 1.0 / EACH_PAGE_PHOTO_COUNT)
+    result["is_over"] = page_count >= (crawler.get_json_value(photo_pagination_response.json_data, "data", "total", type_check=int) / EACH_PAGE_PHOTO_COUNT)
     return result
 
 
@@ -147,20 +129,14 @@ def get_one_page_video(account_page_id, since_id):
         return get_one_page_video(account_page_id, since_id)
     if video_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(video_pagination_response.status))
-    if not crawler.check_sub_key(("code", "data"), video_pagination_response.json_data):
-        raise crawler.CrawlerException("返回信息'code'或'data'字段不存在\n%s" % video_pagination_response.json_data)
-    if not crawler.is_integer(video_pagination_response.json_data["code"]):
-        raise crawler.CrawlerException("返回信息'code'字段类型不正确\n%s" % video_pagination_response.json_data)
-    if int(video_pagination_response.json_data["code"]) != 100000:
-        raise crawler.CrawlerException("返回信息'code'字段取值不正确\n%s" % video_pagination_response.json_data)
-    page_html = video_pagination_response.json_data["data"]
+    response_data = crawler.get_json_value(video_pagination_response.json_data, "data", type_check=str)
     # 获取视频播放地址
-    result["video_play_url_list"] = re.findall('<a target="_blank" href="([^"]*)"><div ', page_html)
+    result["video_play_url_list"] = re.findall('<a target="_blank" href="([^"]*)"><div ', response_data)
     if len(result["video_play_url_list"]) == 0:
-        if page_html.find("还没有发布过视频") == -1:
+        if response_data.find("还没有发布过视频") == -1:
             raise crawler.CrawlerException("返回信息匹配视频地址失败\n%s" % video_pagination_response.json_data)
     # 获取下一页视频的指针
-    next_page_since_id = tool.find_sub_string(page_html, "type=video&owner_uid=&viewer_uid=&since_id=", '">')
+    next_page_since_id = tool.find_sub_string(response_data, "type=video&owner_uid=&viewer_uid=&since_id=", '">')
     if next_page_since_id:
         if not crawler.is_integer(next_page_since_id):
             raise crawler.CrawlerException("返回信息截取下一页指针失败\n%s" % video_pagination_response.json_data)
@@ -180,18 +156,9 @@ def get_video_url(video_play_url):
             video_info_response = net.http_request(video_info_url, method="GET", fields=query_data, json_decode=True)
             if video_info_response.status != net.HTTP_RETURN_CODE_SUCCEED:
                 raise crawler.CrawlerException(crawler.request_failre(video_info_response.status))
-            if not crawler.check_sub_key(("status", "result"), video_info_response.json_data):
-                raise crawler.CrawlerException("返回信息'status'或'result'字段不存在\n%s" % video_info_response.json_data)
-            if not crawler.is_integer(video_info_response.json_data["status"]):
-                raise crawler.CrawlerException("返回信息'status'字段类型不正确\n%s" % video_info_response.json_data)
-            if int(video_info_response.json_data["status"]) != 200:
-                raise crawler.CrawlerException("返回信息'status'字段取值不正确\n%s" % video_info_response.json_data)
-            if len(video_info_response.json_data["result"]) == 0:
-                raise crawler.CrawlerException("返回信息'result'字段长度不正确\n%s" % video_info_response.json_data)
-            for video_info in video_info_response.json_data["result"]:
-                if crawler.check_sub_key(("path", "host", "scheme"), video_info):
-                    video_url = video_info["scheme"] + video_info["host"] + video_info["path"]
-                    break
+            for video_info in crawler.get_json_value(video_info_response.json_data, "result", type_check=str):
+                video_url = crawler.get_json_value(video_info, "scheme", type_check=str) + crawler.get_json_value(video_info, "host", type_check=str) + crawler.get_json_value(video_info, "path", type_check=str)
+                break
         # http://n.miaopai.com/media/SJ9InO25bxrtVhOfGA3KoniJM3gP2XX0.htm
         elif video_play_url.find("miaopai.com/media/") >= 0:
             video_id = tool.find_sub_string(video_play_url, "miaopai.com/media/", ".htm")
@@ -200,19 +167,7 @@ def get_video_url(video_play_url):
             video_info_response = net.http_request(video_info_url, method="GET", fields=query_data, json_decode=True, is_gzip=False)
             if video_info_response.status != net.HTTP_RETURN_CODE_SUCCEED:
                 raise crawler.CrawlerException(crawler.request_failre(video_info_response.status))
-            if not crawler.check_sub_key(("data",), video_info_response.json_data):
-                raise crawler.CrawlerException("返回信息'data'字段不存在\n%s" % video_info_response.json_data)
-            if not crawler.check_sub_key(("meta_data",), video_info_response.json_data["data"]):
-                raise crawler.CrawlerException("返回信息'meta_data'字段不存在\n%s" % video_info_response.json_data)
-            if len(video_info_response.json_data["data"]["meta_data"]) != 1:
-                raise crawler.CrawlerException("返回信息'meta_data'字段长度不正确\n%s" % video_info_response.json_data)
-            if not crawler.check_sub_key(("play_urls",), video_info_response.json_data["data"]["meta_data"][0]):
-                raise crawler.CrawlerException("返回信息'play_urls'字段不存在\n%s" % video_info_response.json_data)
-            if len(video_info_response.json_data["data"]["meta_data"][0]["play_urls"]) != 1:
-                raise crawler.CrawlerException("返回信息'play_urls'字段长度不正确\n%s" % video_info_response.json_data)
-            if not crawler.check_sub_key(("n",), video_info_response.json_data["data"]["meta_data"][0]["play_urls"]):
-                raise crawler.CrawlerException("返回信息'n'字段不存在\n%s" % video_info_response.json_data)
-            video_url = video_info_response.json_data["data"]["meta_data"][0]["play_urls"]["n"]
+            video_url = crawler.get_json_value(video_info_response.json_data, "data", "meta_data", 0, "play_urls", "n", type_check=str)
         else:
             raise crawler.CrawlerException("未知的第三方视频\n%s" % video_play_url)
         if video_url is None:
