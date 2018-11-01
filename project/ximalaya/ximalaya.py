@@ -50,7 +50,7 @@ def get_one_page_audio(account_id, page_count):
         result["audio_info_list"].append(audio_info)
     # 判断是不是最后一页
     max_page_count = 1
-    pagination_list_selector = pq(audit_pagination_response.json_data["html"]).find(".pagingBar_wrapper a.pagingBar_page")
+    pagination_list_selector = pq(response_html).find(".pagingBar_wrapper a.pagingBar_page")
     for pagination_index in range(0, pagination_list_selector.length):
         pagination_selector = pagination_list_selector.eq(pagination_index)
         data_page = pagination_selector.attr("data-page")
