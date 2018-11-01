@@ -43,34 +43,25 @@ def get_video_page(video_id):
     if video_play_response_content.find('<div class="title">This video requires password</div>') >= 0:
         result["is_password"] = True
         return result
-    video_info_html = tool.find_sub_string(video_play_response_content, "window.initials = ", ";\n")
-    if not video_info_html:
+    video_data_html = tool.find_sub_string(video_play_response_content, "window.initials = ", ";\n")
+    if not video_data_html:
         raise crawler.CrawlerException("页面截取视频信息失败\n%s" % video_play_response_content)
-    video_info = tool.json_decode(video_info_html)
-    if video_info is None:
-        raise crawler.CrawlerException("视频信息加载失败\n%s" % video_info_html)
+    video_data = tool.json_decode(video_data_html)
+    if video_data is None:
+        raise crawler.CrawlerException("视频信息加载失败\n%s" % video_data_html)
     # 判断是否需要跳过
-    if not crawler.check_sub_key(("orientation",), video_info):
-        raise crawler.CrawlerException("视频列表信息'orientation'字段不存在\n%s" % video_info)
+    video_orientation = crawler.get_json_value(video_data, "orientation", type_check=str)
     # 过滤视频orientation
-    if video_info["orientation"] in ORIENTATION_TYPE_LIST:
-        if not (ORIENTATION_TYPE_LIST[video_info["orientation"]] & VIDEO_ORIENTATION_FILTER):
+    if video_orientation in ORIENTATION_TYPE_LIST:
+        if not (ORIENTATION_TYPE_LIST[video_orientation] & VIDEO_ORIENTATION_FILTER):
             result["is_skip"] = True
             return result
     else:
-        log.notice("未知视频orientation：" + video_info["orientation"])
-    if not crawler.check_sub_key(("videoModel",), video_info):
-        raise crawler.CrawlerException("视频列表信息'videoModel'字段不存在\n%s" % video_info)
+        log.notice("未知视频orientation：" + video_orientation)
     # 过滤视频category
-    if not crawler.check_sub_key(("categories",), video_info["videoModel"]):
-        raise crawler.CrawlerException("视频列表信息'categories'字段不存在\n%s" % video_info["videoModel"])
-    if not isinstance(video_info["videoModel"]["categories"], list):
-        raise crawler.CrawlerException("视频列表信息'categories'字段类型不正确\n%s" % video_info["videoModel"])
     category_list = []
-    for category_info in video_info["videoModel"]["categories"]:
-        if not crawler.check_sub_key(("name",), category_info):
-            raise crawler.CrawlerException("categories信息'name'字段不存在\n%s" % category_info)
-        category_list.append(category_info["name"].lower())
+    for category_info in crawler.get_json_value(video_data, "videoModel", "categories", type_check=list):
+        category_list.append(crawler.get_json_value(category_info, "name", type_check=str).lower())
     if CATEGORY_BLACKLIST or CATEGORY_WHITELIST:
         is_skip = True if CATEGORY_WHITELIST else False
         for category in category_list:
@@ -87,26 +78,16 @@ def get_video_page(video_id):
             result["is_skip"] = True
             return result
     # 获取视频标题
-    if not crawler.check_sub_key(("title",), video_info["videoModel"]):
-        raise crawler.CrawlerException("视频列表信息'title'字段不存在\n%s" % video_info["videoModel"])
-    result["video_title"] = video_info["videoModel"]["title"]
+    result["video_title"] = crawler.get_json_value(video_data, "videoModel", "title", type_check=str)
     # 获取视频下载地址
-    if not crawler.check_sub_key(("sources",), video_info["videoModel"]):
-        raise crawler.CrawlerException("视频列表信息'sources'字段不存在\n%s" % video_info["videoModel"])
-    if len(video_info["videoModel"]["sources"]) == 0:
-        if not crawler.check_sub_key(("vr",), video_info):
-            raise crawler.CrawlerException("视频列表信息'vr'字段不存在\n%s" % video_info)
-        if not crawler.check_sub_key(("sources",), video_info["vr"]):
-            raise crawler.CrawlerException("视频列表信息'vr.sources'字段不存在\n%s" % video_info)
+    try:
+        video_list = crawler.get_json_value(video_data, "videoModel", "sources", "mp4", type_check=dict)
+    except crawler.CrawlerException:
         video_list = {}
-        for resolution_string in video_info["vr"]["sources"]:
-            if not crawler.check_sub_key(("downloadUrl",), video_info["vr"]["sources"][resolution_string]):
-                raise crawler.CrawlerException("视频列表信息'downloadUrl'字段不存在\n%s" % video_info)
-            video_list[resolution_string] = video_info["vr"]["sources"][resolution_string]["downloadUrl"]
-    else:
-        if not crawler.check_sub_key(("mp4",), video_info["videoModel"]["sources"]):
-            raise crawler.CrawlerException("视频列表信息'mp4'字段不存在\n%s" % video_info)
-        video_list = video_info["videoModel"]["sources"]["mp4"]
+        for resolution_string, video_info in crawler.get_json_value(video_data, "videoModel", "vr", "sources", default_value={}, is_raise_exception=False, type_check=list).items():
+            video_list[resolution_string] = crawler.get_json_value(video_info, "downloadUrl", original_data=video_data, type_check=str)
+        if len(video_list) == 0:
+            raise
     # 各个分辨率下的视频地址
     resolution_to_url = {}
     for resolution_string in video_list:
