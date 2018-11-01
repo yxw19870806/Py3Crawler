@@ -499,8 +499,6 @@ def check_sub_key(needles, haystack):
 def is_integer(number):
     if isinstance(number, int):
         return True
-    elif isinstance(number, int):
-        return True
     elif str(number).isdigit():
         return True
     return False
