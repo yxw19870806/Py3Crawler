@@ -73,17 +73,16 @@ def get_one_page_video(account_id, token):
         script_data = tool.json_decode(script_data_html)
         if script_data is None:
             raise crawler.CrawlerException("视频信息加载失败\n%s" % script_data_html)
-        channel_tab_data = crawler.get_json_value(script_data, "contents", "twoColumnBrowseResultsRenderer", "tabs")
+        channel_tab_data = crawler.get_json_value(script_data, "contents", "twoColumnBrowseResultsRenderer", "tabs", type_check=list)
         # 没有视频标签
         if len(channel_tab_data) < 2:
             return result
-        response_contents = crawler.get_json_value(channel_tab_data, 1, "tabRenderer", "content", "sectionListRenderer", "contents", 0,
-                                                   "itemSectionRenderer", "contents", 0, original_data=script_data)
+        response_contents = crawler.get_json_value(channel_tab_data, 1, "tabRenderer", "content", "sectionListRenderer", "contents", 0, "itemSectionRenderer", "contents", 0, original_data=script_data, type_check=dict)
         try:
-            video_list_data = crawler.get_json_value(response_contents, "gridRenderer", original_data=script_data)
+            video_list_data = crawler.get_json_value(response_contents, "gridRenderer", original_data=script_data, type_check=dict)
         except crawler.CrawlerException:
             # 没有上传过任何视频
-            if crawler.get_json_value(response_contents, "messageRenderer", "text", "simpleText", is_raise_exception=False) == "This channel has no videos.":
+            if crawler.get_json_value(response_contents, "messageRenderer", "text", "simpleText", is_raise_exception=False, type_check=str) == "This channel has no videos.":
                 return result
             raise
     else:
@@ -97,12 +96,12 @@ def get_one_page_video(account_id, token):
         video_pagination_response = net.http_request(query_url, method="GET", fields=query_data, header_list=header_list, json_decode=True)
         if video_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
             raise crawler.CrawlerException(crawler.request_failre(video_pagination_response.status))
-        video_list_data = crawler.get_json_value(video_pagination_response.json_data, 1, "response", "continuationContents", "gridContinuation")
+        video_list_data = crawler.get_json_value(video_pagination_response.json_data, 1, "response", "continuationContents", "gridContinuation", type_check=dict)
     # 获取所有video id
-    for item in crawler.get_json_value(video_list_data, "items"):
-        result["video_id_list"].append(crawler.get_json_value(item, "gridVideoRenderer", "videoId"))
+    for item in crawler.get_json_value(video_list_data, "items", type_check=list):
+        result["video_id_list"].append(crawler.get_json_value(item, "gridVideoRenderer", "videoId", type_check=str))
     # 获取下一页token
-    result["next_page_token"] = crawler.get_json_value(video_list_data, "continuations", 0, "nextContinuationData", "continuation", is_raise_exception=False)
+    result["next_page_token"] = crawler.get_json_value(video_list_data, "continuations", 0, "nextContinuationData", "continuation", is_raise_exception=False, type_check=str)
     return result
 
 
@@ -144,11 +143,11 @@ def get_video_page(video_id):
     if video_info_data is None:
         raise crawler.CrawlerException("视频信息格式不正确\n%s" % video_info_string)
     # 获取视频标题
-    result["video_title"] = crawler.get_json_value(video_info_data, "args", "title")
+    result["video_title"] = crawler.get_json_value(video_info_data, "args", "title", type_check=str)
     # 获取视频地址
     resolution_to_url = {}  # 各个分辨率下的视频地址
     decrypt_function_step = []  # signature生成步骤
-    for sub_url_encoded_fmt_stream_map in crawler.get_json_value(video_info_data, "args", "url_encoded_fmt_stream_map").split(","):
+    for sub_url_encoded_fmt_stream_map in crawler.get_json_value(video_info_data, "args", "url_encoded_fmt_stream_map", type_check=str).split(","):
         video_resolution = video_url = signature = None
         is_skip = False
         for sub_param in sub_url_encoded_fmt_stream_map.split("&"):
