@@ -34,40 +34,26 @@ def get_one_page_photo(account_id, page_count):
     elif photo_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(photo_pagination_response.status))
     # 获取图片信息
-    if not crawler.check_sub_key(("list",), photo_pagination_response.json_data):
-        raise crawler.CrawlerException("返回信息'list'字段不存在\n%s" % photo_pagination_response.json_data)
-    if not isinstance(photo_pagination_response.json_data["list"], list):
-        raise crawler.CrawlerException("返回信息'list'字段类型不正确\n%s" % photo_pagination_response.json_data)
-    for photo_info in photo_pagination_response.json_data["list"]:
+    for photo_info in crawler.get_json_value(photo_pagination_response.json_data, "list", type_check=list):
         result_photo_info = {
             "photo_id": None,  # 图片id
             "photo_url": None,  # 图片地址
         }
-        if not crawler.check_sub_key(("photo",), photo_info):
-            raise crawler.CrawlerException("图片信息'photo'字段不存在\n%s" % photo_info)
         # 获取图片id
-        if not crawler.check_sub_key(("id",), photo_info["photo"]):
-            raise crawler.CrawlerException("图片信息'id'字段不存在\n%s" % photo_info)
-        if not crawler.is_integer(photo_info["photo"]["id"]):
-            raise crawler.CrawlerException("图片信息'id'字段类型不正确\n%s" % photo_info)
-        result_photo_info["photo_id"] = int(photo_info["photo"]["id"])
+        result_photo_info["photo_id"] = crawler.get_json_value(photo_info, "photo", "id", type_check=int)
         # 获取图片地址
-        if crawler.check_sub_key(("sq300_url",), photo_info["photo"]):
-            photo_url = photo_info["photo"]["sq300_url"]
-        elif crawler.check_sub_key(("sq150_url",), photo_info["photo"]):
-            photo_url = photo_info["photo"]["sq150_url"]
+        for key_name in ["sq300_url", "sq150_url"]:
+            photo_url = crawler.get_json_value(photo_info, "photo", key_name, is_raise_exception=False, type_check=str)
+            if photo_url is not None:
+                if photo_url.find("-350x600.") == -1:
+                    raise crawler.CrawlerException("返回信息截取图片地址失败\n%s" % photo_info)
+                result_photo_info["photo_url"] = photo_url
+                break
         else:
-            raise crawler.CrawlerException("图片信息'sq300_url'和'sq150_url'字段不存在\n%s" % photo_info)
-        if photo_url.find("-350x600.") == -1:
-            raise crawler.CrawlerException("图片预览地址 %s 格式不正确\n" % photo_url)
-        result_photo_info["photo_url"] = photo_url
+            raise crawler.CrawlerException("图片信息匹配图片地址失败\n%s" % photo_info)
         result["photo_info_list"].append(result_photo_info)
     # 判断是不是最后一页
-    if not crawler.check_sub_key(("pager",), photo_pagination_response.json_data):
-        raise crawler.CrawlerException("返回信息'pager'字段不存在\n%s" % photo_pagination_response.json_data)
-    if not crawler.check_sub_key(("next_page",), photo_pagination_response.json_data["pager"]):
-        raise crawler.CrawlerException("返回信息'next_page'字段不存在\n%s" % photo_pagination_response.json_data)
-    if photo_pagination_response.json_data["pager"]["next_page"] is None:
+    if crawler.get_json_value(photo_pagination_response.json_data, "pager", "next_page") is None:
         result["is_over"] = True
     return result
 
