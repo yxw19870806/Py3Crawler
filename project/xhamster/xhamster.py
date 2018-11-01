@@ -95,7 +95,7 @@ def get_video_page(video_id):
         if not crawler.is_integer(resolution):
             raise crawler.CrawlerException("视频信息分辨率字段类型不正确\n%s" % resolution_string)
         resolution = int(resolution)
-        if resolution not in [240, 480, 720, 960, 1440, 1920]:
+        if resolution not in [144, 240, 480, 720, 960, 1440, 1920]:
             log.notice("未知视频分辨率：%s" % resolution_string)
         resolution_to_url[resolution] = video_list[resolution_string]
     # 优先使用配置中的分辨率
@@ -141,16 +141,18 @@ class Xhamster(crawler.Crawler):
         # 设置全局变量，供子线程调用
         video_quality = self.app_config["VIDEO_QUALITY"]
         if video_quality == 1:
+            FIRST_CHOICE_RESOLUTION = 144
+        if video_quality == 2:
             FIRST_CHOICE_RESOLUTION = 240
-        elif video_quality == 2:
-            FIRST_CHOICE_RESOLUTION = 480
         elif video_quality == 3:
-            FIRST_CHOICE_RESOLUTION = 720
+            FIRST_CHOICE_RESOLUTION = 480
         elif video_quality == 4:
-            FIRST_CHOICE_RESOLUTION = 960
+            FIRST_CHOICE_RESOLUTION = 720
         elif video_quality == 5:
-            FIRST_CHOICE_RESOLUTION = 1440
+            FIRST_CHOICE_RESOLUTION = 960
         elif video_quality == 6:
+            FIRST_CHOICE_RESOLUTION = 1440
+        elif video_quality == 7:
             FIRST_CHOICE_RESOLUTION = 1920
         else:
             log.error("配置文件config.ini中key为'VIDEO_QUALITY'的值必须是一个1~3的整数，使用程序默认设置")
