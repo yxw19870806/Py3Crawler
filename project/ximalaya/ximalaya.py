@@ -86,7 +86,7 @@ def get_audio_info_page(audio_id):
         if audio_url is not None:
             result["audio_url"] = audio_url
             break
-    if result["audio_url"] is None:
+    else:
         raise crawler.CrawlerException("返回信息匹配音频地址失败\n%s" % audio_play_response.json_data)
     return result
 
