@@ -27,12 +27,10 @@ def get_one_page_audio(account_id, page_count):
         raise crawler.CrawlerException("账号不存在")
     elif audit_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(audit_pagination_response.status))
-    if not crawler.check_sub_key(("res", "html"), audit_pagination_response.json_data):
-        raise crawler.CrawlerException("返回数据'res'或'html'字段不存在\n%s" % audit_pagination_response.json_data)
-    if audit_pagination_response.json_data["res"] is not True:
-        raise crawler.CrawlerException("返回数据'res'字段取值不正确\n%s" % audit_pagination_response.json_data)
+    crawler.get_json_value(audit_pagination_response.json_data, "res", type_check=True)
+    response_html = crawler.get_json_value(audit_pagination_response.json_data, "html", type_check=str)
     # 获取音频信息
-    audio_list_selector = pq(audit_pagination_response.json_data["html"]).find("ul.body_list li.item")
+    audio_list_selector = pq(response_html).find("ul.body_list li.item")
     for audio_index in range(0, audio_list_selector.length):
         audio_info = {
             "audio_id": None,  # 音频id
@@ -52,7 +50,7 @@ def get_one_page_audio(account_id, page_count):
         result["audio_info_list"].append(audio_info)
     # 判断是不是最后一页
     max_page_count = 1
-    pagination_list_selector = pq(audit_pagination_response.json_data["html"]).find(".pagingBar_wrapper a.pagingBar_page")
+    pagination_list_selector = pq(response_html).find(".pagingBar_wrapper a.pagingBar_page")
     for pagination_index in range(0, pagination_list_selector.length):
         pagination_selector = pagination_list_selector.eq(pagination_index)
         data_page = pagination_selector.attr("data-page")
@@ -77,20 +75,17 @@ def get_audio_info_page(audio_id):
     audio_play_response = net.http_request(audio_info_url, method="GET", json_decode=True)
     if audio_play_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(audio_play_response.status))
-    if crawler.check_sub_key(("res",), audio_play_response.json_data) and audio_play_response.json_data["res"] is False:
+    if crawler.get_json_value(audio_play_response.json_data, "res", type_check=bool) is False:
         result["is_delete"] = True
         return result
     # 获取音频标题
-    if not crawler.check_sub_key(("title",), audio_play_response.json_data):
-        raise crawler.CrawlerException("返回信息'title'字段不存在\n%s" % audio_play_response.json_data)
-    result["audio_title"] = audio_play_response.json_data["title"]
+    result["audio_title"] = crawler.get_json_value(audio_play_response.json_data, "title", type_check=str)
     # 获取音频地址
-    if crawler.check_sub_key(("play_path_64",), audio_play_response.json_data):
-        result["audio_url"] = audio_play_response.json_data["play_path_64"]
-    elif crawler.check_sub_key(("play_path_32",), audio_play_response.json_data):
-        result["audio_url"] = audio_play_response.json_data["play_path_32"]
-    elif crawler.check_sub_key(("play_path",), audio_play_response.json_data):
-        result["audio_url"] = audio_play_response.json_data["play_path"]
+    for key_name in ["play_path_64", "play_path_32", "play_path"]:
+        audio_url = crawler.get_json_value(audio_play_response.json_data, key_name, is_raise_exception=False, type_check=str)
+        if audio_url is not None:
+            result["audio_url"] = audio_url
+            break
     else:
         raise crawler.CrawlerException("返回信息匹配音频地址失败\n%s" % audio_play_response.json_data)
     return result

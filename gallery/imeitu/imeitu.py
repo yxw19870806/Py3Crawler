@@ -22,21 +22,7 @@ def get_latest_album_id():
             "length": "1",
         }
         api_response = net.http_request(api_url, method="GET", fields=query_data, json_decode=True)
-        if api_response.status != net.HTTP_RETURN_CODE_SUCCEED:
-            raise crawler.CrawlerException(crawler.request_failre(api_response.status))
-        if not crawler.check_sub_key(("data",), api_response.json_data):
-            raise crawler.CrawlerException("返回信息'data'字段不存在\n%s" % api_response.json_data)
-        if not crawler.check_sub_key(("list",), api_response.json_data["data"]):
-            raise crawler.CrawlerException("返回信息'list'字段不存在\n%s" % api_response.json_data)
-        if not isinstance(api_response.json_data["data"]["list"], list):
-            raise crawler.CrawlerException("返回信息'list'字段类型不正确\n%s" % api_response.json_data)
-        if len(api_response.json_data["data"]["list"]) != 1:
-            raise crawler.CrawlerException("返回信息'list'字段长度不正确\n%s" % api_response.json_data)
-        if not crawler.check_sub_key(("id",), api_response.json_data["data"]["list"][0]):
-            raise crawler.CrawlerException("返回信息'id'字段不存在\n%s" % api_response.json_data)
-        if not crawler.is_integer(api_response.json_data["data"]["list"][0]["id"]):
-            raise crawler.CrawlerException("返回信息'id'字段类型不正确\n%s" % api_response.json_data)
-        max_album_id = max(max_album_id, int(api_response.json_data["data"]["list"][0]["id"]))
+        max_album_id = max(max_album_id, crawler.get_json_value(api_response.json_data, "data", "list", 0, "id", type_check=int))
     return max_album_id
 
 
@@ -55,28 +41,23 @@ def get_album_page(album_id):
     }
     if api_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(api_response.status))
-    if not crawler.check_sub_key(("data",), api_response.json_data):
-        if crawler.check_sub_key(("msg",), api_response.json_data) and api_response.json_data["msg"] == "该动态已被删除":
+    try:
+        response_data = crawler.get_json_value(api_response.json_data, "data", type_check=dict)
+    except crawler.CrawlerException:
+        if crawler.get_json_value(api_response.json_data, "msg", is_raise_exception=False, type_check=str) == "该动态已被删除":
             result["is_delete"] = True
             return result
-        raise crawler.CrawlerException("返回信息'data'字段不存在\n%s" % api_response.json_data)
-    if not crawler.check_sub_key(("type", "url", "title"), api_response.json_data["data"]):
-        raise crawler.CrawlerException("返回信息'type'、'url'或'title'字段不存在\n%s" % api_response.json_data)
-    if not crawler.is_integer(api_response.json_data["data"]["type"]):
-        raise crawler.CrawlerException("返回信息'type'字段类型不正确\n%s" % api_response.json_data)
-    if not api_response.json_data["data"]["url"]:
-        raise crawler.CrawlerException("返回信息'url'字段没有内容\n%s" % api_response.json_data)
-    album_type = int(api_response.json_data["data"]["type"])
-    # 图片
-    if album_type == 1:
-        result["photo_url_list"] = api_response.json_data["data"]["url"].split(",")
-    # 视频
-    elif album_type == 2:
-        result["video_url"] = api_response.json_data["data"]["url"]
+        raise
+    # 图集类型（图片/视频）
+    album_type = crawler.get_json_value(response_data, "type", original_data=api_response.json_data, type_check=int)
+    if album_type == 1:  # 图片
+        result["photo_url_list"] = crawler.get_json_value(response_data, "url", original_data=api_response.json_data, type_check=str).split(",")
+    elif album_type == 2:  # 视频
+        result["video_url"] = crawler.get_json_value(response_data, "url", original_data=api_response.json_data, type_check=str)
     else:
-        raise crawler.CrawlerException("返回信息'type'字段取值不正确\n%s" % api_response.json_data)
+        raise crawler.CrawlerException("未知的图集类型\n%s" % api_response.json_data)
     # 获取作品标题
-    result["album_title"] = api_response.json_data["data"]["title"]
+    result["album_title"] = crawler.get_json_value(response_data, "title", original_data=api_response.json_data, type_check=str)
     return result
 
 

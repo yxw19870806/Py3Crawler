@@ -29,30 +29,18 @@ def get_one_page_video(account_id, page_count):
     }
     if video_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(video_pagination_response.status))
-    if not crawler.check_sub_key(("result",), video_pagination_response.json_data):
-        raise crawler.CrawlerException("返回数据'result'字段不存在\n%s" % video_pagination_response.json_data)
     # 没有视频了
-    if video_pagination_response.json_data["result"] == 500:
+    if crawler.get_json_value(video_pagination_response.json_data, "result", type_check=int) == 500:
         return result
-    if not crawler.check_sub_key(("data",), video_pagination_response.json_data):
-        raise crawler.CrawlerException("返回数据'data'字段不存在\n%s" % video_pagination_response.json_data)
-    if not crawler.check_sub_key(("list",), video_pagination_response.json_data["data"]):
-        raise crawler.CrawlerException("返回数据'list'字段不存在\n%s" % video_pagination_response.json_data)
-    for media_data in video_pagination_response.json_data["data"]["list"]:
+    for media_info in crawler.get_json_value(video_pagination_response.json_data, "data", "list", type_check=list):
         result_video_info = {
             "video_id": None,  # 视频id
             "video_url": None,  # 视频地址
         }
         # 获取视频id
-        if not crawler.check_sub_key(("videoid",), media_data):
-            raise crawler.CrawlerException("视频信息'videoid'字段不存在\n%s" % media_data)
-        if not crawler.is_integer(media_data["videoid"]):
-            raise crawler.CrawlerException("视频信息'videoid'字段类型不正确\n%s" % media_data)
-        result_video_info["video_id"] = int(media_data["videoid"])
+        result_video_info["video_id"] = crawler.get_json_value(media_info, "videoid", type_check=int)
         # 获取视频下载地址
-        if not crawler.check_sub_key(("download_linkurl",), media_data):
-            raise crawler.CrawlerException("视频信息'download_linkurl'字段不存在\n%s" % media_data)
-        result_video_info["video_url"] = media_data["download_linkurl"]
+        result_video_info["video_url"] = crawler.get_json_value(media_info, "download_linkurl", type_check=str)
         result["video_info_list"].append(result_video_info)
     return result
 

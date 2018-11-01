@@ -451,6 +451,63 @@ def get_time():
     return time.strftime("%m-%d %H:%M:%S", time.localtime(time.time()))
 
 
+# 获取一个json文件的指定字段
+# arg如果是字母，取字典对应key；如果是整数，取列表对应下标
+def get_json_value(json_data, *args, default_value=None, is_raise_exception=True, original_data=None, type_check=""):
+    if original_data is None:
+        original_data = json_data
+    last_arg = ""
+    exception_string = ""
+    for arg in args:
+        if isinstance(arg, str):
+            if not isinstance(json_data, dict):
+                exception_string = "'%s'字段不是字典\n%s" % (last_arg, original_data)
+            elif arg not in json_data:
+                exception_string = "'%s'字段不存在\n%s" % (arg, original_data)
+        elif isinstance(arg, int):
+            if not isinstance(json_data, list):
+                exception_string =  "'%s'字段不是列表\n%s" % (last_arg, original_data)
+            elif len(json_data) <= arg:
+                exception_string = "'%s'字段长度不正确\n%s" % (last_arg, original_data)
+        else:
+            exception_string = "arg: %s类型不正确" % arg
+        if exception_string:
+            break
+        last_arg = arg
+        json_data = json_data[arg]
+    # 检测结果类型
+    if not exception_string and type_check is not "":
+        type_error = False
+        if type_check is int:  # 整数（包含int和符合整型规则的字符串）
+            if is_integer(json_data):
+                json_data = int(json_data)
+            else:
+                type_error = True
+        elif type_check is float:  # 浮点数（包含float、int和符合浮点数规则的字符串）
+            try:
+                json_data = float(json_data)
+            except TypeError:
+                type_error = True
+            except ValueError:
+                type_error = True
+        elif type_check is str:  # 直接强制类型转化
+            json_data = str(json_data)
+        elif type_check in [True, False, None]:  # 确定值
+            type_error = json_data is not type_check
+        elif type_check in [dict, list, bool]:  # 标准数据类型
+            type_error = not isinstance(json_data, type_check)
+        else:
+            exception_string = "type_check: %s类型不正确" % type_check
+        if type_error:
+            exception_string = "'%s'字段类型不正确\n%s" % (last_arg, original_data)
+    if exception_string:
+        if is_raise_exception:
+            raise CrawlerException(exception_string)
+        else:
+            return default_value
+    return json_data
+
+
 # 判断类型是否为字典，并且检测是否存在指定的key
 def check_sub_key(needles, haystack):
     if not isinstance(needles, tuple):
@@ -467,11 +524,8 @@ def check_sub_key(needles, haystack):
 def is_integer(number):
     if isinstance(number, int):
         return True
-    elif isinstance(number, int):
-        return True
-    elif str(number).isdigit():
-        return True
-    return False
+    else:
+        return re.compile('^[-+]?[0-9]+$').match(number)
 
 
 # 替换文本中的表情符号
