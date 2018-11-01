@@ -45,7 +45,7 @@ def main():
         # 选择下载目录
         options = {
             "initialdir": xhamster_obj.video_download_path,
-            "initialfile": "%08d - %s.mp4" % (int(video_id), path.filter_text(video_response["video_title"])),
+            "initialfile": "%08d %s.mp4" % (int(video_id), path.filter_text(video_response["video_title"])),
             "filetypes": [("mp4", ".mp4")],
             "parent": gui,
         }
