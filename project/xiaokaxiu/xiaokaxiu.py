@@ -32,15 +32,15 @@ def get_one_page_video(account_id, page_count):
     # 没有视频了
     if crawler.get_json_value(video_pagination_response.json_data, "result", type_check=int) == 500:
         return result
-    for media_data in crawler.get_json_value(video_pagination_response.json_data, "data", "list", type_check=list):
+    for media_info in crawler.get_json_value(video_pagination_response.json_data, "data", "list", type_check=list):
         result_video_info = {
             "video_id": None,  # 视频id
             "video_url": None,  # 视频地址
         }
         # 获取视频id
-        result_video_info["video_id"] = crawler.get_json_value(media_data, "videoid", type_check=int)
+        result_video_info["video_id"] = crawler.get_json_value(media_info, "videoid", type_check=int)
         # 获取视频下载地址
-        result_video_info["video_url"] = crawler.get_json_value(media_data, "download_linkurl", type_check=str)
+        result_video_info["video_url"] = crawler.get_json_value(media_info, "download_linkurl", type_check=str)
         result["video_info_list"].append(result_video_info)
     return result
 
