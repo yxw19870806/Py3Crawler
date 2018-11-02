@@ -45,27 +45,14 @@ def get_tag_account_list(tag_id):
         if account_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
             raise crawler.CrawlerException(crawler.request_failre(account_pagination_response.status))
         # 获取全部账号id
-        if not crawler.check_sub_key(("data",), account_pagination_response.json_data):
-            raise crawler.CrawlerException("返回信息'data'字段不存在\n%s" % account_pagination_response.json_data)
-        for account_info in account_pagination_response.json_data["data"]:
+        for account_info in crawler.get_json_value(account_pagination_response.json_data, "data", type_check=list):
             # 获取账号id
-            if not crawler.check_sub_key(("id",), account_info):
-                raise crawler.CrawlerException("账号信息'id'字段不存在\n%s" % account_info)
-            if not crawler.is_integer(account_info["id"]):
-                raise crawler.CrawlerException("账号信息'id'字段类型不正确\n%s" % account_info)
-            account_id = str(account_info["id"])
+            account_id = crawler.get_json_value(account_info, "id", type_check=int)
             # 获取账号昵称
-            if not crawler.check_sub_key(("nickname",), account_info):
-                raise crawler.CrawlerException("账号信息'title'字段不存在\n%s" % account_info)
-            account_name = account_info["nickname"]
-            account_list[account_id] = account_name
-
+            account_name = crawler.get_json_value(account_info, "nickname", type_check=str)
+            account_list[str(account_id)] = account_name
         # 判断是不是最后一页
-        if not crawler.check_sub_key(("maxPage",), account_pagination_response.json_data):
-            raise crawler.CrawlerException("返回信息'maxPage'字段不存在\n%s" % account_pagination_response.json_data)
-        if not crawler.is_integer(account_pagination_response.json_data["maxPage"]):
-            raise crawler.CrawlerException("返回信息'maxPage'字段类型不正确\n%s" % account_pagination_response.json_data)
-        if page_count >= int(account_pagination_response.json_data["maxPage"]):
+        if page_count >= crawler.get_json_value(account_pagination_response.json_data, "maxPage", type_check=int):
             break
         else:
             page_count += 1

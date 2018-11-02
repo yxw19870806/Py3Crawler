@@ -24,14 +24,10 @@ def _search_account(account_name):
     search_response = net.http_request(search_url, method="POST", fields=post_data, json_decode=True)
     if search_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(search_response.status))
-    if not crawler.check_sub_key(("result", "data"), search_response.json_data):
-        raise crawler.CrawlerException("返回信息`result`或`data`字段不存在\n%s" % search_response.json_data)
-    if search_response.json_data["result"] is not True:
-        raise crawler.CrawlerException("返回信息`result`字段取值不正确\n%s" % search_response.json_data)
+    crawler.get_json_value(search_response.json_data, "result", type_check=True)
     account_name_to_id_list = {}
-    for search_result in search_response.json_data["data"]:
-        if crawler.check_sub_key(("id", "realName"), search_result):
-            account_name_to_id_list[search_result["realName"]] = str(search_result["id"])
+    for search_result in crawler.get_json_value(search_response.json_data, "data", type_check=list):
+        account_name_to_id_list[crawler.get_json_value(search_result, "realName", type_check=str)] = crawler.get_json_value(search_result, "id", type_check=str)
     return account_name_to_id_list
 
 
