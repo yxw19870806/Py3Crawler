@@ -453,8 +453,15 @@ def get_time():
 
 # 获取一个json文件的指定字段
 # arg如果是字母，取字典对应key；如果是整数，取列表对应下标
-def get_json_value(json_data, *args, default_value=None, is_raise_exception=True, original_data=None, type_check=""):
-    if original_data is None:
+# 支持的kwargs
+#       original_data
+#       default_value
+#       is_raise_exception
+#       type_check
+def get_json_value(json_data, *args, **kwargs):
+    if "original_data" is kwargs:
+        original_data = kwargs["original_data"]
+    else:
         original_data = json_data
     last_arg = ""
     exception_string = ""
@@ -476,7 +483,8 @@ def get_json_value(json_data, *args, default_value=None, is_raise_exception=True
         last_arg = arg
         json_data = json_data[arg]
     # 检测结果类型
-    if not exception_string and type_check is not "":
+    if not exception_string and "type_check" in kwargs:
+        type_check = kwargs["type_check"]
         type_error = False
         if type_check is int:  # 整数（包含int和符合整型规则的字符串）
             if is_integer(json_data):
@@ -492,19 +500,21 @@ def get_json_value(json_data, *args, default_value=None, is_raise_exception=True
                 type_error = True
         elif type_check is str:  # 直接强制类型转化
             json_data = str(json_data)
-        elif type_check in [True, False, None]:  # 确定值
-            type_error = json_data is not type_check
         elif type_check in [dict, list, bool]:  # 标准数据类型
             type_error = not isinstance(json_data, type_check)
+        elif type_check in [True, False, None]:  # 确定值
+            type_error = json_data is not type_check
         else:
             exception_string = "type_check: %s类型不正确" % type_check
         if type_error:
             exception_string = "'%s'字段类型不正确\n%s" % (last_arg, original_data)
     if exception_string:
-        if is_raise_exception:
+        if "is_raise_exception" in kwargs:
             raise CrawlerException(exception_string)
         else:
-            return default_value
+            if "default_value" in kwargs:
+                return kwargs["default_value"]
+            return None
     return json_data
 
 
