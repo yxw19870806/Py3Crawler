@@ -144,16 +144,8 @@ def get_one_page_album(account_id, since_id):
     }
     if api_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(api_response.status))
-    if not crawler.check_sub_key(("data",), api_response.json_data):
-        raise crawler.CrawlerException("返回信息'data'字段不存在\n%s" % api_response.json_data)
-    for album_info in api_response.json_data["data"]:
-        if not crawler.check_sub_key(("item_detail",), album_info):
-            raise crawler.CrawlerException("作品信息'item_detail'字段不存在\n%s" % album_info)
-        if not crawler.check_sub_key(("item_id",), album_info["item_detail"]):
-            raise crawler.CrawlerException("作品信息'item_id'字段不存在\n%s" % album_info)
-        if not crawler.is_integer(album_info["item_detail"]["item_id"]):
-            raise crawler.CrawlerException("作品信息'item_id'字段类型不正确\n%s" % album_info)
-        result["album_id_list"].append(int(album_info["item_detail"]["item_id"]))
+    for album_info in crawler.get_json_value(api_response.json_data, "data", type_check=list):
+        result["album_id_list"].append(crawler.get_json_value(album_info, "item_detail", "item_id", type_check=int))
     return result
 
 
@@ -170,65 +162,27 @@ def get_album_page(album_id):
     if album_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(album_response.status))
     album_response_content = album_response.data.decode(errors="ignore")
-    album_info_html = tool.find_sub_string(album_response_content, "JSON.parse(", ");\n")
-    if not album_info_html:
+    script_json_html = tool.find_sub_string(album_response_content, "JSON.parse(", ");\n")
+    if not script_json_html:
         raise crawler.CrawlerException("页面截取作品信息失败\n%s" % album_response_content)
-    album_info = tool.json_decode(tool.json_decode(album_info_html))
-    if not album_info:
+    script_json = tool.json_decode(tool.json_decode(script_json_html))
+    if not script_json:
         raise crawler.CrawlerException("作品信息加载失败\n%s" % album_response_content)
-    if not crawler.check_sub_key(("detail",), album_info):
-        raise crawler.CrawlerException("作品信息'detail'字段不存在\n%s" % album_info)
-    if not crawler.check_sub_key(("post_data",), album_info["detail"]):
-        raise crawler.CrawlerException("作品信息'post_data'字段不存在\n%s" % album_info)
-    if not crawler.check_sub_key(("type",), album_info["detail"]["post_data"]):
-        raise crawler.CrawlerException("作品信息'type'字段不存在\n%s" % album_info)
-    if not crawler.check_sub_key(("multi",), album_info["detail"]["post_data"]):
-        raise crawler.CrawlerException("作品信息'multi'字段不存在\n%s" % album_info)
     is_skip = False
+    album_type = crawler.get_json_value(script_json, "detail", "post_data", "type", type_check=str)
     # 问题
     # https://bcy.net/item/detail/6115326868729126670
-    if album_info["detail"]["post_data"] == "ganswer":
+    if album_type == "ganswer":
         is_skip = True
     # 文章
     # https://bcy.net/item/detail/6162547130750754574
-    elif album_info["detail"]["post_data"] == "article":
+    elif album_type == "article":
         is_skip = True
     # 获取全部图片
-    for photo_info in album_info["detail"]["post_data"]["multi"]:
-        if not crawler.check_sub_key(("path",), photo_info):
-            raise crawler.CrawlerException("图片信息'path'字段不存在\n%s" % photo_info)
-        result["photo_url_list"].append(urllib.parse.unquote(photo_info["path"]))
-
+    for photo_info in crawler.get_json_value(script_json, "detail", "post_data", "multi", type_check=list):
+        result["photo_url_list"].append(urllib.parse.unquote(crawler.get_json_value(photo_info, "path", type_check=str)))
     if not is_skip and len(result["photo_url_list"]) == 0:
         raise crawler.CrawlerException("页面匹配图片地址失败\n%s" % album_response_content)
-
-    # # 检测作品是否被管理员锁定
-    # elif album_response_content.find("<h2>问题已被锁定，无法查看回答</h2>") >= 0:
-    #     is_skip = True
-
-    # 是不是有报错信息
-    # if not is_skip:
-    #     error_message = pq(album_response_content).find("span.l-detail-no-right-to-see__text").text()
-    #     # https://bcy.net/item/detail/5969608017174355726
-    #     if error_message == "该作品已被作者设置为只有粉丝可见":
-    #         result["is_only_follower"] = True
-    #         return result
-    #     # https://bcy.net/item/detail/6363512825238806286
-    #     elif error_message == "该作品已被作者设置为登录后可见":
-    #         if not IS_LOGIN:
-    #             result["is_only_login"] = True
-    #         else:
-    #             raise crawler.CrawlerException("登录状态丢失")
-    #         return result
-    # # 获取作品页面内的全部图片地址列表
-    # photo_list_selector = pq(album_response_content).find("div.content .img-wrap-inner img")
-    # for photo_index in range(0, photo_list_selector.length):
-    #     photo_selector = photo_list_selector.eq(photo_index)
-    #     # 获取作品id
-    #     photo_url = photo_selector.attr("src")
-    #     if not photo_url:
-    #         raise crawler.CrawlerException("图片信息截取图片地址失败\n%s" % photo_selector.html())
-    #     result["photo_url_list"].append(photo_url)
     return result
 
 
