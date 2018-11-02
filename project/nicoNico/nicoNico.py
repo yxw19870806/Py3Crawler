@@ -141,19 +141,13 @@ def get_mylist_index(list_id):
             "video_id": None,  # 视频id
             "video_title": "",  # 视频标题
         }
-        if not crawler.check_sub_key(("item_data",), video_info):
-            raise crawler.CrawlerException("视频信息'item_data'字段不存在\n%s" % video_info)
         # 获取视频id
-        if not crawler.check_sub_key(("video_id",), video_info["item_data"]):
-            raise crawler.CrawlerException("视频信息'video_id'字段不存在\n%s" % video_info)
-        video_id = video_info["item_data"]["video_id"].replace("sm", "")
+        video_id = crawler.get_json_value(video_info, "item_data", "video_id", type_check=str).replace("sm", "")
         if not crawler.is_integer(video_id):
             raise crawler.CrawlerException("视频信息'video_id'字段类型不正确\n%s" % video_info)
         result_video_info["video_id"] = int(video_id)
         # 获取视频辩题
-        if not crawler.check_sub_key(("title",), video_info["item_data"]):
-            raise crawler.CrawlerException("视频信息'title'字段不存在\n%s" % video_info)
-        result_video_info["video_title"] = video_info["item_data"]["title"]
+        result_video_info["video_title"] = crawler.get_json_value(video_info, "item_data", "title", type_check=str)
         result["video_info_list"].append(result_video_info)
     return result
 
@@ -179,8 +173,8 @@ def get_video_info(video_id):
     elif video_play_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException("视频播放页访问失败，" + crawler.request_failre(video_play_response.status))
     video_play_response_content = video_play_response.data.decode(errors="ignore")
-    video_info_string = tool.find_sub_string(video_play_response_content, 'data-api-data="', '" data-environment="')
-    if not video_info_string:
+    script_json_html = tool.find_sub_string(video_play_response_content, 'data-api-data="', '" data-environment="')
+    if not script_json_html:
         # 播放页面提示flash没有安装，重新访问
         if pq(video_play_response_content).find("div.notify_update_flash_player").length > 0:
             return get_video_info(video_id)
@@ -188,25 +182,15 @@ def get_video_info(video_id):
             result["is_private"] = True
             return result
         raise crawler.CrawlerException("视频信息截取失败\n%s" % video_play_response_content)
-    video_info_string = html.unescape(video_info_string)
-    video_info = tool.json_decode(video_info_string)
-    if video_info is None:
+    script_json = tool.json_decode(html.unescape(script_json_html))
+    if script_json is None:
         raise crawler.CrawlerException("视频信息加载失败\n%s" % video_play_response_content)
-    if not crawler.check_sub_key(("video",), video_info):
-        raise crawler.CrawlerException("视频信息'video'字段不存在\n%s" % video_info)
     # 获取视频标题
-    if not crawler.check_sub_key(("title",), video_info["video"]):
-        raise crawler.CrawlerException("视频信息'title'字段不存在\n%s" % video_info)
-    result["video_title"] = video_info["video"]["title"]
+    result["video_title"] = crawler.get_json_value(script_json, "video", "title", type_check=str)
     # 获取视频地址
-    if not crawler.check_sub_key(("smileInfo",), video_info["video"]):
-        raise crawler.CrawlerException("视频信息'smileInfo'字段不存在\n%s" % video_info)
-    if not crawler.check_sub_key(("url",), video_info["video"]["smileInfo"]):
-        raise crawler.CrawlerException("视频信息'url'字段不存在\n%s" % video_info)
-    result["video_url"] = video_info["video"]["smileInfo"]["url"]
+    result["video_url"] = crawler.get_json_value(script_json, "video", "smileInfo", "url", type_check=str)
     # 返回的cookies
-    set_cookie = net.get_cookies_from_response_header(video_play_response.headers)
-    result["extra_cookie"] = set_cookie
+    result["extra_cookie"] = net.get_cookies_from_response_header(video_play_response.headers)
     return result
 
 
