@@ -22,11 +22,7 @@ def get_account_index_page(account_id):
             raise crawler.CrawlerException("账号不存在")
         elif account_vanity_response.status != net.HTTP_RETURN_CODE_SUCCEED:
             raise crawler.CrawlerException("账号ID页，%s" % crawler.request_failre(account_vanity_response.status))
-        if not crawler.check_sub_key(("data",), account_vanity_response.json_data):
-            raise crawler.CrawlerException("账号ID页返回信息'data'字段不存在\n%s" % account_vanity_response.json_data)
-        if not crawler.check_sub_key(("userIdStr",), account_vanity_response.json_data["data"]):
-            raise crawler.CrawlerException("账号ID页返回信息'userIdStr'字段不存在\n%s" % account_vanity_response.json_data)
-        account_id = account_vanity_response.json_data["data"]["userIdStr"]
+        account_id = crawler.get_json_value(account_vanity_response.json_data, "data", "userIdStr", type_check=str)
     # 获取账号详情
     account_profile_url = "https://archive.vine.co/profiles/%s.json" % account_id
     result = {
@@ -35,17 +31,9 @@ def get_account_index_page(account_id):
     account_profile_response = net.http_request(account_profile_url, method="GET", json_decode=True)
     if account_profile_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException("账号详情页，%s" % crawler.request_failre(account_profile_response.status))
-    if not crawler.check_sub_key(("private", "postCount", "posts"), account_profile_response.json_data):
-        raise crawler.CrawlerException("账号详情页返回信息'private'、'postCount'或'posts'字段不存在\n%s" % account_profile_response.json_data)
-    if not crawler.is_integer(account_profile_response.json_data["private"]) or int(account_profile_response.json_data["private"]) != 0:
+    if crawler.get_json_value(account_profile_response.json_data, "private", type_check=int) != 0:
         raise crawler.CrawlerException("账号详情页非公开\n%s" % account_profile_response.json_data)
-    if not crawler.is_integer(account_profile_response.json_data["postCount"]):
-        raise crawler.CrawlerException("账号详情页返回信息'postCount'字段类型不正确\n%s" % account_profile_response.json_data)
-    if not isinstance(account_profile_response.json_data["posts"], list):
-        raise crawler.CrawlerException("账号详情页返回信息'posts'字段类型不正确\n%s" % account_profile_response.json_data)
-    if int(account_profile_response.json_data["postCount"]) != len(account_profile_response.json_data["posts"]):
-        raise crawler.CrawlerException("账号详情页视频数量解析错误\n%s" % account_profile_response.json_data)
-    result["video_id_list"] = account_profile_response.json_data["posts"]
+    result["video_id_list"] = crawler.get_json_value(account_profile_response.json_data, "posts", type_check=list)
     return result
 
 
@@ -63,15 +51,10 @@ def get_video_info_page(video_id):
         result["is_skip"] = True
     elif video_info_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(video_info_response.status))
-    else:
-        if not crawler.check_sub_key(("postId", "videoUrl", "videoDashUrl"), video_info_response.json_data):
-            raise crawler.CrawlerException("返回信息'postId'、'videoUrl'或'videoDashUrl'字段不存在\n%s" % video_info_response.json_data)
-        if not crawler.is_integer(video_info_response.json_data["postId"]):
-            raise crawler.CrawlerException("返回信息'postId'字段类型不正确\n%s" % video_info_response.json_data)
-        # 获取视频地址
-        result["video_url"] = video_info_response.json_data["videoUrl"]
-        # 获取视频id（数字）
-        result["video_id"] = int(video_info_response.json_data["postId"])
+    # 获取视频地址
+    result["video_url"] = crawler.get_json_value(video_info_response.json_data, "videoUrl", type_check=str)
+    # 获取视频id（数字）
+    result["video_id"] = crawler.get_json_value(video_info_response.json_data, "postId", type_check=int)
     return result
 
 
