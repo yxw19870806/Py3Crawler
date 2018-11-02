@@ -81,6 +81,7 @@ def get_account_index_page(account_name):
 
 # 获取一页的推特信息
 def get_one_page_media(account_name, position_blog_id):
+    # https://twitter.com/i/profiles/show/0916_natsumi/media_timeline?include_available_features=1&include_entities=1&max_position=1053199849145872384&reset_error_state=false
     media_pagination_url = "https://twitter.com/i/profiles/show/%s/media_timeline" % account_name
     query_data = {
         "include_available_features": "1",
@@ -96,24 +97,14 @@ def get_one_page_media(account_name, position_blog_id):
     }
     if media_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(media_pagination_response.status))
-    if not crawler.check_sub_key(("has_more_items",), media_pagination_response.json_data):
-        raise crawler.CrawlerException("返回信息'has_more_items'字段不存在\n%s" % media_pagination_response.json_data)
-    if not crawler.check_sub_key(("items_html",), media_pagination_response.json_data):
-        raise crawler.CrawlerException("返回信息'items_html'字段不存在\n%s" % media_pagination_response.json_data)
-    if not crawler.check_sub_key(("new_latent_count",), media_pagination_response.json_data):
-        raise crawler.CrawlerException("返回信息'new_latent_count'字段不存在\n%s" % media_pagination_response.json_data)
-    if not crawler.is_integer(media_pagination_response.json_data["new_latent_count"]):
-        raise crawler.CrawlerException("返回信息'new_latent_count'字段类型不正确\n%s" % media_pagination_response.json_data)
-    if not crawler.check_sub_key(("min_position",), media_pagination_response.json_data):
-        raise crawler.CrawlerException("返回信息'min_position'字段不存在\n%s" % media_pagination_response.json_data)
-    if not crawler.is_integer(media_pagination_response.json_data["min_position"]) and media_pagination_response.json_data["min_position"] is not None:
-        raise crawler.CrawlerException("返回信息'min_position'字段类型不正确\n%s" % media_pagination_response.json_data)
+    response_html = crawler.get_json_value(media_pagination_response.json_data, "items_html", type_check=str).strip()
+    response_count = crawler.get_json_value(media_pagination_response.json_data, "new_latent_count", type_check=int)
     # 没有任何内容
-    if int(media_pagination_response.json_data["new_latent_count"]) == 0 and not media_pagination_response.json_data["items_html"].strip():
+    if response_count == 0 and not response_html:
         result["is_skip"] = True
         return result
-    tweet_list_selector = pq("<ul id=\"py3crawler\">" + media_pagination_response.json_data["items_html"].strip() + "</ul>").children("li.js-stream-item")
-    if int(media_pagination_response.json_data["new_latent_count"]) != tweet_list_selector.length:
+    tweet_list_selector = pq("<ul id=\"py3crawler\">" + response_html + "</ul>").children("li.js-stream-item")
+    if tweet_list_selector.length != response_count:
         raise crawler.CrawlerException("tweet分组数量和返回数据中不一致\n%s\n%s" % (tweet_list_selector.length, media_pagination_response.json_data["new_latent_count"]))
     for tweet_index in range(0, tweet_list_selector.length):
         result_media_info = {
@@ -135,8 +126,8 @@ def get_one_page_media(account_name, position_blog_id):
         result_media_info["has_video"] = tweet_selector.find("div.AdaptiveMedia-video").length > 0
         result["media_info_list"].append(result_media_info)
     # 判断是不是还有下一页
-    if media_pagination_response.json_data["has_more_items"]:
-        result["next_page_position"] = media_pagination_response.json_data["min_position"]
+    if crawler.get_json_value(media_pagination_response.json_data, "has_more_items", type_check=bool):
+        result["next_page_position"] = crawler.get_json_value(media_pagination_response.json_data, "min_position", type_check=str)
     return result
 
 
@@ -158,18 +149,15 @@ def get_video_play_page(tweet_id):
     thread_event.set()
     if video_play_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(video_play_response.status))
-    if not crawler.check_sub_key(("track",), video_play_response.json_data):
-        raise crawler.CrawlerException("返回信息'track'字段不存在\n%s" % video_play_response.json_data)
-    if crawler.check_sub_key(("playbackUrl",), video_play_response.json_data["track"]) and video_play_response.json_data["track"]["playbackUrl"] is not None:
-        file_url = video_play_response.json_data["track"]["playbackUrl"]
-    elif crawler.check_sub_key(("vmapUrl",), video_play_response.json_data["track"]) and video_play_response.json_data["track"]["vmapUrl"] is not None:
-        file_url = video_play_response.json_data["track"]["vmapUrl"]
-    else:
-        raise crawler.CrawlerException("返回信息'playbackUrl'字段不存在\n%s" % video_play_response.json_data["track"])
+    # 获取m3u8或视频文件
+    try:
+        file_url = crawler.get_json_value(video_play_response.json_data, "track", "playbackUrl", type_check=str)
+    except crawler.CrawlerException:
+        file_url = crawler.get_json_value(video_play_response.json_data, "track", "vmapUrl", is_raise_exception=False, type_check=str)
+        if file_url is None:
+            raise
     file_type = net.get_file_type(file_url)
-    # m3u8文件，需要再次访问获取真实视频地址
-    # https://api.twitter.com/1.1/videos/tweet/config/996368816174084097.json
-    if file_type == "m3u8":
+    if file_type == "m3u8":  # https://api.twitter.com/1.1/videos/tweet/config/996368816174084097.json
         file_url_protocol, file_url_path = urllib.parse.splittype(file_url)
         file_url_host = urllib.parse.splithost(file_url_path)[0]
         m3u8_file_response = net.http_request(file_url, method="GET")
@@ -218,8 +206,7 @@ def get_video_play_page(tweet_id):
             raise crawler.CrawlerException("vmap文件 %s 解析全部视频文件失败\n%s" % (file_url, vmap_file_response_content))
         result["video_url"] = bit_rate_to_url[max(bit_rate_to_url)]
     # 直接是视频地址
-    # https://api.twitter.com/1.1/videos/tweet/config/996368816174084097.json
-    else:
+    else:  # https://api.twitter.com/1.1/videos/tweet/config/996368816174084097.json
         result["video_url"] = file_url
     return result
 
@@ -261,7 +248,7 @@ class Twitter(crawler.Crawler):
                         tool.process_exit()
         except crawler.CrawlerException as e:
             log.error("生成authorization失败，原因：%s" % e.message)
-            raise
+            tool.process_exit()
 
     def main(self):
         # 循环下载每个id
