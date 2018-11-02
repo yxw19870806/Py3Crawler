@@ -81,44 +81,20 @@ def get_one_page_video(account_id, cursor_id, dytk, signature):
     if video_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(video_pagination_response.status))
     # 判断是不是最后一页
-    if not crawler.check_sub_key(("has_more",), video_pagination_response.json_data):
-        raise crawler.CrawlerException("返回信息'has_more'字段不存在\n%s" % video_pagination_response.json_data)
-    result["is_over"] = video_pagination_response.json_data["has_more"] == 0
+    result["is_over"] = crawler.get_json_value(video_pagination_response.json_data, "has_more", type_check=int) == 0
     # 判断是不是最后一页
     if not result["is_over"]:
-        if not crawler.check_sub_key(("max_cursor",), video_pagination_response.json_data):
-            raise crawler.CrawlerException("返回信息'max_cursor'字段不存在\n%s" % video_pagination_response.json_data)
-        if not crawler.is_integer(video_pagination_response.json_data["max_cursor"]):
-            raise crawler.CrawlerException("返回信息'max_cursor'字段类型不正确\n%s" % video_pagination_response.json_data)
-        result["next_page_cursor_id"] = int(video_pagination_response.json_data["max_cursor"])
+        result["next_page_cursor_id"] = crawler.get_json_value(video_pagination_response.json_data, "max_cursor", type_check=int)
     # 获取全部视频id
-    if not crawler.check_sub_key(("aweme_list",), video_pagination_response.json_data):
-        raise crawler.CrawlerException("返回信息'aweme_list'字段不存在\n%s" % video_pagination_response.json_data)
-    if not isinstance(video_pagination_response.json_data["aweme_list"], list):
-        raise crawler.CrawlerException("返回信息'aweme_list'字段类型不正确\n%s" % video_pagination_response.json_data)
-    for video_info in video_pagination_response.json_data["aweme_list"]:
+    for video_info in crawler.get_json_value(video_pagination_response.json_data, "aweme_list", type_check=list):
         result_video_info = {
             "video_id": None,  # 视频id
             "video_url": None,  # 视频地址
         }
         # 获取视频id
-        if not crawler.check_sub_key(("aweme_id",), video_info):
-            raise crawler.CrawlerException("视频信息'aweme_id'字段不存在\n%s" % video_info)
-        if not crawler.is_integer(video_info["aweme_id"]):
-            raise crawler.CrawlerException("视频信息'aweme_id'字段类型不正确\n%s" % video_info)
-        result_video_info["video_id"] = int(video_info["aweme_id"])
+        result_video_info["video_id"] = crawler.get_json_value(video_info, "aweme_id", type_check=int)
         # 获取视频地址
-        if not crawler.check_sub_key(("video",), video_info):
-            raise crawler.CrawlerException("视频信息'video'字段不存在\n%s" % video_info)
-        if not crawler.check_sub_key(("play_addr",), video_info["video"]):
-            raise crawler.CrawlerException("视频信息'play_addr'字段不存在\n%s" % video_info)
-        if not crawler.check_sub_key(("url_list",), video_info["video"]["play_addr"]):
-            raise crawler.CrawlerException("视频信息'url_list'字段不存在\n%s" % video_info)
-        if not isinstance(video_info["video"]["play_addr"]["url_list"], list):
-            raise crawler.CrawlerException("视频信息'url_list'字段类型不正确\n%s" % video_info)
-        if len(video_info["video"]["play_addr"]["url_list"]) == 0:
-            raise crawler.CrawlerException("视频信息'url_list'字段长度不正确\n%s" % video_info)
-        result_video_info["video_url"] = video_info["video"]["play_addr"]["url_list"][0]
+        result_video_info["video_url"] = crawler.get_json_value(video_info, "video", "play_addr", "url_list", 0, type_check=str)
         result["video_info_list"].append(result_video_info)
     return result
 
