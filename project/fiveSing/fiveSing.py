@@ -54,20 +54,19 @@ def get_audio_play_page(audio_id, song_type):
     }
     if audio_info_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(audio_info_response.status))
-    if not crawler.check_sub_key(("data",), audio_info_response.json_data):
-        raise crawler.CrawlerException("歌曲信息'data'字段不存在\n%s" % audio_info_response.json_data)
+    if crawler.get_json_value(audio_info_response.json_data, "success", type_check=bool) is False:
+        if crawler.get_json_value(audio_info_response.json_data, "message", type_check=str) in ["该歌曲已下架", "歌曲不存在"]:
+            result["is_delete"] = True
+            return result
+    response_data = crawler.get_json_value(audio_info_response.json_data, "data", type_check=dict)
     # 获取歌曲地址
-    if crawler.check_sub_key(("squrl",), audio_info_response.json_data["data"]):
-        result["audio_url"] = audio_info_response.json_data["data"]["squrl"]
-    elif crawler.check_sub_key(("lqurl",), audio_info_response.json_data["data"]):
-        result["audio_url"] = audio_info_response.json_data["data"]["lqurl"]
-    elif crawler.check_sub_key(("hqurl",), audio_info_response.json_data["data"]):
-        result["audio_url"] = audio_info_response.json_data["data"]["hqurl"]
+    if crawler.check_sub_key(("squrl",), response_data):
+        result["audio_url"] = response_data["squrl"]
+    elif crawler.check_sub_key(("lqurl",), response_data):
+        result["audio_url"] = response_data["lqurl"]
+    elif crawler.check_sub_key(("hqurl",), response_data):
+        result["audio_url"] = response_data["hqurl"]
     else:
-        if crawler.check_sub_key(("success", "message"), audio_info_response.json_data) and audio_info_response.json_data["success"] is False:
-            if audio_info_response.json_data["message"] in ["该歌曲已下架", "歌曲不存在"]:
-                result["is_delete"] = True
-                return result
         raise crawler.CrawlerException("歌曲信息'squrl'、'lqurl'、'hqurl'字段都不存在\n%s" % audio_info_response.json_data)
     # 获取歌曲标题
     if not crawler.check_sub_key(("songName",), audio_info_response.json_data["data"]):
