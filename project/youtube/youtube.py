@@ -105,7 +105,8 @@ def get_one_page_video(account_id, token):
     for item in crawler.get_json_value(video_list_json, "items", type_check=list):
         result["video_id_list"].append(crawler.get_json_value(item, "gridVideoRenderer", "videoId", type_check=str))
     # 获取下一页token
-    result["next_page_token"] = crawler.get_json_value(video_list_json, "continuations", 0, "nextContinuationData", "continuation", is_raise_exception=False, type_check=str)
+    if crawler.check_sub_key(("continuations",), video_list_json):
+        result["next_page_token"] = crawler.get_json_value(video_list_json, "continuations", 0, "nextContinuationData", "continuation", is_raise_exception=False, type_check=str)
     return result
 
 
