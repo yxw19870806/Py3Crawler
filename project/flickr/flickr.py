@@ -141,33 +141,17 @@ def get_one_page_photo(user_id, page_count, api_key, csrf, request_id):
     }
     if photo_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(photo_pagination_response.status))
-    if not crawler.check_sub_key(("photos",), photo_pagination_response.json_data):
-        raise crawler.CrawlerException("返回数据'photos'字段不存在\n%s" % photo_pagination_response.json_data)
-    if not crawler.check_sub_key(("photo", "pages"), photo_pagination_response.json_data["photos"]):
-        raise crawler.CrawlerException("返回数据'photo'或者'pages'字段不存在\n%s" % photo_pagination_response.json_data)
-    if not isinstance(photo_pagination_response.json_data["photos"]["photo"], list) or len(photo_pagination_response.json_data["photos"]["photo"]) == 0:
-        raise crawler.CrawlerException("返回数据'photo'字段类型不正确\n%s" % photo_pagination_response.json_data)
-    if not crawler.is_integer(photo_pagination_response.json_data["photos"]["pages"]):
-        raise crawler.CrawlerException("返回数据'pages'字段类型不正确\n%s" % photo_pagination_response.json_data)
     # 获取图片信息
-    for photo_info in photo_pagination_response.json_data["photos"]["photo"]:
+    for photo_info in crawler.get_json_value(photo_pagination_response.json_data, "photos", "photo", type_check=list):
         result_photo_info = {
             "photo_id": None,  # 图片id
             "photo_time": None,  # 图片上传时间
             "photo_url": None,  # 图片地址
         }
         # 获取图片id
-        if not crawler.check_sub_key(("id",), photo_info):
-            raise crawler.CrawlerException("图片信息'id'字段不存在\n%s" % photo_info)
-        if not crawler.is_integer(photo_info["id"]):
-            raise crawler.CrawlerException("图片信息'id'字段类型不正确\n%s" % photo_info)
-        result_photo_info["photo_id"] = int(photo_info["id"])
+        result_photo_info["photo_id"] = crawler.get_json_value(photo_info, "id", type_check=int)
         # 获取图片上传时间
-        if not crawler.check_sub_key(("dateupload",), photo_info):
-            raise crawler.CrawlerException("图片信息'dateupload'字段不存在\n%s" % photo_info)
-        if not crawler.is_integer(photo_info["dateupload"]):
-            raise crawler.CrawlerException("图片信息'dateupload'字段类型不正确\n%s" % photo_info)
-        result_photo_info["photo_time"] = int(photo_info["dateupload"])
+        result_photo_info["photo_time"] = crawler.get_json_value(photo_info, "dateupload", type_check=int)
         # 获取图片地址
         max_resolution = 0
         max_resolution_photo_type = ""
@@ -187,6 +171,8 @@ def get_one_page_photo(user_id, page_count, api_key, csrf, request_id):
         else:
             raise crawler.CrawlerException("图片信息'url_%s_cdn'或者'url_%s_cdn'字段不存在\n%s" % (max_resolution_photo_type, max_resolution_photo_type, photo_info))
         result["photo_info_list"].append(result_photo_info)
+    if len(result["photo_info_list"]) == 0:
+        raise crawler.CrawlerException("页面截取图片信息失败\n%s" % photo_pagination_response.json_data)
     # 判断是不是最后一页
     if page_count >= int(photo_pagination_response.json_data["photos"]["pages"]):
         result["is_over"] = True
