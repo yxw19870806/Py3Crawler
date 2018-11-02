@@ -31,13 +31,9 @@ def get_comic_index_page(comic_name):
         raise crawler.CrawlerException("漫画信息加载失败\n%s" % comic_info_html)
     for chapter_info in comic_info_data:
         # 获取版本名字
-        if not crawler.check_sub_key(("title",), chapter_info):
-            raise crawler.CrawlerException("漫画版本信息'title'字段不存在\n%s" % chapter_info)
-        version_name = chapter_info["title"]
+        version_name = crawler.get_json_value(chapter_info, "title", type_check=str)
         # 获取版本下各个章节
-        if not crawler.check_sub_key(("data",), chapter_info):
-            raise crawler.CrawlerException("漫画版本信息'data'字段不存在\n%s" % chapter_info)
-        for comic_info in chapter_info["data"]:
+        for comic_info in crawler.get_json_value(chapter_info, "data", type_check=list):
             result_comic_info = {
                 "comic_id": None,  # 漫画id
                 "page_id": None,  # 页面id
@@ -45,21 +41,11 @@ def get_comic_index_page(comic_name):
                 "version_name": version_name,  # 漫画版本名字
             }
             # 获取漫画id
-            if not crawler.check_sub_key(("comic_id",), comic_info):
-                raise crawler.CrawlerException("漫画章节信息'comic_id'字段不存在\n%s" % comic_info)
-            if not crawler.is_integer(comic_info["comic_id"]):
-                raise crawler.CrawlerException("漫画章节信息'id'字段类型不正确在\n%s" % comic_info)
-            result_comic_info["comic_id"] = int(comic_info["comic_id"])
+            result_comic_info["comic_id"] = crawler.get_json_value(comic_info, "comic_id", type_check=int)
             # 获取页面id
-            if not crawler.check_sub_key(("id",), comic_info):
-                raise crawler.CrawlerException("漫画章节信息'id'字段不存在\n%s" % comic_info)
-            if not crawler.is_integer(comic_info["id"]):
-                raise crawler.CrawlerException("漫画章节信息'id'字段类型不正确在\n%s" % comic_info)
-            result_comic_info["page_id"] = int(comic_info["id"])
+            result_comic_info["page_id"] = crawler.get_json_value(comic_info, "id", type_check=int)
             # 获取章节名字
-            if not crawler.check_sub_key(("chapter_name",), comic_info):
-                raise crawler.CrawlerException("漫画章节信息'chapter_name'字段不存在\n%s" % comic_info)
-            result_comic_info["chapter_name"] = comic_info["chapter_name"]
+            result_comic_info["chapter_name"] = crawler.get_json_value(comic_info, "chapter_name", type_check=str)
             result["comic_info_list"][result_comic_info["page_id"]] = result_comic_info
     return result
 
@@ -75,18 +61,14 @@ def get_chapter_page(comic_id, page_id):
     if chapter_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(chapter_response.status))
     chapter_response_content = chapter_response.data.decode(errors="ignore")
-    chapter_info_html = tool.find_sub_string(chapter_response_content, "mReader.initData(", ");")
-    chapter_info_html = chapter_info_html[0:chapter_info_html.rfind("},") + 1]
-    if not chapter_info_html:
+    script_json_html = tool.find_sub_string(chapter_response_content, "mReader.initData(", ");")
+    script_json_html = script_json_html[0:script_json_html.rfind("},") + 1]
+    if not script_json_html:
         raise crawler.CrawlerException("章节信息截取失败\n%s" % chapter_response_content)
-    chapter_info_data = tool.json_decode(chapter_info_html)
-    if not chapter_info_data:
-        raise crawler.CrawlerException("章节信息加载失败\n%s" % chapter_info_html)
-    if not crawler.check_sub_key(("page_url",), chapter_info_data):
-        raise crawler.CrawlerException("章节信息'page_url'字段不存在\n%s" % chapter_info_data)
-    if not isinstance(chapter_info_data["page_url"], list):
-        raise crawler.CrawlerException("章节信息'id'字段类型不正确在\n%s" % chapter_info_data)
-    for photo_url in chapter_info_data["page_url"]:
+    script_json = tool.json_decode(script_json_html)
+    if not script_json:
+        raise crawler.CrawlerException("章节信息加载失败\n%s" % script_json_html)
+    for photo_url in crawler.get_json_value(script_json, "page_url", type_check=list):
         result["photo_url_list"].append(photo_url)
     return result
 
