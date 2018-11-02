@@ -33,28 +33,20 @@ def get_one_page_video(account_id, page_count):
     }
     if video_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(video_pagination_response.status))
-    if not crawler.check_sub_key(("medias",), video_pagination_response.json_data):
-        raise crawler.CrawlerException("返回数据'medias'字段不存在\n%s" % video_pagination_response.json_data)
-    for media_data in video_pagination_response.json_data["medias"]:
+    for media_info in crawler.get_json_value(video_pagination_response.json_data, "medias", type_check=list):
         # 历史直播，跳过
-        if crawler.check_sub_key(("lives",), media_data):
+        if crawler.check_sub_key(("lives",), media_info):
             continue
         result_video_info = {
             "video_id": None,  # 视频id
             "video_url": None,  # 视频地址
         }
         # 获取视频id
-        if not crawler.check_sub_key(("id",), media_data):
-            raise crawler.CrawlerException("视频信息'id'字段不存在\n%s" % media_data)
-        if not crawler.is_integer(media_data["id"]):
-            raise crawler.CrawlerException("视频信息'id'字段类型不正确\n%s" % media_data)
-        result_video_info["video_id"] = int(media_data["id"])
+        result_video_info["video_id"] = crawler.get_json_value(media_info, "id", type_check=int)
         # 获取视频下载地址
-        if not crawler.check_sub_key(("video",), media_data):
-            raise crawler.CrawlerException("视频信息'video'字段不存在\n%s" % media_data)
-        video_url = decrypt_video_url(media_data["video"])
+        video_url = decrypt_video_url(crawler.get_json_value(media_info, "video", type_check=str))
         if video_url is None:
-            raise crawler.CrawlerException("加密视频地址解密失败\n%s" % media_data["video"])
+            raise crawler.CrawlerException("加密视频地址解密失败\n%s" % media_info)
         result_video_info["video_url"] = video_url
         result["video_info_list"].append(result_video_info)
     return result
