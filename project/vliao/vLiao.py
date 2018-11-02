@@ -76,16 +76,12 @@ def login(phone_number, password):
     login_response = net.http_request(login_url, method="POST", fields=post_data, json_decode=True)
     if login_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(login_response.status))
-    if not crawler.check_sub_key(("result", "user"), login_response.json_data):
-        raise crawler.CrawlerException("返回信息`result`或`user`字段不存在\n%s" % login_response.json_data)
-    if login_response.json_data["result"] is False:
-        if crawler.check_sub_key(("errorMsg",), login_response.json_data):
-            return False, login_response.json_data["errorMsg"]
-        raise crawler.CrawlerException("返回信息`result`字段取值不正确\n%s" % login_response.json_data)
-    if not crawler.check_sub_key(("id", "userKey"), login_response.json_data["user"]):
-        raise crawler.CrawlerException("返回信息`id`或`userKey`字段不存在\n%s" % login_response.json_data)
-    USER_ID = login_response.json_data["user"]["id"]
-    USER_KEY = login_response.json_data["user"]["userKey"]
+    # 判断是否登录成功
+    if crawler.get_json_value(login_response.json_data, "result", type_check=bool) is False:
+        return False, crawler.get_json_value(login_response.json_data, "errorMsg", type_check=str)
+    # 获取token
+    USER_ID = crawler.get_json_value(login_response.json_data, "user", "id", type_check=str)
+    USER_KEY = crawler.get_json_value(login_response.json_data, "user", "userKey", type_check=str)
     return True, ""
 
 
@@ -98,8 +94,7 @@ def check_token(user_id, user_key):
     }
     index_response = net.http_request(index_url, method="POST", fields=post_data, json_decode=True)
     if index_response.status == net.HTTP_RETURN_CODE_SUCCEED:
-        if crawler.check_sub_key(("result",), index_response.json_data) and index_response.json_data["result"] is True:
-            return True
+        return crawler.get_json_value(index_response.json_data, "result", default_value=False, is_raise_exception=False, type_check=bool)
     return False
 
 
@@ -118,36 +113,23 @@ def get_one_page_video(account_id, page_count):
     }
     if video_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(video_pagination_response.status))
-    # 判断是不是最后一页
-    if not crawler.check_sub_key(("result",), video_pagination_response.json_data):
-        raise crawler.CrawlerException("返回信息'result'字段不存在\n%s" % video_pagination_response.json_data)
-    if video_pagination_response.json_data["result"] is False:
-        if crawler.check_sub_key(("errorCode",), video_pagination_response.json_data) and video_pagination_response.json_data["errorCode"] == 3:
+    if crawler.get_json_value(video_pagination_response.json_data, "result", type_check=bool) is False:
+        if crawler.get_json_value(video_pagination_response.json_data, "errorCode", type_check=int) == 3:
             raise crawler.CrawlerException("账号不存在")
+        else:
+            raise crawler.CrawlerException("未知返回状态\n%s" % video_pagination_response.json_data)
     # 判断是不是最后一页
-    if not crawler.check_sub_key(("maxPage",), video_pagination_response.json_data):
-        raise crawler.CrawlerException("返回信息'maxPage'字段不存在\n%s" % video_pagination_response.json_data)
-    if not crawler.is_integer(video_pagination_response.json_data["maxPage"]):
-        raise crawler.CrawlerException("返回信息'maxPage'字段类型不正确\n%s" % video_pagination_response.json_data)
-    result["is_over"] = int(video_pagination_response.json_data["maxPage"]) <= page_count
+    result["is_over"] = crawler.get_json_value(video_pagination_response.json_data, "maxPage", type_check=int) <= page_count
     # 获取全部视频id
-    if not crawler.check_sub_key(("data",), video_pagination_response.json_data):
-        raise crawler.CrawlerException("返回信息'data'字段不存在\n%s" % video_pagination_response.json_data)
-    for video_info in video_pagination_response.json_data["data"]:
+    for video_info in crawler.get_json_value(video_pagination_response.json_data, "data", type_check=list):
         result_video_info = {
             "video_id": None,  # 视频id
             "video_title": None,  # 视频id
         }
         # 获取视频id
-        if not crawler.check_sub_key(("id",), video_info):
-            raise crawler.CrawlerException("视频信息'id'字段不存在\n%s" % video_info)
-        if not crawler.is_integer(video_info["id"]):
-            raise crawler.CrawlerException("视频信息'id'字段类型不正确\n%s" % video_info)
-        result_video_info["video_id"] = int(video_info["id"])
+        result_video_info["video_id"] = crawler.get_json_value(video_info, "id", type_check=int)
         # 获取视频标题
-        if not crawler.check_sub_key(("title",), video_info):
-            raise crawler.CrawlerException("视频信息'title'字段不存在\n%s" % video_info)
-        result_video_info["video_title"] = video_info["title"]
+        result_video_info["video_title"] = crawler.get_json_value(video_info, "title", type_check=str)
         result["video_info_list"].append(result_video_info)
     return result
 
@@ -167,11 +149,7 @@ def get_video_info_page(account_id, video_id):
     }
     if video_info_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(video_info_response.status))
-    if not crawler.check_sub_key(("data",), video_info_response.json_data):
-        raise crawler.CrawlerException("返回信息'data'字段不存在\n%s" % video_info_response.json_data)
-    if not crawler.check_sub_key(("url",), video_info_response.json_data["data"]):
-        raise crawler.CrawlerException("返回信息'url'字段不存在\n%s" % video_info_response.json_data)
-    result["video_url"] = str(video_info_response.json_data["data"]["url"])
+    result["video_url"] = crawler.get_json_value(video_info_response.json_data, "data", "url", type_check=str)
     return result
 
 
