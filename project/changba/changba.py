@@ -56,19 +56,11 @@ def get_one_page_audio(user_id, page_count):
             "audio_title": "",  # 歌曲标题
         }
         # 获取歌曲id
-        if not crawler.check_sub_key(("workid",), audio_info):
-            raise crawler.CrawlerException("歌曲信息'workid'字段不存在\n%s" % audio_info)
-        if not crawler.is_integer(audio_info["workid"]):
-            raise crawler.CrawlerException("歌曲信息'workid'字段类型不正确\n%s" % audio_info)
-        result_audio_info["audio_id"] = int(audio_info["workid"])
+        result_audio_info["audio_id"] = crawler.get_json_value(audio_info, "workid", type_check=int)
         # 获取歌曲标题
-        if not crawler.check_sub_key(("songname",), audio_info):
-            raise crawler.CrawlerException("歌曲信息'songname'字段不存在\n%s" % audio_info)
-        result_audio_info["audio_title"] = audio_info["songname"]
+        result_audio_info["audio_title"] = crawler.get_json_value(audio_info, "songname", type_check=str)
         # 获取歌曲key
-        if not crawler.check_sub_key(("enworkid",), audio_info):
-            raise crawler.CrawlerException("歌曲信息'enworkid'字段不存在\n%s" % audio_info)
-        result_audio_info["audio_key"] = audio_info["enworkid"]
+        result_audio_info["audio_key"] = crawler.get_json_value(audio_info, "enworkid", type_check=str)
         result["audio_info_list"].append(result_audio_info)
     return result
 
