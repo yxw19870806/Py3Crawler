@@ -283,14 +283,8 @@ def get_market_game_trade_card_price(game_id):
     if market_search_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(market_search_response.status))
     market_item_list = {}
-    if not crawler.check_sub_key(("success", "results"), market_search_response.json_data):
-        raise crawler.CrawlerException("返回信息'success'或'results'字段不存在\n%s" % market_search_response.json_data)
-    if not isinstance(market_search_response.json_data["results"], list):
-        raise crawler.CrawlerException("返回信息'result'字段类型不正确\n%s" % market_search_response.json_data)
-    for item_info in market_search_response.json_data["results"]:
-        if not crawler.check_sub_key(("hash_name", "sell_price_text"), item_info):
-            raise crawler.CrawlerException("返回信息'success'或'results'字段不存在\n%s" % market_search_response.json_data)
-        market_item_list[item_info["hash_name"].split("-", 1)[1]] = item_info["sell_price_text"].replace("¥", "").strip()
+    for item_info in crawler.get_json_value(market_search_response.json_data, "results", type_check=list):
+        market_item_list[crawler.get_json_value(item_info, "hash_name", type_check=str).split("-", 1)[1]] = crawler.get_json_value(item_info, "sell_price_text", type_check=str).replace("¥", "").strip()
     return market_item_list
 
 
@@ -319,50 +313,34 @@ def get_account_inventory(account_id):
             raise crawler.CrawlerException(crawler.request_failre(api_response.status))
         # 物品数量
         item_count_list = {}
-        if not crawler.check_sub_key(("assets",), api_response.json_data):
-            raise crawler.CrawlerException("返回信息'assets'字段不存在\n%s" % api_response.json_data)
-        for asset in api_response.json_data["assets"]:
-            if not crawler.check_sub_key(("classid", "amount"), asset):
-                raise crawler.CrawlerException("物品信息'classid'或'amount'字段不存在\n%s" % asset)
-            class_id = int(asset["classid"])
-            if class_id in item_count_list:
-                item_count_list[class_id] += int(asset["amount"])
-            else:
-                item_count_list[class_id] = int(asset["amount"])
+        for asset_info in crawler.get_json_value(api_response.json_data, "assets", type_check=list):
+            class_id = crawler.get_json_value(asset_info, "classid", type_check=int)
+            if class_id not in item_count_list:
+                item_count_list[class_id] = 0
+            item_count_list[class_id] += crawler.get_json_value(asset_info, "amount", type_check=int)
         # 物品信息
-        if not crawler.check_sub_key(("descriptions",), api_response.json_data):
-            raise crawler.CrawlerException("返回信息'descriptions'字段不存在\n%s" % api_response.json_data)
-        for item_info in api_response.json_data["descriptions"]:
+        for item_info in crawler.get_json_value(api_response.json_data, "descriptions", type_check=list):
             # 物品类
-            if not crawler.check_sub_key(("classid",), item_info):
-                raise crawler.CrawlerException("物品信息'classid'字段不存在\n%s" % item_info)
-            class_id = int(item_info["classid"])
+            class_id = crawler.get_json_value(item_info, "classid", type_check=int)
             if class_id not in item_count_list:
                 continue
             item_list[class_id] = {}
             # 物品数量
             item_list[class_id]["count"] = item_count_list[class_id]
             # 物品名字
-            if not crawler.check_sub_key(("name",), item_info):
-                raise crawler.CrawlerException("物品信息'name'字段不存在\n%s" % item_info)
-            item_list[class_id]["name"] = item_info["name"]
+            item_list[class_id]["name"] = crawler.get_json_value(item_info, "name", type_check=str)
             # 物品所在游戏app id
-            if not crawler.check_sub_key(("market_fee_app",), item_info):
-                raise crawler.CrawlerException("物品信息'market_fee_app'字段不存在\n%s" % item_info)
-            if not crawler.is_integer(item_info["market_fee_app"]):
-                raise crawler.CrawlerException("物品信息'market_fee_app'字段类型不正确\n%s" % item_info)
-            item_list[class_id]["game_id"] = str(item_info["market_fee_app"])
+            item_list[class_id]["game_id"] = str(crawler.get_json_value(item_info, "market_fee_app", type_check=int))
             # 物品类型
-            for tag in item_info["tags"]:
-                if not crawler.check_sub_key(("category", "localized_tag_name"), tag):
-                    raise crawler.CrawlerException("物品标签信息'category'或'localized_tag_name'字段不存在\n%s" % tag)
+            for tag_info in item_info["tags"]:
                 # Gems / Trading Card / Trading Card / Profile Background / Emoticon
-                if tag["category"] == "item_class":
-                    item_list[class_id]["type"] = tag["localized_tag_name"]
+                if crawler.get_json_value(tag_info, "category", type_check=str) == "item_class":
+                    item_list[class_id]["type"] = crawler.get_json_value(tag_info, "localized_tag_name", type_check=str)
                     break
         # 下一页起始asset id
-        if crawler.check_sub_key(("more_items", "last_assetid"), api_response.json_data):
-            if api_response.json_data["more_items"] == 1 and api_response.json_data["last_assetid"] != last_assert_id:
+        if crawler.get_json_value(api_response.json_data, "more_items", default_value=0, is_raise_exception=False, type_check=int) == 1:
+            response_assert_id = crawler.get_json_value(api_response.json_data, "last_assetid", default_value=last_assert_id, is_raise_exception=False, type_check=str)
+            if last_assert_id != response_assert_id:
                 last_assert_id = api_response.json_data["last_assetid"]
                 page_count += 1
             else:
