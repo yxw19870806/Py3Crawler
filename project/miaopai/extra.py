@@ -22,13 +22,12 @@ def get_follow_list(suid):
         }
         follow_pagination_response = net.http_request(follow_pagination_url, method="GET", fields=query_data, json_decode=True)
         if follow_pagination_response.status == net.HTTP_RETURN_CODE_SUCCEED:
-            if crawler.check_sub_key(("msg", "stat"), follow_pagination_response.json_data) and follow_pagination_response.json_data["stat"].isdigit():
-                stat = int(follow_pagination_response.json_data["stat"]["stat"])
-                if stat == 1 or stat == 2:
-                    one_page_follow_list = re.findall('<a title="([^"]*)" href="http[s]?://www.miaopai.com/u/paike_([^"]*)">', follow_pagination_response.json_data["msg"])
-                    for account_name, account_id in one_page_follow_list:
-                        follow_list[account_id] = account_name
-                    if stat == 1:
-                        page_count += 1
-                        continue
+            return_stat = crawler.get_json_value(follow_pagination_response.json_data, "stat", type_check=int)
+            if return_stat  in [1, 2]:
+                one_page_follow_list = re.findall('<a title="([^"]*)" href="http[s]?://www.miaopai.com/u/paike_([^"]*)">', crawler.get_json_value(follow_pagination_response.json_data, "msg", type_check=str))
+                for account_name, account_id in one_page_follow_list:
+                    follow_list[account_id] = account_name
+                if return_stat == 1:
+                    page_count += 1
+                    continue
         return follow_list

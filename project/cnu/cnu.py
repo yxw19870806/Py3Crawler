@@ -32,17 +32,15 @@ def get_album_page(album_id):
         raise crawler.CrawlerException("页面截取作品标题失败\n%s" % album_response_content)
     result["album_title"] = album_title
     # 获取图片地址
-    photo_info_html = tool.find_sub_string(album_response_content, '<div id="imgs_json" style="display:none">', "</div>")
-    if not photo_info_html:
+    script_json_html = tool.find_sub_string(album_response_content, '<div id="imgs_json" style="display:none">', "</div>")
+    if not script_json_html:
         raise crawler.CrawlerException("页面截取图片列表失败\n%s" % album_response_content)
-    photo_info_data = tool.json_decode(photo_info_html)
-    if photo_info_data is None:
-        raise crawler.CrawlerException("图片列表加载失败\n%s" % photo_info_html)
+    script_json = tool.json_decode(script_json_html)
+    if script_json is None:
+        raise crawler.CrawlerException("图片列表加载失败\n%s" % script_json_html)
     photo_url_list = []
-    for photo_info in photo_info_data:
-        if not crawler.check_sub_key(("img",), photo_info):
-            raise crawler.CrawlerException("图片信息'img'字段不存在\n%s" % photo_info)
-        photo_url_list.append("http://img.cnu.cc/uploads/images/920/" + photo_info["img"])
+    for photo_info in script_json:
+        photo_url_list.append("http://img.cnu.cc/uploads/images/920/" + crawler.get_json_value(photo_info, "img", type_check=str))
     result["photo_url_list"] = photo_url_list
     return result
 

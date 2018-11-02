@@ -49,13 +49,9 @@ def get_one_page_video(suid, page_count):
     if video_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(video_pagination_response.status))
     # 判断是不是最后一页
-    if not crawler.check_sub_key(("isall",), video_pagination_response.json_data):
-        raise crawler.CrawlerException("返回信息'isall'字段不存在\n%s" % video_pagination_response.json_data)
-    result["is_over"] = bool(video_pagination_response.json_data["isall"])
+    result["is_over"] = crawler.get_json_value(video_pagination_response.json_data, "isall", type_check=bool)
     # 获取全部视频id
-    if not crawler.check_sub_key(("msg",), video_pagination_response.json_data):
-        raise crawler.CrawlerException("返回信息'msg'字段不存在\n%s" % video_pagination_response.json_data)
-    result["video_id_list"] = re.findall('data-scid="([^"]*)"', video_pagination_response.json_data["msg"])
+    result["video_id_list"] = re.findall('data-scid="([^"]*)"', crawler.get_json_value(video_pagination_response.json_data, "msg", type_check=str))
     if not result["is_over"] and len(result["video_id_list"]) == 0:
         raise crawler.CrawlerException("页面匹配视频id失败\n%s" % video_pagination_response.json_data)
     return result
@@ -72,13 +68,9 @@ def get_video_info_page(video_id):
     if video_info_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(video_info_response.status))
     # 获取视频地址
-    if not crawler.check_sub_key(("result",), video_info_response.json_data):
-        raise crawler.CrawlerException("返回信息'result'字段不存在\n%s" % video_info_response.json_data)
-    # 存在多个CDN地址
     video_url_list = []
-    for result in video_info_response.json_data["result"]:
-        if crawler.check_sub_key(("path", "host", "scheme"), result):
-            video_url_list.append(result["scheme"] + result["host"] + result["path"])
+    for video_info in crawler.get_json_value(video_info_response.json_data, "result", type_check=list):
+        video_url_list.append(crawler.get_json_value(video_info, "scheme", type_check=str) + crawler.get_json_value(video_info, "host", type_check=str) + crawler.get_json_value(video_info, "path", type_check=str))
     if len(video_url_list) == 0:
         raise crawler.CrawlerException("返回信息匹配视频地址失败\n%s" % video_info_response.json_data)
     result["video_url_list"] = video_url_list

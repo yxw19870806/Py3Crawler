@@ -34,25 +34,15 @@ def get_one_page_video(account_id, page_count):
     }
     if api_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(api_response.status))
-    if not crawler.check_sub_key(("data",), api_response.json_data):
-        raise crawler.CrawlerException("返回信息'data'字段不存在\n%s" % api_response.json_data)
-    if not crawler.check_sub_key(("vlist",), api_response.json_data["data"]):
-        raise crawler.CrawlerException("返回信息'vlist'字段不存在\n%s" % api_response.json_data)
-    for video_info in api_response.json_data["data"]["vlist"]:
+    for video_info in crawler.get_json_value(api_response.json_data, "data", "vlist", type_check=list):
         result_video_info = {
             "video_id": None,  # 视频id
             "video_title": "",  # 视频标题
         }
         # 获取视频id
-        if not crawler.check_sub_key(("aid",), video_info):
-            raise crawler.CrawlerException("视频信息'aid'字段不存在\n%s" % video_info)
-        if not crawler.is_integer(video_info["aid"]):
-            raise crawler.CrawlerException("视频信息'aid'字段类型不正确\n%s" % video_info)
-        result_video_info["video_id"] = int(video_info["aid"])
+        result_video_info["video_id"] = crawler.get_json_value(video_info, "aid", type_check=int)
         # 获取视频标题
-        if not crawler.check_sub_key(("title",), video_info):
-            raise crawler.CrawlerException("视频信息'title'字段不存在\n%s" % video_info)
-        result_video_info["video_title"] = video_info["title"]
+        result_video_info["video_title"] = crawler.get_json_value(video_info, "title", type_check=str)
         result["video_info_list"].append(result_video_info)
     return result
 
@@ -72,37 +62,21 @@ def get_one_page_short_video(account_id, nex_offset):
     }
     if api_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(api_response.status))
-    if not crawler.check_sub_key(("msg",), api_response.json_data):
-        raise crawler.CrawlerException("返回信息'msg'字段不存在\n%s" % api_response.json_data)
-    if api_response.json_data["msg"] != "success":
+    if crawler.get_json_value(api_response.json_data, "msg", type_check=str) != "success":
         raise crawler.CrawlerException("返回信息'msg'字段取值不正确\n%s" % api_response.json_data)
-    if not crawler.check_sub_key(("data",), api_response.json_data):
-        raise crawler.CrawlerException("返回信息'data'字段不存在\n%s" % api_response.json_data)
     # 获取下一页指针
-    if not crawler.check_sub_key(("next_offset",), api_response.json_data["data"]):
-        raise crawler.CrawlerException("返回信息'items'字段不存在\n%s" % api_response.json_data)
-    result["next_page_offset"] = api_response.json_data["data"]["next_offset"]
-    if not crawler.check_sub_key(("items",), api_response.json_data["data"]):
-        raise crawler.CrawlerException("返回信息'items'字段不存在\n%s" % api_response.json_data)
-    for video_info in api_response.json_data["data"]["items"]:
+    result["next_page_offset"] = crawler.get_json_value(api_response.json_data, "data", "next_offset", type_check=str)
+    for video_info in crawler.get_json_value(api_response.json_data, "data", "items", type_check=list):
         result_video_info = {
             "video_id": None,  # 视频id
             "video_url": None,  # 视频标题
         }
         # 获取视频id
-        if not crawler.check_sub_key(("id",), video_info):
-            raise crawler.CrawlerException("视频信息'aid'字段不存在\n%s" % video_info)
-        if not crawler.is_integer(video_info["id"]):
-            raise crawler.CrawlerException("视频信息'aid'字段类型不正确\n%s" % video_info)
-        result_video_info["video_id"] = int(video_info["id"])
+        result_video_info["video_id"] = crawler.get_json_value(video_info, "id", type_check=int)
         # 获取视频标题
-        if not crawler.check_sub_key(("title",), video_info):
-            raise crawler.CrawlerException("视频信息'title'字段不存在\n%s" % video_info)
-        result_video_info["video_title"] = video_info["title"]
+        result_video_info["video_title"] = crawler.get_json_value(video_info, "title", type_check=str)
         # 获取视频地址
-        if not crawler.check_sub_key(("playurl",), video_info):
-            raise crawler.CrawlerException("视频信息'playurl'字段不存在\n%s" % video_info)
-        result_video_info["video_url"] = video_info["playurl"]
+        result_video_info["video_url"] = crawler.get_json_value(video_info, "playurl", type_check=str)
         result["video_info_list"].append(result_video_info)
     return result
 
@@ -123,17 +97,9 @@ def get_one_page_album(account_id, page_count):
     }
     if api_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(api_response.status))
-    if not crawler.check_sub_key(("data",), api_response.json_data):
-        raise crawler.CrawlerException("返回信息'data'字段不存在\n%s" % api_response.json_data)
-    if not crawler.check_sub_key(("items",), api_response.json_data["data"]):
-        raise crawler.CrawlerException("返回信息'items'字段不存在\n%s" % api_response.json_data)
-    for album_info in api_response.json_data["data"]["items"]:
-        # 获取日志id
-        if not crawler.check_sub_key(("doc_id",), album_info):
-            raise crawler.CrawlerException("相簿信息'doc_id'字段不存在\n%s" % album_info)
-        if not crawler.is_integer(album_info["doc_id"]):
-            raise crawler.CrawlerException("相簿信息'doc_id'字段类型不正确\n%s" % album_info)
-        result["album_id_list"].append(int(album_info["doc_id"]))
+    for album_info in crawler.get_json_value(api_response.json_data, "data", "items", type_check=list):
+        # 获取相簿id
+        result["album_id_list"].append(crawler.get_json_value(album_info, "doc_id", type_check=int))
     return result
 
 
@@ -153,28 +119,21 @@ def get_one_page_audio(account_id, page_count):
     }
     if api_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(api_response.status))
-    if not crawler.check_sub_key(("data",), api_response.json_data):
-        raise crawler.CrawlerException("返回信息'data'字段不存在\n%s" % api_response.json_data)
-    if not crawler.check_sub_key(("data",), api_response.json_data["data"]):
-        raise crawler.CrawlerException("返回信息'data'字段不存在\n%s" % api_response.json_data)
     # 没有任何音频
-    if api_response.json_data["data"]["data"] is None:
+    audio_info_list = crawler.get_json_value(api_response.json_data, "data", "data")
+    if audio_info_list is None:
         return result
-    for audio_info in api_response.json_data["data"]["data"]:
+    elif not isinstance(audio_info_list, list):
+        raise crawler.CrawlerException("'data'字段类型不正确\n%s" % api_response.json_data)
+    for audio_info in audio_info_list:
         result_audio_info = {
             "audio_id": None,  # 音频id
             "audio_title": "",  # 音频标题
         }
         # 获取音频id
-        if not crawler.check_sub_key(("id",), audio_info):
-            raise crawler.CrawlerException("音频信息'aid'字段不存在\n%s" % audio_info)
-        if not crawler.is_integer(audio_info["id"]):
-            raise crawler.CrawlerException("音频信息'aid'字段类型不正确\n%s" % audio_info)
-        result_audio_info["audio_id"] = int(audio_info["id"])
+        result_audio_info["audio_id"] = crawler.get_json_value(audio_info, "id", type_check=int)
         # 获取音频标题
-        if not crawler.check_sub_key(("title",), audio_info):
-            raise crawler.CrawlerException("音频信息'title'字段不存在\n%s" % audio_info)
-        result_audio_info["audio_title"] = audio_info["title"]
+        result_audio_info["audio_title"] = crawler.get_json_value(audio_info, "title", type_check=str)
         result["audio_info_list"].append(result_audio_info)
     return result
 
@@ -190,19 +149,11 @@ def get_video_page(video_id):
     if video_play_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(video_play_response.status))
     video_play_response_content = video_play_response.data.decode(errors="ignore")
-    video_info = tool.json_decode(tool.find_sub_string(video_play_response_content, "window.__playinfo__=", "</script>"))
-    if video_info is None:
+    script_json = tool.json_decode(tool.find_sub_string(video_play_response_content, "window.__playinfo__=", "</script>"))
+    if script_json is None:
         raise crawler.CrawlerException("页面截取视频信息失败\n%s" % video_play_response_content)
-    if not crawler.check_sub_key(("data",), video_info):
-        raise crawler.CrawlerException("视频信息'data'字段不存在\n%s" % video_info)
-    if not crawler.check_sub_key(("durl",), video_info["data"]):
-        raise crawler.CrawlerException("视频信息'durl'字段不存在\n%s" % video_info)
-    if not isinstance(video_info["data"]["durl"], list):
-        raise crawler.CrawlerException("视频信息'durl'字段类型不正确\n%s" % video_info)
-    for sub_video_info in video_info["data"]["durl"]:
-        if not crawler.check_sub_key(("url",), sub_video_info):
-            raise crawler.CrawlerException("视频分段信息'url'字段不存在\n%s" % sub_video_info)
-        result["video_url_list"].append(sub_video_info["url"])
+    for sub_video_info in crawler.get_json_value(script_json, "data", "durl", type_check=list):
+        result["video_url_list"].append(crawler.get_json_value(sub_video_info, "url", type_check=str))
     return result
 
 
@@ -219,16 +170,8 @@ def get_album_page(album_id):
     }
     if api_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(api_response.status))
-    if not crawler.check_sub_key(("data",), api_response.json_data):
-        raise crawler.CrawlerException("返回信息'data'字段不存在\n%s" % api_response.json_data)
-    if not crawler.check_sub_key(("item",), api_response.json_data["data"]):
-        raise crawler.CrawlerException("返回信息'items'字段不存在\n%s" % api_response.json_data)
-    if not crawler.check_sub_key(("pictures",), api_response.json_data["data"]["item"]):
-        raise crawler.CrawlerException("返回信息'items'字段不存在\n%s" % api_response.json_data)
-    for photo_info in api_response.json_data["data"]["item"]["pictures"]:
-        if not crawler.check_sub_key(("img_src",), photo_info):
-            raise crawler.CrawlerException("图片信息'img_src'字段不存在\n%s" % photo_info)
-        result["photo_url_list"].append(photo_info["img_src"])
+    for photo_info in crawler.get_json_value(api_response.json_data, "data", "item", "pictures", type_check=list):
+        result["photo_url_list"].append(crawler.get_json_value(photo_info, "img_src", type_check=str))
     return result
 
 
@@ -245,13 +188,7 @@ def get_audio_info_page(audio_id):
     }
     if api_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(api_response.status))
-    if not crawler.check_sub_key(("data",), api_response.json_data):
-        raise crawler.CrawlerException("视频信息'data'字段不存在\n%s" % api_response.json_data)
-    if not crawler.check_sub_key(("cdns",), api_response.json_data["data"]):
-        raise crawler.CrawlerException("视频信息'cdns'字段不存在\n%s" % api_response.json_data)
-    if not isinstance(api_response.json_data["data"]["cdns"], list):
-        raise crawler.CrawlerException("视频信息'cdns'字段类型不正确\n%s" % api_response.json_data)
-    result["audio_url"] = api_response.json_data["data"]["cdns"][0]
+    result["audio_url"] = crawler.get_json_value(api_response.json_data, "data", "cdns", 0, type_check=str)
     return result
 
 

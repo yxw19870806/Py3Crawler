@@ -45,13 +45,14 @@ def follow_account(account_name, account_id):
     header_list = {"Referer": "https://www.instagram.com/", "x-csrftoken": instagram.COOKIE_INFO["csrftoken"], "X-Instagram-AJAX": 1}
     follow_response = net.http_request(follow_api_url, method="POST", header_list=header_list, cookies_list=instagram.COOKIE_INFO, json_decode=True)
     if follow_response.status == net.HTTP_RETURN_CODE_SUCCEED:
-        if not crawler.check_sub_key(("status", "result"), follow_response.json_data):
+        follow_result = crawler.get_json_value(follow_response.json_data, "result", is_raise_exception=False, type_check=str)
+        if follow_result is None:
             output.print_msg("关注%s失败，返回内容不匹配\n%s" % (account_name, follow_response.json_data))
             tool.process_exit()
-        if follow_response.json_data["result"] == "following":
+        if follow_result == "following":
             output.print_msg("关注%s成功" % account_name)
             return True
-        elif follow_response.json_data["result"] == "requested":
+        elif follow_result == "requested":
             output.print_msg("私密账号%s，已发送关注请求" % account_name)
             return True
         else:

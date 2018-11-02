@@ -124,33 +124,27 @@ def get_one_page_post(account_id, page_count, is_https, is_safe_mode):
     elif post_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(post_pagination_response.status))
     post_pagination_response_content = post_pagination_response.data.decode(errors="ignore")
-    page_html = tool.find_sub_string(post_pagination_response_content, '<script type="application/ld+json">', "</script>").strip()
-    if page_html:
-        page_data = tool.json_decode(page_html)
-        if page_data is None:
-            raise crawler.CrawlerException("日志信息加载失败\n%s" % page_html)
-        if not crawler.check_sub_key(("itemListElement",), page_data):
-            raise crawler.CrawlerException("日志信息'itemListElement'字段不存在\n%s" % page_data)
-        if len(page_data["itemListElement"]) == 0:
-            raise crawler.CrawlerException("日志信息'itemListElement'字段长度不正确\n%s" % page_data)
-        # 单条日志
-        for post_info in page_data["itemListElement"]:
-            result_post_info = {
-                "post_id": None,  # 日志id
-                "post_url": None,  # 日志地址
-            }
-            # 获取日志地址
-            if not crawler.check_sub_key(("url",), post_info):
-                raise crawler.CrawlerException("日志信息'url'字段不存在\n%s" % page_data)
-            result_post_info["post_url"] = net.url_encode(post_info["url"])
-            # 获取日志id
-            post_id = tool.find_sub_string(result_post_info["post_url"], "/post/").split("/")[0]
-            if not crawler.is_integer(post_id):
-                crawler.CrawlerException("日志地址截取日志id失败\n%s" % result_post_info["post_url"])
-            result_post_info["post_id"] = int(post_id)
-            result["post_info_list"].append(result_post_info)
-    else:
+    script_json_html = tool.find_sub_string(post_pagination_response_content, '<script type="application/ld+json">', "</script>").strip()
+    if not script_json_html:
         result["is_over"] = True
+        return result
+    script_json = tool.json_decode(script_json_html)
+    if script_json is None:
+        raise crawler.CrawlerException("日志信息加载失败\n%s" % script_json_html)
+    # 单条日志
+    for post_info in crawler.get_json_value(script_json, "itemListElement", type_check=list):
+        result_post_info = {
+            "post_id": None,  # 日志id
+            "post_url": None,  # 日志地址
+        }
+        # 获取日志地址
+        result_post_info["post_url"] = net.url_encode(crawler.get_json_value(post_info, "url", type_check=str))
+        # 获取日志id
+        post_id = tool.find_sub_string(result_post_info["post_url"], "/post/").split("/")[0]
+        if not crawler.is_integer(post_id):
+            crawler.CrawlerException("日志地址截取日志id失败\n%s" % result_post_info["post_url"])
+        result_post_info["post_id"] = int(post_id)
+        result["post_info_list"].append(result_post_info)
     return result
 
 
@@ -182,19 +176,10 @@ def get_one_page_private_blog(account_id, page_count):
         return get_one_page_private_blog(account_id, page_count)
     elif post_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(post_pagination_response.status))
-    if not crawler.check_sub_key(("meta",), post_pagination_response.json_data):
-        raise crawler.CrawlerException("返回信息'meta'字段不存在\n%s" % post_pagination_response.json_data)
-    if not crawler.check_sub_key(("status",), post_pagination_response.json_data["meta"]):
-        raise crawler.CrawlerException("返回信息'status'字段不存在\n%s" % post_pagination_response.json_data)
-    if not crawler.is_integer(post_pagination_response.json_data["meta"]["status"]):
-        raise crawler.CrawlerException("返回信息'status'字段类型不正确\n%s" % post_pagination_response.json_data)
-    if int(post_pagination_response.json_data["meta"]["status"]) != 200:
+    if crawler.get_json_value(post_pagination_response.json_data, "meta", "status", type_check=int) != 200:
         raise crawler.CrawlerException("返回信息'status'字段取值不正确\n%s" % post_pagination_response.json_data)
-    if not crawler.check_sub_key(("response",), post_pagination_response.json_data):
-        raise crawler.CrawlerException("返回信息'response'字段不存在\n%s" % post_pagination_response.json_data)
-    if not crawler.check_sub_key(("posts",), post_pagination_response.json_data["response"]):
-        raise crawler.CrawlerException("返回信息'posts'字段不存在\n%s" % post_pagination_response.json_data)
-    for post_info in post_pagination_response.json_data["response"]["posts"]:
+    post_info_list = crawler.get_json_value(post_pagination_response.json_data, "response", "posts", type_check=list)
+    for post_info in post_info_list:
         result_post_info = {
             "has_video": False,  # 是不是包含视频
             "photo_url_list": [],  # 全部图片地址
@@ -202,49 +187,36 @@ def get_one_page_private_blog(account_id, page_count):
             "video_url": None,  # 视频地址
         }
         # 获取日志地址
-        if not crawler.check_sub_key(("post_url",), post_info):
-            raise crawler.CrawlerException("日志信息'post_url'字段不存在\n%s" % post_info)
-        result_post_info["post_url"] = net.url_encode(post_info["post_url"])
+        result_post_info["post_url"] = net.url_encode(crawler.get_json_value(post_info, "post_url", type_check=str))
         # 获取日志id
         post_id = tool.find_sub_string(result_post_info["post_url"], "/post/").split("/")[0]
         if not crawler.is_integer(post_id):
             crawler.CrawlerException("日志地址截取日志id失败\n%s" % result_post_info["post_url"])
         result_post_info["post_id"] = int(post_id)
-        # 日志类型
-        if not crawler.check_sub_key(("type",), post_info):
-            raise crawler.CrawlerException("日志信息'type'字段不存在\n%s" % post_info)
         # 视频
-        if post_info["type"] == "video":
-            if not crawler.check_sub_key(("player",), post_info):
-                raise crawler.CrawlerException("日志信息'player'字段不存在\n%s" % post_info)
+        if crawler.get_json_value(post_info, "type", type_check=str) == "video":
             result_post_info["is_video"] = True
             # 获取视频地址
             max_width = 0
             video_url = None
-            for video_info in post_info["player"]:
-                if not crawler.check_sub_key(("width", "embed_code"), video_info):
-                    raise crawler.CrawlerException("视频信息'width'或'embed_code'字段不存在\n%s" % video_info)
-                if not crawler.is_integer(video_info["width"]):
-                    raise crawler.CrawlerException("视频信息'width'字段类型不正确\n%s" % video_info)
-                if video_info["embed_code"] is False:
+            for video_info in crawler.get_json_value(post_info, "player", type_check=list):
+                video_html = crawler.get_json_value(video_info, "embed_code")
+                if video_html is False:
                     continue
-                if int(video_info["width"]) > max_width:
-                    temp_video_url = tool.find_sub_string(video_info["embed_code"], '<source src="', '"')
+                video_width = crawler.get_json_value(video_info, "width", type_check=int)
+                if video_width > max_width:
+                    temp_video_url = tool.find_sub_string(video_html, '<source src="', '"')
                     if temp_video_url:
                         video_url = temp_video_url
-                        max_width = video_info["width"]
+                        max_width = video_width
             if video_url is not None:
                 result_post_info["video_url"] = video_url
         # 图片
         elif crawler.check_sub_key(("photos",), post_info):
-            for photo_info in post_info["photos"]:
-                if not crawler.check_sub_key(("original_size",), photo_info):
-                    raise crawler.CrawlerException("图片信息'original_size'字段不存在\n%s" % photo_info)
-                if not crawler.check_sub_key(("url",), photo_info["original_size"]):
-                    raise crawler.CrawlerException("图片信息'url'字段不存在\n%s" % photo_info)
-                result_post_info["photo_url_list"].append(photo_info["original_size"]["url"])
+            for photo_info in crawler.get_json_value(post_info, "photos", type_check=list):
+                result_post_info["photo_url_list"].append(crawler.get_json_value(photo_info, "original_size", "url", type_check=str))
         result["post_info_list"].append(result_post_info)
-    if len(post_pagination_response.json_data["response"]["posts"]) < EACH_PAGE_BLOG_COUNT:
+    if len(post_info_list) < EACH_PAGE_BLOG_COUNT:
         result["is_over"] = True
     return result
 
@@ -291,22 +263,22 @@ def get_post_page(post_url, post_id, is_safe_mode):
             if video_url is not None:
                 result["video_url"] = video_url
     elif not og_type:
-        script_data_string = tool.find_sub_string(post_page_head, '<script type="application/ld+json">', "</script>").strip()
-        if not script_data_string:
+        script_json_html = tool.find_sub_string(post_page_head, '<script type="application/ld+json">', "</script>").strip()
+        if not script_json_html:
             raise crawler.CrawlerException("正文截取og_type失败\n%s" % post_page_head)
-        script_data = tool.json_decode(script_data_string)
-        if script_data is None:
-            raise crawler.CrawlerException("页面脚本数据解析失败\n%s" % script_data)
-        if crawler.check_sub_key(("image",), script_data):
-            if isinstance(script_data["image"], dict):
-                if not crawler.check_sub_key(("@list",), script_data["image"]):
-                    raise crawler.CrawlerException("页面脚本数据'@list'字段不存在\n%s" % script_data)
-                for photo_url in script_data["image"]["@list"]:
-                    result["photo_url_list"].append(photo_url)
-            elif isinstance(script_data["image"], str) or isinstance(script_data["image"], str):
-                result["photo_url_list"].append(script_data["image"])
-            else:
-                raise crawler.CrawlerException("页面脚本数据'image'字段类型错误\n%s" % script_data)
+        script_json = tool.json_decode(script_json_html)
+        if script_json is None:
+            raise crawler.CrawlerException("页面脚本数据解析失败\n%s" % script_json)
+        image_info = crawler.get_json_value(script_json, "image", is_raise_exception=False)
+        if image_info is None:
+            pass
+        elif isinstance(image_info, dict):
+            for photo_url in crawler.get_json_value(image_info, "@list", original_data=script_json, type_check=list):
+                result["photo_url_list"].append(photo_url)
+        elif isinstance(image_info, str):
+            result["photo_url_list"].append(image_info)
+        else:
+            raise crawler.CrawlerException("页面脚本数据'image'字段类型错误\n%s" % script_json)
     else:
         # 获取全部图片地址
         photo_url_list = re.findall('"(http[s]?://\d*[.]?media.tumblr.com/[^"]*)"', post_page_head)
