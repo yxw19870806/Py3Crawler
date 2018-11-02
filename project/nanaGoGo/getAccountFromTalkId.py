@@ -22,20 +22,14 @@ def get_member_from_talk(talk_id):
     if talk_index_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(talk_index_response.status))
     talk_index_response_content = talk_index_response.data.decode(errors="ignore")
-    talk_data_string = tool.find_sub_string(talk_index_response_content, "window.__DEHYDRATED_STATES__ = ", "</script>")
-    if not talk_data_string:
+    script_json_html = tool.find_sub_string(talk_index_response_content, "window.__DEHYDRATED_STATES__ = ", "</script>")
+    if not script_json_html:
         raise crawler.CrawlerException("页面截取talk信息失败\n%s" % talk_index_response_content)
-    talk_data = tool.json_decode(talk_data_string)
-    if talk_data is None:
-        raise crawler.CrawlerException("talk信息加载失败\n%s" % talk_data_string)
-    if not crawler.check_sub_key(("page:talk:service:entity:talkMembers",), talk_data):
-        raise crawler.CrawlerException("talk信息'page:talk:service:entity:talkMembers'字段不存在\n%s" % talk_data)
-    if not crawler.check_sub_key(("members",), talk_data["page:talk:service:entity:talkMembers"]):
-        raise crawler.CrawlerException("talk信息'members'字段不存在\n%s" % talk_data)
-    for member_info in talk_data["page:talk:service:entity:talkMembers"]["members"]:
-        if not crawler.check_sub_key(("userId", "name"), member_info):
-            raise crawler.CrawlerException("参与者信息'userId'或'name'字段不存在\n%s" % talk_data)
-        account_list[member_info["userId"]] = member_info["name"].replace(" ", "")
+    script_json = tool.json_decode(script_json_html)
+    if script_json is None:
+        raise crawler.CrawlerException("talk信息加载失败\n%s" % script_json_html)
+    for member_info in crawler.get_json_value(script_json, "page:talk:service:entity:talkMembers", "members", type_check=list):
+        account_list[crawler.get_json_value(member_info, "userId", type_check=str)] = crawler.get_json_value(member_info, "name", type_check=str).replace(" ", "")
     return account_list
 
 
