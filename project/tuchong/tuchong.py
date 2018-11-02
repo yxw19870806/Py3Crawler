@@ -52,11 +52,9 @@ def get_one_page_album(account_id, post_time):
     }
     if album_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(album_pagination_response.status))
-    if not crawler.check_sub_key(("posts", "result"), album_pagination_response.json_data):
-        raise crawler.CrawlerException("返回数据'posts'或者'result'字段不存在\n%s" % album_pagination_response.json_data)
-    if album_pagination_response.json_data["result"] != "SUCCESS":
+    if crawler.get_json_value(album_pagination_response.json_data, "result", type_check=str) != "SUCCESS":
         raise crawler.CrawlerException("返回数据'result'字段取值不正确\n%s" % album_pagination_response.json_data)
-    for album_info in album_pagination_response.json_data["posts"]:
+    for album_info in crawler.get_json_value(album_pagination_response.json_data, "posts", type_check=list):
         result_photo_info = {
             "album_id": None,  # 相册id
             "album_time": None,  # 相册创建时间
@@ -64,34 +62,14 @@ def get_one_page_album(account_id, post_time):
             "photo_url_list": [],  # 全部图片地址
         }
         # 获取相册id
-        if not crawler.check_sub_key(("post_id",), album_info):
-            raise crawler.CrawlerException("相册信息'post_id'字段不存在\n%s" % album_info)
-        if not crawler.is_integer(album_info["post_id"]):
-            raise crawler.CrawlerException("相册信息'post_id'字段类型不正确\n%s" % album_info)
-        result_photo_info["album_id"] = int(album_info["post_id"])
+        result_photo_info["album_id"] = crawler.get_json_value(album_info, "post_id", type_check=int)
         # 获取相册标题
-        if not crawler.check_sub_key(("title",), album_info):
-            raise crawler.CrawlerException("相册信息'title'字段不存在\n%s" % album_info)
-        result_photo_info["album_title"] = album_info["title"]
+        result_photo_info["album_title"] = crawler.get_json_value(album_info, "title", type_check=str)
         # 获取图片地址
-        if not crawler.check_sub_key(("image_count", "images"), album_info):
-            raise crawler.CrawlerException("相册信息'photo_count'或'images'字段不存在\n%s" % album_info)
-        if not crawler.check_sub_key(("image_count",), album_info):
-            raise crawler.CrawlerException("相册信息'image_count'字段类型不正确\n%s" % album_info)
-        if not isinstance(album_info["images"], list):
-            raise crawler.CrawlerException("相册信息'images'字段类型不正确\n%s" % album_info)
-        if len(album_info["images"]) != int(album_info["image_count"]):
-            raise crawler.CrawlerException("相册信息'images'长度和'photo_count'数值不匹配\n%s" % album_info)
-        for photo_info in album_info["images"]:
-            if not crawler.check_sub_key(("img_id",), photo_info):
-                raise crawler.CrawlerException("相册信息'img_id'字段不存在\n%s" % album_info)
-            result_photo_info["photo_url_list"].append("https://photo.tuchong.com/%s/f/%s.jpg" % (account_id, photo_info["img_id"]))
-        if int(album_info["image_count"]) > 0 and len(result_photo_info["photo_url_list"]) == 0:
-            raise crawler.CrawlerException("相册信息匹配图片地址失败\n%s" % album_info)
+        for photo_info in crawler.get_json_value(album_info, "images", type_check=list):
+            result_photo_info["photo_url_list"].append("https://photo.tuchong.com/%s/f/%s.jpg" % (account_id, crawler.get_json_value(photo_info, "img_id", type_check=str)))
         # 获取相册创建时间
-        if not crawler.check_sub_key(("published_at",), album_info):
-            raise crawler.CrawlerException("相册信息'published_at'字段不存在\n%s" % album_info)
-        result_photo_info["album_time"] = album_info["published_at"]
+        result_photo_info["album_time"] = crawler.get_json_value(album_info, "published_at", type_check=str)
         result["album_info_list"].append(result_photo_info)
     return result
 
