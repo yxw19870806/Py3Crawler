@@ -31,14 +31,9 @@ def get_one_page_audio(account_id, page_count):
     }
     if audio_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(audio_pagination_response.status))
-    if crawler.check_sub_key(("code",), audio_pagination_response.json_data) and crawler.is_integer(audio_pagination_response.json_data["code"]):
-        if int(audio_pagination_response.json_data["code"]) == 1101:
-            raise crawler.CrawlerException("账号不存在")
-    if not crawler.check_sub_key(("data",), audio_pagination_response.json_data):
-        raise crawler.CrawlerException("返回数据'data'字段不存在\n%s" % audio_pagination_response.json_data)
-    if not crawler.check_sub_key(("has_more", "ugclist"), audio_pagination_response.json_data["data"]):
-        raise crawler.CrawlerException("返回数据'has_more'或者'ugclist'字段不存在\n%s" % audio_pagination_response.json_data)
-    for audio_info in audio_pagination_response.json_data["data"]["ugclist"]:
+    if crawler.get_json_value(audio_pagination_response.json_data, "code", type_check=int) == 1101:
+        raise crawler.CrawlerException("账号不存在")
+    for audio_info in crawler.get_json_value(audio_pagination_response.json_data, "data", "ugclist", type_check=list):
         result_audio_info = {
             "audio_id": None,  # 歌曲id
             "audio_key": None,  # 歌曲访问token
@@ -46,23 +41,13 @@ def get_one_page_audio(account_id, page_count):
             "audio_title": "",  # 歌曲标题
         }
         # 获取歌曲id
-        if not crawler.check_sub_key(("ksong_mid",), audio_info):
-            raise crawler.CrawlerException("返回数据'ksong_mid'字段不存在\n%s" % audio_info)
-        result_audio_info["audio_id"] = audio_info["ksong_mid"]
+        result_audio_info["audio_id"] = crawler.get_json_value(audio_info, "ksong_mid", type_check=str)
         # 获取歌曲访问token
-        if not crawler.check_sub_key(("shareid",), audio_info):
-            raise crawler.CrawlerException("返回数据'shareid'字段不存在\n%s" % audio_info)
-        result_audio_info["audio_key"] = audio_info["shareid"]
+        result_audio_info["audio_key"] = crawler.get_json_value(audio_info, "shareid", type_check=str)
         # 获取歌曲标题
-        if not crawler.check_sub_key(("title",), audio_info):
-            raise crawler.CrawlerException("返回数据'title'字段不存在\n%s" % audio_info)
-        result_audio_info["audio_title"] = audio_info["title"]
+        result_audio_info["audio_title"] = crawler.get_json_value(audio_info, "title", type_check=str)
         # 获取歌曲上传时间
-        if not crawler.check_sub_key(("time",), audio_info):
-            raise crawler.CrawlerException("返回数据'time'字段不存在\n%s" % audio_info)
-        if not crawler.is_integer(audio_info["time"]):
-            raise crawler.CrawlerException("返回数据'time'字段类型不正确\n%s" % audio_info)
-        result_audio_info["audio_time"] = int(audio_info["time"])
+        result_audio_info["audio_time"] = crawler.get_json_value(audio_info, "time", type_check=int)
         result["audio_info_list"].append(result_audio_info)
     # 判断是不是最后一页
     result["is_over"] = not bool(int(audio_pagination_response.json_data["data"]["has_more"]))
