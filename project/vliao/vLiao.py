@@ -111,7 +111,10 @@ def get_one_page_video(account_id, page_count):
     result = {
         "video_info_list": [],  # 全部视频信息
     }
-    if video_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
+    if video_pagination_response.status == 400:
+        log.step("%s 第%s页视频访问异常，重试" % (account_id, page_count))
+        return get_one_page_video(account_id, page_count)
+    elif video_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(video_pagination_response.status))
     if crawler.get_json_value(video_pagination_response.json_data, "result", type_check=bool) is False:
         if crawler.get_json_value(video_pagination_response.json_data, "errorCode", type_check=int) == 3:
@@ -147,7 +150,10 @@ def get_video_info_page(account_id, video_id):
     result = {
         "video_url": None,  # 视频地址
     }
-    if video_info_response.status != net.HTTP_RETURN_CODE_SUCCEED:
+    if video_info_response.status == 400:
+        log.step("视频 %s 访问异常，重试" % video_id)
+        return get_video_info_page(account_id, video_id)
+    elif video_info_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(video_info_response.status))
     result["video_url"] = crawler.get_json_value(video_info_response.json_data, "data", "url", type_check=str)
     return result
