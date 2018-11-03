@@ -51,7 +51,7 @@ def get_account_index_page(account_id):
     chrome = webdriver.Chrome(options=chrome_options)
     chrome.get("file:///" + os.path.realpath(cache_html))
     signature = chrome.find_element_by_id("result").text
-    chrome.close()
+    chrome.quit()
     if not signature:
         raise crawler.CrawlerException("signature参数计算失败\n%s" % account_index_response_content)
     result["signature"] = signature
