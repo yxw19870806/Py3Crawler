@@ -499,6 +499,8 @@ class Download(crawler.DownloadThread):
 
     # 解析单个视频
     def crawl_video(self, video_id):
+        self.step("开始解析视频%s" % video_id)
+
         # 获取指定视频信息
         try:
             video_response = get_video_page(video_id)
@@ -545,9 +547,7 @@ class Download(crawler.DownloadThread):
 
             # 从最早的视频开始下载
             while len(video_id_list) > 0:
-                video_id = video_id_list.pop()
-                self.step("开始解析视频%s" % video_id)
-                self.crawl_video(video_id)
+                self.crawl_video(video_id_list.pop())
                 self.main_thread_check()  # 检测主线程运行状态
         except SystemExit as se:
             if se.code == 0:

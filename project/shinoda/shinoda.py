@@ -132,6 +132,7 @@ class Blog(crawler.Crawler):
                         photo_index += 1
                     else:
                         log.step("第%s张图片 %s 下载失败，原因：%s" % (photo_index, photo_url, crawler.download_failre(save_file_return["code"])))
+
                 # 日志内图片全部下载完毕
                 temp_path_list = []  # 临时目录设置清除
                 self.total_photo_count += (photo_index - 1) - int(save_info[0])  # 计数累加

@@ -197,6 +197,8 @@ class Download(crawler.DownloadThread):
 
     # 解析单个作品
     def crawl_album(self, album_info):
+        self.step("开始解析作品 %s" % album_info["album_id"])
+
         # 获取作品
         try:
             album_response = get_album_page(album_info["album_id"])
@@ -236,9 +238,7 @@ class Download(crawler.DownloadThread):
 
             # 从最早的作品开始下载
             while len(album_info_list) > 0:
-                album_info = album_info_list.pop()
-                self.step("开始解析作品 %s" % album_info["album_id"])
-                self.crawl_album(album_info)
+                self.crawl_album(album_info_list.pop())
                 self.main_thread_check()  # 检测主线程运行状态
         except SystemExit as se:
             if se.code == 0:

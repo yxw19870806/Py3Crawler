@@ -182,6 +182,8 @@ class XVideos(crawler.Crawler):
                     log.step("视频%s《%s》 下载成功" % (video_id, video_play_response["video_title"]))
                 else:
                     log.error("视频%s《%s》 %s 下载失败，原因：%s" % (video_id, video_play_response["video_title"], video_play_response["video_url"], crawler.download_failre(save_file_return["code"])))
+
+                # 视频下载完毕
                 self.total_video_count += 1  # 计数累加
                 video_id += 1  # 设置存档记录
         except SystemExit as se:

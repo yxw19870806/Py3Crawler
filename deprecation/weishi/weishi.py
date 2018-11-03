@@ -212,6 +212,7 @@ class Download(crawler.DownloadThread):
                         video_index += 1
                     else:
                         log.error(account_name + " 第%s个视频 %s 下载失败" % (video_index, video_info_response["video_url"]))
+
                 # 视频全部下载完毕
                 temp_path_list = []  # 临时目录设置清除
                 total_video_count += (video_index - 1) - int(self.account_info[1])  # 计数累加

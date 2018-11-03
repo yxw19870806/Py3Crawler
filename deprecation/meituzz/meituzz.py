@@ -167,7 +167,7 @@ class MeiTuZZ(crawler.Crawler):
                     else:
                         log.error("第%s页视频 %s 下载失败，原因：%s" % (album_id, album_response["video_url"], crawler.download_failre(save_file_return["code"])))
 
-                # tweet内图片和视频全部下载完毕
+                # 相册内图片和视频全部下载完毕
                 temp_path_list = []  # 临时目录设置清除
                 self.total_photo_count += photo_index - 1  # 计数累加
                 self.total_video_count += video_index - 1  # 计数累加

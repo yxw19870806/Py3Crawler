@@ -114,6 +114,7 @@ class YWKB(crawler.Crawler):
                 except SystemExit:
                     log.step("提前退出")
                     break
+
                 # 图片下载完毕
                 self.total_photo_count += 1  # 计数累加
                 last_photo_id = photo_info["photo_id"]  # 设置存档记录

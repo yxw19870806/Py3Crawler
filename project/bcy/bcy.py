@@ -232,7 +232,8 @@ class Download(crawler.DownloadThread):
 
     # 解析单个作品
     def crawl_album(self, album_id):
-        self.main_thread_check()  # 检测主线程运行状态
+        self.step("开始解析作品%s" % album_id)
+
         # 获取作品
         try:
             album_response = get_album_page(album_id)
@@ -303,9 +304,7 @@ class Download(crawler.DownloadThread):
 
             # 从最早的作品开始下载
             while len(album_id_list) > 0:
-                album_id = album_id_list.pop()
-                self.step("开始解析作品%s" % album_id)
-                self.crawl_album(album_id)
+                self.crawl_album(album_id_list.pop())
                 self.main_thread_check()  # 检测主线程运行状态
         except SystemExit as se:
             if se.code == 0:
@@ -323,7 +322,7 @@ class Download(crawler.DownloadThread):
             file.write_file("\t".join(self.account_info), self.main_thread.temp_save_data_path)
             self.main_thread.total_photo_count += self.total_photo_count
             self.main_thread.account_list.pop(self.account_id)
-        self.step("下载完毕，总共获得%s张图片，%s个视频" % (self.total_photo_count, self.total_video_count))
+        self.step("下载完毕，总共获得%s张图片和%s个视频" % (self.total_photo_count, self.total_video_count))
         self.notify_main_thread()
 
 

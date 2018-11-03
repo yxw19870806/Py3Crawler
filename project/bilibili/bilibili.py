@@ -432,6 +432,8 @@ class Download(crawler.DownloadThread):
 
     # 解析单个视频
     def crawl_video(self, video_info):
+        self.step("开始解析视频%s" % video_info["video_id"])
+
         # 获取相簿
         try:
             video_play_response = get_video_page(video_info["video_id"])
@@ -465,6 +467,7 @@ class Download(crawler.DownloadThread):
     # 解析单个短视频
     def crawl_short_video(self, video_info):
         self.step("开始下载短视频%s %s" % (video_info["video_id"], video_info["video_url"]))
+
         file_path = os.path.join(self.main_thread.video_download_path, self.display_name, "%07d.%s" % (video_info["video_id"], net.get_file_type(video_info["video_url"])))
         save_file_return = net.save_net_file(video_info["video_url"], file_path)
         if save_file_return["status"] == 1:
@@ -478,6 +481,8 @@ class Download(crawler.DownloadThread):
 
     # 解析单个相簿
     def crawl_audio(self, audio_info):
+        self.step("开始解析音频%s" % audio_info["audio_id"])
+
         # 获取音频信息
         try:
             audio_info_response = get_audio_info_page(audio_info["audio_id"])
@@ -500,6 +505,8 @@ class Download(crawler.DownloadThread):
 
     # 解析单个相簿
     def crawl_photo(self, album_id):
+        self.step("开始解析相簿%s" % album_id)
+
         # 获取相簿
         try:
             album_response = get_album_page(album_id)
@@ -541,9 +548,7 @@ class Download(crawler.DownloadThread):
 
                     # 从最早的视频开始下载
                     while len(video_info_list) > 0:
-                        video_info = video_info_list.pop()
-                        self.step("开始解析视频%s" % video_info["video_id"])
-                        self.crawl_video(video_info)
+                        self.crawl_video(video_info_list.pop())
                         self.main_thread_check()  # 检测主线程运行状态
 
                 if IS_DOWNLOAD_SHORT_VIDEO:
@@ -553,9 +558,7 @@ class Download(crawler.DownloadThread):
 
                     # 从最早的视频开始下载
                     while len(video_info_list) > 0:
-                        video_info = video_info_list.pop()
-                        self.step("开始解析视频%s" % video_info["video_id"])
-                        self.crawl_short_video(video_info)
+                        self.crawl_short_video(video_info_list.pop())
                         self.main_thread_check()  # 检测主线程运行状态
 
             # 音频下载
@@ -566,9 +569,7 @@ class Download(crawler.DownloadThread):
 
                 # 从最早的相簿开始下载
                 while len(audio_info_list) > 0:
-                    audio_info = audio_info_list.pop()
-                    self.step("开始解析音频%s" % audio_info["audio_id"])
-                    self.crawl_audio(audio_info)
+                    self.crawl_audio(audio_info_list.pop())
                     self.main_thread_check()  # 检测主线程运行状态
 
             # 图片下载
@@ -579,9 +580,7 @@ class Download(crawler.DownloadThread):
 
                 # 从最早的相簿开始下载
                 while len(album_id_list) > 0:
-                    album_id = album_id_list.pop()
-                    self.step("开始解析相簿%s" % album_id)
-                    self.crawl_photo(album_id)
+                    self.crawl_photo(album_id_list.pop())
                     self.main_thread_check()  # 检测主线程运行状态
         except SystemExit as se:
             if se.code == 0:

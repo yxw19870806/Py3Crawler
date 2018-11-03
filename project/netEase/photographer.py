@@ -147,6 +147,8 @@ class Download(crawler.DownloadThread):
 
     # 解析单个相册
     def crawl_album(self, album_url):
+        self.step("开始解析第相册%s" % get_album_id(album_url))
+
         try:
             album_response = get_album_page(album_url)
         except crawler.CrawlerException as e:
@@ -190,9 +192,7 @@ class Download(crawler.DownloadThread):
 
             # 从最早的相册开始下载
             while len(album_url_list) > 0:
-                album_url = album_url_list.pop()
-                self.step("开始解析第相册%s" % get_album_id(album_url))
-                self.crawl_album(album_url)
+                self.crawl_album(album_url_list.pop())
                 self.main_thread_check()  # 检测主线程运行状态
         except SystemExit as se:
             if se.code == 0:

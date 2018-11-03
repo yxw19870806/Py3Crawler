@@ -205,6 +205,8 @@ class Download(crawler.DownloadThread):
     # 解析单张图片
     def crawl_photo(self, photo_info):
         photo_index = int(self.account_info[3]) + 1
+        self.step("开始下载第%s张图片 %s" % (photo_index, photo_info["photo_url"]))
+
         photo_file_path = os.path.join(self.main_thread.photo_download_path, self.display_name, "%04d.%s" % (photo_index, net.get_file_type(photo_info["photo_url"])))
         save_file_return = net.save_net_file(photo_info["photo_url"], photo_file_path)
         if save_file_return["status"] == 1:
@@ -254,6 +256,8 @@ class Download(crawler.DownloadThread):
     # 解析单个视频
     def crawl_video(self, video_info):
         video_index = int(self.account_info[1]) + 1
+        self.step("开始下载第%s个视频 %s" % (video_index, video_info["video_url_list"]))
+
         video_file_path = os.path.join(self.main_thread.video_download_path, self.display_name, "%04d.ts" % video_index)
         save_file_return = net.save_net_file_list(video_info["video_url_list"], video_file_path)
         if save_file_return["status"] == 1:
@@ -277,9 +281,7 @@ class Download(crawler.DownloadThread):
 
                 # 从最早的图片开始下载
                 while len(photo_info_list) > 0:
-                    photo_info = photo_info_list.pop()
-                    self.step("开始下载第%s张图片 %s" % (int(self.account_info[3]) + 1, photo_info["photo_url"]))
-                    self.crawl_photo(photo_info)
+                    self.crawl_photo(photo_info_list.pop())
                     self.main_thread_check()  # 检测主线程运行状态
 
             # 视频下载
@@ -290,9 +292,7 @@ class Download(crawler.DownloadThread):
 
                 # 从最早的视频开始下载
                 while len(video_info_list) > 0:
-                    video_info = video_info_list.pop()
-                    self.step("开始下载第%s个视频 %s" % (int(self.account_info[1]) + 1, video_info["video_url_list"]))
-                    self.crawl_video(video_info)
+                    self.crawl_video(video_info_list.pop())
                     self.main_thread_check()  # 检测主线程运行状态
         except SystemExit as se:
             if se.code == 0:

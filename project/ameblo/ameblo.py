@@ -315,6 +315,8 @@ class Download(crawler.DownloadThread):
 
     # 解析单个日志
     def crawl_blog(self, blog_id):
+        self.step("开始解析日志%s" % blog_id)
+
         # 获取日志
         try:
             blog_response = get_blog_page(self.account_id, blog_id)
@@ -396,9 +398,7 @@ class Download(crawler.DownloadThread):
 
                 # 从最早的日志开始下载
                 while len(blog_id_list) > 0:
-                    blog_id = blog_id_list.pop()
-                    self.step("开始解析日志%s" % blog_id)
-                    self.crawl_blog(blog_id)
+                    self.crawl_blog(blog_id_list.pop())
                     self.main_thread_check()  # 检测主线程运行状态
 
                 if start_page_count == 1:
