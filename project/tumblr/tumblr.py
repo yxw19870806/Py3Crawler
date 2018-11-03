@@ -699,7 +699,7 @@ class Download(crawler.DownloadThread):
             self.main_thread.total_photo_count += self.total_photo_count
             self.main_thread.total_video_count += self.total_video_count
             self.main_thread.account_list.pop(self.account_id)
-        self.step("下载完毕，总共获得%s张图片和%s个视频" % (self.total_photo_count, self.total_video_count))
+        self.step("下载完毕，总共获得%s张图片，%s个视频" % (self.total_photo_count, self.total_video_count))
         self.notify_main_thread()
 
 
