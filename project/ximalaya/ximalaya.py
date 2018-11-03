@@ -27,7 +27,7 @@ def get_one_page_audio(account_id, page_count):
         raise crawler.CrawlerException("账号不存在")
     elif audit_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(audit_pagination_response.status))
-    crawler.get_json_value(audit_pagination_response.json_data, "res", type_check=True)
+    crawler.get_json_value(audit_pagination_response.json_data, "res", value_check=True)
     response_html = crawler.get_json_value(audit_pagination_response.json_data, "html", type_check=str)
     # 获取音频信息
     audio_list_selector = pq(response_html).find("ul.body_list li.item")
