@@ -24,7 +24,7 @@ def _search_account(account_name):
     search_response = net.http_request(search_url, method="POST", fields=post_data, json_decode=True)
     if search_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(search_response.status))
-    crawler.get_json_value(search_response.json_data, "result", type_check=True)
+    crawler.get_json_value(search_response.json_data, "result", value_check=True)
     account_name_to_id_list = {}
     for search_result in crawler.get_json_value(search_response.json_data, "data", type_check=list):
         account_name_to_id_list[crawler.get_json_value(search_result, "realName", type_check=str)] = crawler.get_json_value(search_result, "id", type_check=str)

@@ -484,30 +484,38 @@ def get_json_value(json_data, *args, **kwargs):
         json_data = json_data[arg]
     # 检测结果类型
     if not exception_string and "type_check" in kwargs:
-        type_check = kwargs["type_check"]
         type_error = False
-        if type_check is int:  # 整数（包含int和符合整型规则的字符串）
+        if kwargs["type_check"] is int:  # 整数（包含int和符合整型规则的字符串）
             if is_integer(json_data):
                 json_data = int(json_data)
             else:
                 type_error = True
-        elif type_check is float:  # 浮点数（包含float、int和符合浮点数规则的字符串）
+        elif kwargs["type_check"] is float:  # 浮点数（包含float、int和符合浮点数规则的字符串）
             try:
                 json_data = float(json_data)
             except TypeError:
                 type_error = True
             except ValueError:
                 type_error = True
-        elif type_check is str:  # 直接强制类型转化
+        elif kwargs["type_check"] is str:  # 直接强制类型转化
             json_data = str(json_data)
-        elif type_check in [dict, list, bool]:  # 标准数据类型
-            type_error = not isinstance(json_data, type_check)
-        elif type_check in [True, False, None]:  # 确定值
-            type_error = json_data is not type_check
+        elif kwargs["type_check"] in [dict, list, bool]:  # 标准数据类型
+            type_error = not isinstance(json_data, kwargs["type_check"])
         else:
-            exception_string = "type_check: %s类型不正确" % type_check
+            exception_string = "type_check: %s类型不正确" % kwargs["type_check"]
         if type_error:
             exception_string = "'%s'字段类型不正确\n%s" % (last_arg, original_data)
+    # 检测结果数值
+    if not exception_string and "value_check" in kwargs:
+        value_error = False
+        if isinstance(kwargs["value_check"], list):
+            if json_data not in kwargs["value_check"]:
+                value_error = True
+        else:
+            if not (json_data is kwargs["value_check"]):
+                value_error = True
+        if value_error:
+            exception_string = "'%s'字段取值不正确\n%s" % (last_arg, original_data)
     if exception_string:
         if "is_raise_exception" in kwargs:
             raise CrawlerException(exception_string)
