@@ -231,7 +231,8 @@ class Download(crawler.DownloadThread):
 
     # 解析单首歌曲
     def crawl_audio(self, audio_info):
-        self.main_thread_check()  # 检测主线程运行状态
+        self.step("开始解析歌曲%s《%s》" % (audio_info["audio_key"], audio_info["audio_title"]))
+
         # 获取歌曲播放页
         try:
             audio_play_response = get_audio_play_page(audio_info["audio_key"])
@@ -275,9 +276,7 @@ class Download(crawler.DownloadThread):
 
             # 从最早的歌曲开始下载
             while len(audio_info_list) > 0:
-                audio_info = audio_info_list.pop()
-                self.step("开始解析歌曲%s《%s》" % (audio_info["audio_key"], audio_info["audio_title"]))
-                self.crawl_audio(audio_info)
+                self.crawl_audio(audio_info_list.pop())
                 self.main_thread_check()  # 检测主线程运行状态
         except SystemExit as se:
             if se.code == 0:

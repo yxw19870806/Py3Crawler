@@ -184,8 +184,7 @@ class Download(crawler.DownloadThread):
 
             # 从最早的图片开始下载
             while len(photo_info_list) > 0:
-                photo_info = photo_info_list.pop()
-                self.crawl_photo(photo_info)
+                self.crawl_photo(photo_info_list.pop())
                 self.main_thread_check()  # 检测主线程运行状态
         except SystemExit as se:
             if se.code == 0:

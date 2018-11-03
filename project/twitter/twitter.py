@@ -332,6 +332,8 @@ class Download(crawler.DownloadThread):
 
     # 解析单个推特
     def crawl_media(self, media_info):
+        self.step("开始解析推特%s" % media_info["blog_id"])
+
         # 图片下载
         photo_index = 1
         if self.main_thread.is_download_photo:
@@ -413,9 +415,7 @@ class Download(crawler.DownloadThread):
 
             # 从最早的推特开始下载
             while len(media_info_list) > 0:
-                media_info = media_info_list.pop()
-                self.step("开始解析推特%s" % media_info["blog_id"])
-                self.crawl_media(media_info)
+                self.crawl_media(media_info_list.pop())
                 self.main_thread_check()  # 检测主线程运行状态
         except SystemExit as se:
             if se.code == 0:

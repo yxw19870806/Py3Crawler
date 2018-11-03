@@ -323,6 +323,8 @@ class Download(crawler.DownloadThread):
 
     # 解析单个媒体
     def crawl_media(self, media_info):
+        self.step("开始解析媒体 %s" % media_info["page_id"])
+
         media_response = None
         # 图片下载
         photo_index = int(self.account_info[2]) + 1
@@ -418,9 +420,7 @@ class Download(crawler.DownloadThread):
 
             # 从最早的媒体开始下载
             while len(media_info_list) > 0:
-                media_info = media_info_list.pop()
-                self.step("开始解析媒体 %s" % media_info["page_id"])
-                self.crawl_media(media_info)
+                self.crawl_media(media_info_list.pop())
                 self.main_thread_check()  # 检测主线程运行状态
         except SystemExit as se:
             if se.code == 0:

@@ -163,6 +163,8 @@ class Download(crawler.DownloadThread):
 
     # 解析单个相册
     def crawl_album(self, album_info):
+        self.step("开始解析相册%s" % album_info["album_id"])
+
         photo_index = 1
         # 过滤标题中不支持的字符
         album_title = path.filter_text(album_info["album_title"])
@@ -202,10 +204,7 @@ class Download(crawler.DownloadThread):
 
             # 从最早的相册开始下载
             while len(album_info_list) > 0:
-                self.main_thread_check()  # 检测主线程运行状态
-                album_info = album_info_list.pop()
-                self.step("开始解析相册%s" % album_info["album_id"])
-                self.crawl_album(album_info)
+                self.crawl_album(album_info_list.pop())
                 self.main_thread_check()  # 检测主线程运行状态
         except SystemExit as se:
             if se.code == 0:

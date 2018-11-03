@@ -215,6 +215,8 @@ class Download(crawler.DownloadThread):
 
     # 解析单个作品
     def crawl_post(self, post_info):
+        log.step(self.account_name + " 开始解析作品%s" % post_info["post_id"])
+
         # 获取指定作品
         try:
             blog_response = get_post_page(post_info["post_id"])
@@ -294,9 +296,7 @@ class Download(crawler.DownloadThread):
             log.step(self.account_name + " 需要下载的全部作品解析完毕，共%s个" % len(post_id_list))
 
             while len(post_id_list) > 0:
-                post_info = post_id_list.pop()
-                log.step(self.account_name + " 开始解析作品%s" % post_info["post_id"])
-                self.crawl_post(post_info)
+                self.crawl_post(post_id_list.pop())
                 self.main_thread_check()  # 检测主线程运行状态
         except SystemExit as se:
             if se.code == 0:
