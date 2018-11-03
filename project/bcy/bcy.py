@@ -6,11 +6,14 @@ https://bcy.net/
 email: hikaru870806@hotmail.com
 如有问题或建议请联系
 """
+import base64
 import json
 import os
 import time
 import traceback
 import urllib.parse
+from selenium import webdriver
+from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
 from common import *
 from common import crypto
 
@@ -156,6 +159,7 @@ def get_album_page(album_id):
     album_response = net.http_request(album_url, method="GET", cookies_list=COOKIE_INFO)
     result = {
         "photo_url_list": [],  # 全部图片地址
+        "video_id": None,  # 视频id
         "is_only_follower": False,  # 是否只对粉丝显示
         "is_only_login": False,  # 是否只对登录用户显示
     }
@@ -170,7 +174,7 @@ def get_album_page(album_id):
         raise crawler.CrawlerException("作品信息加载失败\n%s" % album_response_content)
     is_skip = False
     album_type = crawler.get_json_value(script_json, "detail", "post_data", "type", type_check=str)
-    # 问题
+    # 问答
     # https://bcy.net/item/detail/6115326868729126670
     if album_type == "ganswer":
         is_skip = True
@@ -178,11 +182,64 @@ def get_album_page(album_id):
     # https://bcy.net/item/detail/6162547130750754574
     elif album_type == "article":
         is_skip = True
+    # 视频
+    # https://bcy.net/item/detail/6610952986225017096
+    elif album_type == "video":
+        is_skip = True
+        result["video_id"] = crawler.get_json_value(script_json, "detail", "post_data", "video_info", "vid", type_check=str)
+    elif album_type == "note":
+        pass
+    else:
+        raise crawler.CrawlerException("未知的作品类型：%s" % album_type)
     # 获取全部图片
     for photo_info in crawler.get_json_value(script_json, "detail", "post_data", "multi", type_check=list):
         result["photo_url_list"].append(urllib.parse.unquote(crawler.get_json_value(photo_info, "path", type_check=str)))
     if not is_skip and len(result["photo_url_list"]) == 0:
         raise crawler.CrawlerException("页面匹配图片地址失败\n%s" % album_response_content)
+    return result
+
+
+# 使用selenium获取指定id的作品
+def get_album_page_by_selenium(album_id):
+    result = {
+        "video_url": None,  # 视频地址
+        "video_type": None,  # 视频类型
+    }
+    caps = DesiredCapabilities.CHROME
+    caps['loggingPrefs'] = {'performance': 'ALL'}  # 记录所有日志
+    chrome_options = webdriver.chrome.options.Options()
+    chrome_options.add_argument('--headless')  # 不打开浏览器
+    chrome = webdriver.Chrome(options=chrome_options, desired_capabilities=caps)
+    album_url = "https://bcy.net/item/detail/%s" % album_id
+    chrome.get(album_url)
+    for log_info in chrome.get_log("performance"):
+        log_message = tool.json_decode(crawler.get_json_value(log_info, "message", type_check=str))
+        if crawler.get_json_value(log_message, "message", "method", is_raise_exception=False, type_check=str) == "Network.requestWillBeSent":
+            video_info_url = crawler.get_json_value(log_message, "message", "params", "request", "url", is_raise_exception=False, type_check=str)
+            if video_info_url is not None and video_info_url.find("//ib.365yg.com/video/urls/") > 0:
+                video_info_url = video_info_url.replace("&callback=axiosJsonpCallback1", "")
+                break
+    else:
+        raise crawler.CrawlerException("访问日志匹配视频信息地址失败")
+    chrome.quit()
+    # 获取视频信息
+    video_info_response = net.http_request(video_info_url, method="GET", json_decode=True)
+    if video_info_response.status != net.HTTP_RETURN_CODE_SUCCEED:
+        raise crawler.CrawlerException(crawler.request_failre(video_info_response.status))
+    video_info_list = crawler.get_json_value(video_info_response.json_data, "data", "video_list", type_check=dict)
+    max_resolution = 0
+    encryption_video_url = None
+    for video_info in video_info_list.values():
+        resolution = crawler.get_json_value(video_info, "vwidth", type_check=int) * crawler.get_json_value(video_info, "vheight", type_check=int)
+        if resolution > max_resolution:
+            encryption_video_url = crawler.get_json_value(video_info, "main_url", type_check=str)
+            result["video_type"] = crawler.get_json_value(video_info, "vtype", type_check=str)
+    if encryption_video_url is None:
+        crawler.CrawlerException("视频信息截取加密视频地址失败\n%s" % video_info_response.json_data)
+    try:
+        result["video_url"] = base64.b64decode(encryption_video_url).decode(errors="ignore")
+    except TypeError:
+        raise crawler.CrawlerException("歌曲加密地址解密失败\n%s" % encryption_video_url)
     return result
 
 
@@ -364,6 +421,7 @@ class Download(crawler.DownloadThread):
         self.trace("作品%s解析的全部图片：%s" % (album_id, album_response["photo_url_list"]))
         self.step("作品%s解析获取%s张图" % (album_id, len(album_response["photo_url_list"])))
 
+        # 图片
         photo_index = 1
         album_path = os.path.join(self.main_thread.photo_download_path, self.display_name, str(album_id))
         # 设置临时目录
@@ -388,6 +446,23 @@ class Download(crawler.DownloadThread):
                     self.error("作品%s第%s张图片 %s，下载失败，原因：%s" % (album_id, photo_index, photo_url, crawler.download_failre(save_file_return["code"])))
                 photo_index += 1
                 break
+
+        # 视频
+        if album_response["video_id"] is not None:
+            try:
+                video_response = get_album_page_by_selenium(album_id)
+            except crawler.CrawlerException as e:
+                self.error("作品%s视频解析失败，原因：%s" % (album_id, e.message))
+                raise
+
+            self.step("作品%s开始下载视频 %s" % (album_id, video_response["video_url"]))
+
+            file_path = os.path.join(self.main_thread.photo_download_path, self.display_name, "%s.%s" % (album_id, video_response["video_type"]))
+            save_file_return = net.save_net_file(video_response["video_url"], file_path)
+            if save_file_return["status"] == 1:
+                self.step("作品%s视频下载成功" % album_id)
+            else:
+                self.error("作品%s视频 %s，下载失败，原因：%s" % (album_id, video_response["video_url"], crawler.download_failre(save_file_return["code"])))
 
         # 作品内图片下全部载完毕
         self.temp_path_list = []  # 临时目录设置清除
