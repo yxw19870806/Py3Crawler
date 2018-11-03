@@ -148,6 +148,7 @@ class Bcy(crawler.Crawler):
         # 初始化参数
         sys_config = {
             crawler.SYS_DOWNLOAD_PHOTO: True,
+            crawler.SYS_DOWNLOAD_VIDEO: True,
         }
         crawler.Crawler.__init__(self, sys_config, **kwargs)
 
@@ -181,7 +182,7 @@ class Bcy(crawler.Crawler):
         # 重新排序保存存档文件
         crawler.rewrite_save_file(self.temp_save_data_path, self.save_data_path)
 
-        log.step("全部下载完毕，耗时%s秒，共计图片%s张" % (self.get_run_time(), self.total_photo_count))
+        log.step("全部下载完毕，耗时%s秒，共计图片%s张，视频%s个" % (self.get_run_time(), self.total_photo_count, self.total_video_count))
 
 
 class Download(crawler.DownloadThread):
@@ -231,7 +232,8 @@ class Download(crawler.DownloadThread):
 
     # 解析单个作品
     def crawl_album(self, album_id):
-        self.main_thread_check()  # 检测主线程运行状态
+        self.step("开始解析作品%s" % album_id)
+
         # 获取作品
         try:
             album_response = get_album_page(album_id)
@@ -239,41 +241,44 @@ class Download(crawler.DownloadThread):
             self.error("作品%s解析失败，原因：%s" % (album_id, e.message))
             raise
 
-        self.trace("作品%s解析的全部图片：%s" % (album_id, album_response["photo_url_list"]))
-        self.step("作品%s解析获取%s张图" % (album_id, len(album_response["photo_url_list"])))
-
         # 图片
         photo_index = 1
-        album_path = os.path.join(self.main_thread.photo_download_path, self.display_name, str(album_id))
-        # 设置临时目录
-        self.temp_path_list.append(album_path)
-        for photo_url in album_response["photo_url_list"]:
-            self.main_thread_check()  # 检测主线程运行状态
-            # 禁用指定分辨率
-            photo_url = get_photo_url(photo_url)
-            self.step("作品%s开始下载第%s张图片 %s" % (album_id, photo_index, photo_url))
+        if self.main_thread.is_download_photo:
+            self.trace("作品%s解析的全部图片：%s" % (album_id, album_response["photo_url_list"]))
+            self.step("作品%s解析获取%s张图片" % (album_id, len(album_response["photo_url_list"])))
 
-            file_path = os.path.join(album_path, "%03d.%s" % (photo_index, net.get_file_type(photo_url, "jpg")))
-            for retry_count in range(0, 10):
-                save_file_return = net.save_net_file(photo_url, file_path)
-                if save_file_return["status"] == 1:
-                    self.step("作品%s第%s张图片下载成功" % (album_id, photo_index))
-                else:
-                    # 560报错，重新下载
-                    if save_file_return["code"] == 404 and retry_count < 4:
-                        log.step("图片 %s 访问异常，重试" % photo_url)
-                        time.sleep(5)
-                        continue
-                    self.error("作品%s第%s张图片 %s，下载失败，原因：%s" % (album_id, photo_index, photo_url, crawler.download_failre(save_file_return["code"])))
-                photo_index += 1
-                break
+            album_path = os.path.join(self.main_thread.photo_download_path, self.display_name, str(album_id))
+            # 设置临时目录
+            self.temp_path_list.append(album_path)
+            for photo_url in album_response["photo_url_list"]:
+                self.main_thread_check()  # 检测主线程运行状态
+                # 禁用指定分辨率
+                photo_url = get_photo_url(photo_url)
+                self.step("作品%s开始下载第%s张图片 %s" % (album_id, photo_index, photo_url))
+
+                file_path = os.path.join(album_path, "%03d.%s" % (photo_index, net.get_file_type(photo_url, "jpg")))
+                for retry_count in range(0, 10):
+                    save_file_return = net.save_net_file(photo_url, file_path)
+                    if save_file_return["status"] == 1:
+                        self.step("作品%s第%s张图片下载成功" % (album_id, photo_index))
+                    else:
+                        # 560报错，重新下载
+                        if save_file_return["code"] == 404 and retry_count < 4:
+                            log.step("图片 %s 访问异常，重试" % photo_url)
+                            time.sleep(5)
+                            continue
+                        self.error("作品%s第%s张图片 %s，下载失败，原因：%s" % (album_id, photo_index, photo_url, crawler.download_failre(save_file_return["code"])))
+                    photo_index += 1
+                    break
 
         # 视频
-        if album_response["video_id"] is not None:
+        video_index = 1
+        if self.main_thread.is_download_video and album_response["video_id"] is not None:
+            self.step("开始解析作品%s的视频" % album_response["video_id"])
             try:
                 video_response = get_album_page_by_selenium(album_id)
             except crawler.CrawlerException as e:
-                self.error("作品%s视频解析失败，原因：%s" % (album_id, e.message))
+                self.error("作品%s的视频解析失败，原因：%s" % (album_id, e.message))
                 raise
 
             self.step("作品%s开始下载视频 %s" % (album_id, video_response["video_url"]))
@@ -288,6 +293,7 @@ class Download(crawler.DownloadThread):
         # 作品内图片下全部载完毕
         self.temp_path_list = []  # 临时目录设置清除
         self.total_photo_count += photo_index - 1  # 计数累加
+        self.total_video_count += video_index - 1  # 计数累加
         self.account_info[1] = str(album_id)  # 设置存档记录
 
     def run(self):
@@ -298,9 +304,7 @@ class Download(crawler.DownloadThread):
 
             # 从最早的作品开始下载
             while len(album_id_list) > 0:
-                album_id = album_id_list.pop()
-                self.step("开始解析作品%s" % album_id)
-                self.crawl_album(album_id)
+                self.crawl_album(album_id_list.pop())
                 self.main_thread_check()  # 检测主线程运行状态
         except SystemExit as se:
             if se.code == 0:
@@ -318,7 +322,7 @@ class Download(crawler.DownloadThread):
             file.write_file("\t".join(self.account_info), self.main_thread.temp_save_data_path)
             self.main_thread.total_photo_count += self.total_photo_count
             self.main_thread.account_list.pop(self.account_id)
-        self.step("下载完毕，总共获得%s张图片" % self.total_photo_count)
+        self.step("下载完毕，总共获得%s张图片和%s个视频" % (self.total_photo_count, self.total_video_count))
         self.notify_main_thread()
 
 

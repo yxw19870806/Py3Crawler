@@ -156,6 +156,8 @@ class Download(crawler.DownloadThread):
 
     # 解析单章节漫画
     def crawl_comic(self, comic_info):
+        self.step("开始解析漫画%s %s《%s》" % (comic_info["page_id"], comic_info["version_name"], comic_info["chapter_name"]))
+
         # 获取指定漫画章节
         try:
             chapter_response = get_chapter_page(comic_info["comic_id"], comic_info["page_id"])
@@ -193,9 +195,7 @@ class Download(crawler.DownloadThread):
 
             # 从最早的日志开始下载
             while len(comic_info_list) > 0:
-                comic_info = comic_info_list.pop()
-                self.step("开始解析漫画%s %s《%s》" % (comic_info["page_id"], comic_info["version_name"], comic_info["chapter_name"]))
-                self.crawl_comic(comic_info)
+                self.crawl_comic(comic_info_list.pop())
                 self.main_thread_check()  # 检测主线程运行状态
         except SystemExit as se:
             if se.code == 0:

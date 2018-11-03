@@ -175,6 +175,9 @@ class Download(crawler.DownloadThread):
 
     # 解析单个视频
     def crawl_video(self, video_id):
+        video_index = int(self.account_info[1]) + 1
+        self.step("开始解析第%s个视频 %s" % (video_index, video_id))
+
         # 获取视频下载地址
         try:
             video_info_response = get_video_info_page(video_id)
@@ -182,7 +185,6 @@ class Download(crawler.DownloadThread):
             self.error("视频%s解析失败，原因：%s" % (video_id, e.message))
             raise
 
-        video_index = int(self.account_info[1]) + 1
         file_path = os.path.join(self.main_thread.video_download_path, self.display_name, "%04d.mp4" % video_index)
         while len(video_info_response["video_url_list"]) > 0:
             self.main_thread_check()  # 检测主线程运行状态
@@ -219,9 +221,7 @@ class Download(crawler.DownloadThread):
 
             # 从最早的视频开始下载
             while len(video_id_list) > 0:
-                video_id = video_id_list.pop()
-                self.step("开始解析第%s个视频 %s" % (int(self.account_info[1]) + 1, video_id))
-                self.crawl_video(video_id)
+                self.crawl_video(video_id_list.pop())
                 self.main_thread_check()  # 检测主线程运行状态
         except SystemExit as se:
             if se.code == 0:

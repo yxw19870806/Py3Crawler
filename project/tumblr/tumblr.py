@@ -533,6 +533,8 @@ class Download(crawler.DownloadThread):
 
     # 解析单个日志
     def crawl_post(self, post_info):
+        self.step("开始解析日志 %s" % post_info["post_id"])
+
         post_url = post_info["post_url"][:post_info["post_url"].find(str(post_info["post_id"])) + len(str(post_info["post_id"]))]
 
         if self.is_private:
@@ -673,9 +675,7 @@ class Download(crawler.DownloadThread):
 
                 # 从最早的日志开始下载
                 while len(post_info_list) > 0:
-                    post_info = post_info_list.pop()
-                    self.step("开始解析日志 %s" % post_info["post_id"])
-                    self.crawl_post(post_info)
+                    self.crawl_post(post_info_list.pop())
                     self.main_thread_check()  # 检测主线程运行状态
 
                 if start_page_count == 1:
@@ -699,7 +699,7 @@ class Download(crawler.DownloadThread):
             self.main_thread.total_photo_count += self.total_photo_count
             self.main_thread.total_video_count += self.total_video_count
             self.main_thread.account_list.pop(self.account_id)
-        self.step("下载完毕，总共获得%s张图片和%s个视频" % (self.total_photo_count, self.total_video_count))
+        self.step("下载完毕，总共获得%s张图片，%s个视频" % (self.total_photo_count, self.total_video_count))
         self.notify_main_thread()
 
 

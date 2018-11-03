@@ -166,6 +166,11 @@ class Download(crawler.DownloadThread):
 
     # 解析单个日志
     def crawl_blog(self, blog_info):
+        self.step("开始解析日志%s" % blog_info["blog_id"])
+
+        self.trace("日志%s解析的全部图片：%s" % (blog_info["blog_id"], blog_info["photo_url_list"]))
+        self.step("日志%s解析获取%s张图片" % (blog_info["blog_id"], len(blog_info["photo_url_list"])))
+
         photo_index = 1
         for photo_url in blog_info["photo_url_list"]:
             self.main_thread_check()  # 检测主线程运行状态
@@ -193,10 +198,7 @@ class Download(crawler.DownloadThread):
 
             # 从最早的日志开始下载
             while len(blog_info_list) > 0:
-                blog_info =  blog_info_list.pop()
-                self.step("开始解析日志%s" % blog_info["blog_id"])
-                self.trace("日志%s解析的全部图片：%s" % (blog_info["blog_id"], blog_info["photo_url_list"]))
-                self.crawl_blog(blog_info)
+                self.crawl_blog(blog_info_list.pop())
                 self.main_thread_check()  # 检测主线程运行状态
         except SystemExit as se:
             if se.code == 0:
