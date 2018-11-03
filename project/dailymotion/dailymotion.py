@@ -25,7 +25,7 @@ def init_session():
     if index_page_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException("首页，" + crawler.request_failre(index_page_response.status))
     index_page_response_content = index_page_response.data.decode(errors="ignore")
-    script_json_html = tool.find_sub_string(index_page_response_content, "var __PLAYER_CONFIG__ = ", ";\n")
+    script_json_html = tool.find_sub_string(index_page_response_content, "var __PLAYER_CONFIG__ = ", ";</script>\n")
     if not script_json_html:
         raise crawler.CrawlerException("页面信息截取失败\n%s" % index_page_response_content)
     script_json = tool.json_decode(script_json_html)
