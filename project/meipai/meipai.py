@@ -82,12 +82,11 @@ def decrypt_video_url(encrypted_string):
     loc1 = _get_hex(encrypted_string)
     loc2 = _get_dec(loc1["hex"])
     loc3 = _sub_str(loc1["str"], loc2["pre"])
-    video_url_string = _sub_str(loc3, _get_pos(loc3, loc2["tail"]))
+    encryption_video_url = _sub_str(loc3, _get_pos(loc3, loc2["tail"]))
     try:
-        video_url = base64.b64decode(video_url_string)
+        video_url = base64.b64decode(encryption_video_url).decode(errors="ignore")
     except TypeError:
         return None
-    video_url = video_url.decode(errors="ignore")
     if video_url.find("http") != 0:
         return None
     return video_url
