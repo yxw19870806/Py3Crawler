@@ -117,14 +117,13 @@ def get_audio_play_page(audio_en_word_id):
         else:
             raise crawler.CrawlerException("歌曲原始地址解密歌曲地址失败\n%s" % audio_source_url)
     else:  # 视频
-        video_source_string = tool.find_sub_string(audio_play_response_content, "video_url: '", "',")
-        if not video_source_string:
+        encryption_video_url = tool.find_sub_string(audio_play_response_content, "video_url: '", "',")
+        if not encryption_video_url:
             raise crawler.CrawlerException("页面截取加密视频地址失败\n%s" % audio_play_response_content)
         try:
-            video_url = base64.b64decode(video_source_string)
+            video_url = "https:" + base64.b64decode(encryption_video_url).decode(errors="ignore")
         except TypeError:
-            raise crawler.CrawlerException("歌曲加密地址解密失败\n%s" % video_source_string)
-        video_url = "https:" + video_url.decode()
+            raise crawler.CrawlerException("歌曲加密地址解密失败\n%s" % encryption_video_url)
         result["audio_url"] = video_url
     return result
 
