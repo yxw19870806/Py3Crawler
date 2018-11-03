@@ -68,9 +68,9 @@ def main():
         # 存档位置
         for account_id in account_list_from_api:
             if account_id not in vLiao_obj.account_list:
-                vLiao_obj.account_list[account_id] = [account_id, "0", account_list_from_api[account_id]]
+                vLiao_obj.account_list[account_id] = [str(account_id), "0", account_list_from_api[account_id]]
         temp_list = [vLiao_obj.account_list[key] for key in sorted(vLiao_obj.account_list.keys())]
-        file.write_file(tool.list_to_string(temp_list), vLiao_obj.account_list, file.WRITE_FILE_TYPE_REPLACE)
+        file.write_file(tool.list_to_string(temp_list), vLiao_obj.save_data_path, file.WRITE_FILE_TYPE_REPLACE)
 
 
 if __name__ == "__main__":
