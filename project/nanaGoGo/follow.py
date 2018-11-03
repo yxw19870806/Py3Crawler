@@ -27,7 +27,7 @@ def follow_account(account_id):
         output.print_msg("关注%s失败，请求返回结果：%s，退出程序！" % (account_id, crawler.request_failre(follow_response.status)))
         tool.process_exit()
     try:
-        crawler.get_json_value(follow_response.json_data, "data", type_check=None)
+        crawler.get_json_value(follow_response.json_data, "data", value_check=None)
         output.print_msg("关注%s成功" % account_id)
         return True
     except crawler.CrawlerException:
