@@ -43,8 +43,8 @@ def get_one_page_photo(account_id, page_count):
         result_photo_info["photo_id"] = crawler.get_json_value(photo_info, "photo", "id", type_check=int)
         # 获取图片地址
         for key_name in ["sq300_url", "sq150_url"]:
-            photo_url = crawler.get_json_value(photo_info, "photo", key_name, is_raise_exception=False, type_check=str)
-            if photo_url is not None:
+            photo_url = crawler.get_json_value(photo_info, "photo", key_name, default_value="", type_check=str)
+            if photo_url:
                 if photo_url.find("-350x600.") == -1:
                     raise crawler.CrawlerException("返回信息截取图片地址失败\n%s" % photo_info)
                 result_photo_info["photo_url"] = photo_url

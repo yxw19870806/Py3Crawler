@@ -23,24 +23,27 @@ def follow_account(account_id):
     if follow_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         output.print_msg("关注%s失败，请求返回结果：%s" % (account_id, crawler.request_failre(follow_response.status)))
         tool.process_exit()
-    return_code = crawler.get_json_value(follow_response.json_data, "code", is_raise_exception=False, type_check=int)
-    if return_code is None:
-        output.print_msg("关注%s失败，请求返回结果：%s" % (account_id, crawler.request_failre(follow_response.status)))
-        tool.process_exit()
-    if return_code == 100000:
-        output.print_msg("关注%s成功" % account_id)
-        time.sleep(5)
-        return True
-    elif return_code == 100027:
-        output.print_msg("关注%s失败，连续关注太多用户需要输入验证码，等待一会儿继续尝试" % account_id)
-        # sleep 一段时间后再试
-        time.sleep(60)
-    elif return_code == 100001:
-        output.print_msg("达到今日关注上限，退出程序" % account_id)
-        tool.process_exit()
-    else:
+    try:
+        return_code = crawler.get_json_value(follow_response.json_data, "code", type_check=int)
+    except crawler.CrawlerException():
         output.print_msg("关注%s失败，返回内容：%s，退出程序！" % (account_id, follow_response.json_data))
         tool.process_exit()
+    else:
+        if return_code == 100000:
+            output.print_msg("关注%s成功" % account_id)
+            time.sleep(5)
+            return True
+        elif return_code == 100027:
+            output.print_msg("关注%s失败，连续关注太多用户需要输入验证码，等待一会儿继续尝试" % account_id)
+            # sleep 一段时间后再试
+            time.sleep(60)
+        elif return_code == 100001:
+            output.print_msg("达到今日关注上限，退出程序" % account_id)
+            tool.process_exit()
+        else:
+            output.print_msg("关注%s失败，返回内容：%s，退出程序！" % (account_id, follow_response.json_data))
+            tool.process_exit()
+
     return False
 
 

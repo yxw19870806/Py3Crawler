@@ -82,8 +82,8 @@ def get_audio_info_page(audio_id):
     result["audio_title"] = crawler.get_json_value(audio_play_response.json_data, "title", type_check=str)
     # 获取音频地址
     for key_name in ["play_path_64", "play_path_32", "play_path"]:
-        audio_url = crawler.get_json_value(audio_play_response.json_data, key_name, is_raise_exception=False, type_check=str)
-        if audio_url is not None:
+        audio_url = crawler.get_json_value(audio_play_response.json_data, key_name, default_value="", type_check=str)
+        if audio_url:
             result["audio_url"] = audio_url
             break
     else:

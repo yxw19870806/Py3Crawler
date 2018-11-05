@@ -99,9 +99,9 @@ def get_album_page_by_selenium(album_id):
     chrome.get(album_url)
     for log_info in chrome.get_log("performance"):
         log_message = tool.json_decode(crawler.get_json_value(log_info, "message", type_check=str))
-        if crawler.get_json_value(log_message, "message", "method", is_raise_exception=False, type_check=str) == "Network.requestWillBeSent":
-            video_info_url = crawler.get_json_value(log_message, "message", "params", "request", "url", is_raise_exception=False, type_check=str)
-            if video_info_url is not None and video_info_url.find("//ib.365yg.com/video/urls/") > 0:
+        if crawler.get_json_value(log_message, "message", "method", default_value="", type_check=str) == "Network.requestWillBeSent":
+            video_info_url = crawler.get_json_value(log_message, "message", "params", "request", "url", default_value=False, type_check=str)
+            if video_info_url.find("//ib.365yg.com/video/urls/") > 0:
                 video_info_url = video_info_url.replace("&callback=axiosJsonpCallback1", "")
                 break
     else:

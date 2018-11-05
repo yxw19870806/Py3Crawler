@@ -269,7 +269,7 @@ def get_post_page(post_url, post_id, is_safe_mode):
         script_json = tool.json_decode(script_json_html)
         if script_json is None:
             raise crawler.CrawlerException("页面脚本数据解析失败\n%s" % script_json)
-        image_info = crawler.get_json_value(script_json, "image", is_raise_exception=False)
+        image_info = crawler.get_json_value(script_json, "image", default_value=None)
         if image_info is None:
             pass
         elif isinstance(image_info, dict):
