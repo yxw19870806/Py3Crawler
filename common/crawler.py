@@ -456,8 +456,8 @@ def get_time():
 # 支持的kwargs
 #       original_data
 #       default_value
-#       is_raise_exception
 #       type_check
+#       value_check
 def get_json_value(json_data, *args, **kwargs):
     if "original_data" is kwargs:
         original_data = kwargs["original_data"]
@@ -517,12 +517,10 @@ def get_json_value(json_data, *args, **kwargs):
         if value_error:
             exception_string = "'%s'字段取值不正确\n%s" % (last_arg, original_data)
     if exception_string:
-        if "is_raise_exception" in kwargs:
-            raise CrawlerException(exception_string)
+        if "default_value" in kwargs:
+            return kwargs["default_value"]
         else:
-            if "default_value" in kwargs:
-                return kwargs["default_value"]
-            return None
+            raise CrawlerException(exception_string)
     return json_data
 
 
