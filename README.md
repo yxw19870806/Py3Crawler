@@ -48,7 +48,6 @@ Visual Studio Installer安装完毕后，在工作负载标签下选择 'Visual 
 * (不推荐) 如果未安装Visual C++ 生成工具和swig，请运行install/install.bat<br>
 (Don't suggest) If you haven't installed Visual C++ Build Tools and swig for windows, you can run install/install_whl.bat<br>
 
-
 # Support website / App
 * [Instagram](https://www.instagram.com/)
 * [Twitter](https://twitter.com/)
@@ -86,6 +85,8 @@ Visual Studio Installer安装完毕后，在工作负载标签下选择 'Visual 
 * /common/path.py  操作系统路径相关类，创建/删除目录，移动/复制文件或文件夹等操作<br>
 * /common/portListenerEvent.py  端口监听类，可以通过向指定端口发送请求暂停/重启/立刻结束爬虫（默认在下一次网络请求时阻塞线程）<br>
 * /common/tool.py  其他一些公共方法类，如读写文件，字符串截取，字符串和列表的转化等
+* /common/log_config.json  日志类的配置文件
+* /common/net_config.json  网络通信类的配置文件
 2. /install，项目依赖的一些扩展包的安装文件（使用pip install）
 3. /project，爬虫项目
 
@@ -93,3 +94,4 @@ Visual Studio Installer安装完毕后，在工作负载标签下选择 'Visual 
 * **install/install_whl.bat** 中使用的PyHook（用于在windows中监听鼠标、键盘事件）在python3下有兼容性问题<br>
 如果前台激活了存在非ascii字符的窗口，会抛出异常（类似于 TypeError: KeyboardSwitch() missing 8 required positional arguments: 'msg', 'vk_code', 'scan_code', 'ascii', 'flags', 'time', 'hwnd', and 'win_name'）、甚至导致进程退出<br>
 如遇到该问题，可安装Visual C++ 生成工具和swig后使用**install/install.bat**中的PyHook3替换；或者在config.ini中禁用键盘事件监听功能
+* 一些较大文件会自动开启多线程下载，有小几率可能无法检测因网络原因导致的部分分段下载失败，可在/common/net_config.json中将ENABLE_MULTI_THREAD_DOWNLOAD设置为False
