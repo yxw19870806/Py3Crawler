@@ -154,7 +154,6 @@ def get_video_page(video_id):
     decrypt_function_step = []  # signature生成步骤
     for sub_url_encoded_fmt_stream_map in crawler.get_json_value(script_json, "args", "url_encoded_fmt_stream_map", type_check=str).split(","):
         video_resolution = video_url = signature = None
-        is_skip = False
         for sub_param in sub_url_encoded_fmt_stream_map.split("&"):
             key, value = sub_param.split("=", 1)
             if key == "type":  # 视频类型
@@ -162,7 +161,6 @@ def get_video_page(video_id):
                 if video_type.find("video/mp4") == 0:
                     pass  # 只要mp4类型的
                 elif video_type.find("video/webm") == 0 or video_type.find("video/3gpp") == 0:
-                    is_skip = True  # 跳过
                     break
                 else:
                     log.notice("未知视频类型：" + video_type)
@@ -199,7 +197,7 @@ def get_video_page(video_id):
                 signature = decrypt_signature(decrypt_function_step, value)
             elif key == "sig":
                 signature = value
-        if is_skip:
+        else:
             continue
         if video_resolution is None or video_url is None:
             log.notice("未知视频未知视频参数：" + script_json)
@@ -220,8 +218,8 @@ def get_video_page(video_id):
             if resolution > FIRST_CHOICE_RESOLUTION:
                 result["video_url"] = resolution_to_url[FIRST_CHOICE_RESOLUTION]
                 break
-        # 如果还是没有，则所有视频中分辨率最大的那个
-        if result["video_url"] is None:
+        else:
+            # 如果还是没有，则所有视频中分辨率最大的那个
             result["video_url"] = resolution_to_url[max(resolution_to_url)]
     # 获取视频发布时间
     video_time_string = tool.find_sub_string(video_play_response_content, '"dateText":{"simpleText":"', '"},').strip()
