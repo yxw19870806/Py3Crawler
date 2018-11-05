@@ -13,6 +13,7 @@ import traceback
 import urllib.parse
 from common import *
 from project.meipai import meipai
+from project.miaopai import miaopai
 
 EACH_PAGE_PHOTO_COUNT = 20  # 每次请求获取的图片数量
 INIT_SINCE_ID = "9999999999999999"
@@ -151,14 +152,7 @@ def get_video_url(video_play_url):
     if video_play_url.find("miaopai.com/") >= 0:  # 秒拍
         if video_play_url.find("miaopai.com/show/") >= 0:
             video_id = tool.find_sub_string(video_play_url, "miaopai.com/show/", ".htm")
-            video_info_url = "http://gslb.miaopai.com/stream/%s.json" % video_id
-            query_data = {"token": ""}
-            video_info_response = net.http_request(video_info_url, method="GET", fields=query_data, json_decode=True)
-            if video_info_response.status != net.HTTP_RETURN_CODE_SUCCEED:
-                raise crawler.CrawlerException(crawler.request_failre(video_info_response.status))
-            for video_info in crawler.get_json_value(video_info_response.json_data, "result", type_check=str):
-                video_url = crawler.get_json_value(video_info, "scheme", type_check=str) + crawler.get_json_value(video_info, "host", type_check=str) + crawler.get_json_value(video_info, "path", type_check=str)
-                break
+            video_url = miaopai.get_video_info_page(video_id)["video_url"]
         # http://n.miaopai.com/media/SJ9InO25bxrtVhOfGA3KoniJM3gP2XX0.htm
         elif video_play_url.find("miaopai.com/media/") >= 0:
             video_id = tool.find_sub_string(video_play_url, "miaopai.com/media/", ".htm")
