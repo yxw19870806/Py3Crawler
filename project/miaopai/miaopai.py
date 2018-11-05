@@ -65,14 +65,31 @@ def get_video_info_page(video_id):
     result = {
         "video_url": None,  # 视频地址
     }
-    if video_info_response.status != net.HTTP_RETURN_CODE_SUCCEED:
+    if video_info_response.status == 403:
+        return get_video_info_page_new(video_id)
+    elif video_info_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(video_info_response.status))
     # 获取视频地址
     for video_info in crawler.get_json_value(video_info_response.json_data, "result", type_check=list):
         result["video_url"].append(crawler.get_json_value(video_info, "scheme", type_check=str) + crawler.get_json_value(video_info, "host", type_check=str) + crawler.get_json_value(video_info, "path", type_check=str))
         break
-    if result["video_url"] is None:
+    else:
         raise crawler.get_json_value("返回信息截取视频地址失败\n%s" % video_info_response.json_data)
+    return result
+
+
+# 获取指定id视频的详情页（新版本API）
+def get_video_info_page_new(video_id):
+    # https://n.miaopai.com/api/aj_media/info.json?smid=k3l02GEPFQqCnn1bkT5S6jD0-~m8ekb6
+    video_info_url = "https://n.miaopai.com/api/aj_media/info.json"
+    query_data = {"smid": video_id}
+    result = {
+        "video_url": None,  # 视频地址
+    }
+    video_info_response = net.http_request(video_info_url, method="GET", fields=query_data, json_decode=True, is_gzip=False)
+    if video_info_response.status != net.HTTP_RETURN_CODE_SUCCEED:
+        raise crawler.CrawlerException(crawler.request_failre(video_info_response.status))
+    result["video_url"] = crawler.get_json_value(video_info_response.json_data, "data", "meta_data", 0, "play_urls", "n", type_check=str)
     return result
 
 
