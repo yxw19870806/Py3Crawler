@@ -69,10 +69,10 @@ def get_one_page_video(account_id, token):
         try:
             result["channel_name"] = crawler.get_json_value(script_json, "metadata", "channelMetadataRenderer", "title", type_check=str)
         except crawler.CrawlerException:
-            reason = crawler.get_json_value(script_json, "alerts", "alertRenderer", "text", "simpleText", is_raise_exception=False, type_check=str)
+            reason = crawler.get_json_value(script_json, "alerts", "alertRenderer", "text", "simpleText", default_value="", type_check=str)
             if reason == "This channel does not exist.":
                 raise crawler.CrawlerException("账号不存在")
-            elif reason is not None:
+            elif not reason:
                 raise crawler.CrawlerException("账号无法访问，原因：%s" % reason)
             else:
                 raise
@@ -86,7 +86,7 @@ def get_one_page_video(account_id, token):
             video_list_json = crawler.get_json_value(video_tab_json, "gridRenderer", original_data=script_json, type_check=dict)
         except crawler.CrawlerException:
             # 没有上传过任何视频
-            if crawler.get_json_value(video_tab_json, "messageRenderer", "text", "simpleText", is_raise_exception=False, type_check=str) == "This channel has no videos.":
+            if crawler.get_json_value(video_tab_json, "messageRenderer", "text", "simpleText", default_value="", type_check=str) == "This channel has no videos.":
                 return result
             raise
     else:
@@ -106,7 +106,7 @@ def get_one_page_video(account_id, token):
         result["video_id_list"].append(crawler.get_json_value(item, "gridVideoRenderer", "videoId", type_check=str))
     # 获取下一页token
     if crawler.check_sub_key(("continuations",), video_list_json):
-        result["next_page_token"] = crawler.get_json_value(video_list_json, "continuations", 0, "nextContinuationData", "continuation", is_raise_exception=False, type_check=str)
+        result["next_page_token"] = crawler.get_json_value(video_list_json, "continuations", 0, "nextContinuationData", "continuation", type_check=str)
     return result
 
 

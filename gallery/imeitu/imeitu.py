@@ -44,7 +44,7 @@ def get_album_page(album_id):
     try:
         response_data = crawler.get_json_value(api_response.json_data, "data", type_check=dict)
     except crawler.CrawlerException:
-        if crawler.get_json_value(api_response.json_data, "msg", is_raise_exception=False, type_check=str) == "该动态已被删除":
+        if crawler.get_json_value(api_response.json_data, "msg", default_value="", type_check=str) == "该动态已被删除":
             result["is_delete"] = True
             return result
         raise

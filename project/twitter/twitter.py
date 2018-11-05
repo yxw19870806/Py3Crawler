@@ -153,8 +153,8 @@ def get_video_play_page(tweet_id):
     try:
         file_url = crawler.get_json_value(video_play_response.json_data, "track", "playbackUrl", type_check=str)
     except crawler.CrawlerException:
-        file_url = crawler.get_json_value(video_play_response.json_data, "track", "vmapUrl", is_raise_exception=False, type_check=str)
-        if file_url is None:
+        file_url = crawler.get_json_value(video_play_response.json_data, "track", "vmapUrl", default_value="", type_check=str)
+        if not file_url:
             raise
     file_type = net.get_file_type(file_url)
     if file_type == "m3u8":  # https://api.twitter.com/1.1/videos/tweet/config/996368816174084097.json
