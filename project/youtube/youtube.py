@@ -152,7 +152,8 @@ def get_video_page(video_id):
     # 获取视频地址
     resolution_to_url = {}  # 各个分辨率下的视频地址
     decrypt_function_step = []  # signature生成步骤
-    for sub_url_encoded_fmt_stream_map in crawler.get_json_value(script_json, "args", "url_encoded_fmt_stream_map", type_check=str).split(","):
+    url_encoded_fmt_stream_map_list = crawler.get_json_value(script_json, "args", "url_encoded_fmt_stream_map", type_check=str).split(",")
+    for sub_url_encoded_fmt_stream_map in url_encoded_fmt_stream_map_list:
         video_resolution = video_url = signature = None
         for sub_param in sub_url_encoded_fmt_stream_map.split("&"):
             key, value = sub_param.split("=", 1)
@@ -164,6 +165,7 @@ def get_video_page(video_id):
                     break
                 else:
                     log.notice("未知视频类型：" + video_type)
+                    break
             elif key == "quality":  # 视频画质
                 if value == "tiny":
                     video_resolution = 144
@@ -198,14 +200,13 @@ def get_video_page(video_id):
             elif key == "sig":
                 signature = value
         else:
-            continue
-        if video_resolution is None or video_url is None:
-            log.notice("未知视频未知视频参数：" + script_json)
-            continue
-        # 加上signature参数
-        if signature is not None:
-            video_url += "&signature=" + signature
-        resolution_to_url[video_resolution] = video_url
+            if video_resolution is None or video_url is None:
+                log.notice("未知视频未知视频参数：%s" % url_encoded_fmt_stream_map_list)
+                continue
+            # 加上signature参数
+            if signature is not None:
+                video_url += "&signature=" + signature
+            resolution_to_url[video_resolution] = video_url
     if len(resolution_to_url) == 0:
         raise crawler.CrawlerException("视频地址解析错误\n%s" % script_json)
     # 优先使用配置中的分辨率
