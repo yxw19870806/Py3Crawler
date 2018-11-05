@@ -84,7 +84,7 @@ def get_video_page(video_id):
         video_list = crawler.get_json_value(script_json, "videoModel", "sources", "mp4", type_check=dict)
     except crawler.CrawlerException:
         video_list = {}
-        for resolution_string, video_info in crawler.get_json_value(script_json, "videoModel", "vr", "sources", default_value={}, is_raise_exception=False, type_check=list).items():
+        for resolution_string, video_info in crawler.get_json_value(script_json, "videoModel", "vr", "sources", default_value={}, type_check=list).items():
             video_list[resolution_string] = crawler.get_json_value(video_info, "downloadUrl", original_data=script_json, type_check=str)
         if len(video_list) == 0:
             raise

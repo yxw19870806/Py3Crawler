@@ -78,7 +78,7 @@ def _do_login(email, password):
     header_list = {"referer": "https://www.instagram.com/", "x-csrftoken": COOKIE_INFO["csrftoken"]}
     login_response = net.http_request(login_url, method="POST", fields=login_post, cookies_list=COOKIE_INFO, header_list=header_list, json_decode=True)
     if login_response.status == net.HTTP_RETURN_CODE_SUCCEED:
-        if crawler.get_json_value(login_response.json_data, "authenticated", default_value=False, is_raise_exception=False, type_check=bool) is True:
+        if crawler.get_json_value(login_response.json_data, "authenticated", default_value=False, type_check=bool) is True:
             set_cookie = net.get_cookies_from_response_header(login_response.headers)
             if "sessionid" in set_cookie:
                 COOKIE_INFO["sessionid"] = set_cookie["sessionid"]
