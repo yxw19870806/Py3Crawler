@@ -134,8 +134,7 @@ class Download(crawler.DownloadThread):
             # 获取相册id
             album_id = get_album_id(album_url)
             if album_id is None:
-                self.error("相册地址%s解析相册id失败" % album_url)
-                tool.process_exit()
+                raise crawler.CrawlerException("相册地址%s解析相册id失败" % album_url)
 
             # 检查是否达到存档记录
             if int(album_id) > int(self.account_info[1]):
