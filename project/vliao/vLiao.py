@@ -94,7 +94,7 @@ def check_token(user_id, user_key):
     }
     index_response = net.http_request(index_url, method="POST", fields=post_data, json_decode=True)
     if index_response.status == net.HTTP_RETURN_CODE_SUCCEED:
-        return crawler.get_json_value(index_response.json_data, "result", default_value=False, is_raise_exception=False, type_check=bool)
+        return crawler.get_json_value(index_response.json_data, "result", default_value=False, type_check=bool)
     return False
 
 

@@ -338,8 +338,8 @@ def get_account_inventory(account_id):
                     item_list[class_id]["type"] = crawler.get_json_value(tag_info, "localized_tag_name", type_check=str)
                     break
         # 下一页起始asset id
-        if crawler.get_json_value(api_response.json_data, "more_items", default_value=0, is_raise_exception=False, type_check=int) == 1:
-            response_assert_id = crawler.get_json_value(api_response.json_data, "last_assetid", default_value=last_assert_id, is_raise_exception=False, type_check=str)
+        if crawler.get_json_value(api_response.json_data, "more_items", default_value=0, type_check=int) == 1:
+            response_assert_id = crawler.get_json_value(api_response.json_data, "last_assetid", default_value=last_assert_id, type_check=str)
             if last_assert_id != response_assert_id:
                 last_assert_id = api_response.json_data["last_assetid"]
                 page_count += 1
