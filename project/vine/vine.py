@@ -166,7 +166,6 @@ class Download(crawler.DownloadThread):
             else:
                 self.is_find = True
 
-        self.main_thread_check()  # 检测主线程运行状态
         video_index = int(self.account_info[1]) + 1
         self.step("开始下载第%s个视频 %s" % (video_index, video_response["video_url"]))
 

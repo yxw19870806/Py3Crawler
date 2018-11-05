@@ -275,7 +275,6 @@ class Download(crawler.DownloadThread):
         video_info_list = []
         # 寻找这一页符合条件的视频
         for video_info in mylist_index_response["video_info_list"]:
-            self.main_thread_check()  # 检测主线程运行状态
             # 检查是否达到存档记录
             if video_info["video_id"] > int(self.account_info[1]):
                 video_info_list.append(video_info)

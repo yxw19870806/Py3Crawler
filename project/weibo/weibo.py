@@ -388,7 +388,6 @@ class Download(crawler.DownloadThread):
             self.step("第%s个视频 %s 跳过" % (video_index, video_play_url))
             return
 
-        self.main_thread_check()  # 检测主线程运行状态
         self.step("开始下载第%s个视频 %s" % (video_index, video_url))
 
         video_file_path = os.path.join(self.main_thread.video_download_path, self.display_name, "%04d.mp4" % video_index)

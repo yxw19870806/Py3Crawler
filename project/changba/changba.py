@@ -244,7 +244,6 @@ class Download(crawler.DownloadThread):
             self.error("歌曲%s《%s》异常，跳过" % (audio_info["audio_key"], audio_info["audio_title"]))
             return
 
-        self.main_thread_check()  # 检测主线程运行状态
         self.step("开始下载歌曲%s《%s》 %s" % (audio_info["audio_key"], audio_info["audio_title"], audio_play_response["audio_url"]))
 
         file_type = audio_play_response["audio_url"].split(".")[-1]

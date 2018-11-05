@@ -520,7 +520,6 @@ class Download(crawler.DownloadThread):
             self.error("视频%s不存在，跳过" % video_id)
             return
 
-        self.main_thread_check()  # 检测主线程运行状态
         self.step("开始下载视频%s《%s》 %s" % (video_id, video_response["video_title"], video_response["video_url"]))
 
         video_file_path = os.path.join(self.main_thread.video_download_path, self.display_name, "%s - %s.mp4" % (video_id, path.filter_text(video_response["video_title"])))
