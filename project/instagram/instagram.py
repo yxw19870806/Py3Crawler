@@ -363,7 +363,6 @@ class Download(crawler.DownloadThread):
         # 视频下载
         video_index = int(self.account_info[3]) + 1
         if self.main_thread.is_download_video and (media_info["is_group"] or media_info["is_video"]):
-            self.main_thread_check()  # 检测主线程运行状态
             # 如果图片那里没有获取过媒体页面，需要重新获取一下
             if media_response is None:
                 # 获取媒体详细页
