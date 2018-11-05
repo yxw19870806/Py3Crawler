@@ -147,7 +147,6 @@ def get_one_page_video(account_page_id, since_id):
 
 # 从视频播放页面中提取下载地址
 def get_video_url(video_play_url):
-    video_url = None
     # http://miaopai.com/show/Gmd7rwiNrc84z5h6S9DhjQ__.htm
     if video_play_url.find("miaopai.com/") >= 0:  # 秒拍
         if video_play_url.find("miaopai.com/show/") >= 0:
@@ -156,16 +155,9 @@ def get_video_url(video_play_url):
         # http://n.miaopai.com/media/SJ9InO25bxrtVhOfGA3KoniJM3gP2XX0.htm
         elif video_play_url.find("miaopai.com/media/") >= 0:
             video_id = tool.find_sub_string(video_play_url, "miaopai.com/media/", ".htm")
-            video_info_url = "https://n.miaopai.com/api/aj_media/info.json"
-            query_data = {"smid": video_id}
-            video_info_response = net.http_request(video_info_url, method="GET", fields=query_data, json_decode=True, is_gzip=False)
-            if video_info_response.status != net.HTTP_RETURN_CODE_SUCCEED:
-                raise crawler.CrawlerException(crawler.request_failre(video_info_response.status))
-            video_url = crawler.get_json_value(video_info_response.json_data, "data", "meta_data", 0, "play_urls", "n", type_check=str)
+            video_url = miaopai.get_video_info_page_new(video_id)["video_url"]
         else:
             raise crawler.CrawlerException("未知的第三方视频\n%s" % video_play_url)
-        if video_url is None:
-            raise crawler.CrawlerException("返回信息匹配视频地址失败\n%s" % video_info_response.json_data)
     # https://video.weibo.com/show?fid=1034:e608e50d5fa95410748da61a7dfa2bff
     elif video_play_url.find("video.weibo.com/show?fid=") >= 0:  # 微博视频
         cookies_list = {"SUB": COOKIE_INFO["SUB"]}
