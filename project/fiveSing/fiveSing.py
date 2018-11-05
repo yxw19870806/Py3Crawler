@@ -196,7 +196,6 @@ class Download(crawler.DownloadThread):
             self.error("%s歌曲%s《%s》解析失败，原因：%s" % (audio_type_name, audio_info["audio_id"], audio_info["audio_title"], e.message))
             return
 
-        self.main_thread_check()  # 检测主线程运行状态
         self.step("开始下载%s歌曲%s《%s》 %s" % (audio_type_name, audio_info["audio_id"], audio_info["audio_title"], audio_info_response["audio_url"]))
 
         file_type = net.get_file_type(audio_info_response["audio_url"])

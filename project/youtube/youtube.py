@@ -69,10 +69,10 @@ def get_one_page_video(account_id, token):
         try:
             result["channel_name"] = crawler.get_json_value(script_json, "metadata", "channelMetadataRenderer", "title", type_check=str)
         except crawler.CrawlerException:
-            reason = crawler.get_json_value(script_json, "alerts", "alertRenderer", "text", "simpleText", is_raise_exception=False, type_check=str)
+            reason = crawler.get_json_value(script_json, "alerts", "alertRenderer", "text", "simpleText", default_value="", type_check=str)
             if reason == "This channel does not exist.":
                 raise crawler.CrawlerException("账号不存在")
-            elif reason is not None:
+            elif not reason:
                 raise crawler.CrawlerException("账号无法访问，原因：%s" % reason)
             else:
                 raise
@@ -86,7 +86,7 @@ def get_one_page_video(account_id, token):
             video_list_json = crawler.get_json_value(video_tab_json, "gridRenderer", original_data=script_json, type_check=dict)
         except crawler.CrawlerException:
             # 没有上传过任何视频
-            if crawler.get_json_value(video_tab_json, "messageRenderer", "text", "simpleText", is_raise_exception=False, type_check=str) == "This channel has no videos.":
+            if crawler.get_json_value(video_tab_json, "messageRenderer", "text", "simpleText", default_value="", type_check=str) == "This channel has no videos.":
                 return result
             raise
     else:
@@ -106,7 +106,7 @@ def get_one_page_video(account_id, token):
         result["video_id_list"].append(crawler.get_json_value(item, "gridVideoRenderer", "videoId", type_check=str))
     # 获取下一页token
     if crawler.check_sub_key(("continuations",), video_list_json):
-        result["next_page_token"] = crawler.get_json_value(video_list_json, "continuations", 0, "nextContinuationData", "continuation", is_raise_exception=False, type_check=str)
+        result["next_page_token"] = crawler.get_json_value(video_list_json, "continuations", 0, "nextContinuationData", "continuation", type_check=str)
     return result
 
 
@@ -152,9 +152,9 @@ def get_video_page(video_id):
     # 获取视频地址
     resolution_to_url = {}  # 各个分辨率下的视频地址
     decrypt_function_step = []  # signature生成步骤
-    for sub_url_encoded_fmt_stream_map in crawler.get_json_value(script_json, "args", "url_encoded_fmt_stream_map", type_check=str).split(","):
+    url_encoded_fmt_stream_map_list = crawler.get_json_value(script_json, "args", "url_encoded_fmt_stream_map", type_check=str).split(",")
+    for sub_url_encoded_fmt_stream_map in url_encoded_fmt_stream_map_list:
         video_resolution = video_url = signature = None
-        is_skip = False
         for sub_param in sub_url_encoded_fmt_stream_map.split("&"):
             key, value = sub_param.split("=", 1)
             if key == "type":  # 视频类型
@@ -162,10 +162,10 @@ def get_video_page(video_id):
                 if video_type.find("video/mp4") == 0:
                     pass  # 只要mp4类型的
                 elif video_type.find("video/webm") == 0 or video_type.find("video/3gpp") == 0:
-                    is_skip = True  # 跳过
                     break
                 else:
                     log.notice("未知视频类型：" + video_type)
+                    break
             elif key == "quality":  # 视频画质
                 if value == "tiny":
                     video_resolution = 144
@@ -199,15 +199,14 @@ def get_video_page(video_id):
                 signature = decrypt_signature(decrypt_function_step, value)
             elif key == "sig":
                 signature = value
-        if is_skip:
-            continue
-        if video_resolution is None or video_url is None:
-            log.notice("未知视频未知视频参数：" + script_json)
-            continue
-        # 加上signature参数
-        if signature is not None:
-            video_url += "&signature=" + signature
-        resolution_to_url[video_resolution] = video_url
+        else:
+            if video_resolution is None or video_url is None:
+                log.notice("未知视频未知视频参数：%s" % url_encoded_fmt_stream_map_list)
+                continue
+            # 加上signature参数
+            if signature is not None:
+                video_url += "&signature=" + signature
+            resolution_to_url[video_resolution] = video_url
     if len(resolution_to_url) == 0:
         raise crawler.CrawlerException("视频地址解析错误\n%s" % script_json)
     # 优先使用配置中的分辨率
@@ -220,8 +219,8 @@ def get_video_page(video_id):
             if resolution > FIRST_CHOICE_RESOLUTION:
                 result["video_url"] = resolution_to_url[FIRST_CHOICE_RESOLUTION]
                 break
-        # 如果还是没有，则所有视频中分辨率最大的那个
-        if result["video_url"] is None:
+        else:
+            # 如果还是没有，则所有视频中分辨率最大的那个
             result["video_url"] = resolution_to_url[max(resolution_to_url)]
     # 获取视频发布时间
     video_time_string = tool.find_sub_string(video_play_response_content, '"dateText":{"simpleText":"', '"},').strip()
@@ -522,7 +521,6 @@ class Download(crawler.DownloadThread):
             self.error("视频%s不存在，跳过" % video_id)
             return
 
-        self.main_thread_check()  # 检测主线程运行状态
         self.step("开始下载视频%s《%s》 %s" % (video_id, video_response["video_title"], video_response["video_url"]))
 
         video_file_path = os.path.join(self.main_thread.video_download_path, self.display_name, "%s - %s.mp4" % (video_id, path.filter_text(video_response["video_title"])))

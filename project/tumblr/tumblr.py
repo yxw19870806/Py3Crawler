@@ -269,7 +269,7 @@ def get_post_page(post_url, post_id, is_safe_mode):
         script_json = tool.json_decode(script_json_html)
         if script_json is None:
             raise crawler.CrawlerException("页面脚本数据解析失败\n%s" % script_json)
-        image_info = crawler.get_json_value(script_json, "image", is_raise_exception=False)
+        image_info = crawler.get_json_value(script_json, "image", default_value=None)
         if image_info is None:
             pass
         elif isinstance(image_info, dict):
@@ -556,7 +556,6 @@ class Download(crawler.DownloadThread):
         video_index = 1
         while self.main_thread.is_download_video and has_video:
             if video_url is None:
-                self.main_thread_check()  # 检测主线程运行状态
                 try:
                     video_play_response = get_video_play_page(self.account_id, post_info["post_id"], self.is_https)
                 except crawler.CrawlerException as e:
@@ -569,7 +568,6 @@ class Download(crawler.DownloadThread):
                 self.error("日志 %s 存在第三方视频，跳过" % post_url)
                 break
 
-            self.main_thread_check()  # 检测主线程运行状态
             self.step("日志 %s 开始下载视频 %s" % (post_info["post_id"], video_url))
 
             video_file_path = os.path.join(self.main_thread.video_download_path, self.account_id, "%012d.mp4" % post_info["post_id"])

@@ -63,17 +63,33 @@ def get_video_info_page(video_id):
     query_data = {"token": ""}
     video_info_response = net.http_request(video_info_url, method="GET", fields=query_data, json_decode=True)
     result = {
-        "video_url_list": [],  # 全部视频地址
+        "video_url": None,  # 视频地址
     }
-    if video_info_response.status != net.HTTP_RETURN_CODE_SUCCEED:
+    if video_info_response.status == 403:
+        return get_video_info_page_new(video_id)
+    elif video_info_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(video_info_response.status))
     # 获取视频地址
-    video_url_list = []
     for video_info in crawler.get_json_value(video_info_response.json_data, "result", type_check=list):
-        video_url_list.append(crawler.get_json_value(video_info, "scheme", type_check=str) + crawler.get_json_value(video_info, "host", type_check=str) + crawler.get_json_value(video_info, "path", type_check=str))
-    if len(video_url_list) == 0:
-        raise crawler.CrawlerException("返回信息匹配视频地址失败\n%s" % video_info_response.json_data)
-    result["video_url_list"] = video_url_list
+        result["video_url"].append(crawler.get_json_value(video_info, "scheme", type_check=str) + crawler.get_json_value(video_info, "host", type_check=str) + crawler.get_json_value(video_info, "path", type_check=str))
+        break
+    else:
+        raise crawler.get_json_value("返回信息截取视频地址失败\n%s" % video_info_response.json_data)
+    return result
+
+
+# 获取指定id视频的详情页（新版本API）
+def get_video_info_page_new(video_id):
+    # https://n.miaopai.com/api/aj_media/info.json?smid=k3l02GEPFQqCnn1bkT5S6jD0-~m8ekb6
+    video_info_url = "https://n.miaopai.com/api/aj_media/info.json"
+    query_data = {"smid": video_id}
+    result = {
+        "video_url": None,  # 视频地址
+    }
+    video_info_response = net.http_request(video_info_url, method="GET", fields=query_data, json_decode=True, is_gzip=False)
+    if video_info_response.status != net.HTTP_RETURN_CODE_SUCCEED:
+        raise crawler.CrawlerException(crawler.request_failre(video_info_response.status))
+    result["video_url"] = crawler.get_json_value(video_info_response.json_data, "data", "meta_data", 0, "play_urls", "n", type_check=str)
     return result
 
 
@@ -186,21 +202,13 @@ class Download(crawler.DownloadThread):
             raise
 
         file_path = os.path.join(self.main_thread.video_download_path, self.display_name, "%04d.mp4" % video_index)
-        while len(video_info_response["video_url_list"]) > 0:
-            self.main_thread_check()  # 检测主线程运行状态
-            video_url = video_info_response["video_url_list"].pop(0)
-            self.step("开始下载第%s个视频 %s" % (video_index, video_url))
+        self.step("开始下载第%s个视频 %s" % (video_index, video_info_response["video_url"]))
 
-            save_file_return = net.save_net_file(video_url, file_path)
-            if save_file_return["status"] == 1:
-                self.step("第%s个视频下载成功" % video_index)
-                break
-            else:
-                error_message = "第%s个视频 %s 下载失败，原因：%s" % (video_index, video_url, crawler.download_failre(save_file_return["code"]))
-                if len(video_url) == 0:
-                    self.error(error_message)
-                else:
-                    self.step(error_message)
+        save_file_return = net.save_net_file(video_info_response["video_url"], file_path)
+        if save_file_return["status"] == 1:
+            self.step("第%s个视频下载成功" % video_index)
+        else:
+            self.error("第%s个视频 %s 下载失败，原因：%s" % (video_index, video_info_response["video_url"], crawler.download_failre(save_file_return["code"])))
 
         # 视频下载完毕
         self.account_info[1] = str(video_index)  # 设置存档记录

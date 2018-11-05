@@ -153,8 +153,8 @@ def get_video_play_page(tweet_id):
     try:
         file_url = crawler.get_json_value(video_play_response.json_data, "track", "playbackUrl", type_check=str)
     except crawler.CrawlerException:
-        file_url = crawler.get_json_value(video_play_response.json_data, "track", "vmapUrl", is_raise_exception=False, type_check=str)
-        if file_url is None:
+        file_url = crawler.get_json_value(video_play_response.json_data, "track", "vmapUrl", default_value="", type_check=str)
+        if not file_url:
             raise
     file_type = net.get_file_type(file_url)
     if file_type == "m3u8":  # https://api.twitter.com/1.1/videos/tweet/config/996368816174084097.json
@@ -356,7 +356,6 @@ class Download(crawler.DownloadThread):
         # 视频下载
         download_complete = False
         if self.main_thread.is_download_video and media_info["has_video"]:
-            self.main_thread_check()  # 检测主线程运行状态
             # 获取视频播放地址
             try:
                 video_play_response = get_video_play_page(media_info["blog_id"])
@@ -369,7 +368,6 @@ class Download(crawler.DownloadThread):
             else:
                 self.trace("推特%s解析的视频：%s" % (media_info["blog_id"], video_play_response["video_url"]))
 
-                self.main_thread_check()  # 检测主线程运行状态
                 self.step("开始下载推特%s的视频 %s" % (media_info["blog_id"], video_play_response["video_url"]))
                 
                 # 分割后的ts格式视频

@@ -94,7 +94,7 @@ def check_token(user_id, user_key):
     }
     index_response = net.http_request(index_url, method="POST", fields=post_data, json_decode=True)
     if index_response.status == net.HTTP_RETURN_CODE_SUCCEED:
-        return crawler.get_json_value(index_response.json_data, "result", default_value=False, is_raise_exception=False, type_check=bool)
+        return crawler.get_json_value(index_response.json_data, "result", default_value=False, type_check=bool)
     return False
 
 
@@ -274,7 +274,6 @@ class Download(crawler.DownloadThread):
             raise
 
         # 视频下载
-        self.main_thread_check()  # 检测主线程运行状态
         self.step("开始下载视频 %s 《%s》 %s" % (video_info["video_id"], video_info["video_title"], video_info_response["video_url"]))
 
         video_file_path = os.path.join(self.main_thread.video_download_path, self.display_name, "%06d %s.mp4" % (video_info["video_id"], path.filter_text(video_info["video_title"])))

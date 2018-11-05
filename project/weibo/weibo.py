@@ -13,6 +13,7 @@ import traceback
 import urllib.parse
 from common import *
 from project.meipai import meipai
+from project.miaopai import miaopai
 
 EACH_PAGE_PHOTO_COUNT = 20  # 每次请求获取的图片数量
 INIT_SINCE_ID = "9999999999999999"
@@ -146,32 +147,18 @@ def get_one_page_video(account_page_id, since_id):
 
 # 从视频播放页面中提取下载地址
 def get_video_url(video_play_url):
-    video_url = None
+    video_url = ""
     # http://miaopai.com/show/Gmd7rwiNrc84z5h6S9DhjQ__.htm
     if video_play_url.find("miaopai.com/") >= 0:  # 秒拍
         if video_play_url.find("miaopai.com/show/") >= 0:
             video_id = tool.find_sub_string(video_play_url, "miaopai.com/show/", ".htm")
-            video_info_url = "http://gslb.miaopai.com/stream/%s.json" % video_id
-            query_data = {"token": ""}
-            video_info_response = net.http_request(video_info_url, method="GET", fields=query_data, json_decode=True)
-            if video_info_response.status != net.HTTP_RETURN_CODE_SUCCEED:
-                raise crawler.CrawlerException(crawler.request_failre(video_info_response.status))
-            for video_info in crawler.get_json_value(video_info_response.json_data, "result", type_check=str):
-                video_url = crawler.get_json_value(video_info, "scheme", type_check=str) + crawler.get_json_value(video_info, "host", type_check=str) + crawler.get_json_value(video_info, "path", type_check=str)
-                break
+            video_url = miaopai.get_video_info_page(video_id)["video_url"]
         # http://n.miaopai.com/media/SJ9InO25bxrtVhOfGA3KoniJM3gP2XX0.htm
         elif video_play_url.find("miaopai.com/media/") >= 0:
             video_id = tool.find_sub_string(video_play_url, "miaopai.com/media/", ".htm")
-            video_info_url = "https://n.miaopai.com/api/aj_media/info.json"
-            query_data = {"smid": video_id}
-            video_info_response = net.http_request(video_info_url, method="GET", fields=query_data, json_decode=True, is_gzip=False)
-            if video_info_response.status != net.HTTP_RETURN_CODE_SUCCEED:
-                raise crawler.CrawlerException(crawler.request_failre(video_info_response.status))
-            video_url = crawler.get_json_value(video_info_response.json_data, "data", "meta_data", 0, "play_urls", "n", type_check=str)
+            video_url = miaopai.get_video_info_page_new(video_id)["video_url"]
         else:
             raise crawler.CrawlerException("未知的第三方视频\n%s" % video_play_url)
-        if video_url is None:
-            raise crawler.CrawlerException("返回信息匹配视频地址失败\n%s" % video_info_response.json_data)
     # https://video.weibo.com/show?fid=1034:e608e50d5fa95410748da61a7dfa2bff
     elif video_play_url.find("video.weibo.com/show?fid=") >= 0:  # 微博视频
         cookies_list = {"SUB": COOKIE_INFO["SUB"]}
@@ -192,21 +179,10 @@ def get_video_url(video_play_url):
             raise crawler.CrawlerException(crawler.request_failre(video_play_response.status))
     # https://www.meipai.com/media/98089758
     elif video_play_url.find("www.meipai.com/media") >= 0:  # 美拍
-        video_play_response = net.http_request(video_play_url, method="GET")
-        if video_play_response.status != net.HTTP_RETURN_CODE_SUCCEED:
-            raise crawler.CrawlerException(crawler.request_failre(video_play_response.status))
-        video_play_response_content = video_play_response.data.decode(errors="ignore")
-        if video_play_response_content.find('<p class="error-p">为建设清朗网络空间，视频正在审核中，暂时无法播放。</p>') > 0:
-            video_url = ""
-        elif video_play_response_content.find('<p class="error-p">可能已被删除或网址输入错误,请再核对下吧~</p>') > 0:
-            video_url = ""
-        else:
-            video_url_find = re.findall('<meta content="([^"]*)" property="og:video:url"', video_play_response_content)
-            if len(video_url_find) != 1:
-                raise crawler.CrawlerException("页面匹配加密视频信息失败\n%s" % video_play_response_content)
-            video_url = meipai.decrypt_video_url(video_url_find[0])
-            if video_url is None:
-                raise crawler.CrawlerException("加密视频地址解密失败\n%s" % video_url_find[0])
+        video_id = tool.find_sub_string(video_play_url, "www.meipai.com/media")
+        video_info_response = meipai.get_video_play_page(video_id)
+        if not video_info_response["is_delete"]:
+            video_url = video_info_response["video_url"]
     # https://v.xiaokaxiu.com/v/0YyG7I4092d~GayCAhwdJQ__.html
     elif video_play_url.find("v.xiaokaxiu.com/v/") >= 0:  # 小咖秀
         video_id = video_play_url.split("/")[-1].split(".")[0]
@@ -412,7 +388,6 @@ class Download(crawler.DownloadThread):
             self.step("第%s个视频 %s 跳过" % (video_index, video_play_url))
             return
 
-        self.main_thread_check()  # 检测主线程运行状态
         self.step("开始下载第%s个视频 %s" % (video_index, video_url))
 
         video_file_path = os.path.join(self.main_thread.video_download_path, self.display_name, "%04d.mp4" % video_index)
