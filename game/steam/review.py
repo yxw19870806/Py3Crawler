@@ -47,9 +47,14 @@ def main(account_id):
     except crawler.CrawlerException as e:
         output.print_msg("个人游戏主页解析失败，原因：%s" % e.message)
         raise
+    
     for game_id in played_game_list:
         # 获取游戏信息
-        game_data = steamCommon.get_game_store_index(game_id)
+        try:
+            game_data = steamCommon.get_game_store_index(game_id)
+        except crawler.CrawlerException as e:
+            output.print_msg("游戏%s解析失败，原因：%s" % (game_id, e.message))
+            raise
 
         # 有DLC的话，遍历每个DLC
         for dlc_id in game_data["dlc_list"]:
@@ -61,7 +66,11 @@ def main(account_id):
             review_data["dlc_in_game"][dlc_id] = game_id
 
             # 获取DLC信息
-            dlc_data = steamCommon.get_game_store_index(dlc_id)
+            try:
+                dlc_data = steamCommon.get_game_store_index(dlc_id)
+            except crawler.CrawlerException as e:
+                output.print_msg("游戏%s解析失败，原因：%s" % (dlc_id, e.message))
+                raise
 
             if dlc_data["owned"]:
                 # 已经评测过了
