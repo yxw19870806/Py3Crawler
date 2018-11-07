@@ -169,6 +169,10 @@ def get_video_url(video_play_url):
             if not video_url:
                 video_url = tool.find_sub_string(video_play_response_content, 'flashvars="list=', '"')
             if not video_url:
+                if video_play_response_content.find("抱歉，网络繁忙") > 0:
+                    log.step("视频%s播放页访问异常，重试" % video_play_url)
+                    time.sleep(5)
+                    return get_video_url(video_play_url)
                 raise crawler.CrawlerException("页面截取视频地址失败\n%s" % video_play_response_content)
             video_url = urllib.parse.unquote(video_url)
             if video_url.find("//") == 0:
