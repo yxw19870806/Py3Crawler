@@ -258,6 +258,8 @@ def get_post_page(post_url, post_id, is_safe_mode):
         post_selector = pq(post_response_content).find("article")
         if post_selector.length > 1:
             post_selector = pq(post_response_content).find("article[data-post-id='%s']" % post_id)
+            if post_selector.length == 0:
+                post_selector = pq(post_response_content).find("article[id='%s']" % post_id)
         if post_selector.length == 1:
             video_url = post_selector.find("source").attr("src")
             if video_url is not None:
