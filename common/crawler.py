@@ -23,6 +23,8 @@ PROJECT_APP_ROOT_PATH = os.path.abspath(os.path.join(PROJECT_ROOT_PATH, "project
 # 应用程序（APP）目录
 # 默认当前进程的工作目录，应用在初始化时应该对该变量进行赋值
 PROJECT_APP_PATH = os.getcwd()
+# webdriver文件路径
+CHROME_WEBDRIVER_PATH = os.path.abspath(os.path.join(PROJECT_ROOT_PATH, "common/chromedriver.exe"))
 try:
     from . import browser, file, keyboardEvent, log, net, output, path, portListenerEvent, tool
 except ImportError:
