@@ -48,7 +48,7 @@ def get_account_index_page(account_id):
     chrome_options = webdriver.chrome.options.Options()
     chrome_options.add_argument('--headless')  # 不打开浏览器
     chrome_options.add_argument("user-agent=" + USER_AGENT)  # 使用指定UA
-    chrome = webdriver.Chrome(options=chrome_options)
+    chrome = webdriver.Chrome(executable_path=crawler.CHROME_WEBDRIVER_PATH, options=chrome_options)
     chrome.get("file:///" + os.path.realpath(cache_html))
     signature = chrome.find_element_by_id("result").text
     chrome.quit()
