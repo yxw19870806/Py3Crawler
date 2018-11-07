@@ -187,8 +187,10 @@ def get_video_url(video_play_url):
     elif video_play_url.find("v.xiaokaxiu.com/v/") >= 0:  # 小咖秀
         video_id = video_play_url.split("/")[-1].split(".")[0]
         video_url = "https://gslb.miaopai.com/stream/%s.mp4" % video_id
+    elif video_play_url.find("//v.youku.com/v_show/") > 0 or video_play_url.find("//www.weishi.com/t/") > 0:
+        pass
     else:  # 其他视频，暂时不支持，收集看看有没有
-        raise crawler.CrawlerException("未知的第三方视频\n%s" % video_play_url)
+        log.notice("未知的第三方视频\n%s" % video_play_url)
     return video_url
 
 
