@@ -369,13 +369,17 @@ def get_video_play_page(account_id, post_id, is_https):
     video_play_url = "%s://www.tumblr.com/video/%s/%s/0" % (protocol_type, account_id, post_id)
     video_play_response = net.http_request(video_play_url, method="GET", is_auto_redirect=False)
     result = {
+        "is_password": False,  # 是否加密
         "video_url": None,  # 视频地址
     }
     if video_play_response.status == 301:
         video_play_url = video_play_response.getheader("Location")
         if video_play_url is not None:
             video_play_response = net.http_request(video_play_url, method="GET")
-    if video_play_response.status in [403, 404]:
+    if video_play_response.status == 403 and video_play_response.data.decode(errors="ignore").find("You do not have permission to access this page.") >= 0:
+        result["is_password"] = True
+        return result
+    elif video_play_response.status == 404:
         log.step("日志%s视频信息页访问异常，重试" % post_id)
         time.sleep(30)
         return get_video_play_page(account_id, post_id, is_https)
@@ -561,6 +565,11 @@ class Download(crawler.DownloadThread):
                 except crawler.CrawlerException as e:
                     self.error("日志 %s 视频解析失败，原因：%s" % (post_url, e.message))
                     raise
+
+                if video_play_response["is_password"]:
+                    self.error("日志视频 %s 需要密码，跳过" % post_url)
+                    break
+                    
                 video_url = video_play_response["video_url"]
 
             # 第三方视频，跳过
