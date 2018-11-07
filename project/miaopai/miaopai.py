@@ -71,7 +71,7 @@ def get_video_info_page(video_id):
         raise crawler.CrawlerException(crawler.request_failre(video_info_response.status))
     # 获取视频地址
     for video_info in crawler.get_json_value(video_info_response.json_data, "result", type_check=list):
-        result["video_url"].append(crawler.get_json_value(video_info, "scheme", type_check=str) + crawler.get_json_value(video_info, "host", type_check=str) + crawler.get_json_value(video_info, "path", type_check=str))
+        result["video_url"] = crawler.get_json_value(video_info, "scheme", type_check=str) + crawler.get_json_value(video_info, "host", type_check=str) + crawler.get_json_value(video_info, "path", type_check=str)
         break
     else:
         raise crawler.get_json_value("返回信息截取视频地址失败\n%s" % video_info_response.json_data)
