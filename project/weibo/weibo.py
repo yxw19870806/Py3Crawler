@@ -391,7 +391,7 @@ class Download(crawler.DownloadThread):
             raise
 
         if video_url is "":
-            self.step("第%s个视频 %s 跳过" % (video_index, video_play_url))
+            self.error("第%s个视频 %s 跳过" % (video_index, video_play_url))
             return
 
         self.step("开始下载第%s个视频 %s" % (video_index, video_url))
