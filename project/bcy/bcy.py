@@ -94,13 +94,13 @@ def get_album_page_by_selenium(album_id):
     caps['loggingPrefs'] = {'performance': 'ALL'}  # 记录所有日志
     chrome_options = webdriver.chrome.options.Options()
     chrome_options.add_argument('--headless')  # 不打开浏览器
-    chrome = webdriver.Chrome(options=chrome_options, desired_capabilities=caps)
+    chrome = webdriver.Chrome(executable_path=crawler.CHROME_WEBDRIVER_PATH, options=chrome_options, desired_capabilities=caps)
     album_url = "https://bcy.net/item/detail/%s" % album_id
     chrome.get(album_url)
     for log_info in chrome.get_log("performance"):
         log_message = tool.json_decode(crawler.get_json_value(log_info, "message", type_check=str))
         if crawler.get_json_value(log_message, "message", "method", default_value="", type_check=str) == "Network.requestWillBeSent":
-            video_info_url = crawler.get_json_value(log_message, "message", "params", "request", "url", default_value=False, type_check=str)
+            video_info_url = crawler.get_json_value(log_message, "message", "params", "request", "url", default_value="", type_check=str)
             if video_info_url.find("//ib.365yg.com/video/urls/") > 0:
                 video_info_url = video_info_url.replace("&callback=axiosJsonpCallback1", "")
                 break
