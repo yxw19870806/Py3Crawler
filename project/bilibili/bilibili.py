@@ -508,6 +508,10 @@ class Download(crawler.DownloadThread):
             self.error("视频%s《%s》解析失败，原因：%s" % (video_info["video_id"], video_info["video_title"], e.message))
             raise
 
+        if video_play_response["is_private"]:
+            log.error("视频%s《%s》需要登录才能访问，跳过" % (video_info["video_id"], video_info["video_title"]))
+            return
+
         self.trace("视频%s《%s》解析的全部视频：%s" % (video_info["video_id"], video_info["video_title"], video_play_response["video_part_info_list"]))
         self.step("视频%s《%s》解析获取%s段视频" % (video_info["video_id"], video_info["video_title"], len(video_play_response["video_part_info_list"])))
 
