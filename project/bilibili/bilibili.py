@@ -11,6 +11,8 @@ import time
 import traceback
 from common import *
 
+COOKIE_INFO = {}
+IS_LOGIN = True
 IS_DOWNLOAD_CONTRIBUTION_VIDEO = True
 IS_DOWNLOAD_SHORT_VIDEO = True
 EACH_PAGE_COUNT = 30
@@ -19,7 +21,7 @@ EACH_PAGE_COUNT = 30
 # 检测是否已登录
 def check_login():
     api_url = "https://account.bilibili.com/home/userInfo"
-    api_response = net.http_request(api_url, method="GET", json_decode=True)
+    api_response = net.http_request(api_url, method="GET", cookies_list=COOKIE_INFO, json_decode=True)
     if api_response.status == net.HTTP_RETURN_CODE_SUCCEED:
         return crawler.get_json_value(api_response.json_data, "status", default_value=False, type_check=bool) is True
     return False
@@ -153,6 +155,7 @@ def get_video_page(video_id):
     video_play_response = net.http_request(video_play_url, method="GET")
     result = {
         "video_part_info_list": [],  # 全部视频地址
+        "is_private": False,  # 是否需要登录
     }
     if video_play_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(video_play_response.status))
@@ -160,8 +163,24 @@ def get_video_page(video_id):
     script_json = tool.json_decode(tool.find_sub_string(video_play_response_content, "window.__INITIAL_STATE__=", ";(function()"))
     if script_json is None:
         raise crawler.CrawlerException("页面截取视频信息失败\n%s" % video_play_response_content)
+    try:
+        video_part_info_list = crawler.get_json_value(script_json, "videoData", "pages", type_check=list)
+    except crawler.CrawlerException:
+        # https://www.bilibili.com/video/av256978
+        if crawler.get_json_value(script_json, "error", "message", default_value="", type_check=str) != "访问权限不足":
+            raise
+        if not IS_LOGIN:
+            result["is_private"] = True
+            return result
+        # 使用cookies再次访问
+        video_play_response = net.http_request(video_play_url, method="GET", cookies_list=COOKIE_INFO)
+        video_play_response_content = video_play_response.data.decode(errors="ignore")
+        script_json = tool.json_decode(tool.find_sub_string(video_play_response_content, "window.__INITIAL_STATE__=", ";(function()"))
+        if script_json is None:
+            raise crawler.CrawlerException("页面截取视频信息失败\n%s" % video_play_response_content)
+        video_part_info_list = crawler.get_json_value(script_json, "videoData", "pages", type_check=list)
     # 分P https://www.bilibili.com/video/av33131459
-    for video_part_info in crawler.get_json_value(script_json, "videoData", "pages", type_check=list):
+    for video_part_info in video_part_info_list:
         result_video_info = {
             "video_url_list": [],  # 视频地址
             "video_part_title": "",  # 视频分P标题
@@ -230,6 +249,7 @@ def get_audio_info_page(audio_id):
 
 class BiliBili(crawler.Crawler):
     def __init__(self, **kwargs):
+        global COOKIE_INFO
         global IS_DOWNLOAD_CONTRIBUTION_VIDEO
         global IS_DOWNLOAD_SHORT_VIDEO
         # 设置APP目录
@@ -244,16 +264,30 @@ class BiliBili(crawler.Crawler):
                 ("IS_DOWNLOAD_CONTRIBUTION_VIDEO", True, crawler.CONFIG_ANALYSIS_MODE_BOOLEAN),
                 ("IS_DOWNLOAD_SHORT_VIDEO", True, crawler.CONFIG_ANALYSIS_MODE_BOOLEAN),
             ),
+            crawler.SYS_GET_COOKIE: ("bilibili.com",),
         }
         crawler.Crawler.__init__(self, sys_config, **kwargs)
 
         # 设置全局变量，供子线程调用
+        COOKIE_INFO = self.cookie_value
         IS_DOWNLOAD_CONTRIBUTION_VIDEO = self.app_config["IS_DOWNLOAD_CONTRIBUTION_VIDEO"]
         IS_DOWNLOAD_SHORT_VIDEO = self.app_config["IS_DOWNLOAD_SHORT_VIDEO"]
 
         # 解析存档文件
         # account_name  last_video_id  last_short_video_id  last_audio_id  last_album_id
         self.account_list = crawler.read_save_data(self.save_data_path, 0, ["", "0", "0", "0", "0"])
+
+        # 检测登录状态
+        if not check_login():
+            while True:
+                input_str = input(crawler.get_time() + " 没有检测到账号登录状态，可能无法解析只对会员开放的日志，继续程序(C)ontinue？或者退出程序(E)xit？:")
+                input_str = input_str.lower()
+                if input_str in ["e", "exit"]:
+                    tool.process_exit()
+                elif input_str in ["c", "continue"]:
+                    global IS_LOGIN
+                    IS_LOGIN = False
+                    break
 
     def main(self):
         # 循环下载每个id
