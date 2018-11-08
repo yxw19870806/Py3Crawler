@@ -11,9 +11,20 @@ import time
 import traceback
 from common import *
 
+COOKIE_INFO = {}
+IS_LOGIN = True
 IS_DOWNLOAD_CONTRIBUTION_VIDEO = True
 IS_DOWNLOAD_SHORT_VIDEO = True
 EACH_PAGE_COUNT = 30
+
+
+# 检测是否已登录
+def check_login():
+    api_url = "https://account.bilibili.com/home/userInfo"
+    api_response = net.http_request(api_url, method="GET", cookies_list=COOKIE_INFO, json_decode=True)
+    if api_response.status == net.HTTP_RETURN_CODE_SUCCEED:
+        return crawler.get_json_value(api_response.json_data, "status", default_value=False, type_check=bool) is True
+    return False
 
 
 # 获取指定页数的全部视频
@@ -140,20 +151,57 @@ def get_one_page_audio(account_id, page_count):
 
 # 获取指定视频
 def get_video_page(video_id):
-    # todo 分P的视频 https://www.bilibili.com/video/av33131459
     video_play_url = "https://www.bilibili.com/video/av%s" % video_id
-    video_play_response = net.http_request(video_play_url, method="GET")
+    video_play_response = net.http_request(video_play_url, method="GET", cookies_list=COOKIE_INFO)
     result = {
-        "video_url_list": [],  # 全部视频地址
+        "video_part_info_list": [],  # 全部视频地址
+        "is_private": False,  # 是否需要登录
     }
     if video_play_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(video_play_response.status))
     video_play_response_content = video_play_response.data.decode(errors="ignore")
-    script_json = tool.json_decode(tool.find_sub_string(video_play_response_content, "window.__playinfo__=", "</script>"))
+    script_json = tool.json_decode(tool.find_sub_string(video_play_response_content, "window.__INITIAL_STATE__=", ";(function()"))
     if script_json is None:
         raise crawler.CrawlerException("页面截取视频信息失败\n%s" % video_play_response_content)
-    for sub_video_info in crawler.get_json_value(script_json, "data", "durl", type_check=list):
-        result["video_url_list"].append(crawler.get_json_value(sub_video_info, "url", type_check=str))
+    try:
+        video_part_info_list = crawler.get_json_value(script_json, "videoData", "pages", type_check=list)
+    except crawler.CrawlerException:
+        if not IS_LOGIN:
+            result["is_private"] = True
+            return result
+        raise
+    # 分P https://www.bilibili.com/video/av33131459
+    for video_part_info in video_part_info_list:
+        result_video_info = {
+            "video_url_list": [],  # 视频地址
+            "video_part_title": "",  # 视频分P标题
+        }
+        # https://api.bilibili.com/x/player/playurl?avid=149236&cid=246864&qn=112&otype=json
+        video_info_url = "https://api.bilibili.com/x/player/playurl"
+        query_data = {
+            "avid": video_id,
+            "cid": crawler.get_json_value(video_part_info, "cid", type_check=int),
+            "qn": "112",  # 上限 高清 1080P+: 112, 高清 1080P: 80, 高清 720P: 64, 清晰 480P: 32, 流畅 360P: 16
+            "otype": "json",
+        }
+        video_info_response = net.http_request(video_info_url, method="GET", fields=query_data, cookies_list=COOKIE_INFO, json_decode=True)
+        if video_info_response.status != net.HTTP_RETURN_CODE_SUCCEED:
+            raise crawler.CrawlerException("视频信息，" + crawler.request_failre(video_info_response.status))
+        if IS_LOGIN and max(crawler.get_json_value(video_info_response.json_data, "data", "accept_quality", type_check=list)) != crawler.get_json_value(video_info_response.json_data, "data", "quality", type_check=int):
+            raise crawler.CrawlerException("返回的视频分辨率不是最高的\n%s" % video_info_response.json_data)
+        try:
+            video_info_list = crawler.get_json_value(video_info_response.json_data, "data", "durl", type_check=list)
+        except crawler.CrawlerException:
+            # https://www.bilibili.com/video/av116528/?p=2
+            if crawler.get_json_value(video_info_response.json_data, "data", "message", default_value="", type_check=str) == "Novideoinfo.":
+                continue
+            raise
+        # 获取视频地址
+        for video_info in video_info_list:
+            result_video_info["video_url_list"].append(crawler.get_json_value(video_info, "url", type_check=str))
+        # 获取视频分P标题
+        result_video_info["video_part_title"] = crawler.get_json_value(video_part_info, "part", type_check=str)
+        result["video_part_info_list"].append(result_video_info)
     return result
 
 
@@ -194,6 +242,7 @@ def get_audio_info_page(audio_id):
 
 class BiliBili(crawler.Crawler):
     def __init__(self, **kwargs):
+        global COOKIE_INFO
         global IS_DOWNLOAD_CONTRIBUTION_VIDEO
         global IS_DOWNLOAD_SHORT_VIDEO
         # 设置APP目录
@@ -208,19 +257,30 @@ class BiliBili(crawler.Crawler):
                 ("IS_DOWNLOAD_CONTRIBUTION_VIDEO", True, crawler.CONFIG_ANALYSIS_MODE_BOOLEAN),
                 ("IS_DOWNLOAD_SHORT_VIDEO", True, crawler.CONFIG_ANALYSIS_MODE_BOOLEAN),
             ),
+            crawler.SYS_GET_COOKIE: ("bilibili.com",),
         }
         crawler.Crawler.__init__(self, sys_config, **kwargs)
 
         # 设置全局变量，供子线程调用
+        COOKIE_INFO = self.cookie_value
         IS_DOWNLOAD_CONTRIBUTION_VIDEO = self.app_config["IS_DOWNLOAD_CONTRIBUTION_VIDEO"]
         IS_DOWNLOAD_SHORT_VIDEO = self.app_config["IS_DOWNLOAD_SHORT_VIDEO"]
-
-        # todo 登录cookies
-        # todo 不同分辨率
 
         # 解析存档文件
         # account_name  last_video_id  last_short_video_id  last_audio_id  last_album_id
         self.account_list = crawler.read_save_data(self.save_data_path, 0, ["", "0", "0", "0", "0"])
+
+        # 检测登录状态
+        if IS_DOWNLOAD_CONTRIBUTION_VIDEO and not check_login():
+            while True:
+                input_str = input(crawler.get_time() + " 没有检测到账号登录状态，可能无法解析需要登录才能查看的视频以及获取高分辨率，继续程序(C)ontinue？或者退出程序(E)xit？:")
+                input_str = input_str.lower()
+                if input_str in ["e", "exit"]:
+                    tool.process_exit()
+                elif input_str in ["c", "continue"]:
+                    global IS_LOGIN
+                    IS_LOGIN = False
+                    break
 
     def main(self):
         # 循环下载每个id
@@ -441,27 +501,45 @@ class Download(crawler.DownloadThread):
             self.error("视频%s《%s》解析失败，原因：%s" % (video_info["video_id"], video_info["video_title"], e.message))
             raise
 
-        self.trace("视频%s《%s》解析的全部视频：%s" % (video_info["video_id"], video_info["video_title"], video_play_response["video_url_list"]))
-        self.step("视频%s《%s》解析获取%s个视频" % (video_info["video_id"], video_info["video_title"], len(video_play_response["video_url_list"])))
+        if video_play_response["is_private"]:
+            log.error("视频%s《%s》需要登录才能访问，跳过" % (video_info["video_id"], video_info["video_title"]))
+            return
+
+        self.trace("视频%s《%s》解析的全部视频：%s" % (video_info["video_id"], video_info["video_title"], video_play_response["video_part_info_list"]))
+        self.step("视频%s《%s》解析获取%s段视频" % (video_info["video_id"], video_info["video_title"], len(video_play_response["video_part_info_list"])))
 
         video_index = 1
-        for video_url in video_play_response["video_url_list"]:
-            self.main_thread_check()  # 检测主线程运行状态
-            self.step("视频%s《%s》开始下载第%s个视频 %s" % (video_info["video_id"], video_info["video_title"], video_index, video_url))
+        part_index = 1
+        for video_part_info in video_play_response["video_part_info_list"]:
+            video_part_index = 1
+            for video_part_url in video_part_info["video_url_list"]:
+                self.main_thread_check()  # 检测主线程运行状态
+                self.step("视频%s《%s》开始下载第%s个视频 %s" % (video_info["video_id"], video_info["video_title"], video_index, video_part_url))
 
-            file_path = os.path.join(self.main_thread.video_download_path, self.display_name, "%08d_%s %s.%s" % (video_info["video_id"], video_index, video_info["video_title"], net.get_file_type(video_url)))
-            save_file_return = net.save_net_file(video_url, file_path)
-            if save_file_return["status"] == 1:
-                self.step("视频%s《%s》第%s个视频下载成功" % (video_info["video_id"], video_info["video_title"], video_index))
-                # 设置临时目录
-                self.temp_path_list.append(file_path)
-            else:
-                self.error("视频%s《%s》第%s个视频 %s，下载失败，原因：%s" % (video_info["video_id"], video_info["video_title"], video_index, video_url, crawler.download_failre(save_file_return["code"])))
-            video_index += 1
+                video_name = "%08d %s" % (video_info["video_id"], video_info["video_title"])
+                if len(video_play_response["video_part_info_list"]) > 1:
+                    if video_part_info["video_part_title"]:
+                        video_name += "_" + video_part_info["video_part_title"]
+                    else:
+                        video_name += "_" + str(part_index)
+                if len(video_part_info["video_url_list"]) > 1:
+                    video_name += " (%s)" % video_part_index
+                video_name = path.filter_text(video_name)
+                video_name = "%s.%s" % (video_name, net.get_file_type(video_part_url))
+                file_path = os.path.join(self.main_thread.video_download_path, self.display_name, video_name)
+                save_file_return = net.save_net_file(video_part_url, file_path, header_list={"Referer": "https://www.bilibili.com/video/av%s" % video_info["video_id"]})
+                if save_file_return["status"] == 1:
+                    self.step("视频%s《%s》第%s个视频下载成功" % (video_info["video_id"], video_info["video_title"], video_index))
+                    # 设置临时目录
+                    self.temp_path_list.append(file_path)
+                else:
+                    self.error("视频%s《%s》第%s个视频 %s，下载失败，原因：%s" % (video_info["video_id"], video_info["video_title"], video_index, video_part_url, crawler.download_failre(save_file_return["code"])))
+                video_part_index += 1
+                video_index += 1
 
         # 视频内所有分P全部下载完毕
         self.temp_path_list = []  # 临时目录设置清除
-        self.total_photo_count += len(video_play_response["video_url_list"])  # 计数累加
+        self.total_video_count += video_index - 1  # 计数累加
         self.account_info[1] = str(video_info["video_id"])  # 设置存档记录
 
     # 解析单个短视频
@@ -476,7 +554,7 @@ class Download(crawler.DownloadThread):
             self.error("短视频%s  %s，下载失败，原因：%s" % (video_info["video_id"], video_info["video_url"], crawler.download_failre(save_file_return["code"])))
 
         # 短视频下载完毕
-        self.total_photo_count += 1  # 计数累加
+        self.total_video_count += 1  # 计数累加
         self.account_info[2] = str(video_info["video_id"])  # 设置存档记录
 
     # 解析单个相簿
