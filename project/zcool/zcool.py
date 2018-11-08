@@ -213,8 +213,8 @@ class Download(crawler.DownloadThread):
         self.temp_path_list.append(album_path)
         photo_index = 1
         for photo_url in album_response["photo_url_list"]:
-            photo_url = get_photo_url(photo_url)
             self.main_thread_check()  # 检测主线程运行状态
+            photo_url = get_photo_url(photo_url)
             self.step("开始下载作品%s《%s》的第%s张图片 %s" % (album_info["album_id"], album_info["album_title"], photo_index, photo_url))
 
             file_path = os.path.join(album_path, "%02d.%s" % (photo_index, net.get_file_type(photo_url)))
