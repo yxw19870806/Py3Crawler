@@ -178,8 +178,6 @@ def get_video_page(video_id):
         if video_info_response.status != net.HTTP_RETURN_CODE_SUCCEED:
             raise crawler.CrawlerException("视频信息，" + crawler.request_failre(video_info_response.status))
         video_info_list = crawler.get_json_value(video_info_response.json_data, "data", "durl", type_check=list)
-        if len(video_info_list) > 1:
-            log.notice("多个durl地址\n%s" % script_json)
         # 获取视频地址
         for video_info in video_info_list:
             result_video_info["video_url_list"].append(crawler.get_json_value(video_info, "url", type_check=str))
