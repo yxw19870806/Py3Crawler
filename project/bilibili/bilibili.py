@@ -539,7 +539,7 @@ class Download(crawler.DownloadThread):
 
         # 视频内所有分P全部下载完毕
         self.temp_path_list = []  # 临时目录设置清除
-        self.total_photo_count += video_index - 1  # 计数累加
+        self.total_video_count += video_index - 1  # 计数累加
         self.account_info[1] = str(video_info["video_id"])  # 设置存档记录
 
     # 解析单个短视频
@@ -554,7 +554,7 @@ class Download(crawler.DownloadThread):
             self.error("短视频%s  %s，下载失败，原因：%s" % (video_info["video_id"], video_info["video_url"], crawler.download_failre(save_file_return["code"])))
 
         # 短视频下载完毕
-        self.total_photo_count += 1  # 计数累加
+        self.total_video_count += 1  # 计数累加
         self.account_info[2] = str(video_info["video_id"])  # 设置存档记录
 
     # 解析单个相簿
