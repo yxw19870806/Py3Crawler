@@ -183,7 +183,7 @@ def get_video_url(video_play_url):
             raise crawler.CrawlerException(crawler.request_failre(video_play_response.status))
     # https://www.meipai.com/media/98089758
     elif video_play_url.find("www.meipai.com/media") >= 0:  # 美拍
-        video_id = tool.find_sub_string(video_play_url, "www.meipai.com/media")
+        video_id = tool.find_sub_string(video_play_url, "www.meipai.com/media/")
         video_info_response = meipai.get_video_play_page(video_id)
         if not video_info_response["is_delete"]:
             video_url = video_info_response["video_url"]
