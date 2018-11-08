@@ -152,7 +152,7 @@ def get_one_page_audio(account_id, page_count):
 # 获取指定视频
 def get_video_page(video_id):
     video_play_url = "https://www.bilibili.com/video/av%s" % video_id
-    video_play_response = net.http_request(video_play_url, method="GET")
+    video_play_response = net.http_request(video_play_url, method="GET", cookies_list=COOKIE_INFO)
     result = {
         "video_part_info_list": [],  # 全部视频地址
         "is_private": False,  # 是否需要登录
@@ -166,19 +166,10 @@ def get_video_page(video_id):
     try:
         video_part_info_list = crawler.get_json_value(script_json, "videoData", "pages", type_check=list)
     except crawler.CrawlerException:
-        # https://www.bilibili.com/video/av256978
-        if crawler.get_json_value(script_json, "error", "message", default_value="", type_check=str) != "访问权限不足":
-            raise
         if not IS_LOGIN:
             result["is_private"] = True
             return result
-        # 使用cookies再次访问
-        video_play_response = net.http_request(video_play_url, method="GET", cookies_list=COOKIE_INFO)
-        video_play_response_content = video_play_response.data.decode(errors="ignore")
-        script_json = tool.json_decode(tool.find_sub_string(video_play_response_content, "window.__INITIAL_STATE__=", ";(function()"))
-        if script_json is None:
-            raise crawler.CrawlerException("页面截取视频信息失败\n%s" % video_play_response_content)
-        video_part_info_list = crawler.get_json_value(script_json, "videoData", "pages", type_check=list)
+        raise
     # 分P https://www.bilibili.com/video/av33131459
     for video_part_info in video_part_info_list:
         result_video_info = {
@@ -190,12 +181,14 @@ def get_video_page(video_id):
         query_data = {
             "avid": video_id,
             "cid": crawler.get_json_value(video_part_info, "cid", type_check=int),
-            "qn": "112",  # 高清 1080P+: 112, 高清 1080P: 80, 高清 720P: 64, 清晰 480P: 32, 流畅 360P: 16
+            "qn": "112",  # 上限 高清 1080P+: 112, 高清 1080P: 80, 高清 720P: 64, 清晰 480P: 32, 流畅 360P: 16
             "otype": "json",
         }
-        video_info_response = net.http_request(video_info_url, method="GET", fields=query_data, json_decode=True)
+        video_info_response = net.http_request(video_info_url, method="GET", fields=query_data, cookies_list=COOKIE_INFO, json_decode=True)
         if video_info_response.status != net.HTTP_RETURN_CODE_SUCCEED:
             raise crawler.CrawlerException("视频信息，" + crawler.request_failre(video_info_response.status))
+        if IS_LOGIN and max(crawler.get_json_value(video_info_response.json_data, "data", "accept_quality", type_check=list)) != crawler.get_json_value(video_info_response.json_data, "data", "quality", type_check=int):
+            raise crawler.CrawlerException("返回的视频分辨率不是最高的\n%s" % video_info_response.json_data)
         try:
             video_info_list = crawler.get_json_value(video_info_response.json_data, "data", "durl", type_check=list)
         except crawler.CrawlerException:
@@ -278,9 +271,9 @@ class BiliBili(crawler.Crawler):
         self.account_list = crawler.read_save_data(self.save_data_path, 0, ["", "0", "0", "0", "0"])
 
         # 检测登录状态
-        if not check_login():
+        if IS_DOWNLOAD_CONTRIBUTION_VIDEO and not check_login():
             while True:
-                input_str = input(crawler.get_time() + " 没有检测到账号登录状态，可能无法解析只对会员开放的日志，继续程序(C)ontinue？或者退出程序(E)xit？:")
+                input_str = input(crawler.get_time() + " 没有检测到账号登录状态，可能无法解析需要登录才能查看的视频以及获取高分辨率，继续程序(C)ontinue？或者退出程序(E)xit？:")
                 input_str = input_str.lower()
                 if input_str in ["e", "exit"]:
                     tool.process_exit()
