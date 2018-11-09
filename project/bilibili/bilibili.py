@@ -187,8 +187,6 @@ def get_video_page(video_id):
         video_info_response = net.http_request(video_info_url, method="GET", fields=query_data, cookies_list=COOKIE_INFO, json_decode=True)
         if video_info_response.status != net.HTTP_RETURN_CODE_SUCCEED:
             raise crawler.CrawlerException("视频信息，" + crawler.request_failre(video_info_response.status))
-        if IS_LOGIN and max(crawler.get_json_value(video_info_response.json_data, "data", "accept_quality", type_check=list)) != crawler.get_json_value(video_info_response.json_data, "data", "quality", type_check=int):
-            raise crawler.CrawlerException("返回的视频分辨率不是最高的\n%s" % video_info_response.json_data)
         try:
             video_info_list = crawler.get_json_value(video_info_response.json_data, "data", "durl", type_check=list)
         except crawler.CrawlerException:
@@ -196,6 +194,9 @@ def get_video_page(video_id):
             if crawler.get_json_value(video_info_response.json_data, "data", "message", default_value="", type_check=str) == "Novideoinfo.":
                 continue
             raise
+        if IS_LOGIN:
+            if max(crawler.get_json_value(video_info_response.json_data, "data", "accept_quality", type_check=list)) != crawler.get_json_value(video_info_response.json_data, "data", "quality", type_check=int):
+                raise crawler.CrawlerException("返回的视频分辨率不是最高的\n%s" % video_info_response.json_data)
         # 获取视频地址
         for video_info in video_info_list:
             result_video_info["video_url_list"].append(crawler.get_json_value(video_info, "url", type_check=str))
