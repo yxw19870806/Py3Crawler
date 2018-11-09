@@ -128,8 +128,8 @@ def get_cookies_from_response_header(response_headers):
 
 
 def get_file_type(file_url, default_file_type=""):
-    # http://www.example.com/sub_path/file_name.file_type?parm1=value1&parm2=value2
-    file_name_and_type = file_url.split("/")[-1].split("?")[0].split(".")
+    # http://www.example.com/sub_path/file_name.file_type?parm1=value1&parm2=value2/value3
+    file_name_and_type = urllib.parse.urlparse(file_url)[2].split("/")[-1].split(".")
     if len(file_name_and_type) == 1:
         return default_file_type
     else:
