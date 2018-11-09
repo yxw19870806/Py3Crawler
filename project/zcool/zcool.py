@@ -86,7 +86,7 @@ def get_album_page(album_id):
     if album_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(album_response.status))
     album_response_content = album_response.data.decode(errors="ignore")
-    photo_list_selector = pq(album_response_content).find(".work-show-box .reveal-work-wrap .photo-information-content img")
+    photo_list_selector = pq(album_response_content).find(".work-show-box .reveal-work-wrap img")
     if photo_list_selector.length == 0:
         raise crawler.CrawlerException("页面截取图片列表失败\n%s" % album_response_content)
     for photo_index in range(0, photo_list_selector.length):
