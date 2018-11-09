@@ -154,8 +154,9 @@ def get_video_page(video_id):
     video_play_url = "https://www.bilibili.com/video/av%s" % video_id
     video_play_response = net.http_request(video_play_url, method="GET", cookies_list=COOKIE_INFO)
     result = {
-        "video_part_info_list": [],  # 全部视频地址
         "is_private": False,  # 是否需要登录
+        "video_part_info_list": [],  # 全部视频地址
+        "video_title": "",  # 视频标题
     }
     if video_play_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(video_play_response.status))
@@ -170,6 +171,8 @@ def get_video_page(video_id):
             result["is_private"] = True
             return result
         raise
+    # 获取视频标题
+    result["video_title"] = crawler.get_json_value(script_json, "videoData", "title", type_check=str)
     # 分P https://www.bilibili.com/video/av33131459
     for video_part_info in video_part_info_list:
         result_video_info = {
