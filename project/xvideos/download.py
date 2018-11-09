@@ -1,7 +1,7 @@
 # -*- coding:UTF-8  -*-
 """
 指定xvideos视频下载
-https://www.xvideos.com
+https://www.xvideos.com/
 @author: hikaru
 email: hikaru870806@hotmail.com
 如有问题或建议请联系
