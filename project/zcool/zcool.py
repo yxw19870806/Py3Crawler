@@ -146,7 +146,10 @@ class Download(crawler.DownloadThread):
     def __init__(self, account_info, main_thread):
         crawler.DownloadThread.__init__(self, account_info, main_thread)
         self.account_name = self.account_info[0]
-        self.display_name = self.account_name
+        if len(self.account_info) >= 3 and self.account_info[2]:
+            self.display_name = self.account_info[2]
+        else:
+            self.display_name = self.account_info[0]
         self.step("开始")
 
     # 获取所有可下载作品
