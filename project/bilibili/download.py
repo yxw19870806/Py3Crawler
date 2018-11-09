@@ -69,6 +69,7 @@ def main():
             if not file_path:
                 continue
 
+            log.step("\n视频标题：%s\n视频地址：%s\n下载路径：%s" % (video_title, video_url, file_path))
             # 开始下载
             video_index = 1
             for video_url in video_part_info["video_url_list"]:
@@ -81,17 +82,17 @@ def main():
                 else:
                     file_real_path = file_path
 
-                if len(video_response["video_part_info_list"]) > 1:
-                    log.step("\n视频标题：%s_%s\n视频地址：%s\n下载路径：%s" % (video_title, video_part_info["video_part_title"], video_url, file_real_path))
-                else:
-                    log.step("\n视频标题：%s\n视频地址：%s\n下载路径：%s" % (video_title, video_url, file_real_path))
-
                 save_file_return = net.save_net_file(video_url, file_real_path)
                 if save_file_return["status"] == 1:
-                    # 设置临时目录
-                    log.step("视频《%s》下载成功" % video_title)
+                    if len(video_part_info["video_url_list"]) == 1:
+                        log.step("视频《%s》下载成功" % video_title)
+                    else:
+                        log.step("视频《%s》第%s段下载成功" % (video_title, video_index))
                 else:
-                    log.step("视频《%s》下载失败，原因：%s" % (video_title, crawler.download_failre(save_file_return["code"])))
+                    if len(video_part_info["video_url_list"]) == 1:
+                        log.step("视频《%s》下载失败，原因：%s" % (video_title, crawler.download_failre(save_file_return["code"])))
+                    else:
+                        log.step("视频《%s》第%s段下载失败，原因：%s" % (video_title, video_index, crawler.download_failre(save_file_return["code"])))
                 video_index += 1
 
 
