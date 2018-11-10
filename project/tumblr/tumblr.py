@@ -117,10 +117,10 @@ def get_one_page_post(account_id, page_count, is_https, is_safe_mode):
         log.step(account_id + " 第%s页日志异常，重试" % page_count)
         time.sleep(5)
         return get_one_page_post(account_id, page_count, is_https, is_safe_mode)
-    elif post_pagination_response.status in [503, 504, net.HTTP_RETURN_CODE_RETRY] and page_count > 1:
-        # 服务器错误，跳过这页
-        log.error(account_id + " 第%s页日志无法访问，跳过" % page_count)
-        return result
+    # elif post_pagination_response.status in [503, 504, net.HTTP_RETURN_CODE_RETRY] and page_count > 1:
+    #     # 服务器错误，跳过这页
+    #     log.error(account_id + " 第%s页日志无法访问，跳过" % page_count)
+    #     return result
     elif post_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(post_pagination_response.status))
     post_pagination_response_content = post_pagination_response.data.decode(errors="ignore")
@@ -235,12 +235,12 @@ def get_post_page(post_url, post_id, is_safe_mode):
         "photo_url_list": [],  # 全部图片地址
         "video_url": None,  # 视频地址
     }
-    if post_response.status in [503, 504, net.HTTP_RETURN_CODE_RETRY]:
-        # 服务器错误，跳过这页
-        account_id = tool.find_sub_string(post_url, "://", ".tumblr.com")
-        log.error(account_id + " 日志 %s 无法访问，跳过" % post_url)
-        return result
-    elif post_response.status != net.HTTP_RETURN_CODE_SUCCEED:
+    # if post_response.status in [503, 504, net.HTTP_RETURN_CODE_RETRY]:
+    #     # 服务器错误，跳过这页
+    #     account_id = tool.find_sub_string(post_url, "://", ".tumblr.com")
+    #     log.error(account_id + " 日志 %s 无法访问，跳过" % post_url)
+    #     return result
+    if post_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(post_response.status))
     post_response_content = post_response.data.decode(errors="ignore")
     post_page_head = tool.find_sub_string(post_response_content, "<head", "</head>", 3)
