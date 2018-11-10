@@ -439,7 +439,13 @@ def save_net_file(file_url, file_path, need_content_type=False, header_list=None
             # 下载
             with open(file_path, "wb") as file_handle:
                 is_create_file = True
-                file_handle.write(response.data)
+                try:
+                    file_handle.write(response.data)
+                except OSError as ose:
+                    if str(ose).find("No space left on device"):
+                        global EXIT_FLAG
+                        EXIT_FLAG = True
+                    raise
         else:  # 多线程下载
             # 单线程下载文件大小（100MB）
             multi_thread_block_size = int(math.ceil(content_length / 10 / SIZE_MB)) * SIZE_MB

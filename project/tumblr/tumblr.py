@@ -117,10 +117,10 @@ def get_one_page_post(account_id, page_count, is_https, is_safe_mode):
         log.step(account_id + " 第%s页日志异常，重试" % page_count)
         time.sleep(5)
         return get_one_page_post(account_id, page_count, is_https, is_safe_mode)
-    elif post_pagination_response.status in [503, 504, net.HTTP_RETURN_CODE_RETRY] and page_count > 1:
-        # 服务器错误，跳过这页
-        log.error(account_id + " 第%s页日志无法访问，跳过" % page_count)
-        return result
+    # elif post_pagination_response.status in [503, 504, net.HTTP_RETURN_CODE_RETRY] and page_count > 1:
+    #     # 服务器错误，跳过这页
+    #     log.error(account_id + " 第%s页日志无法访问，跳过" % page_count)
+    #     return result
     elif post_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(post_pagination_response.status))
     post_pagination_response_content = post_pagination_response.data.decode(errors="ignore")
@@ -235,12 +235,12 @@ def get_post_page(post_url, post_id, is_safe_mode):
         "photo_url_list": [],  # 全部图片地址
         "video_url": None,  # 视频地址
     }
-    if post_response.status in [503, 504, net.HTTP_RETURN_CODE_RETRY]:
-        # 服务器错误，跳过这页
-        account_id = tool.find_sub_string(post_url, "://", ".tumblr.com")
-        log.error(account_id + " 日志 %s 无法访问，跳过" % post_url)
-        return result
-    elif post_response.status != net.HTTP_RETURN_CODE_SUCCEED:
+    # if post_response.status in [503, 504, net.HTTP_RETURN_CODE_RETRY]:
+    #     # 服务器错误，跳过这页
+    #     account_id = tool.find_sub_string(post_url, "://", ".tumblr.com")
+    #     log.error(account_id + " 日志 %s 无法访问，跳过" % post_url)
+    #     return result
+    if post_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(post_response.status))
     post_response_content = post_response.data.decode(errors="ignore")
     post_page_head = tool.find_sub_string(post_response_content, "<head", "</head>", 3)
@@ -260,10 +260,15 @@ def get_post_page(post_url, post_id, is_safe_mode):
             post_selector = pq(post_response_content).find("article[data-post-id='%s']" % post_id)
             if post_selector.length == 0:
                 post_selector = pq(post_response_content).find("article[id='%s']" % post_id)
-        if post_selector.length == 1:
-            video_url = post_selector.find("source").attr("src")
-            if video_url is not None:
-                result["video_url"] = video_url
+        if post_selector.length <= 1:
+            if post_selector.length == 0:
+                video_selector = pq(post_response_content).find("source")
+            else:
+                video_selector = post_selector.find("source")
+            if video_selector.length == 1:
+                result["video_url"] = video_selector.attr("src")
+            elif video_selector.length > 1:
+                log.notice("%s存在多个source标签" % post_url)
     elif not og_type:
         script_json_html = tool.find_sub_string(post_page_head, '<script type="application/ld+json">', "</script>").strip()
         if not script_json_html:
@@ -334,7 +339,9 @@ def analysis_photo(photo_url):
             len(temp_list) == 2 or
             (len(temp_list) == 3 and temp_list[1] == "inline") or
             (len(temp_list) == 3 and temp_list[2] == "frame1") or
-            (len(temp_list) == 4 and temp_list[2] == "r1" and temp_list[3] == "frame1")
+            (len(temp_list) == 4 and temp_list[2] == "r1" and temp_list[3] == "frame1") or
+            (len(temp_list) == 3 and temp_list[2] == "smart1") or
+            (len(temp_list) == 4 and temp_list[2] == "r1" and temp_list[3] == "smart1")
         ):
             pass
         else:
