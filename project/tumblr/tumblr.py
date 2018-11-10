@@ -260,10 +260,15 @@ def get_post_page(post_url, post_id, is_safe_mode):
             post_selector = pq(post_response_content).find("article[data-post-id='%s']" % post_id)
             if post_selector.length == 0:
                 post_selector = pq(post_response_content).find("article[id='%s']" % post_id)
-        if post_selector.length == 1:
-            video_url = post_selector.find("source").attr("src")
-            if video_url is not None:
-                result["video_url"] = video_url
+        if post_selector.length <= 1:
+            if post_selector.length == 0:
+                video_selector = pq(post_response_content).find("source")
+            else:
+                video_selector = post_selector.find("source")
+            if video_selector.length == 1:
+                result["video_url"] = video_selector.attr("src")
+            elif video_selector.length > 1:
+                log.notice("%s存在多个source标签" % post_url)
     elif not og_type:
         script_json_html = tool.find_sub_string(post_page_head, '<script type="application/ld+json">', "</script>").strip()
         if not script_json_html:
