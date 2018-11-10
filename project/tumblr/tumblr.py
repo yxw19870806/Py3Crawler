@@ -334,7 +334,9 @@ def analysis_photo(photo_url):
             len(temp_list) == 2 or
             (len(temp_list) == 3 and temp_list[1] == "inline") or
             (len(temp_list) == 3 and temp_list[2] == "frame1") or
-            (len(temp_list) == 4 and temp_list[2] == "r1" and temp_list[3] == "frame1")
+            (len(temp_list) == 4 and temp_list[2] == "r1" and temp_list[3] == "frame1") or
+            (len(temp_list) == 3 and temp_list[2] == "smart1") or
+            (len(temp_list) == 4 and temp_list[2] == "r1" and temp_list[3] == "smart1")
         ):
             pass
         else:
