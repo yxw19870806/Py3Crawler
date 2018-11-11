@@ -94,31 +94,24 @@ def get_one_page_video(account_id, page_count):
 # 获取指定视频
 def get_video_page(video_id):
     # 获取视频播放页
-    # https://www.dailymotion.com/video/x6lgrfa
-    video_play_url = "https://www.dailymotion.com/video/%s" % video_id
-    video_play_response = net.http_request(video_play_url, method="GET")
+    # https://www.dailymotion.com/player/metadata/video/x6lgrfa
+    video_info_url = "https://www.dailymotion.com/player/metadata/video/%s" % video_id
+    video_info_response = net.http_request(video_info_url, method="GET", json_decode=True)
     result = {
         "is_delete": False,  # 是否已删除
         "video_title": "",  # 视频标题
         "video_url": None,  # 视频地址
     }
-    if video_play_response.status == 404:
+    if video_info_response.status == 404:
         result["is_delete"] = True
         return result
-    elif video_play_response.status != net.HTTP_RETURN_CODE_SUCCEED:
-        raise crawler.CrawlerException(crawler.request_failre(video_play_response.status))
-    video_play_response_content = video_play_response.data.decode(errors="ignore")
-    script_json_html = tool.find_sub_string(video_play_response_content, "var __PLAYER_CONFIG__ = ", ";\n")
-    if not script_json_html:
-        raise crawler.CrawlerException("截取视频信息失败\n%s" % video_play_response_content)
-    script_json = tool.json_decode(script_json_html)
-    if script_json is None:
-        raise crawler.CrawlerException("视频信息加载失败\n%s" % video_play_response_content)
+    elif video_info_response.status != net.HTTP_RETURN_CODE_SUCCEED:
+        raise crawler.CrawlerException(crawler.request_failre(video_info_response.status))
     # 获取视频标题
-    result["video_title"] = crawler.get_json_value(script_json, "metadata", "title", type_check=str)
+    result["video_title"] = crawler.get_json_value(video_info_response.json_data, "title", type_check=str)
     # 查找最高分辨率的视频源地址
     resolution_to_url = {}  # 各个分辨率下的视频地址
-    for video_resolution, video_info_list in crawler.get_json_value(script_json, "metadata", "qualities", type_check=dict).items():
+    for video_resolution, video_info_list in crawler.get_json_value(video_info_response.json_data, "qualities", type_check=dict).items():
         if not crawler.is_integer(video_resolution):
             continue
         video_resolution = int(video_resolution)
@@ -128,7 +121,7 @@ def get_video_page(video_id):
             if crawler.get_json_value(video_info, "type", type_check=str) == "video/mp4":
                 resolution_to_url[video_resolution] = crawler.get_json_value(video_info, "url", type_check=str)
     if len(resolution_to_url) == 0:
-        raise crawler.CrawlerException("匹配不同分辨率视频源失败\n%s" % script_json["metadata"]["qualities"])
+        raise crawler.CrawlerException("匹配不同分辨率视频源失败\n%s" % video_info_response.json_data)
     # 优先使用配置中的分辨率
     if FIRST_CHOICE_RESOLUTION in resolution_to_url:
         result["video_url"] = resolution_to_url[FIRST_CHOICE_RESOLUTION]
