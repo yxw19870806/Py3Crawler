@@ -184,7 +184,7 @@ def get_video_page(video_id):
         query_data = {
             "avid": video_id,
             "cid": crawler.get_json_value(video_part_info, "cid", type_check=int),
-            "qn": "112",  # 上限 高清 1080P+: 112, 高清 1080P: 80, 高清 720P: 64, 清晰 480P: 32, 流畅 360P: 16
+            "qn": "116",  # 上限 高清 1080P+: 112, 高清 1080P: 80, 高清 720P: 64, 清晰 480P: 32, 流畅 360P: 16
             "otype": "json",
         }
         video_info_response = net.http_request(video_info_url, method="GET", fields=query_data, cookies_list=COOKIE_INFO, json_decode=True)
