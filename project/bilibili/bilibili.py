@@ -194,7 +194,7 @@ def get_video_page(video_id):
             video_info_list = crawler.get_json_value(video_info_response.json_data, "data", "durl", type_check=list)
         except crawler.CrawlerException:
             # https://www.bilibili.com/video/av116528/?p=2
-            if crawler.get_json_value(video_info_response.json_data, "data", "message", default_value="", type_check=str) == "Novideoinfo.":
+            if crawler.get_json_value(video_info_response.json_data, "data", "message", default_value="", type_check=str) == "No video info.":
                 continue
             raise
         if IS_LOGIN:
