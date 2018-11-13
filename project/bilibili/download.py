@@ -78,7 +78,7 @@ def main():
                     file_type = temp_list[-1]
                     file_name = ".".join(temp_list[:-1])
                     file_name += " (%s)" % video_index
-                    file_real_path = os.path.join(os.path.dirname(file_path), "%s.%s" % (file_name, file_type))
+                    file_real_path = os.path.abspath(os.path.join(os.path.dirname(file_path), "%s.%s" % (file_name, file_type)))
                 else:
                     file_real_path = file_path
 
