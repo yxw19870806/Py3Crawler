@@ -23,8 +23,8 @@ def main():
     while True:
         video_url = input("请输入bilibili视频地址：").lower()
         video_id = None
-        if video_url.find("www.bilibili.com/video/av") > 0:
-            video_id = tool.find_sub_string(video_url, "www.bilibili.com/video/av").split("?")[0]
+        if video_url.find("bilibili.com/video/av") > 0:
+            video_id = tool.find_sub_string(video_url, "bilibili.com/video/av").split("?")[0]
         # 无效的视频地址
         if not crawler.is_integer(video_id):
             log.step("错误的视频地址，正确的地址格式如：https://www.bilibili.com/video/av123456")
