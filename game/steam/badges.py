@@ -11,7 +11,8 @@ from common import output, crawler
 from game.steam import steamCommon
 
 MIN_CARD_PRICE = 0  # 最低卡牌价格
-MAX_CARD_PRICE = 0.5  # 最高卡牌价格
+MAX_CARD_PRICE = 99  # 最高卡牌价格
+IS_TOTAL_CARD = False  # 是不是一个game id下的所有卡牌都要符合条件
 
 
 # 获取当前account正在收集的徽章进度
@@ -48,6 +49,8 @@ def main(account_id):
             for card_hash_name in market_card_list:
                 card_name = card_hash_name.replace(" (Trading Card)", "")
                 card_hash_name_dict[card_name] = card_hash_name
+            print_message_list = []
+            is_total = True
             for card_name in wanted_card_list:
                 if card_name in card_hash_name_dict:
                     card_hash_name = card_hash_name_dict[card_name]
@@ -56,10 +59,15 @@ def main(account_id):
                 if card_hash_name in market_card_list:
                     if MIN_CARD_PRICE < float(market_card_list[card_hash_name]) <= MAX_CARD_PRICE:
                         market_link = "http://steamcommunity.com/market/listings/753/%s-%s" % (game_id, urllib.parse.quote(card_hash_name))
-                        output.print_msg("card: %s, wanted %s, min price: %s, link: %s" % (card_name, wanted_card_list[card_name], market_card_list[card_hash_name], market_link), False)
+                        print_message_list.append("card: %s, wanted %s, min price: %s, link: %s" % (card_name, wanted_card_list[card_name], market_card_list[card_hash_name], market_link))
+                    else:
+                        is_total = False
                 else:
                     market_link = "http://steamcommunity.com/market/listings/753/%s-%s" % (game_id, urllib.parse.quote(card_hash_name))
-                    output.print_msg("card: %s, wanted %s, not found price in market, link: %s" % (card_name, wanted_card_list[card_hash_name], market_link), False)
+                    print_message_list.append("card: %s, wanted %s, not found price in market, link: %s" % (card_name, wanted_card_list[card_hash_name], market_link))
+            if not IS_TOTAL_CARD or (IS_TOTAL_CARD and is_total):
+                for print_message in print_message_list:
+                    output.print_msg(print_message, False)
 
 
 if __name__ == "__main__":

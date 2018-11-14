@@ -23,8 +23,8 @@ def main():
     while True:
         video_url = input("请输入bilibili视频地址：").lower()
         video_id = None
-        if video_url.find("www.bilibili.com/video/av") > 0:
-            video_id = tool.find_sub_string(video_url, "www.bilibili.com/video/av").split("?")[0]
+        if video_url.find("bilibili.com/video/av") > 0:
+            video_id = tool.find_sub_string(video_url, "bilibili.com/video/av").split("?")[0]
         # 无效的视频地址
         if not crawler.is_integer(video_id):
             log.step("错误的视频地址，正确的地址格式如：https://www.bilibili.com/video/av123456")
@@ -78,7 +78,7 @@ def main():
                     file_type = temp_list[-1]
                     file_name = ".".join(temp_list[:-1])
                     file_name += " (%s)" % video_index
-                    file_real_path = os.path.join(os.path.dirname(file_path), "%s.%s" % (file_name, file_type))
+                    file_real_path = os.path.abspath(os.path.join(os.path.dirname(file_path), "%s.%s" % (file_name, file_type)))
                 else:
                     file_real_path = file_path
 

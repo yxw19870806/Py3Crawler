@@ -184,7 +184,7 @@ def get_video_page(video_id):
         query_data = {
             "avid": video_id,
             "cid": crawler.get_json_value(video_part_info, "cid", type_check=int),
-            "qn": "112",  # 上限 高清 1080P+: 112, 高清 1080P: 80, 高清 720P: 64, 清晰 480P: 32, 流畅 360P: 16
+            "qn": "116",  # 上限 高清 1080P+: 112, 高清 1080P: 80, 高清 720P: 64, 清晰 480P: 32, 流畅 360P: 16
             "otype": "json",
         }
         video_info_response = net.http_request(video_info_url, method="GET", fields=query_data, cookies_list=COOKIE_INFO, json_decode=True)
@@ -194,7 +194,7 @@ def get_video_page(video_id):
             video_info_list = crawler.get_json_value(video_info_response.json_data, "data", "durl", type_check=list)
         except crawler.CrawlerException:
             # https://www.bilibili.com/video/av116528/?p=2
-            if crawler.get_json_value(video_info_response.json_data, "data", "message", default_value="", type_check=str) == "Novideoinfo.":
+            if crawler.get_json_value(video_info_response.json_data, "data", "message", default_value="", type_check=str) == "No video info.":
                 continue
             raise
         if IS_LOGIN:
