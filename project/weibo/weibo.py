@@ -391,6 +391,7 @@ class Download(crawler.DownloadThread):
             raise
 
         if video_url is "":
+            self.account_info[3] = video_play_url  # 设置存档记录
             self.error("第%s个视频 %s 跳过" % (video_index, video_play_url))
             return
 
