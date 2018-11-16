@@ -80,7 +80,7 @@ def get_album_page(album_id):
         if photo_list_selector.length == 0:
             raise crawler.CrawlerException(" %s 页面截取图片列表失败\n%s" % (album_pagination_url, album_pagination_response_content))
         for photo_index in range(0, photo_list_selector.length):
-            result["photo_url_list"].append("http://92mntu.com" + photo_list_selector.eq(photo_index).attr("src"))
+            result["photo_url_list"].append("http://92mntu.com" + photo_list_selector.eq(photo_index).attr("src").strip())
         # 判断是不是最后一页
         max_page_count = pq(album_pagination_response_content).find(".pageart ul li").eq(-2).find("a").html()
         if not crawler.is_integer(max_page_count):
