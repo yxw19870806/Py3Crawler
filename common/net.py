@@ -190,6 +190,7 @@ def http_request(url, method="GET", fields=None, binary_data=None, header_list=N
         is return a decoded json data when response status = 200
         if decode failure will replace response status with HTTP_RETURN_CODE_JSON_DECODE_ERROR
     """
+    url = str(url).strip()
     if not (url.find("http://") == 0 or url.find("https://") == 0):
         return ErrorResponse(HTTP_RETURN_CODE_URL_INVALID)
     method = method.upper()
