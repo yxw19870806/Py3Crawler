@@ -48,6 +48,8 @@ def get_album_page(album_id):
         album_pagination_response = net.http_request(album_pagination_url, method="GET", is_auto_redirect=False)
         if album_pagination_response.status == 404:
             continue
+        elif album_pagination_response.status == 302 and album_pagination_response.getheader("location") == "/404.html":
+            continue
         result["album_url"] = album_pagination_url
         break
     if album_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
