@@ -14,7 +14,7 @@ from project.dailymotion import dailymotion
 
 def main():
     # 初始化
-    dailymotion_obj = dailymotion.DailyMotion(extra_sys_config={crawler.SYS_NOT_CHECK_SAVE_DATA: True})
+    dailymotion_class = dailymotion.DailyMotion(extra_sys_config={crawler.SYS_NOT_CHECK_SAVE_DATA: True})
     # GUI窗口
     gui = tkinter.Tk()
     gui.withdraw()
@@ -37,7 +37,7 @@ def main():
             continue
         # 选择下载目录
         options = {
-            "initialdir": dailymotion_obj.video_download_path,
+            "initialdir": dailymotion_class.video_download_path,
             "initialfile": "%s - %s.mp4" % (video_id, path.filter_text(video_response["video_title"])),
             "filetypes": [("mp4", ".mp4")],
             "parent": gui,

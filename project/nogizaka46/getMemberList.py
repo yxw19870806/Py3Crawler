@@ -29,16 +29,16 @@ def get_account_from_index():
 
 def main():
     # 初始化类
-    nogizaka46Diary_obj = nogizaka46Diary.Nogizaka46Diary(extra_sys_config={crawler.SYS_NOT_CHECK_SAVE_DATA: True})
+    nogizaka46Diary_class = nogizaka46Diary.Nogizaka46Diary(extra_sys_config={crawler.SYS_NOT_CHECK_SAVE_DATA: True})
 
     # 存档位置
     account_list_from_api = get_account_from_index()
     if len(account_list_from_api) > 0:
         for account_id in account_list_from_api:
-            if account_id not in nogizaka46Diary_obj.account_list:
-                nogizaka46Diary_obj.account_list[account_id] = [account_id, "", "0", account_list_from_api[account_id]]
-        temp_list = [nogizaka46Diary_obj.account_list[key] for key in sorted(nogizaka46Diary_obj.account_list.keys())]
-        file.write_file(tool.list_to_string(temp_list), nogizaka46Diary_obj.save_data_path, file.WRITE_FILE_TYPE_REPLACE)
+            if account_id not in nogizaka46Diary_class.account_list:
+                nogizaka46Diary_class.account_list[account_id] = [account_id, "", "0", account_list_from_api[account_id]]
+        temp_list = [nogizaka46Diary_class.account_list[key] for key in sorted(nogizaka46Diary_class.account_list.keys())]
+        file.write_file(tool.list_to_string(temp_list), nogizaka46Diary_class.save_data_path, file.WRITE_FILE_TYPE_REPLACE)
 
 
 if __name__ == "__main__":

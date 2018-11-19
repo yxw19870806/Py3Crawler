@@ -36,14 +36,14 @@ def get_one_page_categories(orientation, category_index):
 
 def main():
     # 初始化
-    xhamster_obj = xhamster.Xhamster()
+    xhamster_class = xhamster.Xhamster()
 
     for orientation in ["straight", "gay", "shemale"]:
         category_list = []
         for category_index in "0" + string.ascii_lowercase:
             category_list += get_one_page_categories(orientation, category_index)
         if len(category_list) > 0:
-            category_file_path = os.path.join(xhamster_obj.cache_data_path, "%s.data" % orientation)
+            category_file_path = os.path.join(xhamster_class.cache_data_path, "%s.data" % orientation)
             file.write_file("\n".join(category_list), category_file_path, file.WRITE_FILE_TYPE_REPLACE)
 
 

@@ -49,10 +49,10 @@ def main():
         tool.process_exit()
 
     # 初始化类
-    nanaGoGo_obj = nanaGoGo.NanaGoGo()
+    nanaGoGo_class = nanaGoGo.NanaGoGo()
 
     count = 0
-    for account_id in nanaGoGo_obj.account_list:
+    for account_id in nanaGoGo_class.account_list:
         if follow_account(account_id):
             count += 1
         time.sleep(0.1)

@@ -34,7 +34,7 @@ def get_account_from_api():
 
 def main():
     # 初始化类
-    yasaxi_obj = yasaxi.Yasaxi(extra_sys_config={crawler.SYS_NOT_CHECK_SAVE_DATA: True})
+    yasaxi_class = yasaxi.Yasaxi(extra_sys_config={crawler.SYS_NOT_CHECK_SAVE_DATA: True})
 
     # 存档位置
     try:
@@ -44,10 +44,10 @@ def main():
         raise
     if len(account_list_from_api) > 0:
         for account_id in account_list_from_api:
-            if account_id not in yasaxi_obj.account_list:
-                yasaxi_obj.account_list[account_id] = [account_id, "", account_list_from_api[account_id]]
-        temp_list = [yasaxi_obj.account_list[key] for key in sorted(yasaxi_obj.account_list.keys())]
-        file.write_file(tool.list_to_string(temp_list), yasaxi_obj.save_data_path, file.WRITE_FILE_TYPE_REPLACE)
+            if account_id not in yasaxi_class.account_list:
+                yasaxi_class.account_list[account_id] = [account_id, "", account_list_from_api[account_id]]
+        temp_list = [yasaxi_class.account_list[key] for key in sorted(yasaxi_class.account_list.keys())]
+        file.write_file(tool.list_to_string(temp_list), yasaxi_class.save_data_path, file.WRITE_FILE_TYPE_REPLACE)
 
 
 if __name__ == "__main__":

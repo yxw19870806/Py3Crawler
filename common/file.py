@@ -96,12 +96,12 @@ def get_file_md5(file_path):
     file_path = os.path.abspath(file_path)
     if not os.path.exists(file_path):
         return None
-    md5_obj = hashlib.md5()
+    md5_class = hashlib.md5()
     with open(file_path, "rb") as file_handle:
         buffer_size = 2 ** 20  # 1M
         while True:
             file_buffer = file_handle.read(buffer_size)
             if not file_buffer:
                 break
-            md5_obj.update(file_buffer)
-    return md5_obj.hexdigest()
+            md5_class.update(file_buffer)
+    return md5_class.hexdigest()
