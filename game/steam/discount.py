@@ -52,13 +52,10 @@ def load_discount_list():
 # 给出给定大等于最低折扣或者小等于最低价格的还没有的打折游戏
 # min_discount_percent  最低折扣
 # min_discount_price    最低价格
-def main(account_id, include_type, min_discount_percent, min_discount_price):
+def main(include_type, min_discount_percent, min_discount_price):
     # 获取登录状态
-    try:
-        steamCommon.init_cookie_from_browser()
-    except crawler.CrawlerException as e:
-        output.print_msg("登录状态检测失败，原因：%s" % e.message)
-        raise
+    steam_class = steamCommon.Steam(need_login=True)
+
     # 从文件里获取打折列表
     discount_game_list = load_discount_list()
     if not discount_game_list:
@@ -75,7 +72,7 @@ def main(account_id, include_type, min_discount_percent, min_discount_price):
         output.print_msg("get discount game list from cache file")
     # 获取自己的全部游戏列表
     try:
-        owned_game_list = steamCommon.get_account_owned_app_list(account_id)
+        owned_game_list = steamCommon.get_account_owned_app_list(steam_class.account_id)
     except crawler.CrawlerException as e:
         output.print_msg("个人游戏主页解析失败，原因：%s" % e.message)
         raise
@@ -120,4 +117,4 @@ if __name__ == "__main__":
     if INCLUDE_BUNDLE:
         include_type_id += 4
 
-    main(steamCommon.get_account_id_from_file(), include_type_id, MIN_DISCOUNT_PERCENT, MAX_SELLING_PERCENT)
+    main(include_type_id, MIN_DISCOUNT_PERCENT, MAX_SELLING_PERCENT)

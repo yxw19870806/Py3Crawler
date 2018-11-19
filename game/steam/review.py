@@ -1,6 +1,6 @@
 # -*- coding:UTF-8  -*-
 """
-获取steam全部打折游戏信息
+获取steam可以发布评测的游戏
 https://store.steampowered.com/
 @author: hikaru
 email: hikaru870806@hotmail.com
@@ -32,18 +32,14 @@ def load_review_list():
     return review_data
 
 
-def main(account_id):
+def main():
     # 获取登录状态
-    try:
-        steamCommon.init_cookie_from_browser()
-    except crawler.CrawlerException as e:
-        output.print_msg("登录状态检测失败，原因：%s" % e.message)
-        raise
+    steam_class = steamCommon.Steam(need_login=True)
     # 历史记录
     review_data = load_review_list()
     # 获取自己的全部玩过的游戏列表
     try:
-        played_game_list = steamCommon.get_account_owned_app_list(account_id, True)
+        played_game_list = steamCommon.get_account_owned_app_list(steam_class.account_id, True)
     except crawler.CrawlerException as e:
         output.print_msg("个人游戏主页解析失败，原因：%s" % e.message)
         raise
@@ -126,5 +122,5 @@ def print_list(print_type=0):
 
 
 if __name__ == "__main__":
-    main(steamCommon.get_account_id_from_file())
+    main()
     print_list()
