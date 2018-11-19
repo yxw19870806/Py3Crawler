@@ -14,7 +14,7 @@ from project.xvideos import xvideos
 
 def main():
     # 初始化
-    xvideos_obj = xvideos.XVideos(extra_sys_config={crawler.SYS_NOT_CHECK_SAVE_DATA: True})
+    xvideos_class = xvideos.XVideos(extra_sys_config={crawler.SYS_NOT_CHECK_SAVE_DATA: True})
     # GUI窗口
     gui = tkinter.Tk()
     gui.withdraw()
@@ -39,7 +39,7 @@ def main():
             continue
         # 选择下载目录
         options = {
-            "initialdir": xvideos_obj.video_download_path,
+            "initialdir": xvideos_class.video_download_path,
             "initialfile": "%08d - %s.mp4" % (int(video_id), path.filter_text(video_response["video_title"])),
             "filetypes": [("mp4", ".mp4")],
             "parent": gui,

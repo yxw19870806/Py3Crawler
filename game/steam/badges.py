@@ -16,16 +16,13 @@ IS_TOTAL_CARD = False  # 是不是一个game id下的所有卡牌都要符合条
 
 
 # 获取当前account正在收集的徽章进度
-def main(account_id):
+def main():
     # 获取登录状态
-    try:
-        steamCommon.init_cookie_from_browser()
-    except crawler.CrawlerException as e:
-        output.print_msg("登录状态检测失败，原因：%s" % e.message)
-        raise
+    steam_class = steamCommon.Steam(need_login=True)
+
     # 获取全部没有收到恒宇卡牌掉落且还可以升级的徽章
     try:
-        badges_detail_url_list = steamCommon.get_self_uncompleted_account_badges(account_id)
+        badges_detail_url_list = steamCommon.get_self_uncompleted_account_badges(steam_class.account_id)
     except crawler.CrawlerException as e:
         output.print_msg("个人徽章首页解析失败，原因：%s" % e.message)
         raise
@@ -71,4 +68,4 @@ def main(account_id):
 
 
 if __name__ == "__main__":
-    main(steamCommon.get_account_id_from_file())
+    main()

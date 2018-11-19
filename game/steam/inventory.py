@@ -15,9 +15,13 @@ CHECK_DUPLICATE_EMOTICON = False  # 是否检测重复的表情
 
 
 # 获取当前account正在收集的徽章进度
-def main(account_id):
+def main():
+    # 获取登录状态
+    steam_class = steamCommon.Steam(need_login=True)
+
+    # 获取所有库存
     try:
-        inventory_item_list = steamCommon.get_account_inventory(account_id)
+        inventory_item_list = steamCommon.get_account_inventory(steam_class.account_id)
     except crawler.CrawlerException as e:
         output.print_msg("库存解析失败，原因：%s" % e.message)
         raise
@@ -25,7 +29,7 @@ def main(account_id):
     if CHECK_EXTRA_CARD:
         # 获取徽章等级
         try:
-            badges_list = steamCommon.get_account_badges(account_id)
+            badges_list = steamCommon.get_account_badges(steam_class.account_id)
         except crawler.CrawlerException as e:
             output.print_msg("获取徽章等级失败，原因：%s" % e.message)
             raise
@@ -51,4 +55,4 @@ def main(account_id):
 
 
 if __name__ == "__main__":
-    main(steamCommon.get_account_id_from_file())
+    main()

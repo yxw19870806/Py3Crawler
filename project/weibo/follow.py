@@ -49,10 +49,10 @@ def follow_account(account_id):
 
 def main():
     # 初始化类
-    weibo_obj = weibo.Weibo()
+    weibo_class = weibo.Weibo()
 
     # 读取存档文件
-    for account_id in sorted(weibo_obj.account_list.keys()):
+    for account_id in sorted(weibo_class.account_list.keys()):
         while not follow_account(account_id):
             pass
 

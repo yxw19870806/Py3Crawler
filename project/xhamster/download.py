@@ -14,7 +14,7 @@ from project.xhamster import xhamster
 
 def main():
     # 初始化
-    xhamster_obj = xhamster.Xhamster(extra_sys_config={crawler.SYS_NOT_CHECK_SAVE_DATA: True})
+    xhamster_class = xhamster.Xhamster(extra_sys_config={crawler.SYS_NOT_CHECK_SAVE_DATA: True})
     # GUI窗口
     gui = tkinter.Tk()
     gui.withdraw()
@@ -44,7 +44,7 @@ def main():
             continue
         # 选择下载目录
         options = {
-            "initialdir": xhamster_obj.video_download_path,
+            "initialdir": xhamster_class.video_download_path,
             "initialfile": "%08d %s.mp4" % (int(video_id), path.filter_text(video_response["video_title"])),
             "filetypes": [("mp4", ".mp4")],
             "parent": gui,

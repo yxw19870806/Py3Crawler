@@ -18,7 +18,7 @@ INVENTORY_ITEM_TYPE_EMOTICON = "Emoticon"
 
 MAX_BADGE_LEVEL = 5
 
-COOKIE_INFO = None
+COOKIE_INFO = {}
 ACCOUNT_ID_FILE_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), "data\\account.data"))
 
 
@@ -431,4 +431,39 @@ def get_account_owned_app_list(user_id, is_played=False):
         app_id_list.append(str(game_data["appid"]))
     return app_id_list
 
-crawler.quickly_set_proxy()
+
+class Steam(crawler.Crawler):
+    account_id = None
+
+    def __init__(self, need_login=True, **kwargs):
+        global COOKIE_INFO
+
+        # 设置APP目录
+        crawler.PROJECT_APP_PATH = os.path.abspath(os.path.dirname(__file__))
+
+        # 初始化参数
+        sys_config = {
+            crawler.SYS_SET_PROXY: True,
+            crawler.SYS_NOT_DOWNLOAD: True,
+            crawler.SYS_NOT_CHECK_SAVE_DATA: True,
+            crawler.SYS_GET_COOKIE: ("store.steampowered.com",),
+        }
+        crawler.Crawler.__init__(self, sys_config, **kwargs)
+
+        if need_login:
+            # 获取account id
+            self.account_id = get_account_id_from_file()
+
+            # 检测是否登录
+            login_url = "https://store.steampowered.com/login/checkstoredlogin/?redirectURL="
+            login_response = net.http_request(login_url, method="GET", cookies_list=self.cookie_value, is_auto_redirect=False)
+            if login_response.status != 302:
+                output.print_msg("登录返回code不正确，\n%s" % login_response.status)
+                tool.process_exit()
+            set_cookies = net.get_cookies_from_response_header(login_response.headers)
+            if "steamLogin" not in set_cookies and "steamLoginSecure" not in set_cookies:
+                output.print_msg("登录返回cookies不正确，\n%s" % set_cookies)
+                tool.process_exit()
+            COOKIE_INFO.update(set_cookies)
+            # 强制使用英文
+            COOKIE_INFO["Steam_Language"] = "english"

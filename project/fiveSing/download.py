@@ -14,7 +14,7 @@ from project.fiveSing import fiveSing
 
 def main():
     # 初始化
-    fiveSing_obj = fiveSing.FiveSing(extra_sys_config={crawler.SYS_NOT_CHECK_SAVE_DATA: True})
+    fiveSing_class = fiveSing.FiveSing(extra_sys_config={crawler.SYS_NOT_CHECK_SAVE_DATA: True})
     # GUI窗口
     gui = tkinter.Tk()
     gui.withdraw()
@@ -43,7 +43,7 @@ def main():
         # 选择下载目录
         file_type = net.get_file_type(audio_response["audio_url"])
         options = {
-            "initialdir": fiveSing_obj.audio_download_path,
+            "initialdir": fiveSing_class.audio_download_path,
             "initialfile": "%08d - %s.%s" % (int(audio_id), path.filter_text(audio_response["audio_title"]), file_type),
             "filetypes": [(file_type, "." + file_type)],
             "parent": gui,

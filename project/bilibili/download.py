@@ -15,7 +15,7 @@ from project.bilibili import bilibili
 
 def main():
     # 初始化
-    bilibili_obj = bilibili.BiliBili(extra_sys_config={crawler.SYS_NOT_CHECK_SAVE_DATA: True})
+    bilibili_class = bilibili.BiliBili(extra_sys_config={crawler.SYS_NOT_CHECK_SAVE_DATA: True})
     # GUI窗口
     gui = tkinter.Tk()
     gui.withdraw()
@@ -60,7 +60,7 @@ def main():
             video_name = "%08d %s.%s" % (int(video_id), path.filter_text(video_title), net.get_file_type(video_part_info["video_url_list"][0]))
             # 选择下载目录
             options = {
-                "initialdir": bilibili_obj.video_download_path,
+                "initialdir": bilibili_class.video_download_path,
                 "initialfile": video_name,
                 "filetypes": [("all", "*")],
                 "parent": gui,

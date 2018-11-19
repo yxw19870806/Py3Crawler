@@ -14,7 +14,7 @@ from project.meipai import meipai
 
 def main():
     # 初始化
-    meipai_obj = meipai.MeiPai(extra_sys_config={crawler.SYS_NOT_CHECK_SAVE_DATA: True})
+    meipai_class = meipai.MeiPai(extra_sys_config={crawler.SYS_NOT_CHECK_SAVE_DATA: True})
     # GUI窗口
     gui = tkinter.Tk()
     gui.withdraw()
@@ -39,7 +39,7 @@ def main():
             continue
         # 选择下载目录
         options = {
-            "initialdir": meipai_obj.video_download_path,
+            "initialdir": meipai_class.video_download_path,
             "initialfile": "%010d.mp4" % int(video_id),
             "filetypes": [("mp4", ".mp4")],
             "parent": gui,

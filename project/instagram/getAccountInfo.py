@@ -43,10 +43,10 @@ def get_account_index_page(account_name):
 
 def main():
     # 初始化类
-    instagram_obj = instagram.Instagram()
+    instagram_class = instagram.Instagram()
 
     result_file_path = os.path.join(os.path.dirname(__file__), "info/account_info.data")
-    for account in sorted(instagram_obj.account_list.keys()):
+    for account in sorted(instagram_class.account_list.keys()):
         try:
             account_index_response = get_account_index_page(account)
         except crawler.CrawlerException as e:

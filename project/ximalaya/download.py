@@ -14,7 +14,7 @@ from project.ximalaya import ximalaya
 
 def main():
     # 初始化
-    ximalaya_obj = ximalaya.XiMaLaYa(extra_sys_config={crawler.SYS_NOT_CHECK_SAVE_DATA: True})
+    ximalaya_class = ximalaya.XiMaLaYa(extra_sys_config={crawler.SYS_NOT_CHECK_SAVE_DATA: True})
     # GUI窗口
     gui = tkinter.Tk()
     gui.withdraw()
@@ -41,7 +41,7 @@ def main():
         # 选择下载目录
         file_type = net.get_file_type(audio_response["audio_url"])
         options = {
-            "initialdir": ximalaya_obj.audio_download_path,
+            "initialdir": ximalaya_class.audio_download_path,
             "initialfile": "%s - %s.%s" % (audio_id, path.filter_text(audio_response["audio_title"]), file_type),
             "filetypes": [(file_type, "." + file_type)],
             "parent": gui,
