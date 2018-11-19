@@ -14,7 +14,7 @@ from project.changba import changba
 
 def main():
     # 初始化
-    changba_obj = changba.ChangBa(extra_sys_config={crawler.SYS_NOT_CHECK_SAVE_DATA: True})
+    changba_class = changba.ChangBa(extra_sys_config={crawler.SYS_NOT_CHECK_SAVE_DATA: True})
     # GUI窗口
     gui = tkinter.Tk()
     gui.withdraw()
@@ -38,7 +38,7 @@ def main():
         # 选择下载目录
         file_type = net.get_file_type(audio_response["audio_url"])
         options = {
-            "initialdir": changba_obj.audio_download_path,
+            "initialdir": changba_class.audio_download_path,
             "initialfile": "%010d - %s.%s" % (audio_response["audio_id"], path.filter_text(audio_response["audio_title"]), file_type),
             "filetypes": [(file_type, "." + file_type)],
             "parent": gui,

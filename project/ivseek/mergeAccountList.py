@@ -16,11 +16,11 @@ from project.nicoNico import nicoNico
 
 def main():
     # 初始化类
-    youtube_obj = youtube.Youtube(extra_sys_config={crawler.SYS_NOT_CHECK_SAVE_DATA: True})
-    nicoNico_obj = nicoNico.NicoNico(extra_sys_config={crawler.SYS_NOT_CHECK_SAVE_DATA: True})
-    ivseek_obj = ivseek.IvSeek()
+    youtube_class = youtube.Youtube(extra_sys_config={crawler.SYS_NOT_CHECK_SAVE_DATA: True})
+    nicoNico_class = nicoNico.NicoNico(extra_sys_config={crawler.SYS_NOT_CHECK_SAVE_DATA: True})
+    ivseek_class = ivseek.IvSeek()
 
-    save_data_list = ivseek.read_save_data(ivseek_obj.save_data_path)
+    save_data_list = ivseek.read_save_data(ivseek_class.save_data_path)
     account_id_list = {
         "youtube": {},
         "niconico": {},
@@ -37,7 +37,7 @@ def main():
             continue
 
     # 获取niconico账号下的所有视频列表
-    niconico_mylist_cache_path = os.path.join(ivseek_obj.cache_data_path, "niconico_mylist.json")
+    niconico_mylist_cache_path = os.path.join(ivseek_class.cache_data_path, "niconico_mylist.json")
     niconico_mylist_list = tool.json_decode(file.read_file(niconico_mylist_cache_path), {})
     for account_id in account_id_list["niconico"]:
         if account_id in niconico_mylist_list:
@@ -54,19 +54,19 @@ def main():
 
     # 更新youtube的存档文件
     for account_id in account_id_list["youtube"]:
-        if account_id not in youtube_obj.account_list:
-            youtube_obj.account_list[account_id] = [account_id]
-    file.write_file(tool.list_to_string(youtube_obj.account_list.values()), youtube_obj.save_data_path, file.WRITE_FILE_TYPE_REPLACE)
+        if account_id not in youtube_class.account_list:
+            youtube_class.account_list[account_id] = [account_id]
+    file.write_file(tool.list_to_string(youtube_class.account_list.values()), youtube_class.save_data_path, file.WRITE_FILE_TYPE_REPLACE)
 
     # 更新niconico的存档文件
     for account_id in niconico_mylist_list:
         for mylist_id in niconico_mylist_list[account_id]:
             mylist_id = str(mylist_id)
-            if mylist_id not in nicoNico_obj.account_list:
-                nicoNico_obj.account_list[mylist_id] = [mylist_id]
-    file.write_file(tool.list_to_string(nicoNico_obj.account_list.values()), nicoNico_obj.save_data_path, file.WRITE_FILE_TYPE_REPLACE)
+            if mylist_id not in nicoNico_class.account_list:
+                nicoNico_class.account_list[mylist_id] = [mylist_id]
+    file.write_file(tool.list_to_string(nicoNico_class.account_list.values()), nicoNico_class.save_data_path, file.WRITE_FILE_TYPE_REPLACE)
 
-    file.write_file(tool.list_to_string(save_data_list), ivseek_obj.save_data_path, file.WRITE_FILE_TYPE_REPLACE)
+    file.write_file(tool.list_to_string(save_data_list), ivseek_class.save_data_path, file.WRITE_FILE_TYPE_REPLACE)
 
 
 if __name__ == "__main__":

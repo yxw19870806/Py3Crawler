@@ -14,7 +14,7 @@ from project.kg import kg
 
 def main():
     # 初始化
-    kg_obj = kg.KG(extra_sys_config={crawler.SYS_NOT_CHECK_SAVE_DATA: True})
+    kg_class = kg.KG(extra_sys_config={crawler.SYS_NOT_CHECK_SAVE_DATA: True})
     # GUI窗口
     gui = tkinter.Tk()
     gui.withdraw()
@@ -44,7 +44,7 @@ def main():
         # 选择下载目录
         file_type = kg.get_file_type(audio_response["audio_url"])
         options = {
-            "initialdir": kg_obj.audio_download_path,
+            "initialdir": kg_class.audio_download_path,
             "initialfile": "%s - %s.%s" % (audio_id, path.filter_text(audio_response["audio_title"]), file_type),
             "filetypes": [(file_type, "." + file_type)],
             "parent": gui,

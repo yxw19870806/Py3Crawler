@@ -67,10 +67,10 @@ def follow_account(account_name, account_id):
 
 def main():
     # 初始化类
-    instagram_obj = instagram.Instagram()
+    instagram_class = instagram.Instagram()
 
     count = 0
-    for account_name in sorted(instagram_obj.account_list.keys()):
+    for account_name in sorted(instagram_class.account_list.keys()):
         try:
             account_index_response = get_account_index_page(account_name)
         except crawler.CrawlerException as e:
