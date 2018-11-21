@@ -320,9 +320,9 @@ def _random_user_agent():
         Common chrome user agent    "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/51.0.2704.103 Safari/537.36"
         Common IE user agent        "Mozilla/4.0 (compatible; MSIE 8.0; Windows NT 6.1; WOW64)"
     """
-    firefox_version_max = 61
+    firefox_version_max = 63
     # https://zh.wikipedia.org/zh-cn/Google_Chrome
-    chrome_version_list = ["59.0.3071", "60.0.3112", "61.0.3163", "62.0.3202", "63.0.3239", "64.0.3282", "65.0.3325", "66.0.3359", "67.0.3396", "68.0.3423"]
+    chrome_version_list = ["61.0.3163", "62.0.3202", "63.0.3239", "64.0.3282", "65.0.3325", "66.0.3359", "67.0.3396", "68.0.3423", "69.0.3497", "70.0.3538"]
     windows_version_dict = {
         "Windows 2000": "Windows NT 5.0",
         "Windows XP": "Windows NT 5.1",
@@ -334,9 +334,9 @@ def _random_user_agent():
     }
     # browser_type = random.choice(["IE", "firefox", "chrome"])
     browser_type = random.choice(["firefox", "chrome"])
-    os_type = random.choice(list(windows_version_dict.values()))
+    os_type = random.choice(windows_version_dict.values())
     if browser_type == "IE":
-        sub_version = random.randint(6, 10)
+        sub_version = random.randint(6, 11)
         return "Mozilla/4.0 (compatible; MSIE %s.0; %s; WOW64)" % (sub_version, os_type)
     elif browser_type == "firefox":
         firefox_version = random.randint(firefox_version_max - 10, firefox_version_max)
