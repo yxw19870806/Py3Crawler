@@ -69,10 +69,10 @@ def get_one_page_video(account_id, token):
         try:
             result["channel_name"] = crawler.get_json_value(script_json, "metadata", "channelMetadataRenderer", "title", type_check=str)
         except crawler.CrawlerException:
-            reason = crawler.get_json_value(script_json, "alerts", "alertRenderer", "text", "simpleText", default_value="", type_check=str)
+            reason = crawler.get_json_value(script_json, "alerts", 0, "alertRenderer", "text", "simpleText", default_value="", type_check=str)
             if reason == "This channel does not exist.":
                 raise crawler.CrawlerException("账号不存在")
-            elif not reason:
+            elif reason:
                 raise crawler.CrawlerException("账号无法访问，原因：%s" % reason)
             else:
                 raise
