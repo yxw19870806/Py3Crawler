@@ -185,15 +185,13 @@ def get_video_page(video_id):
             elif key == "s":
                 # 解析JS文件，获取对应的加密方法
                 if len(decrypt_function_step) == 0:
-                    js_file_name = tool.find_sub_string(video_play_response_content, 'src="/yts/jsbin/player-', '/base.js"')
+                    js_file_name = tool.find_sub_string(video_play_response_content, 'src="/yts/jsbin/player', '/base.js"')
+                    if not js_file_name:
+                        js_file_name = tool.find_sub_string(video_play_response_content, 'src="https://s.ytimg.com/yts/jsbin/player', '/base.js"')
                     if js_file_name:
-                        js_file_url = "https://www.youtube.com/yts/jsbin/player-%s/base.js" % js_file_name
+                        js_file_url = "https://www.youtube.com/yts/jsbin/player%s/base.js" % js_file_name
                     else:
-                        js_file_name = tool.find_sub_string(video_play_response_content, 'src="https://s.ytimg.com/yts/jsbin/player-', '/base.js"')
-                        if js_file_name:
-                            js_file_url = "https://s.ytimg.com/yts/jsbin/player-%s/base.js" % js_file_name
-                        else:
-                            raise crawler.CrawlerException("播放器JS文件地址截取失败\n%s" % video_play_response_content)
+                        raise crawler.CrawlerException("播放器JS文件地址截取失败\n%s" % video_play_response_content)
                     decrypt_function_step = get_decrypt_step(js_file_url)
                 # 生成加密字符串
                 signature = decrypt_signature(decrypt_function_step, value)
