@@ -583,5 +583,6 @@ class MultiThreadDownload(threading.Thread):
                     # 写入本地文件后退出
                     self.fd_handle.seek(self.start_pos)
                     self.fd_handle.write(response.data)
+                    self.fd_handle.close()
                     return
         self.error_flag.append(self)
