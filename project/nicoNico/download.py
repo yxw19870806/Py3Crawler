@@ -51,7 +51,10 @@ def main():
             continue
         # 开始下载
         log.step("\n视频标题：%s\n视频地址：%s\n下载路径：%s" % (video_response["video_title"], video_response["video_url"], file_path))
-        save_file_return = net.save_net_file(video_response["video_url"], file_path, head_check=True)
+        cookies_list = nicoNico.COOKIE_INFO
+        if video_response["extra_cookie"]:
+            cookies_list.update(video_response["extra_cookie"])
+        save_file_return = net.save_net_file(video_response["video_url"], file_path, head_check=True, cookies_list=cookies_list)
         if save_file_return["status"] == 1:
             log.step("视频《%s》下载成功" % video_response["video_title"])
         else:

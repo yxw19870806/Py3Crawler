@@ -483,10 +483,12 @@ def save_net_file(file_url, file_path, need_content_type=False, header_list=None
             # 等待所有线程下载完毕
             for thread in thread_list:
                 thread.join()
-            # 有任意一个线程下载失败了，跳出（重试机制在MultiThreadDownload类中有）
+            # 有任意一个线程下载失败了，或者文件存在连续1K以上的空字节
             if len(error_flag) > 0:
-                return_code = {"status": 0, "code": -2}
-                break
+                continue
+            if not _check_multi_thread_download_file(file_path):
+                output.print_msg("网络文件%s多线程下载后发现无效字节" % file_url)
+                continue
         if content_length is None:
             return {"status": 1, "code": 0, "file_path": file_path}
         # 判断文件下载后的大小和response中的Content-Length是否一致
@@ -499,6 +501,28 @@ def save_net_file(file_url, file_path, need_content_type=False, header_list=None
     if is_create_file:
         path.delete_dir_or_file(file_path)
     return return_code
+
+
+def _check_multi_thread_download_file(file_path):
+    """Check fhe file download with multi thread
+
+    :return:
+        True    file is valid
+        False   file is invalid(download failure)
+    """
+
+    file_path = os.path.abspath(file_path)
+    if not os.path.exists(file_path):
+        return True
+    with open(file_path, "rb") as file_handle:
+        buffer_size = 2 ** 20  # 1M
+        while True:
+            file_buffer = file_handle.read(buffer_size)
+            if not file_buffer:
+                break
+            if file_buffer.find(b"\x00" * (2**10)) >= 0:
+                return False
+    return True
 
 
 def save_net_file_list(file_url_list, file_path, header_list=None, cookies_list=None):
@@ -583,5 +607,6 @@ class MultiThreadDownload(threading.Thread):
                     # 写入本地文件后退出
                     self.fd_handle.seek(self.start_pos)
                     self.fd_handle.write(response.data)
+                    self.fd_handle.close()
                     return
         self.error_flag.append(self)

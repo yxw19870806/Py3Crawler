@@ -8,6 +8,7 @@ email: hikaru870806@hotmail.com
 import os
 import platform
 import shutil
+import time
 
 CREATE_DIR_MODE_IGNORE_IF_EXIST = 1
 CREATE_DIR_MODE_DELETE_IF_EXIST = 2
@@ -59,7 +60,20 @@ def delete_dir_or_file(dir_path):
     if os.path.isdir(dir_path):
         shutil.rmtree(dir_path, True)
     else:
-        os.remove(dir_path)
+        for retry_count in range(0, 5):
+            try:
+                os.remove(dir_path)
+            except PermissionError as e:
+                # PermissionError: [WinError 32] 另一个程序正在使用此文件，进程无法访问。
+                if str(e).find("[WinError 32]") >= 0:
+                    time.sleep(5)
+                    continue
+                else:
+                    raise
+            else:
+                return True
+        else:
+            return False
 
 
 def delete_null_dir(dir_path):
