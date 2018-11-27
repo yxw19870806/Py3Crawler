@@ -16,6 +16,8 @@ COOKIE_INFO = {}
 SOURCE_FILE_PATH = os.path.join(os.path.dirname(__file__), "packages_names.csv")
 # app信息
 RESULT_FILE_PATH = os.path.join(os.path.dirname(__file__), "apps.csv")
+# 异常包
+ERROR_FILE_PATH = os.path.join(os.path.dirname(__file__), "error.csv")
 
 
 def get_app_info(package_name):
@@ -79,10 +81,16 @@ class GooglePlayApps(crawler.Crawler):
             with open(RESULT_FILE_PATH, "r", encoding="UTF-8") as file_handle:
                 for temp_list in csv.reader(file_handle):
                     done_list[temp_list[0]] = 1
+        if os.path.exists(ERROR_FILE_PATH):
+            with open(ERROR_FILE_PATH, "r", encoding="UTF-8") as file_handle:
+                for temp_list in csv.reader(file_handle):
+                    done_list[temp_list[0]] = 1
 
         with open(SOURCE_FILE_PATH, "r", encoding="UTF-8") as source_file_handle, \
-                open(RESULT_FILE_PATH, "a", newline="", encoding="UTF-8") as destination_file_handle:
+                open(RESULT_FILE_PATH, "a", newline="", encoding="UTF-8") as destination_file_handle, \
+                open(ERROR_FILE_PATH, "a", newline="", encoding="UTF-8") as error_file_handle:
             csv_writer = csv.writer(destination_file_handle)
+            error_csv_writer = csv.writer(error_file_handle)
             thread_list = []
             for app_info in csv.reader(source_file_handle):
                 # 提前结束
@@ -93,7 +101,7 @@ class GooglePlayApps(crawler.Crawler):
                 if package_name in done_list:
                     continue
                 # 开始下载
-                thread = AppsInfo(self, package_name, csv_writer)
+                thread = AppsInfo(self, package_name, csv_writer, error_csv_writer)
                 thread.start()
                 thread_list.append(thread)
 
@@ -103,10 +111,11 @@ class GooglePlayApps(crawler.Crawler):
 
 
 class AppsInfo(crawler.DownloadThread):
-    def __init__(self, main_thread, package_name, csv_writer):
+    def __init__(self, main_thread, package_name, csv_writer, error_csv_writer):
         crawler.DownloadThread.__init__(self, [], main_thread)
         self.display_name = self.package_name = package_name
         self.csv_writer = csv_writer
+        self.error_csv_writer = error_csv_writer
         self.step("开始")
 
     def run(self):
@@ -114,10 +123,11 @@ class AppsInfo(crawler.DownloadThread):
             app_info = get_app_info(self.package_name)
         except crawler.CrawlerException as e:
             print("%s获取安装数失败，原因：%s" % (self.package_name, e.message))
+            self.error_csv_writer.writerow([self.package_name])
         except SystemExit:
             pass
         else:
-            log.step("package: %s, install number: %s" % (self.package_name, app_info["install_count"]))
+            log.step("package: %s done" % self.package_name)
             # 写入排名结果
             with self.thread_lock:
                 self.csv_writer.writerow([self.package_name, app_info["install_count"], app_info["score_count"]])
