@@ -130,7 +130,7 @@ class AppsInfo(crawler.DownloadThread):
         try:
             app_info = get_app_info(self.package_name)
         except crawler.CrawlerException as e:
-            print("%s获取安装数失败，原因：%s" % (self.package_name, e.message))
+            log.step("%s获取应用信息失败，原因：%s" % (self.package_name, e.message))
             self.error_csv_writer.writerow([self.package_name])
         except SystemExit:
             pass
