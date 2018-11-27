@@ -11,9 +11,7 @@ root_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "..\\.."))
 if root_path not in sys.path:
     sys.path.append(root_path)
 os.chdir(root_path)
-from game.steam import steamCommon
 from game.steam import badges
 
 
-account_id = steamCommon.get_account_id_from_file()
-badges.main(account_id)
+badges.main()
