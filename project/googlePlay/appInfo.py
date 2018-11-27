@@ -27,10 +27,10 @@ def get_app_info(package_name):
     }
     app_info_response = net.http_request(app_info_url, method="GET", fields=query_data)
     result = {
-        "update_time": None,  # 最后更新时间
-        "file_size": None,  # 安装包大小
-        "install_count": None,  # 安装数
-        "score_count": None,  # 打分人数
+        "update_time": "",  # 最后更新时间
+        "file_size": "",  # 安装包大小
+        "install_count": 0,  # 安装数
+        "score_count": 0,  # 打分人数
         "developer": "",  # 开发者
         "developer_email": "",  # 开发者邮箱
     }
