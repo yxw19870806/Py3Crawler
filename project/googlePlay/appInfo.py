@@ -16,6 +16,8 @@ COOKIE_INFO = {}
 SOURCE_FILE_PATH = os.path.join(os.path.dirname(__file__), "packages_names.csv")
 # app信息
 RESULT_FILE_PATH = os.path.join(os.path.dirname(__file__), "apps.csv")
+# 异常包
+ERROR_FILE_PATH = os.path.join(os.path.dirname(__file__), "error.csv")
 
 
 def get_app_info(package_name):
@@ -25,10 +27,12 @@ def get_app_info(package_name):
     }
     app_info_response = net.http_request(app_info_url, method="GET", fields=query_data)
     result = {
-        "update_time": None,  # 最后更新时间
-        "file_size": None,  # 安装包大小
-        "install_count": None,  # 安装数
-        "score_count": None,  # 打分人数
+        "update_time": "",  # 最后更新时间
+        "file_size": "",  # 安装包大小
+        "install_count": 0,  # 安装数
+        "score_count": 0,  # 打分人数
+        "developer": "",  # 开发者
+        "developer_email": "",  # 开发者邮箱
     }
     if app_info_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(app_info_response.status))
@@ -44,14 +48,22 @@ def get_app_info(package_name):
             result["file_size"] = label_value
         elif label_text == "Installs":
             result["install_count"] = label_value.replace(",", "").replace("+", "")
+        elif label_text == "Offered By":
+            result["developer"] = label_value
+        elif label_text == "Developer":
+            for sub_label_value in label_value.split("\n"):
+                if sub_label_value.find("@") > 0:
+                    result["developer_email"] = sub_label_value
     # 获取评价人数
-    score_count_text = pq(app_info_response_content).find(".AYi5wd.TBRnV span:first").text()
-    if not score_count_text:
-        raise crawler.CrawlerException("页面截取打分人数失败")
-    score_count = score_count_text.replace(",", "")
-    if not crawler.is_integer(score_count):
-        raise crawler.CrawlerException("打分人数转换失败%s" % score_count_text)
-    result["score_count"] = score_count
+    score_count_text = pq(app_info_response_content).find(".jdjqLd .dNLKff").text()
+    if score_count_text:
+        score_count = score_count_text.replace(",", "")
+        if not crawler.is_integer(score_count):
+            log.notice(package_name + " 打分人数转换失败%s" % score_count_text)
+        result["score_count"] = score_count
+    else:
+        if pq(app_info_response_content).find(".jdjqLd .dNLKff").length != 1:
+            log.notice(package_name + " 页面截取打分人数失败")
     return result
 
 
@@ -79,10 +91,16 @@ class GooglePlayApps(crawler.Crawler):
             with open(RESULT_FILE_PATH, "r", encoding="UTF-8") as file_handle:
                 for temp_list in csv.reader(file_handle):
                     done_list[temp_list[0]] = 1
+        if os.path.exists(ERROR_FILE_PATH):
+            with open(ERROR_FILE_PATH, "r", encoding="UTF-8") as file_handle:
+                for temp_list in csv.reader(file_handle):
+                    done_list[temp_list[0]] = 1
 
         with open(SOURCE_FILE_PATH, "r", encoding="UTF-8") as source_file_handle, \
-                open(RESULT_FILE_PATH, "a", newline="", encoding="UTF-8") as destination_file_handle:
+                open(RESULT_FILE_PATH, "a", newline="", encoding="UTF-8") as destination_file_handle, \
+                open(ERROR_FILE_PATH, "a", newline="", encoding="UTF-8") as error_file_handle:
             csv_writer = csv.writer(destination_file_handle)
+            error_csv_writer = csv.writer(error_file_handle)
             thread_list = []
             for app_info in csv.reader(source_file_handle):
                 # 提前结束
@@ -93,7 +111,7 @@ class GooglePlayApps(crawler.Crawler):
                 if package_name in done_list:
                     continue
                 # 开始下载
-                thread = AppsInfo(self, package_name, csv_writer)
+                thread = AppsInfo(self, package_name, csv_writer, error_csv_writer)
                 thread.start()
                 thread_list.append(thread)
 
@@ -103,24 +121,26 @@ class GooglePlayApps(crawler.Crawler):
 
 
 class AppsInfo(crawler.DownloadThread):
-    def __init__(self, main_thread, package_name, csv_writer):
+    def __init__(self, main_thread, package_name, csv_writer, error_csv_writer):
         crawler.DownloadThread.__init__(self, [], main_thread)
         self.display_name = self.package_name = package_name
         self.csv_writer = csv_writer
+        self.error_csv_writer = error_csv_writer
         self.step("开始")
 
     def run(self):
         try:
             app_info = get_app_info(self.package_name)
         except crawler.CrawlerException as e:
-            print("%s获取安装数失败，原因：%s" % (self.package_name, e.message))
+            log.step("%s获取应用信息失败，原因：%s" % (self.package_name, e.message))
+            self.error_csv_writer.writerow([self.package_name])
         except SystemExit:
             pass
         else:
-            log.step("package: %s, install number: %s" % (self.package_name, app_info["install_count"]))
+            log.step("package: %s done" % self.package_name)
             # 写入排名结果
             with self.thread_lock:
-                self.csv_writer.writerow([self.package_name, app_info["install_count"], app_info["score_count"]])
+                self.csv_writer.writerow([self.package_name, app_info["install_count"], app_info["score_count"], app_info["developer"], app_info["developer_email"]])
         self.notify_main_thread()
 
 
