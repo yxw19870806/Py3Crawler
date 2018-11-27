@@ -55,13 +55,15 @@ def get_app_info(package_name):
                 if sub_label_value.find("@") > 0:
                     result["developer_email"] = sub_label_value
     # 获取评价人数
-    score_count_text = pq(app_info_response_content).find(".AYi5wd.TBRnV span:first").text()
-    if not score_count_text:
-        raise crawler.CrawlerException("页面截取打分人数失败")
-    score_count = score_count_text.replace(",", "")
-    if not crawler.is_integer(score_count):
-        raise crawler.CrawlerException("打分人数转换失败%s" % score_count_text)
-    result["score_count"] = score_count
+    score_count_text = pq(app_info_response_content).find(".jdjqLd .dNLKff").text()
+    if score_count_text:
+        score_count = score_count_text.replace(",", "")
+        if not crawler.is_integer(score_count):
+            log.notice(package_name + " 打分人数转换失败%s" % score_count_text)
+        result["score_count"] = score_count
+    else:
+        if pq(app_info_response_content).find(".jdjqLd .dNLKff").length != 1:
+            log.notice(package_name + " 页面截取打分人数失败")
     return result
 
 
