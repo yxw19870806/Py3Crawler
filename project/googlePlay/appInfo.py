@@ -31,6 +31,8 @@ def get_app_info(package_name):
         "file_size": None,  # 安装包大小
         "install_count": None,  # 安装数
         "score_count": None,  # 打分人数
+        "developer": "",  # 开发者
+        "developer_email": "",  # 开发者邮箱
     }
     if app_info_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(app_info_response.status))
@@ -46,6 +48,12 @@ def get_app_info(package_name):
             result["file_size"] = label_value
         elif label_text == "Installs":
             result["install_count"] = label_value.replace(",", "").replace("+", "")
+        elif label_text == "Offered By":
+            result["developer"] = label_value
+        elif label_text == "Developer":
+            for sub_label_value in label_value.split("\n"):
+                if sub_label_value.find("@") > 0:
+                    result["developer_email"] = sub_label_value
     # 获取评价人数
     score_count_text = pq(app_info_response_content).find(".AYi5wd.TBRnV span:first").text()
     if not score_count_text:
@@ -130,7 +138,7 @@ class AppsInfo(crawler.DownloadThread):
             log.step("package: %s done" % self.package_name)
             # 写入排名结果
             with self.thread_lock:
-                self.csv_writer.writerow([self.package_name, app_info["install_count"], app_info["score_count"]])
+                self.csv_writer.writerow([self.package_name, app_info["install_count"], app_info["score_count"], app_info["developer"], app_info["developer_email"]])
         self.notify_main_thread()
 
 
