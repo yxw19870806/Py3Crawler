@@ -8,6 +8,7 @@ email: hikaru870806@hotmail.com
 """
 import csv
 import os
+import urllib.parse
 from pyquery import PyQuery as pq
 from common import *
 
@@ -29,11 +30,13 @@ def get_app_info(package_name):
     }
     app_info_response = net.http_request(app_info_url, method="GET", fields=query_data)
     result = {
+        "category": "",  # 分类
         "update_time": "",  # 最后更新时间
         "file_size": "",  # 安装包大小
         "install_count": 0,  # 安装数
         "score_count": 0,  # 打分人数
-        "developer": "",  # 开发者
+        "developer_id": "",  # 开发者id
+        "developer_name": "",  # 开发者
         "developer_email": "",  # 开发者邮箱
     }
     if app_info_response.status != net.HTTP_RETURN_CODE_SUCCEED:
@@ -50,13 +53,29 @@ def get_app_info(package_name):
             result["file_size"] = label_value
         elif label_text == "Installs":
             result["install_count"] = label_value.replace(",", "").replace("+", "")
-        elif label_text == "Offered By":
-            result["developer"] = label_value
         elif label_text == "Developer":
             for sub_label_value in label_value.split("\n"):
                 if sub_label_value.find("@") > 0:
                     result["developer_email"] = sub_label_value
                     break
+    # 获取分类
+    label_list_selector = pq(app_info_response_content).find(".jdjqLd .ZVWMWc .hrTbp.R8zArc")
+    for label_index in range(0, label_list_selector.length):
+        label_selector = label_list_selector.eq(label_index)
+        label_href = label_selector.attr("href")
+        if label_href is not None:
+            if label_href.find("store/apps/dev?id=") > 0:
+                result["developer_id"] = tool.find_sub_string(label_href, "store/apps/dev?id=")
+                result["developer_name"] = label_selector.text()
+            elif label_href.find("store/apps/developer?id=") > 0:
+                result["developer_id"] =  tool.find_sub_string(label_href, "store/apps/developer?id=")
+                result["developer_name"] = label_selector.text()
+            elif label_href.find("store/apps/category/") > 0:
+                result["category"] = tool.find_sub_string(label_href, "store/apps/category/")
+            else:
+                log.notice(package_name + " 非开发者信息和应用分类地址: %s" % label_href)
+    if result["developer_id"] and not crawler.is_integer(result["developer_id"]):
+        result["developer_id"] = urllib.parse.unquote(result["developer_id"])
     # 获取评价人数
     score_count_text = pq(app_info_response_content).find(".jdjqLd .dNLKff").text()
     if score_count_text:
@@ -143,7 +162,7 @@ class AppsInfo(crawler.DownloadThread):
             log.step("%s done" % self.package_name)
             # 写入排名结果
             with self.thread_lock:
-                self.csv_writer.writerow([self.package_name, app_info["install_count"], app_info["score_count"], app_info["developer"], app_info["developer_email"]])
+                self.csv_writer.writerow([self.package_name, app_info["category"], app_info["install_count"], app_info["score_count"], app_info["developer_id"], app_info["developer_name"], app_info["developer_email"]])
         self.notify_main_thread()
 
 
