@@ -18,6 +18,8 @@ SOURCE_FILE_PATH = os.path.join(os.path.dirname(__file__), "packages_names.csv")
 RESULT_FILE_PATH = os.path.join(os.path.dirname(__file__), "apps.csv")
 # 异常包
 ERROR_FILE_PATH = os.path.join(os.path.dirname(__file__), "error.csv")
+# 去重后的开发者邮箱
+DEVELOPER_MAIL_FILE_PATH = os.path.join(os.path.dirname(__file__), "mail.csv")
 
 
 def get_app_info(package_name):
