@@ -68,14 +68,11 @@ def get_app_info(package_name):
                 result["developer_id"] = tool.find_sub_string(label_href, "store/apps/dev?id=")
                 result["developer_name"] = label_selector.text()
             elif label_href.find("store/apps/developer?id=") > 0:
-                result["developer_id"] =  tool.find_sub_string(label_href, "store/apps/developer?id=")
                 result["developer_name"] = label_selector.text()
             elif label_href.find("store/apps/category/") > 0:
                 result["category"] = tool.find_sub_string(label_href, "store/apps/category/")
             else:
                 log.notice(package_name + " 非开发者信息和应用分类地址: %s" % label_href)
-    if result["developer_id"] and not crawler.is_integer(result["developer_id"]):
-        result["developer_id"] = urllib.parse.unquote(result["developer_id"])
     # 获取评价人数
     score_count_text = pq(app_info_response_content).find(".jdjqLd .dNLKff").text()
     if score_count_text:
