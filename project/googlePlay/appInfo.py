@@ -54,6 +54,7 @@ def get_app_info(package_name):
             for sub_label_value in label_value.split("\n"):
                 if sub_label_value.find("@") > 0:
                     result["developer_email"] = sub_label_value
+                    break
     # 获取评价人数
     score_count_text = pq(app_info_response_content).find(".jdjqLd .dNLKff").text()
     if score_count_text:
