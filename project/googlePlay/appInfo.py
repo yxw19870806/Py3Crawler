@@ -162,7 +162,15 @@ class AppsInfo(crawler.DownloadThread):
             log.step("%s done" % self.package_name)
             # 写入排名结果
             with self.thread_lock:
-                self.csv_writer.writerow([self.package_name, app_info["category"], app_info["install_count"], app_info["score_count"], app_info["developer_id"], app_info["developer_name"], app_info["developer_email"]])
+                self.csv_writer.writerow([
+                    self.package_name,
+                    app_info["category"],
+                    app_info["install_count"],
+                    app_info["score_count"],
+                    app_info["developer_id"],
+                    app_info["developer_name"],
+                    app_info["developer_email"]
+                ])
         self.notify_main_thread()
 
 

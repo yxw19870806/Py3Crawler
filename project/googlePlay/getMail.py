@@ -19,11 +19,11 @@ def main():
                 mail_list[temp_list[0]] = 1
 
     with open(appInfo.RESULT_FILE_PATH, "r", encoding="UTF-8") as source_file_handle, \
-        open(appInfo.DEVELOPER_MAIL_FILE_PATH, "a", newline="", encoding="UTF-8") as destination_file_handle:
+            open(appInfo.DEVELOPER_MAIL_FILE_PATH, "a", newline="", encoding="UTF-8") as destination_file_handle:
         csv_writer = csv.writer(destination_file_handle)
         for app_info in csv.reader(source_file_handle):
             # 已经查过了，跳过
-            developer_mail = app_info[4]
+            developer_mail = app_info[6]
             if developer_mail in mail_list:
                 continue
             mail_list[developer_mail] = 1
