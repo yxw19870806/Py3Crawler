@@ -109,10 +109,14 @@ class GooglePlayApps(crawler.Crawler):
         if os.path.exists(RESULT_FILE_PATH):
             with open(RESULT_FILE_PATH, "r", encoding="UTF-8") as file_handle:
                 for temp_list in csv.reader(file_handle):
+                    if len(temp_list) == 0:
+                        continue
                     done_list[temp_list[0]] = 1
         if os.path.exists(ERROR_FILE_PATH):
             with open(ERROR_FILE_PATH, "r", encoding="UTF-8") as file_handle:
                 for temp_list in csv.reader(file_handle):
+                    if len(temp_list) == 0:
+                        continue
                     done_list[temp_list[0]] = 1
 
         with open(SOURCE_FILE_PATH, "r", encoding="UTF-8") as source_file_handle, \
@@ -125,6 +129,8 @@ class GooglePlayApps(crawler.Crawler):
                 # 提前结束
                 if not self.is_running():
                     break
+                if len(app_info) == 0:
+                    continue
                 # 已经查过了，跳过
                 package_name = app_info[0]
                 if package_name in done_list:
