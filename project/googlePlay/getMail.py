@@ -16,15 +16,21 @@ def main():
     if os.path.exists(appInfo.DEVELOPER_MAIL_FILE_PATH):
         with open(appInfo.DEVELOPER_MAIL_FILE_PATH, "r", encoding="UTF-8") as file_handle:
             for temp_list in csv.reader(file_handle):
+                if len(temp_list) == 0:
+                    continue
                 mail_list[temp_list[0]] = 1
 
     with open(appInfo.RESULT_FILE_PATH, "r", encoding="UTF-8") as source_file_handle, \
             open(appInfo.DEVELOPER_MAIL_FILE_PATH, "a", newline="", encoding="UTF-8") as destination_file_handle:
         csv_writer = csv.writer(destination_file_handle)
         for app_info in csv.reader(source_file_handle):
+            if len(app_info) == 0:
+                continue
             # 已经查过了，跳过
             developer_mail = app_info[6]
             if developer_mail in mail_list:
+                continue
+            if len(developer_mail) == 0:
                 continue
             mail_list[developer_mail] = 1
             csv_writer.writerow([developer_mail])

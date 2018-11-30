@@ -8,7 +8,7 @@ email: hikaru870806@hotmail.com
 """
 import csv
 import os
-import urllib.parse
+import time
 from pyquery import PyQuery as pq
 from common import *
 
@@ -48,7 +48,7 @@ def get_app_info(package_name):
         label_text = label_selector.find(".BgcNfc").text()
         label_value = label_selector.find("span.htlgb>div>span.htlgb").text()
         if label_text == "Updated":
-            result["update_time"] = label_value
+            result["update_time"] = time.strftime("%Y%m%d", time.strptime(label_value, "%B %d, %Y"))
         elif label_text == "Size":
             result["file_size"] = label_value
         elif label_text == "Installs":
@@ -109,10 +109,14 @@ class GooglePlayApps(crawler.Crawler):
         if os.path.exists(RESULT_FILE_PATH):
             with open(RESULT_FILE_PATH, "r", encoding="UTF-8") as file_handle:
                 for temp_list in csv.reader(file_handle):
+                    if len(temp_list) == 0:
+                        continue
                     done_list[temp_list[0]] = 1
         if os.path.exists(ERROR_FILE_PATH):
             with open(ERROR_FILE_PATH, "r", encoding="UTF-8") as file_handle:
                 for temp_list in csv.reader(file_handle):
+                    if len(temp_list) == 0:
+                        continue
                     done_list[temp_list[0]] = 1
 
         with open(SOURCE_FILE_PATH, "r", encoding="UTF-8") as source_file_handle, \
@@ -125,6 +129,8 @@ class GooglePlayApps(crawler.Crawler):
                 # 提前结束
                 if not self.is_running():
                     break
+                if len(app_info) == 0:
+                    continue
                 # 已经查过了，跳过
                 package_name = app_info[0]
                 if package_name in done_list:
@@ -159,14 +165,18 @@ class AppsInfo(crawler.DownloadThread):
             log.step("%s done" % self.package_name)
             # 写入排名结果
             with self.thread_lock:
+                # 包名, 分类, 最小安装数, 应用文件大小, 开发者id, 开发者名, 开发者邮箱, 应用最后更新时间, 爬虫更新时间
                 self.csv_writer.writerow([
                     self.package_name,
                     app_info["category"],
                     app_info["install_count"],
                     app_info["score_count"],
+                    app_info["file_size"],
                     app_info["developer_id"],
                     app_info["developer_name"],
-                    app_info["developer_email"]
+                    app_info["developer_email"],
+                    app_info["update_time"],
+                    int(time.time())
                 ])
         self.notify_main_thread()
 
