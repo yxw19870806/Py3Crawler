@@ -8,7 +8,7 @@ email: hikaru870806@hotmail.com
 """
 import csv
 import os
-import urllib.parse
+import time
 from pyquery import PyQuery as pq
 from common import *
 
@@ -48,7 +48,7 @@ def get_app_info(package_name):
         label_text = label_selector.find(".BgcNfc").text()
         label_value = label_selector.find("span.htlgb>div>span.htlgb").text()
         if label_text == "Updated":
-            result["update_time"] = label_value
+            result["update_time"] = time.strftime("%Y%m%d", time.strptime(label_value, "%B %d, %Y"))
         elif label_text == "Size":
             result["file_size"] = label_value
         elif label_text == "Installs":
@@ -172,7 +172,8 @@ class AppsInfo(crawler.DownloadThread):
                     app_info["score_count"],
                     app_info["developer_id"],
                     app_info["developer_name"],
-                    app_info["developer_email"]
+                    app_info["developer_email"],
+                    app_info["update_time"],
                 ])
         self.notify_main_thread()
 
