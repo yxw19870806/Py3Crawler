@@ -30,6 +30,8 @@ def main():
             developer_mail = app_info[6]
             if developer_mail in mail_list:
                 continue
+            if len(developer_mail) == 0:
+                continue
             mail_list[developer_mail] = 1
             csv_writer.writerow([developer_mail])
 
