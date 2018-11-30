@@ -39,26 +39,6 @@ def get_account_id_from_file():
     return account_id
 
 
-# 从浏览器中获取登录cookies
-def init_cookie_from_browser():
-    global COOKIE_INFO
-    # 获取cookies
-    all_cookie_from_browser = crawler.quickly_get_all_cookies_from_browser()
-    if "store.steampowered.com" not in all_cookie_from_browser:
-        raise crawler.CrawlerException("浏览器解析cookies失败\n%s" % all_cookie_from_browser)
-    COOKIE_INFO = all_cookie_from_browser["store.steampowered.com"]
-    login_url = "https://store.steampowered.com/login/checkstoredlogin/?redirectURL="
-    login_response = net.http_request(login_url, method="GET", cookies_list=all_cookie_from_browser["store.steampowered.com"], is_auto_redirect=False)
-    if login_response.status != 302:
-        raise crawler.CrawlerException("登录返回code不正确，\n%s" % login_response.status)
-    set_cookies = net.get_cookies_from_response_header(login_response.headers)
-    if "steamLogin" not in set_cookies and "steamLoginSecure" not in set_cookies:
-        raise crawler.CrawlerException("登录返回cookies不正确，\n%s" % set_cookies)
-    COOKIE_INFO.update(set_cookies)
-    # 强制使用英文
-    COOKIE_INFO["Steam_Language"] = "english"
-
-
 # 获取全部正在打折的游戏列表
 def get_discount_game_list():
     page_count = 1
