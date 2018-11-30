@@ -6,8 +6,10 @@ https://store.steampowered.com/
 email: hikaru870806@hotmail.com
 如有问题或建议请联系
 """
+import json
+import os
 import urllib.parse
-from common import output, crawler
+from common import output, crawler, file, tool
 from game.steam import steamCommon
 
 MIN_CARD_PRICE = 0  # 最低卡牌价格
@@ -19,6 +21,15 @@ IS_TOTAL_CARD = False  # 是不是一个game id下的所有卡牌都要符合条
 def main():
     # 获取登录状态
     steam_class = steamCommon.Steam(need_login=True)
+    skip_list_file_path = os.path.join(steam_class.cache_data_path, "badges_skip.txt")
+    blacklist_file_path = os.path.join(steam_class.cache_data_path, "badges_blacklist.txt")
+
+    skip_list = []
+    if os.path.exists(skip_list_file_path):
+        skip_list = tool.json_decode(file.read_file(skip_list_file_path), [])
+    blacklist = []
+    if os.path.exists(blacklist_file_path):
+        blacklist = tool.json_decode(file.read_file(blacklist_file_path), [])
 
     # 获取全部没有收到恒宇卡牌掉落且还可以升级的徽章
     try:
@@ -27,6 +38,11 @@ def main():
         output.print_msg("个人徽章首页解析失败，原因：%s" % e.message)
         raise
     for badges_detail_url in badges_detail_url_list:
+        game_id = badges_detail_url.split("/")[-2]
+        # 跳过列表
+        if game_id in skip_list:
+            continue
+
         # 查询徽章剩余的卡牌以及数量
         try:
             wanted_card_list = steamCommon.get_self_account_badge_card(badges_detail_url)
@@ -34,7 +50,8 @@ def main():
             output.print_msg("徽章%s解析失败，原因：%s" % (badges_detail_url, e.message))
             continue
         if len(wanted_card_list) > 0:
-            game_id = badges_detail_url.split("/")[-2]
+            if int(game_id) in blacklist:
+                continue
             output.print_msg("game id: %s" % game_id, False)
             # 获取全部卡牌的市场售价
             try:
@@ -65,6 +82,10 @@ def main():
             if not IS_TOTAL_CARD or (IS_TOTAL_CARD and is_total):
                 for print_message in print_message_list:
                     output.print_msg(print_message, False)
+        else:
+            # 已实际完成
+            skip_list.append(game_id)
+            file.write_file(json.dumps(skip_list), skip_list_file_path, file.WRITE_FILE_TYPE_REPLACE)
 
 
 if __name__ == "__main__":
