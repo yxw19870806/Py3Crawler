@@ -50,7 +50,7 @@ def main():
             output.print_msg("徽章%s解析失败，原因：%s" % (badges_detail_url, e.message))
             continue
         if len(wanted_card_list) > 0:
-            if int(game_id) in blacklist:
+            if game_id in blacklist:
                 continue
             output.print_msg("game id: %s" % game_id, False)
             # 获取全部卡牌的市场售价
