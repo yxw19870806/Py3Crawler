@@ -165,15 +165,18 @@ class AppsInfo(crawler.DownloadThread):
             log.step("%s done" % self.package_name)
             # 写入排名结果
             with self.thread_lock:
+                # 包名, 分类, 最小安装数, 应用文件大小, 开发者id, 开发者名, 开发者邮箱, 应用最后更新时间, 爬虫更新时间
                 self.csv_writer.writerow([
                     self.package_name,
                     app_info["category"],
                     app_info["install_count"],
                     app_info["score_count"],
+                    app_info["file_size"],
                     app_info["developer_id"],
                     app_info["developer_name"],
                     app_info["developer_email"],
                     app_info["update_time"],
+                    int(time.time())
                 ])
         self.notify_main_thread()
 
