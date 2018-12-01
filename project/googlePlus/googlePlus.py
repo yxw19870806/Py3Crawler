@@ -99,11 +99,14 @@ def get_album_page(account_id, album_id):
     if script_json is None:
         raise crawler.CrawlerException("相册信息加载失败\n%s" % script_json_html)
     try:
+        # 没有任何图片的相册 https://get.google.com/albumarchive/103672820480928504638/album/AF1QipNSBnvfO0HfByOvPJzxYGMsEdd0KYIdCMA0m-43
+        if len(script_json[4]) == 1:
+            return result
         user_key = script_json[4][0]
         continue_token = script_json[3]
         for data in script_json[4][1]:
             result["photo_url_list"].append(data[1])
-    except ValueError:
+    except IndexError:
         raise crawler.CrawlerException("相册信息格式不正确\n%s" % script_json_html)
     # 判断是不是还有下一页
     while continue_token:
