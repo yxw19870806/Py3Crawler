@@ -13,7 +13,7 @@ from pyquery import PyQuery as pq
 from common import *
 
 EACH_PAGE_PHOTO_COUNT = 50  # 每次请求获取的图片数量
-IS_LOGIN = True
+IS_LOGIN = False
 COOKIE_INFO = {}
 
 
@@ -204,12 +204,13 @@ class Flickr(crawler.Crawler):
 
         # 检测登录状态
         console_string = ""
-        if not check_login():
-            IS_LOGIN = False
+        if check_login():
+            IS_LOGIN = True
+            # 检测safe search开启状态
+            if not check_safe_search():
+                console_string = "账号安全搜尋已开启"
+        else:
             console_string = "没有检测到账号登录状态"
-        # 检测safe search开启状态
-        elif not check_safe_search():
-            console_string = "账号安全搜尋已开启"
         while console_string:
             input_str = input(crawler.get_time() + " %s，可能无法解析受限制的图片，继续程序(C)ontinue？或者退出程序(E)xit？:" % console_string)
             input_str = input_str.lower()

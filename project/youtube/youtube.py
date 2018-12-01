@@ -13,7 +13,7 @@ import traceback
 import urllib.parse
 from common import *
 
-IS_LOGIN = True
+IS_LOGIN = False
 COOKIE_INFO = {}
 FIRST_CHOICE_RESOLUTION = 720
 
@@ -121,7 +121,7 @@ def get_video_page(video_id):
         # 没有登录时默认使用英语
         video_play_response = net.http_request(video_play_url, method="GET", fields=query_data, header_list={"accept-language": "en"})
     result = {
-        "is_delete": False,  # 是否已删除
+        "skip_reason": "", # 跳过原因
         "video_time": None,  # 视频上传时间
         "video_title": "",  # 视频标题
         "video_url": None,  # 视频地址
@@ -130,23 +130,27 @@ def get_video_page(video_id):
     if video_play_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(video_play_response.status))
     video_play_response_content = video_play_response.data.decode(errors="ignore")
-    if video_play_response_content.find('"playabilityStatus":{"status":"UNPLAYABLE"') != -1 or video_play_response_content.find('"playabilityStatus":{"status":"ERROR"') != -1:
-        result["is_delete"] = True
-        return result
-    # 没有登录，判断是否必须要登录
-    if not IS_LOGIN:
-        need_login_reason = tool.find_sub_string(video_play_response_content, '"playabilityStatus":{"status":"LOGIN_REQUIRED","reason":"', '",')
-        if need_login_reason:
-            if need_login_reason == "Sign in to confirm your age":
-                raise crawler.CrawlerException("视频需要登录账号并且年龄通过检测后才能访问")
-            else:
-                raise crawler.CrawlerException("视频需要登录账号才能访问，原因：%s" % need_login_reason)
+    script_json_html = tool.find_sub_string(video_play_response_content, 'window["ytInitialPlayerResponse"] = (\n', ");\n")
+    if not script_json_html:
+        raise crawler.CrawlerException("页面截取ytInitialPlayerResponse失败\n%s" % video_play_response_content)
+    script_json = tool.json_decode(script_json_html.strip())
+    if script_json is None:
+        raise crawler.CrawlerException("ytInitialPlayerResponse加载失败\n%s" % script_json_html)
+    video_status = crawler.get_json_value(script_json, "playabilityStatus", "status", type_check=str, value_check=["ok", "UNPLAYABLE", "LOGIN_REQUIRED"])
+    if video_status != "ok":
+        reason = crawler.get_json_value(script_json, "playabilityStatus", "reason", type_check=str)
+        if video_status == "LOGIN_REQUIRED":
+            if IS_LOGIN:
+                raise crawler.CrawlerException("登录状态丢失")
+            result["skip_reason"] = "需要登录账号才能访问，" + reason
+        else:
+            result["skip_reason"] = reason
     script_json_html = tool.find_sub_string(video_play_response_content, "ytplayer.config = ", ";ytplayer.load = ").strip()
     if not script_json_html:
-        raise crawler.CrawlerException("页面截取视频信息失败\n%s" % video_play_response_content)
+        raise crawler.CrawlerException("页面截取ytplayer.config失败\n%s" % video_play_response_content)
     script_json = tool.json_decode(script_json_html)
     if script_json is None:
-        raise crawler.CrawlerException("视频信息格式不正确\n%s" % script_json_html)
+        raise crawler.CrawlerException("ytplayer.config加载失败\n%s" % script_json_html)
     # 获取视频标题
     result["video_title"] = crawler.get_json_value(script_json, "args", "title", type_check=str)
     # 获取视频地址
@@ -355,6 +359,7 @@ def _decrypt_function3(a, b):
 
 class Youtube(crawler.Crawler):
     def __init__(self, **kwargs):
+        global IS_LOGIN
         global COOKIE_INFO
         global FIRST_CHOICE_RESOLUTION
 
@@ -395,15 +400,15 @@ class Youtube(crawler.Crawler):
         self.account_list = crawler.read_save_data(self.save_data_path, 0, ["", "", "0"])
 
         # 检测登录状态
-        if not check_login():
+        if check_login():
+            IS_LOGIN = True
+        else:
             while True:
                 input_str = input(crawler.get_time() + " 没有检测到账号登录状态，可能无法解析受限制的视频，继续程序(C)ontinue？或者退出程序(E)xit？:")
                 input_str = input_str.lower()
                 if input_str in ["e", "exit"]:
                     tool.process_exit()
                 elif input_str in ["c", "continue"]:
-                    global IS_LOGIN
-                    IS_LOGIN = False
                     break
 
     def main(self):
@@ -515,8 +520,8 @@ class Download(crawler.DownloadThread):
             else:
                 self.is_find = True
 
-        if video_response["is_delete"]:
-            self.error("视频%s不存在，跳过" % video_id)
+        if video_response["skip_reason"]:
+            self.error("视频%s已跳过，原因：%s" % (video_id, video_response["skip_reason"]))
             return
 
         self.step("开始下载视频%s《%s》 %s" % (video_id, video_response["video_title"], video_response["video_url"]))

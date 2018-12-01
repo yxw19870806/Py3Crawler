@@ -16,9 +16,6 @@ from project.youtube import youtube
 def main():
     # 初始化
     youtube.Youtube(extra_sys_config={crawler.SYS_NOT_CHECK_SAVE_DATA: True})
-    if not youtube.check_login():
-        log.error("没有检测到登录信息")
-        youtube.IS_LOGIN = False
     # GUI窗口
     gui = tkinter.Tk()
     gui.withdraw()
@@ -49,8 +46,8 @@ def main():
         except crawler.CrawlerException as e:
             log.error("解析视频下载地址失败，原因：%s" % e.message)
             tool.process_exit()
-        if video_response["is_delete"]:
-            log.step("视频不存在，跳过")
+        if video_response["skip_reason"]:
+            log.error("视频%s无法播放，原因：%s" % (video_id, video_response["skip_reason"]))
             continue
         # 选择下载目录
         options = {
