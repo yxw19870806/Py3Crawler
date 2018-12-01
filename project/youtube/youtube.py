@@ -136,7 +136,7 @@ def get_video_page(video_id):
     script_json = tool.json_decode(script_json_html.strip())
     if script_json is None:
         raise crawler.CrawlerException("ytInitialPlayerResponse加载失败\n%s" % script_json_html)
-    video_status = crawler.get_json_value(script_json, "playabilityStatus", "status", type_check=str, value_check=["ok", "UNPLAYABLE", "LOGIN_REQUIRED"])
+    video_status = crawler.get_json_value(script_json, "playabilityStatus", "status", type_check=str, value_check=["OK", "UNPLAYABLE", "LOGIN_REQUIRED"])
     if video_status != "ok":
         reason = crawler.get_json_value(script_json, "playabilityStatus", "reason", type_check=str)
         if video_status == "LOGIN_REQUIRED":
