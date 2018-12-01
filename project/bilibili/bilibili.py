@@ -12,7 +12,7 @@ import traceback
 from common import *
 
 COOKIE_INFO = {}
-IS_LOGIN = True
+IS_LOGIN = False
 IS_DOWNLOAD_CONTRIBUTION_VIDEO = True
 IS_DOWNLOAD_SHORT_VIDEO = True
 EACH_PAGE_COUNT = 30
@@ -275,16 +275,18 @@ class BiliBili(crawler.Crawler):
         self.account_list = crawler.read_save_data(self.save_data_path, 0, ["", "0", "0", "0", "0"])
 
         # 检测登录状态
-        if IS_DOWNLOAD_CONTRIBUTION_VIDEO and not check_login():
-            while True:
-                input_str = input(crawler.get_time() + " 没有检测到账号登录状态，可能无法解析需要登录才能查看的视频以及获取高分辨率，继续程序(C)ontinue？或者退出程序(E)xit？:")
-                input_str = input_str.lower()
-                if input_str in ["e", "exit"]:
-                    tool.process_exit()
-                elif input_str in ["c", "continue"]:
-                    global IS_LOGIN
-                    IS_LOGIN = False
-                    break
+        if IS_DOWNLOAD_CONTRIBUTION_VIDEO:
+            global IS_LOGIN
+            if check_login():
+                IS_LOGIN = True
+            else:
+                while True:
+                    input_str = input(crawler.get_time() + " 没有检测到账号登录状态，可能无法解析需要登录才能查看的视频以及获取高分辨率，继续程序(C)ontinue？或者退出程序(E)xit？:")
+                    input_str = input_str.lower()
+                    if input_str in ["e", "exit"]:
+                        tool.process_exit()
+                    elif input_str in ["c", "continue"]:
+                        break
 
     def main(self):
         # 循环下载每个id
