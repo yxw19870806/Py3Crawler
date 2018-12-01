@@ -219,7 +219,7 @@ def get_video_page(video_id):
         # 大于配置中分辨率的所有视频中分辨率最小的那个
         for resolution in sorted(resolution_to_url.keys()):
             if resolution > FIRST_CHOICE_RESOLUTION:
-                result["video_url"] = resolution_to_url[FIRST_CHOICE_RESOLUTION]
+                result["video_url"] = resolution_to_url[resolution]
                 break
         else:
             # 如果还是没有，则所有视频中分辨率最大的那个
