@@ -13,7 +13,7 @@ import traceback
 import urllib.parse
 from common import *
 
-IS_LOGIN = True
+IS_LOGIN = False
 COOKIE_INFO = {}
 FIRST_CHOICE_RESOLUTION = 720
 
@@ -359,6 +359,7 @@ def _decrypt_function3(a, b):
 
 class Youtube(crawler.Crawler):
     def __init__(self, **kwargs):
+        global IS_LOGIN
         global COOKIE_INFO
         global FIRST_CHOICE_RESOLUTION
 
@@ -399,15 +400,15 @@ class Youtube(crawler.Crawler):
         self.account_list = crawler.read_save_data(self.save_data_path, 0, ["", "", "0"])
 
         # 检测登录状态
-        if not check_login():
+        if check_login():
+            IS_LOGIN = True
+        else:
             while True:
                 input_str = input(crawler.get_time() + " 没有检测到账号登录状态，可能无法解析受限制的视频，继续程序(C)ontinue？或者退出程序(E)xit？:")
                 input_str = input_str.lower()
                 if input_str in ["e", "exit"]:
                     tool.process_exit()
                 elif input_str in ["c", "continue"]:
-                    global IS_LOGIN
-                    IS_LOGIN = False
                     break
 
     def main(self):
