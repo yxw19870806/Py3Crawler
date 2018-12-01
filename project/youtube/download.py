@@ -49,8 +49,8 @@ def main():
         except crawler.CrawlerException as e:
             log.error("解析视频下载地址失败，原因：%s" % e.message)
             tool.process_exit()
-        if video_response["is_delete"]:
-            log.step("视频不存在，跳过")
+        if video_response["skip_reason"]:
+            log.error("视频%s无法播放，原因：%s" % (video_id, video_response["skip_reason"]))
             continue
         # 选择下载目录
         options = {
