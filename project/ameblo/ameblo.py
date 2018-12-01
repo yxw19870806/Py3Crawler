@@ -230,8 +230,6 @@ class Ameblo(crawler.Crawler):
                 if input_str in ["e", "exit"]:
                     tool.process_exit()
                 elif input_str in ["c", "continue"]:
-                    global IS_LOGIN
-                    IS_LOGIN = False
                     break
 
     def main(self):
