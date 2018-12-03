@@ -18,20 +18,19 @@ API_UPDATE_TIME_HOUR = 1  # 每周优惠更新时间（几点）
 INCLUDE_GAME = True
 INCLUDE_PACKAGE = True
 INCLUDE_BUNDLE = True
-DISCOUNT_DATA_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), "data\\discount.txt"))
 MIN_DISCOUNT_PERCENT = 75  # 显示折扣大等于这个数字的游戏
 MAX_SELLING_PERCENT = 1  # 显示价格小等于这个数字的游戏
 
 
 # 打折游戏列表保存到文件
-def save_discount_list(discount_game_list):
-    file.write_file(json.dumps(discount_game_list), DISCOUNT_DATA_PATH, file.WRITE_FILE_TYPE_REPLACE)
+def save_discount_list(cache_file_path, discount_game_list):
+    file.write_file(json.dumps(discount_game_list), cache_file_path, file.WRITE_FILE_TYPE_REPLACE)
 
 
 # 获取文件中的打折列表
-def load_discount_list():
+def load_discount_list(cache_file_path):
     discount_game_list = []
-    if not os.path.exists(DISCOUNT_DATA_PATH):
+    if not os.path.exists(cache_file_path):
         return discount_game_list
     week_day = int(time.strftime("%w"))
     # 已超过本周API更新时间
@@ -42,10 +41,10 @@ def load_discount_list():
         last_api_update_day = (datetime.datetime.today() + datetime.timedelta(days=API_UPDATE_TIME_WEEKDAY - week_day - 7)).timetuple()
     last_api_update_day = time.strptime(time.strftime("%Y-%m-%d " + "%02d" % API_UPDATE_TIME_HOUR + ":00:00", last_api_update_day), "%Y-%m-%d %H:%M:%S")
     last_api_update_time = time.mktime(last_api_update_day)
-    if os.path.getmtime(DISCOUNT_DATA_PATH) < last_api_update_time < time.time():
+    if os.path.getmtime(cache_file_path) < last_api_update_time < time.time():
         output.print_msg("discount game list expired")
         return discount_game_list
-    discount_game_list = tool.json_decode(file.read_file(DISCOUNT_DATA_PATH), discount_game_list)
+    discount_game_list = tool.json_decode(file.read_file(cache_file_path), discount_game_list)
     return discount_game_list
 
 
@@ -55,9 +54,10 @@ def load_discount_list():
 def main(include_type, min_discount_percent, min_discount_price):
     # 获取登录状态
     steam_class = steamCommon.Steam(need_login=True)
+    cache_file_path = os.path.abspath(os.path.join(steam_class.cache_data_path, "discount.txt"))
 
     # 从文件里获取打折列表
-    discount_game_list = load_discount_list()
+    discount_game_list = load_discount_list(cache_file_path)
     if not discount_game_list:
         # 调用API获取打折列表
         try:
@@ -66,7 +66,7 @@ def main(include_type, min_discount_percent, min_discount_price):
             output.print_msg("打折游戏解析失败，原因：%s" % e.message)
             raise
         # 将打折列表写入文件
-        save_discount_list(discount_game_list)
+        save_discount_list(cache_file_path, discount_game_list)
         output.print_msg("get discount game list from website")
     else:
         output.print_msg("get discount game list from cache file")
