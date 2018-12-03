@@ -11,32 +11,54 @@ import os
 from common import crawler, file, output, tool
 from game.steam import steamCommon
 
-REVIEW_DATA_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), "data\\review.txt"))
-
 
 # 保存评测记录到文件
-def save_discount_list(review_data):
-    file.write_file(json.dumps(review_data), REVIEW_DATA_PATH, file.WRITE_FILE_TYPE_REPLACE)
+def save_discount_list(cache_file_path, review_data):
+    file.write_file(json.dumps(review_data), cache_file_path, file.WRITE_FILE_TYPE_REPLACE)
 
 
 # 获取历史评测记录
-def load_review_list():
+def load_review_list(cache_file_path):
     review_data = {
         "can_review_lists": [],
         "dlc_in_game": {},
         "review_list": [],
     }
-    if not os.path.exists(REVIEW_DATA_PATH):
+    if not os.path.exists(cache_file_path):
         return review_data
-    review_data = tool.json_decode(file.read_file(REVIEW_DATA_PATH), review_data)
+    review_data = tool.json_decode(file.read_file(cache_file_path), review_data)
     return review_data
+
+
+# 打印列表
+# print_type  0 全部游戏
+# print_type  1 只要本体
+# print_type  2 只要DLC
+# print_type  3 只要本体已评测的DLC
+def print_list(cache_file_path, print_type=0):
+    review_data = load_review_list(cache_file_path)
+    for game_id in review_data["can_review_lists"]:
+        # 是DLC
+        if game_id in review_data["dlc_in_game"]:
+            if print_type == 1:
+                continue
+            # 本体没有评测过
+            if review_data["dlc_in_game"][game_id] in review_data["can_review_lists"]:
+                if print_type == 3:
+                    continue
+        else:
+            if print_type == 2 or print_type == 3:
+                continue
+        output.print_msg("https://store.steampowered.com/app/%s" % game_id)
 
 
 def main():
     # 获取登录状态
     steam_class = steamCommon.Steam(need_login=True)
+    cache_file_path = os.path.abspath(os.path.join(steam_class.cache_data_path, "review.txt"))
+
     # 历史记录
-    review_data = load_review_list()
+    review_data = load_review_list(cache_file_path)
     # 获取自己的全部玩过的游戏列表
     try:
         played_game_list = steamCommon.get_account_owned_app_list(steam_class.account_id, True)
@@ -96,31 +118,11 @@ def main():
                 review_data["can_review_lists"].append(game_id)
 
         # 增加检测标记
-        save_discount_list(review_data)
+        save_discount_list(cache_file_path, review_data)
 
-
-# 打印列表
-# print_type  0 全部游戏
-# print_type  1 只要本体
-# print_type  2 只要DLC
-# print_type  3 只要本体已评测的DLC
-def print_list(print_type=0):
-    review_data = load_review_list()
-    for game_id in review_data["can_review_lists"]:
-        # 是DLC
-        if game_id in review_data["dlc_in_game"]:
-            if print_type == 1:
-                continue
-            # 本体没有评测过
-            if review_data["dlc_in_game"][game_id] in review_data["can_review_lists"]:
-                if print_type == 3:
-                    continue
-        else:
-            if print_type == 2 or print_type == 3:
-                continue
-        output.print_msg("https://store.steampowered.com/app/%s" % game_id)
+    # 输出
+    print_list(cache_file_path)
 
 
 if __name__ == "__main__":
     main()
-    print_list()
