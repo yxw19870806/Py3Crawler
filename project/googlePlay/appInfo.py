@@ -6,6 +6,7 @@ https://play.google.com/
 email: hikaru870806@hotmail.com
 如有问题或建议请联系
 """
+import copy
 import csv
 import os
 import time
@@ -13,14 +14,25 @@ from pyquery import PyQuery as pq
 from common import *
 
 COOKIE_INFO = {}
-# 包名
-SOURCE_FILE_PATH = os.path.join(os.path.dirname(__file__), "packages_names.csv")
+# 旧版本app信息
+SOURCE_FILE_PATH = os.path.join(os.path.dirname(__file__), "old_apps.csv")
 # app信息
 RESULT_FILE_PATH = os.path.join(os.path.dirname(__file__), "apps.csv")
 # 异常包
 ERROR_FILE_PATH = os.path.join(os.path.dirname(__file__), "error.csv")
 # 去重后的开发者邮箱
 DEVELOPER_MAIL_FILE_PATH = os.path.join(os.path.dirname(__file__), "mail.csv")
+
+DEFAULT_APP_INFO = {
+    "category": None,  # 分类
+    "update_time": None,  # 最后更新时间
+    "file_size": None,  # 安装包大小
+    "install_count": None,  # 安装数
+    "score_count": None,  # 打分人数
+    "developer_id": "",  # 开发者id
+    "developer_name": None,  # 开发者
+    "developer_email": "",  # 开发者邮箱
+}
 
 
 def get_app_info(package_name):
@@ -29,16 +41,7 @@ def get_app_info(package_name):
         "id": package_name,
     }
     app_info_response = net.http_request(app_info_url, method="GET", fields=query_data)
-    result = {
-        "category": "",  # 分类
-        "update_time": "",  # 最后更新时间
-        "file_size": "",  # 安装包大小
-        "install_count": 0,  # 安装数
-        "score_count": 0,  # 打分人数
-        "developer_id": "",  # 开发者id
-        "developer_name": "",  # 开发者
-        "developer_email": "",  # 开发者邮箱
-    }
+    result = copy.copy(DEFAULT_APP_INFO)
     if app_info_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(app_info_response.status))
     app_info_response_content = app_info_response.data.decode(errors="ignore")
@@ -80,9 +83,6 @@ def get_app_info(package_name):
         if not crawler.is_integer(score_count):
             log.notice(package_name + " 打分人数转换失败%s" % score_count_text)
         result["score_count"] = score_count
-    else:
-        if pq(app_info_response_content).find(".jdjqLd .dNLKff").length != 1:
-            log.notice(package_name + " 页面截取打分人数失败")
     return result
 
 
@@ -136,7 +136,7 @@ class GooglePlayApps(crawler.Crawler):
                 if package_name in done_list:
                     continue
                 # 开始下载
-                thread = AppsInfo(self, package_name, csv_writer, error_csv_writer)
+                thread = AppsInfo(self, package_name, app_info, csv_writer, error_csv_writer)
                 thread.start()
                 thread_list.append(thread)
 
@@ -146,9 +146,10 @@ class GooglePlayApps(crawler.Crawler):
 
 
 class AppsInfo(crawler.DownloadThread):
-    def __init__(self, main_thread, package_name, csv_writer, error_csv_writer):
+    def __init__(self, main_thread, package_name, old_app_data, csv_writer, error_csv_writer):
         crawler.DownloadThread.__init__(self, [], main_thread)
         self.display_name = self.package_name = package_name
+        self.old_app_data = old_app_data
         self.csv_writer = csv_writer
         self.error_csv_writer = error_csv_writer
         self.step("开始")
@@ -163,21 +164,27 @@ class AppsInfo(crawler.DownloadThread):
             pass
         else:
             log.step("%s done" % self.package_name)
-            # 写入排名结果
-            with self.thread_lock:
-                # 包名, 分类, 最小安装数, 应用文件大小, 开发者id, 开发者名, 开发者邮箱, 应用最后更新时间, 爬虫更新时间
-                self.csv_writer.writerow([
-                    self.package_name,
-                    app_info["category"],
-                    app_info["install_count"],
-                    app_info["score_count"],
-                    app_info["file_size"],
-                    app_info["developer_id"],
-                    app_info["developer_name"],
-                    app_info["developer_email"],
-                    app_info["update_time"],
-                    int(time.time())
-                ])
+            if app_info["category"] is not None and app_info["install_count"] is not None and app_info["score_count"] is not None and \
+                    app_info["file_size"] is not None and app_info["developer_name"] is not None and app_info["update_time"]is not None:
+                # 写入排名结果
+                with self.thread_lock:
+                    # 包名, 分类, 最小安装数, 应用文件大小, 开发者id, 开发者名, 开发者邮箱, 应用最后更新时间, 爬虫更新时间
+                    self.csv_writer.writerow([
+                        self.package_name,
+                        app_info["category"],
+                        app_info["install_count"],
+                        app_info["score_count"],
+                        app_info["file_size"],
+                        app_info["developer_id"],
+                        app_info["developer_name"],
+                        app_info["developer_email"],
+                        app_info["update_time"],
+                        int(time.time())
+                    ])
+            else:
+                log.error("%s抓取数据不完整" % self.package_name)
+                with self.thread_lock:
+                    self.csv_writer.writerow(self.old_app_data)
         self.notify_main_thread()
 
 
