@@ -145,6 +145,7 @@ def get_video_page(video_id):
             result["skip_reason"] = "需要登录账号才能访问，" + reason
         else:
             result["skip_reason"] = reason
+        return result
     script_json_html = tool.find_sub_string(video_play_response_content, "ytplayer.config = ", ";ytplayer.load = ").strip()
     if not script_json_html:
         raise crawler.CrawlerException("页面截取ytplayer.config失败\n%s" % video_play_response_content)
