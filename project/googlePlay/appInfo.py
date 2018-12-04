@@ -24,13 +24,13 @@ ERROR_FILE_PATH = os.path.join(os.path.dirname(__file__), "error.csv")
 DEVELOPER_MAIL_FILE_PATH = os.path.join(os.path.dirname(__file__), "mail.csv")
 
 DEFAULT_APP_INFO = {
-    "category": "",  # 分类
-    "update_time": "",  # 最后更新时间
-    "file_size": "",  # 安装包大小
-    "install_count": 0,  # 安装数
-    "score_count": 0,  # 打分人数
+    "category": None,  # 分类
+    "update_time": None,  # 最后更新时间
+    "file_size": None,  # 安装包大小
+    "install_count": None,  # 安装数
+    "score_count": None,  # 打分人数
     "developer_id": "",  # 开发者id
-    "developer_name": "",  # 开发者
+    "developer_name": None,  # 开发者
     "developer_email": "",  # 开发者邮箱
 }
 
@@ -164,8 +164,8 @@ class AppsInfo(crawler.DownloadThread):
             pass
         else:
             log.step("%s done" % self.package_name)
-            if app_info["category"] and app_info["install_count"] and app_info["score_count"] and \
-                    app_info["file_size"] and app_info["developer_name"] and app_info["update_time"]:
+            if app_info["category"] is not None and app_info["install_count"] is not None and app_info["score_count"] is not None and \
+                    app_info["file_size"] is not None and app_info["developer_name"] is not None and app_info["update_time"]is not None:
                 # 写入排名结果
                 with self.thread_lock:
                     # 包名, 分类, 最小安装数, 应用文件大小, 开发者id, 开发者名, 开发者邮箱, 应用最后更新时间, 爬虫更新时间
