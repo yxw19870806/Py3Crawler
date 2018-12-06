@@ -126,10 +126,11 @@ def get_video_page(video_id):
         "video_title": "",  # 视频标题
         "video_url": None,  # 视频地址
     }
-    # 获取视频地址
     if video_play_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(video_play_response.status))
     video_play_response_content = video_play_response.data.decode(errors="ignore")
+
+    # window["ytInitialPlayerResponse"]
     script_json_html = tool.find_sub_string(video_play_response_content, 'window["ytInitialPlayerResponse"] = (\n', ");\n")
     if not script_json_html:
         raise crawler.CrawlerException("页面截取ytInitialPlayerResponse失败\n%s" % video_play_response_content)
@@ -139,13 +140,56 @@ def get_video_page(video_id):
     video_status = crawler.get_json_value(script_json, "playabilityStatus", "status", type_check=str, value_check=["OK", "UNPLAYABLE", "LOGIN_REQUIRED"])
     if video_status != "OK":
         reason = crawler.get_json_value(script_json, "playabilityStatus", "reason", type_check=str)
+        # https://www.youtube.com/watch?v=f8K4FFjgL88
         if video_status == "LOGIN_REQUIRED":
             if IS_LOGIN:
                 raise crawler.CrawlerException("登录状态丢失")
             result["skip_reason"] = "需要登录账号才能访问，" + reason
         else:
+            # https://www.youtube.com/watch?v=ku0Jf8yiH-k
             result["skip_reason"] = reason
         return result
+
+    # window["ytInitialData"]
+    # 获取视频发布时间
+    video_time_string = tool.find_sub_string(video_play_response_content, '"dateText":{"simpleText":"', '"},').strip()
+    if not video_time_string:
+        video_time_string = tool.find_sub_string(video_play_response_content, '<strong class="watch-time-text">', '</strong>').strip()
+    if not video_time_string:
+        raise crawler.CrawlerException("页面截取视频发布时间错误\n%s" % video_play_response_content)
+    # 英语
+    if video_time_string.find("Published on") >= 0 or video_time_string.find("Streamed live on") >= 0:
+        video_time_string = video_time_string.replace("Published on", "").replace("Streamed live on", "").strip()
+        try:
+            video_time = time.strptime(video_time_string, "%b %d, %Y")
+        except ValueError:
+            raise crawler.CrawlerException("视频发布时间文本格式不正确\n%s" % video_time_string)
+    # 简体中文
+    elif video_time_string.find("发布") >= 0 or video_time_string.find("上线日期：") >= 0:
+        video_time_string = video_time_string.replace("发布", "").replace("上线日期：", "").strip()
+        try:
+            video_time = time.strptime(video_time_string, "%Y年%m月%d日")
+        except ValueError:
+            raise crawler.CrawlerException("视频发布时间文本格式不正确\n%s" % video_time_string)
+    # 繁体中文
+    elif video_time_string.find("发布") >= 0 or video_time_string.find("即時串流日期：") >= 0:
+        video_time_string = video_time_string.replace("即時串流日期：", "").strip()
+        try:
+            video_time = time.strptime(video_time_string, "%Y年%m月%d日")
+        except ValueError:
+            raise crawler.CrawlerException("视频发布时间文本格式不正确\n%s" % video_time_string)
+    # 日文
+    elif video_time_string.find("に公開") >= 0 or video_time_string.find("にライブ配信") >= 0:
+        video_time_string = video_time_string.replace("に公開", "").replace("にライブ配信", "").strip()
+        try:
+            video_time = time.strptime(video_time_string, "%Y/%m/%d")
+        except ValueError:
+            raise crawler.CrawlerException("视频发布时间文本格式不正确\n%s" % video_time_string)
+    else:
+        raise crawler.CrawlerException("未知语言的时间格式\n%s" % video_time_string)
+    result["video_time"] = int(time.mktime(video_time))
+
+    # ytplayer.config
     script_json_html = tool.find_sub_string(video_play_response_content, "ytplayer.config = ", ";ytplayer.load = ").strip()
     if not script_json_html:
         raise crawler.CrawlerException("页面截取ytplayer.config失败\n%s" % video_play_response_content)
@@ -225,43 +269,6 @@ def get_video_page(video_id):
         else:
             # 如果还是没有，则所有视频中分辨率最大的那个
             result["video_url"] = resolution_to_url[max(resolution_to_url)]
-    # 获取视频发布时间
-    video_time_string = tool.find_sub_string(video_play_response_content, '"dateText":{"simpleText":"', '"},').strip()
-    if not video_time_string:
-        video_time_string = tool.find_sub_string(video_play_response_content, '<strong class="watch-time-text">', '</strong>').strip()
-    if not video_time_string:
-        raise crawler.CrawlerException("页面截取视频发布时间错误\n%s" % video_play_response_content)
-    # 英语
-    if video_time_string.find("Published on") >= 0 or video_time_string.find("Streamed live on") >= 0:
-        video_time_string = video_time_string.replace("Published on", "").replace("Streamed live on", "").strip()
-        try:
-            video_time = time.strptime(video_time_string, "%b %d, %Y")
-        except ValueError:
-            raise crawler.CrawlerException("视频发布时间文本格式不正确\n%s" % video_time_string)
-    # 简体中文
-    elif video_time_string.find("发布") >= 0 or video_time_string.find("上线日期：") >= 0:
-        video_time_string = video_time_string.replace("发布", "").replace("上线日期：", "").strip()
-        try:
-            video_time = time.strptime(video_time_string, "%Y年%m月%d日")
-        except ValueError:
-            raise crawler.CrawlerException("视频发布时间文本格式不正确\n%s" % video_time_string)
-    # 繁体中文
-    elif video_time_string.find("发布") >= 0 or video_time_string.find("即時串流日期：") >= 0:
-        video_time_string = video_time_string.replace("即時串流日期：", "").strip()
-        try:
-            video_time = time.strptime(video_time_string, "%Y年%m月%d日")
-        except ValueError:
-            raise crawler.CrawlerException("视频发布时间文本格式不正确\n%s" % video_time_string)
-    # 日文
-    elif video_time_string.find("に公開") >= 0 or video_time_string.find("にライブ配信") >= 0:
-        video_time_string = video_time_string.replace("に公開", "").replace("にライブ配信", "").strip()
-        try:
-            video_time = time.strptime(video_time_string, "%Y/%m/%d")
-        except ValueError:
-            raise crawler.CrawlerException("视频发布时间文本格式不正确\n%s" % video_time_string)
-    else:
-        raise crawler.CrawlerException("未知语言的时间格式\n%s" % video_time_string)
-    result["video_time"] = int(time.mktime(video_time))
     return result
 
 
@@ -527,6 +534,8 @@ class Download(crawler.DownloadThread):
 
         if video_response["skip_reason"]:
             self.error("视频%s已跳过，原因：%s" % (video_id, video_response["skip_reason"]))
+            self.account_info[1] = video_id  # 设置存档记录
+            # self.account_info[2] = str(video_response["video_time"])  # 设置存档记录
             return
 
         self.step("开始下载视频%s《%s》 %s" % (video_id, video_response["video_title"], video_response["video_url"]))
