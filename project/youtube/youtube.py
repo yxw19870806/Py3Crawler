@@ -137,7 +137,7 @@ def get_video_page(video_id):
     script_json = tool.json_decode(script_json_html.strip())
     if script_json is None:
         raise crawler.CrawlerException("ytInitialPlayerResponse加载失败\n%s" % script_json_html)
-    video_status = crawler.get_json_value(script_json, "playabilityStatus", "status", type_check=str, value_check=["OK", "UNPLAYABLE", "LOGIN_REQUIRED"])
+    video_status = crawler.get_json_value(script_json, "playabilityStatus", "status", type_check=str, value_check=["OK", "ERROR", "LOGIN_REQUIRED"])
     if video_status != "OK":
         reason = crawler.get_json_value(script_json, "playabilityStatus", "reason", type_check=str)
         # https://www.youtube.com/watch?v=f8K4FFjgL88
@@ -146,17 +146,27 @@ def get_video_page(video_id):
                 raise crawler.CrawlerException("登录状态丢失")
             result["skip_reason"] = "需要登录账号才能访问，" + reason
         else:
+            # https://www.youtube.com/watch?v=_8zpXuXj_Tw
             # https://www.youtube.com/watch?v=ku0Jf8yiH-k
             result["skip_reason"] = reason
-        return result
 
     # window["ytInitialData"]
+    script_json_html = tool.find_sub_string(video_play_response_content, 'window["ytInitialData"] = ', ";\n")
+    if not script_json_html:
+        raise crawler.CrawlerException("页面截取ytInitialData失败\n%s" % video_play_response_content)
+    script_json = tool.json_decode(script_json_html.strip())
+    if script_json is None:
+        raise crawler.CrawlerException("ytInitialData加载失败\n%s" % script_json_html)
     # 获取视频发布时间
-    video_time_string = tool.find_sub_string(video_play_response_content, '"dateText":{"simpleText":"', '"},').strip()
-    if not video_time_string:
-        video_time_string = tool.find_sub_string(video_play_response_content, '<strong class="watch-time-text">', '</strong>').strip()
-    if not video_time_string:
-        raise crawler.CrawlerException("页面截取视频发布时间错误\n%s" % video_play_response_content)
+    try:
+        video_time_string = crawler.get_json_value(script_json, "contents", "twoColumnWatchNextResults", "results", "results", "contents", 1, "videoSecondaryInfoRenderer",
+                                               "dateText", "simpleText", default_value="", type_check=str)
+    except crawler.CrawlerException:
+        if video_status == "ERROR":
+            result["skip_reason"] = "视频不存在"
+            return result["skip_reason"]
+        else:
+            raise
     # 英语
     if video_time_string.find("Published on") >= 0 or video_time_string.find("Streamed live on") >= 0:
         video_time_string = video_time_string.replace("Published on", "").replace("Streamed live on", "").strip()
@@ -188,6 +198,8 @@ def get_video_page(video_id):
     else:
         raise crawler.CrawlerException("未知语言的时间格式\n%s" % video_time_string)
     result["video_time"] = int(time.mktime(video_time))
+    if result["skip_reason"]:
+        return result
 
     # ytplayer.config
     script_json_html = tool.find_sub_string(video_play_response_content, "ytplayer.config = ", ";ytplayer.load = ").strip()
