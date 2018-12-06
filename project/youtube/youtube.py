@@ -137,7 +137,7 @@ def get_video_page(video_id):
     script_json = tool.json_decode(script_json_html.strip())
     if script_json is None:
         raise crawler.CrawlerException("ytInitialPlayerResponse加载失败\n%s" % script_json_html)
-    video_status = crawler.get_json_value(script_json, "playabilityStatus", "status", type_check=str, value_check=["OK", "ERROR", "LOGIN_REQUIRED"])
+    video_status = crawler.get_json_value(script_json, "playabilityStatus", "status", type_check=str, value_check=["OK", "ERROR", "UNPLAYABLE", "LOGIN_REQUIRED"])
     if video_status != "OK":
         reason = crawler.get_json_value(script_json, "playabilityStatus", "reason", type_check=str)
         # https://www.youtube.com/watch?v=f8K4FFjgL88
@@ -146,7 +146,9 @@ def get_video_page(video_id):
                 raise crawler.CrawlerException("登录状态丢失")
             result["skip_reason"] = "需要登录账号才能访问，" + reason
         else:
+            # ERROR
             # https://www.youtube.com/watch?v=_8zpXuXj_Tw
+            # UNPLAYABLE
             # https://www.youtube.com/watch?v=ku0Jf8yiH-k
             result["skip_reason"] = reason
 
