@@ -501,7 +501,7 @@ class Download(crawler.DownloadThread):
         return video_id_list
 
     # 解析单个视频
-    def crawl_video(self, video_id):
+    def crawl_video(self, video_id, is_last):
         self.step("开始解析视频%s" % video_id)
 
         # 获取指定视频信息
@@ -515,6 +515,10 @@ class Download(crawler.DownloadThread):
         if not self.is_find:
             if video_response["video_time"] < int(self.account_info[2]):
                 self.step("视频%s跳过" % video_id)
+                # 如果最后一个视频仍然没有找到，重新设置存档
+                if is_last:
+                    self.account_info[1] = video_id  # 设置存档记录
+                    self.account_info[2] = str(video_response["video_time"])  # 设置存档记录
                 return
             elif video_response["video_time"] == int(self.account_info[2]):
                 self.error("视频%s与存档视频发布日期一致，无法过滤，再次下载" % video_id)
@@ -549,7 +553,7 @@ class Download(crawler.DownloadThread):
 
             # 从最早的视频开始下载
             while len(video_id_list) > 0:
-                self.crawl_video(video_id_list.pop())
+                self.crawl_video(video_id_list.pop(), len(video_id_list) == 0)
                 self.main_thread_check()  # 检测主线程运行状态
         except SystemExit as se:
             if se.code == 0:
