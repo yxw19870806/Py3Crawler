@@ -350,7 +350,7 @@ class Download(crawler.DownloadThread):
                     is_over = True
                     # todo 没有找到历史记录如何处理
                     # 有历史记录，但此次直接获取了全部视频
-                    if self.account_info[3] != "":
+                    if self.account_info[3] != "" and len(video_play_url_list) > 0:
                         self.error("没有找到上次下载的最后一个视频地址")
                 else:
                     # 设置下一页指针
