@@ -333,7 +333,7 @@ def _random_user_agent():
     # https://en.wikipedia.org/wiki/Microsoft_Edge
     edge_version_list = ["12.10240", "13.10586", "14.14393", "15.15063", "16.16299", "17.17134", "18.17763"]
     # browser_type = random.choice(["IE", "firefox", "chrome", "Edge"])
-    browser_type = random.choice(["firefox", "chrome", "edge"])
+    browser_type = random.choice(["firefox", "chrome"])
     if browser_type == "IE":
         ie_version = random.randint(8, 11)
         os_type = random.choice(list(windows_version_dict.values()))
