@@ -43,7 +43,7 @@ def main():
         elif item_info["type"] == steamCommon.INVENTORY_ITEM_TYPE_TRADE_CARD:
             if CHECK_EXTRA_CARD:
                 # 闪卡，跳过
-                if item_info['name'].find("(Foil)") >= 0:
+                if item_info['name'].find("(Foil)") >= 0 or item_info['name'].find("(Foil Trading Card)") >= 0:
                     continue
                 if item_info["game_id"] in badges_list:
                     badge_level = badges_list[item_info["game_id"]]
