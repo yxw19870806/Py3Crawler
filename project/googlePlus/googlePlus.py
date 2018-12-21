@@ -243,6 +243,7 @@ class Download(crawler.DownloadThread):
 
         if len(album_response["photo_url_list"]) == 0:
             self.error("相册%s没有解析到图片" % blog_info["blog_id"])
+            self.account_info[2] = str(blog_info["blog_time"])  # 设置存档记录
             return
 
         self.trace("相册%s解析的全部图片：%s" % (blog_info["blog_id"], album_response["photo_url_list"]))
