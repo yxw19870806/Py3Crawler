@@ -13,8 +13,6 @@ import datetime
 from common import *
 from game.steam import steamCommon
 
-API_UPDATE_TIME_WEEKDAY = 2  # 每周优惠更新时间（周几）
-API_UPDATE_TIME_HOUR = 1  # 每周优惠更新时间（几点）
 INCLUDE_GAME = True
 INCLUDE_PACKAGE = True
 INCLUDE_BUNDLE = True
@@ -32,18 +30,16 @@ def load_discount_list(cache_file_path):
     discount_game_list = []
     if not os.path.exists(cache_file_path):
         return discount_game_list
-    week_day = int(time.strftime("%w"))
-    # 已超过本周API更新时间
-    if (week_day > API_UPDATE_TIME_WEEKDAY) or (week_day == API_UPDATE_TIME_WEEKDAY and int(time.strftime("%H")) >= API_UPDATE_TIME_WEEKDAY):
-        last_api_update_day = (datetime.datetime.today() + datetime.timedelta(days=API_UPDATE_TIME_WEEKDAY - week_day)).timetuple()
-    #  获取上周API更新时间
-    else:
-        last_api_update_day = (datetime.datetime.today() + datetime.timedelta(days=API_UPDATE_TIME_WEEKDAY - week_day - 7)).timetuple()
-    last_api_update_day = time.strptime(time.strftime("%Y-%m-%d " + "%02d" % API_UPDATE_TIME_HOUR + ":00:00", last_api_update_day), "%Y-%m-%d %H:%M:%S")
-    last_api_update_time = time.mktime(last_api_update_day)
-    if os.path.getmtime(cache_file_path) < last_api_update_time < time.time():
-        output.print_msg("discount game list expired")
-        return discount_game_list
+    cache_time = time.strftime("%Y-%m-%d %H:%M", time.gmtime(os.path.getmtime(cache_file_path)))
+    while True:
+        input_str = input(crawler.get_time() + " 缓存文件时间：%s，是否使用？使用缓存数据(Y)es，删除缓存数据并重新获取(N)o，退出程序(E)xit" % cache_time)
+        input_str = input_str.lower()
+        if input_str in ["y", "yes"]:
+            break
+        elif input_str in ["n", "no"]:
+            return discount_game_list
+        elif input_str in ["e", "exit"]:
+            tool.process_exit()
     discount_game_list = tool.json_decode(file.read_file(cache_file_path), discount_game_list)
     return discount_game_list
 
