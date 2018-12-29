@@ -165,8 +165,21 @@ def get_video_url(video_play_url):
         video_play_response = net.http_request(video_play_url, method="GET", cookies_list=cookies_list)
         if video_play_response.status == net.HTTP_RETURN_CODE_SUCCEED:
             video_play_response_content = video_play_response.data.decode(errors="ignore")
-            video_url = tool.find_sub_string(video_play_response_content, "video_src=", "&")
-            if not video_url:
+            video_sources = tool.find_sub_string(video_play_response_content, 'video-sources="', '"')
+            if video_sources:
+                video_url = ""
+                resolution_to_url = {}
+                for video_info in video_sources.split("&"):
+                    video_quality, temp_video_url = video_info.split("=")
+                    if temp_video_url:
+                        if video_quality == "fluency":
+                            video_url = temp_video_url
+                        elif crawler.is_integer(video_quality):
+                            resolution_to_url[int(video_quality)] = temp_video_url
+                if len(resolution_to_url) > 0:
+                    video_url = resolution_to_url[max(resolution_to_url)]
+                video_url = urllib.parse.unquote(video_url)
+            else:
                 video_url = tool.find_sub_string(video_play_response_content, 'flashvars="list=', '"')
             if not video_url:
                 if video_play_response_content.find("抱歉，网络繁忙") > 0:
