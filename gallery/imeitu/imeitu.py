@@ -35,7 +35,8 @@ def get_album_page(album_id):
     api_response = net.http_request(api_url, method="GET", fields=query_data, json_decode=True)
     result = {
         "album_title": "",  # 作品标题
-        "is_delete": "",  # 是否已删除
+        "is_delete": False,  # 是否已删除
+        "is_pending": False,  # 是否未审核
         "photo_url_list": [],  # 全部图片地址
         "video_url": None,  # 视频地址
     }
@@ -44,8 +45,12 @@ def get_album_page(album_id):
     try:
         response_data = crawler.get_json_value(api_response.json_data, "data", type_check=dict)
     except crawler.CrawlerException:
-        if crawler.get_json_value(api_response.json_data, "msg", default_value="", type_check=str) == "该动态已被删除":
+        error_msg = crawler.get_json_value(api_response.json_data, "msg", default_value="", type_check=str)
+        if error_msg == "该动态已被删除":
             result["is_delete"] = True
+            return result
+        elif error_msg == "该动态还未审核通过":
+            result["is_pending"] = True
             return result
         raise
     # 图集类型（图片/视频）
@@ -107,6 +112,8 @@ class IMeitu(crawler.Crawler):
 
                 if album_response["is_delete"]:
                     log.step("作品%s已删除，跳过" % album_id)
+                elif album_response["is_pending"]:
+                    log.error("作品%s审核未通过，跳过" % album_id)
 
                 if self.is_download_photo and len(album_response["photo_url_list"]) > 0:
                     photo_index = 1
