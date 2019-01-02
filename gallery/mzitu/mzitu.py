@@ -1,6 +1,6 @@
 # -*- coding:UTF-8  -*-
 """
-http://www.mzitu.com/
+https://www.mzitu.com/
 @author: hikaru
 email: hikaru870806@hotmail.com
 如有问题或建议请联系
@@ -14,7 +14,7 @@ from common import *
 
 # 获取图集首页
 def get_index_page():
-    index_url = "http://www.mzitu.com/"
+    index_url = "https://www.mzitu.com/"
     index_response = net.http_request(index_url, method="GET")
     result = {
         "max_album_id": None,  # 最新图集id
@@ -22,7 +22,7 @@ def get_index_page():
     if index_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(index_response.status))
     index_response_content = index_response.data.decode(errors="ignore")
-    album_id_find = re.findall('<a href="http://www.mzitu.com/(\d+)', index_response_content)
+    album_id_find = re.findall('<a href="https://www.mzitu.com/(\d+)', index_response_content)
     if len(album_id_find) == 0:
         raise crawler.CrawlerException("页面匹配图集id失败\n%s" % index_response_content)
     result["max_album_id"] = max(list(map(int, album_id_find)))
@@ -39,9 +39,9 @@ def get_album_page(album_id):
     }
     while page_count <= max_page_count:
         if page_count == 1:
-            album_pagination_url = "http://www.mzitu.com/%s" % album_id
+            album_pagination_url = "https://www.mzitu.com/%s" % album_id
         else:
-            album_pagination_url = "http://www.mzitu.com/%s/%s" % (album_id, page_count)
+            album_pagination_url = "https://www.mzitu.com/%s/%s" % (album_id, page_count)
         album_pagination_response = net.http_request(album_pagination_url, method="GET", is_auto_redirect=False)
         if page_count == 1 and album_pagination_response.status in [301, 404]:
             result["is_delete"] = True
@@ -181,7 +181,7 @@ class Download(crawler.DownloadThread):
         self.result = None
 
     def run(self):
-        self.result = net.save_net_file(self.photo_url, self.file_path, header_list={"Referer": "http://www.mzitu.com/"})
+        self.result = net.save_net_file(self.photo_url, self.file_path, header_list={"Referer": "https://www.mzitu.com/"})
         self.notify_main_thread()
 
     def get_result(self):
