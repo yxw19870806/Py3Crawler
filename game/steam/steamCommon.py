@@ -138,16 +138,19 @@ def get_game_store_index(game_id):
         "dlc_list": [],  # 游戏下的DLC列表
         "reviewed": False,  # 是否评测过
         "owned": False,  # 是否已拥有
+        "learning": False,  # 是否正在了解
     }
     # 所有DLC
     dlc_list_selection = pq(game_index_response_content).find(".game_area_dlc_section a.game_area_dlc_row")
     if dlc_list_selection.length > 0:
         for index in range(0, dlc_list_selection.length):
             result["dlc_list"].append(dlc_list_selection.eq(index).attr("data-ds-appid"))
-    # 是否已评测
-    result["reviewed"] = pq(game_index_response_content).find("#review_create").length == 0
     # 是否已拥有
     result["owned"] = pq(game_index_response_content).find(".already_in_library").length == 1
+    # 是否已评测
+    result["reviewed"] = result["owned"] and pq(game_index_response_content).find("#review_create").length == 0
+    # 是否正在了解
+    result["learning"] = pq(game_index_response_content).find(".learning_about").length == 1
     return result
 
 
@@ -430,10 +433,10 @@ class Steam(crawler.Crawler):
         }
         crawler.Crawler.__init__(self, sys_config, **kwargs)
 
-        if need_login:
-            # 获取account id
-            self.account_id = get_account_id_from_file()
+        # 获取account id
+        self.account_id = get_account_id_from_file()
 
+        if need_login:
             # 检测是否登录
             login_url = "https://store.steampowered.com/login/checkstoredlogin/?redirectURL="
             login_response = net.http_request(login_url, method="GET", cookies_list=self.cookie_value, is_auto_redirect=False)
