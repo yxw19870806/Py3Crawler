@@ -433,10 +433,10 @@ class Steam(crawler.Crawler):
         }
         crawler.Crawler.__init__(self, sys_config, **kwargs)
 
-        if need_login:
-            # 获取account id
-            self.account_id = get_account_id_from_file()
+        # 获取account id
+        self.account_id = get_account_id_from_file()
 
+        if need_login:
             # 检测是否登录
             login_url = "https://store.steampowered.com/login/checkstoredlogin/?redirectURL="
             login_response = net.http_request(login_url, method="GET", cookies_list=self.cookie_value, is_auto_redirect=False)
