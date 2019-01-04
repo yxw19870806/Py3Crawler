@@ -27,7 +27,7 @@ def main():
             if len(app_info) == 0:
                 continue
             # 已经查过了，跳过
-            developer_mail = app_info[6]
+            developer_mail = app_info[7]
             if developer_mail in mail_list:
                 continue
             if len(developer_mail) == 0:
