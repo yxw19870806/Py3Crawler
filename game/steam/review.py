@@ -23,6 +23,7 @@ def load_review_list(cache_file_path):
         "can_review_lists": [],
         "dlc_in_game": {},
         "review_list": [],
+        "learning_list": [],
     }
     if not os.path.exists(cache_file_path):
         return review_data
@@ -116,6 +117,11 @@ def main():
         else:
             if game_id not in review_data["can_review_lists"]:
                 review_data["can_review_lists"].append(game_id)
+
+        # 需要了解
+        if game_data["learning"]:
+            if game_id not in review_data["learning_list"]:
+                review_data["learning_list"].append(game_id)
 
         # 增加检测标记
         save_discount_list(cache_file_path, review_data)
