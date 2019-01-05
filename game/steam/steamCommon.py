@@ -447,6 +447,9 @@ class Steam(crawler.Crawler):
             if "steamLogin" not in set_cookies and "steamLoginSecure" not in set_cookies:
                 output.print_msg("登录返回cookies不正确，\n%s" % set_cookies)
                 tool.process_exit()
+            COOKIE_INFO.update(self.cookie_value)
             COOKIE_INFO.update(set_cookies)
             # 强制使用英文
             COOKIE_INFO["Steam_Language"] = "english"
+            # 年龄
+            COOKIE_INFO["lastagecheckage"] = "1-January-1971"
