@@ -130,16 +130,21 @@ def get_discount_game_list():
 # 获取游戏商店首页
 def get_game_store_index(game_id):
     game_index_url = "https://store.steampowered.com/app/%s" % game_id
-    game_index_response = net.http_request(game_index_url, method="GET", cookies_list=COOKIE_INFO)
-    if game_index_response.status != net.HTTP_RETURN_CODE_SUCCEED:
-        raise crawler.CrawlerException(crawler.request_failre(game_index_response.status))
-    game_index_response_content = game_index_response.data.decode(errors="ignore")
+    game_index_response = net.http_request(game_index_url, method="GET", cookies_list=COOKIE_INFO, is_auto_redirect=False)
     result = {
         "dlc_list": [],  # 游戏下的DLC列表
         "reviewed": False,  # 是否评测过
         "owned": False,  # 是否已拥有
         "learning": False,  # 是否正在了解
+        "deleted": False,  # 是否已删除（不再合作）
     }
+    if game_index_response.status == 302:
+        if game_index_response.getheader("Location") == "https://store.steampowered.com/":
+            result["deleted"] = True
+            return result
+    if game_index_response.status != net.HTTP_RETURN_CODE_SUCCEED:
+        raise crawler.CrawlerException(crawler.request_failre(game_index_response.status))
+    game_index_response_content = game_index_response.data.decode(errors="ignore")
     # 所有DLC
     dlc_list_selection = pq(game_index_response_content).find(".game_area_dlc_section a.game_area_dlc_row")
     if dlc_list_selection.length > 0:
@@ -447,6 +452,9 @@ class Steam(crawler.Crawler):
             if "steamLogin" not in set_cookies and "steamLoginSecure" not in set_cookies:
                 output.print_msg("登录返回cookies不正确，\n%s" % set_cookies)
                 tool.process_exit()
+            COOKIE_INFO.update(self.cookie_value)
             COOKIE_INFO.update(set_cookies)
             # 强制使用英文
             COOKIE_INFO["Steam_Language"] = "english"
+            # 年龄
+            COOKIE_INFO["lastagecheckage"] = "1-January-1971"

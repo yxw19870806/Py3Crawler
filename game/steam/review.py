@@ -23,6 +23,8 @@ def load_review_list(cache_file_path):
         "can_review_lists": [],
         "dlc_in_game": {},
         "review_list": [],
+        "learning_list": [],
+        "deleted_list": [],
     }
     if not os.path.exists(cache_file_path):
         return review_data
@@ -67,6 +69,9 @@ def main():
         raise
     
     for game_id in played_game_list:
+        if game_id in review_data["deleted_list"]:
+            continue
+
         # 获取游戏信息
         try:
             game_data = steamCommon.get_game_store_index(game_id)
@@ -74,48 +79,57 @@ def main():
             output.print_msg("游戏%s解析失败，原因：%s" % (game_id, e.message))
             raise
 
-        # 有DLC的话，遍历每个DLC
-        for dlc_id in game_data["dlc_list"]:
-            # 已经评测过了，跳过检查
-            if dlc_id in review_data["review_list"]:
-                continue
-
-            # DLC和游戏本体关系字典
-            review_data["dlc_in_game"][dlc_id] = game_id
-
-            # 获取DLC信息
-            try:
-                dlc_data = steamCommon.get_game_store_index(dlc_id)
-            except crawler.CrawlerException as e:
-                output.print_msg("游戏%s解析失败，原因：%s" % (dlc_id, e.message))
-                raise
-
-            if dlc_data["owned"]:
-                # 已经评测过了
-                if dlc_data["reviewed"]:
-                    # 从待评测列表中删除
-                    if dlc_id in review_data["can_review_lists"]:
-                        review_data["can_review_lists"].remove(dlc_id)
-                    # 增加已评测记录
-                    if dlc_id not in review_data["review_list"]:
-                        review_data["review_list"].append(dlc_id)
-                # 新的可以评测游戏
-                else:
-                    if dlc_id not in review_data["can_review_lists"]:
-                        review_data["can_review_lists"].append(dlc_id)
-
-        # 已经评测过了
-        if game_data["reviewed"]:
-            # 从待评测列表中删除
-            if game_id in review_data["can_review_lists"]:
-                review_data["can_review_lists"].remove(game_id)
-            # 增加已评测记录
-            if game_id not in review_data["review_list"]:
-                review_data["review_list"].append(game_id)
-        # 新的可以评测游戏
+        # 已删除
+        if game_data["deleted"]:
+            review_data["deleted_list"].append(game_id)
         else:
-            if game_id not in review_data["can_review_lists"]:
-                review_data["can_review_lists"].append(game_id)
+            # 有DLC的话，遍历每个DLC
+            for dlc_id in game_data["dlc_list"]:
+                # 已经评测过了，跳过检查
+                if dlc_id in review_data["review_list"]:
+                    continue
+
+                # DLC和游戏本体关系字典
+                review_data["dlc_in_game"][dlc_id] = game_id
+
+                # 获取DLC信息
+                try:
+                    dlc_data = steamCommon.get_game_store_index(dlc_id)
+                except crawler.CrawlerException as e:
+                    output.print_msg("游戏%s解析失败，原因：%s" % (dlc_id, e.message))
+                    raise
+
+                if dlc_data["owned"]:
+                    # 已经评测过了
+                    if dlc_data["reviewed"]:
+                        # 从待评测列表中删除
+                        if dlc_id in review_data["can_review_lists"]:
+                            review_data["can_review_lists"].remove(dlc_id)
+                        # 增加已评测记录
+                        if dlc_id not in review_data["review_list"]:
+                            review_data["review_list"].append(dlc_id)
+                    # 新的可以评测游戏
+                    else:
+                        if dlc_id not in review_data["can_review_lists"]:
+                            review_data["can_review_lists"].append(dlc_id)
+
+            # 已经评测过了
+            if game_data["reviewed"]:
+                # 从待评测列表中删除
+                if game_id in review_data["can_review_lists"]:
+                    review_data["can_review_lists"].remove(game_id)
+                # 增加已评测记录
+                if game_id not in review_data["review_list"]:
+                    review_data["review_list"].append(game_id)
+            # 新的可以评测游戏
+            else:
+                if game_id not in review_data["can_review_lists"]:
+                    review_data["can_review_lists"].append(game_id)
+
+            # 需要了解
+            if game_data["learning"]:
+                if game_id not in review_data["learning_list"]:
+                    review_data["learning_list"].append(game_id)
 
         # 增加检测标记
         save_discount_list(cache_file_path, review_data)
