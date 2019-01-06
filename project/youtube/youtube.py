@@ -162,7 +162,7 @@ def get_video_page(video_id):
     # 获取视频发布时间
     try:
         video_time_string = crawler.get_json_value(script_json, "contents", "twoColumnWatchNextResults", "results", "results", "contents", 1, "videoSecondaryInfoRenderer",
-                                               "dateText", "simpleText", default_value="", type_check=str)
+                                               "dateText", "simpleText", type_check=str)
     except crawler.CrawlerException:
         if video_status == "ERROR":
             result["skip_reason"] = "视频不存在"
