@@ -78,7 +78,7 @@ def get_album_page(album_id):
         raise crawler.CrawlerException("未知的作品类型：%s" % album_type)
     # 获取全部图片
     for photo_info in crawler.get_json_value(script_json, "detail", "post_data", "multi", type_check=list):
-        result["photo_url_list"].append(urllib.parse.unquote(crawler.get_json_value(photo_info, "path", type_check=str)))
+        result["photo_url_list"].append(urllib.parse.unquote(crawler.get_json_value(photo_info, "original_path", type_check=str)))
     if not is_skip and len(result["photo_url_list"]) == 0:
         raise crawler.CrawlerException("页面匹配图片地址失败\n%s" % album_response_content)
     return result
@@ -126,18 +126,6 @@ def get_album_page_by_selenium(album_id):
     except TypeError:
         raise crawler.CrawlerException("歌曲加密地址解密失败\n%s" % encryption_video_url)
     return result
-
-
-# 禁用指定分辨率
-def get_photo_url(photo_url):
-    temp_list = photo_url.split("/")
-    # https://img5.bcyimg.com/user/16876/item/web/4bsb/ca1f5d30b3d111e8b9c639207079d5a4.jpg/w650
-    # ->
-    # https://img5.bcyimg.com/user/16876/item/web/4bsb/ca1f5d30b3d111e8b9c639207079d5a4.jpg
-    if temp_list[-1][0] == 'w':
-        return "/".join(temp_list[0:-1])
-    else:
-        return photo_url
 
 
 class Bcy(crawler.Crawler):
@@ -253,7 +241,6 @@ class Download(crawler.DownloadThread):
             for photo_url in album_response["photo_url_list"]:
                 self.main_thread_check()  # 检测主线程运行状态
                 # 禁用指定分辨率
-                photo_url = get_photo_url(photo_url)
                 self.step("作品%s开始下载第%s张图片 %s" % (album_id, photo_index, photo_url))
 
                 file_path = os.path.join(album_path, "%03d.%s" % (photo_index, net.get_file_type(photo_url, "jpg")))
