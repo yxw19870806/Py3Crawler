@@ -15,6 +15,7 @@ from game.steam import steamCommon
 INCLUDE_GAME = True
 INCLUDE_PACKAGE = True
 INCLUDE_BUNDLE = True
+SKIP_LEARNING_GAME = True
 MIN_DISCOUNT_PERCENT = 75  # 显示折扣大等于这个数字的游戏
 MAX_SELLING_PERCENT = 1  # 显示价格小等于这个数字的游戏
 
@@ -48,6 +49,7 @@ def main():
     # 获取登录状态
     steam_class = steamCommon.Steam(need_login=True)
     cache_file_path = os.path.abspath(os.path.join(steam_class.cache_data_path, "discount.txt"))
+    apps_cache_data = steam_class.load_cache_apps_info()
 
     # 从文件里获取打折列表
     discount_game_list = load_discount_list(cache_file_path)
@@ -86,9 +88,12 @@ def main():
                 is_all = True
                 # 遍历包含的全部游戏，如果都有了，则跳过
                 for app_id in discount_info["app_id"]:
+                    if SKIP_LEARNING_GAME and app_id in apps_cache_data["learning_list"]:
+                        is_all = True
+                        break
                     if app_id not in owned_game_list:
                         is_all = False
-                        break
+                        # break
                 if not is_all:
                     if discount_info["type"] == "bundle":
                         output.print_msg("http://store.steampowered.com/bundle/%s/ ,discount %s%%, old price: %s, discount price: %s" % (discount_info["id"], discount_info["discount"], discount_info["old_price"], discount_info["now_price"]), False)
@@ -96,6 +101,8 @@ def main():
                         output.print_msg("http://store.steampowered.com/sub/%s ,discount %s%%, old price: %s, discount price: %s" % (discount_info["id"], discount_info["discount"], discount_info["old_price"], discount_info["now_price"]), False)
             else:
                 if not INCLUDE_GAME:
+                    continue
+                if SKIP_LEARNING_GAME and discount_info["app_id"] in apps_cache_data["learning_list"]:
                     continue
                 if discount_info["app_id"] not in owned_game_list:
                     output.print_msg("http://store.steampowered.com/app/%s/ ,discount %s%%, old price: %s, discount price: %s" % (discount_info["id"], discount_info["discount"], discount_info["old_price"], discount_info["now_price"]), False)
