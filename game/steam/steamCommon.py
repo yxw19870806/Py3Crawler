@@ -6,6 +6,7 @@ https://store.steampowered.com/
 email: hikaru870806@hotmail.com
 如有问题或建议请联系
 """
+import json
 import os
 import re
 from pyquery import PyQuery as pq
@@ -440,6 +441,7 @@ class Steam(crawler.Crawler):
 
         # 获取account id
         self.account_id = get_account_id_from_file()
+        self.apps_cache_file_path = os.path.join(self.cache_data_path, "apps.txt")
 
         if need_login:
             # 检测是否登录
@@ -458,3 +460,21 @@ class Steam(crawler.Crawler):
             COOKIE_INFO["Steam_Language"] = "english"
             # 年龄
             COOKIE_INFO["lastagecheckage"] = "1-January-1971"
+
+
+    def save_cache_apps_info(self, review_data):
+        file.write_file(json.dumps(review_data), self.apps_cache_file_path, file.WRITE_FILE_TYPE_REPLACE)
+
+
+    def load_cache_apps_info(self):
+        review_data = {
+            "can_review_lists": [],
+            "dlc_in_game": {},
+            "review_list": [],
+            "learning_list": [],
+            "deleted_list": [],
+        }
+        if not os.path.exists(self.apps_cache_file_path):
+            return review_data
+        review_data = tool.json_decode(file.read_file(self.apps_cache_file_path), review_data)
+        return review_data

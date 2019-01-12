@@ -9,13 +9,13 @@ email: hikaru870806@hotmail.com
 import json
 import os
 import time
-import datetime
 from common import *
 from game.steam import steamCommon
 
 INCLUDE_GAME = True
 INCLUDE_PACKAGE = True
 INCLUDE_BUNDLE = True
+SKIP_LEARNING_GAME = True
 MIN_DISCOUNT_PERCENT = 75  # 显示折扣大等于这个数字的游戏
 MAX_SELLING_PERCENT = 1  # 显示价格小等于这个数字的游戏
 
@@ -45,12 +45,11 @@ def load_discount_list(cache_file_path):
 
 
 # 给出给定大等于最低折扣或者小等于最低价格的还没有的打折游戏
-# min_discount_percent  最低折扣
-# min_discount_price    最低价格
-def main(include_type, min_discount_percent, min_discount_price):
+def main():
     # 获取登录状态
     steam_class = steamCommon.Steam(need_login=True)
     cache_file_path = os.path.abspath(os.path.join(steam_class.cache_data_path, "discount.txt"))
+    apps_cache_data = steam_class.load_cache_apps_info()
 
     # 从文件里获取打折列表
     discount_game_list = load_discount_list(cache_file_path)
@@ -77,40 +76,37 @@ def main(include_type, min_discount_percent, min_discount_price):
         if discount_info["now_price"] <= 0 or discount_info["old_price"] <= 0:
             continue
         # 只显示当前价格或折扣小等于限制的那些游戏
-        if discount_info["now_price"] <= min_discount_price or discount_info["discount"] >= min_discount_percent:
+        if discount_info["now_price"] <= MAX_SELLING_PERCENT or discount_info["discount"] >= MIN_DISCOUNT_PERCENT:
             # bundle 或者 package，都包含多个游戏
             if discount_info["type"] == "bundle" or discount_info["type"] == "package":
                 # 是否不显示package
-                if discount_info["type"] == "package" and include_type & 2 == 0:
+                if discount_info["type"] == "package" and not INCLUDE_PACKAGE:
                     continue
                 # 是否不显示bundle
-                if discount_info["type"] == "bundle" and include_type & 4 == 0:
+                if discount_info["type"] == "bundle" and not INCLUDE_BUNDLE:
                     continue
                 is_all = True
                 # 遍历包含的全部游戏，如果都有了，则跳过
                 for app_id in discount_info["app_id"]:
+                    if SKIP_LEARNING_GAME and app_id in apps_cache_data["learning_list"]:
+                        is_all = True
+                        break
                     if app_id not in owned_game_list:
                         is_all = False
-                        break
+                        # break
                 if not is_all:
                     if discount_info["type"] == "bundle":
                         output.print_msg("http://store.steampowered.com/bundle/%s/ ,discount %s%%, old price: %s, discount price: %s" % (discount_info["id"], discount_info["discount"], discount_info["old_price"], discount_info["now_price"]), False)
                     else:
                         output.print_msg("http://store.steampowered.com/sub/%s ,discount %s%%, old price: %s, discount price: %s" % (discount_info["id"], discount_info["discount"], discount_info["old_price"], discount_info["now_price"]), False)
             else:
-                if include_type & 1 == 0:
+                if not INCLUDE_GAME:
+                    continue
+                if SKIP_LEARNING_GAME and discount_info["app_id"] in apps_cache_data["learning_list"]:
                     continue
                 if discount_info["app_id"] not in owned_game_list:
                     output.print_msg("http://store.steampowered.com/app/%s/ ,discount %s%%, old price: %s, discount price: %s" % (discount_info["id"], discount_info["discount"], discount_info["old_price"], discount_info["now_price"]), False)
 
 
 if __name__ == "__main__":
-    include_type_id = 0
-    if INCLUDE_GAME:
-        include_type_id += 1
-    if INCLUDE_PACKAGE:
-        include_type_id += 2
-    if INCLUDE_BUNDLE:
-        include_type_id += 4
-
-    main(include_type_id, MIN_DISCOUNT_PERCENT, MAX_SELLING_PERCENT)
+    main()
