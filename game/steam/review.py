@@ -6,30 +6,8 @@ https://store.steampowered.com/
 email: hikaru870806@hotmail.com
 如有问题或建议请联系
 """
-import json
-import os
-from common import crawler, file, output, tool
+from common import crawler, output
 from game.steam import steamCommon
-
-
-# 保存评测记录到文件
-def save_discount_list(cache_file_path, review_data):
-    file.write_file(json.dumps(review_data), cache_file_path, file.WRITE_FILE_TYPE_REPLACE)
-
-
-# 获取历史评测记录
-def load_review_list(cache_file_path):
-    review_data = {
-        "can_review_lists": [],
-        "dlc_in_game": {},
-        "review_list": [],
-        "learning_list": [],
-        "deleted_list": [],
-    }
-    if not os.path.exists(cache_file_path):
-        return review_data
-    review_data = tool.json_decode(file.read_file(cache_file_path), review_data)
-    return review_data
 
 
 # 打印列表
@@ -37,8 +15,8 @@ def load_review_list(cache_file_path):
 # print_type  1 只要本体
 # print_type  2 只要DLC
 # print_type  3 只要本体已评测的DLC
-def print_list(cache_file_path, print_type=0):
-    review_data = load_review_list(cache_file_path)
+def print_list(steam_class, print_type=0):
+    review_data = steam_class.load_cache_apps_info()
     for game_id in review_data["can_review_lists"]:
         # 是DLC
         if game_id in review_data["dlc_in_game"]:
@@ -57,10 +35,9 @@ def print_list(cache_file_path, print_type=0):
 def main():
     # 获取登录状态
     steam_class = steamCommon.Steam(need_login=True)
-    cache_file_path = os.path.abspath(os.path.join(steam_class.cache_data_path, "review.txt"))
 
     # 历史记录
-    review_data = load_review_list(cache_file_path)
+    review_data = steam_class.load_cache_apps_info()
     # 获取自己的全部玩过的游戏列表
     try:
         played_game_list = steamCommon.get_account_owned_app_list(steam_class.account_id, True)
@@ -132,10 +109,10 @@ def main():
                     review_data["learning_list"].append(game_id)
 
         # 增加检测标记
-        save_discount_list(cache_file_path, review_data)
+        steam_class.save_cache_apps_info(review_data)
 
     # 输出
-    print_list(cache_file_path)
+    print_list(steam_class)
 
 
 if __name__ == "__main__":
