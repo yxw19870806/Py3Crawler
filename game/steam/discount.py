@@ -32,7 +32,7 @@ def load_discount_list(cache_file_path):
         return discount_game_list
     cache_time = time.strftime("%Y-%m-%d %H:%M", time.gmtime(os.path.getmtime(cache_file_path)))
     while True:
-        input_str = input(crawler.get_time() + " 缓存文件时间：%s，是否使用？使用缓存数据(Y)es，删除缓存数据并重新获取(N)o，退出程序(E)xit" % cache_time)
+        input_str = input(crawler.get_time() + " 缓存文件时间：%s，是否使用？使用缓存数据(Y)es，删除缓存数据并重新获取(N)o，退出程序(E)xit：" % cache_time)
         input_str = input_str.lower()
         if input_str in ["y", "yes"]:
             break
