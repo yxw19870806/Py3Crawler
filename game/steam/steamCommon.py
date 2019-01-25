@@ -463,6 +463,10 @@ class Steam(crawler.Crawler):
 
 
     def save_cache_apps_info(self, review_data):
+        review_data["can_review_lists"] = sorted(review_data["can_review_lists"])
+        review_data["review_list"] = sorted(review_data["review_list"])
+        review_data["learning_list"] = sorted(review_data["learning_list"])
+        review_data["deleted_list"] = sorted(review_data["deleted_list"])
         file.write_file(json.dumps(review_data), self.apps_cache_file_path, file.WRITE_FILE_TYPE_REPLACE)
 
 
