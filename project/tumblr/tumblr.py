@@ -17,7 +17,7 @@ EACH_PAGE_BLOG_COUNT = 100  # 每次请求获取的日志数量
 COOKIE_INFO = {}
 USER_AGENT = None
 IS_STEP_ERROR_403_AND_404 = False
-IS_SAFE_MODE = True
+IS_LOGIN = False
 
 
 # 检测登录状态
@@ -28,25 +28,6 @@ def check_login():
     index_response = net.http_request(index_url, method="GET", cookies_list=COOKIE_INFO, header_list={"User-Agent": USER_AGENT}, is_auto_redirect=False)
     if index_response.status == 302 and index_response.getheader("Location") == "https://www.tumblr.com/dashboard":
         return True
-    return False
-
-
-# 检测安全模式设置
-def check_safe_mode():
-    if not COOKIE_INFO:
-        return False
-    account_setting_url = "https://www.tumblr.com/settings/account"
-    account_setting_response = net.http_request(account_setting_url, method="GET", cookies_list=COOKIE_INFO, header_list={"User-Agent": USER_AGENT})
-    if account_setting_response.status == net.HTTP_RETURN_CODE_SUCCEED:
-        account_setting_response_content = account_setting_response.data.decode(errors="ignore")
-        # 页面存在safe mode的设置，并且没有选择上
-        if pq(account_setting_response_content).find('#user_safe_mode').length == 1 and pq(account_setting_response_content).find('#user_safe_mode:checked').val() is None:
-            # 访问一次safe mode的网址获取这个UA对应的cookies
-            update_url = "https://www.tumblr.com/safe-mode?url=http://www.tumblr.com/"
-            update_response = net.http_request(update_url, method="GET", cookies_list=COOKIE_INFO, header_list={"User-Agent": USER_AGENT})
-            if update_response.status == 404:
-                COOKIE_INFO.update(net.get_cookies_from_response_header(update_response.headers))
-                return True
     return False
 
 
@@ -430,21 +411,18 @@ class Tumblr(crawler.Crawler):
         self.account_list = crawler.read_save_data(self.save_data_path, 0, ["", "0"])
 
         # 检测登录状态
-        console_string = ""
-        if not check_login():
-            console_string = "没有检测到账号登录状态"
-        # 检测safe mode开启状态
-        elif not check_safe_mode():
-            console_string = "账号安全模式已开启"
-        while console_string:
-            input_str = input(crawler.get_time() + " %s，可能无法解析受限制的账号，继续程序(C)ontinue？或者退出程序(E)xit？:" % console_string)
-            input_str = input_str.lower()
-            if input_str in ["e", "exit"]:
-                tool.process_exit()
-            elif input_str in ["c", "continue"]:
-                global IS_SAFE_MODE
-                IS_SAFE_MODE = False
-                break
+        if check_login():
+            IS_LOGIN = True
+        else:
+            while True:
+                input_str = input(crawler.get_time() + " 没有检测到账号登录状态，可能无法解析受限制的账号，继续程序(C)ontinue？或者退出程序(E)xit？:")
+                input_str = input_str.lower()
+                if input_str in ["e", "exit"]:
+                    tool.process_exit()
+                elif input_str in ["c", "continue"]:
+                    global IS_LOGIN
+                    IS_LOGIN = False
+                    break
 
     def main(self):
         # 循环下载每个id
@@ -644,8 +622,8 @@ class Download(crawler.DownloadThread):
                 raise
 
             # 未登录&开启safe mode直接退出
-            if not IS_SAFE_MODE and self.is_safe_mode:
-                self.error("账号开启了安全模式，跳过")
+            if not IS_LOGIN and (self.is_safe_mode or self.is_private):
+                self.error("账号只限登录账号访问，跳过")
                 tool.process_exit()
 
             # 查询当前任务大致需要从多少页开始爬取
