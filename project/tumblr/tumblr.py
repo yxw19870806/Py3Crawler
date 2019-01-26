@@ -93,7 +93,7 @@ def get_index_setting(account_id):
 
 
 # 获取一页的日志地址列表
-def get_one_page_post(account_id, page_count, is_https, is_safe_mode):
+def get_one_page_post(account_id, page_count, is_https):
     if is_https:
         protocol_type = "https"
     else:
@@ -102,13 +102,7 @@ def get_one_page_post(account_id, page_count, is_https, is_safe_mode):
         post_pagination_url = "%s://%s.tumblr.com/" % (protocol_type, account_id)
     else:
         post_pagination_url = "%s://%s.tumblr.com/page/%s" % (protocol_type, account_id, page_count)
-    if is_safe_mode:
-        header_list = {"User-Agent": USER_AGENT}
-        cookies_list = COOKIE_INFO
-    else:
-        header_list = None
-        cookies_list = None
-    post_pagination_response = net.http_request(post_pagination_url, method="GET", header_list=header_list, cookies_list=cookies_list)
+    post_pagination_response = net.http_request(post_pagination_url, method="GET")
     result = {
         "is_over": False,  # 是否最后一页日志
         "post_info_list": [],  # 全部日志信息
@@ -116,7 +110,7 @@ def get_one_page_post(account_id, page_count, is_https, is_safe_mode):
     if post_pagination_response.status == 404:
         log.step(account_id + " 第%s页日志异常，重试" % page_count)
         time.sleep(5)
-        return get_one_page_post(account_id, page_count, is_https, is_safe_mode)
+        return get_one_page_post(account_id, page_count, is_https)
     # elif post_pagination_response.status in [503, 504, net.HTTP_RETURN_CODE_RETRY] and page_count > 1:
     #     # 服务器错误，跳过这页
     #     log.error(account_id + " 第%s页日志无法访问，跳过" % page_count)
@@ -155,7 +149,9 @@ def get_one_page_private_blog(account_id, page_count):
         "limit": EACH_PAGE_BLOG_COUNT,
         "offset": (page_count - 1) * EACH_PAGE_BLOG_COUNT,
         "post_id": "",
+        "can_modify_safe_mode": "true",
         "should_bypass_safemode": "false",
+        "should_bypass_safemode_forblog": "true",
         "should_bypass_tagfiltering": "false",
         "tumblelog_name_or_id": account_id,
     }
@@ -222,14 +218,8 @@ def get_one_page_private_blog(account_id, page_count):
 
 
 # 获取日志页面
-def get_post_page(post_url, post_id, is_safe_mode):
-    if is_safe_mode:
-        header_list = {"User-Agent": USER_AGENT}
-        cookies_list = COOKIE_INFO
-    else:
-        header_list = None
-        cookies_list = None
-    post_response = net.http_request(post_url, method="GET", header_list=header_list, cookies_list=cookies_list)
+def get_post_page(post_url, post_id):
+    post_response = net.http_request(post_url, method="GET")
     result = {
         "has_video": False,  # 是不是包含视频
         "photo_url_list": [],  # 全部图片地址
@@ -509,15 +499,15 @@ class Download(crawler.DownloadThread):
 
             # 获取一页的日志地址
             try:
-                if self.is_private:
+                if self.is_private or self.is_safe_mode:
                     post_pagination_response = get_one_page_private_blog(self.account_id, page_count)
                 else:
-                    post_pagination_response = get_one_page_post(self.account_id, page_count, self.is_https, self.is_safe_mode)
+                    post_pagination_response = get_one_page_post(self.account_id, page_count, self.is_https)
             except crawler.CrawlerException as e:
                 self.error("第%s页日志解析失败，原因：%s" % (page_count, e.message))
                 raise
 
-            if not self.is_private and post_pagination_response["is_over"]:
+            if (not self.is_private and not self.is_safe_mode) and post_pagination_response["is_over"]:
                 break
 
             self.trace("第%s页解析的全部日志：%s" % (page_count, post_pagination_response["post_info_list"]))
@@ -550,14 +540,14 @@ class Download(crawler.DownloadThread):
 
         post_url = post_info["post_url"][:post_info["post_url"].find(str(post_info["post_id"])) + len(str(post_info["post_id"]))]
 
-        if self.is_private:
+        if self.is_private or self.is_safe_mode:
             has_video = post_info["has_video"]
             photo_url_list = post_info["photo_url_list"]
             video_url = post_info["video_url"]
         else:
             # 获取日志
             try:
-                post_response = get_post_page(post_info["post_url"], post_info["post_id"], self.is_safe_mode)
+                post_response = get_post_page(post_info["post_url"], post_info["post_id"])
             except crawler.CrawlerException as e:
                 self.error("日志 %s 解析失败，原因：%s" % (post_url, e.message))
                 raise
@@ -664,10 +654,10 @@ class Download(crawler.DownloadThread):
                 self.main_thread_check()  # 检测主线程运行状态
                 start_page_count += self.EACH_LOOP_MAX_PAGE_COUNT
                 try:
-                    if self.is_private:
+                    if self.is_private or self.is_safe_mode:
                         post_pagination_response = get_one_page_private_blog(self.account_id, start_page_count)
                     else:
-                        post_pagination_response = get_one_page_post(self.account_id, start_page_count, self.is_https, self.is_safe_mode)
+                        post_pagination_response = get_one_page_post(self.account_id, start_page_count, self.is_https)
                 except crawler.CrawlerException as e:
                     self.error("第%s页日志解析失败，原因：%s" % (start_page_count, e.message))
                     raise
