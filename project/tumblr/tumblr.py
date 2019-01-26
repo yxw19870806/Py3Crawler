@@ -36,13 +36,11 @@ def get_index_setting(account_id):
     index_url = "https://%s.tumblr.com/" % account_id
     index_response = net.http_request(index_url, method="GET", is_auto_redirect=False)
     is_https = True
-    is_safe_mode = False
     is_private = False
     if index_response.status == 301:
         redirect_url = index_response.getheader("Location")
         if redirect_url.find("http://") == 0:
             is_https = False
-        is_safe_mode = False
         is_private = False
         # raise crawler.CrawlerException("此账号已重定向第三方网站")
     elif index_response.status == 302:
@@ -52,12 +50,12 @@ def get_index_setting(account_id):
             index_url = "http://%s.tumblr.com/" % account_id
             index_response = net.http_request(index_url, method="GET", is_auto_redirect=False)
             if index_response.status == net.HTTP_RETURN_CODE_SUCCEED:
-                return is_https, is_safe_mode, is_private
+                return is_https, is_private
             elif index_response.status != 302:
                 raise crawler.CrawlerException(crawler.request_failre(index_response.status))
             redirect_url = index_response.getheader("Location")
         if redirect_url.find("www.tumblr.com/safe-mode?url=") > 0:
-            is_safe_mode = True
+            is_private = True
             if tool.find_sub_string(redirect_url, "?https://www.tumblr.com/safe-mode?url=").find("http://") == 0:
                 is_https = False
         # "Show this blog on the web" disabled
@@ -70,7 +68,7 @@ def get_index_setting(account_id):
         raise crawler.CrawlerException("账号不存在")
     elif index_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(index_response.status))
-    return is_https, is_safe_mode, is_private
+    return is_https, is_private
 
 
 # 获取一页的日志地址列表
@@ -456,7 +454,6 @@ class Tumblr(crawler.Crawler):
 class Download(crawler.DownloadThread):
     EACH_LOOP_MAX_PAGE_COUNT = 200  # 单次缓存多少页的日志
     is_https = True
-    is_safe_mode = False
     is_private = False
 
     def __init__(self, account_info, main_thread):
@@ -477,7 +474,7 @@ class Download(crawler.DownloadThread):
 
             # 获取一页的日志地址
             try:
-                if self.is_private or self.is_safe_mode:
+                if self.is_private:
                     post_pagination_response = get_one_page_private_blog(self.account_id, page_count)
                 else:
                     post_pagination_response = get_one_page_post(self.account_id, page_count, self.is_https)
@@ -485,7 +482,7 @@ class Download(crawler.DownloadThread):
                 self.error("第%s页日志解析失败，原因：%s" % (page_count, e.message))
                 raise
 
-            if (not self.is_private and not self.is_safe_mode) and post_pagination_response["is_over"]:
+            if not self.is_private and post_pagination_response["is_over"]:
                 break
 
             self.trace("第%s页解析的全部日志：%s" % (page_count, post_pagination_response["post_info_list"]))
@@ -518,7 +515,7 @@ class Download(crawler.DownloadThread):
 
         post_url = post_info["post_url"][:post_info["post_url"].find(str(post_info["post_id"])) + len(str(post_info["post_id"]))]
 
-        if self.is_private or self.is_safe_mode:
+        if self.is_private:
             has_video = post_info["has_video"]
             photo_url_list = post_info["photo_url_list"]
             video_url = post_info["video_url"]
@@ -616,13 +613,13 @@ class Download(crawler.DownloadThread):
     def run(self):
         try:
             try:
-                self.is_https, self.is_safe_mode, self.is_private = get_index_setting(self.account_id)
+                self.is_https, self.is_private = get_index_setting(self.account_id)
             except crawler.CrawlerException as e:
                 self.error("账号设置解析失败，原因：%s" % e.message)
                 raise
 
             # 未登录&开启safe mode直接退出
-            if not IS_LOGIN and (self.is_safe_mode or self.is_private):
+            if not IS_LOGIN and self.is_private:
                 self.error("账号只限登录账号访问，跳过")
                 tool.process_exit()
 
@@ -632,7 +629,7 @@ class Download(crawler.DownloadThread):
                 self.main_thread_check()  # 检测主线程运行状态
                 start_page_count += self.EACH_LOOP_MAX_PAGE_COUNT
                 try:
-                    if self.is_private or self.is_safe_mode:
+                    if self.is_private:
                         post_pagination_response = get_one_page_private_blog(self.account_id, start_page_count)
                     else:
                         post_pagination_response = get_one_page_post(self.account_id, start_page_count, self.is_https)
