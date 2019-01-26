@@ -382,6 +382,7 @@ class Tumblr(crawler.Crawler):
         global COOKIE_INFO
         global USER_AGENT
         global IS_STEP_ERROR_403_AND_404
+        global IS_LOGIN
 
         # 设置APP目录
         crawler.PROJECT_APP_PATH = os.path.abspath(os.path.dirname(__file__))
@@ -418,7 +419,6 @@ class Tumblr(crawler.Crawler):
                 if input_str in ["e", "exit"]:
                     tool.process_exit()
                 elif input_str in ["c", "continue"]:
-                    global IS_LOGIN
                     IS_LOGIN = False
                     break
 
