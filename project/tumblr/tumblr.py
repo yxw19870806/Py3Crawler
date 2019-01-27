@@ -170,7 +170,7 @@ def get_one_page_private_blog(account_id, page_count):
         result_post_info["post_id"] = int(post_id)
         # 视频
         if crawler.get_json_value(post_info, "type", type_check=str) == "video":
-            result_post_info["is_video"] = True
+            result_post_info["has_video"] = True
             # 获取视频地址
             max_width = 0
             video_url = None
