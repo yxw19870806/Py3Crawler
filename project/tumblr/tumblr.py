@@ -201,15 +201,14 @@ def get_post_page(post_url, post_id):
     post_response = net.http_request(post_url, method="GET")
     result = {
         "has_video": False,  # 是不是包含视频
+        "is_delete": False,  # 是否已删除
         "photo_url_list": [],  # 全部图片地址
         "video_url": None,  # 视频地址
     }
-    # if post_response.status in [503, 504, net.HTTP_RETURN_CODE_RETRY]:
-    #     # 服务器错误，跳过这页
-    #     account_id = tool.find_sub_string(post_url, "://", ".tumblr.com")
-    #     log.error(account_id + " 日志 %s 无法访问，跳过" % post_url)
-    #     return result
-    if post_response.status != net.HTTP_RETURN_CODE_SUCCEED:
+    if post_response.status == 404:
+        result["is_delete"] = True
+        return result
+    elif post_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(post_response.status))
     post_response_content = post_response.data.decode(errors="ignore")
     post_page_head = tool.find_sub_string(post_response_content, "<head", "</head>", 3)
@@ -526,6 +525,12 @@ class Download(crawler.DownloadThread):
             except crawler.CrawlerException as e:
                 self.error("日志 %s 解析失败，原因：%s" % (post_url, e.message))
                 raise
+            if post_response["is_delete"]:
+                if post_info["post_url"].find("/hey-this-post-may-contain-adult-content-so-weve") > 0 or \
+                                post_info["post_url"].find("//この投稿には成人向けコンテンツか含まれている可能性があるため非公開となりました-もっと知る") > 0:
+                    self.step("日志 %s 已被删除，跳过" % post_info["post_url"])
+                else:
+                    self.error("日志 %s 已被删除，跳过" % post_info["post_url"])
             has_video = post_response["has_video"]
             photo_url_list = post_response["photo_url_list"]
             video_url = post_response["video_url"]
