@@ -1,0 +1,4 @@
+[submodule "video"]
+	path = video
+	url = https://github.com/yxw19870806/Py3CrawlerVideo.git
+	branch = master
