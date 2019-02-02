@@ -45,7 +45,7 @@ def init_session():
 
 # 获取账号首页
 def get_account_index_page(account_id):
-    account_index_url = "https://weibo.com/u/%s" % account_id
+    account_index_url = "https://weibo.com/%s" % account_id
     result = {
         "account_page_id": None,  # 账号page id
     }
