@@ -260,6 +260,8 @@ class BiliBili(crawler.Crawler):
             crawler.SYS_APP_CONFIG: (
                 ("IS_DOWNLOAD_CONTRIBUTION_VIDEO", True, crawler.CONFIG_ANALYSIS_MODE_BOOLEAN),
                 ("IS_DOWNLOAD_SHORT_VIDEO", True, crawler.CONFIG_ANALYSIS_MODE_BOOLEAN),
+                ("CONTRIBUTION_VIDEO_DOWNLOAD_PATH", "\\video", crawler.CONFIG_ANALYSIS_MODE_PATH),
+                ("SHORT_VIDEO_DOWNLOAD_PATH", "\\video", crawler.CONFIG_ANALYSIS_MODE_PATH),
             ),
             crawler.SYS_GET_COOKIE: ("bilibili.com",),
         }
@@ -269,6 +271,8 @@ class BiliBili(crawler.Crawler):
         COOKIE_INFO = self.cookie_value
         IS_DOWNLOAD_CONTRIBUTION_VIDEO = self.app_config["IS_DOWNLOAD_CONTRIBUTION_VIDEO"]
         IS_DOWNLOAD_SHORT_VIDEO = self.app_config["IS_DOWNLOAD_SHORT_VIDEO"]
+        self.contribution_video_download_path = self.app_config["CONTRIBUTION_VIDEO_DOWNLOAD_PATH"]
+        self.short_video_download_path = self.app_config["SHORT_VIDEO_DOWNLOAD_PATH"]
 
         # 解析存档文件
         # account_name  last_video_id  last_short_video_id  last_audio_id  last_album_id
@@ -532,7 +536,7 @@ class Download(crawler.DownloadThread):
                     video_name += " (%s)" % video_part_index
                 video_name = path.filter_text(video_name)
                 video_name = "%s.%s" % (video_name, net.get_file_type(video_part_url))
-                file_path = os.path.join(self.main_thread.video_download_path, self.display_name, video_name)
+                file_path = os.path.join(self.main_thread.contribution_video_download_path, self.display_name, video_name)
                 save_file_return = net.save_net_file(video_part_url, file_path, header_list={"Referer": "https://www.bilibili.com/video/av%s" % video_info["video_id"]})
                 if save_file_return["status"] == 1:
                     self.step("视频%s《%s》第%s个视频下载成功" % (video_info["video_id"], video_info["video_title"], video_index))
@@ -552,7 +556,7 @@ class Download(crawler.DownloadThread):
     def crawl_short_video(self, video_info):
         self.step("开始下载短视频%s %s" % (video_info["video_id"], video_info["video_url"]))
 
-        file_path = os.path.join(self.main_thread.video_download_path, self.display_name, "%07d.%s" % (video_info["video_id"], net.get_file_type(video_info["video_url"])))
+        file_path = os.path.join(self.main_thread.short_video_download_path, self.display_name, "%07d.%s" % (video_info["video_id"], net.get_file_type(video_info["video_url"])))
         save_file_return = net.save_net_file(video_info["video_url"], file_path)
         if save_file_return["status"] == 1:
             self.step("短视频%s下载成功" % video_info["video_id"])
@@ -576,7 +580,7 @@ class Download(crawler.DownloadThread):
 
         self.step("开始下载音频%s《%s》 %s" % (audio_info["audio_id"], audio_info["audio_title"], audio_info_response["audio_url"]))
 
-        file_path = os.path.join(self.main_thread.video_download_path, self.display_name, "%06d %s.%s" % (audio_info["audio_id"], path.filter_text(audio_info["audio_title"]), net.get_file_type(audio_info_response["audio_url"])))
+        file_path = os.path.join(self.main_thread.audio_download_path, self.display_name, "%06d %s.%s" % (audio_info["audio_id"], path.filter_text(audio_info["audio_title"]), net.get_file_type(audio_info_response["audio_url"])))
         save_file_return = net.save_net_file(audio_info_response["audio_url"], file_path)
         if save_file_return["status"] == 1:
             self.step("音频%s《%s》下载成功" % (audio_info["audio_id"], audio_info["audio_title"]))
