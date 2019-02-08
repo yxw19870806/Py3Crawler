@@ -2,8 +2,7 @@
 *.pyc
 log/
 *-*_*_*.data
-gallery/*/cache/
-project/*/cache/
+*/*/cache/
 project/*/info/session
 game/steam/data/account.data
 game/steam/data/discount.txt
