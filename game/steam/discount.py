@@ -17,6 +17,7 @@ INCLUDE_PACKAGE = True
 INCLUDE_BUNDLE = True
 SKIP_LEARNING_GAME = True
 MIN_DISCOUNT_PERCENT = 75  # 显示折扣大等于这个数字的游戏
+MAX_DISCOUNT_PERCENT = 100  # 显示折扣大等于这个数字的游戏
 MAX_SELLING_PERCENT = 1  # 显示价格小等于这个数字的游戏
 
 
@@ -71,12 +72,13 @@ def main():
     except crawler.CrawlerException as e:
         output.print_msg("个人游戏主页解析失败，原因：%s" % e.message)
         raise
+    dlc_ids = apps_cache_data["dlc_in_game"]
     for discount_info in discount_game_list:
         # 获取到的价格不大于0的跳过
         if discount_info["now_price"] <= 0 or discount_info["old_price"] <= 0:
             continue
         # 只显示当前价格或折扣小等于限制的那些游戏
-        if discount_info["now_price"] <= MAX_SELLING_PERCENT or discount_info["discount"] >= MIN_DISCOUNT_PERCENT:
+        if discount_info["now_price"] <= MAX_SELLING_PERCENT or (discount_info["discount"] >= MIN_DISCOUNT_PERCENT and discount_info["discount"] <= MAX_DISCOUNT_PERCENT):
             # bundle 或者 package，都包含多个游戏
             if discount_info["type"] == "bundle" or discount_info["type"] == "package":
                 # 是否不显示package
@@ -91,7 +93,7 @@ def main():
                     if SKIP_LEARNING_GAME and app_id in apps_cache_data["learning_list"]:
                         is_all = True
                         break
-                    if app_id not in owned_game_list:
+                    if app_id not in owned_game_list and app_id not in dlc_ids:
                         is_all = False
                         # break
                 if not is_all:
@@ -104,7 +106,7 @@ def main():
                     continue
                 if SKIP_LEARNING_GAME and discount_info["app_id"] in apps_cache_data["learning_list"]:
                     continue
-                if discount_info["app_id"] not in owned_game_list:
+                if discount_info["app_id"] not in owned_game_list and discount_info["app_id"] not in dlc_ids:
                     output.print_msg("http://store.steampowered.com/app/%s/ ,discount %s%%, old price: %s, discount price: %s" % (discount_info["id"], discount_info["discount"], discount_info["old_price"], discount_info["now_price"]), False)
 
 
