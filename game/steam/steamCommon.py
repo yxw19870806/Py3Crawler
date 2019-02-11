@@ -462,16 +462,12 @@ class Steam(crawler.Crawler):
             COOKIE_INFO["lastagecheckage"] = "1-January-1971"
 
 
-    def save_cache_apps_info(self, review_data):
-        review_data["can_review_lists"] = sorted(review_data["can_review_lists"])
-        review_data["review_list"] = sorted(review_data["review_list"])
-        review_data["learning_list"] = sorted(review_data["learning_list"])
-        review_data["deleted_list"] = sorted(review_data["deleted_list"])
-        file.write_file(json.dumps(review_data), self.apps_cache_file_path, file.WRITE_FILE_TYPE_REPLACE)
+    def save_cache_apps_info(self, apps_cache_data):
+        file.write_file(json.dumps(apps_cache_data), self.apps_cache_file_path, file.WRITE_FILE_TYPE_REPLACE)
 
 
     def load_cache_apps_info(self):
-        review_data = {
+        apps_cache_data = {
             "can_review_lists": [],
             "dlc_in_game": {},
             "review_list": [],
@@ -479,6 +475,14 @@ class Steam(crawler.Crawler):
             "deleted_list": [],
         }
         if not os.path.exists(self.apps_cache_file_path):
-            return review_data
-        review_data = tool.json_decode(file.read_file(self.apps_cache_file_path), review_data)
-        return review_data
+            return apps_cache_data
+        apps_cache_data = tool.json_decode(file.read_file(self.apps_cache_file_path), apps_cache_data)
+        return apps_cache_data
+
+    def format_cache_app_info(self):
+        apps_cache_data = self.load_cache_apps_info()
+        apps_cache_data["can_review_lists"] = sorted(list(set(apps_cache_data["can_review_lists"])))
+        apps_cache_data["review_list"] = sorted(list(set(apps_cache_data["review_list"])))
+        apps_cache_data["learning_list"] = sorted(list(set(apps_cache_data["learning_list"])))
+        apps_cache_data["deleted_list"] = sorted(list(set(apps_cache_data["deleted_list"])))
+        self.save_cache_apps_info(apps_cache_data)
