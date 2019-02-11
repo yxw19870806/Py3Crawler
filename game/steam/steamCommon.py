@@ -143,6 +143,8 @@ def get_game_store_index(game_id):
         if game_index_response.getheader("Location") == "https://store.steampowered.com/":
             result["deleted"] = True
             return result
+        else:
+            game_index_response = net.http_request(game_index_response.getheader("Location"), method="GET", cookies_list=COOKIE_INFO)
     if game_index_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(game_index_response.status))
     game_index_response_content = game_index_response.data.decode(errors="ignore")
@@ -486,3 +488,4 @@ class Steam(crawler.Crawler):
         apps_cache_data["learning_list"] = sorted(list(set(apps_cache_data["learning_list"])))
         apps_cache_data["deleted_list"] = sorted(list(set(apps_cache_data["deleted_list"])))
         self.save_cache_apps_info(apps_cache_data)
+        
