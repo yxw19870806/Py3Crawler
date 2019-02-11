@@ -72,6 +72,7 @@ def main():
     except crawler.CrawlerException as e:
         output.print_msg("个人游戏主页解析失败，原因：%s" % e.message)
         raise
+    dlc_ids = apps_cache_data["dlc_in_game"]
     for discount_info in discount_game_list:
         # 获取到的价格不大于0的跳过
         if discount_info["now_price"] <= 0 or discount_info["old_price"] <= 0:
@@ -92,7 +93,7 @@ def main():
                     if SKIP_LEARNING_GAME and app_id in apps_cache_data["learning_list"]:
                         is_all = True
                         break
-                    if app_id not in owned_game_list:
+                    if app_id not in owned_game_list and app_id not in dlc_ids:
                         is_all = False
                         # break
                 if not is_all:
@@ -105,7 +106,7 @@ def main():
                     continue
                 if SKIP_LEARNING_GAME and discount_info["app_id"] in apps_cache_data["learning_list"]:
                     continue
-                if discount_info["app_id"] not in owned_game_list:
+                if discount_info["app_id"] not in owned_game_list and discount_info["app_id"] not in dlc_ids:
                     output.print_msg("http://store.steampowered.com/app/%s/ ,discount %s%%, old price: %s, discount price: %s" % (discount_info["id"], discount_info["discount"], discount_info["old_price"], discount_info["now_price"]), False)
 
 
