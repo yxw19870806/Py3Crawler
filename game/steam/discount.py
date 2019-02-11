@@ -17,6 +17,7 @@ INCLUDE_PACKAGE = True
 INCLUDE_BUNDLE = True
 SKIP_LEARNING_GAME = True
 MIN_DISCOUNT_PERCENT = 75  # 显示折扣大等于这个数字的游戏
+MAX_DISCOUNT_PERCENT = 100  # 显示折扣大等于这个数字的游戏
 MAX_SELLING_PERCENT = 1  # 显示价格小等于这个数字的游戏
 
 
@@ -76,7 +77,7 @@ def main():
         if discount_info["now_price"] <= 0 or discount_info["old_price"] <= 0:
             continue
         # 只显示当前价格或折扣小等于限制的那些游戏
-        if discount_info["now_price"] <= MAX_SELLING_PERCENT or discount_info["discount"] >= MIN_DISCOUNT_PERCENT:
+        if discount_info["now_price"] <= MAX_SELLING_PERCENT or (discount_info["discount"] >= MIN_DISCOUNT_PERCENT and discount_info["discount"] <= MAX_DISCOUNT_PERCENT):
             # bundle 或者 package，都包含多个游戏
             if discount_info["type"] == "bundle" or discount_info["type"] == "package":
                 # 是否不显示package
