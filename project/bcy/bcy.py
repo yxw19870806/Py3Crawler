@@ -20,13 +20,11 @@ EACH_PAGE_ALBUM_COUNT = 20
 
 # 获取指定页数的全部作品
 def get_one_page_album(account_id, since_id):
-    # https://bcy.net/home/timeline/loaduserposts?since=0&grid_type=timeline&uid=12218&limit=20
-    api_url = "https://bcy.net/home/timeline/loaduserposts"
+    # https://bcy.net/apiv3/user/selfPosts?uid=50220&since=6059553291006664462
+    api_url = "https://bcy.net/apiv3/user/selfPosts"
     query_data = {
         "since": since_id,
-        "grid_type": "timeline",
         "uid": account_id,
-        "limit": EACH_PAGE_ALBUM_COUNT,
     }
     api_response = net.http_request(api_url, method="GET", fields=query_data, json_decode=True)
     result = {
@@ -34,7 +32,7 @@ def get_one_page_album(account_id, since_id):
     }
     if api_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(api_response.status))
-    for album_info in crawler.get_json_value(api_response.json_data, "data", type_check=list):
+    for album_info in crawler.get_json_value(api_response.json_data, "data", "items", type_check=list):
         result["album_id_list"].append(crawler.get_json_value(album_info, "item_detail", "item_id", type_check=int))
     return result
 
@@ -42,6 +40,8 @@ def get_one_page_album(account_id, since_id):
 # 获取指定id的作品
 def get_album_page(album_id):
     # https://bcy.net/item/detail/6383727612803440398
+    # https://bcy.net/item/detail/5969608017174355726 该作品已被作者设置为只有粉丝可见
+    # https://bcy.net/item/detail/6363512825238806286 该作品已被作者设置为登录后可见
     album_url = "https://bcy.net/item/detail/%s" % album_id
     album_response = net.http_request(album_url, method="GET")
     result = {
