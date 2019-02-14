@@ -8,7 +8,8 @@ email: hikaru870806@hotmail.com
 import os
 import platform
 import sqlite3
-import win32crypt
+if platform.system() == "Windows":
+    import win32crypt
 
 try:
     from . import output

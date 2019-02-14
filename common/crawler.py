@@ -26,9 +26,15 @@ PROJECT_APP_PATH = os.getcwd()
 # webdriver文件路径
 CHROME_WEBDRIVER_PATH = os.path.abspath(os.path.join(PROJECT_ROOT_PATH, "common/chromedriver.exe"))
 try:
-    from . import browser, file, keyboardEvent, log, net, output, path, portListenerEvent, tool
+    from . import browser, file, log, net, output, path, portListenerEvent, tool
 except ImportError:
-    from common import browser, file, keyboardEvent, log, net, output, path, portListenerEvent, tool
+    from common import browser, file, log, net, output, path, portListenerEvent, tool
+if platform.system() == "Windows":
+    try:
+        from . import keyboardEvent
+    except ImportError:
+        from common import keyboardEvent
+
 
 # 程序是否支持下载图片功能
 SYS_DOWNLOAD_PHOTO = "download_photo"
