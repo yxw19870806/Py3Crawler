@@ -233,23 +233,26 @@ class Ameblo(crawler.Crawler):
                     break
 
     def main(self):
-        # 循环下载每个id
-        thread_list = []
-        for account_id in sorted(self.account_list.keys()):
-            # 提前结束
-            if not self.is_running():
-                break
+        try:
+            # 循环下载每个id
+            thread_list = []
+            for account_id in sorted(self.account_list.keys()):
+                # 提前结束
+                if not self.is_running():
+                    break
 
-            # 开始下载
-            thread = Download(self.account_list[account_id], self)
-            thread.start()
-            thread_list.append(thread)
+                # 开始下载
+                thread = Download(self.account_list[account_id], self)
+                thread.start()
+                thread_list.append(thread)
 
-            time.sleep(1)
+                time.sleep(1)
 
-        # 等待子线程全部完成
-        while len(thread_list) > 0:
-            thread_list.pop().join()
+            # 等待子线程全部完成
+            while len(thread_list) > 0:
+                thread_list.pop().join()
+        except KeyboardInterrupt:
+            self.stop_process()
 
         # 未完成的数据保存
         if len(self.account_list) > 0:
@@ -403,11 +406,11 @@ class Download(crawler.DownloadThread):
                     break
                 else:
                     start_page_count -= self.EACH_LOOP_MAX_PAGE_COUNT
-        except SystemExit as se:
-            if se.code == 0:
-                self.step("提前退出")
-            else:
+        except (SystemExit, KeyboardInterrupt) as e:
+            if isinstance(e, SystemExit) and e.code == 1:
                 self.error("异常退出")
+            else:
+                self.step("提前退出")
             # 如果临时目录变量不为空，表示某个日志正在下载中，需要把下载了部分的内容给清理掉
             self.clean_temp_path()
         except Exception as e:

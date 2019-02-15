@@ -425,23 +425,26 @@ class Youtube(crawler.Crawler):
                     break
 
     def main(self):
-        # 循环下载每个id
-        thread_list = []
-        for account_id in sorted(self.account_list.keys()):
-            # 提前结束
-            if not self.is_running():
-                break
+        try:
+            # 循环下载每个id
+            thread_list = []
+            for account_id in sorted(self.account_list.keys()):
+                # 提前结束
+                if not self.is_running():
+                    break
 
-            # 开始下载
-            thread = Download(self.account_list[account_id], self)
-            thread.start()
-            thread_list.append(thread)
+                # 开始下载
+                thread = Download(self.account_list[account_id], self)
+                thread.start()
+                thread_list.append(thread)
 
-            time.sleep(1)
+                time.sleep(1)
 
-        # 等待子线程全部完成
-        while len(thread_list) > 0:
-            thread_list.pop().join()
+            # 等待子线程全部完成
+            while len(thread_list) > 0:
+                thread_list.pop().join()
+        except KeyboardInterrupt:
+            self.stop_process()
 
         # 未完成的数据保存
         if len(self.account_list) > 0:
@@ -569,11 +572,11 @@ class Download(crawler.DownloadThread):
             while len(video_id_list) > 0:
                 self.crawl_video(video_id_list.pop(), len(video_id_list) == 0)
                 self.main_thread_check()  # 检测主线程运行状态
-        except SystemExit as se:
-            if se.code == 0:
-                self.step("提前退出")
-            else:
+        except (SystemExit, KeyboardInterrupt) as e:
+            if isinstance(e, SystemExit) and e.code == 1:
                 self.error("异常退出")
+            else:
+                self.step("提前退出")
         except Exception as e:
             self.error("未知异常")
             self.error(str(e) + "\n" + traceback.format_exc(), False)
