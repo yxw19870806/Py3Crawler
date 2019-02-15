@@ -26,6 +26,7 @@ def get_blog_page(account_id, blog_id):
     result = {
         "photo_url_list": [],  # 全部图片地址
         "video_url_list": [],  # 全部视频地址
+        "audio_url_list": [],  # 全部音频地址
     }
     return result
 
@@ -40,6 +41,7 @@ class Template(crawler.Crawler):
         sys_config = {
             crawler.SYS_DOWNLOAD_PHOTO: True,
             crawler.SYS_DOWNLOAD_VIDEO: True,
+            crawler.SYS_DOWNLOAD_AUDIO: True,
             crawler.SYS_SET_PROXY: True,
             crawler.SYS_NOT_CHECK_SAVE_DATA: True,
         }
@@ -77,7 +79,7 @@ class Template(crawler.Crawler):
         crawler.rewrite_save_file(self.temp_save_data_path, self.save_data_path)
 
         # todo 是否需要下载图片或视频
-        log.step("全部下载完毕，耗时%s秒，共计图片%s张，视频%s个" % (self.get_run_time(), self.total_photo_count, self.total_video_count))
+        log.step("全部下载完毕，耗时%s秒，共计图片%s张，视频%s个，音频%s个" % (self.get_run_time(), self.total_photo_count, self.total_video_count, self.total_audio_count))
 
 
 class Download(crawler.DownloadThread):
@@ -167,13 +169,34 @@ class Download(crawler.DownloadThread):
                 else:
                     self.error("第%s个视频 %s 下载失败，原因：%s" % (video_index, video_url, crawler.download_failre(save_file_return["code"])))
 
-        # 媒体内图片和视频全部下载完毕
+        # todo 音频下载逻辑
+        # 音频下载
+        audio_index = self.account_info[2] + 1
+        if self.main_thread.is_download_audio:
+            for audio_url in blog_response["audio_url_list"]:
+                self.main_thread_check()  # 检测主线程运行状态
+                self.step("开始下载第%s个音频 %s" % (audio_index, audio_url))
+
+                file_type = net.get_file_type(audio_url)
+                audio_file_path = os.path.join(self.main_thread.audio_download_path, self.account_id, "%04d.%s" % (audio_index, file_type))
+                save_file_return = net.save_net_file(audio_url, audio_file_path)
+                if save_file_return["status"] == 1:
+                    # 设置临时目录
+                    self.temp_path_list.append(audio_file_path)
+                    self.step("第%s个音频下载成功" % audio_index)
+                    audio_index += 1
+                else:
+                    self.error("第%s个音频 %s 下载失败，原因：%s" % (audio_index, audio_url, crawler.download_failre(save_file_return["code"])))
+
+        # 日志内图片、视频和音频全部下载完毕
         self.temp_path_list = []  # 临时目录设置清除
         self.total_photo_count += (photo_index - 1) - int(self.account_info[1])  # 计数累加
         self.total_video_count += (video_index - 1) - int(self.account_info[2])  # 计数累加
+        self.total_audio_count += (audio_index - 1) - int(self.account_info[3])  # 计数累加
         self.account_info[1] = str(photo_index - 1)  # 设置存档记录
         self.account_info[2] = str(video_index - 1)  # 设置存档记录
-        self.account_info[3] = ""  # 设置存档记录
+        self.account_info[3] = str(audio_index - 1)  # 设置存档记录
+        self.account_info[4] = ""  # 设置存档记录
 
     def run(self):
         try:
@@ -203,8 +226,9 @@ class Download(crawler.DownloadThread):
             file.write_file("\t".join(self.account_info), self.main_thread.temp_save_data_path)
             self.main_thread.total_photo_count += self.total_photo_count
             self.main_thread.total_video_count += self.total_video_count
+            self.main_thread.total_audio_count += self.total_audio_count
             self.main_thread.account_list.pop(self.account_id)
-        self.step("下载完毕，总共获得%s张图片和%s个视频" % (self.total_photo_count, self.total_video_count))
+        self.step("下载完毕，总共获得%s张图片、%s个视频、%s个音频" % (self.total_photo_count, self.total_video_count, self.total_audio_count))
         self.notify_main_thread()
 
 
