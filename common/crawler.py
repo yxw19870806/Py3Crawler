@@ -269,15 +269,17 @@ class DownloadThread(threading.Thread):
         :param main_thread:
             object of main thread(class Crawler)
         """
-        threading.Thread.__init__(self)
-        self.account_info = account_info
-        if isinstance(main_thread, Crawler):
+        if not isinstance(main_thread, Crawler):
+            output.print_msg("下载线程参数异常")
+            tool.process_exit()
+        try:
+            threading.Thread.__init__(self)
+            self.account_info = account_info
             self.main_thread = main_thread
             self.thread_lock = main_thread.thread_lock
             main_thread.thread_semaphore.acquire()
-        else:
-            output.print_msg("下载线程参数异常")
-            tool.process_exit()
+        except KeyboardInterrupt:
+            self.main_thread.stop_process()
         self.total_photo_count = 0
         self.total_video_count = 0
         self.total_audio_count = 0
