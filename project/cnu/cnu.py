@@ -122,11 +122,11 @@ class CNU(crawler.Crawler):
                 temp_path = ""  # 临时目录设置清除
                 self.total_photo_count += photo_index - 1  # 计数累加
                 album_id += 1  # 设置存档记录
-        except SystemExit as se:
-            if se.code == 0:
-                log.step("提前退出")
-            else:
+        except (SystemExit, KeyboardInterrupt) as e:
+            if isinstance(e, SystemExit) and e.code == 1:
                 log.error("异常退出")
+            else:
+                log.step("提前退出")
             # 如果临时目录变量不为空，表示某个作品正在下载中，需要把下载了部分的内容给清理掉
             if temp_path:
                 path.delete_dir_or_file(temp_path)

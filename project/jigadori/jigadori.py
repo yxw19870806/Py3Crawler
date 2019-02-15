@@ -187,11 +187,11 @@ class Jigadori(crawler.Crawler):
                     break
                 else:
                     start_page_count -= EACH_LOOP_MAX_PAGE_COUNT
-        except SystemExit as se:
-            if se.code == 0:
-                log.step("提前退出")
-            else:
+        except (SystemExit, KeyboardInterrupt) as e:
+            if isinstance(e, SystemExit) and e.code == 1:
                 log.error("异常退出")
+            else:
+                log.step("提前退出")
             # 如果临时目录变量不为空，表示某个日志正在下载中，需要把下载了部分的内容给清理掉
             if len(temp_path_list) > 0:
                 for temp_path in temp_path_list:

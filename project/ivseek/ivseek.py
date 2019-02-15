@@ -208,11 +208,11 @@ class IvSeek(crawler.Crawler):
                 # 提前结束
                 if not self.is_running():
                     break
-        except SystemExit as se:
-            if se.code == 0:
-                log.step("提前退出")
-            else:
+        except (SystemExit, KeyboardInterrupt) as e:
+            if isinstance(e, SystemExit) and e.code == 1:
                 log.error("异常退出")
+            else:
+                log.step("提前退出")
         except Exception as e:
             log.error("未知异常")
             log.error(str(e) + "\n" + traceback.format_exc())
