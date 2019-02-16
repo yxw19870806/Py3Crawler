@@ -9,3 +9,6 @@
 	path = data
 	url = https://github.com/yxw19870806/Py3CrawlerData.git
 	branch = master
+[submodule "deprecation"]
+	path = deprecation
+	url = https://github.com/yxw19870806/Py3CrawlerDeprecation.git
