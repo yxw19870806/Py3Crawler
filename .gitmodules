@@ -5,10 +5,6 @@
 [submodule "gallery"]
 	path = gallery
 	url = https://github.com/yxw19870806/Py3CrawlerGallery.git
-[submodule "data"]
-	path = data
-	url = https://github.com/yxw19870806/Py3CrawlerData.git
-	branch = master
 [submodule "deprecation"]
 	path = deprecation
 	url = https://github.com/yxw19870806/Py3CrawlerDeprecation.git
