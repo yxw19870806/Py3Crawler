@@ -366,7 +366,7 @@ def _random_ip_address():
     return "%s.%s.%s.%s" % (random.randint(1, 254), random.randint(0, 255), random.randint(0, 255), random.randint(0, 255))
 
 
-def save_net_file(file_url, file_path, need_content_type=False, header_list=None, cookies_list=None, head_check=False, is_auto_proxy=True):
+def save_net_file(file_url, file_path, need_content_type=False, header_list=None, cookies_list=None, head_check=False, is_auto_proxy=True, is_gzip=True):
     """Visit web and save to local
 
     :param file_url:
@@ -404,7 +404,7 @@ def save_net_file(file_url, file_path, need_content_type=False, header_list=None
         else:
             request_method = "GET"
         # 获取头信息
-        response = http_request(file_url, request_method, header_list=header_list, cookies_list=cookies_list, is_auto_proxy=is_auto_proxy,
+        response = http_request(file_url, request_method, header_list=header_list, cookies_list=cookies_list, is_auto_proxy=is_auto_proxy, is_gzip=is_gzip,
                                 connection_timeout=NET_CONFIG["HTTP_CONNECTION_TIMEOUT"], read_timeout=NET_CONFIG["HTTP_READ_TIMEOUT"])
         # 其他返回状态，退出
         if response.status != HTTP_RETURN_CODE_SUCCEED:
@@ -446,7 +446,7 @@ def save_net_file(file_url, file_path, need_content_type=False, header_list=None
         if not is_multi_thread:  # 单线程下载
             # 如果是先调用HEAD方法的，需要重新获取完整数据
             if head_check:
-                response = http_request(file_url, method="GET", header_list=header_list, cookies_list=cookies_list, is_auto_proxy=is_auto_proxy,
+                response = http_request(file_url, method="GET", header_list=header_list, cookies_list=cookies_list, is_auto_proxy=is_auto_proxy, is_gzip=is_gzip,
                                         connection_timeout=NET_CONFIG["DOWNLOAD_CONNECTION_TIMEOUT"], read_timeout=NET_CONFIG["DOWNLOAD_READ_TIMEOUT"])
                 if response.status != HTTP_RETURN_CODE_SUCCEED:
                     continue
