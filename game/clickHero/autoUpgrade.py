@@ -67,5 +67,5 @@ if __name__ == "__main__":
             # 重置计数
             count = 0
 
-        time.sleep(1)
+        time.sleep(30)
         count += 1
