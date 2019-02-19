@@ -63,7 +63,7 @@ def main():
     gui.withdraw()
 
     options = {
-        "initialdir": os.path.abspath(os.path.join(crawler.PROJECT_APP_ROOT_PATH, "twitter/info")),
+        "initialdir": os.path.abspath(os.path.join(crawler.PROJECT_ROOT_PATH, "project/twitter/info")),
         "initialfile": "save.data",
         "filetypes": [("data file", "*.data"), ("all files", "*")],
         "parent": gui,

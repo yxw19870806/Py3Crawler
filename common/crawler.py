@@ -18,9 +18,6 @@ import time
 PROJECT_ROOT_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 # 全局config.ini路径
 PROJECT_CONFIG_PATH = os.path.abspath(os.path.join(PROJECT_ROOT_PATH, "common/config.ini"))
-# 应用程序（APP）根目录，下面包含多个应用
-PROJECT_APP_ROOT_PATH = os.path.abspath(os.path.join(PROJECT_ROOT_PATH, "project"))
-# 应用程序（APP）目录
 # 默认当前进程的工作目录，应用在初始化时应该对该变量进行赋值
 PROJECT_APP_PATH = os.getcwd()
 # webdriver文件路径
