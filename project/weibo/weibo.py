@@ -108,11 +108,13 @@ def get_one_page_photo(account_id, page_count):
 
 # 获取一页的视频信息
 # page_id -> 1005052535836307
-def get_one_page_video(account_page_id, since_id):
-    # https://weibo.com/p/aj/album/loading?type=video&since_id=9999999999999999&page_id=1005052535836307&page=1&ajax_call=1
+def get_one_page_video(account_id, account_page_id, since_id):
+    # https://weibo.com/p/aj/album/loading?ajwvr=6&type=video&owner_uid=1642591402&viewer_uid=&since_id=4341680691744416&page_id=1002061642591402&page=2&ajax_call=1&__rnd=1551011542206
     video_pagination_url = "https://weibo.com/p/aj/album/loading"
     query_data = {
         "type": "video",
+        "owner_uid": account_id,
+        # "viewer_uid": VIEW_ID,
         "since_id": since_id,
         "page_id": account_page_id,
         "ajax_call": "1",
@@ -127,7 +129,7 @@ def get_one_page_video(account_page_id, since_id):
     if video_pagination_response.status == net.HTTP_RETURN_CODE_JSON_DECODE_ERROR:
         time.sleep(5)
         log.step("since_id：%s页视频解返回异常" % since_id)
-        return get_one_page_video(account_page_id, since_id)
+        return get_one_page_video(account_id, account_page_id, since_id)
     if video_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(video_pagination_response.status))
     response_data = crawler.get_json_value(video_pagination_response.json_data, "data", type_check=str)
@@ -137,7 +139,7 @@ def get_one_page_video(account_page_id, since_id):
         if response_data.find("还没有发布过视频") == -1:
             raise crawler.CrawlerException("返回信息匹配视频地址失败\n%s" % video_pagination_response.json_data)
     # 获取下一页视频的指针
-    next_page_since_id = tool.find_sub_string(response_data, "type=video&owner_uid=&viewer_uid=&since_id=", '">')
+    next_page_since_id = tool.find_sub_string(response_data, "&since_id=", '">')
     if next_page_since_id:
         if not crawler.is_integer(next_page_since_id):
             raise crawler.CrawlerException("返回信息截取下一页指针失败\n%s" % video_pagination_response.json_data)
@@ -344,7 +346,7 @@ class Download(crawler.DownloadThread):
 
             # 获取指定时间点后的一页视频信息
             try:
-                video_pagination_response = get_one_page_video(account_index_response["account_page_id"], since_id)
+                video_pagination_response = get_one_page_video(self.account_id, account_index_response["account_page_id"], since_id)
             except crawler.CrawlerException as e:
                 self.error("since_id：%s页视频解析失败，原因：%s" % (since_id, e.message))
                 raise
