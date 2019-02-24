@@ -114,7 +114,7 @@ def get_one_page_video(account_id, account_page_id, since_id):
     query_data = {
         "type": "video",
         "owner_uid": account_id,
-        # "viewer_uid": VIEW_ID,
+        "viewer_uid": "0",
         "since_id": since_id,
         "page_id": account_page_id,
         "ajax_call": "1",
