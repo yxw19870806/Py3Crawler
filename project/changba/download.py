@@ -6,6 +6,7 @@ https://changba.com/
 email: hikaru870806@hotmail.com
 如有问题或建议请联系
 """
+import re
 import tkinter
 from tkinter import filedialog
 from common import *
@@ -21,11 +22,15 @@ def main():
 
     while True:
         audio_url = input(crawler.get_time() + " 请输入唱吧歌曲地址：")
+        audio_key = None
         # https://changba.com/s/LBdSlkRwmqApasSCCVp5VA
-        if audio_url.lower().find("//changba.com/s/") == -1:
+        if audio_url.lower().find("//changba.com/s/") > 0:
+            audio_key = audio_url.split("/")[-1].split("?")[0]
+        elif re.match("[a-zA-Z0-9]+$", audio_url) is not None:
+            audio_key = audio_url
+        if audio_key is None:
             log.step("错误的歌曲地址，正确的地址格式如：https://changba.com/s/LBdSlkRwmqApasSCCVp5VA")
             continue
-        audio_key = audio_url.split("/")[-1].split("?")[0]
         # 访问歌曲播放页
         try:
             audio_response = changba.get_audio_play_page(audio_key)
