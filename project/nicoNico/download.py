@@ -6,7 +6,6 @@ http://www.nicovideo.jp/
 email: hikaru870806@hotmail.com
 如有问题或建议请联系
 """
-import os
 import tkinter
 from tkinter import filedialog
 from common import *
@@ -15,7 +14,7 @@ from project.nicoNico import nicoNico
 
 def main():
     # 初始化
-    nicoNico.NicoNico(extra_sys_config={crawler.SYS_NOT_CHECK_SAVE_DATA: True})
+    nicoNico_class = nicoNico.NicoNico(extra_sys_config={crawler.SYS_NOT_CHECK_SAVE_DATA: True})
     if not nicoNico.check_login():
         log.error("没有检测到登录信息")
         nicoNico.COOKIE_INFO = {}
@@ -47,7 +46,7 @@ def main():
             continue
         # 选择下载目录
         options = {
-            "initialdir": os.path.join(os.path.dirname(__file__), "video"),
+            "initialdir": nicoNico_class.video_download_path,
             "initialfile": "%08d - %s.mp4" % (int(video_id), path.filter_text(video_response["video_title"])),
             "filetypes": [("mp4", ".mp4")],
             "parent": gui,
