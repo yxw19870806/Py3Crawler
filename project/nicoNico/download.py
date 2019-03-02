@@ -6,7 +6,6 @@ http://www.nicovideo.jp/
 email: hikaru870806@hotmail.com
 如有问题或建议请联系
 """
-import os
 import tkinter
 from tkinter import filedialog
 from common import *
@@ -15,7 +14,7 @@ from project.nicoNico import nicoNico
 
 def main():
     # 初始化
-    nicoNico.NicoNico(extra_sys_config={crawler.SYS_NOT_CHECK_SAVE_DATA: True})
+    nicoNico_class = nicoNico.NicoNico(extra_sys_config={crawler.SYS_NOT_CHECK_SAVE_DATA: True})
     if not nicoNico.check_login():
         log.error("没有检测到登录信息")
         nicoNico.COOKIE_INFO = {}
@@ -25,11 +24,17 @@ def main():
 
     while True:
         video_url = input(crawler.get_time() + " 请输入Nico Nico视频地址：").lower()
+        video_id = None
         # http://www.nicovideo.jp/watch/sm20429274?ref=search_key_video&ss_pos=3&ss_id=361e7a4b-278e-40c1-acbb-a0c55c84005d
-        if video_url.find("//www.nicovideo.jp/watch/sm") == -1:
+        if video_url.find("//www.nicovideo.jp/watch/sm") > 0:
+            video_id = video_url.split("/")[-1].split("?")[0].replace("sm", "")
+        elif crawler.is_integer(video_url):
+            video_id = video_url
+        elif video_url[:2] == "sm" and crawler.is_integer(video_url[2:]):
+            video_id = video_url[2:]
+        if video_id is not None:
             log.step("错误的视频地址，正确的地址格式如：http://www.nicovideo.jp/watch/sm20429274")
             continue
-        video_id = video_url.split("/")[-1].split("?")[0].replace("sm", "")
         # 访问视频播放页
         try:
             video_response = nicoNico.get_video_info(video_id)
@@ -41,7 +46,7 @@ def main():
             continue
         # 选择下载目录
         options = {
-            "initialdir": os.path.join(os.path.dirname(__file__), "video"),
+            "initialdir": nicoNico_class.video_download_path,
             "initialfile": "%08d - %s.mp4" % (int(video_id), path.filter_text(video_response["video_title"])),
             "filetypes": [("mp4", ".mp4")],
             "parent": gui,

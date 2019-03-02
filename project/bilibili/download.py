@@ -25,6 +25,10 @@ def main():
         video_id = None
         if video_url.find("bilibili.com/video/av") > 0:
             video_id = tool.find_sub_string(video_url, "bilibili.com/video/av").split("?")[0]
+        elif crawler.is_integer(video_url):
+            video_id = video_url
+        elif video_url[:2] == "av" and crawler.is_integer(video_url[2:]):
+            video_id = video_url[2:]
         # 无效的视频地址
         if not crawler.is_integer(video_id):
             log.step("错误的视频地址，正确的地址格式如：https://www.bilibili.com/video/av123456")

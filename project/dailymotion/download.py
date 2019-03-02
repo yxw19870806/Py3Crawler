@@ -6,6 +6,7 @@ https://www.dailymotion.com/
 email: hikaru870806@hotmail.com
 如有问题或建议请联系
 """
+import re
 import tkinter
 from tkinter import filedialog
 from common import *
@@ -21,11 +22,15 @@ def main():
 
     while True:
         video_url = input(crawler.get_time() + " 请输入dailymotion视频地址：").lower()
+        video_id = None
         # https://www.dailymotion.com/video/x6njw4l
-        if video_url.find("//www.dailymotion.com/video/") == -1:
+        if video_url.find("//www.dailymotion.com/video/") > 0:
+            video_id = video_url.split("/")[-1].split("?")[0]
+        elif re.match("[a-zA-Z0-9]+$", video_url) is not None:
+            video_id = video_url
+        if video_id is None:
             log.step("错误的视频地址，正确的地址格式如：https://www.dailymotion.com/video/x6njw4l")
             continue
-        video_id = video_url.split("/")[-1].split("?")[0]
         # 访问视频播放页
         try:
             video_response = dailymotion.get_video_page(video_id)
