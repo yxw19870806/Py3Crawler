@@ -6,6 +6,7 @@ https://kg.qq.com/
 email: hikaru870806@hotmail.com
 如有问题或建议请联系
 """
+import re
 import tkinter
 from tkinter import filedialog
 from common import *
@@ -32,6 +33,8 @@ def main():
                 if key == "s":
                     audio_id = value
                     break
+        elif re.match("[a-zA-Z0-9]+$", audio_url) is not None:
+            audio_id = audio_url
         if audio_id is None:
             log.step("错误的歌曲地址，正确的地址格式如：https://node.kg.qq.com/play?s=JLm8h1J64lEyXJ6n")
             continue
