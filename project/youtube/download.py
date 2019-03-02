@@ -7,6 +7,7 @@ email: hikaru870806@hotmail.com
 如有问题或建议请联系
 """
 import os
+import re
 import tkinter
 from tkinter import filedialog
 from common import *
@@ -36,6 +37,8 @@ def main():
         # https://youtu.be/lkHlnWFnA0c
         elif video_url.lower().find("//youtu.be/") > 0:
             video_id = video_url.split("/")[-1].split("&")[0]
+        elif re.match("[a-zA-Z0-9_]+$", video_url) is not None:
+            video_id = video_url
         # 无效的视频地址
         if video_id is None:
             log.step("错误的视频地址，正确的地址格式如：https://www.youtube.com/watch?v=lkHlnWFnA0c 或 https://youtu.be/lkHlnWFnA0c")
