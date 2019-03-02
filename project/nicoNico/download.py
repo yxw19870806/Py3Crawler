@@ -25,11 +25,17 @@ def main():
 
     while True:
         video_url = input(crawler.get_time() + " 请输入Nico Nico视频地址：").lower()
+        video_id = None
         # http://www.nicovideo.jp/watch/sm20429274?ref=search_key_video&ss_pos=3&ss_id=361e7a4b-278e-40c1-acbb-a0c55c84005d
-        if video_url.find("//www.nicovideo.jp/watch/sm") == -1:
+        if video_url.find("//www.nicovideo.jp/watch/sm") > 0:
+            video_id = video_url.split("/")[-1].split("?")[0].replace("sm", "")
+        elif crawler.is_integer(video_url):
+            video_id = video_url
+        elif video_url[:2] == "sm" and crawler.is_integer(video_url[2:]):
+            video_id = video_url[2:]
+        if video_id is not None:
             log.step("错误的视频地址，正确的地址格式如：http://www.nicovideo.jp/watch/sm20429274")
             continue
-        video_id = video_url.split("/")[-1].split("?")[0].replace("sm", "")
         # 访问视频播放页
         try:
             video_response = nicoNico.get_video_info(video_id)
