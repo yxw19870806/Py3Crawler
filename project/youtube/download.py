@@ -6,7 +6,6 @@ https://www.youtube.com/
 email: hikaru870806@hotmail.com
 如有问题或建议请联系
 """
-import os
 import re
 import tkinter
 from tkinter import filedialog
@@ -16,7 +15,7 @@ from project.youtube import youtube
 
 def main():
     # 初始化
-    youtube.Youtube(extra_sys_config={crawler.SYS_NOT_CHECK_SAVE_DATA: True})
+    youtube_class = youtube.Youtube(extra_sys_config={crawler.SYS_NOT_CHECK_SAVE_DATA: True})
     # GUI窗口
     gui = tkinter.Tk()
     gui.withdraw()
@@ -54,7 +53,7 @@ def main():
             continue
         # 选择下载目录
         options = {
-            "initialdir": os.path.join(os.path.dirname(__file__), "video"),
+            "initialdir": youtube_class.video_download_path,
             "initialfile": "%s - %s.mp4" % (video_id, path.filter_text(video_response["video_title"])),
             "filetypes": [("mp4", ".mp4")],
             "parent": gui,
