@@ -102,12 +102,18 @@ class GetFileListMd5(crawler.Crawler):
         self.temp_save_data_path = os.path.join(os.path.dirname(__file__), "md5_new.txt")
         record_list = file.read_file(self.save_data_path, file.READ_FILE_TYPE_LINE)
         delete_list = file.read_file(self.deleted_file_path, file.READ_FILE_TYPE_LINE)
+        delete_dict = {}
+        for key in delete_list:
+            delete_dict[key] = 1
+        log.step("总文件数：%s，已删除文件数量：%s" % (len(record_list), len(delete_dict)))
+
         new_result = []
         write_count = 0
         for record in record_list:
             file_path, file_md5 = record.split("\t")
-            if file_path not in delete_list:
+            if file_path not in delete_dict:
                 new_result.append(record)
+            # 每1万行保存一下
             if len(new_result) > 10000:
                 print("rewrite %s - %s record" % ((write_count - 1) * 10000, (write_count + 1) * 10000))
                 write_count += 1
