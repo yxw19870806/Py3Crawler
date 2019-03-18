@@ -59,6 +59,7 @@ class GetFileListMd5(crawler.Crawler):
         for file_name in path.get_dir_files_name(dir_path):
             if not self.is_running():
                 tool.process_exit(0)
+            net.thread_event.wait()
 
             file_path = os.path.join(dir_path, file_name)
 
@@ -89,6 +90,8 @@ class GetFileListMd5(crawler.Crawler):
                     duplicate_list[file_md5] = [check_list[file_md5]]
                 duplicate_list[file_md5].append(file_path)
 
+        log.step("重复文件组数：%s" % len(duplicate_list))
+
         for file_md5 in duplicate_list:
             delete_list = deal_one_group(duplicate_list[file_md5])
             if len(delete_list) > 0:
@@ -96,14 +99,29 @@ class GetFileListMd5(crawler.Crawler):
 
     # 重写记录文件
     def rewrite_recode_file(self):
+        self.temp_save_data_path = os.path.join(os.path.dirname(__file__), "md5_new.txt")
         record_list = file.read_file(self.save_data_path, file.READ_FILE_TYPE_LINE)
         delete_list = file.read_file(self.deleted_file_path, file.READ_FILE_TYPE_LINE)
+        delete_dict = {}
+        for key in delete_list:
+            delete_dict[key] = 1
+        log.step("总文件数：%s，已删除文件数量：%s" % (len(record_list), len(delete_dict)))
+
         new_result = []
+        write_count = 0
         for record in record_list:
             file_path, file_md5 = record.split("\t")
-            if file_path not in delete_list:
+            if file_path not in delete_dict:
                 new_result.append(record)
-        file.write_file("\n".join(new_result), self.save_data_path, file.WRITE_FILE_TYPE_REPLACE)
+            # 每1万行保存一下
+            if len(new_result) > 10000:
+                print("rewrite %s - %s record" % ((write_count - 1) * 10000, (write_count + 1) * 10000))
+                write_count += 1
+                file.write_file("\n".join(new_result), self.temp_save_data_path, file.WRITE_FILE_TYPE_APPEND)
+                new_result = []
+        if len(new_result) > 0:
+            print("rewrite last %s record" % len(new_result))
+            file.write_file("\n".join(new_result), self.temp_save_data_path, file.WRITE_FILE_TYPE_APPEND)
 
     def main(self, file_path):
         try:
@@ -116,8 +134,12 @@ class GetFileListMd5(crawler.Crawler):
 
             # 循环获取目录文件md5值
             self.get_file_md5_from_dir(file_path)
-            # check_record_data()
-            # rewrite_recode_file()
+
+            # 删除重复文件
+            self.check_record_data()
+
+            # 重新记录
+            self.rewrite_recode_file()
         except (SystemExit, KeyboardInterrupt) as e:
             if isinstance(e, SystemExit) and e.code == 1:
                 log.error("异常退出")
