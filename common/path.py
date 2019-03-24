@@ -104,7 +104,10 @@ def get_dir_files_name(dir_path, order=None):
         return []
     if not os.path.isdir(dir_path):
         return []
-    files_list = os.listdir(dir_path)
+    try:
+        files_list = os.listdir(dir_path)
+    except PermissionError:
+        return []
     # 升序
     if order == RETURN_FILE_LIST_ASC:
         return sorted(files_list, reverse=False)
