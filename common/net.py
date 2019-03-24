@@ -226,14 +226,7 @@ def http_request(url, method="GET", fields=None, binary_data=None, header_list=N
         header_list["Accept-Encoding"] = "gzip"
 
     # 超时设置
-    if connection_timeout == 0 and read_timeout == 0:
-        timeout = None
-    elif connection_timeout == 0:
-        timeout = urllib3.Timeout(read=read_timeout)
-    elif read_timeout == 0:
-        timeout = urllib3.Timeout(connect=connection_timeout)
-    else:
-        timeout = urllib3.Timeout(connect=connection_timeout, read=read_timeout)
+    timeout = urllib3.Timeout(connect=float(connection_timeout) if connection_timeout > 0 else None, read=read_timeout if read_timeout > 0 else None)
 
     retry_count = 0
     while True:
