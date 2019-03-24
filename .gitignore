@@ -4,6 +4,5 @@ log/
 *-*_*_*.data
 */*/cache/
 project/*/info/session
-game/steam/data/account.data
-game/steam/data/discount.txt
+game/steam/data/*
 test/
