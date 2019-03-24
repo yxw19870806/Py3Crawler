@@ -195,7 +195,7 @@ def get_self_uncompleted_account_badges(account_id):
             if badge_selector.find("span.progress_info_bold").length == 0:
                 badge_level_html = badge_selector.find(".badge_info_description div").eq(1).text()
                 if not badge_level_html:
-                    raise crawler.CrawlerException("徽章信息截取徽章等级信息失败\n%s" % badge_selector.html())
+                    continue
                 badge_level_find = re.findall("(\d*) 级,", badge_level_html)
                 if len(badge_level_find) == 1 and crawler.is_integer(badge_level_find[0]):
                     if int(badge_level_find[0]) == 5:
