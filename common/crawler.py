@@ -217,11 +217,11 @@ class Crawler(object):
             pause_process_key = analysis_config(config, "PAUSE_PROCESS_KEYBOARD_KEY", "F9")
             # 暂停进程
             if pause_process_key:
-                keyboard_event_bind[pause_process_key] = net.pause_request
+                keyboard_event_bind[pause_process_key] = self.pause_process
             # 继续进程
             continue_process_key = analysis_config(config, "CONTINUE_PROCESS_KEYBOARD_KEY", "F10")
             if continue_process_key:
-                keyboard_event_bind[continue_process_key] = net.resume_request
+                keyboard_event_bind[continue_process_key] = self.resume_process
             # 结束进程（取消当前的线程，完成任务）
             stop_process_key = analysis_config(config, "STOP_PROCESS_KEYBOARD_KEY", "CTRL + F12")
             if stop_process_key:
@@ -237,6 +237,12 @@ class Crawler(object):
         self.total_audio_count = 0
 
         output.print_msg("初始化完成")
+
+    def pause_process(self):
+        net.pause_request()
+
+    def resume_process(self):
+        net.resume_request()
 
     def stop_process(self):
         output.print_msg("stop process")
