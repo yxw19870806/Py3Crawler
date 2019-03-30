@@ -17,13 +17,12 @@ EACH_PAGE_BLOG_COUNT = 20  # 每次请求获取的日志数量
 
 # 获取指定页数的全部日志
 def get_one_page_blog(account_id, page_count):
-    # https://www.keyakizaka46.com/mob/news/diarKiji.php?cd=member&ct=01&page=0&rw=20
-    blog_pagination_url = "https://www.keyakizaka46.com/mob/news/diarKiji.php"
+    # https://www.keyakizaka46.com/s/k46o/diary/member/list?ima=0000&page=1&cd=member&ct=13
+    blog_pagination_url = "https://www.keyakizaka46.com/s/k46o/diary/member/list"
     query_data = {
         "cd": "member",
         "ct": "%02d" % int(account_id),
         "page": str(page_count - 1),
-        "rw": str(EACH_PAGE_BLOG_COUNT),
     }
     blog_pagination_response = net.http_request(blog_pagination_url, method="GET", fields=query_data)
     result = {
