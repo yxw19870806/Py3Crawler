@@ -1,7 +1,7 @@
 # -*- coding:UTF-8  -*-
 """
 唱吧歌曲爬虫
-https://changba.com/
+http://changba.com/
 @author: hikaru
 email: hikaru870806@hotmail.com
 如有问题或建议请联系
@@ -16,12 +16,12 @@ from common import *
 
 # 获取账号首页页面
 def get_account_index_page(account_id):
-    account_index_url = "https://changba.com/u/%s" % account_id
+    account_index_url = "http://changba.com/u/%s" % account_id
     account_index_response = net.http_request(account_index_url, method="GET", is_auto_redirect=False)
     result = {
         "user_id": None,  # user id
     }
-    if account_index_response.status == 302 and account_index_response.getheader("Location") == "https://changba.com":
+    if account_index_response.status == 302 and account_index_response.getheader("Location") == "http://changba.com":
         raise crawler.CrawlerException("账号不存在")
     elif account_index_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(account_index_response.status))
@@ -37,8 +37,8 @@ def get_account_index_page(account_id):
 # 获取指定页数的全部歌曲信息
 # user_id -> 4306405
 def get_one_page_audio(user_id, page_count):
-    # https://changba.com/member/personcenter/loadmore.php?userid=4306405&pageNum=1
-    audit_pagination_url = "https://changba.com/member/personcenter/loadmore.php"
+    # http://changba.com/member/personcenter/loadmore.php?userid=4306405&pageNum=1
+    audit_pagination_url = "http://changba.com/member/personcenter/loadmore.php"
     query_data = {
         "userid": user_id,
         "pageNum": page_count - 1,
@@ -68,7 +68,7 @@ def get_one_page_audio(user_id, page_count):
 # 获取指定id的歌曲播放页
 # audio_en_word_id => w-ptydrV23KVyIPbWPoKsA
 def get_audio_play_page(audio_en_word_id):
-    audio_play_url = "https://changba.com/s/%s" % audio_en_word_id
+    audio_play_url = "http://changba.com/s/%s" % audio_en_word_id
     result = {
         "audio_id": None,  # 歌曲id
         "audio_title": "",  # 歌曲标题
@@ -111,9 +111,9 @@ def get_audio_play_page(audio_en_word_id):
             f = int(int(special_find[0][2], 16) / e / e)
             g = int(int(special_find[0][3], 16) / e / e)
             if "a" == special_find[0][0] and g % 1000 == f:
-                result["audio_url"] = "https://a%smp3.changba.com/userdata/userwork/%s/%g.mp3" % (e, f, g)
+                result["audio_url"] = "http://a%smp3.changba.com/userdata/userwork/%s/%g.mp3" % (e, f, g)
             else:
-                result["audio_url"] = "https://aliuwmp3.changba.com/userdata/userwork/%s.mp3" % g
+                result["audio_url"] = "http://aliuwmp3.changba.com/userdata/userwork/%s.mp3" % g
         else:
             raise crawler.CrawlerException("歌曲原始地址解密歌曲地址失败\n%s" % audio_source_url)
     else:  # 视频
@@ -121,7 +121,7 @@ def get_audio_play_page(audio_en_word_id):
         if not encryption_video_url:
             raise crawler.CrawlerException("页面截取加密视频地址失败\n%s" % audio_play_response_content)
         try:
-            video_url = "https:" + base64.b64decode(encryption_video_url).decode(errors="ignore")
+            video_url = "http:" + base64.b64decode(encryption_video_url).decode(errors="ignore")
         except TypeError:
             raise crawler.CrawlerException("歌曲加密地址解密失败\n%s" % encryption_video_url)
         result["audio_url"] = video_url
