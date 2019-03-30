@@ -1,7 +1,7 @@
 # -*- coding:UTF-8  -*-
 """
-欅坂46公式Blog图片爬虫
-https://www.keyakizaka46.com/mob/news/diarShw.php?cd=member
+日向坂46公式Blog图片爬虫
+https://www.hinatazaka46.com/s/official/diary/member/list
 @author: hikaru
 email: hikaru870806@hotmail.com
 如有问题或建议请联系
@@ -17,11 +17,11 @@ EACH_PAGE_BLOG_COUNT = 20  # 每次请求获取的日志数量
 
 # 获取指定页数的全部日志
 def get_one_page_blog(account_id, page_count):
-    # https://www.keyakizaka46.com/s/k46o/diary/member/list?ima=0000&page=1&cd=member&ct=13
-    blog_pagination_url = "https://www.keyakizaka46.com/s/k46o/diary/member/list"
+    # https://www.hinatazaka46.com/s/official/diary/member/list?ima=0000&ct=1
+    blog_pagination_url = "https://www.hinatazaka46.com/s/official/diary/member/list"
     query_data = {
         "cd": "member",
-        "ct": "%02d" % int(account_id),
+        "ct": account_id,
         "page": str(page_count - 1),
     }
     blog_pagination_response = net.http_request(blog_pagination_url, method="GET", fields=query_data)
@@ -32,11 +32,11 @@ def get_one_page_blog(account_id, page_count):
     if blog_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(blog_pagination_response.status))
     blog_pagination_response_content = blog_pagination_response.data.decode(errors="ignore")
-    account_info_html = pq(blog_pagination_response_content).find(".box-profile").html()
+    account_info_html = pq(blog_pagination_response_content).find(".p-blog-member__head .c-blog-member__name").html()
     if account_info_html is None or not account_info_html.strip():
         raise crawler.CrawlerException("账号不存在")
     # 日志正文部分
-    blog_list_selector = pq(blog_pagination_response_content).find(".box-main article")
+    blog_list_selector = pq(blog_pagination_response_content).find(".p-blog-group .p-blog-article")
     if blog_list_selector.length == 0:
         raise crawler.CrawlerException("页面截取日志列表失败\n%s" % blog_pagination_response_content)
     for blog_index in range(0, blog_list_selector.length):
@@ -46,7 +46,7 @@ def get_one_page_blog(account_id, page_count):
         }
         blog_selector = blog_list_selector.eq(blog_index)
         # 获取日志id
-        blog_url = blog_selector.find(".box-ttl h3 a").attr("href")
+        blog_url = blog_selector.find(".p-button__blog_detail a").attr("href")
         if not blog_url:
             raise crawler.CrawlerException("日志信息截取日志地址失败\n%s" % blog_selector.html())
         blog_id = blog_url.split("/")[-1].split("?")[0]
@@ -65,14 +65,14 @@ def get_one_page_blog(account_id, page_count):
                 continue
             result_blog_info["photo_url_list"].append(photo_url)
         result["blog_info_list"].append(result_blog_info)
-    last_pagination_html = pq(blog_pagination_response_content).find(".pager li:last").text()
+    last_pagination_html = pq(blog_pagination_response_content).find(".p-pager--count li:last").text()
     if not last_pagination_html:
         raise crawler.CrawlerException("页面截取下一页按钮失败\n%s" % blog_pagination_response_content)
     result["is_over"] = last_pagination_html != ">"
     return result
 
 
-class Keyakizaka46Diary(crawler.Crawler):
+class Hinatazaka46Diary(crawler.Crawler):
     def __init__(self, **kwargs):
         # 设置APP目录
         crawler.PROJECT_APP_PATH = os.path.abspath(os.path.dirname(__file__))
@@ -223,4 +223,4 @@ class Download(crawler.DownloadThread):
 
 
 if __name__ == "__main__":
-    Keyakizaka46Diary().main()
+    Hinatazaka46Diary().main()
