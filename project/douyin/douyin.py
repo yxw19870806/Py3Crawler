@@ -46,7 +46,7 @@ def get_account_index_page(account_id):
     file.write_file(template_html, cache_html, file.WRITE_FILE_TYPE_REPLACE)
     # 使用抖音的加密JS方法算出signature的值
     chrome_options = webdriver.ChromeOptions()
-    chrome_options.add_argument('--headless')  # 不打开浏览器
+    chrome_options.headless = True  # 不打开浏览器
     chrome_options.add_argument("user-agent=" + USER_AGENT)  # 使用指定UA
     chrome = webdriver.Chrome(executable_path=crawler.CHROME_WEBDRIVER_PATH, options=chrome_options)
     chrome.get("file:///" + os.path.realpath(cache_html))
