@@ -1,7 +1,7 @@
 # -*- coding:UTF-8  -*-
 """
-抖音视频爬虫
-https://www.douyin.com/
+TikTok视频爬虫
+https://www.tiktok.com/
 @author: hikaru
 email: hikaru870806@hotmail.com
 如有问题或建议请联系
@@ -9,67 +9,57 @@ email: hikaru870806@hotmail.com
 import os
 import time
 import traceback
-from common import *
+import urllib.parse
 from selenium import webdriver
+from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
+from common import *
 
-EACH_PAGE_VIDEO_COUNT = 21
-CACHE_FILE_PATH = os.path.join(os.path.dirname(__file__), "cache")
-TEMPLATE_HTML_PATH = os.path.join(os.path.dirname(__file__), "template.html")
+EACH_PAGE_VIDEO_COUNT = 48
 USER_AGENT = net._random_user_agent()
 
 
 # 获取账号首页
 def get_account_index_page(account_id):
-    account_index_url = "https://www.douyin.com/share/user/%s" % account_id
-    header_list = {
-        "User-Agent": USER_AGENT,
-    }
-    account_index_response = net.http_request(account_index_url, method="GET", header_list=header_list)
+    account_index_url = "https://www.tiktok.com/share/user/%s" % account_id
     result = {
-        "dytk": "",  # 账号dytk值（请求参数）
         "signature": "",  # 加密串（请求参数）
     }
-    if account_index_response.status != net.HTTP_RETURN_CODE_SUCCEED:
-        raise crawler.CrawlerException(crawler.request_failre(account_index_response.status))
-    account_index_response_content = account_index_response.data.decode(errors="ignore")
-    script_tac = tool.find_sub_string(account_index_response_content, "<script>tac='", "'</script>")
-    if not script_tac:
-        raise crawler.CrawlerException("页面截取tac参数失败\n%s" % account_index_response_content)
-    script_dytk = tool.find_sub_string(account_index_response_content, "dytk: '", "'")
-    if not script_dytk:
-        raise crawler.CrawlerException("页面截取dytk参数失败\n%s" % account_index_response_content)
-    result["dytk"] = script_dytk
-    # 读取模板并替换相关参数
-    template_html = file.read_file(TEMPLATE_HTML_PATH)
-    template_html = template_html.replace("%%USER_AGENT%%", USER_AGENT).replace("%%TAC%%", script_tac).replace("%%UID%%", str(account_id))
-    cache_html = os.path.join(CACHE_FILE_PATH, "%s.html" % account_id)
-    file.write_file(template_html, cache_html, file.WRITE_FILE_TYPE_REPLACE)
-    # 使用抖音的加密JS方法算出signature的值
+    caps = DesiredCapabilities.CHROME
+    caps['loggingPrefs'] = {'performance': 'ALL'}  # 记录所有日志
     chrome_options = webdriver.ChromeOptions()
     chrome_options.headless = True  # 不打开浏览器
     chrome_options.add_argument("user-agent=" + USER_AGENT)  # 使用指定UA
-    chrome = webdriver.Chrome(executable_path=crawler.CHROME_WEBDRIVER_PATH, options=chrome_options)
-    chrome.get("file:///" + os.path.realpath(cache_html))
-    signature = chrome.find_element_by_id("result").text
+    chrome = webdriver.Chrome(executable_path=crawler.CHROME_WEBDRIVER_PATH, options=chrome_options, desired_capabilities=caps)
+    chrome.get(account_index_url)
+    for log_info in chrome.get_log("performance"):
+        log_message = tool.json_decode(crawler.get_json_value(log_info, "message", type_check=str))
+        if crawler.get_json_value(log_message, "message", "method", default_value="", type_check=str) == "Network.requestWillBeSent":
+            video_info_url = crawler.get_json_value(log_message, "message", "params", "request", "url", default_value="", type_check=str)
+            if video_info_url.find("//www.tiktok.com/share/item/list?") > 0:
+                break
+    else:
+        raise crawler.CrawlerException("访问日志匹配视频信息地址失败")
     chrome.quit()
-    if not signature:
-        raise crawler.CrawlerException("signature参数计算失败\n%s" % account_index_response_content)
-    result["signature"] = signature
+    video_info_param = urllib.parse.parse_qs(urllib.parse.urlparse(video_info_url)[4])
+    result["signature"] = crawler.get_json_value(video_info_param, "_signature", 0, default_value="")
+    if not result["signature"]:
+        raise crawler.CrawlerException("视频信息地址匹配视频加密串失败")
     return result
 
 
 # 获取指定页数的全部视频
-def get_one_page_video(account_id, cursor_id, dytk, signature):
-    api_url = "https://www.douyin.com/aweme/v1/aweme/post/"
+def get_one_page_video(account_id, cursor_id, signature):
+    api_url = "https://www.tiktok.com/share/item/list"
     query_data = {
-        "_signature": signature,
+        "id": account_id,
+        "type": "1",
         "count": EACH_PAGE_VIDEO_COUNT,
-        "dytk": dytk,
-        "max_cursor": cursor_id,
-        "user_id": account_id,
+        "maxCursor": cursor_id,
+        "minCursor": 0,
+        "_signature": signature,
     }
     header_list = {
-        "Referer": "https://www.douyin.com/share/user/%s" % account_id,
+        "Referer": "https://www.tiktok.com/share/user/%s" % account_id,
         "User-Agent": USER_AGENT,
     }
     video_pagination_response = net.http_request(api_url, method="GET", fields=query_data, header_list=header_list, json_decode=True)
@@ -81,25 +71,25 @@ def get_one_page_video(account_id, cursor_id, dytk, signature):
     if video_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(video_pagination_response.status))
     # 判断是不是最后一页
-    result["is_over"] = crawler.get_json_value(video_pagination_response.json_data, "has_more", type_check=int) == 0
+    result["is_over"] = crawler.get_json_value(video_pagination_response.json_data, "body", "hasMore", type_check=bool) == True
     # 判断是不是最后一页
     if not result["is_over"]:
-        result["next_page_cursor_id"] = crawler.get_json_value(video_pagination_response.json_data, "max_cursor", type_check=int)
+        result["next_page_cursor_id"] = crawler.get_json_value(video_pagination_response.json_data, "body", "maxCursor", type_check=int)
     # 获取全部视频id
-    for video_info in crawler.get_json_value(video_pagination_response.json_data, "aweme_list", type_check=list):
+    for video_info in crawler.get_json_value(video_pagination_response.json_data, "body", "itemListData", type_check=list):
         result_video_info = {
             "video_id": None,  # 视频id
             "video_url": None,  # 视频地址
         }
         # 获取视频id
-        result_video_info["video_id"] = crawler.get_json_value(video_info, "aweme_id", type_check=int)
+        result_video_info["video_id"] = crawler.get_json_value(video_info, "itemInfos", "id", type_check=int)
         # 获取视频地址
-        result_video_info["video_url"] = crawler.get_json_value(video_info, "video", "play_addr", "url_list", 0, type_check=str)
+        result_video_info["video_url"] = crawler.get_json_value(video_info, "itemInfos", "video", "urls", 0, type_check=str)
         result["video_info_list"].append(result_video_info)
     return result
 
 
-class DouYin(crawler.Crawler):
+class TikTok(crawler.Crawler):
     def __init__(self, **kwargs):
         # 设置APP目录
         crawler.PROJECT_APP_PATH = os.path.abspath(os.path.dirname(__file__))
@@ -142,9 +132,6 @@ class DouYin(crawler.Crawler):
         # 重新排序保存存档文件
         crawler.rewrite_save_file(self.temp_save_data_path, self.save_data_path)
 
-        # 删除临时缓存目录
-        path.delete_dir_or_file(CACHE_FILE_PATH)
-
         log.step("全部下载完毕，耗时%s秒，共计视频%s个" % (self.get_run_time(), self.total_video_count))
 
 
@@ -177,7 +164,7 @@ class Download(crawler.DownloadThread):
 
             # 获取指定一页的视频信息
             try:
-                video_pagination_response = get_one_page_video(self.account_id, cursor_id, account_index_response["dytk"], account_index_response["signature"])
+                video_pagination_response = get_one_page_video(self.account_id, cursor_id, account_index_response["signature"])
             except crawler.CrawlerException as e:
                 self.error("cursor %s后的一页视频解析失败，原因：%s" % (cursor_id, e.message))
                 raise
@@ -245,4 +232,4 @@ class Download(crawler.DownloadThread):
 
 
 if __name__ == "__main__":
-    DouYin().main()
+    TikTok().main()

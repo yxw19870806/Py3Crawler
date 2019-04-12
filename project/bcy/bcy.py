@@ -92,8 +92,8 @@ def get_album_page_by_selenium(album_id):
     }
     caps = DesiredCapabilities.CHROME
     caps['loggingPrefs'] = {'performance': 'ALL'}  # 记录所有日志
-    chrome_options = webdriver.chrome.options.Options()
-    chrome_options.add_argument('--headless')  # 不打开浏览器
+    chrome_options = webdriver.ChromeOptions()
+    chrome_options.headless = True  # 不打开浏览器
     chrome = webdriver.Chrome(executable_path=crawler.CHROME_WEBDRIVER_PATH, options=chrome_options, desired_capabilities=caps)
     album_url = "https://bcy.net/item/detail/%s" % album_id
     chrome.get(album_url)
