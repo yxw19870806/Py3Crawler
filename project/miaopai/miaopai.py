@@ -105,8 +105,8 @@ class MiaoPai(crawler.Crawler):
         crawler.Crawler.__init__(self, sys_config, **kwargs)
 
         # 解析存档文件
-        # account_id  video_count  last_video_url
-        self.account_list = crawler.read_save_data(self.save_data_path, 0, ["", "0", "", ""])
+        # account_id  suid  video_count  last_video_url
+        self.account_list = crawler.read_save_data(self.save_data_path, 0, ["", "", "0", "", ""])
 
     def main(self):
         try:
@@ -144,8 +144,9 @@ class Download(crawler.DownloadThread):
     def __init__(self, account_info, main_thread):
         crawler.DownloadThread.__init__(self, account_info, main_thread)
         self.account_id = self.account_info[0]
-        if len(self.account_info) >= 4 and self.account_info[3]:
-            self.display_name = self.account_info[3]
+        self.suid = self.account_info[1]
+        if len(self.account_info) >= 5 and self.account_info[3]:
+            self.display_name = self.account_info[4]
         else:
             self.display_name = self.account_info[0]
         self.step("开始")
@@ -173,7 +174,7 @@ class Download(crawler.DownloadThread):
             # 寻找这一页符合条件的视频
             for video_id in video_pagination_response["video_id_list"]:
                 # 检查是否达到存档记录
-                if video_id != self.account_info[2]:
+                if video_id != self.account_info[3]:
                     # 新增视频导致的重复判断
                     if video_id in video_id_list:
                         continue
@@ -185,7 +186,7 @@ class Download(crawler.DownloadThread):
 
             # 没有视频了
             if video_pagination_response["is_over"]:
-                if self.account_info[2] != "":
+                if self.account_info[3] != "":
                     self.error("没有找到上次下载的最后一个视频地址")
                 is_over = True
             else:
@@ -194,7 +195,7 @@ class Download(crawler.DownloadThread):
 
     # 解析单个视频
     def crawl_video(self, video_id):
-        video_index = int(self.account_info[1]) + 1
+        video_index = int(self.account_info[2]) + 1
         self.step("开始解析第%s个视频 %s" % (video_index, video_id))
 
         # 获取视频下载地址
@@ -214,20 +215,22 @@ class Download(crawler.DownloadThread):
             self.error("第%s个视频 %s 下载失败，原因：%s" % (video_index, video_info_response["video_url"], crawler.download_failre(save_file_return["code"])))
 
         # 视频下载完毕
-        self.account_info[1] = str(video_index)  # 设置存档记录
-        self.account_info[2] = video_id  # 设置存档记录
+        self.account_info[2] = str(video_index)  # 设置存档记录
+        self.account_info[3] = video_id  # 设置存档记录
         self.total_video_count += 1  # 计数累加
 
     def run(self):
         try:
-            try:
-                account_index_response = get_account_index_page(self.account_id)
-            except crawler.CrawlerException as e:
-                self.error("首页解析失败，原因：%s" % e.message)
-                raise
+            if self.suid == "":
+                try:
+                    account_index_response = get_account_index_page(self.account_id)
+                except crawler.CrawlerException as e:
+                    self.error("首页解析失败，原因：%s" % e.message)
+                    raise
+                self.suid = self.account_info[1] = account_index_response["user_id"]
 
             # 获取所有可下载视频
-            video_id_list = self.get_crawl_list(account_index_response["user_id"])
+            video_id_list = self.get_crawl_list(self.suid)
             self.step("需要下载的全部视频解析完毕，共%s个" % len(video_id_list))
 
             # 从最早的视频开始下载
