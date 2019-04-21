@@ -66,7 +66,7 @@ def get_one_page_blog(account_id, page_count):
             result_blog_info["photo_url_list"].append(photo_url)
         result["blog_info_list"].append(result_blog_info)
     last_pagination_html = pq(blog_pagination_response_content).find(".pager li:last").text()
-    if not last_pagination_html:
+    if not last_pagination_html and pq(blog_pagination_response_content).find(".pager").length > 0:
         raise crawler.CrawlerException("页面截取下一页按钮失败\n%s" % blog_pagination_response_content)
     result["is_over"] = last_pagination_html != ">"
     return result
