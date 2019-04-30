@@ -232,3 +232,7 @@ http://www.tornadoweb.cn
 
 26. Markdown
 https://zh.wikipedia.org/zh/Markdown
+
+29. Pyinstaller
+pip install pyinstaller
+pyinstaller -p PATH_TO_YOUR_PROJECT_ROOT_PATH -F xxxx.py
