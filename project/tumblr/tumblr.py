@@ -10,6 +10,7 @@ import os
 import re
 import time
 import traceback
+import urllib.parse
 from pyquery import PyQuery as pq
 from common import *
 
@@ -530,7 +531,7 @@ class Download(crawler.DownloadThread):
                 raise
             if post_response["is_delete"]:
                 if post_info["post_url"].find("/hey-this-post-may-contain-adult-content-so-weve") > 0 or \
-                                post_info["post_url"].find("//この投稿には成人向けコンテンツか含まれている可能性があるため非公開となりました-もっと知る") > 0:
+                    post_info["post_url"].find(urllib.parse.quote("/この投稿には成人向けコンテンツか含まれている可能性があるため非公開となりました-もっと知る")) > 0:
                     self.step("日志 %s 已被删除，跳过" % post_info["post_url"])
                 else:
                     self.error("日志 %s 已被删除，跳过" % post_info["post_url"])
