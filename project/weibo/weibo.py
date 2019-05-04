@@ -188,6 +188,9 @@ def get_video_url(video_play_url):
                     log.step("视频%s播放页访问异常，重试" % video_play_url)
                     time.sleep(5)
                     return get_video_url(video_play_url)
+                elif video_play_response_content.find("啊哦，此视频已被删除。") > 0: # http://video.weibo.com/show?fid=1034:14531c4838e14a8c3f2a3d35e33cab5e
+                    video_url = ""
+                    return video_url
                 raise crawler.CrawlerException("页面截取视频地址失败\n%s" % video_play_response_content)
             video_url = urllib.parse.unquote(video_url)
             if video_url.find("//") == 0:
