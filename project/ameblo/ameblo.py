@@ -38,7 +38,7 @@ def get_one_page_blog(account_name, page_count):
         "blog_id_list": [],  # 全部日志id
         "is_over": False,  # 是否最后一页日志
     }
-    if page_count == 1 and blog_pagination_response.status == 404:
+    if blog_pagination_response.status == 404:
         raise crawler.CrawlerException("账号不存在")
     elif blog_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(blog_pagination_response.status))
