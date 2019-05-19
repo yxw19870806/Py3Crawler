@@ -162,7 +162,7 @@ def get_video_url(video_play_url):
         else:
             raise crawler.CrawlerException("未知的第三方视频\n%s" % video_play_url)
     # https://video.weibo.com/show?fid=1034:e608e50d5fa95410748da61a7dfa2bff
-    elif video_play_url.find("video.weibo.com/show?fid=") >= 0:  # 微博视频
+    elif video_play_url.find("video.weibo.com/show?fid=") >= 0 or video_play_url.find("eibo.com/tv/v"):  # 微博视频
         cookies_list = {"SUB": COOKIE_INFO["SUB"]}
         video_play_response = net.http_request(video_play_url, method="GET", cookies_list=cookies_list)
         if video_play_response.status == net.HTTP_RETURN_CODE_SUCCEED:
