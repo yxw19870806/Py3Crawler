@@ -525,7 +525,7 @@ def get_json_value(json_data, *args, **kwargs):
             if json_data not in kwargs["value_check"]:
                 value_error = True
         else:
-            if not (json_data is kwargs["value_check"]):
+            if not (json_data == kwargs["value_check"]):
                 value_error = True
         if value_error:
             exception_string = "'%s'字段取值不正确\n%s" % (last_arg, original_data)
