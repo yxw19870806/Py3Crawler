@@ -483,6 +483,8 @@ class Steam(crawler.Crawler):
 
     def format_cache_app_info(self):
         apps_cache_data = self.load_cache_apps_info()
+        if len(apps_cache_data["learning_list"]) == 0:
+            return
         apps_cache_data["can_review_lists"] = sorted(list(set(apps_cache_data["can_review_lists"])))
         apps_cache_data["review_list"] = sorted(list(set(apps_cache_data["review_list"])))
         apps_cache_data["learning_list"] = sorted(list(set(apps_cache_data["learning_list"])))
