@@ -13,6 +13,7 @@ from game.steam import steamCommon, review
 def main():
     # 获取登录状态
     steam_class = steamCommon.Steam(need_login=False)
+    steam_class.format_cache_app_info()
 
     # 历史记录
     apps_cache_data = steam_class.load_cache_apps_info()
