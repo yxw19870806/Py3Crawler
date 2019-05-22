@@ -12,7 +12,7 @@ import time
 import traceback
 from pyquery import PyQuery as pq
 from common import *
-from project.nicoNico import niconico_
+from project.nicoNico import niconico
 
 DONE_SING = "~"
 
@@ -112,11 +112,11 @@ def get_archive_page(archive_id):
                 raise crawler.CrawlerException("未知视频来源" + video_url)
             result_video_info["video_url"] = "http://www.nicovideo.jp/watch/%s" % video_id
             # 获取视频发布账号
-            video_play_response = net.http_request(result_video_info["video_url"], method="GET", cookies_list=niconico_.COOKIE_INFO)
+            video_play_response = net.http_request(result_video_info["video_url"], method="GET", cookies_list=niconico.COOKIE_INFO)
             while video_play_response.status == 403:
                 log.step("视频%s访问异常，重试" % video_id)
                 time.sleep(60)
-                video_play_response = net.http_request(result_video_info["video_url"], method="GET", cookies_list=niconico_.COOKIE_INFO)
+                video_play_response = net.http_request(result_video_info["video_url"], method="GET", cookies_list=niconico.COOKIE_INFO)
             if video_play_response.status != net.HTTP_RETURN_CODE_SUCCEED:
                 raise crawler.CrawlerException("视频播放页 %s，%s" % (result_video_info["video_url"], crawler.request_failre(video_play_response.status)))
             video_play_response_content = video_play_response.data.decode(errors="ignore")
@@ -157,7 +157,7 @@ def get_archive_page(archive_id):
 class IvSeek(crawler.Crawler):
     def __init__(self, **kwargs):
         # 初始化相关cookies
-        niconico_.NicoNico()
+        niconico.NicoNico()
 
         # 设置APP目录
         crawler.PROJECT_APP_PATH = os.path.abspath(os.path.dirname(__file__))

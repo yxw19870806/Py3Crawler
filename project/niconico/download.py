@@ -9,15 +9,15 @@ email: hikaru870806@hotmail.com
 import tkinter
 from tkinter import filedialog
 from common import *
-from project.nicoNico import niconico_
+from project.nicoNico import niconico
 
 
 def main():
     # 初始化
-    nicoNico_class = niconico_.NicoNico(extra_sys_config={crawler.SYS_NOT_CHECK_SAVE_DATA: True})
-    if not niconico_.check_login():
+    nicoNico_class = niconico.NicoNico(extra_sys_config={crawler.SYS_NOT_CHECK_SAVE_DATA: True})
+    if not niconico.check_login():
         log.error("没有检测到登录信息")
-        niconico_.COOKIE_INFO = {}
+        niconico.COOKIE_INFO = {}
     # GUI窗口
     gui = tkinter.Tk()
     gui.withdraw()
@@ -37,7 +37,7 @@ def main():
             continue
         # 访问视频播放页
         try:
-            video_response = niconico_.get_video_info(video_id)
+            video_response = niconico.get_video_info(video_id)
         except crawler.CrawlerException as e:
             log.error("解析视频下载地址失败，原因：%s" % e.message)
             tool.process_exit()
@@ -56,7 +56,7 @@ def main():
             continue
         # 开始下载
         log.step("\n视频标题：%s\n视频地址：%s\n下载路径：%s" % (video_response["video_title"], video_response["video_url"], file_path))
-        cookies_list = niconico_.COOKIE_INFO
+        cookies_list = niconico.COOKIE_INFO
         if video_response["extra_cookie"]:
             cookies_list.update(video_response["extra_cookie"])
         save_file_return = net.save_net_file(video_response["video_url"], file_path, head_check=True, cookies_list=cookies_list)
