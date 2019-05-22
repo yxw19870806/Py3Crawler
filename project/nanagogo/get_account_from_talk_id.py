@@ -8,7 +8,7 @@ email: hikaru870806@hotmail.com
 """
 import os
 from common import *
-from project.nanaGoGo import nanaGoGo
+from project.nanaGoGo import nanagogo
 
 # 存放解析出的账号文件路径
 ACCOUNT_ID_FILE_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), "info/account.data"))
@@ -35,7 +35,7 @@ def get_member_from_talk(talk_id):
 
 def main():
     # 初始化类
-    nanaGoGo_class = nanaGoGo.NanaGoGo()
+    nanaGoGo_class = nanagogo.NanaGoGo()
 
     # 存档位置
     account_list = list(crawler.read_save_data(ACCOUNT_ID_FILE_PATH, 0, []).keys())

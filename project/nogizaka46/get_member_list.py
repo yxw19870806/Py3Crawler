@@ -8,7 +8,7 @@ email: hikaru870806@hotmail.com
 """
 import re
 from common import *
-from project.nogizaka46 import nogizaka46Diary
+from project.nogizaka46 import nogizaka46_diary
 
 
 # 从页面获取全部成员账号
@@ -29,7 +29,7 @@ def get_account_from_index():
 
 def main():
     # 初始化类
-    nogizaka46Diary_class = nogizaka46Diary.Nogizaka46Diary(extra_sys_config={crawler.SYS_NOT_CHECK_SAVE_DATA: True})
+    nogizaka46Diary_class = nogizaka46_diary.Nogizaka46Diary(extra_sys_config={crawler.SYS_NOT_CHECK_SAVE_DATA: True})
 
     # 存档位置
     account_list_from_api = get_account_from_index()
