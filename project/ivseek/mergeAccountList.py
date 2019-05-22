@@ -11,13 +11,13 @@ import os
 from common import *
 from project.ivseek import ivseek
 from project.youtube import youtube
-from project.nicoNico import nicoNico
+from project.nicoNico import niconico_
 
 
 def main():
     # 初始化类
     youtube_class = youtube.Youtube(extra_sys_config={crawler.SYS_NOT_CHECK_SAVE_DATA: True})
-    nicoNico_class = nicoNico.NicoNico(extra_sys_config={crawler.SYS_NOT_CHECK_SAVE_DATA: True})
+    nicoNico_class = niconico_.NicoNico(extra_sys_config={crawler.SYS_NOT_CHECK_SAVE_DATA: True})
     ivseek_class = ivseek.IvSeek()
 
     save_data_list = ivseek.read_save_data(ivseek_class.save_data_path)
@@ -45,7 +45,7 @@ def main():
         if not crawler.is_integer(account_id):
             continue
         try:
-            account_mylist_response = nicoNico.get_account_mylist(account_id)
+            account_mylist_response = niconico_.get_account_mylist(account_id)
         except crawler.CrawlerException as e:
             print("niconico账号%s的视频列表解析失败，原因：%s" % (account_id, e.message))
             continue
