@@ -8,7 +8,7 @@ email: hikaru870806@hotmail.com
 """
 import time
 from common import *
-from project.nanaGoGo import nanagogo_
+from project.nanaGoGo import nanagogo
 
 COOKIE_INFO = {}
 
@@ -49,7 +49,7 @@ def main():
         tool.process_exit()
 
     # 初始化类
-    nanaGoGo_class = nanagogo_.NanaGoGo()
+    nanaGoGo_class = nanagogo.NanaGoGo()
 
     count = 0
     for account_id in nanaGoGo_class.account_list:
