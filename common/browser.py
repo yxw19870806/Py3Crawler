@@ -5,6 +5,7 @@
 email: hikaru870806@hotmail.com
 如有问题或建议请联系
 """
+import json
 import os
 import platform
 import sqlite3
@@ -50,7 +51,19 @@ def get_default_browser_cookie_path(browser_type):
                 if os.path.exists(os.path.join(sub_path, "cookies.sqlite")):
                     return os.path.abspath(sub_path)
     elif browser_type == BROWSER_TYPE_CHROME:
-        return os.path.abspath(os.path.join(os.getenv("LOCALAPPDATA"), "Google\\Chrome\\User Data\\Default"))
+        profile_file_path = os.path.abspath(os.path.join(os.getenv("LOCALAPPDATA"), "Google\\Chrome\\User Data\\Local State"))
+        default_profile_name = "Default"
+        if os.path.exists(profile_file_path):
+            with open(profile_file_path, "r", encoding="UTF-8") as file_handle:
+                profile_info = json.load(file_handle)
+                if "profile" in profile_info:
+                    if "info_cache" in profile_info["profile"] and isinstance(profile_info["profile"]["info_cache"], dict) and len(profile_info["profile"]["info_cache"]) == 1:
+                        default_profile_name = list(profile_info["profile"]["info_cache"].keys())[0]
+                    elif "last_used" in profile_info["profile"]:
+                        default_profile_name = profile_info["profile"]["last_used"]
+                    elif "last_active_profiles" in profile_info["profile"] and isinstance(profile_info["profile"]["last_active_profiles"], dict) and len(profile_info["profile"]["last_active_profiles"]) == 1:
+                        default_profile_name = profile_info["profile"]["last_active_profiles"][0]
+        return os.path.abspath(os.path.join(os.getenv("LOCALAPPDATA"), "Google\\Chrome\\User Data", default_profile_name))
     else:
         output.print_msg("不支持的浏览器类型：" + browser_type)
     return None
