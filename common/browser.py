@@ -77,7 +77,7 @@ def get_default_browser_cookie_path(browser_type):
 def get_all_cookie_from_browser(browser_type, file_path):
     if not os.path.exists(file_path):
         output.print_msg("cookie目录：" + file_path + " 不存在")
-        return None
+        return {}
     all_cookies = {}
     if browser_type == 1:
         for cookie_name in os.listdir(file_path):
@@ -110,7 +110,7 @@ def get_all_cookie_from_browser(browser_type, file_path):
     elif browser_type == 3:
         # chrome仅支持windows系统的解密
         if platform.system() != "Windows":
-            return None
+            return {}
         con = sqlite3.connect(os.path.join(file_path, "Cookies"))
         cur = con.cursor()
         cur.execute("SELECT host_key, path, name, value, encrypted_value FROM cookies")
@@ -127,5 +127,5 @@ def get_all_cookie_from_browser(browser_type, file_path):
         con.close()
     else:
         output.print_msg("不支持的浏览器类型：" + browser_type)
-        return None
+        return {}
     return all_cookies
