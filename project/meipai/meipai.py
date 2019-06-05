@@ -68,9 +68,11 @@ def get_video_play_page(video_id):
     video_play_response_content = video_play_response.data.decode(errors="ignore")
     video_url_crypt_string = pq(video_play_response_content).find("meta[property='og:video:url']").attr("content")
     if not video_url_crypt_string:
-        if pq(video_play_response_content).find(".error-p").length == 1 and pq(video_play_response_content).find(".error-p").text() == "为建设清朗网络空间，视频正在审核中，暂时无法播放。":
-            result["is_delete"] = True
-            return result
+        if pq(video_play_response_content).find(".error-p").length == 1:
+            error_message = pq(video_play_response_content).find(".error-p").text()
+            if error_message == "为建设清朗网络空间，视频正在审核中，暂时无法播放。" or error_message == "可能已被删除或网址输入错误,请再核对下吧~":
+                result["is_delete"] = True
+                return result
         raise crawler.CrawlerException("页面截取加密视频地址失败\n%s" % video_play_response_content)
     video_url = decrypt_video_url(video_url_crypt_string)
     if not video_url:
