@@ -136,7 +136,7 @@ def get_one_page_video(account_id, account_page_id, since_id):
     # 获取视频播放地址
     result["video_play_url_list"] = re.findall('<a target="_blank" href="([^"]*)"><div ', response_data)
     if len(result["video_play_url_list"]) == 0:
-        if response_data.find("还没有发布过视频") == -1:
+        if response_data.find("还没有发布过视频") == -1 and response_data.find("<!-- 懒加载的加载条，当不出现加载条时，懒加载停止 -->") == -1:
             raise crawler.CrawlerException("返回信息匹配视频地址失败\n%s" % video_pagination_response.json_data)
     # 获取下一页视频的指针
     next_page_since_id = tool.find_sub_string(response_data, "&since_id=", '">')
@@ -148,7 +148,7 @@ def get_one_page_video(account_id, account_page_id, since_id):
 
 
 # 从视频播放页面中提取下载地址
-def get_video_url(video_play_url):
+def get_video_url(video_play_url, error_count = 0):
     video_url = ""
     # http://miaopai.com/show/Gmd7rwiNrc84z5h6S9DhjQ__.htm
     if video_play_url.find("miaopai.com/") >= 0:  # 秒拍
@@ -184,10 +184,13 @@ def get_video_url(video_play_url):
             else:
                 video_url = tool.find_sub_string(video_play_response_content, 'flashvars="list=', '"')
             if not video_url:
-                if video_play_response_content.find("抱歉，网络繁忙") > 0:
+                if video_play_response_content.find("抱歉，网络繁忙") > 0: # https://video.weibo.com/show?fid=1034:15691c2fd85cb3986bcbc0fecc20f373
+                    if error_count >= 5:
+                        return video_url
                     log.step("视频%s播放页访问异常，重试" % video_play_url)
                     time.sleep(5)
-                    return get_video_url(video_play_url)
+                    error_count += 1
+                    return get_video_url(video_play_url, error_count)
                 elif video_play_response_content.find("啊哦，此视频已被删除。") > 0: # http://video.weibo.com/show?fid=1034:14531c4838e14a8c3f2a3d35e33cab5e
                     video_url = ""
                     return video_url
