@@ -136,7 +136,7 @@ def get_one_page_video(account_id, account_page_id, since_id):
     # 获取视频播放地址
     result["video_play_url_list"] = re.findall('<a target="_blank" href="([^"]*)"><div ', response_data)
     if len(result["video_play_url_list"]) == 0:
-        if response_data.find("还没有发布过视频") == -1:
+        if response_data.find("还没有发布过视频") == -1 and response_data.find("<!-- 懒加载的加载条，当不出现加载条时，懒加载停止 -->") == -1:
             raise crawler.CrawlerException("返回信息匹配视频地址失败\n%s" % video_pagination_response.json_data)
     # 获取下一页视频的指针
     next_page_since_id = tool.find_sub_string(response_data, "&since_id=", '">')
