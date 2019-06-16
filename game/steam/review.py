@@ -66,7 +66,7 @@ def main():
             game_data = steamCommon.get_game_store_index(game_id)
         except crawler.CrawlerException as e:
             output.print_msg("游戏%s解析失败，原因：%s" % (game_id, e.message))
-            raise
+            continue
 
         # 已删除
         if game_data["deleted"]:
