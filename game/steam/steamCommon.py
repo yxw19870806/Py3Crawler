@@ -144,6 +144,7 @@ def get_game_store_index(game_id):
             result["deleted"] = True
             return result
         else:
+            COOKIE_INFO.update(net.get_cookies_from_response_header(game_index_response.headers))
             game_index_response = net.http_request(game_index_response.getheader("Location"), method="GET", cookies_list=COOKIE_INFO)
     if game_index_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(game_index_response.status))
