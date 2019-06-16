@@ -6,7 +6,8 @@ https://store.steampowered.com/
 email: hikaru870806@hotmail.com
 如有问题或建议请联系
 """
-from common import crawler, output
+import os
+from common import crawler, file, output
 from game.steam import steamCommon
 
 
@@ -37,16 +38,28 @@ def main():
 
     # 历史记录
     apps_cache_data = steam_class.load_cache_apps_info()
+    # 已检测过的游戏列表
+    checked_apps_file_path = os.path.join(steam_class.cache_data_path, "review_checked.txt")
+    checked_apps_string = file.read_file(checked_apps_file_path)
+    if checked_apps_string:
+        checked_apps_list = checked_apps_string.split(",")
+    else:
+        checked_apps_list = []
+
     # 获取自己的全部玩过的游戏列表
     try:
         played_game_list = steamCommon.get_account_owned_app_list(steam_class.account_id, True)
     except crawler.CrawlerException as e:
         output.print_msg("个人游戏主页解析失败，原因：%s" % e.message)
         raise
-    
+
     for game_id in played_game_list:
         if game_id in apps_cache_data["deleted_list"]:
             continue
+        if game_id in checked_apps_list:
+            continue
+
+        output.print_msg("开始解析游戏%s" % game_id)
 
         # 获取游戏信息
         try:
@@ -109,6 +122,9 @@ def main():
 
         # 增加检测标记
         steam_class.save_cache_apps_info(apps_cache_data)
+        # 保存数据
+        checked_apps_list.append(game_id)
+        file.write_file(",".join(checked_apps_list), checked_apps_file_path, file.WRITE_FILE_TYPE_REPLACE)
 
     # 输出
     print_list(apps_cache_data)
