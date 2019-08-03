@@ -198,6 +198,8 @@ def get_self_uncompleted_account_badges(account_id):
                 if not badge_level_html:
                     continue
                 badge_level_find = re.findall("(\d*) 级,", badge_level_html)
+                if len(badge_level_find) == 0:
+                    badge_level_find = re.findall("Level (\d*),", badge_level_html)
                 if len(badge_level_find) == 1 and crawler.is_integer(badge_level_find[0]):
                     if int(badge_level_find[0]) == 5:
                         continue
@@ -236,6 +238,8 @@ def get_self_account_badge_card(badge_detail_url):
         if not badge_level_html:
             raise crawler.CrawlerException("页面截取徽章等级信息失败\n%s" % badge_detail_response_content)
         badge_level_find = re.findall("(\d*) 级,", badge_level_html)
+        if len(badge_level_find) != 1:
+            badge_level_find = re.findall("Level (\d*),", badge_level_html)
         if len(badge_level_find) != 1:
             raise crawler.CrawlerException("徽章等级信息徽章等级失败\n%s" % badge_level_html)
         if not crawler.is_integer(badge_level_find[0]):
