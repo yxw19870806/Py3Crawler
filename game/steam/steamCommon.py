@@ -490,5 +490,8 @@ class Steam(crawler.Crawler):
         apps_cache_data["review_list"] = sorted(list(set(apps_cache_data["review_list"])))
         apps_cache_data["learning_list"] = sorted(list(set(apps_cache_data["learning_list"])))
         apps_cache_data["deleted_list"] = sorted(list(set(apps_cache_data["deleted_list"])))
+        for dlc_id in apps_cache_data["dlc_in_game"]:
+            if dlc_id in apps_cache_data["learning_list"]:
+                apps_cache_data["learning_list"].remove(dlc_id)
         self.save_cache_apps_info(apps_cache_data)
         
