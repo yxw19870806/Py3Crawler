@@ -45,6 +45,7 @@ def get_discount_game_list():
     page_count = 1
     discount_game_list = []
     app_id_list = []
+    COOKIE_INFO.update({"Steam_Language": "schinese"})
     while True:
         output.print_msg("开始解析第%s页打折游戏" % page_count)
         discount_game_pagination_url = "https://store.steampowered.com/search/results?sort_by=Price_ASC&category1=996,998&os=win&specials=1&page=%s" % page_count
@@ -198,6 +199,8 @@ def get_self_uncompleted_account_badges(account_id):
                 if not badge_level_html:
                     continue
                 badge_level_find = re.findall("(\d*) 级,", badge_level_html)
+                if len(badge_level_find) == 0:
+                    badge_level_find = re.findall("Level (\d*),", badge_level_html)
                 if len(badge_level_find) == 1 and crawler.is_integer(badge_level_find[0]):
                     if int(badge_level_find[0]) == 5:
                         continue
@@ -236,6 +239,8 @@ def get_self_account_badge_card(badge_detail_url):
         if not badge_level_html:
             raise crawler.CrawlerException("页面截取徽章等级信息失败\n%s" % badge_detail_response_content)
         badge_level_find = re.findall("(\d*) 级,", badge_level_html)
+        if len(badge_level_find) != 1:
+            badge_level_find = re.findall("Level (\d*),", badge_level_html)
         if len(badge_level_find) != 1:
             raise crawler.CrawlerException("徽章等级信息徽章等级失败\n%s" % badge_level_html)
         if not crawler.is_integer(badge_level_find[0]):
@@ -490,5 +495,8 @@ class Steam(crawler.Crawler):
         apps_cache_data["review_list"] = sorted(list(set(apps_cache_data["review_list"])))
         apps_cache_data["learning_list"] = sorted(list(set(apps_cache_data["learning_list"])))
         apps_cache_data["deleted_list"] = sorted(list(set(apps_cache_data["deleted_list"])))
+        for dlc_id in apps_cache_data["dlc_in_game"]:
+            if dlc_id in apps_cache_data["learning_list"]:
+                apps_cache_data["learning_list"].remove(dlc_id)
         self.save_cache_apps_info(apps_cache_data)
         
