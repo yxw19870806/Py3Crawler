@@ -45,6 +45,7 @@ def get_discount_game_list():
     page_count = 1
     discount_game_list = []
     app_id_list = []
+    COOKIE_INFO.update({"Steam_Language": "schinese"})
     while True:
         output.print_msg("开始解析第%s页打折游戏" % page_count)
         discount_game_pagination_url = "https://store.steampowered.com/search/results?sort_by=Price_ASC&category1=996,998&os=win&specials=1&page=%s" % page_count
