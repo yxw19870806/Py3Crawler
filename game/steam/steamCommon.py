@@ -54,7 +54,7 @@ def get_discount_game_list():
             raise crawler.CrawlerException("第%s页打折游戏访问失败，原因：%s" % (page_count, crawler.request_failre(discount_game_pagination_response.status)))
         discount_game_pagination_response_content = discount_game_pagination_response.data.decode(errors="ignore")
         search_result_selector = pq(discount_game_pagination_response_content).find("#search_result_container")
-        game_list_selector = search_result_selector.find("div").eq(1).find("a")
+        game_list_selector = search_result_selector.find("#search_resultsRows a")
         for game_index in range(0, game_list_selector.length):
             game_selector = game_list_selector.eq(game_index)
             # game app id
