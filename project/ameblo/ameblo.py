@@ -269,6 +269,7 @@ class Download(crawler.DownloadThread):
 
     def __init__(self, account_info, main_thread):
         crawler.DownloadThread.__init__(self, account_info, main_thread)
+        self.duplicate_list = {}
         self.account_id = self.account_info[0]
         if len(self.account_info) >= 3 and self.account_info[2]:
             self.display_name = self.account_info[2]
@@ -343,6 +344,11 @@ class Download(crawler.DownloadThread):
             self.main_thread_check()  # 检测主线程运行状态
             # 获取原始图片下载地址
             photo_url = get_origin_photo_url(photo_url)
+            if photo_url in self.duplicate_list:
+                self.step("日志%s的图片 %s 已存在" % (blog_id, photo_url))
+                continue
+            else:
+                self.duplicate_list[photo_url] = 1
             self.step("开始下载日志%s的第%s张图片 %s" % (blog_id, photo_index, photo_url))
 
             file_path = os.path.join(self.main_thread.photo_download_path, self.account_id, "%011d_%02d.%s" % (blog_id, photo_index, net.get_file_type(photo_url, "jpg")))
