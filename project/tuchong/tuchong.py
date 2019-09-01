@@ -24,6 +24,9 @@ def get_account_index_page(account_name):
     result = {
         "account_id": None,  # 账号id（字母账号->数字账号)
     }
+    if account_index_response.status == 302 and account_index_response.getheader("Location").find("https://tuchong.com/") == 0 and account_index_response.getheader("Location")[-5:] == "/work":
+        account_index_url += "/work"
+        account_index_response = net.http_request(account_index_url, method="GET", is_auto_redirect=False)
     if account_index_response.status == 301 and account_index_response.getheader("Location") == "https://tuchong.com/":
         raise crawler.CrawlerException("账号不存在")
     elif account_index_response.status != net.HTTP_RETURN_CODE_SUCCEED:
