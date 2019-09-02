@@ -334,6 +334,8 @@ class CrawlerException(SystemExit):
 
 
 def read_config(config_path):
+    if not os.path.exists(config_path):
+        return {}
     """Read config file"""
     config = {}
     with codecs.open(config_path, encoding="UTF-8-SIG") as file_handle:
