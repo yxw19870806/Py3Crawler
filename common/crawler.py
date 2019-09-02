@@ -197,7 +197,7 @@ class Crawler(object):
         self.thread_semaphore = threading.Semaphore(self.thread_count)  # 线程总数信号量
 
         # 启用线程监控是否需要暂停其他下载线程
-        if analysis_config(config, "IS_PORT_LISTENER_ENVET", True, CONFIG_ANALYSIS_MODE_BOOLEAN):
+        if analysis_config(config, "IS_PORT_LISTENER_ENVET", False, CONFIG_ANALYSIS_MODE_BOOLEAN):
             listener_event_bind = {}
             # 暂停进程
             listener_event_bind[str(portListenerEvent.PROCESS_STATUS_PAUSE)] = net.pause_request
@@ -334,6 +334,8 @@ class CrawlerException(SystemExit):
 
 
 def read_config(config_path):
+    if not os.path.exists(config_path):
+        return {}
     """Read config file"""
     config = {}
     with codecs.open(config_path, encoding="UTF-8-SIG") as file_handle:

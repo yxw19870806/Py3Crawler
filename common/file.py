@@ -64,7 +64,7 @@ def read_file(file_path, read_type=READ_FILE_TYPE_FULL):
     return result
 
 
-def write_file(msg, file_path, append_type=WRITE_FILE_TYPE_APPEND):
+def write_file(msg, file_path, append_type=WRITE_FILE_TYPE_APPEND, encoding="UTF-8"):
     """Write local file
 
     :param file_path:
@@ -87,7 +87,7 @@ def write_file(msg, file_path, append_type=WRITE_FILE_TYPE_APPEND):
         open_type = "w"
     else:
         return False
-    with open(file_path, open_type, encoding="UTF-8") as file_handle:
+    with open(file_path, open_type, encoding=encoding) as file_handle:
         file_handle.write(msg + "\n")
 
 
