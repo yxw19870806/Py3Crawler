@@ -4,6 +4,7 @@
 email: hikaru870806@hotmail.com
 如有问题或建议请联系
 """
+import hashlib
 import json
 import os
 import platform
@@ -132,3 +133,12 @@ def shutdown(delay_time=30):
         os.system("shutdown -s -f -t " + str(delay_time))
     else:
         os.system("halt")
+
+
+# 字符串md5
+def string_md5(source_string):
+    if not isinstance(source_string, str):
+        return ''
+    md5_class = hashlib.md5()
+    md5_class.update(source_string.encode())
+    return md5_class.hexdigest()
