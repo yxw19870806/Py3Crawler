@@ -32,8 +32,11 @@ def check_login():
 def check_safe_search():
     if not COOKIE_INFO:
         return False
-    setting_url = "https://www.flickr.com/account/prefs/safesearch/?from=privacy"
-    setting_response = net.http_request(setting_url, method="GET", cookies_list=COOKIE_INFO, is_auto_redirect=False)
+    setting_url = "https://www.flickr.com/account/prefs/safesearch/"
+    query_data = {
+        "from": "privacy"
+    }
+    setting_response = net.http_request(setting_url, method="GET", fields=query_data, cookies_list=COOKIE_INFO, is_auto_redirect=False)
     if setting_response.status == net.HTTP_RETURN_CODE_SUCCEED:
         if pq(setting_response.data.decode(errors="ignore")).find("input[name='safe_search']:checked").val() == "2":
             return True
