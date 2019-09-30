@@ -89,7 +89,7 @@ def _do_login(email, password):
 # 根据账号名字获得账号id（字母账号->数字账号)
 def get_account_index_page(account_name):
     account_index_url = "https://www.instagram.com/%s" % account_name
-    account_index_response = net.http_request(account_index_url, method="GET")
+    account_index_response = net.http_request(account_index_url, method="GET", cookies_list=COOKIE_INFO)
     result = {
         "account_id": None,  # account id
     }
