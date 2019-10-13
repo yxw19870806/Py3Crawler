@@ -7,7 +7,7 @@ email: hikaru870806@hotmail.com
 如有问题或建议请联系
 """
 from common import output, crawler
-from game.steam.common import steam
+from game.steam.lib import steam
 
 CHECK_EXTRA_CARD = True  # 是否检测额外的交换卡（徽章等级大于5，并且还有卡牌）
 CHECK_DUPLICATE_BACKGROUND = True  # 是否检测重复的个人背景图
