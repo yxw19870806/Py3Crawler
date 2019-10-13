@@ -10,7 +10,7 @@ import json
 import os
 import time
 from common import *
-from game.steam import steamCommon
+from game.steam.common import steam
 
 INCLUDE_GAME = True
 INCLUDE_PACKAGE = True
@@ -18,7 +18,7 @@ INCLUDE_BUNDLE = True
 SKIP_LEARNING_GAME = True
 MIN_DISCOUNT_PERCENT = 75  # 显示折扣大等于这个数字的游戏
 MAX_DISCOUNT_PERCENT = 100  # 显示折扣大等于这个数字的游戏
-MAX_SELLING_PERCENT = 1  # 显示价格小等于这个数字的游戏
+MAX_SELLING_PERCENT = 2  # 显示价格小等于这个数字的游戏
 
 
 # 打折游戏列表保存到文件
@@ -48,7 +48,7 @@ def load_discount_list(cache_file_path):
 # 给出给定大等于最低折扣或者小等于最低价格的还没有的打折游戏
 def main():
     # 获取登录状态
-    steam_class = steamCommon.Steam(need_login=True)
+    steam_class = steam.Steam(need_login=True)
     cache_file_path = os.path.abspath(os.path.join(steam_class.cache_data_path, "discount.txt"))
     apps_cache_data = steam_class.load_cache_apps_info()
 
@@ -57,7 +57,7 @@ def main():
     if not discount_game_list:
         # 调用API获取打折列表
         try:
-            discount_game_list = steamCommon.get_discount_game_list()
+            discount_game_list = steam.get_discount_game_list()
         except crawler.CrawlerException as e:
             output.print_msg("打折游戏解析失败，原因：%s" % e.message)
             raise
@@ -68,7 +68,7 @@ def main():
         output.print_msg("get discount game list from cache file")
     # 获取自己的全部游戏列表
     try:
-        owned_game_list = steamCommon.get_account_owned_app_list(steam_class.account_id)
+        owned_game_list = steam.get_account_owned_app_list(steam_class.account_id)
     except crawler.CrawlerException as e:
         output.print_msg("个人游戏主页解析失败，原因：%s" % e.message)
         raise
