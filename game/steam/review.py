@@ -8,7 +8,7 @@ email: hikaru870806@hotmail.com
 """
 import os
 from common import crawler, file, output
-from game.steam import steamCommon
+from game.steam.common import steam
 
 
 # 打印列表
@@ -34,7 +34,7 @@ def print_list(apps_cache_data, print_type=0):
 
 def main():
     # 获取登录状态
-    steam_class = steamCommon.Steam(need_login=True)
+    steam_class = steam.Steam(need_login=True)
 
     # 历史记录
     apps_cache_data = steam_class.load_cache_apps_info()
@@ -48,7 +48,7 @@ def main():
 
     # 获取自己的全部玩过的游戏列表
     try:
-        played_game_list = steamCommon.get_account_owned_app_list(steam_class.account_id, True)
+        played_game_list = steam.get_account_owned_app_list(steam_class.account_id, True)
     except crawler.CrawlerException as e:
         output.print_msg("个人游戏主页解析失败，原因：%s" % e.message)
         raise
@@ -63,7 +63,7 @@ def main():
 
         # 获取游戏信息
         try:
-            game_data = steamCommon.get_game_store_index(game_id)
+            game_data = steam.get_game_store_index(game_id)
         except crawler.CrawlerException as e:
             output.print_msg("游戏%s解析失败，原因：%s" % (game_id, e.message))
             continue
@@ -83,7 +83,7 @@ def main():
 
                 # 获取DLC信息
                 try:
-                    dlc_data = steamCommon.get_game_store_index(dlc_id)
+                    dlc_data = steam.get_game_store_index(dlc_id)
                 except crawler.CrawlerException as e:
                     output.print_msg("游戏%s解析失败，原因：%s" % (dlc_id, e.message))
                     continue

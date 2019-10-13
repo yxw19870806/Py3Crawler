@@ -7,12 +7,12 @@ email: hikaru870806@hotmail.com
 如有问题或建议请联系
 """
 from common import output
-from game.steam import steamCommon, review
+from game.steam.common import steam
 
 
 def main():
     # 获取登录状态
-    steam_class = steamCommon.Steam(need_login=False)
+    steam_class = steam.Steam(need_login=False)
     steam_class.format_cache_app_info()
 
     # 历史记录

@@ -8,12 +8,12 @@ email: hikaru870806@hotmail.com
 """
 import os
 from common import crawler, file, output, tool
-from game.steam import steamCommon
+from game.steam.common import steam
 
 
 def main():
     # 获取登录状态
-    steam_class = steamCommon.Steam(need_login=True)
+    steam_class = steam.Steam(need_login=True)
 
     # 所有打折游戏
     discount_game_file_path = os.path.abspath(os.path.join(steam_class.cache_data_path, "discount.txt"))
@@ -47,7 +47,7 @@ def main():
 
         # 获取游戏信息
         try:
-            game_data = steamCommon.get_game_store_index(game_id)
+            game_data = steam.get_game_store_index(game_id)
         except crawler.CrawlerException as e:
             output.print_msg("游戏%s解析失败，原因：%s" % (game_id, e.message))
             continue
