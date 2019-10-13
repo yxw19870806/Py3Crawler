@@ -7,7 +7,7 @@ email: hikaru870806@hotmail.com
 如有问题或建议请联系
 """
 from common import output
-from game.steam.common import steam
+from game.steam.lib import steam
 
 
 def main():

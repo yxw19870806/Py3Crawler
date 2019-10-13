@@ -6,8 +6,7 @@ email: hikaru870806@hotmail.com
 如有问题或建议请联系
 """
 from common import output
-from game.steam.common import astats, steam
-from game.steam import steamCommon
+from game.steam.lib import astats, steam
 
 
 def main(account_id):

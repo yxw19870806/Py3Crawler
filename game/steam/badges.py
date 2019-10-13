@@ -10,7 +10,7 @@ import json
 import os
 import urllib.parse
 from common import output, crawler, file, tool
-from game.steam.common import steam
+from game.steam.lib import steam
 
 MIN_CARD_PRICE = 0  # 最低卡牌价格
 MAX_CARD_PRICE = 99  # 最高卡牌价格
