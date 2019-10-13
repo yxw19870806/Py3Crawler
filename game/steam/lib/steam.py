@@ -20,7 +20,7 @@ INVENTORY_ITEM_TYPE_EMOTICON = "Emoticon"
 MAX_BADGE_LEVEL = 5
 
 COOKIE_INFO = {}
-ACCOUNT_ID_FILE_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), "data\\account.data"))
+ACCOUNT_ID_FILE_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), "..\\data\\account.data"))
 
 
 # 从文件中读取account id，如果不存在提示输入
