@@ -8,7 +8,7 @@ email: hikaru870806@hotmail.com
 """
 import os
 from common import crawler, file, output, tool
-from game.steam.common import steam
+from game.steam.lib import steam
 
 
 def main():

@@ -10,7 +10,7 @@ import json
 import os
 import time
 from common import *
-from game.steam.common import steam
+from game.steam.lib import steam
 
 INCLUDE_GAME = True
 INCLUDE_PACKAGE = True
