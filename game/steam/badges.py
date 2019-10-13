@@ -10,7 +10,7 @@ import json
 import os
 import urllib.parse
 from common import output, crawler, file, tool
-from game.steam import steamCommon
+from game.steam.common import steam
 
 MIN_CARD_PRICE = 0  # 最低卡牌价格
 MAX_CARD_PRICE = 99  # 最高卡牌价格
@@ -20,7 +20,7 @@ IS_TOTAL_CARD = False  # 是不是一个game id下的所有卡牌都要符合条
 # 获取当前account正在收集的徽章进度
 def main():
     # 获取登录状态
-    steam_class = steamCommon.Steam(need_login=True)
+    steam_class = steam.Steam(need_login=True)
     skip_list_file_path = os.path.join(steam_class.cache_data_path, "badges_skip.txt")
     apps_cache_data = steam_class.load_cache_apps_info()
 
@@ -30,7 +30,7 @@ def main():
 
     # 获取全部没有收到恒宇卡牌掉落且还可以升级的徽章
     try:
-        badges_detail_url_list = steamCommon.get_self_uncompleted_account_badges(steam_class.account_id)
+        badges_detail_url_list = steam.get_self_uncompleted_account_badges(steam_class.account_id)
     except crawler.CrawlerException as e:
         output.print_msg("个人徽章首页解析失败，原因：%s" % e.message)
         raise
@@ -42,7 +42,7 @@ def main():
 
         # 查询徽章剩余的卡牌以及数量
         try:
-            wanted_card_list = steamCommon.get_self_account_badge_card(badges_detail_url)
+            wanted_card_list = steam.get_self_account_badge_card(badges_detail_url)
         except crawler.CrawlerException as e:
             output.print_msg("徽章%s解析失败，原因：%s" % (badges_detail_url, e.message))
             continue
@@ -52,7 +52,7 @@ def main():
             output.print_msg("game id: %s" % game_id, False)
             # 获取全部卡牌的市场售价
             try:
-                market_card_list = steamCommon.get_market_game_trade_card_price(game_id)
+                market_card_list = steam.get_market_game_trade_card_price(game_id)
             except crawler.CrawlerException as e:
                 output.print_msg("游戏id%s的市场解析失败，原因：%s" % (game_id, e.message))
                 continue

@@ -8,16 +8,16 @@ email: hikaru870806@hotmail.com
 """
 import os
 from common import crawler, file, output
-from game.steam import steamCommon
+from game.steam.common import steam
 
 
 def main():
     # 获取登录状态
-    steam_class = steamCommon.Steam(need_login=True)
+    steam_class = steam.Steam(need_login=True)
 
     # 获取自己的全部游戏列表
     try:
-        owned_game_list = steamCommon.get_account_owned_app_list(steam_class.account_id)
+        owned_game_list = steam.get_account_owned_app_list(steam_class.account_id)
     except crawler.CrawlerException as e:
         output.print_msg("个人游戏主页解析失败，原因：%s" % e.message)
         raise
@@ -41,7 +41,7 @@ def main():
         output.print_msg("游戏: %s，剩余数量: %s" % (game_id, len(owned_game_list)))
         # 获取游戏信息
         try:
-            game_data = steamCommon.get_game_store_index(game_id)
+            game_data = steam.get_game_store_index(game_id)
         except crawler.CrawlerException as e:
             output.print_msg("游戏%s解析失败，原因：%s" % (game_id, e.message))
             raise
