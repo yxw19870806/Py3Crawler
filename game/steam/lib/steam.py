@@ -20,24 +20,6 @@ INVENTORY_ITEM_TYPE_EMOTICON = "Emoticon"
 MAX_BADGE_LEVEL = 5
 
 COOKIE_INFO = {}
-ACCOUNT_ID_FILE_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), "..\\data\\account.data"))
-
-
-# 从文件中读取account id，如果不存在提示输入
-def get_account_id_from_file():
-    account_id = file.read_file(ACCOUNT_ID_FILE_PATH)
-    while not account_id:
-        console_account_id = input(crawler.get_time() + " 请输入STEAM账号ID: ")
-        while True:
-            input_str = input(crawler.get_time() + " 是否使用输入的STEAM账号ID '%s' 是Y(es) / 否N(o) ?" % console_account_id)
-            input_str = input_str.lower()
-            if input_str in ["y", "yes"]:
-                account_id = console_account_id
-                file.write_file(console_account_id, ACCOUNT_ID_FILE_PATH, file.WRITE_FILE_TYPE_REPLACE)
-                break
-            elif input_str in ["n", "no"]:
-                break
-    return account_id
 
 
 # 获取全部正在打折的游戏列表
@@ -447,9 +429,15 @@ class Steam(crawler.Crawler):
         }
         crawler.Crawler.__init__(self, sys_config, **kwargs)
 
+        self.data_path = os.path.abspath(os.path.join(crawler.PROJECT_APP_PATH, "data"))
         # 获取account id
-        self.account_id = get_account_id_from_file()
-        self.apps_cache_file_path = os.path.join(self.cache_data_path, "apps.txt")
+        self.account_id = self.get_account_id_from_file(os.path.join(self.data_path, "account.data"))
+        # 已删除的游戏app id
+        self.deleted_app_list_path = os.path.join(self.data_path, "deleted_app.txt")
+        # 个人资料受限的游戏app id
+        self.restricted_app_list_path = os.path.join(self.data_path, "restricted_app.txt")
+        # 个人账号应用缓存
+        self.apps_cache_file_path = os.path.join(self.cache_data_path, "%s_apps.txt" % self.account_id)
 
         if need_login:
             # 检测是否登录
@@ -469,37 +457,76 @@ class Steam(crawler.Crawler):
             # 年龄
             COOKIE_INFO["lastagecheckage"] = "1-January-1971"
 
+    # 从文件中读取account id，如果不存在提示输入
+    def get_account_id_from_file(self, account_id_file_path):
+        account_id = file.read_file(account_id_file_path)
+        while not account_id:
+            console_account_id = input(crawler.get_time() + " 请输入STEAM账号ID: ")
+            while True:
+                input_str = input(crawler.get_time() + " 是否使用输入的STEAM账号ID '%s' 是Y(es) / 否N(o) ?" % console_account_id)
+                input_str = input_str.lower()
+                if input_str in ["y", "yes"]:
+                    account_id = console_account_id
+                    file.write_file(console_account_id, account_id_file_path, file.WRITE_FILE_TYPE_REPLACE)
+                    break
+                elif input_str in ["n", "no"]:
+                    break
+        return account_id
 
     def save_cache_apps_info(self, apps_cache_data):
         file.write_file(json.dumps(apps_cache_data), self.apps_cache_file_path, file.WRITE_FILE_TYPE_REPLACE)
-
 
     def load_cache_apps_info(self):
         apps_cache_data = {
             "can_review_lists": [],
             "dlc_in_game": {},
             "review_list": [],
-            "learning_list": [],
-            "deleted_list": [],
         }
         if not os.path.exists(self.apps_cache_file_path):
             return apps_cache_data
         apps_cache_data = tool.json_decode(file.read_file(self.apps_cache_file_path), apps_cache_data)
         return apps_cache_data
 
+    def load_deleted_app_list(self):
+        deleted_app_list_string = file.read_file(self.deleted_app_list_path)
+        deleted_app_list = []
+        if len(deleted_app_list_string) > 0:
+            deleted_app_list = deleted_app_list_string.split(",")
+        return deleted_app_list
+
+    def save_deleted_app_list(self, deleted_app_list):
+        file.write_file(",".join(deleted_app_list), self.deleted_app_list_path, file.WRITE_FILE_TYPE_REPLACE)
+
+    def load_restricted_app_list(self):
+        restricted_app_list_string = file.read_file(self.restricted_app_list_path)
+        restricted_app_list = []
+        if len(restricted_app_list_string) > 0:
+            restricted_app_list = restricted_app_list_string.split(",")
+        return restricted_app_list
+
+    def save_restricted_app_list(self, restricted_app_list):
+        file.write_file(",".join(restricted_app_list), self.restricted_app_list_path, file.WRITE_FILE_TYPE_REPLACE)
+
     def format_cache_app_info(self):
         apps_cache_data = self.load_cache_apps_info()
-        if len(apps_cache_data["learning_list"]) == 0:
+        if len(apps_cache_data) == 0:
             return
+        deleted_app_list = self.load_deleted_app_list()
+        restricted_app_list = self.load_restricted_app_list()
+        # dlc从受限制的应用内删除
+        for dlc_id in apps_cache_data["dlc_in_game"]:
+            if dlc_id in restricted_app_list:
+                restricted_app_list.remove(dlc_id)
+        # 已经删除的游戏从受限制的应用内删除
+        for game_id in deleted_app_list:
+            if game_id in restricted_app_list:
+                restricted_app_list.remove(game_id)
+        # 排序去重
         apps_cache_data["can_review_lists"] = sorted(list(set(apps_cache_data["can_review_lists"])))
         apps_cache_data["review_list"] = sorted(list(set(apps_cache_data["review_list"])))
-        apps_cache_data["learning_list"] = sorted(list(set(apps_cache_data["learning_list"])))
-        apps_cache_data["deleted_list"] = sorted(list(set(apps_cache_data["deleted_list"])))
-        for dlc_id in apps_cache_data["dlc_in_game"]:
-            if dlc_id in apps_cache_data["learning_list"]:
-                apps_cache_data["learning_list"].remove(dlc_id)
-        for game_id in apps_cache_data["deleted_list"]:
-            if game_id in apps_cache_data["learning_list"]:
-                apps_cache_data["learning_list"].remove(game_id)
+        deleted_app_list = sorted(list(set(deleted_app_list)))
+        restricted_app_list = sorted(list(set(restricted_app_list)))
+        # 保存新的数据
         self.save_cache_apps_info(apps_cache_data)
-        
+        self.save_deleted_app_list(deleted_app_list)
+        self.save_restricted_app_list(restricted_app_list)

@@ -45,6 +45,10 @@ def main():
         checked_apps_list = checked_apps_string.split(",")
     else:
         checked_apps_list = []
+    # 已删除的游戏
+    deleted_app_list = steam_class.load_deleted_app_list()
+    # 已资料受限制的游戏
+    restricted_app_list = steam_class.load_restricted_app_list()
 
     # 获取自己的全部玩过的游戏列表
     try:
@@ -54,7 +58,7 @@ def main():
         raise
 
     for game_id in played_game_list:
-        if game_id in apps_cache_data["deleted_list"]:
+        if game_id in deleted_app_list:
             continue
         if game_id in checked_apps_list:
             continue
@@ -70,7 +74,9 @@ def main():
 
         # 已删除
         if game_data["deleted"]:
-            apps_cache_data["deleted_list"].append(game_id)
+            deleted_app_list.append(game_id)
+            # 保存数据
+            steam_class.save_deleted_app_list(deleted_app_list)
         else:
             # 有DLC的话，遍历每个DLC
             for dlc_id in game_data["dlc_list"]:
@@ -117,8 +123,10 @@ def main():
 
             # 需要了解
             if game_data["learning"]:
-                if game_id not in apps_cache_data["learning_list"]:
-                    apps_cache_data["learning_list"].append(game_id)
+                if game_id not in restricted_app_list:
+                    restricted_app_list.append(game_id)
+                    # 保存数据
+                    steam_class.save_restricted_app_list(restricted_app_list)
 
         # 增加检测标记
         steam_class.save_cache_apps_info(apps_cache_data)

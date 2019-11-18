@@ -29,6 +29,10 @@ def main():
         checked_apps_list = checked_apps_string.split(",")
     else:
         checked_apps_list = []
+    # 已删除的游戏
+    deleted_app_list = steam_class.load_deleted_app_list()
+    # 已资料受限制的游戏
+    restricted_app_list = steam_class.load_restricted_app_list()
 
     # 缓存数据
     apps_cache_data = steam_class.load_cache_apps_info()
@@ -49,21 +53,26 @@ def main():
         # 已删除
         if game_data["deleted"]:
             output.print_msg("游戏: %s，已删除" % game_id)
-            if game_id not in apps_cache_data["deleted_list"]:
-                apps_cache_data["deleted_list"].append(game_id)
+            if game_id not in deleted_app_list:
+                deleted_app_list.append(game_id)
+                # 保存数据
+                steam_class.save_deleted_app_list(deleted_app_list)
         else:
             # 受限制
             if game_data["learning"]:
                 output.print_msg("游戏: %s，已受限制" % game_id)
-                if game_id not in apps_cache_data["learning_list"]:
-                    apps_cache_data["learning_list"].append(game_id)
+                if game_id not in restricted_app_list:
+                    restricted_app_list.append(game_id)
+                    # 保存数据
+                    steam_class.save_restricted_app_list(restricted_app_list)
             # 所有的DLC
-            for dlc_id in game_data["dlc_list"]:
-                output.print_msg("游戏: %s，DLC: %s" % (game_id, dlc_id))
-                apps_cache_data["dlc_in_game"][dlc_id] = game_id
+            if len(game_data["dlc_list"]) > 0:
+                for dlc_id in game_data["dlc_list"]:
+                    output.print_msg("游戏: %s，DLC: %s" % (game_id, dlc_id))
+                    apps_cache_data["dlc_in_game"][dlc_id] = game_id
+                # 保存数据
+                steam_class.save_cache_apps_info(apps_cache_data)
 
-        # 保存数据
-        steam_class.save_cache_apps_info(apps_cache_data)
         checked_apps_list.append(game_id)
         file.write_file(",".join(checked_apps_list), checked_apps_file_path, file.WRITE_FILE_TYPE_REPLACE)
 
