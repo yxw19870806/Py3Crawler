@@ -14,10 +14,7 @@ def main():
     # 获取登录状态
     steam_class = steam.Steam(need_login=False)
     steam_class.format_cache_app_info()
-
-    # 历史记录
-    apps_cache_data = steam_class.load_cache_apps_info()
-    output.print_msg(apps_cache_data["learning_list"] + apps_cache_data["deleted_list"])
+    output.print_msg(steam_class.deleted_app_list + steam_class.restricted_app_list)
 
 
 if __name__ == "__main__":

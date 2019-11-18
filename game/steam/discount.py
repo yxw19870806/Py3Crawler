@@ -90,7 +90,7 @@ def main():
                 is_all = True
                 # 遍历包含的全部游戏，如果都有了，则跳过
                 for app_id in discount_info["app_id"]:
-                    if SKIP_LEARNING_GAME and app_id in apps_cache_data["learning_list"]:
+                    if SKIP_LEARNING_GAME and app_id in steam_class.restricted_app_list:
                         is_all = True
                         break
                     if app_id not in owned_game_list and app_id not in dlc_ids:
@@ -104,7 +104,7 @@ def main():
             else:
                 if not INCLUDE_GAME:
                     continue
-                if SKIP_LEARNING_GAME and discount_info["app_id"] in apps_cache_data["learning_list"]:
+                if SKIP_LEARNING_GAME and discount_info["app_id"] in steam_class.restricted_app_list:
                     continue
                 if discount_info["app_id"] not in owned_game_list and discount_info["app_id"] not in dlc_ids:
                     output.print_msg("http://store.steampowered.com/app/%s/ ,discount %s%%, old price: %s, discount price: %s" % (discount_info["id"], discount_info["discount"], discount_info["old_price"], discount_info["now_price"]), False)
