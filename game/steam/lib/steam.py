@@ -20,24 +20,6 @@ INVENTORY_ITEM_TYPE_EMOTICON = "Emoticon"
 MAX_BADGE_LEVEL = 5
 
 COOKIE_INFO = {}
-ACCOUNT_ID_FILE_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), "..\\data\\account.data"))
-
-
-# 从文件中读取account id，如果不存在提示输入
-def get_account_id_from_file():
-    account_id = file.read_file(ACCOUNT_ID_FILE_PATH)
-    while not account_id:
-        console_account_id = input(crawler.get_time() + " 请输入STEAM账号ID: ")
-        while True:
-            input_str = input(crawler.get_time() + " 是否使用输入的STEAM账号ID '%s' 是Y(es) / 否N(o) ?" % console_account_id)
-            input_str = input_str.lower()
-            if input_str in ["y", "yes"]:
-                account_id = console_account_id
-                file.write_file(console_account_id, ACCOUNT_ID_FILE_PATH, file.WRITE_FILE_TYPE_REPLACE)
-                break
-            elif input_str in ["n", "no"]:
-                break
-    return account_id
 
 
 # 获取全部正在打折的游戏列表
@@ -448,7 +430,7 @@ class Steam(crawler.Crawler):
         crawler.Crawler.__init__(self, sys_config, **kwargs)
 
         # 获取account id
-        self.account_id = get_account_id_from_file()
+        self.account_id = self.get_account_id_from_file(os.path.abspath(os.path.join(crawler.PROJECT_APP_PATH, "data\\account.data")))
         self.apps_cache_file_path = os.path.join(self.cache_data_path, "apps.txt")
 
         if need_login:
@@ -469,10 +451,24 @@ class Steam(crawler.Crawler):
             # 年龄
             COOKIE_INFO["lastagecheckage"] = "1-January-1971"
 
+    # 从文件中读取account id，如果不存在提示输入
+    def get_account_id_from_file(self, account_id_file_path):
+        account_id = file.read_file(account_id_file_path)
+        while not account_id:
+            console_account_id = input(crawler.get_time() + " 请输入STEAM账号ID: ")
+            while True:
+                input_str = input(crawler.get_time() + " 是否使用输入的STEAM账号ID '%s' 是Y(es) / 否N(o) ?" % console_account_id)
+                input_str = input_str.lower()
+                if input_str in ["y", "yes"]:
+                    account_id = console_account_id
+                    file.write_file(console_account_id, account_id_file_path, file.WRITE_FILE_TYPE_REPLACE)
+                    break
+                elif input_str in ["n", "no"]:
+                    break
+        return account_id
 
     def save_cache_apps_info(self, apps_cache_data):
         file.write_file(json.dumps(apps_cache_data), self.apps_cache_file_path, file.WRITE_FILE_TYPE_REPLACE)
-
 
     def load_cache_apps_info(self):
         apps_cache_data = {
