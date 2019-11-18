@@ -14,13 +14,16 @@ def main():
     steam_class = steam.Steam(need_login=False)
     steam_class.format_cache_app_info()
 
+    # 已删除的游戏
+    deleted_app_list = steam_class.load_deleted_app_list()
+
     try:
         banned_game_list = madjoki.get_banned_game_list()
     except crawler.CrawlerException as e:
         output.print_msg("已下线游戏列表获取失败，原因：%s" % e.message)
     else:
         for game_info in banned_game_list:
-            if str(game_info["game_id"]) not in steam_class.deleted_app_list:
+            if str(game_info["game_id"]) not in deleted_app_list:
                 output.print_msg("\t".join(list(map(str, game_info.values()))), False)
 
 

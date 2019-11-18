@@ -14,7 +14,13 @@ def main():
     # 获取登录状态
     steam_class = steam.Steam(need_login=False)
     steam_class.format_cache_app_info()
-    output.print_msg(steam_class.deleted_app_list + steam_class.restricted_app_list)
+
+    # 已删除的游戏
+    deleted_app_list = steam_class.load_deleted_app_list()
+    # 已资料受限制的游戏
+    restricted_app_list = steam_class.load_restricted_app_list()
+
+    output.print_msg(deleted_app_list + restricted_app_list)
 
 
 if __name__ == "__main__":
