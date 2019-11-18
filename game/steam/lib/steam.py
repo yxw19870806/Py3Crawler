@@ -429,9 +429,23 @@ class Steam(crawler.Crawler):
         }
         crawler.Crawler.__init__(self, sys_config, **kwargs)
 
+        self.data_path = os.path.abspath(os.path.join(crawler.PROJECT_APP_PATH, "data"))
         # 获取account id
-        self.account_id = self.get_account_id_from_file(os.path.abspath(os.path.join(crawler.PROJECT_APP_PATH, "data\\account.data")))
-        self.apps_cache_file_path = os.path.join(self.cache_data_path, "apps.txt")
+        self.account_id = self.get_account_id_from_file(os.path.join(self.data_path, "account.data"))
+        # 已删除的游戏app id
+        delete_app_list = file.read_file(os.path.join(self.data_path, "deleted_app.txt"))
+        if len(delete_app_list) > 0:
+            self.delete_app_list = delete_app_list.split(",")
+        else:
+            self.delete_app_list = []
+        # 个人资料受限的游戏app id
+        restricted_app_list = file.read_file(os.path.join(self.data_path, "restricted_app.txt"))
+        if len(restricted_app_list) > 0:
+            self.restricted_app_list = restricted_app_list.split(",")
+        else:
+            self.restricted_app_list = []
+        # 个人账号应用缓存
+        self.apps_cache_file_path = os.path.join(self.cache_data_path, "%s_apps.txt" % self.account_id)
 
         if need_login:
             # 检测是否登录
