@@ -38,7 +38,7 @@ def main():
     while len(game_id_list) > 0:
         game_id = game_id_list.pop()
         game_id = str(game_id)
-        if game_id in apps_cache_data["deleted_list"] or game_id in apps_cache_data["learning_list"]:
+        if game_id in steam_class.deleted_app_list or game_id in steam_class.restricted_app_list:
             continue
         if game_id in checked_apps_list:
             continue
@@ -60,10 +60,12 @@ def main():
         # 需要了解
         if game_data["learning"]:
             output.print_msg("游戏%s需要了解" % game_id)
-            apps_cache_data["learning_list"].append(game_id)
+            steam_class.restricted_app_list.append(game_id)
 
         # 增加检测标记
         steam_class.save_cache_apps_info(apps_cache_data)
+        steam_class.save_restricted_app_list()
+
         checked_apps_list.append(game_id)
         file.write_file(",".join(checked_apps_list), checked_apps_file_path, file.WRITE_FILE_TYPE_REPLACE)
 

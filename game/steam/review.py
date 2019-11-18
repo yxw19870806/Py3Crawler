@@ -54,7 +54,7 @@ def main():
         raise
 
     for game_id in played_game_list:
-        if game_id in apps_cache_data["deleted_list"]:
+        if game_id in steam_class.deleted_app_list:
             continue
         if game_id in checked_apps_list:
             continue
@@ -70,7 +70,7 @@ def main():
 
         # 已删除
         if game_data["deleted"]:
-            apps_cache_data["deleted_list"].append(game_id)
+            steam_class.deleted_app_list.append(game_id)
         else:
             # 有DLC的话，遍历每个DLC
             for dlc_id in game_data["dlc_list"]:
@@ -117,11 +117,13 @@ def main():
 
             # 需要了解
             if game_data["learning"]:
-                if game_id not in apps_cache_data["learning_list"]:
-                    apps_cache_data["learning_list"].append(game_id)
+                if game_id not in steam_class.restricted_app_list:
+                    steam_class.restricted_app_list.append(game_id)
 
         # 增加检测标记
         steam_class.save_cache_apps_info(apps_cache_data)
+        steam_class.save_deleted_app_list()
+        steam_class.save_restricted_app_list()
         # 保存数据
         checked_apps_list.append(game_id)
         file.write_file(",".join(checked_apps_list), checked_apps_file_path, file.WRITE_FILE_TYPE_REPLACE)

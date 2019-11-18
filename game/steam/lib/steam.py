@@ -413,6 +413,8 @@ def get_account_owned_app_list(user_id, is_played=False):
 
 class Steam(crawler.Crawler):
     account_id = None
+    deleted_app_list = []
+    restricted_app_list = []
 
     def __init__(self, need_login=True, **kwargs):
         global COOKIE_INFO
@@ -433,17 +435,11 @@ class Steam(crawler.Crawler):
         # 获取account id
         self.account_id = self.get_account_id_from_file(os.path.join(self.data_path, "account.data"))
         # 已删除的游戏app id
-        delete_app_list = file.read_file(os.path.join(self.data_path, "deleted_app.txt"))
-        if len(delete_app_list) > 0:
-            self.delete_app_list = delete_app_list.split(",")
-        else:
-            self.delete_app_list = []
+        self.deleted_app_list_path = os.path.join(self.data_path, "deleted_app.txt")
+        self.load_deleted_app_list()
         # 个人资料受限的游戏app id
-        restricted_app_list = file.read_file(os.path.join(self.data_path, "restricted_app.txt"))
-        if len(restricted_app_list) > 0:
-            self.restricted_app_list = restricted_app_list.split(",")
-        else:
-            self.restricted_app_list = []
+        self.restricted_app_list_path = os.path.join(self.data_path, "restricted_app.txt")
+        self.load_restricted_app_list()
         # 个人账号应用缓存
         self.apps_cache_file_path = os.path.join(self.cache_data_path, "%s_apps.txt" % self.account_id)
 
@@ -489,8 +485,6 @@ class Steam(crawler.Crawler):
             "can_review_lists": [],
             "dlc_in_game": {},
             "review_list": [],
-            "learning_list": [],
-            "deleted_list": [],
         }
         if not os.path.exists(self.apps_cache_file_path):
             return apps_cache_data
@@ -499,17 +493,38 @@ class Steam(crawler.Crawler):
 
     def format_cache_app_info(self):
         apps_cache_data = self.load_cache_apps_info()
-        if len(apps_cache_data["learning_list"]) == 0:
+        if len(apps_cache_data) == 0:
             return
         apps_cache_data["can_review_lists"] = sorted(list(set(apps_cache_data["can_review_lists"])))
         apps_cache_data["review_list"] = sorted(list(set(apps_cache_data["review_list"])))
-        apps_cache_data["learning_list"] = sorted(list(set(apps_cache_data["learning_list"])))
-        apps_cache_data["deleted_list"] = sorted(list(set(apps_cache_data["deleted_list"])))
+        # dlc从受限制的应用内删除
         for dlc_id in apps_cache_data["dlc_in_game"]:
-            if dlc_id in apps_cache_data["learning_list"]:
-                apps_cache_data["learning_list"].remove(dlc_id)
-        for game_id in apps_cache_data["deleted_list"]:
-            if game_id in apps_cache_data["learning_list"]:
-                apps_cache_data["learning_list"].remove(game_id)
+            if dlc_id in self.restricted_app_list:
+                self.restricted_app_list.remove(dlc_id)
+        # 已经删除的游戏从受限制的应用内删除
+        for game_id in self.deleted_app_list:
+            if game_id in self.restricted_app_list:
+                self.restricted_app_list.remove(game_id)
         self.save_cache_apps_info(apps_cache_data)
-        
+        self.save_deleted_app_list()
+        self.save_restricted_app_list()
+
+    def load_deleted_app_list(self):
+        deleted_app_list_string = file.read_file(self.deleted_app_list_path)
+        if len(deleted_app_list_string) > 0:
+            self.deleted_app_list = deleted_app_list_string.split(",")
+        else:
+            self.deleted_app_list = []
+
+    def save_deleted_app_list(self):
+        file.write_file(",".join(self.deleted_app_list), self.deleted_app_list_path, file.WRITE_FILE_TYPE_REPLACE)
+
+    def load_restricted_app_list(self):
+        restricted_app_list_string = file.read_file(self.restricted_app_list_path)
+        if len(restricted_app_list_string) > 0:
+            self.restricted_app_list = restricted_app_list_string.split(",")
+        else:
+            self.restricted_app_list = []
+
+    def save_restricted_app_list(self):
+        file.write_file(",".join(self.restricted_app_list), self.restricted_app_list_path, file.WRITE_FILE_TYPE_REPLACE)
