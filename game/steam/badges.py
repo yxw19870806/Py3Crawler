@@ -23,6 +23,9 @@ def main():
     steam_class = steam.Steam(need_login=True)
     skip_list_file_path = os.path.join(steam_class.cache_data_path, "badges_skip.txt")
 
+    # 已删除的游戏
+    deleted_app_list = steam_class.load_deleted_app_list()
+    # 已设置跳过的游戏
     skip_list = []
     if os.path.exists(skip_list_file_path):
         skip_list = tool.json_decode(file.read_file(skip_list_file_path), [])
@@ -46,7 +49,7 @@ def main():
             output.print_msg("徽章%s解析失败，原因：%s" % (badges_detail_url, e.message))
             continue
         if len(wanted_card_list) > 0:
-            if game_id in steam_class.deleted_app_list:
+            if game_id in deleted_app_list:
                 continue
             output.print_msg("game id: %s" % game_id, False)
             # 获取全部卡牌的市场售价
