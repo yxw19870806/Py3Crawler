@@ -119,7 +119,7 @@ def get_game_store_index(game_id):
         "dlc_list": [],  # 游戏下的DLC列表
         "reviewed": False,  # 是否评测过
         "owned": False,  # 是否已拥有
-        "learning": False,  # 是否正在了解
+        "restricted": False,  # 是否已资料受限制
         "deleted": False,  # 是否已删除（不再合作）
     }
     if game_index_response.status == 302:
@@ -141,8 +141,8 @@ def get_game_store_index(game_id):
     result["owned"] = pq(game_index_response_content).find(".already_in_library").length == 1
     # 是否已评测
     result["reviewed"] = result["owned"] and pq(game_index_response_content).find("#review_create").length == 0
-    # 是否正在了解
-    result["learning"] = pq(game_index_response_content).find(".learning_about").length == 1
+    # 是否已资料受限制
+    result["restricted"] = pq(game_index_response_content).find(".learning_about").length == 1
     return result
 
 

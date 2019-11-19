@@ -58,7 +58,7 @@ def main():
             continue
 
         if len(game_data["dlc_list"]) > 0:
-            output.print_msg("游戏%s全部DLC: %s" % (game_id, game_data["dlc_list"]))
+            output.print_msg("游戏: %s全部DLC: %s" % (game_id, game_data["dlc_list"]))
             is_change = False
             for dlc_id in game_data["dlc_list"]:
                 if dlc_id not in game_dlc_list:
@@ -68,9 +68,9 @@ def main():
             if is_change:
                 steam_class.save_game_dlc_list(game_dlc_list)
 
-        # 需要了解
-        if game_data["learning"]:
-            output.print_msg("游戏%s需要了解" % game_id)
+        # 已资料受限制
+        if game_data["restricted"]:
+            output.print_msg("游戏: %s已资料受限制" % game_id)
             restricted_app_list.append(game_id)
             # 保存数据
             steam_class.save_restricted_app_list(restricted_app_list)

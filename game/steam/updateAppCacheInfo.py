@@ -58,7 +58,7 @@ def main():
                 steam_class.save_deleted_app_list(deleted_app_list)
         else:
             # 受限制
-            if game_data["learning"]:
+            if game_data["restricted"]:
                 output.print_msg("游戏: %s，已受限制" % game_id)
                 if game_id not in restricted_app_list:
                     restricted_app_list.append(game_id)
