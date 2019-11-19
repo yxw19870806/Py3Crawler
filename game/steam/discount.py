@@ -15,7 +15,7 @@ from game.steam.lib import steam
 INCLUDE_GAME = True
 INCLUDE_PACKAGE = True
 INCLUDE_BUNDLE = True
-SKIP_LEARNING_GAME = True
+SKIP_RESTRICTED_GAME = True
 MIN_DISCOUNT_PERCENT = 75  # 显示折扣大等于这个数字的游戏
 MAX_DISCOUNT_PERCENT = 100  # 显示折扣大等于这个数字的游戏
 MAX_SELLING_PERCENT = 2  # 显示价格小等于这个数字的游戏
@@ -92,7 +92,7 @@ def main():
                 is_all = True
                 # 遍历包含的全部游戏，如果都有了，则跳过
                 for app_id in discount_info["app_id"]:
-                    if SKIP_LEARNING_GAME and app_id in restricted_app_list:
+                    if SKIP_RESTRICTED_GAME and app_id in restricted_app_list:
                         is_all = True
                         break
                     if app_id not in owned_game_list and app_id not in game_dlc_list:
@@ -106,7 +106,7 @@ def main():
             else:
                 if not INCLUDE_GAME:
                     continue
-                if SKIP_LEARNING_GAME and discount_info["app_id"] in restricted_app_list:
+                if SKIP_RESTRICTED_GAME and discount_info["app_id"] in restricted_app_list:
                     continue
                 if discount_info["app_id"] not in owned_game_list and discount_info["app_id"] not in game_dlc_list:
                     output.print_msg("http://store.steampowered.com/app/%s/ ,discount %s%%, old price: %s, discount price: %s" % (discount_info["id"], discount_info["discount"], discount_info["old_price"], discount_info["now_price"]), False)

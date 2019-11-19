@@ -129,8 +129,8 @@ def main():
             if is_change:
                 steam_class.save_game_dlc_list(game_dlc_list)
 
-            # 需要了解
-            if game_data["learning"]:
+            # 已资料受限制
+            if game_data["restricted"]:
                 if game_id not in restricted_app_list:
                     restricted_app_list.append(game_id)
                     # 保存数据
