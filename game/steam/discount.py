@@ -50,9 +50,10 @@ def main():
     # 获取登录状态
     steam_class = steam.Steam(need_login=True)
     cache_file_path = os.path.abspath(os.path.join(steam_class.cache_data_path, "discount.txt"))
-    apps_cache_data = steam_class.load_cache_apps_info()
     # 已资料受限制的游戏
     restricted_app_list = steam_class.load_restricted_app_list()
+    # 游戏的DLC列表
+    game_dlc_list = steam_class.load_game_dlc_list()
 
     # 从文件里获取打折列表
     discount_game_list = load_discount_list(cache_file_path)
@@ -74,7 +75,6 @@ def main():
     except crawler.CrawlerException as e:
         output.print_msg("个人游戏主页解析失败，原因：%s" % e.message)
         raise
-    dlc_ids = apps_cache_data["dlc_in_game"]
     for discount_info in discount_game_list:
         # 获取到的价格不大于0的跳过
         if discount_info["now_price"] <= 0 or discount_info["old_price"] <= 0:
@@ -95,7 +95,7 @@ def main():
                     if SKIP_LEARNING_GAME and app_id in restricted_app_list:
                         is_all = True
                         break
-                    if app_id not in owned_game_list and app_id not in dlc_ids:
+                    if app_id not in owned_game_list and app_id not in game_dlc_list:
                         is_all = False
                         # break
                 if not is_all:
@@ -108,7 +108,7 @@ def main():
                     continue
                 if SKIP_LEARNING_GAME and discount_info["app_id"] in restricted_app_list:
                     continue
-                if discount_info["app_id"] not in owned_game_list and discount_info["app_id"] not in dlc_ids:
+                if discount_info["app_id"] not in owned_game_list and discount_info["app_id"] not in game_dlc_list:
                     output.print_msg("http://store.steampowered.com/app/%s/ ,discount %s%%, old price: %s, discount price: %s" % (discount_info["id"], discount_info["discount"], discount_info["old_price"], discount_info["now_price"]), False)
 
 

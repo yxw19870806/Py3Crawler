@@ -16,14 +16,14 @@ from game.steam.lib import steam
 # print_type  1 只要本体
 # print_type  2 只要DLC
 # print_type  3 只要本体已评测的DLC
-def print_list(apps_cache_data, print_type=0):
+def print_list(apps_cache_data, game_dlc_list, print_type=0):
     for game_id in apps_cache_data["can_review_lists"]:
         # 是DLC
-        if game_id in apps_cache_data["dlc_in_game"]:
+        if game_id in game_dlc_list:
             if print_type == 1:
                 continue
             # 本体没有评测过
-            if apps_cache_data["dlc_in_game"][game_id] in apps_cache_data["can_review_lists"]:
+            if game_dlc_list[game_id] in apps_cache_data["can_review_lists"]:
                 if print_type == 3:
                     continue
         else:
@@ -49,6 +49,8 @@ def main():
     deleted_app_list = steam_class.load_deleted_app_list()
     # 已资料受限制的游戏
     restricted_app_list = steam_class.load_restricted_app_list()
+    # 游戏的DLC列表
+    game_dlc_list = steam_class.load_game_dlc_list()
 
     # 获取自己的全部玩过的游戏列表
     try:
@@ -72,6 +74,7 @@ def main():
             output.print_msg("游戏%s解析失败，原因：%s" % (game_id, e.message))
             continue
 
+        is_change = False
         # 已删除
         if game_data["deleted"]:
             deleted_app_list.append(game_id)
@@ -85,7 +88,9 @@ def main():
                     continue
 
                 # DLC和游戏本体关系字典
-                apps_cache_data["dlc_in_game"][dlc_id] = game_id
+                if dlc_id not in game_dlc_list:
+                    game_dlc_list[dlc_id] = game_id
+                    is_change = True
 
                 # 获取DLC信息
                 try:
@@ -121,6 +126,9 @@ def main():
                 if game_id not in apps_cache_data["can_review_lists"]:
                     apps_cache_data["can_review_lists"].append(game_id)
 
+            if is_change:
+                steam_class.save_game_dlc_list(game_dlc_list)
+
             # 需要了解
             if game_data["learning"]:
                 if game_id not in restricted_app_list:
@@ -135,7 +143,7 @@ def main():
         file.write_file(",".join(checked_apps_list), checked_apps_file_path, file.WRITE_FILE_TYPE_REPLACE)
 
     # 输出
-    print_list(apps_cache_data)
+    print_list(apps_cache_data, game_dlc_list)
 
 
 if __name__ == "__main__":
