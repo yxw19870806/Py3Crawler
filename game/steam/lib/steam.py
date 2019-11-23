@@ -119,7 +119,7 @@ def get_game_store_index(game_id):
         "dlc_list": [],  # 游戏下的DLC列表
         "reviewed": False,  # 是否评测过
         "owned": False,  # 是否已拥有
-        "learning": False,  # 是否正在了解
+        "restricted": False,  # 是否已资料受限制
         "deleted": False,  # 是否已删除（不再合作）
     }
     if game_index_response.status == 302:
@@ -141,8 +141,8 @@ def get_game_store_index(game_id):
     result["owned"] = pq(game_index_response_content).find(".already_in_library").length == 1
     # 是否已评测
     result["reviewed"] = result["owned"] and pq(game_index_response_content).find("#review_create").length == 0
-    # 是否正在了解
-    result["learning"] = pq(game_index_response_content).find(".learning_about").length == 1
+    # 是否已资料受限制
+    result["restricted"] = pq(game_index_response_content).find(".learning_about").length == 1
     return result
 
 
@@ -436,6 +436,8 @@ class Steam(crawler.Crawler):
         self.deleted_app_list_path = os.path.join(self.data_path, "deleted_app.txt")
         # 个人资料受限的游戏app id
         self.restricted_app_list_path = os.path.join(self.data_path, "restricted_app.txt")
+        # 游戏的DLC列表
+        self.game_dlc_list_path = os.path.join(self.data_path, "game_dlc_list.txt")
         # 个人账号应用缓存
         self.apps_cache_file_path = os.path.join(self.cache_data_path, "%s_apps.txt" % self.account_id)
 
@@ -473,19 +475,18 @@ class Steam(crawler.Crawler):
                     break
         return account_id
 
-    def save_cache_apps_info(self, apps_cache_data):
-        file.write_file(json.dumps(apps_cache_data), self.apps_cache_file_path, file.WRITE_FILE_TYPE_REPLACE)
-
     def load_cache_apps_info(self):
         apps_cache_data = {
             "can_review_lists": [],
-            "dlc_in_game": {},
             "review_list": [],
         }
         if not os.path.exists(self.apps_cache_file_path):
             return apps_cache_data
         apps_cache_data = tool.json_decode(file.read_file(self.apps_cache_file_path), apps_cache_data)
         return apps_cache_data
+
+    def save_cache_apps_info(self, apps_cache_data):
+        file.write_file(json.dumps(apps_cache_data), self.apps_cache_file_path, file.WRITE_FILE_TYPE_REPLACE)
 
     def load_deleted_app_list(self):
         deleted_app_list_string = file.read_file(self.deleted_app_list_path)
@@ -507,14 +508,21 @@ class Steam(crawler.Crawler):
     def save_restricted_app_list(self, restricted_app_list):
         file.write_file(",".join(restricted_app_list), self.restricted_app_list_path, file.WRITE_FILE_TYPE_REPLACE)
 
+    def load_game_dlc_list(self):
+        return tool.json_decode(file.read_file(self.game_dlc_list_path), {})
+
+    def save_game_dlc_list(self, game_dlc_list):
+        file.write_file(json.dumps(game_dlc_list), self.game_dlc_list_path, file.WRITE_FILE_TYPE_REPLACE)
+
     def format_cache_app_info(self):
         apps_cache_data = self.load_cache_apps_info()
         if len(apps_cache_data) == 0:
             return
         deleted_app_list = self.load_deleted_app_list()
         restricted_app_list = self.load_restricted_app_list()
+        game_dlc_list = self.load_game_dlc_list()
         # dlc从受限制的应用内删除
-        for dlc_id in apps_cache_data["dlc_in_game"]:
+        for dlc_id in game_dlc_list:
             if dlc_id in restricted_app_list:
                 restricted_app_list.remove(dlc_id)
         # 已经删除的游戏从受限制的应用内删除

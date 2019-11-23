@@ -35,13 +35,14 @@ def main():
     deleted_app_list = steam_class.load_deleted_app_list()
     # 已资料受限制的游戏
     restricted_app_list = steam_class.load_restricted_app_list()
-
-    # 历史记录
-    apps_cache_data = steam_class.load_cache_apps_info()
+    # 游戏的DLC列表
+    game_dlc_list = steam_class.load_game_dlc_list()
 
     while len(game_id_list) > 0:
         game_id = game_id_list.pop()
         game_id = str(game_id)
+        if game_id[-1:] != "0":
+            continue
         if game_id in deleted_app_list or game_id in restricted_app_list:
             continue
         if game_id in checked_apps_list:
@@ -57,15 +58,19 @@ def main():
             continue
 
         if len(game_data["dlc_list"]) > 0:
-            output.print_msg("游戏%s全部DLC: %s" % (game_id, game_data["dlc_list"]))
+            output.print_msg("游戏: %s全部DLC: %s" % (game_id, game_data["dlc_list"]))
+            is_change = False
             for dlc_id in game_data["dlc_list"]:
-                apps_cache_data["dlc_in_game"][dlc_id] = game_id
+                if dlc_id not in game_dlc_list:
+                    is_change = True
+                    game_dlc_list[dlc_id] = game_id
             # 保存数据
-            steam_class.save_cache_apps_info(apps_cache_data)
+            if is_change:
+                steam_class.save_game_dlc_list(game_dlc_list)
 
-        # 需要了解
-        if game_data["learning"]:
-            output.print_msg("游戏%s需要了解" % game_id)
+        # 已资料受限制
+        if game_data["restricted"]:
+            output.print_msg("游戏: %s已资料受限制" % game_id)
             restricted_app_list.append(game_id)
             # 保存数据
             steam_class.save_restricted_app_list(restricted_app_list)
