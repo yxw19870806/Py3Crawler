@@ -37,5 +37,7 @@ def main():
                     output.print_msg("\t".join(list(map(str, [game_info["game_id"], game_info["game_name"], steamdb_info["develop_name"]]))), False)
 
         steam_class.save_deleted_app_list(deleted_app_list)
+
+        
 if __name__ == "__main__":
     main()
