@@ -50,7 +50,7 @@ def get_game_store_index(game_id):
     return result
 
 
-class Steam(crawler.Crawler):
+class SteamDb(crawler.Crawler):
     account_id = None
 
     def __init__(self, need_login=True, **kwargs):
