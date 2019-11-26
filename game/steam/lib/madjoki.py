@@ -18,6 +18,7 @@ def get_banned_game_list():
     page_count = max_page_count = 1
     result = []
     while page_count <= max_page_count:
+        output.print_msg("开始解析第%s页删除游戏" % page_count)
         index_url = "https://steam.madjoki.com/apps/banned"
         query_data = {
             "type": "1",
@@ -41,7 +42,7 @@ def get_banned_game_list():
             game_name = game_info_selector.find("td").eq(2).find("a:first").text()
             if not game_name:
                 raise crawler.CrawlerException("游戏信息截取游戏名字失败\n%s" % game_info_selector.html())
-            result_game_info["game_name"] = game_name
+            result_game_info["game_name"] = game_name.strip()
             # 获取游戏ID
             game_url = game_info_selector.find("td").eq(2).find("a:first").attr("href")
             game_id = game_url.split("/")[-1]
