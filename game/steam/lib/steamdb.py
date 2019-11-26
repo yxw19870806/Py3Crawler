@@ -40,15 +40,17 @@ def get_game_store_index(game_id):
     if not develop_name:
         develop_name = pq(game_index_response_content).find("a[itemprop=author]").text()
     if not develop_name:
-        raise crawler.CrawlerException("页面截取开发者名字失败\n%s" % game_index_response_content)
-    result["develop_name"] = develop_name
+        result["develop_name"] = ""
+    else:
+        result["develop_name"] = develop_name
     # 获取发行商名字
     publisher_name = pq(game_index_response_content).find("span[itemprop=publisher]").text()
     if not publisher_name:
         pq(game_index_response_content).find("a[itemprop=publisher]").text()
     if not publisher_name:
-        raise crawler.CrawlerException("页面截取发行商名字失败\n%s" % game_index_response_content)
-    result["publisher_name"] = publisher_name
+        result["publisher_name"] = ""
+    else:
+        result["publisher_name"] = publisher_name
     return result
 
 
