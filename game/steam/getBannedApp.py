@@ -12,8 +12,7 @@ from game.steam.lib import madjoki, steam, steamdb
 def main():
     # 获取登录状态
     steam_class = steam.Steam(need_login=False)
-    steam_class.format_cache_app_info()
-
+    
     steamdb.SteamDb()
 
     # 已删除的游戏
@@ -38,6 +37,6 @@ def main():
 
         steam_class.save_deleted_app_list(deleted_app_list)
 
-        
+
 if __name__ == "__main__":
     main()
