@@ -60,19 +60,20 @@ def main(check_game=True):
         raise
 
     if check_game:
-        for game_id in played_game_list:
+        while len(played_game_list) > 0:
+            game_id = played_game_list.pop()
             if game_id in deleted_app_list:
                 continue
             if game_id in checked_apps_list:
                 continue
 
-            output.print_msg("开始解析游戏%s" % game_id)
+            output.print_msg("开始解析游戏：%s，剩余数量：%s" % (game_id, len(played_game_list)))
 
             # 获取游戏信息
             try:
                 game_data = steam.get_game_store_index(game_id)
             except crawler.CrawlerException as e:
-                output.print_msg("游戏%s解析失败，原因：%s" % (game_id, e.message))
+                output.print_msg("游戏：%s解析失败，原因：%s" % (game_id, e.message))
                 continue
 
             is_change = False
@@ -97,7 +98,7 @@ def main(check_game=True):
                     try:
                         dlc_data = steam.get_game_store_index(dlc_id)
                     except crawler.CrawlerException as e:
-                        output.print_msg("游戏%s解析失败，原因：%s" % (dlc_id, e.message))
+                        output.print_msg("游戏：%s解析失败，原因：%s" % (dlc_id, e.message))
                         continue
 
                     if dlc_data["owned"]:
