@@ -154,13 +154,13 @@ class Favorite(crawler.Crawler):
             log.step("第%s页解析获取%s个已删除微博" % (page_count, len(favorite_pagination_response["delete_blog_id_list"])))
 
             for blog_id in favorite_pagination_response["delete_blog_id_list"]:
-                log.trace("开始删除微博%s" % blog_id)
+                log.step("开始删除微博%s" % blog_id)
                 try:
                     delete_favorite(blog_id)
                 except crawler.CrawlerException as e:
                     log.error("微博%s删除失败，原因：%s" % (blog_id, e.message))
                     raise
-                log.trace("删除微博%s成功" % blog_id)
+                log.step("删除微博%s成功" % blog_id)
 
             log.trace("第%s页解析的全部微博：%s" % (page_count, favorite_pagination_response["blog_info_list"]))
             log.step("第%s页解析获取%s个微博" % (page_count, len(favorite_pagination_response["blog_info_list"])))
