@@ -47,8 +47,11 @@ def get_one_page_favorite(page_count):
     for i in range(0, children_selector.length - 1):
         feed_selector = children_selector.eq(i)
         # 已被删除的微博
-        if feed_selector.find(".WB_empty").length == 1:
-            result["delete_blog_id_list"].append(feed_selector.find(".WB_empty").attr("mid"))
+        if not feed_selector.has_class("WB_feed_type"):
+            if feed_selector.attr("mid") is not None:
+                result["delete_blog_id_list"].append(feed_selector.attr("mid"))
+            elif feed_selector.find(".WB_empty").length == 1:
+                result["delete_blog_id_list"].append(feed_selector.find(".WB_empty").attr("mid"))
             continue
         result_blog_info = {
             "blog_id": None,  # 日志id（mid）
