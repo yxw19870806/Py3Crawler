@@ -95,12 +95,17 @@ def get_one_page_favorite(page_count):
 
 
 def delete_favorite(blog_id):
-    api_url = " https://weibo.com/aj/fav/mblog/del"
+    api_url = " https://weibo.com/aj/fav/mblog/del?ajwvr=6"
     post_data = {
-        "mid": blog_id
+        "mid": blog_id,
+        "location": "v6_fav"
+    }
+    header_list = {
+        "Origin": "https://weibo.com",
+        "Referer": "https://weibo.com/fav",
     }
     cookies_list = {"SUB": weibo.COOKIE_INFO["SUB"]}
-    api_response = net.http_request(api_url, method="POST", fields=post_data, cookies_list=cookies_list, json_decode=True)
+    api_response = net.http_request(api_url, method="POST", fields=post_data, cookies_list=cookies_list, header_list=header_list, json_decode=True)
     if api_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(api_response.status))
     crawler.get_json_value(api_response.json_data, "code", type_check=int, value_check=100000)
