@@ -474,7 +474,7 @@ def get_time():
 #       type_check
 #       value_check
 def get_json_value(json_data, *args, **kwargs):
-    if "original_data" is kwargs:
+    if "original_data" in kwargs:
         original_data = kwargs["original_data"]
     else:
         original_data = json_data
