@@ -10,7 +10,10 @@ import threading
 try:
     import PyHook3 as pyHook
 except ModuleNotFoundError:
-    import pyHook
+    try:
+        import pyHook
+    except ModuleNotFoundError:
+        pass
 
 SUPPORT_KEYBOARD_LIST = ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z",
                          "0", "1", "2", "3", "4", "5", "6", "7", "8", "9",
@@ -96,8 +99,12 @@ class KeyboardEvent(threading.Thread):
 
     def run(self):
         """Start listener"""
-        hook_manager = pyHook.HookManager()
-        hook_manager.KeyDown = self.on_keyboard_down
-        hook_manager.KeyUp = self.on_keyboard_up
-        hook_manager.HookKeyboard()
-        pythoncom.PumpMessages()
+        try:
+            hook_manager = pyHook.HookManager()
+        except NameError:
+            pass
+        else:
+            hook_manager.KeyDown = self.on_keyboard_down
+            hook_manager.KeyUp = self.on_keyboard_up
+            hook_manager.HookKeyboard()
+            pythoncom.PumpMessages()
