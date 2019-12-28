@@ -9,6 +9,7 @@ email: hikaru870806@hotmail.com
 import json
 import os
 import time
+import threading
 import traceback
 from common import *
 from common import crypto
@@ -17,6 +18,9 @@ IS_LOCAL_SAVE_SESSION = False
 EACH_PAGE_PHOTO_COUNT = 12  # 每次请求获取的媒体数量
 QUERY_ID = "17859156310193001"
 COOKIE_INFO = {"csrftoken": "", "mid": "", "sessionid": ""}
+REQUEST_LIMIT_DURATION = 10 # 请求统计的分钟数量
+REQUEST_LIMIT_COUNT = 1000 # 一定时间范围内的请求次数限制
+REQUEST_MINTER_COUNT = {}  # 每分钟的请求次数
 SESSION_DATA_PATH = None
 
 
@@ -173,13 +177,13 @@ def get_media_page(page_id):
     if media_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(media_response.status))
     media_response_content = media_response.data.decode(errors="ignore")
-    script_json_html = tool.find_sub_string(media_response_content, "window._sharedData = ", ";</script>")
+    script_json_html = tool.find_sub_string(media_response_content, "window.__additionalDataLoaded('/p/%s/'," % page_id, ");</script>")
     if not script_json_html:
         crawler.CrawlerException("页面截取媒体信息失败\n%s" % media_response_content)
     script_json = tool.json_decode(script_json_html)
     if script_json is None:
         raise crawler.CrawlerException("媒体信息加载失败\n%s" % script_json_html)
-    media_info = crawler.get_json_value(script_json, "entry_data", "PostPage", 0, "graphql", "shortcode_media", type_check=dict)
+    media_info = crawler.get_json_value(script_json, "graphql", "shortcode_media", type_check=dict)
     media_type = crawler.get_json_value(media_info, "__typename", type_check=str)
     # 多张图片/视频
     if media_type == "GraphSidecar":
@@ -199,6 +203,22 @@ def get_media_page(page_id):
     else:
         raise crawler.CrawlerException("'__typename'取值范围不正确\n%s" % script_json)
     return result
+
+
+# 限制一定时间范围内的请求次数
+def add_request_count(thread_lock):
+    struct_time = time.gmtime()
+    hour_minuter = struct_time[3] * 60 + struct_time[4]
+    with thread_lock:
+        if hour_minuter not in REQUEST_MINTER_COUNT:
+            REQUEST_MINTER_COUNT[hour_minuter] = 0
+        REQUEST_MINTER_COUNT[hour_minuter] += 1
+        total_request_count = 0
+        for i in range(0, REQUEST_LIMIT_DURATION):
+            if (hour_minuter - i) in REQUEST_MINTER_COUNT:
+                total_request_count += REQUEST_MINTER_COUNT[hour_minuter - i]
+        if total_request_count > REQUEST_LIMIT_COUNT:
+            time.sleep(120)
 
 
 class Instagram(crawler.Crawler):
@@ -296,6 +316,8 @@ class Download(crawler.DownloadThread):
             self.main_thread_check()  # 检测主线程运行状态
             self.step("开始解析cursor：%s页媒体" % cursor)
 
+            # 增加请求计数
+            add_request_count(self.thread_lock)
             # 获取指定时间后的一页媒体信息
             try:
                 media_pagination_response = get_one_page_media(self.account_info[1], cursor)
@@ -334,6 +356,9 @@ class Download(crawler.DownloadThread):
         if self.main_thread.is_download_photo:
             # 多张图片
             if media_info["is_group"]:
+                # 增加请求计数
+                add_request_count(self.thread_lock)
+
                 # 获取媒体详细页
                 try:
                     media_response = get_media_page(media_info["page_id"])
