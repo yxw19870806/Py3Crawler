@@ -441,7 +441,7 @@ def save_net_file(file_url, file_path, need_content_type=False, head_check=False
                 try:
                     file_handle.write(response.data)
                 except OSError as ose:
-                    if str(ose).find("No space left on device"):
+                    if str(ose).find("No space left on device") != -1:
                         global EXIT_FLAG
                         EXIT_FLAG = True
                     raise
