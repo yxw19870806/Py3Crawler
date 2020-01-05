@@ -27,6 +27,8 @@ def main():
 
         for game_info in banned_game_list:
             if str(game_info["game_id"]) not in deleted_app_list:
+                if str(game_info["game_id"]) in ["533120"]:
+                    continue
                 try:
                     steamdb_info = steamdb.get_game_store_index(game_info["game_id"])
                 except crawler.CrawlerException as e:
