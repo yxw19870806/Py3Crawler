@@ -14,14 +14,14 @@ COOKIE_INFO = {}
 
 
 def get_game_store_index(game_id):
-    game_index_url = "https://steamdb.info/app/%s" % game_id
+    game_index_url = "https://steamdb.info/app/%s/" % game_id
     header_list = {
         # "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/74.0.3729.131 Safari/537.36",
         "Referer": "https://steamdb.info/",
     }
     if "User-Agent" not in header_list:
         raise crawler.CrawlerException("header没有携带User-Agent")
-    game_index_response = net.http_request(game_index_url, method="GET", header_list=header_list, cookies_list=COOKIE_INFO, is_random_ip=False)
+    game_index_response = net.http_request(game_index_url, method="GET", header_list=header_list, cookies_list=COOKIE_INFO, is_random_ip=False, is_auto_retry=False)
     result = {
         "game_name": None,  # 游戏名字
         "develop_name": None,  # Developer
