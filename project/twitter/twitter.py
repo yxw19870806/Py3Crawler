@@ -145,7 +145,7 @@ def get_one_page_media(account_name, account_id, cursor):
         # 获取日志id
         result_media_info["blog_id"] = int(tweet_id)
         try:
-            for media_info in crawler.get_json_value(tweet_info, "entities", "extended_entities", type_check=list):
+            for media_info in crawler.get_json_value(tweet_info, "extended_entities", "media", type_check=list):
                 media_type = crawler.get_json_value(media_info, "type", type_check=str)
                 # 获取图片地址
                 if media_type == "photo":
@@ -165,13 +165,11 @@ def get_one_page_media(account_name, account_id, cursor):
                         raise crawler.CrawlerException("获取视频地址失败\n%s" % media_info)
                     result_media_info["video_url_list"].append(video_url)
                 else:
-                    log.notice(str(media_info))
-            # 判断是不是有视频
-                result["media_info_list"].append(result_media_info)
+                    raise crawler.CrawlerException("未知media类型\n%s" % media_info)
         except crawler.CrawlerException:
             log.notice(tweet_id)
-            import json
-            log.notice(json.dumps(tweet_info))
+            log.notice(tweet_info)
+        result["media_info_list"].append(result_media_info)
     # 判断是不是还有下一页
     for page_info in crawler.get_json_value(media_pagination_response.json_data, "timeline", "instructions", 0, "addEntries", "entries", type_check=list):
         if crawler.get_json_value(page_info, "content", "operation", "cursor", "cursorType", type_check=str, default_value="") == "Bottom":
