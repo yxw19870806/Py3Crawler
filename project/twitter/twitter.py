@@ -28,23 +28,25 @@ def check_login():
     global AUTHORIZATION
     global COOKIE_INFO
     global IS_LOGIN
-    index_url = "https://twitter.com/"
-    index_page_response = net.http_request(index_url, method="GET", cookies_list=COOKIE_INFO, header_list={"referer": "https://twitter.com"})
-    if index_page_response.status != net.HTTP_RETURN_CODE_SUCCEED:
+    index_url = "https://twitter.com/home"
+    index_page_response = net.http_request(index_url, method="GET", cookies_list=COOKIE_INFO, header_list={"referer": "https://twitter.com"}, is_auto_redirect=False)
+    if index_page_response.status == 200:
+        IS_LOGIN = True
+    elif index_page_response.status == 302 and index_page_response.getheader("Location") == "/login?redirect_after_login=%2Fhome":
+        pass
+    else:
         raise crawler.CrawlerException(crawler.request_failre(index_page_response.status))
     index_page_response_content = index_page_response.data.decode(errors="ignore")
-    # 有登录状态
-    if pq(index_page_response_content).find(".DashboardProfileCard").length == 1:
-        IS_LOGIN = True
     # 更新cookies
     COOKIE_INFO.update(net.get_cookies_from_response_header(index_page_response.headers))
-    init_js_url_find = re.findall('<script src="(https://abs.twimg.com/k/[^/]*/init.[^\.]*.[\w]*.js)" async></script>', index_page_response_content)
+    init_js_url_find = re.findall('href="(https://abs.twimg.com/responsive-web/web/main.[^\.]*.[\w]*.js)"', index_page_response_content)
     if len(init_js_url_find) != 1:
         raise crawler.CrawlerException("初始化JS地址截取失败\n%s" % index_page_response_content)
     init_js_response = net.http_request(init_js_url_find[0], method="GET")
     if init_js_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException("初始化JS文件，" + crawler.request_failre(init_js_response.status))
     init_js_response_content = init_js_response.data.decode(errors="ignore")
+    # 截取authorization
     authorization_string = tool.find_sub_string(init_js_response_content, '="AAAAAAAAAA', '"', )
     if not authorization_string:
         raise crawler.CrawlerException("初始化JS中截取authorization失败\n%s" % init_js_response_content)
