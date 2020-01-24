@@ -411,7 +411,10 @@ class Download(crawler.DownloadThread):
         video_index = 1
         if self.main_thread.is_download_video:
             for video_url in media_info["video_url_list"]:
-                video_file_path = os.path.join(self.main_thread.video_download_path, self.account_name, "%019d_%02d.%s" % (media_info["blog_id"], video_index, net.get_file_type(video_url)))
+                if len(media_info["video_url_list"]) > 1:
+                    video_file_path = os.path.join(self.main_thread.video_download_path, self.account_name, "%019d_%02d.%s" % (media_info["blog_id"], video_index, net.get_file_type(video_url)))
+                else:
+                    video_file_path = os.path.join(self.main_thread.video_download_path, self.account_name, "%019d.%s" % (media_info["blog_id"], net.get_file_type(video_url)))
                 save_file_return = net.save_net_file(video_url, video_file_path)
                 if save_file_return["status"] == 1:
                     self.temp_path_list.append(video_file_path)
