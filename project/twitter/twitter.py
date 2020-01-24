@@ -17,6 +17,7 @@ from pyquery import PyQuery as pq
 from common import *
 
 AUTHORIZATION = ""
+QUERY_ID = ""
 COOKIE_INFO = {}
 IS_LOGIN = False
 thread_event = threading.Event()
@@ -26,6 +27,7 @@ thread_event.set()
 # 初始化session。获取authorization。并检测登录状态
 def check_login():
     global AUTHORIZATION
+    global QUERY_ID
     global COOKIE_INFO
     global IS_LOGIN
     index_url = "https://twitter.com/home"
@@ -51,33 +53,42 @@ def check_login():
     if not authorization_string:
         raise crawler.CrawlerException("初始化JS中截取authorization失败\n%s" % init_js_response_content)
     AUTHORIZATION = "AAAAAAAAAA" + authorization_string
+    # 截取query id
+    query_id_find = re.findall('queryId:"([\w]*)",operationName:"UserByScreenName",operationType:"query"', init_js_response_content)
+    if len(query_id_find) != 1:
+        raise crawler.CrawlerException("初始化JS中截取queryId失败\n%s" % init_js_response_content)
+    QUERY_ID = query_id_find[0]
     return IS_LOGIN
 
 
 # 根据账号名字获得账号id（字母账号->数字账号)
 def get_account_index_page(account_name):
-    account_index_url = "https://twitter.com/%s" % account_name
-    header_list = {"referer": "https://twitter.com/%s" % account_name}
-    account_index_response = net.http_request(account_index_url, method="GET", cookies_list=COOKIE_INFO, header_list=header_list)
+    account_index_url = "https://api.twitter.com/graphql/%s/UserByScreenName" % QUERY_ID
+    query_data = {
+        "variables": '{"screen_name":"%s","withHighlightedLabel":false}' % account_name
+    }
+    header_list = {
+        "referer": "https://twitter.com/%s" % account_name,
+        "authorization": "Bearer " + AUTHORIZATION,
+        "x-csrf-token": COOKIE_INFO["ct0"],
+    }
+    account_index_response = net.http_request(account_index_url, method="GET", fields=query_data, cookies_list=COOKIE_INFO, header_list=header_list, json_decode=True)
     result = {
         "account_id": None,  # account id
     }
-    if account_index_response.status == 404:
-        raise crawler.CrawlerException("账号不存在")
-    elif account_index_response.status != net.HTTP_RETURN_CODE_SUCCEED:
+    if account_index_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(account_index_response.status))
-    account_index_response_content = account_index_response.data.decode(errors="ignore")
-    # 重新访问
-    if account_index_response_content.find("captureMessage( 'Failed to load source'") >= 0:
-        return get_account_index_page(account_name)
-    if account_index_response_content.find('<div class="ProtectedTimeline">') >= 0:
-        raise crawler.CrawlerException("私密账号，需要关注才能访问")
-    if account_index_response_content.find('<a href="https://support.twitter.com/articles/15790"') >= 0:
-        raise crawler.CrawlerException("账号已被冻结")
-    account_id = tool.find_sub_string(account_index_response_content, '<div class="ProfileNav" role="navigation" data-user-id="', '">')
-    if not crawler.is_integer(account_id):
-        raise crawler.CrawlerException("页面截取用户id失败\n%s" % account_index_response_content)
-    result["account_id"] = account_id
+    result["account_id"] = crawler.get_json_value(account_index_response.json_data, "data", "user", "rest_id", type_check=str, default_value=0)
+    if result["account_id"] == 0:
+        error_message = crawler.get_json_value(account_index_response.json_data, "data", "errors", "message", type_check=str, default_value="")
+        print(error_message)
+        if error_message == "Not found":
+            raise crawler.CrawlerException("账号不存在")
+        elif error_message:
+            raise crawler.CrawlerException(error_message)
+        else:
+            raise crawler.CrawlerException(account_index_response.data)
+    result["account_id"] = str(result["account_id"])
     return result
 
 
