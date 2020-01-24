@@ -19,7 +19,7 @@ EACH_PAGE_PHOTO_COUNT = 12  # 每次请求获取的媒体数量
 QUERY_ID = "17859156310193001"
 COOKIE_INFO = {"csrftoken": "", "mid": "", "sessionid": ""}
 REQUEST_LIMIT_DURATION = 10 # 请求统计的分钟数量
-REQUEST_LIMIT_COUNT = 1000 # 一定时间范围内的请求次数限制
+REQUEST_LIMIT_COUNT = 300 # 一定时间范围内的请求次数限制
 REQUEST_MINTER_COUNT = {}  # 每分钟的请求次数
 SESSION_DATA_PATH = None
 
