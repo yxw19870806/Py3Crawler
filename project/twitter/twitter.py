@@ -17,6 +17,7 @@ from pyquery import PyQuery as pq
 from common import *
 
 AUTHORIZATION = ""
+QUERY_ID = ""
 COOKIE_INFO = {}
 IS_LOGIN = False
 thread_event = threading.Event()
@@ -26,108 +27,159 @@ thread_event.set()
 # 初始化session。获取authorization。并检测登录状态
 def check_login():
     global AUTHORIZATION
+    global QUERY_ID
     global COOKIE_INFO
     global IS_LOGIN
-    index_url = "https://twitter.com/"
-    index_page_response = net.http_request(index_url, method="GET", cookies_list=COOKIE_INFO, header_list={"referer": "https://twitter.com"})
-    if index_page_response.status != net.HTTP_RETURN_CODE_SUCCEED:
+    index_url = "https://twitter.com/home"
+    index_page_response = net.http_request(index_url, method="GET", cookies_list=COOKIE_INFO, header_list={"referer": "https://twitter.com"}, is_auto_redirect=False)
+    if index_page_response.status == 200:
+        IS_LOGIN = True
+    elif index_page_response.status == 302 and index_page_response.getheader("Location") == "/login?redirect_after_login=%2Fhome":
+        pass
+    else:
         raise crawler.CrawlerException(crawler.request_failre(index_page_response.status))
     index_page_response_content = index_page_response.data.decode(errors="ignore")
-    # 有登录状态
-    if pq(index_page_response_content).find(".DashboardProfileCard").length == 1:
-        IS_LOGIN = True
     # 更新cookies
     COOKIE_INFO.update(net.get_cookies_from_response_header(index_page_response.headers))
-    init_js_url_find = re.findall('<script src="(https://abs.twimg.com/k/[^/]*/init.[^\.]*.[\w]*.js)" async></script>', index_page_response_content)
+    init_js_url_find = re.findall('href="(https://abs.twimg.com/responsive-web/web/main.[^\.]*.[\w]*.js)"', index_page_response_content)
     if len(init_js_url_find) != 1:
         raise crawler.CrawlerException("初始化JS地址截取失败\n%s" % index_page_response_content)
     init_js_response = net.http_request(init_js_url_find[0], method="GET")
     if init_js_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException("初始化JS文件，" + crawler.request_failre(init_js_response.status))
     init_js_response_content = init_js_response.data.decode(errors="ignore")
+    # 截取authorization
     authorization_string = tool.find_sub_string(init_js_response_content, '="AAAAAAAAAA', '"', )
     if not authorization_string:
         raise crawler.CrawlerException("初始化JS中截取authorization失败\n%s" % init_js_response_content)
     AUTHORIZATION = "AAAAAAAAAA" + authorization_string
+    # 截取query id
+    query_id_find = re.findall('queryId:"([\w]*)",operationName:"UserByScreenName",operationType:"query"', init_js_response_content)
+    if len(query_id_find) != 1:
+        raise crawler.CrawlerException("初始化JS中截取queryId失败\n%s" % init_js_response_content)
+    QUERY_ID = query_id_find[0]
     return IS_LOGIN
 
 
 # 根据账号名字获得账号id（字母账号->数字账号)
 def get_account_index_page(account_name):
-    account_index_url = "https://twitter.com/%s" % account_name
-    header_list = {"referer": "https://twitter.com/%s" % account_name}
-    account_index_response = net.http_request(account_index_url, method="GET", cookies_list=COOKIE_INFO, header_list=header_list)
+    account_index_url = "https://api.twitter.com/graphql/%s/UserByScreenName" % QUERY_ID
+    query_data = {
+        "variables": '{"screen_name":"%s","withHighlightedLabel":false}' % account_name
+    }
+    header_list = {
+        "referer": "https://twitter.com/%s" % account_name,
+        "authorization": "Bearer " + AUTHORIZATION,
+        "x-csrf-token": COOKIE_INFO["ct0"],
+    }
+    account_index_response = net.http_request(account_index_url, method="GET", fields=query_data, cookies_list=COOKIE_INFO, header_list=header_list, json_decode=True)
     result = {
         "account_id": None,  # account id
     }
-    if account_index_response.status == 404:
-        raise crawler.CrawlerException("账号不存在")
-    elif account_index_response.status != net.HTTP_RETURN_CODE_SUCCEED:
+    if account_index_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(account_index_response.status))
-    account_index_response_content = account_index_response.data.decode(errors="ignore")
-    # 重新访问
-    if account_index_response_content.find("captureMessage( 'Failed to load source'") >= 0:
-        return get_account_index_page(account_name)
-    if account_index_response_content.find('<div class="ProtectedTimeline">') >= 0:
-        raise crawler.CrawlerException("私密账号，需要关注才能访问")
-    if account_index_response_content.find('<a href="https://support.twitter.com/articles/15790"') >= 0:
-        raise crawler.CrawlerException("账号已被冻结")
-    account_id = tool.find_sub_string(account_index_response_content, '<div class="ProfileNav" role="navigation" data-user-id="', '">')
-    if not crawler.is_integer(account_id):
-        raise crawler.CrawlerException("页面截取用户id失败\n%s" % account_index_response_content)
-    result["account_id"] = account_id
+    result["account_id"] = crawler.get_json_value(account_index_response.json_data, "data", "user", "rest_id", type_check=str, default_value=0)
+    if result["account_id"] == 0:
+        error_message = crawler.get_json_value(account_index_response.json_data, "data", "errors", "message", type_check=str, default_value="")
+        if error_message == "Not found":
+            raise crawler.CrawlerException("账号不存在")
+        elif error_message:
+            raise crawler.CrawlerException(error_message)
+        else:
+            raise crawler.CrawlerException(account_index_response.data)
+    result["account_id"] = str(result["account_id"])
     return result
 
 
 # 获取一页的推特信息
-def get_one_page_media(account_name, position_blog_id):
-    # https://twitter.com/i/profiles/show/0916_natsumi/media_timeline?include_available_features=1&include_entities=1&max_position=1053199849145872384&reset_error_state=false
-    media_pagination_url = "https://twitter.com/i/profiles/show/%s/media_timeline" % account_name
+def get_one_page_media(account_name, account_id, cursor):
+    media_pagination_url = "https://api.twitter.com/2/timeline/media/%s.json" % account_id
     query_data = {
-        "include_available_features": "1",
-        "include_entities": "1",
-        "max_position": position_blog_id,
+        "include_profile_interstitial_type": "1",
+        "include_blocking": "1",
+        "include_blocked_by": "1",
+        "include_followed_by": "1",
+        # "include_want_retweets": "1",
+        "include_mute_edge": "1",
+        "include_can_dm": "1",
+        # "include_can_media_tag": "1",
+        "skip_status": "1",
+        "cards_platform": "Web-12",
+        "include_cards": "1",
+        "include_composer_source": "true",
+        "include_ext_alt_text": "true",
+        # "include_reply_count": "1",
+        "tweet_mode": "extended",
+        "include_entities": "true",
+        # "include_user_entities": "true",
+        # "include_ext_media_color": "true",
+        # "include_ext_media_availability": "true",
+        "send_error_codes": "1",
+        "simple_quoted_tweets": "1",
+        "count": "20",
+        "ext": "mediaStats,cameraMoment",
     }
-    header_list = {"referer": "https://twitter.com/%s" % account_name}
+    if cursor:
+        query_data["cursor"] = cursor
+    header_list = {
+        "referer": "https://twitter.com/%s" % account_name,
+        "authorization": "Bearer " + AUTHORIZATION,
+        "x-csrf-token": COOKIE_INFO["ct0"],
+    }
     media_pagination_response = net.http_request(media_pagination_url, method="GET", fields=query_data, cookies_list=COOKIE_INFO, header_list=header_list, json_decode=True)
     result = {
         "is_over": False,  # 是否最后一页推特（没有获取到任何内容）
         "media_info_list": [],  # 全部推特信息
-        "next_page_position": None  # 下一页指针
+        "next_page_cursor": None  # 下一页指针
     }
     if media_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(media_pagination_response.status))
-    response_html = crawler.get_json_value(media_pagination_response.json_data, "items_html", type_check=str).strip()
-    response_count = crawler.get_json_value(media_pagination_response.json_data, "new_latent_count", type_check=int)
-    # 没有任何内容
-    if response_count == 0 and not response_html:
-        result["is_skip"] = True
-        return result
-    tweet_list_selector = pq("<ul id=\"py3crawler\">" + response_html + "</ul>").children("li.js-stream-item")
-    if tweet_list_selector.length != response_count:
-        raise crawler.CrawlerException("tweet分组数量和返回数据中不一致\n%s\n%s" % (tweet_list_selector.length, media_pagination_response.json_data["new_latent_count"]))
-    for tweet_index in range(0, tweet_list_selector.length):
+    tweet_list = crawler.get_json_value(media_pagination_response.json_data, "globalObjects", "tweets", type_check=dict)
+    for tweet_id in sorted(tweet_list.keys(), reverse=True):
         result_media_info = {
             "blog_id": None,  # 推特id
-            "has_video": False,  # 是不是包含视频
             "photo_url_list": [],  # 全部图片地址
+            "video_url_list": [],  # 全部视频地址
         }
-        tweet_selector = tweet_list_selector.eq(tweet_index)
-        # 获取推特id
-        tweet_id = tweet_selector.attr("data-item-id")
-        if not crawler.is_integer(tweet_id):
-            raise crawler.CrawlerException("推特信息截取推特id败\n%s" % tweet_selector.html())
+        tweet_info = tweet_list[tweet_id]
+        # 获取日志id
         result_media_info["blog_id"] = int(tweet_id)
-        # 获取图片地址
-        photo_list_selector = tweet_selector.find("div.js-adaptive-photo")
-        for photo_index in range(0, photo_list_selector.length):
-            result_media_info["photo_url_list"].append(photo_list_selector.eq(photo_index).attr("data-image-url"))
-        # 判断是不是有视频
-        result_media_info["has_video"] = tweet_selector.find("div.AdaptiveMedia-video").length > 0
+        try:
+            for media_info in crawler.get_json_value(tweet_info, "extended_entities", "media", type_check=list):
+                media_type = crawler.get_json_value(media_info, "type", type_check=str)
+                # 获取图片地址
+                if media_type == "photo":
+                    result_media_info["photo_url_list"].append(crawler.get_json_value(media_info, "media_url_https", type_check=str))
+                # 获取视频地址
+                elif media_type == "video":
+                    max_bit_rate = 0
+                    video_url = ''
+                    for video_info in crawler.get_json_value(media_info, "video_info", "variants", type_check=list):
+                        bit_rate = crawler.get_json_value(video_info, "bitrate", type_check=int, default_value=0)
+                        if bit_rate == 0 and "application/x-mpegURL" == crawler.get_json_value(video_info, "content_type", type_check=str):
+                            continue
+                        if bit_rate > max_bit_rate:
+                            max_bit_rate = bit_rate
+                            video_url = crawler.get_json_value(video_info, "url", type_check=str)
+                    if not video_url:
+                        raise crawler.CrawlerException("获取视频地址失败\n%s" % media_info)
+                    result_media_info["video_url_list"].append(video_url)
+                else:
+                    raise crawler.CrawlerException("未知media类型\n%s" % media_info)
+        except crawler.CrawlerException:
+            log.notice(tweet_id)
+            log.notice(tweet_info)
         result["media_info_list"].append(result_media_info)
     # 判断是不是还有下一页
-    if crawler.get_json_value(media_pagination_response.json_data, "has_more_items", type_check=bool):
-        result["next_page_position"] = crawler.get_json_value(media_pagination_response.json_data, "min_position", type_check=str)
+    for page_info in crawler.get_json_value(media_pagination_response.json_data, "timeline", "instructions", 0, "addEntries", "entries", type_check=list):
+        if crawler.get_json_value(page_info, "content", "operation", "cursor", "cursorType", type_check=str, default_value="") == "Bottom":
+            result["next_page_cursor"] = crawler.get_json_value(page_info, "content", "operation", "cursor", "value", type_check=str)
+    if result["next_page_cursor"] is None:
+        raise crawler.CrawlerException("下一页cursor获取失败\n%s" % media_pagination_response.json_data)
+    else:
+        # 和当前cursor一致表示到底了
+        if cursor == result["next_page_cursor"]:
+            result["next_page_cursor"] = None
     return result
 
 
@@ -283,8 +335,6 @@ class Twitter(crawler.Crawler):
 
 
 class Download(crawler.DownloadThread):
-    init_position_blog_id = "1999999999999999999"
-
     def __init__(self, account_info, main_thread):
         crawler.DownloadThread.__init__(self, account_info, main_thread)
         self.account_name = self.account_info[0]
@@ -293,26 +343,26 @@ class Download(crawler.DownloadThread):
 
     # 获取所有可下载推特
     def get_crawl_list(self):
-        position_blog_id = self.init_position_blog_id
+        cursor = ""
         media_info_list = []
         is_over = False
         # 获取全部还未下载过需要解析的推特
         while not is_over:
             self.main_thread_check()  # 检测主线程运行状态
-            self.step("开始解析position：%s页推特" % position_blog_id)
+            self.step("开始解析cursor：%s页推特" % cursor)
 
             # 获取指定时间点后的一页图片信息
             try:
-                media_pagination_response = get_one_page_media(self.account_name, position_blog_id)
+                media_pagination_response = get_one_page_media(self.account_name, self.account_info[1], cursor)
             except crawler.CrawlerException as e:
-                self.error("position：%s页推特解析失败，原因：%s" % (position_blog_id, e.message))
+                self.error("cursor：%s页推特解析失败，原因：%s" % (cursor, e.message))
                 raise
 
             if media_pagination_response["is_over"]:
                 break
 
-            self.trace("position：%s页解析的全部推特：%s" % (position_blog_id, media_pagination_response["media_info_list"]))
-            self.step("position：%s页解析获取%s个推特" % (position_blog_id, len(media_pagination_response["media_info_list"])))
+            self.trace("cursor：%s页解析的全部推特：%s" % (cursor, media_pagination_response["media_info_list"]))
+            self.step("cursor：%s页解析获取%s个推特" % (cursor, len(media_pagination_response["media_info_list"])))
 
             # 寻找这一页符合条件的推特
             for media_info in media_pagination_response["media_info_list"]:
@@ -325,11 +375,11 @@ class Download(crawler.DownloadThread):
 
             if not is_over:
                 # 下一页的指针
-                if media_pagination_response["next_page_position"] is None:
+                if media_pagination_response["next_page_cursor"] is None:
                     is_over = True
                 else:
                     # 设置下一页
-                    position_blog_id = media_pagination_response["next_page_position"]
+                    cursor = media_pagination_response["next_page_cursor"]
 
         return media_info_list
 
@@ -337,12 +387,12 @@ class Download(crawler.DownloadThread):
     def crawl_media(self, media_info):
         self.step("开始解析推特%s" % media_info["blog_id"])
 
+        self.trace("推特%s解析的全部图片：%s，全部视频：%s" % (media_info["blog_id"], media_info["photo_url_list"], media_info["video_url_list"]))
+        self.step("推特%s解析获取%s张图片和%s个视频" % (media_info["blog_id"], len(media_info["photo_url_list"]), len(media_info["video_url_list"])))
+
         # 图片下载
         photo_index = 1
         if self.main_thread.is_download_photo:
-            self.trace("推特%s解析的全部图片：%s" % (media_info["blog_id"], media_info["photo_url_list"]))
-            self.step("推特%s解析获取%s张图片" % (media_info["blog_id"], len(media_info["photo_url_list"])))
-
             for photo_url in media_info["photo_url_list"]:
                 self.main_thread_check()  # 检测主线程运行状态
                 self.step("开始下载推特%s的第%s张图片 %s" % (media_info["blog_id"], photo_index, photo_url))
@@ -358,35 +408,21 @@ class Download(crawler.DownloadThread):
 
         # 视频下载
         download_complete = False
-        if self.main_thread.is_download_video and media_info["has_video"]:
-            # 获取视频播放地址
-            try:
-                video_play_response = get_video_play_page(media_info["blog_id"])
-            except crawler.CrawlerException as e:
-                self.error("推特%s的视频解析失败，原因：%s" % (media_info["blog_id"], e.message))
-                raise
-
-            if video_play_response["video_url"] is None:
-                self.error("推特%s的视频无法访问，跳过" % media_info["blog_id"])
-            else:
-                self.trace("推特%s解析的视频：%s" % (media_info["blog_id"], video_play_response["video_url"]))
-
-                self.step("开始下载推特%s的视频 %s" % (media_info["blog_id"], video_play_response["video_url"]))
-                
-                # 分割后的ts格式视频
-                if isinstance(video_play_response["video_url"], list):
-                    video_file_path = os.path.join(self.main_thread.video_download_path, self.account_name, "%019d.ts" % media_info["blog_id"])
-                    save_file_return = net.save_net_file_list(video_play_response["video_url"], video_file_path)
-                # 其他格式的视频
+        video_index = 1
+        if self.main_thread.is_download_video:
+            for video_url in media_info["video_url_list"]:
+                if len(media_info["video_url_list"]) > 1:
+                    video_file_path = os.path.join(self.main_thread.video_download_path, self.account_name, "%019d_%02d.%s" % (media_info["blog_id"], video_index, net.get_file_type(video_url)))
                 else:
-                    video_file_path = os.path.join(self.main_thread.video_download_path, self.account_name, "%019d.%s" % (media_info["blog_id"], net.get_file_type(video_play_response["video_url"])))
-                    save_file_return = net.save_net_file(video_play_response["video_url"], video_file_path)
+                    video_file_path = os.path.join(self.main_thread.video_download_path, self.account_name, "%019d.%s" % (media_info["blog_id"], net.get_file_type(video_url)))
+                save_file_return = net.save_net_file(video_url, video_file_path)
                 if save_file_return["status"] == 1:
                     self.temp_path_list.append(video_file_path)
-                    self.step("推特%s的视频下载成功" % media_info["blog_id"])
+                    self.step("推特%s的第%s个视频下载成功" % (media_info["blog_id"], video_index))
                     download_complete = True
                 else:
-                    self.error("推特%s的视频 %s 下载失败，原因：%s" % (media_info["blog_id"], video_play_response["video_url"], crawler.download_failre(save_file_return["code"])))
+                    self.error("推特%s的第%s个视频 %s 下载失败，原因：%s" % (media_info["blog_id"], video_index, video_url, crawler.download_failre(save_file_return["code"])))
+                video_index += 1
 
         # 推特内图片和视频全部下载完毕
         self.temp_path_list = []  # 临时目录设置清除
