@@ -9,7 +9,6 @@ email: hikaru870806@hotmail.com
 import json
 import os
 import time
-import threading
 import traceback
 from common import *
 from common import crypto
@@ -92,8 +91,11 @@ def _do_login(email, password):
 
 # 根据账号名字获得账号id（字母账号->数字账号)
 def get_account_index_page(account_name):
-    account_index_url = "https://www.instagram.com/%s" % account_name
-    account_index_response = net.http_request(account_index_url, method="GET", cookies_list=COOKIE_INFO)
+    account_index_url = "https://www.instagram.com/%s/" % account_name
+    query_data = {
+        "hl": "en"
+    }
+    account_index_response = net.http_request(account_index_url, method="GET", fields=query_data, cookies_list=COOKIE_INFO)
     result = {
         "account_id": None,  # account id
     }
@@ -104,6 +106,8 @@ def get_account_index_page(account_name):
     account_index_response_content = account_index_response.data.decode(errors="ignore")
     account_id = tool.find_sub_string(account_index_response_content, '"profilePage_', '"')
     if not crawler.is_integer(account_id):
+        if account_index_response_content.find("The link you followed may be broken, or the page may have been removed.") > 0:
+            raise crawler.CrawlerException("账号不存在")
         raise crawler.CrawlerException("页面截取账号id失败\n%s" % account_index_response_content)
     result["account_id"] = account_id
     return result
