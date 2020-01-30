@@ -11,7 +11,6 @@ import os
 import random
 import time
 import traceback
-from pyquery import PyQuery as pq
 from common import *
 
 
@@ -27,6 +26,7 @@ def get_one_page_audio(account_id, page_count):
         "orderType": "2",  # 降序
     }
     now = int(time.time() * 1000)
+    # 加密方法解析来自 https://s1.xmcdn.com/yx/ximalaya-web-static/last/dist/scripts/b20b549ee.js
     header_list = {
         "xm-sign": "%s(%s)%s(%s)%s" % (tool.string_md5("himalaya-" + str(now)), random.randint(1, 100), now, random.randint(1, 100), now + random.randint(1, 100 * 60))
     }
