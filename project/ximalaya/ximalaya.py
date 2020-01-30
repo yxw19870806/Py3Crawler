@@ -6,7 +6,9 @@ https://www.ximalaya.com/
 email: hikaru870806@hotmail.com
 如有问题或建议请联系
 """
+import math
 import os
+import random
 import time
 import traceback
 from pyquery import PyQuery as pq
@@ -15,51 +17,41 @@ from common import *
 
 # 获取指定页数的全部音频信息
 def get_one_page_audio(account_id, page_count):
-    # https://www.ximalaya.com/1014267/index_tracks?page=2
-    audit_pagination_url = "https://www.ximalaya.com/%s/index_tracks" % account_id
-    query_data = {"page": page_count}
-    audit_pagination_response = net.http_request(audit_pagination_url, method="GET", fields=query_data, json_decode=True)
+    # https://www.ximalaya.com/zhubo/1014267/sound/
+    audit_pagination_url = "https://www.ximalaya.com/revision/user/track"
+    query_data = {
+        "page": page_count,
+        "pageSize": "10",
+        "keyWord": "",
+        "uid": account_id,
+        "orderType": "2",  # 降序
+    }
+    now = int(time.time() * 1000)
+    header_list = {
+        "xm-sign": "%s(%s)%s(%s)%s" % (tool.string_md5("himalaya-" + str(now)), random.randint(1, 100), now, random.randint(1, 100), now + random.randint(1, 100 * 60))
+    }
+    audit_pagination_response = net.http_request(audit_pagination_url, method="GET", fields=query_data, header_list=header_list, json_decode=True)
     result = {
         "audio_info_list": [],  # 全部音频信息
         "is_over": False,  # 是否最后一页音频
     }
-    if audit_pagination_response.status == 404:
-        raise crawler.CrawlerException("账号不存在")
-    elif audit_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
+    if audit_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(audit_pagination_response.status))
-    crawler.get_json_value(audit_pagination_response.json_data, "res", value_check=True)
-    response_html = crawler.get_json_value(audit_pagination_response.json_data, "html", type_check=str)
     # 获取音频信息
-    audio_list_selector = pq(response_html).find("ul.body_list li.item")
-    for audio_index in range(0, audio_list_selector.length):
-        audio_info = {
+    for audio_info in crawler.get_json_value(audit_pagination_response.json_data, "data", "trackList", type_check=list):
+        result_audio_info = {
             "audio_id": None,  # 音频id
             "audio_title": "",  # 音频标题
         }
-        audio_selector = audio_list_selector.eq(audio_index)
         # 获取音频id
-        audio_id = audio_selector.find(".content_wrap").attr("sound_id")
-        if not crawler.is_integer(audio_id):
-            raise crawler.CrawlerException("音频信息匹配音频id失败\n%s" % audio_list_selector.html())
-        audio_info["audio_id"] = int(audio_id)
+        result_audio_info["audio_id"] = crawler.get_json_value(audio_info, "trackId", type_check=int)
         # 获取音频标题
-        audio_title = audio_selector.find(".sound_title").attr("title")
-        if not audio_title:
-            raise crawler.CrawlerException("音频信息匹配音频标题失败\n%s" % audio_list_selector.html())
-        audio_info["audio_title"] = audio_title.strip()
-        result["audio_info_list"].append(audio_info)
+        result_audio_info["audio_title"] = crawler.get_json_value(audio_info, "title", type_check=str).strip()
+        result["audio_info_list"].append(result_audio_info)
     # 判断是不是最后一页
-    max_page_count = 1
-    pagination_list_selector = pq(response_html).find(".pagingBar_wrapper a.pagingBar_page")
-    for pagination_index in range(0, pagination_list_selector.length):
-        pagination_selector = pagination_list_selector.eq(pagination_index)
-        data_page = pagination_selector.attr("data-page")
-        if data_page is None:
-            continue
-        if not crawler.is_integer(data_page):
-            raise crawler.CrawlerException("分页信息匹配失败\n%s" % audio_list_selector.html())
-        max_page_count = max(max_page_count, int(data_page))
-    result["is_over"] = page_count >= max_page_count
+    total_audio_count = crawler.get_json_value(audit_pagination_response.json_data, "data", "maxCount", type_check=int)
+    real_page_size = crawler.get_json_value(audit_pagination_response.json_data, "data", "pageSize", type_check=int)
+    result["is_over"] = page_count >= math.ceil(total_audio_count / real_page_size)
     return result
 
 
@@ -75,7 +67,7 @@ def get_audio_info_page(audio_id):
     audio_play_response = net.http_request(audio_info_url, method="GET", json_decode=True)
     if audio_play_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(audio_play_response.status))
-    if crawler.get_json_value(audio_play_response.json_data, "res", type_check=bool) is False:
+    if crawler.get_json_value(audio_play_response.json_data, "id", type_check=int) == 0:
         result["is_delete"] = True
         return result
     # 获取音频标题
