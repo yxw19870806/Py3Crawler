@@ -110,7 +110,7 @@ def get_one_page_media(account_name, account_id, cursor):
         "include_ext_alt_text": "true",
         # "include_reply_count": "1",
         "tweet_mode": "extended",
-        "include_entities": "true",
+        "include_entities": "false",
         # "include_user_entities": "true",
         # "include_ext_media_color": "true",
         # "include_ext_media_availability": "true",
@@ -144,31 +144,30 @@ def get_one_page_media(account_name, account_id, cursor):
         tweet_info = tweet_list[tweet_id]
         # 获取日志id
         result_media_info["blog_id"] = int(tweet_id)
-        try:
-            for media_info in crawler.get_json_value(tweet_info, "extended_entities", "media", type_check=list):
-                media_type = crawler.get_json_value(media_info, "type", type_check=str)
-                # 获取图片地址
-                if media_type == "photo":
-                    result_media_info["photo_url_list"].append(crawler.get_json_value(media_info, "media_url_https", type_check=str))
-                # 获取视频地址
-                elif media_type == "video":
-                    max_bit_rate = 0
-                    video_url = ''
-                    for video_info in crawler.get_json_value(media_info, "video_info", "variants", type_check=list):
-                        bit_rate = crawler.get_json_value(video_info, "bitrate", type_check=int, default_value=0)
-                        if bit_rate == 0 and "application/x-mpegURL" == crawler.get_json_value(video_info, "content_type", type_check=str):
-                            continue
-                        if bit_rate > max_bit_rate:
-                            max_bit_rate = bit_rate
-                            video_url = crawler.get_json_value(video_info, "url", type_check=str)
-                    if not video_url:
-                        raise crawler.CrawlerException("获取视频地址失败\n%s" % media_info)
-                    result_media_info["video_url_list"].append(video_url)
-                else:
-                    raise crawler.CrawlerException("未知media类型\n%s" % media_info)
-        except crawler.CrawlerException:
+        if "extended_entities" not in tweet_info:
             log.notice(tweet_id)
             log.notice(tweet_info)
+        for media_info in crawler.get_json_value(tweet_info, "extended_entities", "media", type_check=list):
+            media_type = crawler.get_json_value(media_info, "type", type_check=str)
+            # 获取图片地址
+            if media_type == "photo":
+                result_media_info["photo_url_list"].append(crawler.get_json_value(media_info, "media_url_https", type_check=str))
+            # 获取视频地址
+            elif media_type == "video":
+                max_bit_rate = 0
+                video_url = ''
+                for video_info in crawler.get_json_value(media_info, "video_info", "variants", type_check=list):
+                    bit_rate = crawler.get_json_value(video_info, "bitrate", type_check=int, default_value=0)
+                    if bit_rate == 0 and "application/x-mpegURL" == crawler.get_json_value(video_info, "content_type", type_check=str):
+                        continue
+                    if bit_rate > max_bit_rate:
+                        max_bit_rate = bit_rate
+                        video_url = crawler.get_json_value(video_info, "url", type_check=str)
+                if not video_url:
+                    raise crawler.CrawlerException("获取视频地址失败\n%s" % media_info)
+                result_media_info["video_url_list"].append(video_url)
+            else:
+                raise crawler.CrawlerException("未知media类型\n%s" % media_info)
         result["media_info_list"].append(result_media_info)
     # 判断是不是还有下一页
     for page_info in crawler.get_json_value(media_pagination_response.json_data, "timeline", "instructions", 0, "addEntries", "entries", type_check=list):
