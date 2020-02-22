@@ -182,20 +182,25 @@ class Crawler(object):
             browser_type = analysis_config(config, "BROWSER_TYPE", 2, CONFIG_ANALYSIS_MODE_INTEGER)
             # cookie
             is_auto_get_cookie = analysis_config(config, "IS_AUTO_GET_COOKIE", True, CONFIG_ANALYSIS_MODE_BOOLEAN)
-            if is_auto_get_cookie:
-                cookie_path = browser.get_default_browser_cookie_path(browser_type)
+            cookie_path = analysis_config(config, "COOKIE_PATH", "", CONFIG_ANALYSIS_MODE_RAW)
+            if cookie_path:
+                cookie_path = analysis_config(config, "COOKIE_PATH", "", CONFIG_ANALYSIS_MODE_PATH)
             else:
-                cookie_path = analysis_config(config, "COOKIE_PATH", "")
+                cookie_path = browser.get_default_browser_cookie_path(browser_type)
             all_cookie_from_browser = browser.get_all_cookie_from_browser(browser_type, cookie_path)
-            for cookie_domain in sys_config[SYS_GET_COOKIE]:
-                check_domain_list = [cookie_domain]
-                if cookie_domain[0] != ".":
-                    check_domain_list.append("." + cookie_domain)
-                elif cookie_domain[0] == ".":
-                    check_domain_list.append(cookie_domain[1:])
-                for check_domain in check_domain_list:
-                    if check_domain in all_cookie_from_browser:
-                        self.cookie_value.update(all_cookie_from_browser[check_domain])
+            if browser_type == browser.BROWSER_TYPE_TEXT:
+                if "DEFAULT" in all_cookie_from_browser:
+                    self.cookie_value.update(all_cookie_from_browser["DEFAULT"])
+            else:
+                for cookie_domain in sys_config[SYS_GET_COOKIE]:
+                    check_domain_list = [cookie_domain]
+                    if cookie_domain[0] != ".":
+                        check_domain_list.append("." + cookie_domain)
+                    elif cookie_domain[0] == ".":
+                        check_domain_list.append(cookie_domain[1:])
+                    for check_domain in check_domain_list:
+                        if check_domain in all_cookie_from_browser:
+                            self.cookie_value.update(all_cookie_from_browser[check_domain])
 
         # 线程数
         self.thread_count = analysis_config(config, "THREAD_COUNT", 10, CONFIG_ANALYSIS_MODE_INTEGER)
@@ -393,10 +398,12 @@ def analysis_config(config, key, default_value, mode=CONFIG_ANALYSIS_MODE_RAW):
         else:
             value = True
     elif mode == CONFIG_ANALYSIS_MODE_PATH:
-        if value[:2] == "\\\\":  # \\ 开头，程序所在目录
+        if len(value) > 2 and value[:2] == "\\\\":  # \\ 开头，程序所在目录
             value = os.path.join(PROJECT_APP_PATH, value[2:])  # \\ 仅做标记使用，实际需要去除
-        elif value[0] == "\\":  # \ 开头，项目根目录（common目录上级）
+        elif len(value) > 1 and value[0] == "\\":  # \ 开头，项目根目录（common目录上级）
             value = os.path.join(PROJECT_ROOT_PATH, value[1:])  # \ 仅做标记使用，实际需要去除
+        else:
+            value = "."
         value = os.path.abspath(value)
     return value
 
