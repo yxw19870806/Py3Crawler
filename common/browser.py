@@ -13,13 +13,14 @@ if platform.system() == "Windows":
     import win32crypt
 
 try:
-    from . import output
+    from . import file, output
 except ImportError:
-    from common import output
+    from common import file, output
 
 BROWSER_TYPE_IE = 1
 BROWSER_TYPE_FIREFOX = 2
 BROWSER_TYPE_CHROME = 3
+BROWSER_TYPE_TEXT = 4 # 直接从文件里读取cookies
 
 
 # 根据浏览器和操作系统，返回浏览器程序文件所在的路径
@@ -79,7 +80,8 @@ def get_all_cookie_from_browser(browser_type, file_path):
         output.print_msg("cookie目录：" + file_path + " 不存在")
         return {}
     all_cookies = {}
-    if browser_type == 1:
+    if browser_type == BROWSER_TYPE_IE:
+        # win10，IE 11已不支持该方法读取
         for cookie_name in os.listdir(file_path):
             if cookie_name.find(".txt") == -1:
                 continue
@@ -95,7 +97,7 @@ def get_all_cookie_from_browser(browser_type, file_path):
                 if cookie_domain not in all_cookies:
                     all_cookies[cookie_domain] = {}
                 all_cookies[cookie_domain][cookie_key] = cookie_value
-    elif browser_type == 2:
+    elif browser_type == BROWSER_TYPE_FIREFOX:
         con = sqlite3.connect(os.path.join(file_path, "cookies.sqlite"))
         cur = con.cursor()
         cur.execute("SELECT host, path, name, value FROM moz_cookies")
@@ -107,8 +109,9 @@ def get_all_cookie_from_browser(browser_type, file_path):
                 all_cookies[cookie_domain] = {}
             all_cookies[cookie_domain][cookie_key] = cookie_value
         con.close()
-    elif browser_type == 3:
+    elif browser_type == BROWSER_TYPE_CHROME:
         # chrome仅支持windows系统的解密
+        # Chrome 80以上版本已不支持使用该方法对https协议保存的cookies
         if platform.system() != "Windows":
             return {}
         con = sqlite3.connect(os.path.join(file_path, "Cookies"))
@@ -125,6 +128,16 @@ def get_all_cookie_from_browser(browser_type, file_path):
                 all_cookies[cookie_domain] = {}
             all_cookies[cookie_domain][cookie_key] = cookie_value.decode()
         con.close()
+    elif browser_type == BROWSER_TYPE_TEXT:
+        all_cookies["DEFAULT"] = {}
+        # 直接读取文件，保存格式  key1=value1; key2=value2; ......
+        cookies_string = file.read_file(file_path, file.READ_FILE_TYPE_FULL)
+        for single_cookie in cookies_string.split(";"):
+            single_cookie = single_cookie.strip()
+            if len(single_cookie) == 0:
+                continue
+            cookie_key, cookie_value = single_cookie.split("=", 1)
+            all_cookies["DEFAULT"][cookie_key.strip()] = cookie_value.strip()
     else:
         output.print_msg("不支持的浏览器类型：" + browser_type)
         return {}
