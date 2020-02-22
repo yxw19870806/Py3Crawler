@@ -15,5 +15,5 @@
 
 ## 配置参数
 1. 可配置是否单独下载图片和视频，参数：IS_DOWNLOAD_PHOTO、IS_DOWNLOAD_VIDEO
-2. 需配置浏览器类型，参数：BROWSER_TYPE、IS_AUTO_GET_COOKIE
+2. 需配置浏览器类型，参数：BROWSER_TYPE、COOKIE_PATH
 并使用该浏览器登陆自己的微博账号，否则无法下载

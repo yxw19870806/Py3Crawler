@@ -9,7 +9,7 @@
 2. @的账号名，就是账号的ID
 
 ## 配置参数
-1. 为访问已被保护的推文，需要配置浏览器类型，参数：BROWSER_TYPE、IS_AUTO_GET_COOKIE、COOKIE_PATH
+1. 为访问已被保护的推文，需要配置浏览器类型，参数：BROWSER_TYPE、COOKIE_PATH
 并在浏览器中手动关注该账号（通过对方的审核）
 
 ## 程序限制

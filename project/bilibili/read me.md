@@ -10,5 +10,5 @@
 地址类似为**https://space.bilibili.com/[1234567]/**，其中[]中的数字（实际不包括[]）就是账号的ID
 
 ## 配置参数
-1. 为访问需要登录才能查看的视频，需要配置浏览器类型，参数：BROWSER_TYPE、IS_AUTO_GET_COOKIE、COOKIE_PATH
+1. 为访问需要登录才能查看的视频，需要配置浏览器类型，参数：BROWSER_TYPE、COOKIE_PATH
 如果没有登录状态执行下载时，将会自动跳过登录才能查看的作品
