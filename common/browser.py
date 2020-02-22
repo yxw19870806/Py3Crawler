@@ -13,13 +13,14 @@ if platform.system() == "Windows":
     import win32crypt
 
 try:
-    from . import output
+    from . import file, output
 except ImportError:
-    from common import output
+    from common import file, output
 
 BROWSER_TYPE_IE = 1
 BROWSER_TYPE_FIREFOX = 2
 BROWSER_TYPE_CHROME = 3
+BROWSER_TYPE_TEXT = 4 # 直接从文件里读取cookies
 
 
 # 根据浏览器和操作系统，返回浏览器程序文件所在的路径
@@ -125,6 +126,16 @@ def get_all_cookie_from_browser(browser_type, file_path):
                 all_cookies[cookie_domain] = {}
             all_cookies[cookie_domain][cookie_key] = cookie_value.decode()
         con.close()
+    elif browser_type == BROWSER_TYPE_TEXT:
+        all_cookies["DEFAULT"] = {}
+        # 直接读取文件，保存格式  key1=value1; key2=value2; ......
+        cookies_string = file.read_file(file_path, file.READ_FILE_TYPE_FULL)
+        for single_cookie in cookies_string.split(";"):
+            single_cookie = single_cookie.strip()
+            if len(single_cookie) == 0:
+                continue
+            cookie_key, cookie_value = single_cookie.split("=", 1)
+            all_cookies["DEFAULT"][cookie_key.strip()] = cookie_value.strip()
     else:
         output.print_msg("不支持的浏览器类型：" + browser_type)
         return {}
