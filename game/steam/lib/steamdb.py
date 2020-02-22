@@ -11,12 +11,13 @@ from pyquery import PyQuery as pq
 from common import *
 
 COOKIE_INFO = {}
+USER_AGENT = None
 
 
 def get_game_store_index(game_id):
     game_index_url = "https://steamdb.info/app/%s/" % game_id
     header_list = {
-        # "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/74.0.3729.131 Safari/537.36",
+        "User-Agent": USER_AGENT,
         "Referer": "https://steamdb.info/",
     }
     if "User-Agent" not in header_list:
@@ -91,6 +92,7 @@ class SteamDb(crawler.Crawler):
 
     def __init__(self, need_login=True, **kwargs):
         global COOKIE_INFO
+        global USER_AGENT
 
         # 设置APP目录
         crawler.PROJECT_APP_PATH = os.path.abspath(os.path.dirname(__file__))
@@ -102,7 +104,11 @@ class SteamDb(crawler.Crawler):
             crawler.SYS_NOT_CHECK_SAVE_DATA: True,
             crawler.SYS_GET_COOKIE: ("steamdb.info",),
             crawler.SYS_APP_CONFIG_PATH: os.path.join(crawler.PROJECT_APP_PATH, "steamdb.ini"),
+            crawler.SYS_APP_CONFIG: (
+                ("USER_AGENT", "", crawler.CONFIG_ANALYSIS_MODE_RAW),
+            ),
         }
         crawler.Crawler.__init__(self, sys_config, **kwargs)
 
         COOKIE_INFO = self.cookie_value
+        USER_AGENT = self.app_config["USER_AGENT"]
