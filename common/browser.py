@@ -80,7 +80,8 @@ def get_all_cookie_from_browser(browser_type, file_path):
         output.print_msg("cookie目录：" + file_path + " 不存在")
         return {}
     all_cookies = {}
-    if browser_type == 1:
+    if browser_type == BROWSER_TYPE_IE:
+        # win10，IE 11已不支持该方法读取
         for cookie_name in os.listdir(file_path):
             if cookie_name.find(".txt") == -1:
                 continue
@@ -96,7 +97,7 @@ def get_all_cookie_from_browser(browser_type, file_path):
                 if cookie_domain not in all_cookies:
                     all_cookies[cookie_domain] = {}
                 all_cookies[cookie_domain][cookie_key] = cookie_value
-    elif browser_type == 2:
+    elif browser_type == BROWSER_TYPE_FIREFOX:
         con = sqlite3.connect(os.path.join(file_path, "cookies.sqlite"))
         cur = con.cursor()
         cur.execute("SELECT host, path, name, value FROM moz_cookies")
@@ -108,8 +109,9 @@ def get_all_cookie_from_browser(browser_type, file_path):
                 all_cookies[cookie_domain] = {}
             all_cookies[cookie_domain][cookie_key] = cookie_value
         con.close()
-    elif browser_type == 3:
+    elif browser_type == BROWSER_TYPE_CHROME:
         # chrome仅支持windows系统的解密
+        # Chrome 80以上版本已不支持使用该方法对https协议保存的cookies
         if platform.system() != "Windows":
             return {}
         con = sqlite3.connect(os.path.join(file_path, "Cookies"))
