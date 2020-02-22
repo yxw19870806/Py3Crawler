@@ -50,6 +50,9 @@ SYS_GET_COOKIE = "get_cookie"
 # 应用额外配置
 # 传入参数类型为tuple，每一位参数为长度3的tuple，顺序为(配置名字，默认值，配置读取方式)，同analysis_config方法后三个参数
 SYS_APP_CONFIG = "app_config"
+# 自定义的app配置文件路径（默认
+SYS_APP_CONFIG_PATH = 'app_config_path'
+
 
 CONFIG_ANALYSIS_MODE_RAW = 0
 CONFIG_ANALYSIS_MODE_INTEGER = 1
@@ -93,7 +96,10 @@ class Crawler(object):
         # 程序配置
         config = read_config(config_path)
         # 应用配置
-        app_config_path = os.path.abspath(os.path.join(PROJECT_APP_PATH, "app.ini"))
+        if SYS_APP_CONFIG_PATH in sys_config:
+            app_config_path = sys_config[SYS_APP_CONFIG_PATH]
+        else:
+            app_config_path = os.path.abspath(os.path.join(PROJECT_APP_PATH, "app.ini"))
         if os.path.exists(app_config_path):
             config.update(read_config(app_config_path))
         # 额外应用配置（直接通过实例化中传入，可覆盖配置文件中参数）
