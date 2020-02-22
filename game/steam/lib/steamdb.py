@@ -101,6 +101,7 @@ class SteamDb(crawler.Crawler):
             crawler.SYS_NOT_DOWNLOAD: True,
             crawler.SYS_NOT_CHECK_SAVE_DATA: True,
             crawler.SYS_GET_COOKIE: ("steamdb.info",),
+            crawler.SYS_APP_CONFIG_PATH: os.path.join(crawler.PROJECT_APP_PATH, "steamdb.ini"),
         }
         crawler.Crawler.__init__(self, sys_config, **kwargs)
 
