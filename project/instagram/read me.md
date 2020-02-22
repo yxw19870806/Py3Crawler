@@ -10,5 +10,5 @@
 地址类似为**https://www.instagram.com/[abcdef]**，其中[]中的字母+数字（实际不包括[]）就是账号的ID
 
 ## 配置参数
-1. 为调用请求，需要配置浏览器类型，参数：BROWSER_TYPE、IS_AUTO_GET_COOKIE、COOKIE_PATH
+1. 为调用请求，需要配置浏览器类型，参数：BROWSER_TYPE、COOKIE_PATH
 如果没有检测到浏览器中的登录状态，程序会退出执行

@@ -181,7 +181,6 @@ class Crawler(object):
             # 操作系统&浏览器
             browser_type = analysis_config(config, "BROWSER_TYPE", 2, CONFIG_ANALYSIS_MODE_INTEGER)
             # cookie
-            is_auto_get_cookie = analysis_config(config, "IS_AUTO_GET_COOKIE", True, CONFIG_ANALYSIS_MODE_BOOLEAN)
             cookie_path = analysis_config(config, "COOKIE_PATH", "", CONFIG_ANALYSIS_MODE_RAW)
             if cookie_path:
                 cookie_path = analysis_config(config, "COOKIE_PATH", "", CONFIG_ANALYSIS_MODE_PATH)
@@ -657,9 +656,6 @@ def quickly_get_all_cookies_from_browser(config=None):
     if not isinstance(config, configparser.SafeConfigParser):
         config = _get_config()
     # 是否自动查找cookies路径
-    is_auto_get_cookie = analysis_config(config, "IS_AUTO_GET_COOKIE", True, CONFIG_ANALYSIS_MODE_BOOLEAN)
-    if not is_auto_get_cookie:
-        return {}
     # 操作系统&浏览器
     browser_type = analysis_config(config, "BROWSER_TYPE", browser.BROWSER_TYPE_CHROME, CONFIG_ANALYSIS_MODE_INTEGER)
     cookie_path = browser.get_default_browser_cookie_path(browser_type)
