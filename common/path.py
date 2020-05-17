@@ -88,7 +88,7 @@ def delete_null_dir(dir_path):
             os.rmdir(dir_path)
 
 
-def get_dir_files_name(dir_path, order=None):
+def get_dir_files_name(dir_path, order=None, recursive=False, full_path=False):
     """Get list of filename from specified directory
 
     :param order:
@@ -104,10 +104,21 @@ def get_dir_files_name(dir_path, order=None):
         return []
     if not os.path.isdir(dir_path):
         return []
-    try:
-        files_list = os.listdir(dir_path)
-    except PermissionError:
-        return []
+
+    if recursive:
+        files_list = []
+        for root, dirs, files in os.walk(dir_path):
+            if full_path:
+                files_list += list(map(lambda file_name: os.path.join(dir_path, file_name), files))
+            else:
+                files_list += files
+    else:
+        try:
+            files_list = os.listdir(dir_path)
+            if full_path:
+                files_list = list(map(lambda file_name: os.path.join(dir_path, file_name), files_list))
+        except PermissionError:
+            return []
     # 升序
     if order == RETURN_FILE_LIST_ASC:
         return sorted(files_list, reverse=False)
