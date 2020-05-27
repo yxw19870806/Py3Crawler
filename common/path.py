@@ -109,7 +109,7 @@ def get_dir_files_name(dir_path, order=None, recursive=False, full_path=False):
         files_list = []
         for root, dirs, files in os.walk(dir_path):
             if full_path:
-                files_list += list(map(lambda file_name: os.path.join(dir_path, file_name), files))
+                files_list += list(map(lambda file_name: os.path.join(root, file_name), files))
             else:
                 files_list += files
     else:
