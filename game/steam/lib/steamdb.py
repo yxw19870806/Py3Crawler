@@ -32,7 +32,7 @@ def get_game_store_index(game_id):
         raise crawler.CrawlerException(crawler.request_failre(game_index_response.status))
     game_index_response_content = game_index_response.data.decode(errors="ignore")
     # 获取游戏名字
-    game_name = pq(game_index_response_content).find(".css-truncate").text()
+    game_name = pq(game_index_response_content).find("[itemprop='name']").text()
     if not game_name:
         raise crawler.CrawlerException("页面截取游戏名字失败\n%s" % game_index_response_content)
     result["game_name"] = game_name
