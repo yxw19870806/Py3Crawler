@@ -98,6 +98,8 @@ def get_discount_game_list():
         # 下一页
         pagination_html = search_result_selector.find(".search_pagination .search_pagination_right").html()
         if pagination_html is None:
+            if pq(discount_game_pagination_response_content).find("#error_box").length == 1:
+                continue
             break
         page_count_find = re.findall("<a [\s|\S]*?>([\d]*)</a>", pagination_html)
         if len(page_count_find) > 0:
