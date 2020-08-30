@@ -13,9 +13,9 @@ if platform.system() == "Windows":
     import win32crypt
 
 try:
-    from . import file, output
+    from . import crawler, file, output
 except ImportError:
-    from common import file, output
+    from common import crawler, file, output
 
 BROWSER_TYPE_IE = 1
 BROWSER_TYPE_FIREFOX = 2
@@ -65,6 +65,8 @@ def get_default_browser_cookie_path(browser_type):
                     elif "last_active_profiles" in profile_info["profile"] and isinstance(profile_info["profile"]["last_active_profiles"], dict) and len(profile_info["profile"]["last_active_profiles"]) == 1:
                         default_profile_name = profile_info["profile"]["last_active_profiles"][0]
         return os.path.abspath(os.path.join(os.getenv("LOCALAPPDATA"), "Google\\Chrome\\User Data", default_profile_name))
+    elif browser_type == BROWSER_TYPE_TEXT:
+        return os.path.abspath(os.path.join(crawler.PROJECT_APP_PATH, "info/cookies.data"))
     else:
         output.print_msg("不支持的浏览器类型：" + browser_type)
     return None
