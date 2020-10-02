@@ -116,9 +116,11 @@ def build_header_cookie_string(cookies_list):
 
 def split_cookies_from_cookie_string(cookie_string):
     cookies_list = {}
-    for temp_cookie in cookie_string.split(";"):
-        temp_cookie = temp_cookie.strip()
-        cookie_name, cookie_value = temp_cookie.strip().split("=", 1)
+    for single_cookie in cookie_string.split(";"):
+        single_cookie = single_cookie.strip()
+        if len(single_cookie) == 0:
+            continue
+        cookie_name, cookie_value = single_cookie.strip().split("=", 1)
         cookies_list[cookie_name] = cookie_value
     return cookies_list
 
