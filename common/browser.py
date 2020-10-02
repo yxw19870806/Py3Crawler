@@ -13,9 +13,9 @@ if platform.system() == "Windows":
     import win32crypt
 
 try:
-    from . import crawler, file, output
+    from . import crawler, file, net, output
 except ImportError:
-    from common import crawler, file, output
+    from common import crawler, file, net, output
 
 BROWSER_TYPE_IE = 1
 BROWSER_TYPE_FIREFOX = 2
@@ -131,15 +131,7 @@ def get_all_cookie_from_browser(browser_type, file_path):
             all_cookies[cookie_domain][cookie_key] = cookie_value.decode()
         con.close()
     elif browser_type == BROWSER_TYPE_TEXT:
-        all_cookies["DEFAULT"] = {}
-        # 直接读取文件，保存格式  key1=value1; key2=value2; ......
-        cookies_string = file.read_file(file_path, file.READ_FILE_TYPE_FULL)
-        for single_cookie in cookies_string.split(";"):
-            single_cookie = single_cookie.strip()
-            if len(single_cookie) == 0:
-                continue
-            cookie_key, cookie_value = single_cookie.split("=", 1)
-            all_cookies["DEFAULT"][cookie_key.strip()] = cookie_value.strip()
+        all_cookies["DEFAULT"] = net.split_cookies_from_cookie_string(file.read_file(file_path, file.READ_FILE_TYPE_FULL))
     else:
         output.print_msg("不支持的浏览器类型：" + browser_type)
         return {}
