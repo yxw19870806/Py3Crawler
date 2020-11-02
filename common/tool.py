@@ -67,10 +67,20 @@ def find_sub_string(haystack, start_string=None, end_string=None, include_string
     return find_string
 
 
-# decode a json string
+# decode a json string to object
 def json_decode(json_string, default_value=None):
     try:
         return json.loads(json_string)
+    except ValueError:
+        pass
+    except TypeError:
+        pass
+    return default_value
+
+# encode a json object to string
+def json_encode(json_obj, default_value=None):
+    try:
+        return json.dumps(json_obj)
     except ValueError:
         pass
     except TypeError:
