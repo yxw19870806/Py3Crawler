@@ -147,8 +147,9 @@ def get_one_page_media(account_name, account_id, cursor):
         # 获取日志id
         result_media_info["blog_id"] = int(tweet_id)
         if "extended_entities" not in tweet_info:
-            log.notice(tweet_id)
-            log.notice(tweet_info)
+            # log.notice(tweet_id)
+            # log.notice(tweet_info)
+            continue
         for media_info in crawler.get_json_value(tweet_info, "extended_entities", "media", type_check=list):
             media_type = crawler.get_json_value(media_info, "type", type_check=str)
             # 获取图片地址
