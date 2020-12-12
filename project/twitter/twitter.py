@@ -70,8 +70,9 @@ def get_account_index_page(account_name):
     header_list = {
         "referer": "https://twitter.com/%s" % account_name,
         "authorization": "Bearer " + AUTHORIZATION,
-        "x-csrf-token": COOKIE_INFO["ct0"],
     }
+    if "ct0" in COOKIE_INFO:
+        header_list["x-csrf-token"] = COOKIE_INFO["ct0"]
     account_index_response = net.http_request(account_index_url, method="GET", fields=query_data, cookies_list=COOKIE_INFO, header_list=header_list, json_decode=True)
     result = {
         "account_id": None,  # account id
@@ -124,8 +125,9 @@ def get_one_page_media(account_name, account_id, cursor):
     header_list = {
         "referer": "https://twitter.com/%s" % account_name,
         "authorization": "Bearer " + AUTHORIZATION,
-        "x-csrf-token": COOKIE_INFO["ct0"],
     }
+    if "ct0" in COOKIE_INFO:
+        header_list["x-csrf-token"] = COOKIE_INFO["ct0"]
     media_pagination_response = net.http_request(media_pagination_url, method="GET", fields=query_data, cookies_list=COOKIE_INFO, header_list=header_list, json_decode=True)
     result = {
         "is_over": False,  # 是否最后一页推特（没有获取到任何内容）
