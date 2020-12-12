@@ -41,7 +41,7 @@ def check_login():
     index_page_response_content = index_page_response.data.decode(errors="ignore")
     # 更新cookies
     COOKIE_INFO.update(net.get_cookies_from_response_header(index_page_response.headers))
-    init_js_url_find = re.findall('href="(https://abs.twimg.com/responsive-web/web/main.[^\.]*.[\w]*.js)"', index_page_response_content)
+    init_js_url_find = re.findall('href="(https://abs.twimg.com/responsive-web/client-web-legacy/main.[^\.]*.[\w]*.js)"', index_page_response_content)
     if len(init_js_url_find) != 1:
         raise crawler.CrawlerException("初始化JS地址截取失败\n%s" % index_page_response_content)
     init_js_response = net.http_request(init_js_url_find[0], method="GET")
@@ -70,8 +70,9 @@ def get_account_index_page(account_name):
     header_list = {
         "referer": "https://twitter.com/%s" % account_name,
         "authorization": "Bearer " + AUTHORIZATION,
-        "x-csrf-token": COOKIE_INFO["ct0"],
     }
+    if "ct0" in COOKIE_INFO:
+        header_list["x-csrf-token"] = COOKIE_INFO["ct0"]
     account_index_response = net.http_request(account_index_url, method="GET", fields=query_data, cookies_list=COOKIE_INFO, header_list=header_list, json_decode=True)
     result = {
         "account_id": None,  # account id
@@ -93,7 +94,7 @@ def get_account_index_page(account_name):
 
 # 获取一页的推特信息
 def get_one_page_media(account_name, account_id, cursor):
-    media_pagination_url = "https://api.twitter.com/2/timeline/media/%s.json" % account_id
+    media_pagination_url = "https://twitter.com/i/api/2/timeline/media/%s.json" % account_id
     query_data = {
         "include_profile_interstitial_type": "1",
         "include_blocking": "1",
@@ -117,15 +118,16 @@ def get_one_page_media(account_name, account_id, cursor):
         "send_error_codes": "1",
         "simple_quoted_tweets": "1",
         "count": "20",
-        "ext": "mediaStats,cameraMoment",
+        "ext": "mediaStats,highlightedLabel",
     }
     if cursor:
         query_data["cursor"] = cursor
     header_list = {
         "referer": "https://twitter.com/%s" % account_name,
         "authorization": "Bearer " + AUTHORIZATION,
-        "x-csrf-token": COOKIE_INFO["ct0"],
     }
+    if "ct0" in COOKIE_INFO:
+        header_list["x-csrf-token"] = COOKIE_INFO["ct0"]
     media_pagination_response = net.http_request(media_pagination_url, method="GET", fields=query_data, cookies_list=COOKIE_INFO, header_list=header_list, json_decode=True)
     result = {
         "is_over": False,  # 是否最后一页推特（没有获取到任何内容）
@@ -145,8 +147,9 @@ def get_one_page_media(account_name, account_id, cursor):
         # 获取日志id
         result_media_info["blog_id"] = int(tweet_id)
         if "extended_entities" not in tweet_info:
-            log.notice(tweet_id)
-            log.notice(tweet_info)
+            # log.notice(tweet_id)
+            # log.notice(tweet_info)
+            continue
         for media_info in crawler.get_json_value(tweet_info, "extended_entities", "media", type_check=list):
             media_type = crawler.get_json_value(media_info, "type", type_check=str)
             # 获取图片地址
@@ -155,6 +158,20 @@ def get_one_page_media(account_name, account_id, cursor):
             # 获取视频地址
             elif media_type == "video":
                 max_bit_rate = 0
+                video_url = ''
+                for video_info in crawler.get_json_value(media_info, "video_info", "variants", type_check=list):
+                    bit_rate = crawler.get_json_value(video_info, "bitrate", type_check=int, default_value=0)
+                    if bit_rate == 0 and "application/x-mpegURL" == crawler.get_json_value(video_info, "content_type", type_check=str):
+                        continue
+                    if bit_rate > max_bit_rate:
+                        max_bit_rate = bit_rate
+                        video_url = crawler.get_json_value(video_info, "url", type_check=str)
+                if not video_url:
+                    raise crawler.CrawlerException("获取视频地址失败\n%s" % media_info)
+                result_media_info["video_url_list"].append(video_url)
+            # animated gif
+            elif media_type == "animated_gif":
+                max_bit_rate = -1
                 video_url = ''
                 for video_info in crawler.get_json_value(media_info, "video_info", "variants", type_check=list):
                     bit_rate = crawler.get_json_value(video_info, "bitrate", type_check=int, default_value=0)
