@@ -415,12 +415,18 @@ class Download(crawler.DownloadThread):
 
                 photo_file_path = os.path.join(self.main_thread.photo_download_path, self.account_name, "%019d_%02d.%s" % (media_info["blog_id"], photo_index, net.get_file_type(photo_url)))
                 save_file_return = net.save_net_file(photo_url, photo_file_path)
-                if save_file_return["status"] == 1:
-                    self.temp_path_list.append(photo_file_path)
-                    self.step("推特%s的第%s张图片下载成功" % (media_info["blog_id"], photo_index))
-                else:
-                    self.error("推特%s的第%s张图片 %s 下载失败，原因：%s" % (media_info["blog_id"], photo_index, photo_url, crawler.download_failre(save_file_return["code"])))
-                photo_index += 1
+                for retry_count in range(0, 5):
+                    if save_file_return["status"] == 1:
+                        self.temp_path_list.append(photo_file_path)
+                        self.step("推特%s的第%s张图片下载成功" % (media_info["blog_id"], photo_index))
+                    else:
+                        # 502报错，重新下载
+                        if save_file_return["code"] == 502:
+                            self.error("推特%s的第%s张图片 %s 下载失败，重试" % (media_info["blog_id"], photo_index, photo_url))
+                            continue
+                        self.error("推特%s的第%s张图片 %s 下载失败，原因：%s" % (media_info["blog_id"], photo_index, photo_url, crawler.download_failre(save_file_return["code"])))
+                    photo_index += 1
+                    break
 
         # 视频下载
         download_complete = False
