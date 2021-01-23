@@ -401,7 +401,7 @@ def analysis_config(config, key, default_value, mode=CONFIG_ANALYSIS_MODE_RAW):
             value = os.path.join(PROJECT_APP_PATH, value[2:])  # \\ 仅做标记使用，实际需要去除
         elif len(value) > 1 and value[0] == "\\":  # \ 开头，项目根目录（common目录上级）
             value = os.path.join(PROJECT_ROOT_PATH, value[1:])  # \ 仅做标记使用，实际需要去除
-        else:
+        elif not value:
             value = "."
         value = os.path.abspath(value)
     return value
