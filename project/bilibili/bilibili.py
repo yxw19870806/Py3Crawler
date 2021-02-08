@@ -30,13 +30,13 @@ def check_login():
 # 获取指定页数的全部视频
 def get_one_page_video(account_id, page_count):
     # https://space.bilibili.com/ajax/member/getSubmitVideos?mid=116683&pagesize=30&tid=0&page=3&keyword=&order=pubdate
-    api_url = "https://space.bilibili.com/ajax/member/getSubmitVideos"
+    api_url = "https://api.bilibili.com/x/space/arc/search"
     query_data = {
         "keyword": "",
         "mid": account_id,
         "order": "pubdate",
-        "page": page_count,
-        "pagesize": EACH_PAGE_COUNT,
+        "pn": page_count,
+        "ps": EACH_PAGE_COUNT,
         "tid": "0",
     }
     api_response = net.http_request(api_url, method="GET", fields=query_data, json_decode=True)
@@ -45,7 +45,7 @@ def get_one_page_video(account_id, page_count):
     }
     if api_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(api_response.status))
-    for video_info in crawler.get_json_value(api_response.json_data, "data", "vlist", type_check=list):
+    for video_info in crawler.get_json_value(api_response.json_data, "data", "list", "vlist", type_check=list):
         result_video_info = {
             "video_id": None,  # 视频id
             "video_title": "",  # 视频标题
