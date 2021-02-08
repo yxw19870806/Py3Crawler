@@ -246,9 +246,8 @@ def get_audio_info_page(audio_id):
 
 class BiliBili(crawler.Crawler):
     def __init__(self, **kwargs):
-        global COOKIE_INFO
-        global IS_DOWNLOAD_CONTRIBUTION_VIDEO
-        global IS_DOWNLOAD_SHORT_VIDEO
+        global COOKIE_INFO, IS_DOWNLOAD_CONTRIBUTION_VIDEO, IS_DOWNLOAD_SHORT_VIDEO
+        
         # 设置APP目录
         crawler.PROJECT_APP_PATH = os.path.abspath(os.path.dirname(__file__))
 

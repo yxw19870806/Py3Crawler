@@ -184,8 +184,7 @@ def get_one_page_photo(user_id, page_count, api_key, csrf, request_id):
 
 class Flickr(crawler.Crawler):
     def __init__(self, **kwargs):
-        global COOKIE_INFO
-        global IS_LOGIN
+        global COOKIE_INFO, IS_LOGIN
 
         # 设置APP目录
         crawler.PROJECT_APP_PATH = os.path.abspath(os.path.dirname(__file__))
