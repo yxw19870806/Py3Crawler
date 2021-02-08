@@ -13,6 +13,9 @@ pip.exe install urllib3
 echo install PyQuery
 pip.exe install pyquery
 
+echo install selenium
+pip.exe install selenium
+
 echo install cryptography
 pip.exe install cryptography
 
