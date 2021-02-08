@@ -372,9 +372,7 @@ def _decrypt_function3(a, b):
 
 class Youtube(crawler.Crawler):
     def __init__(self, **kwargs):
-        global IS_LOGIN
-        global COOKIE_INFO
-        global FIRST_CHOICE_RESOLUTION
+        global COOKIE_INFO, FIRST_CHOICE_RESOLUTION, IS_LOGIN
 
         # 设置APP目录
         crawler.PROJECT_APP_PATH = os.path.abspath(os.path.dirname(__file__))

@@ -379,10 +379,7 @@ def get_video_play_page(account_id, post_id, is_https):
 
 class Tumblr(crawler.Crawler):
     def __init__(self, **kwargs):
-        global COOKIE_INFO
-        global USER_AGENT
-        global IS_STEP_ERROR_403_AND_404
-        global IS_LOGIN
+        global COOKIE_INFO, IS_LOGIN, IS_STEP_ERROR_403_AND_404, USER_AGENT
 
         # 设置APP目录
         crawler.PROJECT_APP_PATH = os.path.abspath(os.path.dirname(__file__))

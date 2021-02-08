@@ -14,6 +14,9 @@ echo install PyQuery
 FOR /F %%i IN ('python.exe get_whl_path.py lxml') DO pip.exe install %%i
 pip.exe install pyquery
 
+echo install selenium
+pip.exe install selenium
+
 echo install cryptography
 pip.exe install cryptography
 
