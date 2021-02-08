@@ -91,8 +91,7 @@ class SteamDb(crawler.Crawler):
     account_id = None
 
     def __init__(self, need_login=True, **kwargs):
-        global COOKIE_INFO
-        global USER_AGENT
+        global COOKIE_INFO, USER_AGENT
 
         # 设置APP目录
         crawler.PROJECT_APP_PATH = os.path.abspath(os.path.dirname(__file__))

@@ -234,9 +234,7 @@ def add_request_count(thread_lock):
 
 class Instagram(crawler.Crawler):
     def __init__(self, **kwargs):
-        global COOKIE_INFO
-        global IS_LOCAL_SAVE_SESSION
-        global SESSION_DATA_PATH
+        global COOKIE_INFO, IS_LOCAL_SAVE_SESSION, SESSION_DATA_PATH
 
         # 设置APP目录
         crawler.PROJECT_APP_PATH = os.path.abspath(os.path.dirname(__file__))

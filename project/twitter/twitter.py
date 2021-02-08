@@ -26,10 +26,7 @@ thread_event.set()
 
 # 初始化session。获取authorization。并检测登录状态
 def check_login():
-    global AUTHORIZATION
-    global QUERY_ID
-    global COOKIE_INFO
-    global IS_LOGIN
+    global AUTHORIZATION, COOKIE_INFO, IS_LOGIN, QUERY_ID
     index_url = "https://twitter.com/home"
     index_page_response = net.http_request(index_url, method="GET", cookies_list=COOKIE_INFO, header_list={"referer": "https://twitter.com"}, is_auto_redirect=False)
     if index_page_response.status == 200:
