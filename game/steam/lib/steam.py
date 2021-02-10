@@ -73,18 +73,17 @@ def get_discount_game_list():
             # discount
             discount = "".join(list(filter(str.isdigit, game_selector.find(".search_discount span").text())))
             # old price
-            old_price = "".join(filter(str.isdigit, game_selector.find(".search_price span strike").text()))
-            # now price
-            now_price = "".join(list(filter(str.isdigit, game_selector.find(".search_price").remove("span").text())))
-            # 如果没有取到，给个默认值
-            if not crawler.is_integer(old_price):
+            old_price = game_selector.find(".search_price span strike").text()[1:].strip()
+            try:
+                old_price = float(old_price)
+            except ValueError:
                 old_price = 0
-            else:
-                old_price = int(old_price)
-            if not crawler.is_integer(now_price):
+            # now price
+            now_price = game_selector.find(".search_price").remove("span").text()[1:].strip()
+            try:
+                now_price = float(now_price)
+            except ValueError:
                 now_price = 0
-            else:
-                now_price = int(now_price)
             if not crawler.is_integer(discount):
                 if old_price == 0:
                     discount = 100
