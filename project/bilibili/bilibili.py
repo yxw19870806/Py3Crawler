@@ -20,10 +20,10 @@ EACH_PAGE_COUNT = 30
 
 # 检测是否已登录
 def check_login():
-    api_url = "https://account.bilibili.com/home/userInfo"
+    api_url = "https://api.bilibili.com/x/member/web/account"
     api_response = net.http_request(api_url, method="GET", cookies_list=COOKIE_INFO, json_decode=True)
     if api_response.status == net.HTTP_RETURN_CODE_SUCCEED:
-        return crawler.get_json_value(api_response.json_data, "status", default_value=False, type_check=bool) is True
+        return crawler.is_integer(crawler.get_json_value(api_response.json_data, "data", "mid", type_check=int))
     return False
 
 
@@ -102,7 +102,7 @@ def get_one_page_album(account_id, page_count):
         "page_size": EACH_PAGE_COUNT,
         "biz": "all",
     }
-    api_response = net.http_request(api_url, method="GET", fields=query_data, json_decode=True)
+    api_response = net.http_request(api_url, method="GET", fields=query_data, cookies_list=COOKIE_INFO, json_decode=True)
     result = {
         "album_id_list": [],  # 全部相簿id
     }
