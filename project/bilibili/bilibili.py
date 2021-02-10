@@ -102,7 +102,7 @@ def get_one_page_album(account_id, page_count):
         "page_size": EACH_PAGE_COUNT,
         "biz": "all",
     }
-    api_response = net.http_request(api_url, method="GET", fields=query_data, json_decode=True)
+    api_response = net.http_request(api_url, method="GET", fields=query_data, cookies_list=COOKIE_INFO, json_decode=True)
     result = {
         "album_id_list": [],  # 全部相簿id
     }
