@@ -122,6 +122,7 @@ def get_game_store_index(game_id):
         "owned": False,  # 是否已拥有
         "restricted": False,  # 是否已资料受限制
         "deleted": False,  # 是否已删除（不再合作）
+        "error": "",  # 访问错误信息
     }
     if game_index_response.status == 302:
         if game_index_response.getheader("Location") == "https://store.steampowered.com/":
@@ -133,6 +134,9 @@ def get_game_store_index(game_id):
     if game_index_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(game_index_response.status))
     game_index_response_content = game_index_response.data.decode(errors="ignore")
+    if pq(game_index_response_content).find("#error_box").length > 0:
+        result["error"] = pq(game_index_response_content).find("#error_box span").text()
+        return result
     # 所有DLC
     dlc_list_selection = pq(game_index_response_content).find(".game_area_dlc_section a.game_area_dlc_row")
     if dlc_list_selection.length > 0:
