@@ -196,6 +196,9 @@ def get_video_page(video_id):
             # https://www.bilibili.com/video/av116528/?p=2
             if crawler.get_json_value(video_info_response.json_data, "data", "message", default_value="", type_check=str) == "No video info.":
                 continue
+            # https://www.bilibili.com/video/av44067
+            elif crawler.get_json_value(video_info_response.json_data, "message", default_value="", type_check=str) == "啥都木有":
+                continue
             raise
         if IS_LOGIN:
             if max(crawler.get_json_value(video_info_response.json_data, "data", "accept_quality", type_check=list)) != crawler.get_json_value(video_info_response.json_data, "data", "quality", type_check=int):
