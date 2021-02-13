@@ -596,6 +596,8 @@ def download_failre(return_code):
         return "源文件多次下载后和原始文件大小不一致，可能网络环境较差"
     elif return_code == -4:
         return "源文件太大，跳过"
+    elif return_code == -5:
+        return "文件所在保存目录创建失败"
     elif return_code > 0:
         return "未知错误，http code %s" % return_code
     else:

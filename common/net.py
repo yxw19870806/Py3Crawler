@@ -392,7 +392,7 @@ def save_net_file(file_url, file_path, need_content_type=False, head_check=False
     """
     # 判断保存目录是否存在
     if not path.create_dir(os.path.dirname(file_path)):
-        return False
+        return {"status": 1, "code": -5, "file_path": file_path}
     is_create_file = False
     is_multi_thread = False
     return_code = {"status": 0, "code": -3}
