@@ -18,6 +18,7 @@ def main():
 
     output.print_msg("总共获取%s个已删除游戏" % len(deleted_app_list))
 
+    result_game_ids = []
     while len(deleted_app_list) > 0:
         game_id = deleted_app_list.pop()
 
@@ -31,6 +32,9 @@ def main():
             continue
         if game_data["deleted"] is False:
             output.print_msg("游戏 %s 不在已删除列表中" % game_id)
+            result_game_ids.append(game_id)
+
+    output.print_msg(result_game_ids)
 
 
 if __name__ == "__main__":
