@@ -590,7 +590,7 @@ class Download(crawler.DownloadThread):
         self.step("开始下载音频%s《%s》 %s" % (audio_info["audio_id"], audio_info["audio_title"], audio_info_response["audio_url"]))
 
         file_path = os.path.join(self.main_thread.audio_download_path, self.display_name, "%06d %s.%s" % (audio_info["audio_id"], path.filter_text(audio_info["audio_title"]), net.get_file_type(audio_info_response["audio_url"])))
-        save_file_return = net.save_net_file(audio_info_response["audio_url"], file_path)
+        save_file_return = net.save_net_file(audio_info_response["audio_url"], file_path, cookies_list=COOKIE_INFO)
         if save_file_return["status"] == 1:
             self.step("音频%s《%s》下载成功" % (audio_info["audio_id"], audio_info["audio_title"]))
         else:
