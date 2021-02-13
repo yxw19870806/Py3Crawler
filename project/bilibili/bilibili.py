@@ -549,6 +549,7 @@ class Download(crawler.DownloadThread):
                     self.temp_path_list.append(file_path)
                 else:
                     self.error("视频%s《%s》第%s个视频 %s，下载失败，原因：%s" % (video_info["video_id"], video_info["video_title"], video_index, video_part_url, crawler.download_failre(save_file_return["code"])))
+                    return False
                 video_part_index += 1
                 video_index += 1
 
@@ -556,6 +557,7 @@ class Download(crawler.DownloadThread):
         self.temp_path_list = []  # 临时目录设置清除
         self.total_video_count += video_index - 1  # 计数累加
         self.account_info[1] = str(video_info["video_id"])  # 设置存档记录
+        return True
 
     # 解析单个短视频
     def crawl_short_video(self, video_info):
@@ -567,10 +569,12 @@ class Download(crawler.DownloadThread):
             self.step("短视频%s下载成功" % video_info["video_id"])
         else:
             self.error("短视频%s  %s，下载失败，原因：%s" % (video_info["video_id"], video_info["video_url"], crawler.download_failre(save_file_return["code"])))
+            return False
 
         # 短视频下载完毕
         self.total_video_count += 1  # 计数累加
         self.account_info[2] = str(video_info["video_id"])  # 设置存档记录
+        return True
 
     # 解析单个相簿
     def crawl_audio(self, audio_info):
@@ -591,10 +595,12 @@ class Download(crawler.DownloadThread):
             self.step("音频%s《%s》下载成功" % (audio_info["audio_id"], audio_info["audio_title"]))
         else:
             self.error("音频%s《%s》 %s，下载失败，原因：%s" % (audio_info["audio_id"], audio_info["audio_title"], audio_info_response["audio_url"], crawler.download_failre(save_file_return["code"])))
+            return False
 
         # 音频下载完毕
         self.total_audio_count += 1  # 计数累加
         self.account_info[3] = str(audio_info["audio_id"])  # 设置存档记录
+        return True
 
     # 解析单个相簿
     def crawl_photo(self, album_id):
@@ -623,12 +629,14 @@ class Download(crawler.DownloadThread):
                 self.temp_path_list.append(file_path)
             else:
                 self.error("相簿%s第%s张图片 %s，下载失败，原因：%s" % (album_id, photo_index, photo_url, crawler.download_failre(save_file_return["code"])))
+                return False
             photo_index += 1
 
         # 相簿内图片全部下载完毕
         self.temp_path_list = []  # 临时目录设置清除
         self.total_photo_count += photo_index - 1  # 计数累加
         self.account_info[4] = str(album_id)  # 设置存档记录
+        return True
 
     def run(self):
         try:
@@ -641,7 +649,8 @@ class Download(crawler.DownloadThread):
 
                     # 从最早的视频开始下载
                     while len(video_info_list) > 0:
-                        self.crawl_video(video_info_list.pop())
+                        if False == self.crawl_video(video_info_list.pop()):
+                            break
                         self.main_thread_check()  # 检测主线程运行状态
 
                 if IS_DOWNLOAD_SHORT_VIDEO:
@@ -651,7 +660,8 @@ class Download(crawler.DownloadThread):
 
                     # 从最早的视频开始下载
                     while len(video_info_list) > 0:
-                        self.crawl_short_video(video_info_list.pop())
+                        if False == self.crawl_short_video(video_info_list.pop()):
+                            break
                         self.main_thread_check()  # 检测主线程运行状态
 
             # 音频下载
@@ -662,7 +672,8 @@ class Download(crawler.DownloadThread):
 
                 # 从最早的相簿开始下载
                 while len(audio_info_list) > 0:
-                    self.crawl_audio(audio_info_list.pop())
+                    if False == self.crawl_audio(audio_info_list.pop()):
+                        break
                     self.main_thread_check()  # 检测主线程运行状态
 
             # 图片下载
@@ -673,7 +684,8 @@ class Download(crawler.DownloadThread):
 
                 # 从最早的相簿开始下载
                 while len(album_id_list) > 0:
-                    self.crawl_photo(album_id_list.pop())
+                    if False == self.crawl_photo(album_id_list.pop()):
+                        break
                     self.main_thread_check()  # 检测主线程运行状态
         except (SystemExit, KeyboardInterrupt) as e:
             if isinstance(e, SystemExit) and e.code == 1:
