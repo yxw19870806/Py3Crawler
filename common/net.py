@@ -370,7 +370,7 @@ def _random_ip_address():
     return "%s.%s.%s.%s" % (random.randint(1, 254), random.randint(0, 255), random.randint(0, 255), random.randint(0, 255))
 
 
-def save_net_file(file_url, file_path, need_content_type=False, head_check=False, **kwargs):
+def save_net_file(file_url, file_path, need_content_type=False, head_check=False, replace_if_exist=True, **kwargs):
     """Visit web and save to local
 
     :param file_url:
@@ -390,6 +390,9 @@ def save_net_file(file_url, file_path, need_content_type=False, head_check=False
         code        failure reason
         file_path   finally local file path(when need_content_type is True, will rename it)
     """
+    if not replace_if_exist and os.path.exists(file_path) and os.path.getsize(file_path) > 0:
+        output.print_msg("文件%s（%s）已存在，跳过" % (file_path, file_url))
+        return {"status": 1, "code": 0, "file_path": file_path}
     # 判断保存目录是否存在
     if not path.create_dir(os.path.dirname(file_path)):
         return {"status": 1, "code": -5, "file_path": file_path}
