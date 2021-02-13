@@ -531,7 +531,7 @@ class Download(crawler.DownloadThread):
                 self.main_thread_check()  # 检测主线程运行状态
                 self.step("视频%s《%s》开始下载第%s个视频 %s" % (video_info["video_id"], video_info["video_title"], video_index, video_part_url))
 
-                video_name = "%08d %s" % (video_info["video_id"], video_info["video_title"])
+                video_name = "%09d %s" % (video_info["video_id"], video_info["video_title"])
                 if len(video_play_response["video_part_info_list"]) > 1:
                     if video_part_info["video_part_title"]:
                         video_name += "_" + video_part_info["video_part_title"]
@@ -621,7 +621,7 @@ class Download(crawler.DownloadThread):
             self.main_thread_check()  # 检测主线程运行状态
             self.step("相簿%s开始下载第%s张图片 %s" % (album_id, photo_index, photo_url))
 
-            file_path = os.path.join(self.main_thread.photo_download_path, self.display_name, "%07d_%02d.%s" % (album_id, photo_index, net.get_file_type(photo_url)))
+            file_path = os.path.join(self.main_thread.photo_download_path, self.display_name, "%09d_%02d.%s" % (album_id, photo_index, net.get_file_type(photo_url)))
             save_file_return = net.save_net_file(photo_url, file_path)
             if save_file_return["status"] == 1:
                 self.step("相簿%s第%s张图片下载成功" % (album_id, photo_index))
