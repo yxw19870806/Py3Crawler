@@ -334,8 +334,10 @@ class DownloadThread(threading.Thread):
 
 
 class CrawlerException(SystemExit):
-    def __init__(self, msg=""):
+    def __init__(self, msg="", print=True):
         SystemExit.__init__(self, 1)
+        if print:
+            output.print_msg(msg)
         self.exception_message = msg
 
     @property
