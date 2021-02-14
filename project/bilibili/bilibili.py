@@ -170,9 +170,14 @@ def get_video_page(video_id):
         if not IS_LOGIN:
             result["is_private"] = True
             return result
-        raise
+        else:
+            crawler.get_json_value(script_json, "mediaInfo", "id", type_check=int)
+            # 获取视频标题
+            result["video_title"] = crawler.get_json_value(script_json, "h1Title", type_check=str).strip()
+            return result
+        # raise
     # 获取视频标题
-    result["video_title"] = crawler.get_json_value(script_json, "videoData", "title", type_check=str)
+    result["video_title"] = crawler.get_json_value(script_json, "videoData", "title", type_check=str).strip()
     # 分P https://www.bilibili.com/video/av33131459
     for video_part_info in video_part_info_list:
         result_video_info = {
@@ -531,7 +536,7 @@ class Download(crawler.DownloadThread):
                 self.main_thread_check()  # 检测主线程运行状态
                 self.step("视频%s《%s》开始下载第%s个视频 %s" % (video_info["video_id"], video_info["video_title"], video_index, video_part_url))
 
-                video_name = "%09d %s" % (video_info["video_id"], video_info["video_title"])
+                video_name = "%010d %s" % (video_info["video_id"], video_info["video_title"])
                 if len(video_play_response["video_part_info_list"]) > 1:
                     if video_part_info["video_part_title"]:
                         video_name += "_" + video_part_info["video_part_title"]
@@ -549,7 +554,8 @@ class Download(crawler.DownloadThread):
                     self.temp_path_list.append(file_path)
                 else:
                     self.error("视频%s《%s》第%s个视频 %s，下载失败，原因：%s" % (video_info["video_id"], video_info["video_title"], video_index, video_part_url, crawler.download_failre(save_file_return["code"])))
-                    return False
+                    if save_file_return["status"] != -4:
+                        return False
                 video_part_index += 1
                 video_index += 1
 
@@ -590,7 +596,7 @@ class Download(crawler.DownloadThread):
         self.step("开始下载音频%s《%s》 %s" % (audio_info["audio_id"], audio_info["audio_title"], audio_info_response["audio_url"]))
 
         file_path = os.path.join(self.main_thread.audio_download_path, self.display_name, "%06d %s.%s" % (audio_info["audio_id"], path.filter_text(audio_info["audio_title"]), net.get_file_type(audio_info_response["audio_url"])))
-        save_file_return = net.save_net_file(audio_info_response["audio_url"], file_path, cookies_list=COOKIE_INFO)
+        save_file_return = net.save_net_file(audio_info_response["audio_url"], file_path, header_list={"Referer": "https://www.bilibili.com/"})
         if save_file_return["status"] == 1:
             self.step("音频%s《%s》下载成功" % (audio_info["audio_id"], audio_info["audio_title"]))
         else:
