@@ -170,9 +170,14 @@ def get_video_page(video_id):
         if not IS_LOGIN:
             result["is_private"] = True
             return result
-        raise
+        else:
+            crawler.get_json_value(script_json, "mediaInfo", "id", type_check=int)
+            # 获取视频标题
+            result["video_title"] = crawler.get_json_value(script_json, "h1Title", type_check=str).strip()
+            return result
+        # raise
     # 获取视频标题
-    result["video_title"] = crawler.get_json_value(script_json, "videoData", "title", type_check=str)
+    result["video_title"] = crawler.get_json_value(script_json, "videoData", "title", type_check=str).strip()
     # 分P https://www.bilibili.com/video/av33131459
     for video_part_info in video_part_info_list:
         result_video_info = {
