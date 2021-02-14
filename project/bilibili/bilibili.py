@@ -554,7 +554,8 @@ class Download(crawler.DownloadThread):
                     self.temp_path_list.append(file_path)
                 else:
                     self.error("视频%s《%s》第%s个视频 %s，下载失败，原因：%s" % (video_info["video_id"], video_info["video_title"], video_index, video_part_url, crawler.download_failre(save_file_return["code"])))
-                    return False
+                    if save_file_return["status"] != -4:
+                        return False
                 video_part_index += 1
                 video_index += 1
 
