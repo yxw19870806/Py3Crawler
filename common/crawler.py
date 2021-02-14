@@ -124,6 +124,9 @@ class Crawler(object):
                 tool.process_exit()
                 return
 
+        # 下载文件时是否覆盖已存在的同名文件
+        net.DOWNLOAD_REPLACE_IF_EXIST = analysis_config(config, "IS_DOWNLOAD_REPLACE_IF_EXIST", False, CONFIG_ANALYSIS_MODE_BOOLEAN)
+
         # 存档
         self.save_data_path = analysis_config(config, "SAVE_DATA_PATH", "\\\\info/save.data", CONFIG_ANALYSIS_MODE_PATH)
         if not sys_not_check_save_data and not os.path.exists(self.save_data_path):

@@ -65,6 +65,8 @@ HTTP_RETURN_CODE_RESPONSE_TO_LARGE = -4  # 文件太大
 HTTP_RETURN_CODE_TOO_MANY_REDIRECTS = -5  # 重定向次数过多
 HTTP_RETURN_CODE_EXCEPTION_CATCH = -10
 HTTP_RETURN_CODE_SUCCEED = 200
+# 下载文件时是否覆盖已存在的同名文件
+DOWNLOAD_REPLACE_IF_EXIST = False
 
 
 class ErrorResponse(object):
@@ -370,7 +372,7 @@ def _random_ip_address():
     return "%s.%s.%s.%s" % (random.randint(1, 254), random.randint(0, 255), random.randint(0, 255), random.randint(0, 255))
 
 
-def save_net_file(file_url, file_path, need_content_type=False, head_check=False, replace_if_exist=True, **kwargs):
+def save_net_file(file_url, file_path, need_content_type=False, head_check=False, replace_if_exist=None, **kwargs):
     """Visit web and save to local
 
     :param file_url:
@@ -390,6 +392,8 @@ def save_net_file(file_url, file_path, need_content_type=False, head_check=False
         code        failure reason
         file_path   finally local file path(when need_content_type is True, will rename it)
     """
+    if not isinstance(replace_if_exist, bool):
+        replace_if_exist = DOWNLOAD_REPLACE_IF_EXIST
     if not replace_if_exist and os.path.exists(file_path) and os.path.getsize(file_path) > 0:
         output.print_msg("文件%s（%s）已存在，跳过" % (file_path, file_url))
         return {"status": 1, "code": 0, "file_path": file_path}
