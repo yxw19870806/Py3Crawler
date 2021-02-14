@@ -44,7 +44,11 @@ DEFAULT_NET_CONFIG = {
     "DOWNLOAD_MULTI_THREAD_MIN_BLOCK_SIZE": 10 * SIZE_MB,  # 多线程下载中单个线程下载的字节数下限（线程总数下限=文件大小/单个线程下载的字节数下限）
     "DOWNLOAD_MULTI_THREAD_MAX_BLOCK_SIZE": 100 * SIZE_MB,  # 多线程下载中单个线程下载的字节数上限（线程总数上限=文件大小/单个线程下载的字节数上限）
 }
-NET_CONFIG = tool.json_decode(file.read_file(os.path.join(os.path.dirname(__file__), "net_config.json")), DEFAULT_NET_CONFIG)
+NET_CONFIG = tool.json_decode(file.read_file(os.path.join(os.path.dirname(__file__), "net_config.json")), {})
+for config_key in DEFAULT_NET_CONFIG:
+    if config_key not in NET_CONFIG:
+        NET_CONFIG[config_key] = DEFAULT_NET_CONFIG[config_key]
+
 
 # 连接池
 HTTP_CONNECTION_POOL = None
