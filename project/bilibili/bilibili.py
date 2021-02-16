@@ -49,11 +49,14 @@ def get_one_page_video(account_id, page_count):
         result_video_info = {
             "video_id": None,  # 视频id
             "video_title": "",  # 视频标题
+            "video_time": "",  # 视频上传时间
         }
         # 获取视频id
         result_video_info["video_id"] = crawler.get_json_value(video_info, "aid", type_check=int)
         # 获取视频标题
         result_video_info["video_title"] = crawler.get_json_value(video_info, "title", type_check=str)
+        # 获取视频上传时间
+        result_video_info["video_time"] = crawler.get_json_value(video_info, "created", type_check=int)
         result["video_info_list"].append(result_video_info)
     return result
 
@@ -192,7 +195,7 @@ def get_video_page(video_id):
             "qn": "116",  # 上限 高清 1080P+: 112, 高清 1080P: 80, 高清 720P: 64, 清晰 480P: 32, 流畅 360P: 16
             "otype": "json",
         }
-        video_info_response = net.http_request(video_info_url, method="GET", fields=query_data, cookies_list=COOKIE_INFO, json_decode=True)
+        video_info_response = net.http_request(video_info_url, method="GET", fields=query_data, cookies_list=COOKIE_INFO, header_list={"Referer": "https://www.bilibili.com/video/av%s" % video_id}, json_decode=True)
         if video_info_response.status != net.HTTP_RETURN_CODE_SUCCEED:
             raise crawler.CrawlerException("视频信息，" + crawler.request_failre(video_info_response.status))
         try:
@@ -364,7 +367,7 @@ class Download(crawler.DownloadThread):
             # 寻找这一页符合条件的视频
             for video_info in album_pagination_response["video_info_list"]:
                 # 检查是否达到存档记录
-                if video_info["video_id"] > int(self.account_info[1]):
+                if video_info["video_time"] > int(self.account_info[1]):
                     # 新增相簿导致的重复判断
                     if video_info["video_id"] in unique_list:
                         continue
@@ -554,7 +557,7 @@ class Download(crawler.DownloadThread):
                     self.temp_path_list.append(file_path)
                 else:
                     self.error("视频%s《%s》第%s个视频 %s，下载失败，原因：%s" % (video_info["video_id"], video_info["video_title"], video_index, video_part_url, crawler.download_failre(save_file_return["code"])))
-                    if save_file_return["status"] != -4:
+                    if save_file_return["code"] != -4:
                         return False
                 video_part_index += 1
                 video_index += 1
@@ -562,7 +565,7 @@ class Download(crawler.DownloadThread):
         # 视频内所有分P全部下载完毕
         self.temp_path_list = []  # 临时目录设置清除
         self.total_video_count += video_index - 1  # 计数累加
-        self.account_info[1] = str(video_info["video_id"])  # 设置存档记录
+        self.account_info[1] = str(video_info["video_time"])  # 设置存档记录
         return True
 
     # 解析单个短视频
@@ -655,7 +658,7 @@ class Download(crawler.DownloadThread):
 
                     # 从最早的视频开始下载
                     while len(video_info_list) > 0:
-                        if False == self.crawl_video(video_info_list.pop()):
+                        if not self.crawl_video(video_info_list.pop()):
                             break
                         self.main_thread_check()  # 检测主线程运行状态
 
@@ -666,7 +669,7 @@ class Download(crawler.DownloadThread):
 
                     # 从最早的视频开始下载
                     while len(video_info_list) > 0:
-                        if False == self.crawl_short_video(video_info_list.pop()):
+                        if not self.crawl_short_video(video_info_list.pop()):
                             break
                         self.main_thread_check()  # 检测主线程运行状态
 
@@ -678,7 +681,7 @@ class Download(crawler.DownloadThread):
 
                 # 从最早的相簿开始下载
                 while len(audio_info_list) > 0:
-                    if False == self.crawl_audio(audio_info_list.pop()):
+                    if not self.crawl_audio(audio_info_list.pop()):
                         break
                     self.main_thread_check()  # 检测主线程运行状态
 
@@ -690,7 +693,7 @@ class Download(crawler.DownloadThread):
 
                 # 从最早的相簿开始下载
                 while len(album_id_list) > 0:
-                    if False == self.crawl_photo(album_id_list.pop()):
+                    if not self.crawl_photo(album_id_list.pop()):
                         break
                     self.main_thread_check()  # 检测主线程运行状态
         except (SystemExit, KeyboardInterrupt) as e:

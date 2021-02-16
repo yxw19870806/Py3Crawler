@@ -61,7 +61,7 @@ def main():
                     video_title += "_" + video_part_info["video_part_title"]
                 else:
                     video_title += "_" + str(part_index)
-            video_name = "%08d %s.%s" % (int(video_id), path.filter_text(video_title), net.get_file_type(video_part_info["video_url_list"][0]))
+            video_name = "%010d %s.%s" % (int(video_id), path.filter_text(video_title), net.get_file_type(video_part_info["video_url_list"][0]))
             # 选择下载目录
             options = {
                 "initialdir": bilibili_class.video_download_path,
@@ -73,7 +73,7 @@ def main():
             if not file_path:
                 continue
 
-            log.step("\n视频标题：%s\n视频地址：%s\n下载路径：%s" % (video_title, video_url, file_path))
+            log.step("\n视频标题：%s\n视频地址：%s\n下载路径：%s" % (video_title, video_part_info["video_url_list"], file_path))
             # 开始下载
             video_index = 1
             for video_url in video_part_info["video_url_list"]:
