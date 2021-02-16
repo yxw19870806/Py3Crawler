@@ -192,7 +192,7 @@ def get_video_page(video_id):
             "qn": "116",  # 上限 高清 1080P+: 112, 高清 1080P: 80, 高清 720P: 64, 清晰 480P: 32, 流畅 360P: 16
             "otype": "json",
         }
-        video_info_response = net.http_request(video_info_url, method="GET", fields=query_data, cookies_list=COOKIE_INFO, json_decode=True)
+        video_info_response = net.http_request(video_info_url, method="GET", fields=query_data, cookies_list=COOKIE_INFO, header_list={"Referer": "https://www.bilibili.com/video/av%s" % video_id}, json_decode=True)
         if video_info_response.status != net.HTTP_RETURN_CODE_SUCCEED:
             raise crawler.CrawlerException("视频信息，" + crawler.request_failre(video_info_response.status))
         try:
