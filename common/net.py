@@ -67,7 +67,6 @@ HTTP_RETURN_CODE_JSON_DECODE_ERROR = -2  # 返回数据不是JSON格式，但返
 HTTP_RETURN_CODE_DOMAIN_NOT_RESOLVED = -3  # 域名无法解析
 HTTP_RETURN_CODE_RESPONSE_TO_LARGE = -4  # 文件太大
 HTTP_RETURN_CODE_TOO_MANY_REDIRECTS = -5  # 重定向次数过多
-HTTP_RETURN_CODE_EXCEPTION_CATCH = -10
 HTTP_RETURN_CODE_SUCCEED = 200
 # 下载文件时是否覆盖已存在的同名文件
 DOWNLOAD_REPLACE_IF_EXIST = False
@@ -403,7 +402,7 @@ def save_net_file(file_url, file_path, need_content_type=False, head_check=False
         return {"status": 1, "code": 0, "file_path": file_path}
     # 判断保存目录是否存在
     if not path.create_dir(os.path.dirname(file_path)):
-        return {"status": 1, "code": -5, "file_path": file_path}
+        return {"status": 1, "code": -11, "file_path": file_path}
     is_create_file = False
     is_multi_thread = False
     return_code = {"status": 0, "code": -3}

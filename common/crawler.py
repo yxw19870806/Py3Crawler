@@ -602,6 +602,8 @@ def download_failre(return_code):
     elif return_code == -4:
         return "源文件太大，跳过"
     elif return_code == -5:
+        return "重定向次数过多"
+    elif return_code == -11:
         return "文件所在保存目录创建失败"
     elif return_code > 0:
         return "未知错误，http code %s" % return_code
