@@ -31,7 +31,7 @@ def get_comic_index_page(comic_name):
         raise crawler.CrawlerException("漫画信息加载失败\n%s" % comic_info_html)
     for chapter_info in comic_info_data:
         # 获取版本名字
-        version_name = crawler.get_json_value(chapter_info, "title", type_check=str)
+        version_name = crawler.get_json_value(chapter_info, "title", type_check=str).strip()
         # 获取版本下各个章节
         for comic_info in crawler.get_json_value(chapter_info, "data", type_check=list):
             result_comic_info = {
@@ -45,7 +45,7 @@ def get_comic_index_page(comic_name):
             # 获取页面id
             result_comic_info["page_id"] = crawler.get_json_value(comic_info, "id", type_check=int)
             # 获取章节名字
-            result_comic_info["chapter_name"] = crawler.get_json_value(comic_info, "chapter_name", type_check=str)
+            result_comic_info["chapter_name"] = crawler.get_json_value(comic_info, "chapter_name", type_check=str).strip()
             result["comic_info_list"][result_comic_info["page_id"]] = result_comic_info
     return result
 
