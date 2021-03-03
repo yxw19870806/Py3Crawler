@@ -188,7 +188,7 @@ class Download(crawler.DownloadThread):
         # 媒体内图片全部下载完毕
         self.temp_path_list = []  # 临时目录设置清除
         self.total_photo_count += photo_index - 1  # 计数累加
-        self.account_info[1] = str(comic_info["comic_id"])  # 设置存档记录
+        self.account_info[1] = str(comic_info["page_id"])  # 设置存档记录
 
     def run(self):
         try:
