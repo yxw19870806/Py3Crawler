@@ -32,7 +32,6 @@ if platform.system() == "Windows":
     except ImportError:
         from common import keyboardEvent
 
-
 # 程序是否支持下载图片功能
 SYS_DOWNLOAD_PHOTO = "download_photo"
 # 程序是否支持下载视频功能
@@ -52,7 +51,6 @@ SYS_GET_COOKIE = "get_cookie"
 SYS_APP_CONFIG = "app_config"
 # 自定义的app配置文件路径（默认
 SYS_APP_CONFIG_PATH = 'app_config_path'
-
 
 CONFIG_ANALYSIS_MODE_RAW = 0
 CONFIG_ANALYSIS_MODE_INTEGER = 1
