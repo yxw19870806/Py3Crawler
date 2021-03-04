@@ -47,7 +47,9 @@ def get_comic_index_page(comic_id):
         # 获取页面id
         result_comic_info["ep_id"] = crawler.get_json_value(ep_info, "id", type_check=int)
         # 获取章节名字
-        result_comic_info["ep_name"] = crawler.get_json_value(ep_info, "short_title", type_check=str).strip() + " " + crawler.get_json_value(ep_info, "title", type_check=str).strip()
+        short_title = crawler.get_json_value(ep_info, "short_title", type_check=str).strip()
+        title = crawler.get_json_value(ep_info, "title", type_check=str).strip()
+        result_comic_info["ep_name"] = (short_title + " " + title) if title else short_title
         result["comic_info_list"][result_comic_info["ep_id"]] = result_comic_info
     return result
 
