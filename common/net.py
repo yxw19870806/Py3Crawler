@@ -43,6 +43,8 @@ DEFAULT_NET_CONFIG = {
     "DOWNLOAD_MULTI_THREAD_MIN_SIZE": 50 * SIZE_MB,  # 下载文件超过多少字节后开始使用多线程下载
     "DOWNLOAD_MULTI_THREAD_MIN_BLOCK_SIZE": 10 * SIZE_MB,  # 多线程下载中单个线程下载的字节数下限（线程总数下限=文件大小/单个线程下载的字节数下限）
     "DOWNLOAD_MULTI_THREAD_MAX_BLOCK_SIZE": 100 * SIZE_MB,  # 多线程下载中单个线程下载的字节数上限（线程总数上限=文件大小/单个线程下载的字节数上限）
+    "TOO_MANY_REQUESTS_WAIT_TIME": 30,  # http code 429(Too Many requests)时的等待时间
+    "SERVICE_INTERNAL_ERROR_WAIT_TIME": 30,  # http code 50X（服务器内部错误）时的等待时间
 }
 NET_CONFIG = tool.json_decode(file.read_file(os.path.join(os.path.dirname(__file__), "net_config.json")), {})
 for config_key in DEFAULT_NET_CONFIG:
@@ -281,12 +283,12 @@ def http_request(url, method="GET", fields=None, binary_data=None, header_list=N
                         response.status = HTTP_RETURN_CODE_JSON_DECODE_ERROR
             elif response.status == 429:  # Too Many Requests
                 output.print_msg(url + " Too Many Requests, sleep")
-                time.sleep(300)
+                time.sleep(NET_CONFIG["TOO_MANY_REQUESTS_WAIT_TIME"])
                 continue
             elif response.status in [500, 502, 503, 504] and is_auto_retry:  # 服务器临时性错误，重试
                 if retry_count < NET_CONFIG["HTTP_REQUEST_RETRY_COUNT"]:
                     retry_count += 1
-                    time.sleep(30)
+                    time.sleep(NET_CONFIG["SERVICE_INTERNAL_ERROR_WAIT_TIME"])
                     continue
                 else:
                     return response
