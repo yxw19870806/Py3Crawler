@@ -59,7 +59,7 @@ def get_chapter_page(ep_id):
     post_data = {
         "ep_id": ep_id
     }
-    api_response = net.http_request(api_url, method="POST", fields=post_data, json_decode=True)
+    api_response = net.http_request(api_url, method="POST", fields=post_data, cookies_list=COOKIE_INFO, json_decode=True)
     result = {
         "need_buy": False,  # 是否需要购买
         "photo_url_list": [],  # 全部漫画图片地址
