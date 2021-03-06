@@ -43,6 +43,9 @@ DEFAULT_NET_CONFIG = {
     "DOWNLOAD_MULTI_THREAD_MIN_SIZE": 50 * SIZE_MB,  # 下载文件超过多少字节后开始使用多线程下载
     "DOWNLOAD_MULTI_THREAD_MIN_BLOCK_SIZE": 10 * SIZE_MB,  # 多线程下载中单个线程下载的字节数下限（线程总数下限=文件大小/单个线程下载的字节数下限）
     "DOWNLOAD_MULTI_THREAD_MAX_BLOCK_SIZE": 100 * SIZE_MB,  # 多线程下载中单个线程下载的字节数上限（线程总数上限=文件大小/单个线程下载的字节数上限）
+    "TOO_MANY_REQUESTS_WAIT_TIME": 30,  # http code 429(Too Many requests)时的等待时间
+    "SERVICE_INTERNAL_ERROR_WAIT_TIME": 30,  # http code 50X（服务器内部错误）时的等待时间
+    "HTTP_REQUEST_RETRY_WAIT_TIME": 5,  # 请求失败后重新请求的间隔时间
 }
 NET_CONFIG = tool.json_decode(file.read_file(os.path.join(os.path.dirname(__file__), "net_config.json")), {})
 for config_key in DEFAULT_NET_CONFIG:
@@ -281,12 +284,12 @@ def http_request(url, method="GET", fields=None, binary_data=None, header_list=N
                         response.status = HTTP_RETURN_CODE_JSON_DECODE_ERROR
             elif response.status == 429:  # Too Many Requests
                 output.print_msg(url + " Too Many Requests, sleep")
-                time.sleep(300)
+                time.sleep(NET_CONFIG["TOO_MANY_REQUESTS_WAIT_TIME"])
                 continue
             elif response.status in [500, 502, 503, 504] and is_auto_retry:  # 服务器临时性错误，重试
                 if retry_count < NET_CONFIG["HTTP_REQUEST_RETRY_COUNT"]:
                     retry_count += 1
-                    time.sleep(30)
+                    time.sleep(NET_CONFIG["SERVICE_INTERNAL_ERROR_WAIT_TIME"])
                     continue
                 else:
                     return response
@@ -314,7 +317,7 @@ def http_request(url, method="GET", fields=None, binary_data=None, header_list=N
             # output.print_msg(message)
             # output.print_msg(traceback.format_exc())
             output.print_msg(url + " 访问超时，重试中")
-            time.sleep(5)
+            time.sleep(NET_CONFIG["HTTP_REQUEST_RETRY_WAIT_TIME"])
 
         retry_count += 1
         if retry_count >= NET_CONFIG["HTTP_REQUEST_RETRY_COUNT"]:
@@ -503,7 +506,7 @@ def save_net_file(file_url, file_path, need_content_type=False, head_check=False
             return {"status": 1, "code": 0, "file_path": file_path}
         else:
             output.print_msg("本地文件%s：%s和网络文件%s：%s不一致" % (file_path, content_length, file_url, file_size))
-            time.sleep(10)
+            time.sleep(NET_CONFIG["HTTP_REQUEST_RETRY_WAIT_TIME"])
     if is_create_file:
         path.delete_dir_or_file(file_path)
     return return_code
@@ -608,7 +611,7 @@ class MultiThreadDownload(threading.Thread):
                 # 下载的文件和请求的文件大小不一致
                 if len(response.data) != range_size:
                     output.print_msg("网络文件%s：range %s - %s实际下载大小 %s 不一致" % (self.file_url, self.start_pos, self.end_pos, len(response.data)))
-                    time.sleep(10)
+                    time.sleep(NET_CONFIG["HTTP_REQUEST_RETRY_WAIT_TIME"])
                 else:
                     # 写入本地文件后退出
                     self.fd_handle.seek(self.start_pos)

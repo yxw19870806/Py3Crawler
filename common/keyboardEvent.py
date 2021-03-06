@@ -14,6 +14,10 @@ except ModuleNotFoundError:
         import pyHook
     except ModuleNotFoundError:
         pass
+try:
+    from . import output
+except ImportError:
+    from common import output
 
 SUPPORT_KEYBOARD_LIST = ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z",
                          "0", "1", "2", "3", "4", "5", "6", "7", "8", "9",
@@ -102,6 +106,7 @@ class KeyboardEvent(threading.Thread):
         try:
             hook_manager = pyHook.HookManager()
         except NameError:
+            output.print_msg("PyHook安装失败，键盘监听功能失效")
             pass
         else:
             hook_manager.KeyDown = self.on_keyboard_down
