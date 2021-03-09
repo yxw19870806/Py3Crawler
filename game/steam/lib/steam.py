@@ -134,6 +134,9 @@ def get_game_store_index(game_id):
     if game_index_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(game_index_response.status))
     game_index_response_content = game_index_response.data.decode(errors="ignore")
+    if pq(game_index_response_content).find(".agegate_birthday_selector").length > 0:
+        result["error"] = "需要检测年龄"
+        return result
     if pq(game_index_response_content).find("#error_box").length > 0:
         result["error"] = pq(game_index_response_content).find("#error_box span").text()
         return result
