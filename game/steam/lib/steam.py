@@ -467,6 +467,12 @@ class Steam(crawler.Crawler):
             COOKIE_INFO["Steam_Language"] = "english"
             # 年龄
             COOKIE_INFO["lastagecheckage"] = "1-January-1971"
+        else:
+            # 强制使用英文
+            COOKIE_INFO["Steam_Language"] = "english"
+            # 年龄
+            COOKIE_INFO["lastagecheckage"] = "1-January-1971"
+            COOKIE_INFO["birthtime"] = "1"
 
     # 从文件中读取account id，如果不存在提示输入
     def get_account_id_from_file(self, account_id_file_path):
