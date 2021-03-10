@@ -134,6 +134,9 @@ def get_game_store_index(game_id):
     if game_index_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(game_index_response.status))
     game_index_response_content = game_index_response.data.decode(errors="ignore")
+    if pq(game_index_response_content).find(".agegate_birthday_selector").length > 0:
+        result["error"] = "需要检测年龄"
+        return result
     if pq(game_index_response_content).find("#error_box").length > 0:
         result["error"] = pq(game_index_response_content).find("#error_box span").text()
         return result
@@ -464,6 +467,12 @@ class Steam(crawler.Crawler):
             COOKIE_INFO["Steam_Language"] = "english"
             # 年龄
             COOKIE_INFO["lastagecheckage"] = "1-January-1971"
+        else:
+            # 强制使用英文
+            COOKIE_INFO["Steam_Language"] = "english"
+            # 年龄
+            COOKIE_INFO["lastagecheckage"] = "1-January-1971"
+            COOKIE_INFO["birthtime"] = "1"
 
     # 从文件中读取account id，如果不存在提示输入
     def get_account_id_from_file(self, account_id_file_path):
