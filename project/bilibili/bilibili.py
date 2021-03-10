@@ -532,9 +532,9 @@ class Download(crawler.DownloadThread):
         self.step("视频%s《%s》解析获取%s段视频" % (video_info["video_id"], video_info["video_title"], len(video_play_response["video_part_info_list"])))
 
         video_index = 1
-        part_index = 1
+        video_part_index = 1
         for video_part_info in video_play_response["video_part_info_list"]:
-            video_part_index = 1
+            video_split_index = 1
             for video_part_url in video_part_info["video_url_list"]:
                 self.main_thread_check()  # 检测主线程运行状态
                 self.step("视频%s《%s》开始下载第%s个视频 %s" % (video_info["video_id"], video_info["video_title"], video_index, video_part_url))
@@ -544,9 +544,9 @@ class Download(crawler.DownloadThread):
                     if video_part_info["video_part_title"]:
                         video_name += "_" + video_part_info["video_part_title"]
                     else:
-                        video_name += "_" + str(part_index)
+                        video_name += "_" + str(video_part_index)
                 if len(video_part_info["video_url_list"]) > 1:
-                    video_name += " (%s)" % video_part_index
+                    video_name += " (%s)" % video_split_index
                 video_name = path.filter_text(video_name)
                 video_name = "%s.%s" % (video_name, net.get_file_type(video_part_url))
                 file_path = os.path.join(self.main_thread.contribution_video_download_path, self.display_name, video_name)
@@ -559,8 +559,9 @@ class Download(crawler.DownloadThread):
                     self.error("视频%s《%s》第%s个视频 %s，下载失败，原因：%s" % (video_info["video_id"], video_info["video_title"], video_index, video_part_url, crawler.download_failre(save_file_return["code"])))
                     if save_file_return["code"] != -4:
                         return False
-                video_part_index += 1
+                video_split_index += 1
                 video_index += 1
+            video_part_index += 1
 
         # 视频内所有分P全部下载完毕
         self.temp_path_list = []  # 临时目录设置清除
