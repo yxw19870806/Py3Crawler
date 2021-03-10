@@ -27,6 +27,49 @@ def check_login():
     return False
 
 
+def get_favorites_list(favorites_id):
+    # https://api.bilibili.com/x/v2/medialist/resource/list?type=3&otype=2&biz_id=1100799539&bvid=&with_current=true&mobi_app=web&ps=20&direction=false
+    bv_id = ""
+    result = {
+        "video_info_list": [],  # 全部视频信息
+    }
+    while True:
+        api_url = "https://api.bilibili.com/x/v2/medialist/resource/list"
+        query_data = {
+            "type": "3",
+            "otype": "2",
+            "biz_id": favorites_id,
+            "bvid": bv_id,
+            "with_current": "true",
+            "mobi_app": "web",
+            "ps": EACH_PAGE_COUNT,
+            "direction": "false",
+        }
+        api_response = net.http_request(api_url, method="GET", fields=query_data, cookies_list=COOKIE_INFO, json_decode=True)
+        try:
+            video_info_list = crawler.get_json_value(api_response.json_data, "data", "media_list", type_check=list)
+        except crawler.CrawlerException as e:
+            if crawler.get_json_value(api_response.json_data, "data", "media_list", value_check=None) is None:
+                video_info_list = []
+            else:
+                raise
+        for video_info in video_info_list:
+            result_video_info = {
+                "video_id": None,  # 视频id
+                "video_title": "",  # 视频标题
+            }
+            # bv id
+            bv_id = crawler.get_json_value(video_info, "bv_id", type_check=str)
+            # 获取视频id
+            result_video_info["video_id"] = crawler.get_json_value(video_info, "id", type_check=int)
+            # 获取视频标题
+            result_video_info["video_title"] = crawler.get_json_value(video_info, "title", type_check=str)
+            result["video_info_list"].append(result_video_info)
+        if not crawler.get_json_value(api_response.json_data, "data", "has_more", type_check=bool):
+            break
+    return result
+
+
 # 获取指定页数的全部视频
 def get_one_page_video(account_id, page_count):
     # https://space.bilibili.com/ajax/member/getSubmitVideos?mid=116683&pagesize=30&tid=0&page=3&keyword=&order=pubdate
