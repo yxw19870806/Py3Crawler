@@ -4,6 +4,9 @@ log/
 *-*_*_*.data
 */*/cache/
 project/*/info/session
+project/*/audio/
+project/*/photo/
+project/*/video/
 *cookies.data
 game/steam/data/*
 test/
