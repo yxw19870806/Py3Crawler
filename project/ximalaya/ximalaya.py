@@ -15,9 +15,41 @@ from common import *
 
 
 # 获取指定页数的全部音频信息
+def get_one_page_album(album_id, page_count):
+    album_pagination_url = "https://www.ximalaya.com/revision/album/v1/getTracksList"
+    query_data = {
+        "albumId": album_id,
+        "pageNum": page_count,
+    }
+    album_pagination_response = net.http_request(album_pagination_url, method="GET", fields=query_data, json_decode=True)
+    result = {
+        "audio_info_list": [],  # 全部音频信息
+        "is_over": False,  # 是否最后一页音频
+    }
+    if album_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
+        raise crawler.CrawlerException(crawler.request_failre(album_pagination_response.status))
+    # 获取音频信息
+    for audio_info in crawler.get_json_value(album_pagination_response.json_data, "data", "tracks", type_check=list):
+        result_audio_info = {
+            "audio_id": None,  # 音频id
+            "audio_title": "",  # 音频标题
+        }
+        # 获取音频id
+        result_audio_info["audio_id"] = crawler.get_json_value(audio_info, "trackId", type_check=int)
+        # 获取音频标题
+        result_audio_info["audio_title"] = crawler.get_json_value(audio_info, "title", type_check=str).strip()
+        result["audio_info_list"].append(result_audio_info)
+    # 判断是不是最后一页
+    total_audio_count = crawler.get_json_value(album_pagination_response.json_data, "data", "trackTotalCount", type_check=int)
+    real_page_size = crawler.get_json_value(album_pagination_response.json_data, "data", "pageSize", type_check=int)
+    result["is_over"] = page_count >= math.ceil(total_audio_count / real_page_size)
+    return result
+
+
+# 获取指定页数的全部音频信息
 def get_one_page_audio(account_id, page_count):
     # https://www.ximalaya.com/zhubo/1014267/sound/
-    audit_pagination_url = "https://www.ximalaya.com/revision/user/track"
+    audio_pagination_url = "https://www.ximalaya.com/revision/user/track"
     query_data = {
         "page": page_count,
         "pageSize": "10",
@@ -30,7 +62,7 @@ def get_one_page_audio(account_id, page_count):
     header_list = {
         "xm-sign": "%s(%s)%s(%s)%s" % (tool.string_md5("himalaya-" + str(now)), random.randint(1, 100), now, random.randint(1, 100), now + random.randint(1, 100 * 60))
     }
-    audit_pagination_response = net.http_request(audit_pagination_url, method="GET", fields=query_data, header_list=header_list, json_decode=True)
+    audit_pagination_response = net.http_request(audio_pagination_url, method="GET", fields=query_data, header_list=header_list, json_decode=True)
     result = {
         "audio_info_list": [],  # 全部音频信息
         "is_over": False,  # 是否最后一页音频
