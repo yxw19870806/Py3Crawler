@@ -21,7 +21,7 @@ class XiMaLaYaAccount(crawler.Crawler):
         # 初始化参数
         sys_config = {
             crawler.SYS_DOWNLOAD_AUDIO: True,
-            crawler.SYS_APP_CONFIG_PATH: os.path.join(crawler.PROJECT_APP_PATH, "lib/account.ini"),
+            crawler.SYS_APP_CONFIG_PATH: os.path.join(crawler.PROJECT_APP_PATH, "account.ini"),
         }
         crawler.Crawler.__init__(self, sys_config, **kwargs)
 
