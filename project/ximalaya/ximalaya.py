@@ -13,6 +13,8 @@ import time
 import traceback
 from common import *
 
+EACH_PAGE_AUDIO_COUNT = 30  # 每次请求获取的视频数量
+
 
 # 获取指定页数的全部音频信息
 def get_one_page_album(album_id, page_count):
@@ -52,7 +54,7 @@ def get_one_page_audio(account_id, page_count):
     audio_pagination_url = "https://www.ximalaya.com/revision/user/track"
     query_data = {
         "page": page_count,
-        "pageSize": "10",
+        "pageSize": EACH_PAGE_AUDIO_COUNT,
         "keyWord": "",
         "uid": account_id,
         "orderType": "2",  # 降序
