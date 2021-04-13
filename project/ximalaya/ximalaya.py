@@ -20,6 +20,7 @@ def get_one_page_album(album_id, page_count):
     query_data = {
         "albumId": album_id,
         "pageNum": page_count,
+        "sort": "1",
     }
     album_pagination_response = net.http_request(album_pagination_url, method="GET", fields=query_data, json_decode=True)
     result = {
