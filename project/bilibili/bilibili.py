@@ -21,7 +21,7 @@ def check_login():
     api_url = "https://api.bilibili.com/x/member/web/account"
     api_response = net.http_request(api_url, method="GET", cookies_list=COOKIE_INFO, json_decode=True)
     if api_response.status == net.HTTP_RETURN_CODE_SUCCEED:
-        return crawler.is_integer(crawler.get_json_value(api_response.json_data, "data", "mid", type_check=int))
+        return crawler.get_json_value(api_response.json_data, "data", "mid", type_check=int, default_value=0) != 0
     return False
 
 
