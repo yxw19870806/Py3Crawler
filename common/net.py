@@ -128,6 +128,8 @@ def split_cookies_from_cookie_string(cookie_string):
         single_cookie = single_cookie.strip()
         if len(single_cookie) == 0:
             continue
+        if single_cookie.find("=") == -1:
+            continue
         cookie_name, cookie_value = single_cookie.strip().split("=", 1)
         cookies_list[cookie_name] = cookie_value
     return cookies_list
