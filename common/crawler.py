@@ -386,7 +386,8 @@ def analysis_config(config, key, default_value, mode=CONFIG_ANALYSIS_MODE_RAW):
     if isinstance(config, dict) and key in config:
         value = config[key]
     else:
-        output.print_msg("配置文件config.ini中没有找到key为'" + key + "'的参数，使用程序默认设置")
+        if not tool.IS_EXECUTABLE:
+            output.print_msg("配置文件config.ini中没有找到key为'" + key + "'的参数，使用程序默认设置")
         value = default_value
     if mode == CONFIG_ANALYSIS_MODE_INTEGER:
         if isinstance(value, int) or isinstance(value, int) or (isinstance(value, str) and value.isdigit()):
