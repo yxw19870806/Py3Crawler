@@ -223,7 +223,7 @@ class Crawler(object):
             process_control_thread.start()
 
         # 键盘监控线程（仅支持windows）
-        if platform.system() == "Windows" and analysis_config(config, "IS_KEYBOARD_EVENT", True, CONFIG_ANALYSIS_MODE_BOOLEAN):
+        if platform.system() == "Windows" and analysis_config(config, "IS_KEYBOARD_EVENT", False, CONFIG_ANALYSIS_MODE_BOOLEAN):
             keyboard_event_bind = {}
             pause_process_key = analysis_config(config, "PAUSE_PROCESS_KEYBOARD_KEY", "F9")
             # 暂停进程
