@@ -105,7 +105,7 @@ def get_album_page_by_selenium(album_id):
                 video_info_url = video_info_url.replace("&callback=axiosJsonpCallback1", "")
                 break
     else:
-        raise crawler.CrawlerException("访问日志匹配视频信息地址失败")
+        raise crawler.CrawlerException("播放页匹配视频信息地址失败")
     chrome.quit()
     # 获取视频信息
     video_info_response = net.http_request(video_info_url, method="GET", json_decode=True)
