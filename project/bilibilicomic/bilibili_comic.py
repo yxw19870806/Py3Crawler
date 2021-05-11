@@ -168,7 +168,7 @@ class Download(crawler.DownloadThread):
         self.trace("漫画首页解析的全部漫画：%s" % blog_pagination_response["comic_info_list"])
         self.step("漫画首页解析获取%s个漫画" % len(blog_pagination_response["comic_info_list"]))
 
-        # 寻找这一页符合条件的媒体
+        # 寻找符合条件的章节
         for ep_id in sorted(list(blog_pagination_response["comic_info_list"].keys()), reverse=True):
             comic_info = blog_pagination_response["comic_info_list"][ep_id]
             # 检查是否达到存档记录
@@ -210,18 +210,18 @@ class Download(crawler.DownloadThread):
             else:
                 self.error("漫画%s 《%s》第%s张图片 %s 下载失败，原因：%s" % (comic_info["ep_id"], comic_info["ep_name"], photo_index, photo_url, crawler.download_failre(save_file_return["code"])))
 
-        # 媒体内图片全部下载完毕
+        # 章节内图片全部下载完毕
         self.temp_path_list = []  # 临时目录设置清除
         self.total_photo_count += photo_index - 1  # 计数累加
         self.account_info[1] = str(comic_info["ep_id"])  # 设置存档记录
 
     def run(self):
         try:
-            # 获取所有可下载日志
+            # 获取所有可下载章节
             comic_info_list = self.get_crawl_list()
             self.step("需要下载的全部漫画解析完毕，共%s个" % len(comic_info_list))
 
-            # 从最早的日志开始下载
+            # 从最早的章节开始下载
             while len(comic_info_list) > 0:
                 self.crawl_comic(comic_info_list.pop())
                 self.main_thread_check()  # 检测主线程运行状态
@@ -230,7 +230,7 @@ class Download(crawler.DownloadThread):
                 self.error("异常退出")
             else:
                 self.step("提前退出")
-            # 如果临时目录变量不为空，表示某个日志正在下载中，需要把下载了部分的内容给清理掉
+            # 如果临时目录变量不为空，表示某个章节正在下载中，需要把下载了部分的内容给清理掉
             self.clean_temp_path()
         except Exception as e:
             self.error("未知异常")
