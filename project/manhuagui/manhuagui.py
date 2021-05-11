@@ -154,7 +154,7 @@ class Download(crawler.DownloadThread):
             self.display_name = self.comic_id
         self.step("开始")
 
-    # 获取所有可下载日志
+    # 获取所有可下载章节
     def get_crawl_list(self):
         chapter_info_list = {}
 
@@ -227,7 +227,7 @@ class Download(crawler.DownloadThread):
                 self.error("异常退出")
             else:
                 self.step("提前退出")
-            # 如果临时目录变量不为空，表示某个日志正在下载中，需要把下载了部分的内容给清理掉
+            # 如果临时目录变量不为空，表示某个章节正在下载中，需要把下载了部分的内容给清理掉
             self.clean_temp_path()
         except Exception as e:
             self.error("未知异常")
