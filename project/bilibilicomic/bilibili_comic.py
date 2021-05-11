@@ -12,10 +12,6 @@ import traceback
 from common import *
 
 COOKIE_INFO = {}
-IS_LOGIN = False
-IS_DOWNLOAD_CONTRIBUTION_VIDEO = True
-IS_DOWNLOAD_SHORT_VIDEO = True
-EACH_PAGE_COUNT = 30
 
 
 # 检测是否已登录
@@ -86,7 +82,7 @@ def get_chapter_page(ep_id):
 
 class BiliBiliComic(crawler.Crawler):
     def __init__(self, **kwargs):
-        global COOKIE_INFO, IS_DOWNLOAD_CONTRIBUTION_VIDEO, IS_DOWNLOAD_SHORT_VIDEO
+        global COOKIE_INFO
         
         # 设置APP目录
         crawler.PROJECT_APP_PATH = os.path.abspath(os.path.dirname(__file__))
@@ -106,18 +102,14 @@ class BiliBiliComic(crawler.Crawler):
         self.account_list = crawler.read_save_data(self.save_data_path, 0, ["", "0"])
 
         # 检测登录状态
-        if IS_DOWNLOAD_CONTRIBUTION_VIDEO:
-            global IS_LOGIN
-            if check_login():
-                IS_LOGIN = True
-            else:
-                while True:
-                    input_str = input(crawler.get_time() + " 没有检测到账号登录状态，可能无法解析需要登录才能查看的视频以及获取高分辨率，继续程序(C)ontinue？或者退出程序(E)xit？:")
-                    input_str = input_str.lower()
-                    if input_str in ["e", "exit"]:
-                        tool.process_exit()
-                    elif input_str in ["c", "continue"]:
-                        break
+        if not check_login():
+            while True:
+                input_str = input(crawler.get_time() + " 没有检测到账号登录状态，可能无法解析需要登录才能查看的漫画，继续程序(C)ontinue？或者退出程序(E)xit？:")
+                input_str = input_str.lower()
+                if input_str in ["e", "exit"]:
+                    tool.process_exit()
+                elif input_str in ["c", "continue"]:
+                    break
 
     def main(self):
         try:
