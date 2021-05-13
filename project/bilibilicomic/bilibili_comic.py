@@ -12,10 +12,6 @@ import traceback
 from common import *
 
 COOKIE_INFO = {}
-IS_LOGIN = False
-IS_DOWNLOAD_CONTRIBUTION_VIDEO = True
-IS_DOWNLOAD_SHORT_VIDEO = True
-EACH_PAGE_COUNT = 30
 
 
 # 检测是否已登录
@@ -86,7 +82,7 @@ def get_chapter_page(ep_id):
 
 class BiliBiliComic(crawler.Crawler):
     def __init__(self, **kwargs):
-        global COOKIE_INFO, IS_DOWNLOAD_CONTRIBUTION_VIDEO, IS_DOWNLOAD_SHORT_VIDEO
+        global COOKIE_INFO
         
         # 设置APP目录
         crawler.PROJECT_APP_PATH = os.path.abspath(os.path.dirname(__file__))
@@ -106,18 +102,14 @@ class BiliBiliComic(crawler.Crawler):
         self.account_list = crawler.read_save_data(self.save_data_path, 0, ["", "0"])
 
         # 检测登录状态
-        if IS_DOWNLOAD_CONTRIBUTION_VIDEO:
-            global IS_LOGIN
-            if check_login():
-                IS_LOGIN = True
-            else:
-                while True:
-                    input_str = input(crawler.get_time() + " 没有检测到账号登录状态，可能无法解析需要登录才能查看的视频以及获取高分辨率，继续程序(C)ontinue？或者退出程序(E)xit？:")
-                    input_str = input_str.lower()
-                    if input_str in ["e", "exit"]:
-                        tool.process_exit()
-                    elif input_str in ["c", "continue"]:
-                        break
+        if not check_login():
+            while True:
+                input_str = input(crawler.get_time() + " 没有检测到账号登录状态，可能无法解析需要登录才能查看的漫画，继续程序(C)ontinue？或者退出程序(E)xit？:")
+                input_str = input_str.lower()
+                if input_str in ["e", "exit"]:
+                    tool.process_exit()
+                elif input_str in ["c", "continue"]:
+                    break
 
     def main(self):
         try:
@@ -176,7 +168,7 @@ class Download(crawler.DownloadThread):
         self.trace("漫画首页解析的全部漫画：%s" % blog_pagination_response["comic_info_list"])
         self.step("漫画首页解析获取%s个漫画" % len(blog_pagination_response["comic_info_list"]))
 
-        # 寻找这一页符合条件的媒体
+        # 寻找符合条件的章节
         for ep_id in sorted(list(blog_pagination_response["comic_info_list"].keys()), reverse=True):
             comic_info = blog_pagination_response["comic_info_list"][ep_id]
             # 检查是否达到存档记录
@@ -218,18 +210,18 @@ class Download(crawler.DownloadThread):
             else:
                 self.error("漫画%s 《%s》第%s张图片 %s 下载失败，原因：%s" % (comic_info["ep_id"], comic_info["ep_name"], photo_index, photo_url, crawler.download_failre(save_file_return["code"])))
 
-        # 媒体内图片全部下载完毕
+        # 章节内图片全部下载完毕
         self.temp_path_list = []  # 临时目录设置清除
         self.total_photo_count += photo_index - 1  # 计数累加
         self.account_info[1] = str(comic_info["ep_id"])  # 设置存档记录
 
     def run(self):
         try:
-            # 获取所有可下载日志
+            # 获取所有可下载章节
             comic_info_list = self.get_crawl_list()
             self.step("需要下载的全部漫画解析完毕，共%s个" % len(comic_info_list))
 
-            # 从最早的日志开始下载
+            # 从最早的章节开始下载
             while len(comic_info_list) > 0:
                 self.crawl_comic(comic_info_list.pop())
                 self.main_thread_check()  # 检测主线程运行状态
@@ -238,7 +230,7 @@ class Download(crawler.DownloadThread):
                 self.error("异常退出")
             else:
                 self.step("提前退出")
-            # 如果临时目录变量不为空，表示某个日志正在下载中，需要把下载了部分的内容给清理掉
+            # 如果临时目录变量不为空，表示某个章节正在下载中，需要把下载了部分的内容给清理掉
             self.clean_temp_path()
         except Exception as e:
             self.error("未知异常")

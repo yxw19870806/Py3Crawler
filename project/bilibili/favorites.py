@@ -49,9 +49,19 @@ def main():
         if not root_dir:
             continue
 
+        exist_list = []
+        for file_path in path.get_dir_files_name(root_dir):
+            if file_path.find(" ") > 0:
+                video_id = file_path.split(" ")[0]
+                if crawler.is_integer(video_id):
+                    exist_list.append(int(video_id))
+
         while len(favorites_response["video_info_list"]) > 0:
             video_info = favorites_response["video_info_list"].pop()
             log.step("开始解析视频%s 《%s》，剩余%s个视频" % (video_info["video_id"], video_info["video_title"], len(favorites_response["video_info_list"])))
+
+            if video_info["video_id"] in exist_list:
+                continue
 
             try:
                 video_play_response = bilibili.get_video_page(video_info["video_id"])

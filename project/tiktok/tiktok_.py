@@ -38,7 +38,7 @@ def get_account_index_page(account_id):
             if video_info_url.find("//www.tiktok.com/share/item/list?") > 0:
                 break
     else:
-        raise crawler.CrawlerException("访问日志匹配视频信息地址失败")
+        raise crawler.CrawlerException("账号首页匹配视频信息地址失败")
     chrome.quit()
     video_info_param = urllib.parse.parse_qs(urllib.parse.urlparse(video_info_url)[4])
     result["signature"] = crawler.get_json_value(video_info_param, "_signature", 0, default_value="")

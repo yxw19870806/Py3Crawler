@@ -223,7 +223,7 @@ class Crawler(object):
             process_control_thread.start()
 
         # 键盘监控线程（仅支持windows）
-        if platform.system() == "Windows" and analysis_config(config, "IS_KEYBOARD_EVENT", True, CONFIG_ANALYSIS_MODE_BOOLEAN):
+        if platform.system() == "Windows" and analysis_config(config, "IS_KEYBOARD_EVENT", False, CONFIG_ANALYSIS_MODE_BOOLEAN):
             keyboard_event_bind = {}
             pause_process_key = analysis_config(config, "PAUSE_PROCESS_KEYBOARD_KEY", "F9")
             # 暂停进程
@@ -386,7 +386,8 @@ def analysis_config(config, key, default_value, mode=CONFIG_ANALYSIS_MODE_RAW):
     if isinstance(config, dict) and key in config:
         value = config[key]
     else:
-        output.print_msg("配置文件config.ini中没有找到key为'" + key + "'的参数，使用程序默认设置")
+        if not tool.IS_EXECUTABLE:
+            output.print_msg("配置文件config.ini中没有找到key为'" + key + "'的参数，使用程序默认设置")
         value = default_value
     if mode == CONFIG_ANALYSIS_MODE_INTEGER:
         if isinstance(value, int) or isinstance(value, int) or (isinstance(value, str) and value.isdigit()):
