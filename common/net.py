@@ -46,12 +46,16 @@ DEFAULT_NET_CONFIG = {
     "TOO_MANY_REQUESTS_WAIT_TIME": 30,  # http code 429(Too Many requests)时的等待时间
     "SERVICE_INTERNAL_ERROR_WAIT_TIME": 30,  # http code 50X（服务器内部错误）时的等待时间
     "HTTP_REQUEST_RETRY_WAIT_TIME": 5,  # 请求失败后重新请求的间隔时间
+    "GLOBAL_QUERY_PER_MINUTER": 1000,  # 全局每分钟请求限制
+    "SINGLE_HOST_QUERY_PER_MINUTER": 1000,  # 单域名每分钟请求限制
 }
 NET_CONFIG = tool.json_decode(file.read_file(os.path.join(os.path.dirname(__file__), "net_config.json")), {})
 for config_key in DEFAULT_NET_CONFIG:
     if config_key not in NET_CONFIG:
         NET_CONFIG[config_key] = DEFAULT_NET_CONFIG[config_key]
 
+# qps队列
+QPS = {}
 
 # 连接池
 HTTP_CONNECTION_POOL = None
@@ -255,6 +259,10 @@ def http_request(url, method="GET", fields=None, binary_data=None, header_list=N
         if EXIT_FLAG:
             tool.process_exit(0)
 
+        if _qps(url):
+            time.sleep(10)
+            continue
+
         try:
             if method in ['DELETE', 'GET', 'HEAD', 'OPTIONS']:
                 response = connection_pool.request(method, url, headers=header_list, redirect=is_auto_redirect, timeout=timeout, fields=fields)
@@ -325,6 +333,33 @@ def http_request(url, method="GET", fields=None, binary_data=None, header_list=N
         if retry_count >= NET_CONFIG["HTTP_REQUEST_RETRY_COUNT"]:
             output.print_msg("无法访问页面：" + url)
             return ErrorResponse(HTTP_RETURN_CODE_RETRY)
+
+
+def _qps(url):
+    # 当前分钟
+    day_minuter = int(time.strftime("%Y%m%d%H%M"))
+    if day_minuter not in QPS:
+        QPS[day_minuter] = {}
+
+    # host
+    host = urllib.parse.urlparse(url).netloc
+    if host not in QPS[day_minuter]:
+        QPS[day_minuter][host] = 0
+
+    # 当前域名、当前分钟的请求数
+    if QPS[day_minuter][host] > NET_CONFIG["SINGLE_HOST_QUERY_PER_MINUTER"]:
+        return True
+
+    # 所有域名、当前分钟的请求数
+    total_query = 0
+    for temp_host in QPS[day_minuter]:
+        total_query += QPS[day_minuter][temp_host]
+    if total_query > NET_CONFIG["GLOBAL_QUERY_PER_MINUTER"]:
+        return True
+
+    QPS[day_minuter][host] += 1
+
+    return False
 
 
 def _random_user_agent():
