@@ -168,7 +168,7 @@ def url_encode(url):
 
 def http_request(url, method="GET", fields=None, binary_data=None, header_list=None, cookies_list=None, encode_multipart=False, json_decode=False,
                  is_auto_proxy=True, is_auto_redirect=True, is_gzip=True, is_url_encode=True, is_auto_retry=True, is_random_ip=True,
-                 connection_timeout=NET_CONFIG["HTTP_CONNECTION_TIMEOUT"], read_timeout=NET_CONFIG["HTTP_READ_TIMEOUT"]):
+                 is_check_qps=True, connection_timeout=NET_CONFIG["HTTP_CONNECTION_TIMEOUT"], read_timeout=NET_CONFIG["HTTP_READ_TIMEOUT"]):
     """Http request via urllib3
 
     :param url:
@@ -259,8 +259,8 @@ def http_request(url, method="GET", fields=None, binary_data=None, header_list=N
         if EXIT_FLAG:
             tool.process_exit(0)
 
-        if _qps(url):
-            time.sleep(10)
+        if is_check_qps and _qps(url):
+            time.sleep(random.randint(60, 120))
             continue
 
         try:
@@ -321,7 +321,7 @@ def http_request(url, method="GET", fields=None, binary_data=None, header_list=N
                 if message.find("'Received response with content-encoding: gzip, but failed to decode it.'") >= 0:
                     return http_request(url, method=method, fields=fields, binary_data=binary_data, header_list=header_list, cookies_list=cookies_list,
                                         encode_multipart=encode_multipart, json_decode=json_decode, is_auto_proxy=is_auto_proxy, is_auto_redirect=is_auto_redirect,
-                                        is_gzip=False, is_url_encode=False, is_auto_retry=is_auto_retry, is_random_ip=is_random_ip,
+                                        is_gzip=False, is_url_encode=False, is_auto_retry=is_auto_retry, is_random_ip=is_random_ip, is_check_qps=is_check_qps,
                                         connection_timeout=connection_timeout, read_timeout=read_timeout)
             # import traceback
             # output.print_msg(message)
@@ -452,7 +452,7 @@ def save_net_file(file_url, file_path, need_content_type=False, head_check=False
         else:
             request_method = "GET"
         # 获取头信息
-        response = http_request(file_url, request_method, connection_timeout=NET_CONFIG["HTTP_CONNECTION_TIMEOUT"], read_timeout=NET_CONFIG["HTTP_READ_TIMEOUT"], **kwargs)
+        response = http_request(file_url, request_method, is_check_qps = False, connection_timeout=NET_CONFIG["HTTP_CONNECTION_TIMEOUT"], read_timeout=NET_CONFIG["HTTP_READ_TIMEOUT"], **kwargs)
         # 其他返回状态，退出
         if response.status != HTTP_RETURN_CODE_SUCCEED:
             # URL格式不正确
