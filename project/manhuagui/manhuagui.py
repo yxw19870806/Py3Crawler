@@ -217,7 +217,6 @@ class Download(crawler.DownloadThread):
             # 获取所有可下载章节
             chapter_info_list = self.get_crawl_list()
             self.step("需要下载的全部漫画解析完毕，共%s个" % len(chapter_info_list))
-            print(chapter_info_list)
             # 从最早的章节开始下载
             while len(chapter_info_list) > 0:
                 self.crawl_comic(chapter_info_list.pop())
