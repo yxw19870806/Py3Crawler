@@ -174,8 +174,6 @@ class Download(crawler.DownloadThread):
             # 检查是否达到存档记录
             if chapter_info["chapter_id"] > int(self.account_info[1]):
                 chapter_info_list[chapter_info["chapter_id"]] = chapter_info
-            else:
-                break
 
         return [chapter_info_list[key] for key in sorted(chapter_info_list.keys(), reverse=True)]
 
