@@ -90,8 +90,8 @@ def get_chapter_page(comic_id, chapter_id):
         raise crawler.CrawlerException("页面截取脚本代码失败\n%s" % chapter_response_content)
     template_html = file.read_file(TEMPLATE_HTML_PATH)
     template_html = template_html.replace("%%SCRIPT_CODE%%", script_code)
-    cache_html = os.path.join(CACHE_FILE_PATH, "%s.html" % comic_id)
-    file.write_file(template_html, cache_html, file.WRITE_FILE_TYPE_REPLACE)
+    cache_html_path = os.path.join(CACHE_FILE_PATH, "%s.html" % comic_id)
+    file.write_file(template_html, cache_html_path, file.WRITE_FILE_TYPE_REPLACE)
     # 使用抖音的加密JS方法算出signature的值
     chrome_options = webdriver.ChromeOptions()
     chrome_options.headless = True  # 不打开浏览器
@@ -103,7 +103,7 @@ def get_chapter_page(comic_id, chapter_id):
             return get_chapter_page(comic_id, chapter_id)
         else:
             raise
-    chrome.get("file:///" + os.path.realpath(cache_html))
+    chrome.get("file:///" + os.path.realpath(cache_html_path))
     result_photo_list = chrome.find_element_by_id("result").text
     chrome.quit()
     photo_list = result_photo_list.split("\n")
