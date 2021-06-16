@@ -11,6 +11,7 @@ import time
 import traceback
 from pyquery import PyQuery as pq
 from selenium import webdriver
+from selenium.common.exceptions import WebDriverException
 from common import *
 
 CACHE_FILE_PATH = os.path.join(os.path.dirname(__file__), "cache")
@@ -86,7 +87,14 @@ def get_chapter_page(comic_id, chapter_id):
     # 使用抖音的加密JS方法算出signature的值
     chrome_options = webdriver.ChromeOptions()
     chrome_options.headless = True  # 不打开浏览器
-    chrome = webdriver.Chrome(executable_path=crawler.CHROME_WEBDRIVER_PATH, options=chrome_options)
+    try:
+        chrome = webdriver.Chrome(executable_path=crawler.CHROME_WEBDRIVER_PATH, options=chrome_options)
+    except WebDriverException as e:
+        message = str(e)
+        if message.find("chrome not reachable") >= 0:
+            return get_chapter_page(comic_id, chapter_id)
+        else:
+            raise
     chrome.get("file:///" + os.path.realpath(cache_html))
     result_photo_list = chrome.find_element_by_id("result").text
     chrome.quit()
