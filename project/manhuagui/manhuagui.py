@@ -190,8 +190,6 @@ class Download(crawler.DownloadThread):
             # 检查是否达到存档记录
             if chapter_info["chapter_id"] > int(self.account_info[1]):
                 chapter_info_list[chapter_info["chapter_id"]] = chapter_info
-            else:
-                break
 
         return [chapter_info_list[key] for key in sorted(chapter_info_list.keys(), reverse=True)]
 
@@ -233,7 +231,6 @@ class Download(crawler.DownloadThread):
             # 获取所有可下载章节
             chapter_info_list = self.get_crawl_list()
             self.step("需要下载的全部漫画解析完毕，共%s个" % len(chapter_info_list))
-            print(chapter_info_list)
             # 从最早的章节开始下载
             while len(chapter_info_list) > 0:
                 self.crawl_comic(chapter_info_list.pop())
