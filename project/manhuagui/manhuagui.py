@@ -6,6 +6,7 @@ https://www.manhuagui.com/
 email: hikaru870806@hotmail.com
 如有问题或建议请联系
 """
+import lzstring
 import os
 import time
 import traceback
@@ -33,6 +34,13 @@ def get_comic_index_page(comic_id):
     if chapter_info_selector.length != 1:
         raise crawler.CrawlerException("页面截取漫画列表失败\n%s" % index_response_content)
     group_name_selector = chapter_info_selector.find("h4")
+    if group_name_selector.length == 0:
+        if pq(index_response_content).find("#__VIEWSTATE").length == 1:
+            decompress_string = pq(index_response_content).find("#__VIEWSTATE").val()
+            if decompress_string:
+                decompress_html = lzstring.LZString().decompressFromBase64(decompress_string)
+                chapter_info_selector.html(decompress_html)
+                group_name_selector = chapter_info_selector.find("h4")
     group_chapter_list_selector = chapter_info_selector.find(".chapter-list")
     if group_name_selector.length != group_chapter_list_selector.length:
         raise crawler.CrawlerException("页面截取章节数量异常\n%s" % index_response_content)
