@@ -6,11 +6,13 @@ https://www.manhuagui.com/
 email: hikaru870806@hotmail.com
 如有问题或建议请联系
 """
+import lzstring
 import os
 import time
 import traceback
 from pyquery import PyQuery as pq
 from selenium import webdriver
+from selenium.common.exceptions import WebDriverException
 from common import *
 
 CACHE_FILE_PATH = os.path.join(os.path.dirname(__file__), "cache")
@@ -32,12 +34,19 @@ def get_comic_index_page(comic_id):
     if chapter_info_selector.length != 1:
         raise crawler.CrawlerException("页面截取漫画列表失败\n%s" % index_response_content)
     group_name_selector = chapter_info_selector.find("h4")
+    if group_name_selector.length == 0:
+        if pq(index_response_content).find("#__VIEWSTATE").length == 1:
+            decompress_string = pq(index_response_content).find("#__VIEWSTATE").val()
+            if decompress_string:
+                decompress_html = lzstring.LZString().decompressFromBase64(decompress_string)
+                chapter_info_selector.html(decompress_html)
+                group_name_selector = chapter_info_selector.find("h4")
     group_chapter_list_selector = chapter_info_selector.find(".chapter-list")
     if group_name_selector.length != group_chapter_list_selector.length:
         raise crawler.CrawlerException("页面截取章节数量异常\n%s" % index_response_content)
     for group_index in range(0, group_name_selector.length):
         #　获取分组名字
-        group_name = group_name_selector.eq(group_index).text()
+        group_name = group_name_selector.eq(group_index).text().strip()
         if not group_name:
             raise crawler.CrawlerException("章节信息截取章节名失败\n%s" % group_name_selector.eq(group_index).html())
         chapter_list_selector = group_chapter_list_selector.eq(group_index).find("li")
@@ -60,7 +69,7 @@ def get_comic_index_page(comic_id):
             chapter_name = chapter_selector.find("a").attr("title")
             if not chapter_name:
                 raise crawler.CrawlerException("页面地址截取章节名失败\n%s" % page_url)
-            result_comic_info["chapter_name"] = chapter_name
+            result_comic_info["chapter_name"] = chapter_name.strip()
             result["chapter_info_list"].append(result_comic_info)
     return result
 
@@ -86,7 +95,14 @@ def get_chapter_page(comic_id, chapter_id):
     # 使用抖音的加密JS方法算出signature的值
     chrome_options = webdriver.ChromeOptions()
     chrome_options.headless = True  # 不打开浏览器
-    chrome = webdriver.Chrome(executable_path=crawler.CHROME_WEBDRIVER_PATH, options=chrome_options)
+    try:
+        chrome = webdriver.Chrome(executable_path=crawler.CHROME_WEBDRIVER_PATH, options=chrome_options)
+    except WebDriverException as e:
+        message = str(e)
+        if message.find("chrome not reachable") >= 0:
+            return get_chapter_page(comic_id, chapter_id)
+        else:
+            raise
     chrome.get("file:///" + os.path.realpath(cache_html))
     result_photo_list = chrome.find_element_by_id("result").text
     chrome.quit()
@@ -174,8 +190,6 @@ class Download(crawler.DownloadThread):
             # 检查是否达到存档记录
             if chapter_info["chapter_id"] > int(self.account_info[1]):
                 chapter_info_list[chapter_info["chapter_id"]] = chapter_info
-            else:
-                break
 
         return [chapter_info_list[key] for key in sorted(chapter_info_list.keys(), reverse=True)]
 
@@ -217,7 +231,6 @@ class Download(crawler.DownloadThread):
             # 获取所有可下载章节
             chapter_info_list = self.get_crawl_list()
             self.step("需要下载的全部漫画解析完毕，共%s个" % len(chapter_info_list))
-            print(chapter_info_list)
             # 从最早的章节开始下载
             while len(chapter_info_list) > 0:
                 self.crawl_comic(chapter_info_list.pop())
