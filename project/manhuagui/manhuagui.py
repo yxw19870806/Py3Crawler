@@ -214,12 +214,12 @@ class Download(crawler.DownloadThread):
             self.step("漫画%s %s《%s》开始下载第%s张图片 %s" % (chapter_info["chapter_id"], chapter_info["group_name"], chapter_info["chapter_name"], photo_index, photo_url))
 
             photo_file_path = os.path.join(chapter_path, "%03d.%s" % (photo_index, net.get_file_type(photo_url)))
-            save_file_return = net.save_net_file(photo_url, photo_file_path, header_list={"Referer": "https://www.manhuagui.com/comic/%s/%s.html" % (self.comic_id, chapter_info["chapter_id"])})
+            save_file_return = net.save_net_file(photo_url, photo_file_path, header_list={"Referer": "https://www.manhuagui.com/comic/%s/%s.html" % (self.comic_id, chapter_info["chapter_id"])}, is_auto_proxy=False)
             if save_file_return["status"] == 1:
                 self.step("漫画%s %s《%s》第%s张图片下载成功" % (chapter_info["chapter_id"], chapter_info["group_name"], chapter_info["chapter_name"], photo_index))
-                photo_index += 1
             else:
                 self.error("漫画%s %s《%s》第%s张图片 %s 下载失败，原因：%s" % (chapter_info["chapter_id"], chapter_info["group_name"], chapter_info["chapter_name"], photo_index, photo_url, crawler.download_failre(save_file_return["code"])))
+            photo_index += 1
 
         # 媒体内图片全部下载完毕
         self.temp_path_list = []  # 临时目录设置清除
