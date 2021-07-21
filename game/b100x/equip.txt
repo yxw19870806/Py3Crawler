@@ -1,0 +1,184 @@
+buckler	2	physical defense (%)	1
+dagger	3	number of attacks (%)	2						
+long sword	3	attack damage	20						
+antidote herb	3	ailment resistance	20						
+wood staff	4	spell damage	20						
+herbs	4	hp recovery on killing	5						
+robe	4	max shield	24						
+leather armor	5	max hp	45	physical defense (%)	2				
+cloak	5	magical defense (%)	3						
+leather gloves	5	accuracy	30	ignore cooldown (%)	3				
+leather boots	5	dodge	18	hp recovery on killing	1				
+rapier	6	additional magical damage	30						
+spider tonic	6	add paralysis	30						
+clothes	6	dodge	30						
+lucky coin	6	junk gain on killing	3						
+silver ring	6	max energy	15						
+small wind	8	max energy	12						
+kite shield	8	physical defense (%)	3						
+training clothes	8	max hp	50	avoid critical	20				
+holy cross	8	avoid critical	25	magical defense (%)	2				
+fire liquor	9	attack damage (%)	8
+saber	10	attack damage	28	add bleed	28				
+chainmail	10	max hp	100						
+traveler boots	10	exp gain on killing	3						
+underground map	10	start floor	20						
+wild club	12	attack damage	32	critical damage (%)	16				
+heal potion	12	hp recovery on killing	10						
+breast plate	12	max hp	120						
+happy clover	12	exp gain on killing	4						
+silver foil	13	additional magical damage	32	accuracy	60				
+hunting horn	13	pursuit	21						
+priest's robe	13	max shield	27	magical defense (%)	2				
+gauntlet	13	accuracy	60	ignore cooldown (%)	6				
+giant hammer	15	critical rate	28						
+dispensing mortar	15	influence	25						
+brand coat	15	dodge	36	junk gain on killing	3				
+salet	15	max hp	140						
+evil eye	15	add curse	24	magical penetration (%)	3	ailment resistance	24	energy recovery on hit	1
+white fungus	15	influence	12	add blind	25	add poison	25	ailment resistance	25
+slime suit	15	max hp	60	global defense (%)	3	start floor	10	max hp (%)	3
+sting	15	physical penetration (%)	3	attack damage	25	number of attacks (%)	3	attack damage (%)	5
+black wand	17	spell damage	40	add curse	40				
+horrible skull	17	add fear	40	pursuit	20				
+soldier mail	17	max hp	100	reflect damage	12				
+magical hat	17	max energy	20	ignore energy cost (%)	8				
+battle axe	18	attack damage	42	critical damage (%)	21				
+round shield	18	physical defense (%)	6						
+wizard robe	18	max shield	64						
+bandit gauntlet	18	drop item quantity (%)	8	accuracy	80				
+tachi	20	attack damage	45	number of attacks (%)	4				
+boneless ham	20	hp recovery on killing	12						
+fog cloak	20	dodge	45	magical defense (%)	5				
+gold ring	20	energy recovery per turn	4	junk gain on killing	5				
+old map	20	start floor	100						
+saint tree branch	20	spell damage	30	ailment resistance	30	hp recovery per turn	3	energy recovery per turn	3
+parasitic worm	20	ailment resistance (%)	6	absorb on attack (%)	6	energy recovery on killing	6	cooldown on killing (%)	3
+scowling helmet	20	max hp	77	revenge (%)	15	accuracy	60	accuracy (%)	10
+white staff	21	spell damage	48	hp recovery rate (%)	10				
+mage shield	21	magical defense (%)	5	physical defense (%)	5				
+shining sword	22	attack damage (%)	10	add paralysis	50				
+eldrich bottle	22	add fear	50	add bleed	50				
+knight armor	22	max hp	120	ailment resistance	50				
+curse necklace	22	pursuit	24	add blind	50				
+black suit	23	hp recovery on dodge	24						
+gale hairclip	23	number of attacks (%)	4	dodge	40				
+poison dagger	25	add poison	54	number of attacks (%)	5				
+sacred leaf	25	hp recovery per turn	5	ailment resistance (%)	10				
+royal clothes	25	dodge	54	exp gain on killing	5				
+stone armor	25	max hp	90	max hp (%)	4	physical defense (%)	4	heart protection (%)	11
+black fungus	25	influence	18	add bleed	36	add paralysis	36	influence (%)	7
+mud shoes	25	ignore cooldown (%)	7	add poison	36	influence (%)	7	ailment resistance	36
+heat blade	27	additional magical damage	60	add paralysis	60				
+mage potion 	27	energy recovery on killing	15						
+kenpo wear	27	reflect damage	18	dodge	60				
+blaze greaves	27	dodge	60	reflect damage	18				
+kunimori	29	accuracy	120	physical defense (%)	6				
+beginner magic book	29	spell damage	60	max energy	30				
+sage robe	29	max shield	62	energy recovery on dodge	18				
+fullface	29	max hp	150	max hp (%)	6				
+gold nugget	30	junk gain on killing	5	attack damage	50	critical rate	25		
+dragon steak	30	hp recovery on killing	12	energy recovery on killing	6				
+full plate mail	30	max hp	240						
+dragon brooch	30	physical penetration (%)	6	magical penetration (%)	6				
+flesh-eating axe	30	physical penetration (%)	4	attack damage	42	absorb on attack (%)	8	elite slayer (%)	12
+whispering sword	30	attack damage	42	additional magical damage	42	elite slayer (%)	12	final blow (%)	4
+telescope	30	accuracy	80	physical penetration (%)	4	magical penetration (%)	4	floor skip (%)	21
+flesh leotard	30	max hp	105	hp recovery rate (%)	8	attack damage (%)	8	cooldown on killing (%)	4
+mithril piercer	32	additional magical damage	52	additional magical damage (%)	10	accuracy	100		
+missed holy grail	32	hp recovery rate (%)	12	hp recovery on dodge	20				
+barbarian garb	32	hp recovery per turn	6	ignore cooldown (%)	12				
+idaten shoes	32	floor skip (%)	25	dodge	50	dodge (%)	15		
+theft edge	34	number of attacks (%)	5	junk gain on killing	5	ignore cooldown (%)	12		
+plague bottle	34	add poison	70	ailment resistance	70				
+assassin suit	34	dodge	55	add paralysis	55	final blow (%)	5		
+crown of thorns	34	influence	35	add poison	70				
+bloody exe	35	attack damage	56	critical damage (%)	28	absorb on attack (%)	11		
+elixir	35	hp recovery on killing	12	energy recovery on killing	6				
+student uniform	35	max shield	72	exp gain (%)	21				
+helm of dirtiness	35	max hp	140	ailment resistance	56	hp recovery per turn	6		
+blood-sucking fangs	35	absorb on attack (%)	10	hp recovery on killing	10	hp recovery rate (%)	10	ignore cooldown (%)	10
+fanged necklace	35	dealing damage (%)	10	final blow (%)	5	add bleed	48	critical damage (%)	24
+excavated idol	35	magical penetration (%)	5	spell damage (%)	10	add fear	48	floor skip (%)	24
+winged mail	35	max hp	120	dodge	48	dodge (%)	15	number of attacks (%)	5
+sage staff	37	spell damage	60	max energy (%)	6				
+skull of monkey	37	add curse	60	add fear	60	spell damage	60		
+vampire cloak	37	hp recovery per turn	5	absorb on attack (%)	12	ailment resistance	60		
+burning hands	37	physical penetration (%)	6	additional magical damage	60	accuracy	120		
+ouga edge	39	attack damage (%)	12	physical penetration (%)	6	number of attacks (%)	6		
+advanced magic book	39	spell damage	60	max shield	62	magical penetration (%)	6		
+master dogi	39	reflect damage	24	dodge	80				
+economic token	39	junk gain (%)	24	junk gain on killing	8				
+huge blade	40	critical rate	32	elite slayer (%)	20	attack damage	64		
+levy	40	attack damage	62	critical damage (%)	32	physical defense (%)	6		
+thunder blade	40	attack damage	62	additional magical damage	62	critical rate	32		
+wind shear	40	attack damage	62	number of attacks (%)	5	add bleed	62		
+offerings to the darkness	40	pursuit (%)	12	spell damage (%)	12	ignore energy cost (%)	12		
+trapezohedron	40	exp gain on killing	6	add fear	60	ailment resistance	60		
+royal ankh	40	add curse	60	drop item rarity (%)	10	drop item quantity (%)	12		
+medical bag	40	hp recovery rate (%)	16	hp recovery on dodge	24				
+star cloth	40	max shield	80	ailment resistance	80				
+shugendo cloth	40	max hp	160	reflect damage	20	ignore cooldown (%)	12		
+titus	40	max hp	160	avoid critical	60	physical defense (%)	6		
+holy greaves	40	cooldown on killing (%)	8	heart protection (%)	24
+cursed ring	40	add curse	80	magical defense (%)	8				
+princess crown	40	max energy (%)	8	start floor	50				
+dragon scale armor	40	max hp	135	global defense (%)	5	pursuit	27	avoid critical	54
+magical beast vest	40	max hp	135	physical defense (%)	5	add fear	54	cooldown on killing (%)	5
+burning sword	40	additional magical damage	54	dealing damage	52	pursuit	27	additional magical damage (%)	11
+black bottle	40	add poison	54	add curse	54	add blind	54	spell damage	54
+swarm wand	42	spell damage	64	spell damage (%)	12	pursuit (%)	12		
+small magic circle	42	pursuit	32	pursuit (%)	12	energy recovery per turn	6		
+mithril plate	42	max hp	210	magical defense (%)	8				
+beads of corpse ritual	42	dealing damage (%)	12	ignore energy cost (%)	12
+molten armor	44	max hp	170	max hp (%)	6	pursuit	32		
+blessing of the earth	44	ailment resistance (%)	12	energy recovery on dodge	20	ignore energy cost (%)	12		
+plague scales	45	influence	30	influence (%)	12	add poison	60	add paralysis	60
+shadow boots	45	floor skip (%)	30	cooldown on killing (%)	6	dodge (%)	18	max attacks	1
+strategist's loupe	45	magical penetration (%)	6	max shield (%)	6	accuracy (%)	18	add paralysis	60
+azurestone	45	energy recovery per turn	6	energy recovery on killing	12	energy recovery rate (%)	18	junk gain on killing	6
+concentrator	46	spell damage	72	spell damage (%)	14	ignore energy cost (%)	15		
+mana crystal	46	ignore energy cost (%)	15	energy recovery rate (%)	20	max energy (%)	7		
+behemoth	46	max hp	230	avoid critical	90				
+bright helmet	46	max hp	180	dodge	70	hp recovery rate (%)	15		
+volcanic	47	additional magical damage	72	critical rate	36	critical damage (%)	36		
+ogrekilling mushroom	47	add poison	72	influence	36	pursuit	36		
+dragon scale	47	max hp	180	revenge (%)	36	additional magical damage (%)	15		
+third eye	47	cooldown on killing (%)	7	accuracy	140	dodge	72		
+dragon slayer	48	additional magical damage	75	attack damage	75	elite slayer (%)	20		
+demon shield	48	dealing damage (%)	14	reflect damage	21	physical defense (%)	7		
+fairy garb	48	max shield	75	ailment resistance	75	heart protection (%)	24		
+formal shoes	48	ignore cooldown (%)	20	floor skip (%)	50				
+star saber	50	additional magical damage	77	add blind	77	exp gain (%)	24
+gram	50	dealing damage	65	max attacks	1	reflect damage	20	reflect damage (%)	12
+seven-branched	50	add fear	65	add curse	65	add bleed	65	add paralysis	65
+aaron	50	dealing damage	65	add blind	65	energy recovery per turn	6	influence (%)	12
+sunrise	50	pursuit	32	max energy	32	energy recovery rate (%)	20	magical penetration (%)	6
+phoenix shield	50	hp recovery per turn	6	max hp	160	magical defense (%)	6	physical defense (%)	6
+angel shield	50	hp recovery rate (%)	15	hp recovery per turn	7	global defense (%)	7		
+king shield	50	global defense (%)	7	max hp	190	max shield	78		
+fool shield	50	max shield	100	magical defense (%)	9				
+lithography of time	50	ignore cooldown (%)	20	exp gain (%)	30				
+overlord robe	50	max hp	180	max shield	78	exp gain on killing	8		
+dreadnought	50	max hp	190	absorb on attack (%)	15	max hp (%)	7		
+dark breast	50	max hp	190	add curse	75	revenge (%)	40		
+steel shackles	50	exp gain (%)	30	exp gain on killing	10				
+truthful loupe	50	drop item quantity (%)	20	drop item rarity (%)	20				
+guardian ring	50	physical defense (%)	8	magical defense (%)	8	ailment resistance (%)	15		
+guardian mail	50	max hp	165	max shield	65	avoid critical	65	ailment resistance (%)	13
+grimreaper sickle	50	physical penetration (%)	7	final blow (%)	7	number of attacks (%)	7	attack damage	65
+satan staff	50	additional magical damage	65	spell damage	65	elite slayer (%)	20	energy recovery rate (%)	20
+abyss key	50	start floor	30	floor skip (%)	32	drop item quantity (%)	12	drop item rarity (%)	10
+shell shield	50	physical defense (%)	7	magical defense (%)	7	avoid critical	65	ailment resistance	65
+smithhammer	50	critical rate	33	critical damage (%)	33	attack damage	65	drop item rarity (%)	10
+star garb	50	max shield	65	spell damage (%)	13	start floor	30	ignore energy cost (%)	12
+turquoise shield	50	global defense (%)	7	ailment resistance	65	ignore cooldown (%)	12	floor skip (%)	33
+saint cane	50	spell damage	65	hp recovery rate (%)	13	ailment resistance (%)	13	hp recovery per turn	7
+blood sickle	50	number of attacks (%)	7	physical penetration (%)	7	attack damage	65	add bleed	65
+lightning mail	50	max hp	165	dodge (%)	20	dealing damage (%)	13	add paralysis	65
+burning suit	50	max shield	65	reflect damage	20	avoid critical	65	reflect damage (%)	13
+dragon meat pie	50	hp recovery on killing	13	dealing damage	65	physical penetration (%)	7	critical rate	33
+burning feathers	50	revival	1						
+devilish necklace	50	add paralysis	65	spell damage (%)	13	influence (%)	13	energy recovery rate (%)	20
+steel suit	50	max hp	165	physical defense (%)	7	avoid critical	65	elite slayer (%)	20
+dirty meat	50	max hp (%)	7	add poison	65	hp recovery per turn	7	hp recovery on killing	13
