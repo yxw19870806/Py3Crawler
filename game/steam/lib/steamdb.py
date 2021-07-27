@@ -94,7 +94,7 @@ class SteamDb(crawler.Crawler):
         global COOKIE_INFO, USER_AGENT
 
         # 设置APP目录
-        crawler.PROJECT_APP_PATH = os.path.abspath(os.path.dirname(__file__))
+        crawler.PROJECT_APP_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 
         # 初始化参数
         sys_config = {
