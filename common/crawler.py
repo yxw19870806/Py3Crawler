@@ -250,9 +250,11 @@ class Crawler(object):
 
         output.print_msg("初始化完成")
 
+    @staticmethod
     def pause_process(self):
         net.pause_request()
 
+    @staticmethod
     def resume_process(self):
         net.resume_request()
 
