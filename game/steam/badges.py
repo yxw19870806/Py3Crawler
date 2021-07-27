@@ -13,13 +13,22 @@ from common import output, crawler, file, tool
 from game.steam.lib import steam
 
 MIN_CARD_PRICE = 0  # 最低卡牌价格
-MAX_CARD_PRICE = 99  # 最高卡牌价格
-MAX_TOTAL_PRICE = 99 # 所有卡牌总价
+MAX_CARD_PRICE = 0.5  # 最高卡牌价格
+MAX_TOTAL_PRICE = 1.5 # 所有卡牌总价
 IS_TOTAL_CARD = False  # 是不是一个game id下的所有卡牌都要符合条件
+EXTRA_CONFIG_FILE_PATH = os.path.join("lib", "badges.ini")
 
 
 # 获取当前account正在收集的徽章进度
 def main():
+    global MIN_CARD_PRICE, MAX_CARD_PRICE, MAX_TOTAL_PRICE, IS_TOTAL_CARD
+    config = crawler.read_config(EXTRA_CONFIG_FILE_PATH)
+
+    MIN_CARD_PRICE = crawler.analysis_config(config, "MIN_CARD_PRICE", 0, crawler.CONFIG_ANALYSIS_MODE_BOOLEAN)
+    MAX_CARD_PRICE = crawler.analysis_config(config, "MAX_CARD_PRICE", 0.5, crawler.CONFIG_ANALYSIS_MODE_BOOLEAN)
+    MAX_TOTAL_PRICE = crawler.analysis_config(config, "MAX_TOTAL_PRICE", 1.5, crawler.CONFIG_ANALYSIS_MODE_BOOLEAN)
+    IS_TOTAL_CARD = crawler.analysis_config(config, "IS_TOTAL_CARD", False, crawler.CONFIG_ANALYSIS_MODE_BOOLEAN)
+
     # 获取登录状态
     steam_class = steam.Steam(need_login=True)
     skip_list_file_path = os.path.join(steam_class.cache_data_path, "badges_skip.txt")
