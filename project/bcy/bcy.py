@@ -32,7 +32,11 @@ def get_one_page_album(account_id, since_id):
     }
     if api_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(api_response.status))
-    for album_info in crawler.get_json_value(api_response.json_data, "data", "items", type_check=list):
+    try:
+        album_info_list = crawler.get_json_value(api_response.json_data, "data", "items", type_check=list)
+    except crawler.CrawlerException:
+        album_info_list = crawler.get_json_value(api_response.json_data, "data", value_check={})
+    for album_info in album_info_list:
         result["album_id_list"].append(crawler.get_json_value(album_info, "item_detail", "item_id", type_check=int))
     return result
 
