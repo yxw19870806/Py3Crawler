@@ -12,13 +12,14 @@ import time
 from common import *
 from game.steam.lib import steam
 
-INCLUDE_GAME = True
-INCLUDE_PACKAGE = True
-INCLUDE_BUNDLE = True
-SKIP_RESTRICTED_GAME = True
+INCLUDE_GAME = True # 是否包含游戏
+INCLUDE_PACKAGE = True # 是否包含礼包(sub)
+INCLUDE_BUNDLE = True # 是否包含捆绑包(bundle)
+SKIP_RESTRICTED_GAME = True # 是否跳过Steam正在了解的游戏
 MIN_DISCOUNT_PERCENT = 75  # 显示折扣大等于这个数字的游戏
 MAX_DISCOUNT_PERCENT = 100  # 显示折扣大等于这个数字的游戏
-MAX_SELLING_PERCENT = 2  # 显示价格小等于这个数字的游戏
+MAX_SELLING_PERCENT = 1  # 显示价格小等于这个数字的游戏
+EXTRA_CONFIG_FILE_PATH = os.path.join("lib", "discount.ini")
 
 
 # 打折游戏列表保存到文件
@@ -47,6 +48,21 @@ def load_discount_list(cache_file_path):
 
 # 给出给定大等于最低折扣或者小等于最低价格的还没有的打折游戏
 def main():
+    global INCLUDE_GAME, INCLUDE_PACKAGE, INCLUDE_BUNDLE, SKIP_RESTRICTED_GAME
+    global MIN_DISCOUNT_PERCENT, MAX_DISCOUNT_PERCENT, MAX_SELLING_PERCENT
+    config = crawler.read_config(EXTRA_CONFIG_FILE_PATH)
+
+    INCLUDE_GAME = crawler.analysis_config(config, "INCLUDE_GAME", True, crawler.CONFIG_ANALYSIS_MODE_BOOLEAN)
+    INCLUDE_PACKAGE = crawler.analysis_config(config, "INCLUDE_PACKAGE", True, crawler.CONFIG_ANALYSIS_MODE_BOOLEAN)
+    INCLUDE_BUNDLE = crawler.analysis_config(config, "INCLUDE_BUNDLE", True, crawler.CONFIG_ANALYSIS_MODE_BOOLEAN)
+    SKIP_RESTRICTED_GAME = crawler.analysis_config(config, "SKIP_RESTRICTED_GAME", True, crawler.CONFIG_ANALYSIS_MODE_BOOLEAN)
+    MIN_DISCOUNT_PERCENT = crawler.analysis_config(config, "MIN_DISCOUNT_PERCENT", 75, crawler.CONFIG_ANALYSIS_MODE_INTEGER)
+    MAX_DISCOUNT_PERCENT = crawler.analysis_config(config, "MAX_DISCOUNT_PERCENT", 100, crawler.CONFIG_ANALYSIS_MODE_INTEGER)
+    MAX_SELLING_PERCENT = crawler.analysis_config(config, "MAX_SELLING_PERCENT", 1, crawler.CONFIG_ANALYSIS_MODE_INTEGER)
+    MIN_DISCOUNT_PERCENT = min(max(MIN_DISCOUNT_PERCENT, 1), 100)
+    MAX_DISCOUNT_PERCENT = min(max(MAX_DISCOUNT_PERCENT, 1), 100)
+    MAX_SELLING_PERCENT = max(MAX_SELLING_PERCENT, 1)
+
     # 获取登录状态
     steam_class = steam.Steam(need_login=True)
     cache_file_path = os.path.abspath(os.path.join(steam_class.cache_data_path, "discount.txt"))
@@ -80,7 +96,7 @@ def main():
         if discount_info["now_price"] <= 0 or discount_info["old_price"] <= 0:
             continue
         # 只显示当前价格或折扣小等于限制的那些游戏
-        if discount_info["now_price"] <= MAX_SELLING_PERCENT or (discount_info["discount"] >= MIN_DISCOUNT_PERCENT and discount_info["discount"] <= MAX_DISCOUNT_PERCENT):
+        if discount_info["now_price"] <= MAX_SELLING_PERCENT or MAX_DISCOUNT_PERCENT >= discount_info["discount"] >= MIN_DISCOUNT_PERCENT:
             # bundle 或者 package，都包含多个游戏
             if discount_info["type"] == "bundle" or discount_info["type"] == "package":
                 # 是否不显示package

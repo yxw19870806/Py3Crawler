@@ -52,10 +52,11 @@ SYS_APP_CONFIG = "app_config"
 # 自定义的app配置文件路径（默认
 SYS_APP_CONFIG_PATH = 'app_config_path'
 
-CONFIG_ANALYSIS_MODE_RAW = 0
-CONFIG_ANALYSIS_MODE_INTEGER = 1
-CONFIG_ANALYSIS_MODE_BOOLEAN = 2
-CONFIG_ANALYSIS_MODE_PATH = 3
+CONFIG_ANALYSIS_MODE_RAW = "raw"
+CONFIG_ANALYSIS_MODE_INTEGER = "int"
+CONFIG_ANALYSIS_MODE_BOOLEAN = "bool"
+CONFIG_ANALYSIS_MODE_FLOAT = "float"
+CONFIG_ANALYSIS_MODE_PATH = "path"
 
 
 class Crawler(object):
@@ -400,6 +401,12 @@ def analysis_config(config, key, default_value, mode=CONFIG_ANALYSIS_MODE_RAW):
             value = False
         else:
             value = True
+    elif mode == CONFIG_ANALYSIS_MODE_FLOAT:
+        try:
+            value = float(value)
+        except ValueError:
+            output.print_msg("配置文件config.ini中key为'" + key + "'的值必须是一个浮点数，使用程序默认设置")
+            value = default_value
     elif mode == CONFIG_ANALYSIS_MODE_PATH:
         if len(value) > 2 and value[:2] == "\\\\":  # \\ 开头，程序所在目录
             value = os.path.join(PROJECT_APP_PATH, value[2:])  # \\ 仅做标记使用，实际需要去除

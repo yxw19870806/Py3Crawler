@@ -45,19 +45,20 @@ def get_game_store_index(game_id):
     # 获取发行商名字
     publisher_name = pq(game_index_response_content).find("span[itemprop=publisher]").text()
     if not publisher_name:
-        pq(game_index_response_content).find("a[itemprop=publisher]").text()
+        publisher_name = pq(game_index_response_content).find("a[itemprop=publisher]").text()
     if publisher_name:
         result["publisher_name"] = publisher_name
     if not result["develop_name"] or not result["publisher_name"]:
-        history_api_url = "https://steamdb.info/api/GetAppHistory/?lastentry=0&appid=999170"
+        history_api_url = "https://steamdb.info/api/GetAppHistory/"
         query_data = {
             "lastentry": "0",
             "appid": game_id,
         }
-        history_api_response = net.http_request(history_api_url, method="GET", fields=query_data, header_list=header_list, cookies_list=COOKIE_INFO, is_random_ip=False, json_decode=True)
+        header_list["X-Requested-With"] = "XMLHttpRequest"
+        history_api_response = net.http_request(history_api_url, method="GET", fields=query_data, header_list=header_list, cookies_list=COOKIE_INFO, is_random_ip=False)
         if history_api_response.status != net.HTTP_RETURN_CODE_SUCCEED:
-            raise crawler.CrawlerException("历史记录，%s" % crawler.request_failre(game_index_response.status))
-        history_response_content = crawler.get_json_value(history_api_response.json_data, "data", "Rendered", type_check=str)
+            raise crawler.CrawlerException("历史记录，%s" % crawler.request_failre(history_api_response.status))
+        history_response_content = history_api_response.data.decode(errors="ignore")
         if not result["develop_name"]:
             history_info_selector_list = pq(history_response_content).find(".app-history i:contains('developer')")
             for history_index in range(0, history_info_selector_list.length):
@@ -94,7 +95,7 @@ class SteamDb(crawler.Crawler):
         global COOKIE_INFO, USER_AGENT
 
         # 设置APP目录
-        crawler.PROJECT_APP_PATH = os.path.abspath(os.path.dirname(__file__))
+        crawler.PROJECT_APP_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 
         # 初始化参数
         sys_config = {
@@ -102,7 +103,7 @@ class SteamDb(crawler.Crawler):
             crawler.SYS_NOT_DOWNLOAD: True,
             crawler.SYS_NOT_CHECK_SAVE_DATA: True,
             crawler.SYS_GET_COOKIE: ("steamdb.info",),
-            crawler.SYS_APP_CONFIG_PATH: os.path.join(crawler.PROJECT_APP_PATH, "steamdb.ini"),
+            crawler.SYS_APP_CONFIG_PATH: os.path.join(crawler.PROJECT_APP_PATH, "lib", "steamdb.ini"),
             crawler.SYS_APP_CONFIG: (
                 ("USER_AGENT", "", crawler.CONFIG_ANALYSIS_MODE_RAW),
             ),
