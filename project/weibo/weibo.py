@@ -17,16 +17,15 @@ from project.miaopai import miaopai
 
 EACH_PAGE_PHOTO_COUNT = 20  # 每次请求获取的图片数量
 INIT_SINCE_ID = "9999999999999999"
-COOKIE_INFO = {"SUB": ""}
+COOKIE_INFO = {}
 
 
 # 检测登录状态
 def check_login():
     if "SUB" not in COOKIE_INFO or not COOKIE_INFO["SUB"]:
         return False
-    cookies_list = {"SUB": COOKIE_INFO["SUB"]}
     index_url = "https://weibo.com/"
-    index_response = net.http_request(index_url, method="GET", cookies_list=cookies_list)
+    index_response = net.http_request(index_url, method="GET", cookies_list=COOKIE_INFO)
     if index_response.status == net.HTTP_RETURN_CODE_SUCCEED:
         return index_response.data.decode(errors="ignore").find("$CONFIG['islogin']='1';") >= 0
     return False
@@ -78,12 +77,11 @@ def get_one_page_photo(account_id, page_count):
         "page": page_count,
         "type": "3",
     }
-    cookies_list = {"SUB": COOKIE_INFO["SUB"]}
     result = {
         "photo_info_list": [],  # 全部图片信息
         "is_over": False,  # 是否最后一页图片
     }
-    photo_pagination_response = net.http_request(photo_pagination_url, method="GET", fields=query_data, cookies_list=cookies_list, json_decode=True)
+    photo_pagination_response = net.http_request(photo_pagination_url, method="GET", fields=query_data, cookies_list=COOKIE_INFO, json_decode=True)
     if photo_pagination_response.status == net.HTTP_RETURN_CODE_JSON_DECODE_ERROR and photo_pagination_response.data.find('<p class="txt M_txtb">用户不存在或者获取用户信息失败</p>'.encode()) >= 0:
         raise crawler.CrawlerException("账号不存在")
     elif photo_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
@@ -120,12 +118,11 @@ def get_one_page_video(account_id, account_page_id, since_id):
         "ajax_call": "1",
         "__rnd": int(time.time() * 1000),
     }
-    cookies_list = {"SUB": COOKIE_INFO["SUB"]}
     result = {
         "next_page_since_id": None,  # 下一页视频指针
         "video_play_url_list": [],  # 全部视频地址
     }
-    video_pagination_response = net.http_request(video_pagination_url, method="GET", fields=query_data, cookies_list=cookies_list, json_decode=True)
+    video_pagination_response = net.http_request(video_pagination_url, method="GET", fields=query_data, cookies_list=COOKIE_INFO, json_decode=True)
     if video_pagination_response.status == net.HTTP_RETURN_CODE_JSON_DECODE_ERROR:
         time.sleep(5)
         log.step("since_id：%s页视频解返回异常" % since_id)
@@ -163,8 +160,7 @@ def get_video_url(video_play_url, error_count = 0):
             raise crawler.CrawlerException("未知的第三方视频\n%s" % video_play_url)
     # https://video.weibo.com/show?fid=1034:e608e50d5fa95410748da61a7dfa2bff
     elif video_play_url.find("video.weibo.com/show?fid=") >= 0 or video_play_url.find("weibo.com/tv/v") >= 0:  # 微博视频
-        cookies_list = {"SUB": COOKIE_INFO["SUB"]}
-        video_play_response = net.http_request(video_play_url, method="GET", cookies_list=cookies_list)
+        video_play_response = net.http_request(video_play_url, method="GET", cookies_list=COOKIE_INFO)
         if video_play_response.status == net.HTTP_RETURN_CODE_SUCCEED:
             video_play_response_content = video_play_response.data.decode(errors="ignore")
             video_sources = tool.find_sub_string(video_play_response_content, 'video-sources="', '"')
