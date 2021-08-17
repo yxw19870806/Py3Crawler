@@ -38,7 +38,7 @@ If you have installed Visual C++ Build Tools and swig for windows (and add swig'
 >> 访问[微软官方Visual Studio下载页面](https://visualstudio.microsoft.com/downloads/)<br>
 选择"Visual Studio 2019 工具" - "Visual Studio 2019 生成工具"下载<br>
 运行下载的exe引导文件、开始安装Visual Studio Installer<br>
-Visual Studio Installer安装完毕后，勾选"桌面应用和移动应用"（点击后右侧至少要包含有一个"对应操作系统的最新版本SDK包"以及"测试工具核心功能 - 生成工具"）并安装<br>
+Visual Studio Installer安装完毕后，勾选"桌面应用和移动应用"标签下的"使用C++的桌面开发"和"通用windows平台生成工具"并安装<br>
 
 > 如何安装swig
 >> 访问[swig官网下载页面](http://www.swig.org/download.html)<br>
