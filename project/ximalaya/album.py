@@ -124,11 +124,11 @@ class Download(crawler.DownloadThread):
             audio_play_response = ximalaya.get_audio_info_page(audio_info["audio_id"])
         except crawler.CrawlerException as e:
             self.error("音频%s解析失败，原因：%s" % (audio_info["audio_id"], e.message))
-            return
+            raise
 
-        if audio_play_response["is_delete"]:
-            self.error("音频%s不存在" % audio_info["audio_id"])
-            return
+        if audio_play_response["is_paid"]:
+            self.error("音频%s需要购买" % audio_info["audio_id"])
+            raise crawler.CrawlerException()
 
         audio_url = audio_play_response["audio_url"]
         self.step("开始下载音频%s《%s》 %s" % (audio_info["audio_id"], audio_info["audio_title"], audio_url))
@@ -139,7 +139,7 @@ class Download(crawler.DownloadThread):
             self.step("音频%s《%s》下载成功" % (audio_info["audio_id"], audio_info["audio_title"]))
         else:
             self.error("音频%s《%s》 %s 下载失败，原因：%s" % (audio_info["audio_id"], audio_info["audio_title"], audio_url, crawler.download_failre(save_file_return["code"])))
-            return
+            raise crawler.CrawlerException()
 
         # 音频下载完毕
         self.total_audio_count += 1  # 计数累加
