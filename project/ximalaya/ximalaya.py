@@ -91,26 +91,36 @@ def get_one_page_audio(account_id, page_count):
 # 获取指定id的音频播放页
 # audio_id -> 16558983
 def get_audio_info_page(audio_id):
-    audio_info_url = "https://www.ximalaya.com/tracks/%s.json" % audio_id
     result = {
         "audio_title": "",  # 音频标题
         "audio_url": None,  # 音频地址
         "is_delete": False,  # 是否已删除
     }
-    audio_play_response = net.http_request(audio_info_url, method="GET", json_decode=True)
-    if audio_play_response.status != net.HTTP_RETURN_CODE_SUCCEED:
-        raise crawler.CrawlerException(crawler.request_failre(audio_play_response.status))
-    if crawler.get_json_value(audio_play_response.json_data, "id", type_check=int) == 0:
+    audio_simple_info_url = "https://www.ximalaya.com/revision/track/simple"
+    query_data = {
+        "trackId": audio_id,
+    }
+    audio_simple_info_response = net.http_request(audio_simple_info_url, fields=query_data, method="GET", json_decode=True)
+    if audio_simple_info_response.status != net.HTTP_RETURN_CODE_SUCCEED:
+        raise crawler.CrawlerException("音频简易信息 " + crawler.request_failre(audio_simple_info_response.status))
+    if crawler.get_json_value(audio_simple_info_response.json_data, "ret", type_check=int) == 200:
+        pass
+    elif crawler.get_json_value(audio_simple_info_response.json_data, "ret", type_check=int) == 404:
         result["is_delete"] = True
         return result
-    # 获取音频标题
-    result["audio_title"] = crawler.get_json_value(audio_play_response.json_data, "title", type_check=str)
-    # 获取音频地址
-    for key_name in ["play_path_64", "play_path_32", "play_path"]:
-        audio_url = crawler.get_json_value(audio_play_response.json_data, key_name, default_value="", type_check=str)
-        if audio_url:
-            result["audio_url"] = audio_url
-            break
     else:
-        raise crawler.CrawlerException("返回信息匹配音频地址失败\n%s" % audio_play_response.json_data)
+        raise crawler.CrawlerException("音频简易信息 ret返回值不正确\n%s" % audio_simple_info_response.json_data)
+    # 获取音频标题
+    result["audio_title"] = crawler.get_json_value(audio_simple_info_response.json_data, "data", "trackInfo", "title", type_check=str)
+
+    audio_info_url = "https://www.ximalaya.com/revision/play/v1/audio"
+    query_data = {
+        "id": audio_id,
+        "ptype": 1,
+    }
+    audio_info_response = net.http_request(audio_info_url, fields=query_data, method="GET", json_decode=True)
+    if audio_info_response.status != net.HTTP_RETURN_CODE_SUCCEED:
+        raise crawler.CrawlerException("音频详细信息" + crawler.request_failre(audio_info_response.status))
+    # 获取音频地址
+    result["audio_url"] = crawler.get_json_value(audio_info_response.json_data, "data", "src", type_check=str)
     return result
