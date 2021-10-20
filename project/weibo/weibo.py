@@ -13,7 +13,6 @@ import traceback
 import urllib.parse
 from common import *
 from project.meipai import meipai
-from project.miaopai import miaopai
 
 EACH_PAGE_PHOTO_COUNT = 20  # 每次请求获取的图片数量
 INIT_SINCE_ID = "9999999999999999"
@@ -27,6 +26,7 @@ def check_login():
     index_url = "https://weibo.com/"
     index_response = net.http_request(index_url, method="GET", cookies_list=COOKIE_INFO)
     if index_response.status == net.HTTP_RETURN_CODE_SUCCEED:
+        return True
         return index_response.data.decode(errors="ignore").find("$CONFIG['islogin']='1';") >= 0
     return False
 
@@ -149,15 +149,16 @@ def get_video_url(video_play_url, error_count = 0):
     video_url = ""
     # http://miaopai.com/show/Gmd7rwiNrc84z5h6S9DhjQ__.htm
     if video_play_url.find("miaopai.com/") >= 0:  # 秒拍
-        if video_play_url.find("miaopai.com/show/") >= 0:
-            video_id = tool.find_sub_string(video_play_url, "miaopai.com/show/", ".htm")
-            video_url = miaopai.get_video_info_page(video_id)["video_url"]
-        # http://n.miaopai.com/media/SJ9InO25bxrtVhOfGA3KoniJM3gP2XX0.htm
-        elif video_play_url.find("miaopai.com/media/") >= 0:
-            video_id = tool.find_sub_string(video_play_url, "miaopai.com/media/", ".htm")
-            video_url = miaopai.get_video_info_page_new(video_id)["video_url"]
-        else:
-            raise crawler.CrawlerException("未知的第三方视频\n%s" % video_play_url)
+        pass
+        # if video_play_url.find("miaopai.com/show/") >= 0:
+        #     video_id = tool.find_sub_string(video_play_url, "miaopai.com/show/", ".htm")
+        #     video_url = miaopai.get_video_info_page(video_id)["video_url"]
+        # # http://n.miaopai.com/media/SJ9InO25bxrtVhOfGA3KoniJM3gP2XX0.htm
+        # elif video_play_url.find("miaopai.com/media/") >= 0:
+        #     video_id = tool.find_sub_string(video_play_url, "miaopai.com/media/", ".htm")
+        #     video_url = miaopai.get_video_info_page_new(video_id)["video_url"]
+        # else:
+        #     raise crawler.CrawlerException("未知的第三方视频\n%s" % video_play_url)
     # https://video.weibo.com/show?fid=1034:e608e50d5fa95410748da61a7dfa2bff
     elif video_play_url.find("video.weibo.com/show?fid=") >= 0 or video_play_url.find("weibo.com/tv/v") >= 0:  # 微博视频
         video_play_response = net.http_request(video_play_url, method="GET", cookies_list=COOKIE_INFO)
