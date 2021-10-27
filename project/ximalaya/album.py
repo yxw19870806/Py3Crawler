@@ -126,9 +126,9 @@ class Download(crawler.DownloadThread):
             self.error("音频%s解析失败，原因：%s" % (audio_info["audio_id"], e.message))
             raise
 
-        if audio_play_response["is_paid"]:
-            self.error("音频%s需要购买" % audio_info["audio_id"])
-            raise crawler.CrawlerException()
+        # if audio_play_response["is_paid"]:
+        #     self.error("音频%s需要购买" % audio_info["audio_id"])
+        #     raise crawler.CrawlerException()
 
         audio_url = audio_play_response["audio_url"]
         self.step("开始下载音频%s《%s》 %s" % (audio_info["audio_id"], audio_info["audio_title"], audio_url))
