@@ -41,6 +41,7 @@ def main():
             continue
 
         # 选择下载目录
+        log.step("请选择下载目录")
         options = {
             "initialdir": bilibili_class.video_download_path,
             "parent": gui,
