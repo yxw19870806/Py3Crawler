@@ -21,14 +21,20 @@ def main():
     gui.withdraw()
 
     while True:
-        video_url = input("请输入bilibili视频地址：").lower()
+        video_url = input("请输入bilibili视频地址：")
+        lower_video_url = video_url.lower()
         video_id = None
-        if video_url.find("bilibili.com/video/av") > 0:
+        if lower_video_url.find("bilibili.com/video/av") > 0:
             video_id = tool.find_sub_string(video_url, "bilibili.com/video/av").split("?")[0]
-        elif crawler.is_integer(video_url):
-            video_id = video_url
-        elif video_url[:2] == "av" and crawler.is_integer(video_url[2:]):
-            video_id = video_url[2:]
+        elif lower_video_url.find("bilibili.com/video/bv") > 0:
+            bv_id = tool.find_sub_string(video_url, "bilibili.com/video/").split("?")[0]
+            video_id = bilibili.bv_id_2_av_id(bv_id)
+        elif crawler.is_integer(lower_video_url):
+            video_id = lower_video_url
+        elif lower_video_url[:2] == "av" and crawler.is_integer(lower_video_url[2:]):
+            video_id = lower_video_url[2:]
+        elif lower_video_url[:2] == "bv":
+            video_id = bilibili.bv_id_2_av_id(video_url)
         # 无效的视频地址
         if not crawler.is_integer(video_id):
             log.step("错误的视频地址，正确的地址格式如：https://www.bilibili.com/video/av123456")
@@ -62,6 +68,8 @@ def main():
                 else:
                     video_title += "_" + str(part_index)
             video_name = "%010d %s.%s" % (int(video_id), path.filter_text(video_title), net.get_file_type(video_part_info["video_url_list"][0]))
+
+            log.step("请选择下载目录")
             # 选择下载目录
             options = {
                 "initialdir": bilibili_class.video_download_path,

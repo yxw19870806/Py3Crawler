@@ -6,6 +6,7 @@ https://www.bilibili.com/
 email: hikaru870806@hotmail.com
 如有问题或建议请联系
 """
+import math
 import os
 import time
 import traceback
@@ -14,6 +15,30 @@ from common import *
 COOKIE_INFO = {}
 IS_LOGIN = False
 EACH_PAGE_COUNT = 30
+
+
+string_table = 'fZodR9XQDSUm21yCkr6zBqiveYah8bt4xsWpHnJE7jL5VG3guMTKNPAwcF'
+id_index = [11, 10, 3, 8, 4, 6]
+xor = 177451812
+add = 8728348608
+
+# av id转bv id
+def av_id_2_bv_id(av_id):
+    if isinstance(av_id, str) and av_id[:2].lower() == 'av':
+        av_id = av_id[2:]
+    av_id = (av_id ^ xor) + add
+    result = list('BV1  4 1 7  ')
+    for i in range(0, 6):
+        result[id_index[i]] = string_table[math.floor(av_id / 58 ** i) % 58]
+    return "".join(result)
+
+
+# bv id转av id
+def bv_id_2_av_id(bv_id):
+    result = 0
+    for i in range(0, 6):
+        result += string_table.find(bv_id[id_index[i]]) * 58 ** i
+    return result - add ^ xor
 
 
 # 检测是否已登录
