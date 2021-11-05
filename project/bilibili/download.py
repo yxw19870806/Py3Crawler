@@ -68,6 +68,8 @@ def main():
                 else:
                     video_title += "_" + str(part_index)
             video_name = "%010d %s.%s" % (int(video_id), path.filter_text(video_title), net.get_file_type(video_part_info["video_url_list"][0]))
+
+            log.step("请选择下载目录")
             # 选择下载目录
             options = {
                 "initialdir": bilibili_class.video_download_path,
