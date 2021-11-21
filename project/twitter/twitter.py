@@ -51,7 +51,7 @@ def check_login():
         raise crawler.CrawlerException("初始化JS中截取authorization失败\n%s" % init_js_response_content)
     AUTHORIZATION = "AAAAAAAAAA" + authorization_string
     # 截取query id
-    query_id_find = re.findall('queryId:"([\w]*)",operationName:"UserByScreenName",operationType:"query"', init_js_response_content)
+    query_id_find = re.findall('queryId:"([\w-]*)",operationName:"UserByScreenName",operationType:"query"', init_js_response_content)
     if len(query_id_find) != 1:
         raise crawler.CrawlerException("初始化JS中截取queryId失败\n%s" % init_js_response_content)
     QUERY_ID = query_id_find[0]
@@ -62,7 +62,7 @@ def check_login():
 def get_account_index_page(account_name):
     account_index_url = "https://api.twitter.com/graphql/%s/UserByScreenName" % QUERY_ID
     query_data = {
-        "variables": '{"screen_name":"%s","withHighlightedLabel":false}' % account_name
+        "variables": '{"screen_name":"%s","withSafetyModeUserFields":true,"withSuperFollowsUserFields":true}' % account_name
     }
     header_list = {
         "referer": "https://twitter.com/%s" % account_name,
@@ -76,13 +76,13 @@ def get_account_index_page(account_name):
     }
     if account_index_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(account_index_response.status))
-    result["account_id"] = crawler.get_json_value(account_index_response.json_data, "data", "user", "rest_id", type_check=str, default_value=0)
+    result["account_id"] = crawler.get_json_value(account_index_response.json_data, "data", "user", "result", "rest_id", type_check=str, default_value=0)
     if result["account_id"] == 0:
-        error_message = crawler.get_json_value(account_index_response.json_data, "data", "errors", "message", type_check=str, default_value="")
-        if error_message == "Not found":
+        if crawler.get_json_value(account_index_response.json_data, "data", type_check=dict) is {}:
             raise crawler.CrawlerException("账号不存在")
-        elif error_message:
-            raise crawler.CrawlerException(error_message)
+        error_message = crawler.get_json_value(account_index_response.json_data, "data", "user", "result", "reason", type_check=str, default_value="")
+        if error_message == "Suspended":
+            raise crawler.CrawlerException("账号已封禁")
         else:
             raise crawler.CrawlerException(account_index_response.data)
     result["account_id"] = str(result["account_id"])
@@ -430,6 +430,8 @@ class Download(crawler.DownloadThread):
         video_index = 1
         if self.main_thread.is_download_video:
             for video_url in media_info["video_url_list"]:
+                self.step("开始下载推特%s的第%s个视频 %s" % (media_info["blog_id"], video_index, video_url))
+
                 if len(media_info["video_url_list"]) > 1:
                     video_file_path = os.path.join(self.main_thread.video_download_path, self.account_name, "%019d_%02d.%s" % (media_info["blog_id"], video_index, net.get_file_type(video_url)))
                 else:
