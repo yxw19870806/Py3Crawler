@@ -430,6 +430,8 @@ class Download(crawler.DownloadThread):
         video_index = 1
         if self.main_thread.is_download_video:
             for video_url in media_info["video_url_list"]:
+                self.step("开始下载推特%s的第%s个视频 %s" % (media_info["blog_id"], video_index, video_url))
+
                 if len(media_info["video_url_list"]) > 1:
                     video_file_path = os.path.join(self.main_thread.video_download_path, self.account_name, "%019d_%02d.%s" % (media_info["blog_id"], video_index, net.get_file_type(video_url)))
                 else:
