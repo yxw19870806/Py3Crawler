@@ -76,13 +76,13 @@ def get_account_index_page(account_name):
     }
     if account_index_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(account_index_response.status))
-    result["account_id"] = crawler.get_json_value(account_index_response.json_data, "data", "user", "rest_id", type_check=str, default_value=0)
+    result["account_id"] = crawler.get_json_value(account_index_response.json_data, "data", "user", "result", "rest_id", type_check=str, default_value=0)
     if result["account_id"] == 0:
-        error_message = crawler.get_json_value(account_index_response.json_data, "data", "errors", "message", type_check=str, default_value="")
-        if error_message == "Not found":
+        if crawler.get_json_value(account_index_response.json_data, "data", type_check=dict) is {}:
             raise crawler.CrawlerException("账号不存在")
-        elif error_message:
-            raise crawler.CrawlerException(error_message)
+        error_message = crawler.get_json_value(account_index_response.json_data, "data", "user", "result", "reason", type_check=str, default_value="")
+        if error_message == "Suspended":
+            raise crawler.CrawlerException("账号已封禁")
         else:
             raise crawler.CrawlerException(account_index_response.data)
     result["account_id"] = str(result["account_id"])
