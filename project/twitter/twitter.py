@@ -62,7 +62,7 @@ def check_login():
 def get_account_index_page(account_name):
     account_index_url = "https://api.twitter.com/graphql/%s/UserByScreenName" % QUERY_ID
     query_data = {
-        "variables": '{"screen_name":"%s","withHighlightedLabel":false}' % account_name
+        "variables": '{"screen_name":"%s","withSafetyModeUserFields":true,"withSuperFollowsUserFields":true}' % account_name
     }
     header_list = {
         "referer": "https://twitter.com/%s" % account_name,
