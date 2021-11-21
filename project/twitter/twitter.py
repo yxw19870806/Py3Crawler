@@ -51,7 +51,7 @@ def check_login():
         raise crawler.CrawlerException("初始化JS中截取authorization失败\n%s" % init_js_response_content)
     AUTHORIZATION = "AAAAAAAAAA" + authorization_string
     # 截取query id
-    query_id_find = re.findall('queryId:"([\w]*)",operationName:"UserByScreenName",operationType:"query"', init_js_response_content)
+    query_id_find = re.findall('queryId:"([\w-]*)",operationName:"UserByScreenName",operationType:"query"', init_js_response_content)
     if len(query_id_find) != 1:
         raise crawler.CrawlerException("初始化JS中截取queryId失败\n%s" % init_js_response_content)
     QUERY_ID = query_id_find[0]
