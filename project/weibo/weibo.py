@@ -100,7 +100,7 @@ def get_one_page_photo(account_id, page_count):
         result_photo_info["photo_url"] = crawler.get_json_value(photo_info, "pic_host", type_check=str) + "/large/" + crawler.get_json_value(photo_info, "pic_name", type_check=str)
         result["photo_info_list"].append(result_photo_info)
     # 检测是不是还有下一页 总的图片数量 / 每页显示的图片数量 = 总的页数
-    result["is_over"] = page_count >= (crawler.get_json_value(photo_pagination_response.json_data, "data", "total", type_check=int) / EACH_PAGE_PHOTO_COUNT)
+    result["is_over"] = len(result["photo_info_list"]) == 0 or page_count >= (crawler.get_json_value(photo_pagination_response.json_data, "data", "total", type_check=int) / EACH_PAGE_PHOTO_COUNT)
     return result
 
 
