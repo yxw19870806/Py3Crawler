@@ -128,18 +128,19 @@ class Crawler(object):
 
         # 存档
         self.save_data_path = analysis_config(config, "SAVE_DATA_PATH", "\\\\info/save.data", CONFIG_ANALYSIS_MODE_PATH)
-        if not sys_not_check_save_data and not os.path.exists(self.save_data_path):
-            # 存档文件不存在
-            output.print_msg("存档文件%s不存在！" % self.save_data_path)
-            tool.process_exit()
-            return
-        temp_file_name = time.strftime("%m-%d_%H_%M_", time.localtime(time.time())) + os.path.basename(self.save_data_path)
-        self.temp_save_data_path = os.path.join(os.path.dirname(self.save_data_path), temp_file_name)
-        if os.path.exists(self.temp_save_data_path):
-            # 临时文件已存在
-            output.print_msg("存档临时文件%s已存在！" % self.temp_save_data_path)
-            tool.process_exit()
-            return
+        if not sys_not_check_save_data:
+            if not os.path.exists(self.save_data_path):
+                # 存档文件不存在
+                output.print_msg("存档文件%s不存在！" % self.save_data_path)
+                tool.process_exit()
+                return
+            temp_file_name = time.strftime("%m-%d_%H_%M_", time.localtime(time.time())) + os.path.basename(self.save_data_path)
+            self.temp_save_data_path = os.path.join(os.path.dirname(self.save_data_path), temp_file_name)
+            if os.path.exists(self.temp_save_data_path):
+                # 临时文件已存在
+                output.print_msg("存档临时文件%s已存在！" % self.temp_save_data_path)
+                tool.process_exit()
+                return
 
         # cache
         self.cache_data_path = analysis_config(config, "CACHE_DATA_PATH", "\\\\cache", CONFIG_ANALYSIS_MODE_PATH)
