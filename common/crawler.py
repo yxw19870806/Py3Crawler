@@ -38,6 +38,8 @@ SYS_DOWNLOAD_PHOTO = "download_photo"
 SYS_DOWNLOAD_VIDEO = "download_video"
 # 程序是否支持下载音频功能
 SYS_DOWNLOAD_AUDIO = "download_audio"
+# 程序是否支持下载文本内容功能
+SYS_DOWNLOAD_CONTENT = "download_content"
 # 程序是否默认需要设置代理
 SYS_SET_PROXY = "set_proxy"
 # 程序是否支持不需要存档文件就可以开始运行
@@ -79,6 +81,7 @@ class Crawler(object):
         sys_download_photo = SYS_DOWNLOAD_PHOTO in sys_config
         sys_download_video = SYS_DOWNLOAD_VIDEO in sys_config
         sys_download_audio = SYS_DOWNLOAD_AUDIO in sys_config
+        sys_download_content = SYS_DOWNLOAD_CONTENT in sys_config
         sys_set_proxy = SYS_SET_PROXY in sys_config
         sys_get_cookie = SYS_GET_COOKIE in sys_config
         sys_not_check_save_data = SYS_NOT_CHECK_SAVE_DATA in sys_config
@@ -116,8 +119,9 @@ class Crawler(object):
         self.is_download_photo = analysis_config(config, "IS_DOWNLOAD_PHOTO", True, CONFIG_ANALYSIS_MODE_BOOLEAN) and sys_download_photo
         self.is_download_video = analysis_config(config, "IS_DOWNLOAD_VIDEO", True, CONFIG_ANALYSIS_MODE_BOOLEAN) and sys_download_video
         self.is_download_audio = analysis_config(config, "IS_DOWNLOAD_AUDIO", True, CONFIG_ANALYSIS_MODE_BOOLEAN) and sys_download_audio
+        self.is_download_content = analysis_config(config, "IS_DOWNLOAD_CONTENT", True, CONFIG_ANALYSIS_MODE_BOOLEAN) and sys_download_audio
 
-        if not sys_not_download and not self.is_download_photo and not self.is_download_video and not self.is_download_audio:
+        if not sys_not_download and not self.is_download_photo and not self.is_download_video and not self.is_download_audio and not self.is_download_content:
             if sys_download_photo or sys_download_video or sys_download_audio:
                 output.print_msg("所有支持的下载都没有开启，请检查配置！")
                 tool.process_exit()
@@ -166,6 +170,12 @@ class Crawler(object):
             self.audio_download_path = analysis_config(config, "AUDIO_DOWNLOAD_PATH", "\\\\audio", CONFIG_ANALYSIS_MODE_PATH)
         else:
             self.audio_download_path = ""
+        # 是否需要下载文本内容
+        if self.is_download_content:
+            # 音频保存目录
+            self.content_download_path = analysis_config(config, "CONTENT_DOWNLOAD_PATH", "\\\\content", CONFIG_ANALYSIS_MODE_PATH)
+        else:
+            self.content_download_path = ""
 
         # 代理
         is_proxy = analysis_config(config, "IS_PROXY", 2, CONFIG_ANALYSIS_MODE_INTEGER)
@@ -299,6 +309,7 @@ class DownloadThread(threading.Thread):
         self.total_photo_count = 0
         self.total_video_count = 0
         self.total_audio_count = 0
+        self.total_content_count = 0
         self.temp_path_list = []
 
     # 检测主线程是否已经结束（外部中断）
