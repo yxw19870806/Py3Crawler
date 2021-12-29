@@ -70,10 +70,15 @@ def get_chapter_page(chapter_url):
     chapter_response = net.http_request(chapter_url, method="GET")
     result = {
         "content": "",  # 文章内容
+        "is_vip": False,  # 是否需要vip解锁
     }
     if chapter_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(chapter_response.status))
     chapter_response_content = chapter_response.data.decode(errors="ignore")
+    # 判断是否是vip解锁
+    if chapter_response_content.find("<i>这是VIP章节</i>需要订阅后才能阅读") >= 0:
+        result["is_vip"] = True
+        return result
     chapter_info_list_selector = pq(chapter_response_content).find(".read-content")
     if chapter_info_list_selector.length != 1:
         if chapter_response_content.find("<title>502 Bad Gateway</title>") >= 0:
@@ -180,12 +185,15 @@ class Download(crawler.DownloadThread):
             self.error("章节《%s》 %s解析失败，原因：%s" % (chapter_info["chapter_title"], chapter_info["chapter_url"], e.message))
             raise
 
+        if chapter_response["is_vip"]:
+            self.error("章节《%s》 %s需要vip才能解锁" % (chapter_info["chapter_title"], chapter_info["chapter_url"]))
+            return
+
         content_file_path = os.path.join(self.main_thread.content_download_path, self.display_name, "%s %s.txt" % (chapter_info["chapter_time_string"], chapter_info["chapter_title"]))
         file.write_file(chapter_response['content'], content_file_path)
         self.step("章节《%s》下载成功" % chapter_info["chapter_title"])
 
         # 章节内图片全部下载完毕
-        self.temp_path_list = []  # 临时目录设置清除
         self.total_content_count += 1  # 计数累加
         self.account_info[1] = chapter_info["chapter_id"]  # 设置存档记录
 
