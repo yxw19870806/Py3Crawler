@@ -145,7 +145,7 @@ def get_one_page_video(account_id, account_page_id, since_id):
 
 
 # 从视频播放页面中提取下载地址
-def get_video_url(video_play_url, error_count = 0):
+def get_video_url(video_play_url, error_count=0):
     video_url = ""
     # http://miaopai.com/show/Gmd7rwiNrc84z5h6S9DhjQ__.htm
     if video_play_url.find("miaopai.com/") >= 0:  # 秒拍
@@ -181,14 +181,14 @@ def get_video_url(video_play_url, error_count = 0):
             else:
                 video_url = tool.find_sub_string(video_play_response_content, 'flashvars="list=', '"')
             if not video_url:
-                if video_play_response_content.find("抱歉，网络繁忙") > 0: # https://video.weibo.com/show?fid=1034:15691c2fd85cb3986bcbc0fecc20f373
+                if video_play_response_content.find("抱歉，网络繁忙") > 0:  # https://video.weibo.com/show?fid=1034:15691c2fd85cb3986bcbc0fecc20f373
                     if error_count >= 5:
                         return video_url
                     log.step("视频%s播放页访问异常，重试" % video_play_url)
                     time.sleep(5)
                     error_count += 1
                     return get_video_url(video_play_url, error_count)
-                elif video_play_response_content.find("啊哦，此视频已被删除。") > 0: # http://video.weibo.com/show?fid=1034:14531c4838e14a8c3f2a3d35e33cab5e
+                elif video_play_response_content.find("啊哦，此视频已被删除。") > 0:  # http://video.weibo.com/show?fid=1034:14531c4838e14a8c3f2a3d35e33cab5e
                     video_url = ""
                     return video_url
                 raise crawler.CrawlerException("页面截取视频地址失败\n%s" % video_play_response_content)

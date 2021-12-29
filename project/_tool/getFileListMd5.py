@@ -75,7 +75,6 @@ class GetFileListMd5(crawler.Crawler):
                 file.write_file("%s\t%s" % (file_path, file_md5), self.save_data_path)
         log.step("已完成：" + dir_path)
 
-
     # 根据生产的md5文件查重并是删除
     def check_record_data(self):
         record_list = file.read_file(self.save_data_path, file.READ_FILE_TYPE_LINE)

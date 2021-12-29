@@ -174,7 +174,7 @@ class Download(crawler.DownloadThread):
         else:
             self.display_name = self.account_info[0]
         self.step("开始")
-        
+
     # 获取所有可下载日志
     def get_crawl_list(self):
         page_count = 1

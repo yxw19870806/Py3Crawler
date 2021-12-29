@@ -37,5 +37,6 @@ def main():
     temp_list = [save_data[key] for key in sorted(save_data.keys())]
     file.write_file(tool.list_to_string(temp_list), save_data_file_path, file.WRITE_FILE_TYPE_REPLACE)
 
+
 if __name__ == "__main__":
     main()

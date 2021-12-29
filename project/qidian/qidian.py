@@ -83,7 +83,7 @@ def get_chapter_page(chapter_url):
     if chapter_info_list_selector.length != 1:
         if chapter_response_content.find("<title>502 Bad Gateway</title>") >= 0:
             time.sleep(3)
-            return  get_chapter_page(chapter_url)
+            return get_chapter_page(chapter_url)
         raise crawler.CrawlerException("页面截取文章内容失败\n%s" % chapter_response_content)
     # 文章内容
     result["content"] = chapter_info_list_selector.text().strip()

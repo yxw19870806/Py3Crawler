@@ -54,5 +54,6 @@ def main():
             continue
         file.write_file("%s\t%s\t%s" % (account, account_index_response["account_info"], account_index_response["external_url"]), result_file_path)
 
+
 if __name__ == "__main__":
     main()
