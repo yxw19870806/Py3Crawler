@@ -8,6 +8,5 @@ email: hikaru870806@hotmail.com
 from common import portListenerEvent
 from common.tools.process import processControl
 
-
 if __name__ == "__main__":
     processControl.ProcessControl().send_code(portListenerEvent.PROCESS_STATUS_PAUSE)

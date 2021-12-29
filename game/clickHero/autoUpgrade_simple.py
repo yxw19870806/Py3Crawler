@@ -8,7 +8,6 @@ email: hikaru870806@hotmail.com
 import time
 from game.clickHero import clickerHeroes
 
-
 if __name__ == "__main__":
     ch = clickerHeroes.ClickerHeroes()
     while True:

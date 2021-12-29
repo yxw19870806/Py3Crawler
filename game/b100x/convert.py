@@ -7,7 +7,6 @@ email: hikaru870806@hotmail.com
 import os
 from common import *
 
-
 if __name__ == "__main__":
     attribute_list_file_path = os.path.join("attribute.txt")
     attribute_list = file.read_file(attribute_list_file_path).split("\t")

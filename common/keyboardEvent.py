@@ -7,6 +7,7 @@ email: hikaru870806@hotmail.com
 """
 import pythoncom
 import threading
+
 try:
     import PyHook3 as pyHook
 except ModuleNotFoundError:
