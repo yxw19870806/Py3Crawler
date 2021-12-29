@@ -77,6 +77,7 @@ def json_decode(json_string, default_value=None):
         pass
     return default_value
 
+
 # encode a json object to string
 def json_encode(json_obj, default_value=None):
     try:

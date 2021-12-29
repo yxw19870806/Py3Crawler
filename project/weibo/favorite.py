@@ -85,7 +85,7 @@ def get_one_page_favorite(page_count):
     # 最后一条feed是分页信息
     page_selector = children_selector.eq(children_selector.length - 1)
     # 判断是不是最后一页
-    page_count_find = re.findall("第(\d*)页",  page_selector.html())
+    page_count_find = re.findall("第(\d*)页", page_selector.html())
     if len(page_count_find) > 0:
         page_count_find = list(map(int, page_count_find))
         result["is_over"] = page_count >= max(page_count_find)

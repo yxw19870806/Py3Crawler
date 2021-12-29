@@ -121,7 +121,7 @@ def get_video_page(video_id):
         # 没有登录时默认使用英语
         video_play_response = net.http_request(video_play_url, method="GET", fields=query_data, header_list={"accept-language": "en"})
     result = {
-        "skip_reason": "", # 跳过原因
+        "skip_reason": "",  # 跳过原因
         "video_time": None,  # 视频上传时间
         "video_title": "",  # 视频标题
         "video_url": None,  # 视频地址

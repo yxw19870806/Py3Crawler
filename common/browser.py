@@ -9,6 +9,7 @@ import json
 import os
 import platform
 import sqlite3
+
 if platform.system() == "Windows":
     import win32crypt
 
@@ -20,7 +21,7 @@ except ImportError:
 BROWSER_TYPE_IE = 1
 BROWSER_TYPE_FIREFOX = 2
 BROWSER_TYPE_CHROME = 3
-BROWSER_TYPE_TEXT = 4 # 直接从文件里读取cookies
+BROWSER_TYPE_TEXT = 4  # 直接从文件里读取cookies
 
 
 # 根据浏览器和操作系统，返回浏览器程序文件所在的路径

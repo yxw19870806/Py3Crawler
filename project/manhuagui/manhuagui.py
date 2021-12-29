@@ -45,7 +45,7 @@ def get_comic_index_page(comic_id):
     if group_name_selector.length != group_chapter_list_selector.length:
         raise crawler.CrawlerException("页面截取章节数量异常\n%s" % index_response_content)
     for group_index in range(0, group_name_selector.length):
-        #　获取分组名字
+        # 　获取分组名字
         group_name = group_name_selector.eq(group_index).text().strip()
         if not group_name:
             raise crawler.CrawlerException("章节信息截取章节名失败\n%s" % group_name_selector.eq(group_index).html())

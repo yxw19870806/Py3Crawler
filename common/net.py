@@ -81,6 +81,7 @@ DOWNLOAD_REPLACE_IF_EXIST = False
 
 class ErrorResponse(object):
     """Default http_request() response object(exception return)"""
+
     def __init__(self, status=-1):
         self.status = status
         self.data = b''

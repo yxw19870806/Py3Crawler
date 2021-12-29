@@ -12,7 +12,7 @@ from game.steam.lib import madjoki, steam, steamdb
 def main():
     # 获取登录状态
     steam_class = steam.Steam(need_login=False)
-    
+
     steamdb.SteamDb()
 
     # 已删除的游戏

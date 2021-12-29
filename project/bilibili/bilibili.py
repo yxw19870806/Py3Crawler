@@ -16,11 +16,11 @@ COOKIE_INFO = {}
 IS_LOGIN = False
 EACH_PAGE_COUNT = 30
 
-
 string_table = 'fZodR9XQDSUm21yCkr6zBqiveYah8bt4xsWpHnJE7jL5VG3guMTKNPAwcF'
 id_index = [11, 10, 3, 8, 4, 6]
 xor = 177451812
 add = 8728348608
+
 
 # av id转bv id
 def av_id_2_bv_id(av_id):
@@ -324,7 +324,7 @@ def get_audio_info_page(audio_id):
 class BiliBili(crawler.Crawler):
     def __init__(self, **kwargs):
         global COOKIE_INFO
-        
+
         # 设置APP目录
         crawler.PROJECT_APP_PATH = os.path.abspath(os.path.dirname(__file__))
 
