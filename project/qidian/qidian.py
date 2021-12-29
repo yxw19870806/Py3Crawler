@@ -75,12 +75,15 @@ def get_chapter_page(chapter_url):
         raise crawler.CrawlerException(crawler.request_failre(chapter_response.status))
     chapter_response_content = chapter_response.data.decode(errors="ignore")
     chapter_info_list_selector = pq(chapter_response_content).find(".read-content")
-    if chapter_info_list_selector.length == 0:
+    if chapter_info_list_selector.length != 1:
+        if chapter_response_content.find("<title>502 Bad Gateway</title>") >= 0:
+            time.sleep(3)
+            return  get_chapter_page(chapter_url)
         raise crawler.CrawlerException("页面截取文章内容失败\n%s" % chapter_response_content)
     # 文章内容
     result["content"] = chapter_info_list_selector.text().strip()
     if not result["content"]:
-        raise crawler.CrawlerException("页面截取文章内容失败\n%s" % chapter_response_content)
+        raise crawler.CrawlerException("页面截取文章为空失败\n%s" % chapter_response_content)
     return result
 
 
