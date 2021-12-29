@@ -29,26 +29,44 @@ def get_book_index(book_id):
         raise crawler.CrawlerException("页面截取章节列表失败\n%s" % index_response_content)
     for chapter_index in range(0, chapter_info_list_selector.length):
         result_chapter_info = {
-            "chapter_url": None,
-            "chapter_title": "",
+            "chapter_url": None,  # 章节地址
+            "chapter_id": None,  # 章节id
+            "chapter_time": None,  # 章节发布时间
+            "chapter_time_string": None,  # 章节发布时间
+            "chapter_title": "",  # 章节标题
         }
         chapter_info_selector = chapter_info_list_selector.eq(chapter_index)
-        # 章节id
-        chapter_url = chapter_info_selector.find("a").attr("href")
-        result_chapter_info["chapter_id"] = chapter_url.rstrip("/").split("/")[-1]
-        if not crawler.is_integer(result_chapter_info["chapter_id"]):
-            raise crawler.CrawlerException("章节地址%s截取章节id失败" % chapter_url)
-        result_chapter_info["chapter_id"] = int(result_chapter_info["chapter_id"])
-        # 章节标题
+        # 获取章节地址
+        result_chapter_info["chapter_url"] = chapter_info_selector.find("a").attr("href")
+        if result_chapter_info["chapter_url"][:2] == "//":
+            result_chapter_info["chapter_url"] = "https:" + result_chapter_info["chapter_url"]
+        result_chapter_info["chapter_id"] = result_chapter_info["chapter_url"].rstrip("/").split("/")[-1]
+        if result_chapter_info["chapter_url"].find("//read.qidian.com") >= 0:
+            pass
+        elif result_chapter_info["chapter_url"].find("//vipreader.qidian.com/") >= 0:
+            if not crawler.is_integer(result_chapter_info["chapter_id"]):
+                raise crawler.CrawlerException("章节地址%s截取章节id失败" % result_chapter_info["chapter_url"])
+        else:
+            raise crawler.CrawlerException("未知的章节域名%s" % result_chapter_info["chapter_url"])
+        # 获取章节id
+        result_chapter_info["chapter_id"] = result_chapter_info["chapter_id"]
+        # 获取章节标题
         result_chapter_info["chapter_title"] = chapter_info_selector.find("a").html()
-        result["chapter_info_list"].append(result_chapter_info)
+        # 获取章节发布时间
+        result_chapter_info["chapter_time_string"] = tool.find_sub_string(chapter_info_selector.find("a").attr("alt"), "首发时间：", " 章节字数")
+        try:
+            result_chapter_info["chapter_time"] = int(time.mktime(time.strptime(result_chapter_info["chapter_time_string"], "%Y-%m-%d %H:%M:%S")))
+            result_chapter_info["chapter_time_string"] = result_chapter_info["chapter_time_string"].replace(":", "_")
+        except ValueError:
+            raise crawler.CrawlerException("日志时间格式不正确\n%s" % result_chapter_info["chapter_time_string"])
+        result["chapter_info_list"].insert(0, result_chapter_info)
     return result
 
 
 # 获取章节内容
-def get_chapter_page(book_id, chapter_id):
+def get_chapter_page(chapter_url):
     # https://book.qidian.com/info/1016397637/
-    chapter_url = "https://vipreader.qidian.com/chapter/%s/%s/" % (book_id, chapter_id)
+    # https://read.qidian.com/chapter/q2B9dFLoeqU3v1oFI-DX8Q2/yyg9pjNdd3y2uJcMpdsVgA2/
     chapter_response = net.http_request(chapter_url, method="GET")
     result = {
         "content": "",  # 文章内容
@@ -141,7 +159,7 @@ class Download(crawler.DownloadThread):
         # 寻找符合条件的章节
         for chapter_info in index_response["chapter_info_list"]:
             # 检查是否达到存档记录
-            if chapter_info["chapter_id"] > int(self.account_info[1]):
+            if chapter_info["chapter_id"] != self.account_info[1]:
                 chapter_info_list.append(chapter_info)
             else:
                 break
@@ -150,23 +168,23 @@ class Download(crawler.DownloadThread):
 
     # 解析单章节小说
     def crawl_chapter(self, chapter_info):
-        self.step("开始解析章节《%s》" % chapter_info["chapter_title"])
+        self.step("开始解析章节《%s》 %s" % (chapter_info["chapter_title"], chapter_info["chapter_url"]))
 
         # 获取指定小说章节
         try:
-            chapter_response = get_chapter_page(self.book_id, chapter_info["chapter_id"])
+            chapter_response = get_chapter_page(chapter_info["chapter_url"])
         except crawler.CrawlerException as e:
-            self.error("章节《%s》解析失败，原因：%s" % (chapter_info["chapter_title"], e.message))
+            self.error("章节《%s》 %s解析失败，原因：%s" % (chapter_info["chapter_title"], chapter_info["chapter_url"], e.message))
             raise
 
-        content_file_path = os.path.join(self.main_thread.content_download_path, self.display_name, "%010d %s.txt" % (chapter_info["chapter_id"], chapter_info["chapter_title"]))
-        save_file_return = file.write_file(chapter_response['content'], content_file_path)
-        self.step("章节《%s》下载成功" % chapter_info["chapter_id"])
+        content_file_path = os.path.join(self.main_thread.content_download_path, self.display_name, "%s %s.txt" % (chapter_info["chapter_time_string"], chapter_info["chapter_title"]))
+        file.write_file(chapter_response['content'], content_file_path)
+        self.step("章节《%s》下载成功" % chapter_info["chapter_title"])
 
         # 章节内图片全部下载完毕
         self.temp_path_list = []  # 临时目录设置清除
         self.total_content_count += 1  # 计数累加
-        self.account_info[1] = str(chapter_info["chapter_id"])  # 设置存档记录
+        self.account_info[1] = chapter_info["chapter_id"]  # 设置存档记录
 
     def run(self):
         try:
