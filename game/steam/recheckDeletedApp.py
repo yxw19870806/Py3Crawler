@@ -12,7 +12,7 @@ from game.steam.lib import steam
 def main():
     # 获取登录状态
     steam_class = steam.Steam(need_login=False)
-    
+
     # 已删除的游戏
     deleted_app_list = steam_class.load_deleted_app_list()
 

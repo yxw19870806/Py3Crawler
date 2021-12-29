@@ -12,10 +12,10 @@ import time
 from common import *
 from game.steam.lib import steam
 
-INCLUDE_GAME = True # 是否包含游戏
-INCLUDE_PACKAGE = True # 是否包含礼包(sub)
-INCLUDE_BUNDLE = True # 是否包含捆绑包(bundle)
-SKIP_RESTRICTED_GAME = True # 是否跳过Steam正在了解的游戏
+INCLUDE_GAME = True  # 是否包含游戏
+INCLUDE_PACKAGE = True  # 是否包含礼包(sub)
+INCLUDE_BUNDLE = True  # 是否包含捆绑包(bundle)
+SKIP_RESTRICTED_GAME = True  # 是否跳过Steam正在了解的游戏
 MIN_DISCOUNT_PERCENT = 75  # 显示折扣大等于这个数字的游戏
 MAX_DISCOUNT_PERCENT = 100  # 显示折扣大等于这个数字的游戏
 MAX_SELLING_PERCENT = 1  # 显示价格小等于这个数字的游戏
