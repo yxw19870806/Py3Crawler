@@ -260,7 +260,7 @@ class Download(crawler.DownloadThread):
     # 解析单个视频
     def crawl_video(self, video_info):
         self.step("开始解析视频%s" % video_info["video_id"])
-        
+
         # 获取指定视频信息
         try:
             video_response = get_video_page(video_info["video_id"])

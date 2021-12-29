@@ -549,7 +549,7 @@ class Download(crawler.DownloadThread):
                 if video_play_response["is_password"]:
                     self.error("日志视频 %s 需要密码，跳过" % post_url)
                     break
-                    
+
                 video_url = video_play_response["video_url"]
 
             # 第三方视频，跳过

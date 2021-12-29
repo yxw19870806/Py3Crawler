@@ -41,7 +41,7 @@ def get_one_page_blog(account_id, page_count):
         raise crawler.CrawlerException("页面截取日志列表失败\n%s" % blog_pagination_response_content)
     for blog_index in range(0, blog_list_selector.length):
         result_blog_info = {
-            "blog_id" : None,  # 日志id
+            "blog_id": None,  # 日志id
             "photo_url_list": [],  # 全部图片地址
         }
         blog_selector = blog_list_selector.eq(blog_index)
