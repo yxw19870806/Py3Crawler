@@ -13,14 +13,19 @@ from common import *
 from project.bilibili import bilibili
 
 
-def main():
-    # 初始化
-    bilibili_class = bilibili.BiliBili(extra_sys_config={crawler.SYS_NOT_CHECK_SAVE_DATA: True})
-    # GUI窗口
-    gui = tkinter.Tk()
-    gui.withdraw()
+class BiliBiliDownload(bilibili.BiliBili):
+    def __init__(self, **kwargs):
+        extra_sys_config = {
+            crawler.SYS_NOT_CHECK_SAVE_DATA: True
+        }
+        bilibili.BiliBili.__init__(self, extra_sys_config=extra_sys_config, **kwargs)
 
-    while True:
+        # GUI窗口
+        self.gui = tkinter.Tk()
+        self.gui.withdraw()
+
+    @staticmethod
+    def get_video_id_from_console():
         video_url = input("请输入bilibili视频地址：")
         lower_video_url = video_url.lower()
         video_id = None
@@ -35,19 +40,28 @@ def main():
             video_id = lower_video_url[2:]
         elif lower_video_url[:2] == "bv":
             video_id = bilibili.bv_id_2_av_id(video_url)
+        return video_id
+
+    def main(self):
+        while True:
+            self.download()
+
+    def download(self):
+        video_id = self.get_video_id_from_console()
         # 无效的视频地址
         if not crawler.is_integer(video_id):
             log.step("错误的视频地址，正确的地址格式如：https://www.bilibili.com/video/av123456")
-            continue
+            return
+
         # 访问视频播放页
         try:
             video_response = bilibili.get_video_page(video_id)
         except crawler.CrawlerException as e:
             log.error("解析视频下载地址失败，原因：%s" % e.message)
-            continue
+            return
         if video_response["is_private"]:
             log.step("视频需要登录才能访问，跳过")
-            continue
+            return
 
         if len(video_response["video_part_info_list"]) > 1:
             log.step("视频共获取%s个分段" % len(video_response["video_part_info_list"]))
@@ -59,7 +73,7 @@ def main():
                     log.step("视频第%s个分段已删除" % part_index)
                 else:
                     log.step("视频已删除")
-                continue
+                return
 
             video_title = video_response["video_title"]
             if len(video_response["video_part_info_list"]) > 1:
@@ -72,10 +86,10 @@ def main():
             log.step("请选择下载目录")
             # 选择下载目录
             options = {
-                "initialdir": bilibili_class.video_download_path,
+                "initialdir": self.video_download_path,
                 "initialfile": video_name,
                 "filetypes": [("all", "*")],
-                "parent": gui,
+                "parent": self.gui,
             }
             file_path = tkinter.filedialog.asksaveasfilename(**options)
             if not file_path:
@@ -109,4 +123,4 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    BiliBiliDownload().main()
