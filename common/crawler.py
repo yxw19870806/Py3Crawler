@@ -78,15 +78,15 @@ class Crawler(object):
         # 额外初始化配置（直接通过实例化中传入，可覆盖子类__init__方法传递的sys_config参数）
         if "extra_sys_config" in kwargs and isinstance(kwargs["extra_sys_config"], dict):
             sys_config.update(kwargs["extra_sys_config"])
-        sys_download_photo = SYS_DOWNLOAD_PHOTO in sys_config
-        sys_download_video = SYS_DOWNLOAD_VIDEO in sys_config
-        sys_download_audio = SYS_DOWNLOAD_AUDIO in sys_config
-        sys_download_content = SYS_DOWNLOAD_CONTENT in sys_config
-        sys_set_proxy = SYS_SET_PROXY in sys_config
-        sys_get_cookie = SYS_GET_COOKIE in sys_config
-        sys_not_check_save_data = SYS_NOT_CHECK_SAVE_DATA in sys_config
-        sys_not_download = SYS_NOT_DOWNLOAD in sys_config
-
+        sys_download_photo = SYS_DOWNLOAD_PHOTO in sys_config and sys_config[SYS_DOWNLOAD_PHOTO]
+        sys_download_video = SYS_DOWNLOAD_VIDEO in sys_config and sys_config[SYS_DOWNLOAD_VIDEO]
+        sys_download_audio = SYS_DOWNLOAD_AUDIO in sys_config and sys_config[SYS_DOWNLOAD_AUDIO]
+        sys_download_content = SYS_DOWNLOAD_CONTENT in sys_config and sys_config[SYS_DOWNLOAD_CONTENT]
+        sys_set_proxy = SYS_SET_PROXY in sys_config and sys_config[SYS_SET_PROXY]
+        sys_get_cookie = SYS_GET_COOKIE in sys_config and sys_config[SYS_GET_COOKIE]
+        sys_not_check_save_data = SYS_NOT_CHECK_SAVE_DATA in sys_config and sys_config[SYS_NOT_CHECK_SAVE_DATA]
+        sys_not_download = SYS_NOT_DOWNLOAD in sys_config and sys_config[SYS_NOT_DOWNLOAD]
+        
         # exe程序
         if tool.IS_EXECUTABLE:
             application_path = os.path.dirname(sys.executable)
@@ -119,10 +119,10 @@ class Crawler(object):
         self.is_download_photo = analysis_config(config, "IS_DOWNLOAD_PHOTO", True, CONFIG_ANALYSIS_MODE_BOOLEAN) and sys_download_photo
         self.is_download_video = analysis_config(config, "IS_DOWNLOAD_VIDEO", True, CONFIG_ANALYSIS_MODE_BOOLEAN) and sys_download_video
         self.is_download_audio = analysis_config(config, "IS_DOWNLOAD_AUDIO", True, CONFIG_ANALYSIS_MODE_BOOLEAN) and sys_download_audio
-        self.is_download_content = analysis_config(config, "IS_DOWNLOAD_CONTENT", True, CONFIG_ANALYSIS_MODE_BOOLEAN) and sys_download_audio
+        self.is_download_content = analysis_config(config, "IS_DOWNLOAD_CONTENT", True, CONFIG_ANALYSIS_MODE_BOOLEAN) and sys_download_content
 
         if not sys_not_download and not self.is_download_photo and not self.is_download_video and not self.is_download_audio and not self.is_download_content:
-            if sys_download_photo or sys_download_video or sys_download_audio:
+            if sys_download_photo or sys_download_video or sys_download_audio or sys_download_content:
                 output.print_msg("所有支持的下载都没有开启，请检查配置！")
                 tool.process_exit()
                 return
@@ -177,6 +177,9 @@ class Crawler(object):
         else:
             self.content_download_path = ""
 
+        # 是否在下载失败后退出线程的运行
+        self.is_thread_exit_after_download_failure = analysis_config(config, "IS_THREAD_EXIT_AFTER_DOWNLOAD_FAILURE", "\\\\content", CONFIG_ANALYSIS_MODE_BOOLEAN)
+
         # 代理
         is_proxy = analysis_config(config, "IS_PROXY", 2, CONFIG_ANALYSIS_MODE_INTEGER)
         if is_proxy == 1 or (is_proxy == 2 and sys_set_proxy):
@@ -220,7 +223,7 @@ class Crawler(object):
         self.thread_semaphore = threading.Semaphore(self.thread_count)  # 线程总数信号量
 
         # 启用线程监控是否需要暂停其他下载线程
-        if analysis_config(config, "IS_PORT_LISTENER_ENVET", False, CONFIG_ANALYSIS_MODE_BOOLEAN):
+        if analysis_config(config, "IS_PORT_LISTENER_EVENT", False, CONFIG_ANALYSIS_MODE_BOOLEAN):
             listener_event_bind = {}
             # 暂停进程
             listener_event_bind[str(portListenerEvent.PROCESS_STATUS_PAUSE)] = net.pause_request
@@ -322,6 +325,15 @@ class DownloadThread(threading.Thread):
     def notify_main_thread(self):
         if isinstance(self.main_thread, Crawler):
             self.main_thread.thread_semaphore.release()
+
+    # 当下载失败，检测是否要退出线程
+    def check_thread_exit_after_download_failure(self, is_process_exit=True):
+        if self.main_thread.is_thread_exit_after_download_failure:
+            if is_process_exit:
+                tool.process_exit()
+            else:
+                return True
+        return False
 
     # 中途退出，删除临时文件/目录
     def clean_temp_path(self):

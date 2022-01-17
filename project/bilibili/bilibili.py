@@ -43,6 +43,8 @@ def bv_id_2_av_id(bv_id):
 
 # 检测是否已登录
 def check_login():
+    if not COOKIE_INFO:
+        return False
     api_url = "https://api.bilibili.com/x/member/web/account"
     api_response = net.http_request(api_url, method="GET", cookies_list=COOKIE_INFO, json_decode=True)
     if api_response.status == net.HTTP_RETURN_CODE_SUCCEED:

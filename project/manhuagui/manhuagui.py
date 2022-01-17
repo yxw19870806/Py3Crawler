@@ -12,6 +12,7 @@ import time
 import traceback
 from pyquery import PyQuery as pq
 from selenium import webdriver
+from selenium.webdriver.common.by import By
 from selenium.common.exceptions import WebDriverException
 from common import *
 
@@ -104,7 +105,7 @@ def get_chapter_page(comic_id, chapter_id):
         else:
             raise
     chrome.get("file:///" + os.path.realpath(cache_html_path))
-    result_photo_list = chrome.find_element_by_id("result").text
+    result_photo_list = chrome.find_element(by=By.ID, value="result").text
     chrome.quit()
     photo_list = result_photo_list.split("\n")
     for photo_url in photo_list:

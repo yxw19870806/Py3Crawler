@@ -11,6 +11,7 @@ import time
 import traceback
 from common import *
 from selenium import webdriver
+from selenium.webdriver.common.by import By
 
 EACH_PAGE_VIDEO_COUNT = 21
 CACHE_FILE_PATH = os.path.join(os.path.dirname(__file__), "cache")
@@ -50,7 +51,7 @@ def get_account_index_page(account_id):
     chrome_options.add_argument("user-agent=" + USER_AGENT)  # 使用指定UA
     chrome = webdriver.Chrome(executable_path=crawler.CHROME_WEBDRIVER_PATH, options=chrome_options)
     chrome.get("file:///" + os.path.realpath(cache_html))
-    signature = chrome.find_element_by_id("result").text
+    signature = chrome.find_element(by=By.ID, value="result").text
     chrome.quit()
     if not signature:
         raise crawler.CrawlerException("signature参数计算失败\n%s" % account_index_response_content)

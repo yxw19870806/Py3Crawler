@@ -13,17 +13,17 @@ from common import *
 from project.ximalaya import ximalaya
 
 
-class XiMaLaYaAlbum(crawler.Crawler):
+class XiMaLaYaAlbum(ximalaya.XiMaLaYa):
     def __init__(self, **kwargs):
         # 设置APP目录
         crawler.PROJECT_APP_PATH = os.path.abspath(os.path.dirname(__file__))
 
         # 初始化参数
         sys_config = {
-            crawler.SYS_DOWNLOAD_AUDIO: True,
+            crawler.SYS_NOT_CHECK_SAVE_DATA: False,
             crawler.SYS_APP_CONFIG_PATH: os.path.join(crawler.PROJECT_APP_PATH, "album.ini"),
         }
-        crawler.Crawler.__init__(self, sys_config, **kwargs)
+        ximalaya.XiMaLaYa.__init__(self, sys_config, **kwargs)
 
         # 解析存档文件
         # album_id  last_audio_id
@@ -126,9 +126,10 @@ class Download(crawler.DownloadThread):
             self.error("音频%s解析失败，原因：%s" % (audio_info["audio_id"], e.message))
             raise
 
-        # if audio_play_response["is_paid"]:
-        #     self.error("音频%s需要购买" % audio_info["audio_id"])
-        #     raise crawler.CrawlerException()
+        if audio_play_response["is_video"]:
+            self.error("音频%s类型是视频" % audio_info["audio_id"])
+            self.account_info[1] = str(audio_info["audio_id"])  # 设置存档记录
+            return
 
         audio_url = audio_play_response["audio_url"]
         self.step("开始下载音频%s《%s》 %s" % (audio_info["audio_id"], audio_info["audio_title"], audio_url))
