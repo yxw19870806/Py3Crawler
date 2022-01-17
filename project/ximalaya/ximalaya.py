@@ -14,10 +14,21 @@ from selenium import webdriver
 from selenium.webdriver.common.by import By
 from common import *
 
+COOKIE_INFO = {}
 EACH_PAGE_AUDIO_COUNT = 30  # 每次请求获取的视频数量
 CACHE_FILE_PATH = os.path.join(os.path.dirname(__file__), "cache")
 TEMPLATE_HTML_PATH = os.path.join(os.path.dirname(__file__), "template", "template.html")
 
+
+# 判断是否已登录
+def check_login():
+    if not COOKIE_INFO:
+        return False
+    api_url = "https://www.ximalaya.com/revision/main/getCurrentUser"
+    api_response = net.http_request(api_url, method="GET", cookies_list=COOKIE_INFO, json_decode=True)
+    if api_response.status == net.HTTP_RETURN_CODE_SUCCEED:
+        return crawler.get_json_value(api_response.json_data, "ret", type_check=int, default_value=0) == 200
+    return False
 
 # 获取指定页数的全部音频信息
 def get_one_page_album(album_id, page_count):
@@ -159,3 +170,37 @@ def get_audio_info_page(audio_id):
         raise crawler.CrawlerException("url解密失败\n%s" % decrypt_url)
     result["audio_url"] = audio_url
     return result
+
+
+class XiMaLaYa(crawler.Crawler):
+    def __init__(self, sys_config, **kwargs):
+        global COOKIE_INFO, IS_LOGIN
+        # 设置APP目录
+        crawler.PROJECT_APP_PATH = os.path.abspath(os.path.dirname(__file__))
+
+        # 初始化参数
+        default_sys_config = {
+            crawler.SYS_NOT_CHECK_SAVE_DATA: True,
+            crawler.SYS_DOWNLOAD_AUDIO: True,
+            crawler.SYS_GET_COOKIE: ("ximalaya.com",),
+        }
+        default_sys_config.update(sys_config)
+        crawler.Crawler.__init__(self, default_sys_config, **kwargs)
+
+        # 设置全局变量，供子线程调用
+        COOKIE_INFO = self.cookie_value
+        
+        # 检测登录状态
+        if check_login():
+            IS_LOGIN = True
+        else:
+            while True:
+                input_str = input(crawler.get_time() + " 没有检测到账号登录状态，可能无法解析需要登录才能查看的音频，继续程序(C)ontinue？或者退出程序(E)xit？:")
+                input_str = input_str.lower()
+                if input_str in ["e", "exit"]:
+                    tool.process_exit()
+                elif input_str in ["c", "continue"]:
+                    break
+
+    def main(self):
+        pass
