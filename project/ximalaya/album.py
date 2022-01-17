@@ -13,17 +13,17 @@ from common import *
 from project.ximalaya import ximalaya
 
 
-class XiMaLaYaAlbum(crawler.Crawler):
+class XiMaLaYaAlbum(ximalaya.XiMaLaYa):
     def __init__(self, **kwargs):
         # 设置APP目录
         crawler.PROJECT_APP_PATH = os.path.abspath(os.path.dirname(__file__))
 
         # 初始化参数
         sys_config = {
-            crawler.SYS_DOWNLOAD_AUDIO: True,
+            crawler.SYS_NOT_CHECK_SAVE_DATA: False,
             crawler.SYS_APP_CONFIG_PATH: os.path.join(crawler.PROJECT_APP_PATH, "album.ini"),
         }
-        crawler.Crawler.__init__(self, sys_config, **kwargs)
+        ximalaya.XiMaLaYa.__init__(self, sys_config, **kwargs)
 
         # 解析存档文件
         # album_id  last_audio_id
