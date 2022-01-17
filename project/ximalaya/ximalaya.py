@@ -147,7 +147,7 @@ def get_audio_info_page(audio_id):
         result["audio_url"] = crawler.get_json_value(audio_info_response.json_data, "data", "src", type_check=str)
         return result
     except:
-        crawler.get_json_value(audio_info_response.json_data, "data", "hasBuy", type_check=bool, value_check=False)
+        crawler.get_json_value(audio_info_response.json_data, "data", "hasBuy", type_check=bool, value_check=True)
 
     # 需要购买或者vip才能解锁的音频
     vip_audio_info_url = "https://mobile.ximalaya.com/mobile-playpage/track/v3/baseInfo/1642399208220"
