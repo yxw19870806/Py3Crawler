@@ -177,6 +177,9 @@ class Crawler(object):
         else:
             self.content_download_path = ""
 
+        # 是否在下载失败后退出线程的运行
+        self.is_thread_exit_after_download_failure = analysis_config(config, "IS_THREAD_EXIT_AFTER_DOWNLOAD_FAILURE", "\\\\content", CONFIG_ANALYSIS_MODE_BOOLEAN)
+
         # 代理
         is_proxy = analysis_config(config, "IS_PROXY", 2, CONFIG_ANALYSIS_MODE_INTEGER)
         if is_proxy == 1 or (is_proxy == 2 and sys_set_proxy):
@@ -322,6 +325,15 @@ class DownloadThread(threading.Thread):
     def notify_main_thread(self):
         if isinstance(self.main_thread, Crawler):
             self.main_thread.thread_semaphore.release()
+
+    # 当下载失败，检测是否要退出线程
+    def check_thread_exit_after_download_failure(self, is_process_exit=True):
+        if self.main_thread.is_thread_exit_after_download_failure:
+            if is_process_exit:
+                tool.process_exit()
+            else:
+                return True
+        return False
 
     # 中途退出，删除临时文件/目录
     def clean_temp_path(self):
