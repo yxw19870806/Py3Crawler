@@ -111,6 +111,7 @@ def get_audio_info_page(audio_id):
         "audio_title": "",  # 音频标题
         "audio_url": None,  # 音频地址
         "is_delete": False,  # 是否已删除
+        "is_video": False,  # 是否是视频
     }
     audio_simple_info_url = "https://www.ximalaya.com/revision/track/simple"
     query_data = {
@@ -128,6 +129,10 @@ def get_audio_info_page(audio_id):
         raise crawler.CrawlerException("音频简易信息 ret返回值不正确\n%s" % audio_simple_info_response.json_data)
     # 获取音频标题
     result["audio_title"] = crawler.get_json_value(audio_simple_info_response.json_data, "data", "trackInfo", "title", type_check=str)
+    # 判断是否是视频
+    result["is_video"] = crawler.get_json_value(audio_simple_info_response.json_data, "data", "trackInfo", "isVideo", type_check=bool)
+    if result["is_video"]:
+        return result
 
     audio_info_url = "https://www.ximalaya.com/revision/play/v1/audio"
     query_data = {
