@@ -7,11 +7,16 @@ email: hikaru870806@hotmail.com
 如有问题或建议请联系
 """
 import math
+import os
 import random
 import time
+from selenium import webdriver
+from selenium.webdriver.common.by import By
 from common import *
 
 EACH_PAGE_AUDIO_COUNT = 30  # 每次请求获取的视频数量
+CACHE_FILE_PATH = os.path.join(os.path.dirname(__file__), "cache")
+TEMPLATE_HTML_PATH = os.path.join(os.path.dirname(__file__), "template", "template.html")
 
 
 # 获取指定页数的全部音频信息
@@ -122,5 +127,35 @@ def get_audio_info_page(audio_id):
     if audio_info_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException("音频详细信息" + crawler.request_failre(audio_info_response.status))
     # 获取音频地址
-    result["audio_url"] = crawler.get_json_value(audio_info_response.json_data, "data", "src", type_check=str)
+    try:
+        result["audio_url"] = crawler.get_json_value(audio_info_response.json_data, "data", "src", type_check=str)
+        return result
+    except:
+        crawler.get_json_value(audio_info_response.json_data, "data", "hasBuy", type_check=bool, value_check=False)
+
+    # 需要购买或者vip才能解锁的音频
+    vip_audio_info_url = "https://mobile.ximalaya.com/mobile-playpage/track/v3/baseInfo/1642399208220"
+    query_data = {
+        "device": "web",
+        "trackId": audio_id,
+    }
+    vip_audio_info_response = net.http_request(vip_audio_info_url, fields=query_data, method="GET", json_decode=True)
+    if vip_audio_info_response.status != net.HTTP_RETURN_CODE_SUCCEED:
+        raise crawler.CrawlerException("vip音频详细信息" + crawler.request_failre(vip_audio_info_response.status))
+    decrypt_url = crawler.get_json_value(vip_audio_info_response.json_data, "trackInfo", "playUrlList", 0, "url", type_check=str)
+    # 读取模板并替换相关参数
+    template_html = file.read_file(TEMPLATE_HTML_PATH)
+    template_html = template_html.replace("%%URL%%", decrypt_url)
+    cache_html = os.path.join(CACHE_FILE_PATH, "%s.html" % audio_id)
+    file.write_file(template_html, cache_html, file.WRITE_FILE_TYPE_REPLACE)
+    # 使用喜马拉雅的加密JS方法解密url地址
+    chrome_options = webdriver.ChromeOptions()
+    chrome_options.headless = True  # 不打开浏览器
+    chrome = webdriver.Chrome(executable_path=crawler.CHROME_WEBDRIVER_PATH, options=chrome_options)
+    chrome.get("file:///" + os.path.realpath(cache_html))
+    audio_url = chrome.find_element(by=By.ID, value="result").get_attribute('value')
+    chrome.quit()
+    if not audio_url:
+        raise crawler.CrawlerException("url解密失败\n%s" % decrypt_url)
+    result["audio_url"] = audio_url
     return result
