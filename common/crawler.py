@@ -119,10 +119,10 @@ class Crawler(object):
         self.is_download_photo = analysis_config(config, "IS_DOWNLOAD_PHOTO", True, CONFIG_ANALYSIS_MODE_BOOLEAN) and sys_download_photo
         self.is_download_video = analysis_config(config, "IS_DOWNLOAD_VIDEO", True, CONFIG_ANALYSIS_MODE_BOOLEAN) and sys_download_video
         self.is_download_audio = analysis_config(config, "IS_DOWNLOAD_AUDIO", True, CONFIG_ANALYSIS_MODE_BOOLEAN) and sys_download_audio
-        self.is_download_content = analysis_config(config, "IS_DOWNLOAD_CONTENT", True, CONFIG_ANALYSIS_MODE_BOOLEAN) and sys_download_audio
+        self.is_download_content = analysis_config(config, "IS_DOWNLOAD_CONTENT", True, CONFIG_ANALYSIS_MODE_BOOLEAN) and sys_download_content
 
         if not sys_not_download and not self.is_download_photo and not self.is_download_video and not self.is_download_audio and not self.is_download_content:
-            if sys_download_photo or sys_download_video or sys_download_audio:
+            if sys_download_photo or sys_download_video or sys_download_audio or sys_download_content:
                 output.print_msg("所有支持的下载都没有开启，请检查配置！")
                 tool.process_exit()
                 return
