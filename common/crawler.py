@@ -78,15 +78,15 @@ class Crawler(object):
         # 额外初始化配置（直接通过实例化中传入，可覆盖子类__init__方法传递的sys_config参数）
         if "extra_sys_config" in kwargs and isinstance(kwargs["extra_sys_config"], dict):
             sys_config.update(kwargs["extra_sys_config"])
-        sys_download_photo = SYS_DOWNLOAD_PHOTO in sys_config
-        sys_download_video = SYS_DOWNLOAD_VIDEO in sys_config
-        sys_download_audio = SYS_DOWNLOAD_AUDIO in sys_config
-        sys_download_content = SYS_DOWNLOAD_CONTENT in sys_config
-        sys_set_proxy = SYS_SET_PROXY in sys_config
-        sys_get_cookie = SYS_GET_COOKIE in sys_config
-        sys_not_check_save_data = SYS_NOT_CHECK_SAVE_DATA in sys_config
-        sys_not_download = SYS_NOT_DOWNLOAD in sys_config
-
+        sys_download_photo = SYS_DOWNLOAD_PHOTO in sys_config and sys_config[SYS_DOWNLOAD_PHOTO]
+        sys_download_video = SYS_DOWNLOAD_VIDEO in sys_config and sys_config[SYS_DOWNLOAD_VIDEO]
+        sys_download_audio = SYS_DOWNLOAD_AUDIO in sys_config and sys_config[SYS_DOWNLOAD_AUDIO]
+        sys_download_content = SYS_DOWNLOAD_CONTENT in sys_config and sys_config[SYS_DOWNLOAD_CONTENT]
+        sys_set_proxy = SYS_SET_PROXY in sys_config and sys_config[SYS_SET_PROXY]
+        sys_get_cookie = SYS_GET_COOKIE in sys_config and sys_config[SYS_GET_COOKIE]
+        sys_not_check_save_data = SYS_NOT_CHECK_SAVE_DATA in sys_config and sys_config[SYS_NOT_CHECK_SAVE_DATA]
+        sys_not_download = SYS_NOT_DOWNLOAD in sys_config and sys_config[SYS_NOT_DOWNLOAD]
+        
         # exe程序
         if tool.IS_EXECUTABLE:
             application_path = os.path.dirname(sys.executable)
