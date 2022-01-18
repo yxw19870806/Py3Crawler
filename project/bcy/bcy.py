@@ -237,61 +237,68 @@ class Download(crawler.DownloadThread):
             raise
 
         # 图片
-        photo_index = 1
         if self.main_thread.is_download_photo:
-            self.trace("作品%s解析的全部图片：%s" % (album_id, album_response["photo_url_list"]))
-            self.step("作品%s解析获取%s张图片" % (album_id, len(album_response["photo_url_list"])))
-
-            album_path = os.path.join(self.main_thread.photo_download_path, self.display_name, str(album_id))
-            # 设置临时目录
-            self.temp_path_list.append(album_path)
-            for photo_url in album_response["photo_url_list"]:
-                self.main_thread_check()  # 检测主线程运行状态
-                # 禁用指定分辨率
-                self.step("作品%s开始下载第%s张图片 %s" % (album_id, photo_index, photo_url))
-
-                file_type = net.get_file_type(photo_url, "jpg")
-                if file_type == 'image':
-                    file_type = "jpg"
-                file_path = os.path.join(album_path, "%03d.%s" % (photo_index, file_type))
-                for retry_count in range(0, 10):
-                    save_file_return = net.save_net_file(photo_url, file_path)
-                    if save_file_return["status"] == 1:
-                        self.step("作品%s第%s张图片下载成功" % (album_id, photo_index))
-                    else:
-                        # 560报错，重新下载
-                        if save_file_return["code"] == 404 and retry_count < 4:
-                            log.step("图片 %s 访问异常，重试" % photo_url)
-                            time.sleep(5)
-                            continue
-                        self.error("作品%s第%s张图片 %s，下载失败，原因：%s" % (album_id, photo_index, photo_url, crawler.download_failre(save_file_return["code"])))
-                    photo_index += 1
-                    break
+            self.crawl_photo(album_id, album_response["photo_url_list"])
 
         # 视频
-        video_index = 1
         if self.main_thread.is_download_video and album_response["video_id"] is not None:
-            self.step("开始解析作品%s的视频" % album_response["video_id"])
-            try:
-                video_response = get_album_page_by_selenium(album_id)
-            except crawler.CrawlerException as e:
-                self.error("作品%s的视频解析失败，原因：%s" % (album_id, e.message))
-                raise
-
-            self.step("作品%s开始下载视频 %s" % (album_id, video_response["video_url"]))
-
-            file_path = os.path.join(self.main_thread.photo_download_path, self.display_name, "%s.%s" % (album_id, video_response["video_type"]))
-            save_file_return = net.save_net_file(video_response["video_url"], file_path)
-            if save_file_return["status"] == 1:
-                self.step("作品%s视频下载成功" % album_id)
-            else:
-                self.error("作品%s视频 %s，下载失败，原因：%s" % (album_id, video_response["video_url"], crawler.download_failre(save_file_return["code"])))
+            self.crawl_video(album_id)
 
         # 作品内图片下全部载完毕
         self.temp_path_list = []  # 临时目录设置清除
-        self.total_photo_count += photo_index - 1  # 计数累加
-        self.total_video_count += video_index - 1  # 计数累加
         self.account_info[1] = str(album_id)  # 设置存档记录
+
+    def crawl_photo(self, album_id, photo_url_list):
+        self.trace("作品%s解析的全部图片：%s" % (album_id, photo_url_list))
+        self.step("作品%s解析获取%s张图片" % (album_id, len(photo_url_list)))
+
+        album_path = os.path.join(self.main_thread.photo_download_path, self.display_name, str(album_id))
+        # 设置临时目录
+        self.temp_path_list.append(album_path)
+        photo_index = 1
+        for photo_url in photo_url_list:
+            self.main_thread_check()  # 检测主线程运行状态
+            # 禁用指定分辨率
+            self.step("作品%s开始下载第%s张图片 %s" % (album_id, photo_index, photo_url))
+
+            file_type = net.get_file_type(photo_url, "jpg")
+            if file_type == 'image':
+                file_type = "jpg"
+            file_path = os.path.join(album_path, "%03d.%s" % (photo_index, file_type))
+            for retry_count in range(0, 10):
+                save_file_return = net.save_net_file(photo_url, file_path)
+                if save_file_return["status"] == 1:
+                    self.total_photo_count += 1  # 计数累加
+                    self.step("作品%s第%s张图片下载成功" % (album_id, photo_index))
+                else:
+                    # 560报错，重新下载
+                    if save_file_return["code"] == 404 and retry_count < 4:
+                        log.step("图片 %s 访问异常，重试" % photo_url)
+                        time.sleep(5)
+                        continue
+                    self.error("作品%s第%s张图片 %s，下载失败，原因：%s" % (album_id, photo_index, photo_url, crawler.download_failre(save_file_return["code"])))
+                    self.check_thread_exit_after_download_failure()
+                photo_index += 1
+                break
+
+    def crawl_video(self, album_id):
+        self.step("开始解析作品%s的视频" % album_id)
+        try:
+            video_response = get_album_page_by_selenium(album_id)
+        except crawler.CrawlerException as e:
+            self.error("作品%s的视频解析失败，原因：%s" % (album_id, e.message))
+            raise
+
+        self.step("作品%s开始下载视频 %s" % (album_id, video_response["video_url"]))
+
+        file_path = os.path.join(self.main_thread.photo_download_path, self.display_name, "%s.%s" % (album_id, video_response["video_type"]))
+        save_file_return = net.save_net_file(video_response["video_url"], file_path)
+        if save_file_return["status"] == 1:
+            self.total_video_count += 1  # 计数累加
+            self.step("作品%s视频下载成功" % album_id)
+        else:
+            self.error("作品%s视频 %s，下载失败，原因：%s" % (album_id, video_response["video_url"], crawler.download_failre(save_file_return["code"])))
+            self.check_thread_exit_after_download_failure()
 
     def run(self):
         try:
