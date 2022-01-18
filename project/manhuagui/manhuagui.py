@@ -91,9 +91,8 @@ def get_chapter_page(comic_id, chapter_id):
         raise crawler.CrawlerException("页面截取脚本代码失败\n%s" % chapter_response_content)
     template_html = file.read_file(TEMPLATE_HTML_PATH)
     template_html = template_html.replace("%%SCRIPT_CODE%%", script_code)
-    cache_html_path = os.path.join(CACHE_FILE_PATH, "%s.html" % comic_id)
+    cache_html_path = os.path.realpath(os.path.join(CACHE_FILE_PATH, "%s.html" % comic_id))
     file.write_file(template_html, cache_html_path, file.WRITE_FILE_TYPE_REPLACE)
-    # 使用抖音的加密JS方法算出signature的值
     chrome_options = webdriver.ChromeOptions()
     chrome_options.headless = True  # 不打开浏览器
     try:
@@ -104,9 +103,10 @@ def get_chapter_page(comic_id, chapter_id):
             return get_chapter_page(comic_id, chapter_id)
         else:
             raise
-    chrome.get("file:///" + os.path.realpath(cache_html_path))
+    chrome.get("file:///" + cache_html_path)
     result_photo_list = chrome.find_element(by=By.ID, value="result").text
     chrome.quit()
+    path.delete_dir_or_file(cache_html_path)
     photo_list = result_photo_list.split("\n")
     for photo_url in photo_list:
         result["photo_url_list"].append("https://i.hamreus.com" + photo_url)
@@ -157,6 +157,9 @@ class ManHuaGui(crawler.Crawler):
 
         # 重新排序保存存档文件
         crawler.rewrite_save_file(self.temp_save_data_path, self.save_data_path)
+
+        # 删除临时缓存目录
+        path.delete_dir_or_file(CACHE_FILE_PATH)
 
         log.step("全部下载完毕，耗时%s秒，共计图片%s张" % (self.get_run_time(), self.total_photo_count))
 
