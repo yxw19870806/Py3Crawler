@@ -4,6 +4,9 @@ cd /d %~dp0
 echo update pip
 python.exe -m pip install --upgrade pip
 
+echo install lzstring
+pip.exe install lzstring
+
 echo install Pillow
 pip.exe install Pillow
 
