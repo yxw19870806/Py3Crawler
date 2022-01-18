@@ -390,12 +390,13 @@ class Download(crawler.DownloadThread):
                 photo_file_path = os.path.join(self.main_thread.photo_download_path, self.account_name, "%04d.%s" % (photo_index, net.get_file_type(photo_url)))
                 save_file_return = net.save_net_file(photo_url, photo_file_path)
                 if save_file_return["status"] == 1:
-                    # 设置临时目录
-                    self.temp_path_list.append(photo_file_path)
+                    self.temp_path_list.append(photo_file_path)  # 设置临时目录
+                    self.total_photo_count += 1  # 计数累加
                     self.step("第%s张图片下载成功" % photo_index)
-                    photo_index += 1
                 else:
                     self.error("第%s张图片 %s 下载失败，原因：%s" % (photo_index, photo_url, crawler.download_failre(save_file_return["code"])))
+                    self.check_thread_exit_after_download_failure()
+                photo_index += 1
 
         # 视频下载
         video_index = int(self.account_info[3]) + 1
@@ -419,17 +420,16 @@ class Download(crawler.DownloadThread):
                 video_file_path = os.path.join(self.main_thread.video_download_path, self.account_name, "%04d.%s" % (video_index, net.get_file_type(video_url)))
                 save_file_return = net.save_net_file(video_url, video_file_path)
                 if save_file_return["status"] == 1:
-                    # 设置临时目录
-                    self.temp_path_list.append(video_file_path)
+                    self.temp_path_list.append(video_file_path)  # 设置临时目录
+                    self.total_video_count += 1  # 计数累加
                     self.step("第%s个视频下载成功" % video_index)
-                    video_index += 1
                 else:
                     self.error("第%s个视频 %s 下载失败，原因：%s" % (video_index, video_url, crawler.download_failre(save_file_return["code"])))
+                    self.check_thread_exit_after_download_failure()
+                video_index += 1
 
         # 媒体内图片和视频全部下载完毕
         self.temp_path_list = []  # 临时目录设置清除
-        self.total_photo_count += (photo_index - 1) - int(self.account_info[2])  # 计数累加
-        self.total_video_count += (video_index - 1) - int(self.account_info[3])  # 计数累加
         self.account_info[2] = str(photo_index - 1)  # 设置存档记录
         self.account_info[3] = str(video_index - 1)  # 设置存档记录
         self.account_info[4] = str(media_info["media_time"])
