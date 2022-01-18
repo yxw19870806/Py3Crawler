@@ -205,14 +205,15 @@ class Download(crawler.DownloadThread):
             photo_file_path = os.path.join(chapter_path, "%03d.%s" % (photo_index, net.get_file_type(photo_url)))
             save_file_return = net.save_net_file(photo_url, photo_file_path, header_list={"Referer": "https://m.dmzj.com/"})
             if save_file_return["status"] == 1:
+                self.total_photo_count += 1  # 计数累加
                 self.step("漫画%s 《%s》第%s张图片下载成功" % (comic_info["ep_id"], comic_info["ep_name"], photo_index))
-                photo_index += 1
             else:
                 self.error("漫画%s 《%s》第%s张图片 %s 下载失败，原因：%s" % (comic_info["ep_id"], comic_info["ep_name"], photo_index, photo_url, crawler.download_failre(save_file_return["code"])))
+                self.check_thread_exit_after_download_failure()
+            photo_index += 1
 
         # 章节内图片全部下载完毕
         self.temp_path_list = []  # 临时目录设置清除
-        self.total_photo_count += photo_index - 1  # 计数累加
         self.account_info[1] = str(comic_info["ep_id"])  # 设置存档记录
 
     def run(self):
