@@ -573,20 +573,20 @@ class Download(crawler.DownloadThread):
                 file_path = os.path.join(self.main_thread.video_download_path, self.display_name, video_name)
                 save_file_return = net.save_net_file(video_part_url, file_path, header_list={"Referer": "https://www.bilibili.com/video/av%s" % video_info["video_id"]})
                 if save_file_return["status"] == 1:
+                    self.temp_path_list.append(file_path)  # 设置临时目录
+                    self.total_video_count += 1  # 计数累加
                     self.step("视频%s《%s》第%s个视频下载成功" % (video_info["video_id"], video_info["video_title"], video_index))
-                    # 设置临时目录
-                    self.temp_path_list.append(file_path)
                 else:
                     self.error("视频%s《%s》第%s个视频 %s，下载失败，原因：%s" % (video_info["video_id"], video_info["video_title"], video_index, video_part_url, crawler.download_failre(save_file_return["code"])))
                     if save_file_return["code"] != -4:
-                        return False
+                        if self.check_thread_exit_after_download_failure(False):
+                            return False
                 video_split_index += 1
                 video_index += 1
             video_part_index += 1
 
         # 视频内所有分P全部下载完毕
         self.temp_path_list = []  # 临时目录设置清除
-        self.total_video_count += video_index - 1  # 计数累加
         self.account_info[1] = str(video_info["video_time"])  # 设置存档记录
         return True
 
@@ -606,13 +606,14 @@ class Download(crawler.DownloadThread):
         file_path = os.path.join(self.main_thread.audio_download_path, self.display_name, "%06d %s.%s" % (audio_info["audio_id"], path.filter_text(audio_info["audio_title"]), net.get_file_type(audio_info_response["audio_url"])))
         save_file_return = net.save_net_file(audio_info_response["audio_url"], file_path, header_list={"Referer": "https://www.bilibili.com/"})
         if save_file_return["status"] == 1:
+            self.total_audio_count += 1  # 计数累加
             self.step("音频%s《%s》下载成功" % (audio_info["audio_id"], audio_info["audio_title"]))
         else:
             self.error("音频%s《%s》 %s，下载失败，原因：%s" % (audio_info["audio_id"], audio_info["audio_title"], audio_info_response["audio_url"], crawler.download_failre(save_file_return["code"])))
-            return False
+            if self.check_thread_exit_after_download_failure(False):
+                return False
 
         # 音频下载完毕
-        self.total_audio_count += 1  # 计数累加
         self.account_info[2] = str(audio_info["audio_id"])  # 设置存档记录
         return True
 
@@ -638,17 +639,17 @@ class Download(crawler.DownloadThread):
             file_path = os.path.join(self.main_thread.photo_download_path, self.display_name, "%09d_%02d.%s" % (album_id, photo_index, net.get_file_type(photo_url)))
             save_file_return = net.save_net_file(photo_url, file_path)
             if save_file_return["status"] == 1:
+                self.temp_path_list.append(file_path)  # 设置临时目录
+                self.total_photo_count += 1  # 计数累加
                 self.step("相簿%s第%s张图片下载成功" % (album_id, photo_index))
-                # 设置临时目录
-                self.temp_path_list.append(file_path)
             else:
                 self.error("相簿%s第%s张图片 %s，下载失败，原因：%s" % (album_id, photo_index, photo_url, crawler.download_failre(save_file_return["code"])))
-                return False
+                if self.check_thread_exit_after_download_failure(False):
+                    return False
             photo_index += 1
 
         # 相簿内图片全部下载完毕
         self.temp_path_list = []  # 临时目录设置清除
-        self.total_photo_count += photo_index - 1  # 计数累加
         self.account_info[3] = str(album_id)  # 设置存档记录
         return True
 
