@@ -309,15 +309,15 @@ class Download(crawler.DownloadThread):
             file_path = os.path.join(self.main_thread.photo_download_path, self.account_name, "%011d.%s" % (photo_info["photo_id"], net.get_file_type(photo_info["photo_url"])))
             save_file_return = net.save_net_file(photo_info["photo_url"], file_path)
             if save_file_return["status"] == 1:
-                # 设置临时目录
-                self.temp_path_list.append(file_path)
+                self.temp_path_list.append(file_path)  # 设置临时目录
+                self.total_photo_count += 1  # 计数累加
                 self.step("图片%s下载成功" % photo_info["photo_id"])
             else:
                 self.error("图片%s %s 下载失败，原因：%s" % (photo_info["photo_id"], photo_info["photo_url"], crawler.download_failre(save_file_return["code"])))
+                self.check_thread_exit_after_download_failure()
 
         # 图片下载完毕
         self.temp_path_list = []  # 临时目录设置清除
-        self.total_photo_count += len(photo_info_list)  # 计数累加
         self.account_info[1] = str(photo_info_list[0]["photo_time"])  # 设置存档记
 
     def run(self):
