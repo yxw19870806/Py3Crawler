@@ -252,14 +252,13 @@ class Download(crawler.DownloadThread):
         file_path = os.path.join(self.main_thread.audio_download_path, self.display_name, "%010d - %s.%s" % (audio_info["audio_id"], path.filter_text(audio_info["audio_title"]), net.get_file_type(audio_play_response["audio_url"])))
         save_file_return = net.save_net_file(audio_play_response["audio_url"], file_path)
         if save_file_return["status"] == 1:
+            self.total_audio_count += 1  # 计数累加
             self.step("歌曲%s《%s》下载成功" % (audio_info["audio_key"], audio_info["audio_title"]))
         else:
             self.error("歌曲%s《%s》 %s 下载失败，原因：%s" % (audio_info["audio_key"], audio_info["audio_title"], audio_play_response["audio_url"], crawler.download_failre(save_file_return["code"])))
-            return
+            self.check_thread_exit_after_download_failure()
 
         # 歌曲下载完毕
-        if save_file_return["status"] == 1:
-            self.total_audio_count += 1  # 计数累加
         self.account_info[1] = str(audio_info["audio_id"])  # 设置存档
 
     def run(self):
