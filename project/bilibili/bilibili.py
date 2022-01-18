@@ -568,8 +568,7 @@ class Download(crawler.DownloadThread):
                         video_name += "_" + str(video_part_index)
                 if len(video_part_info["video_url_list"]) > 1:
                     video_name += " (%s)" % video_split_index
-                video_name = path.filter_text(video_name)
-                video_name = "%s.%s" % (video_name, net.get_file_type(video_part_url))
+                video_name = "%s.%s" % (path.filter_text(video_name), net.get_file_type(video_part_url))
                 file_path = os.path.join(self.main_thread.video_download_path, self.display_name, video_name)
                 save_file_return = net.save_net_file(video_part_url, file_path, header_list={"Referer": "https://www.bilibili.com/video/av%s" % video_info["video_id"]})
                 if save_file_return["status"] == 1:
