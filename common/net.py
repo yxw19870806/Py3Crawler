@@ -453,7 +453,7 @@ def save_net_file(file_url, file_path, need_content_type=False, head_check=False
         else:
             request_method = "GET"
         # 获取头信息
-        response = http_request(file_url, request_method, is_check_qps = False, connection_timeout=NET_CONFIG["HTTP_CONNECTION_TIMEOUT"], read_timeout=NET_CONFIG["HTTP_READ_TIMEOUT"], **kwargs)
+        response = http_request(file_url, request_method, is_check_qps=False, connection_timeout=NET_CONFIG["HTTP_CONNECTION_TIMEOUT"], read_timeout=NET_CONFIG["HTTP_READ_TIMEOUT"], **kwargs)
         # 其他返回状态，退出
         if response.status != HTTP_RETURN_CODE_SUCCEED:
             # URL格式不正确
@@ -567,7 +567,7 @@ def _check_multi_thread_download_file(file_path):
             file_buffer = file_handle.read(buffer_size)
             if not file_buffer:
                 break
-            if file_buffer.find(b"\x00" * (2**10)) >= 0:
+            if file_buffer.find(b"\x00" * (2 ** 10)) >= 0:
                 return False
     return True
 

@@ -86,7 +86,7 @@ class Crawler(object):
         sys_get_cookie = SYS_GET_COOKIE in sys_config and sys_config[SYS_GET_COOKIE]
         sys_not_check_save_data = SYS_NOT_CHECK_SAVE_DATA in sys_config and sys_config[SYS_NOT_CHECK_SAVE_DATA]
         sys_not_download = SYS_NOT_DOWNLOAD in sys_config and sys_config[SYS_NOT_DOWNLOAD]
-        
+
         # exe程序
         if tool.IS_EXECUTABLE:
             application_path = os.path.dirname(sys.executable)
@@ -535,7 +535,7 @@ def get_json_value(json_data, *args, **kwargs):
                 exception_string = "'%s'字段不存在\n%s" % (arg, original_data)
         elif isinstance(arg, int):
             if not isinstance(json_data, list):
-                exception_string =  "'%s'字段不是列表\n%s" % (last_arg, original_data)
+                exception_string = "'%s'字段不是列表\n%s" % (last_arg, original_data)
             elif len(json_data) <= arg:
                 exception_string = "'%s'字段长度不正确\n%s" % (last_arg, original_data)
         else:

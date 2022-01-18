@@ -14,6 +14,7 @@ import traceback
 from common import *
 from project.kuwo import kuwo
 
+
 def main():
     # 初始化
     kuwo_class = kuwo.KuWo()
@@ -55,8 +56,6 @@ def main():
             "parent": gui,
         }
         file_path = tkinter.filedialog.asksaveasfilename(**options)
-
-
 
 
 if __name__ == "__main__":
