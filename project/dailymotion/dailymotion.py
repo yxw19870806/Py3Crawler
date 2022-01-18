@@ -273,13 +273,13 @@ class Download(crawler.DownloadThread):
         video_file_path = os.path.join(self.main_thread.video_download_path, self.account_id, "%s - %s.mp4" % (video_info["video_id"], path.filter_text(video_info["video_title"])))
         save_file_return = net.save_net_file(video_response["video_url"], video_file_path, head_check=True)
         if save_file_return["status"] == 1:
-            # 设置临时目录
+            self.total_video_count += 1  # 计数累加
             self.step("视频%s 《%s》下载成功" % (video_info["video_id"], video_info["video_title"]))
         else:
             self.error("视频%s 《%s》 %s 下载失败，原因：%s" % (video_info["video_id"], video_info["video_title"], video_response["video_url"], crawler.download_failre(save_file_return["code"])))
+            self.check_thread_exit_after_download_failure()
 
-        # 媒体内图片和视频全部下载完毕
-        self.total_video_count += 1  # 计数累加
+        # 视频全部下载完毕
         self.account_info[1] = str(video_info["video_time"])  # 设置存档记录
 
     def run(self):
