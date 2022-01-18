@@ -162,15 +162,16 @@ def get_audio_info_page(audio_id):
     # 读取模板并替换相关参数
     template_html = file.read_file(TEMPLATE_HTML_PATH)
     template_html = template_html.replace("%%URL%%", decrypt_url)
-    cache_html = os.path.join(CACHE_FILE_PATH, "%s.html" % audio_id)
-    file.write_file(template_html, cache_html, file.WRITE_FILE_TYPE_REPLACE)
+    cache_html_path = os.path.realpath(os.path.join(CACHE_FILE_PATH, "%s.html" % audio_id))
+    file.write_file(template_html, cache_html_path, file.WRITE_FILE_TYPE_REPLACE)
     # 使用喜马拉雅的加密JS方法解密url地址
     chrome_options = webdriver.ChromeOptions()
     chrome_options.headless = True  # 不打开浏览器
     chrome = webdriver.Chrome(executable_path=crawler.CHROME_WEBDRIVER_PATH, options=chrome_options)
-    chrome.get("file:///" + os.path.realpath(cache_html))
+    chrome.get("file:///" + cache_html_path)
     audio_url = chrome.find_element(by=By.ID, value="result").get_attribute('value')
     chrome.quit()
+    path.delete_dir_or_file(cache_html_path)
     if not audio_url:
         raise crawler.CrawlerException("url解密失败\n%s" % decrypt_url)
     result["audio_url"] = audio_url
