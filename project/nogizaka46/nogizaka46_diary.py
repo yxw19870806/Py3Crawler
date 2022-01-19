@@ -21,7 +21,7 @@ def get_one_page_blog(account_id, page_count):
     # https://blog.nogizaka46.com/asuka.saito
     blog_pagination_url = "https://blog.nogizaka46.com/%s/" % account_id
     query_data = {"p": page_count}
-    blog_pagination_response = net.http_request(blog_pagination_url, method="GET", fields=query_data)
+    blog_pagination_response = net.request(blog_pagination_url, method="GET", fields=query_data)
     result = {
         "blog_info_list": [],  # 全部图片信息
         "is_over": False,  # 是否最后一页日志
@@ -85,7 +85,7 @@ def check_big_photo(photo_url, big_2_small_list):
     }
     if photo_url in big_2_small_list:
         if big_2_small_list[photo_url].find("//dcimg.awalker.jp") > 0:
-            big_photo_response = net.http_request(big_2_small_list[photo_url], method="GET")
+            big_photo_response = net.request(big_2_small_list[photo_url], method="GET")
             if big_photo_response.status == net.HTTP_RETURN_CODE_SUCCEED:
                 # 检测是不是已经过期删除
                 temp_photo_url = tool.find_sub_string(big_photo_response.data, '<img src="', '"')

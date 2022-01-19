@@ -25,7 +25,7 @@ def get_one_page_album(account_name, page_count):
         "sort": "8",  # 按时间倒叙
         "p": page_count,
     }
-    album_pagination_response = net.http_request(album_pagination_url, method="GET", fields=query_data)
+    album_pagination_response = net.request(album_pagination_url, method="GET", fields=query_data)
     result = {
         "album_info_list": [],  # 全部作品信息
         "is_over": False,  # 是否最后页
@@ -79,7 +79,7 @@ def get_one_page_album(account_name, page_count):
 # 获取作品
 def get_album_page(album_id):
     album_url = "https://www.zcool.com.cn/work/%s.html" % album_id
-    album_response = net.http_request(album_url, method="GET")
+    album_response = net.request(album_url, method="GET")
     result = {
         "photo_url_list": [],  # 全部图片地址
     }

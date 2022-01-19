@@ -19,7 +19,7 @@ EACH_LOOP_MAX_PAGE_COUNT = 50  # 单次缓存多少页的图片
 def get_one_page_photo(page_count):
     photo_pagination_url = "http://jigadori.fkoji.com/"
     query_data = {"p": page_count}
-    photo_pagination_response = net.http_request(photo_pagination_url, method="GET", fields=query_data)
+    photo_pagination_response = net.request(photo_pagination_url, method="GET", fields=query_data)
     result = {
         "photo_info_list": [],  # 全部图片信息
     }

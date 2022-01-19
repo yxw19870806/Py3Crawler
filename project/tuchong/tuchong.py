@@ -20,13 +20,13 @@ def get_account_index_page(account_name):
         account_index_url = "https://tuchong.com/%s" % account_name
     else:
         account_index_url = "https://%s.tuchong.com" % account_name
-    account_index_response = net.http_request(account_index_url, method="GET", is_auto_redirect=False)
+    account_index_response = net.request(account_index_url, method="GET", is_auto_redirect=False)
     result = {
         "account_id": None,  # 账号id（字母账号->数字账号)
     }
     if account_index_response.status == 302 and account_index_response.getheader("Location").find("https://tuchong.com/") == 0 and account_index_response.getheader("Location")[-5:] == "/work":
         account_index_url += "/work"
-        account_index_response = net.http_request(account_index_url, method="GET", is_auto_redirect=False)
+        account_index_response = net.request(account_index_url, method="GET", is_auto_redirect=False)
     if account_index_response.status == 301 and account_index_response.getheader("Location") == "https://tuchong.com/":
         raise crawler.CrawlerException("账号不存在")
     elif account_index_response.status != net.HTTP_RETURN_CODE_SUCCEED:
@@ -49,7 +49,7 @@ def get_one_page_album(account_id, post_time):
     # https://deer-vision.tuchong.com/rest/sites/1186455/posts/2016-11-11%2011:11:11?limit=20
     album_pagination_url = "https://www.tuchong.com/rest/sites/%s/posts/%s" % (account_id, post_time)
     query_data = {"limit": EACH_PAGE_PHOTO_COUNT}
-    album_pagination_response = net.http_request(album_pagination_url, method="GET", fields=query_data, json_decode=True)
+    album_pagination_response = net.request(album_pagination_url, method="GET", fields=query_data, json_decode=True)
     result = {
         "album_info_list": [],  # 全部图片信息
     }

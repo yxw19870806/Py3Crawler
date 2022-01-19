@@ -16,7 +16,7 @@ from common import *
 # 获取有声书首页
 def get_album_index_page(album_id):
     album_index_url = "http://m.tingshubao.com/book/%s.html" % album_id
-    album_index_response = net.http_request(album_index_url, method="GET")
+    album_index_response = net.request(album_index_url, method="GET")
     result = {
         "audio_info_list": [],  # 全部音频信息
     }
@@ -47,7 +47,7 @@ def get_audio_info_page(audio_play_url):
     result = {
         "audio_url": "",  # 音频下载地址
     }
-    audio_play_response = net.http_request(audio_play_url, method="GET")
+    audio_play_response = net.request(audio_play_url, method="GET")
     if audio_play_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(audio_play_response.status))
     audio_play_response_content = audio_play_response.data.decode(errors="ignore")
@@ -61,7 +61,7 @@ def get_audio_info_page(audio_play_url):
     query_data = {
         "url": "".join(temp_list).split("&")[0]
     }
-    audio_detail_response = net.http_request(audio_detail_url, method="GET", fields=query_data, json_decode=True)
+    audio_detail_response = net.request(audio_detail_url, method="GET", fields=query_data, json_decode=True)
     if audio_detail_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(audio_detail_response.status))
     result["audio_url"] = crawler.get_json_value(audio_detail_response.json_data, "url", type_check=str)

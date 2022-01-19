@@ -18,7 +18,7 @@ from common import *
 def get_one_page_audio(account_id, page_type, page_count):
     # http://5sing.kugou.com/inory/yc/1.html
     audio_pagination_url = "http://5sing.kugou.com/%s/%s/%s.html" % (account_id, page_type, page_count)
-    audio_pagination_response = net.http_request(audio_pagination_url, method="GET")
+    audio_pagination_response = net.request(audio_pagination_url, method="GET")
     result = {
         "audio_info_list": [],  # 全部歌曲信息
     }
@@ -46,7 +46,7 @@ def get_audio_play_page(audio_id, song_type):
         "songid": audio_id,
         "songtype": song_type,
     }
-    audio_info_response = net.http_request(audio_info_url, method="GET", fields=query_data, json_decode=True)
+    audio_info_response = net.request(audio_info_url, method="GET", fields=query_data, json_decode=True)
     result = {
         "audio_title": "",  # 歌曲标题
         "audio_url": None,  # 歌曲地址

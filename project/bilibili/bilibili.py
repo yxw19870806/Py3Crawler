@@ -46,7 +46,7 @@ def check_login():
     if not COOKIE_INFO:
         return False
     api_url = "https://api.bilibili.com/x/member/web/account"
-    api_response = net.http_request(api_url, method="GET", cookies_list=COOKIE_INFO, json_decode=True)
+    api_response = net.request(api_url, method="GET", cookies_list=COOKIE_INFO, json_decode=True)
     if api_response.status == net.HTTP_RETURN_CODE_SUCCEED:
         return crawler.get_json_value(api_response.json_data, "data", "mid", type_check=int, default_value=0) != 0
     return False
@@ -70,7 +70,7 @@ def get_favorites_list(favorites_id):
             "ps": EACH_PAGE_COUNT,
             "direction": "false",
         }
-        api_response = net.http_request(api_url, method="GET", fields=query_data, cookies_list=COOKIE_INFO, json_decode=True)
+        api_response = net.request(api_url, method="GET", fields=query_data, cookies_list=COOKIE_INFO, json_decode=True)
         try:
             video_info_list = crawler.get_json_value(api_response.json_data, "data", "media_list", type_check=list)
         except crawler.CrawlerException as e:
@@ -107,7 +107,7 @@ def get_one_page_video(account_id, page_count):
         "ps": EACH_PAGE_COUNT,
         "tid": "0",
     }
-    api_response = net.http_request(api_url, method="GET", fields=query_data, json_decode=True)
+    api_response = net.request(api_url, method="GET", fields=query_data, json_decode=True)
     result = {
         "video_info_list": [],  # 全部视频信息
     }
@@ -137,7 +137,7 @@ def get_one_page_short_video(account_id, nex_offset):
         "uid": account_id,
         "next_offset": nex_offset,
     }
-    api_response = net.http_request(api_url, method="GET", fields=query_data, json_decode=True)
+    api_response = net.request(api_url, method="GET", fields=query_data, json_decode=True)
     result = {
         "video_info_list": [],  # 全部视频信息
         "next_page_offset": None,  # 下一页指针
@@ -173,7 +173,7 @@ def get_one_page_album(account_id, page_count):
         "page_size": EACH_PAGE_COUNT,
         "biz": "all",
     }
-    api_response = net.http_request(api_url, method="GET", fields=query_data, cookies_list=COOKIE_INFO, json_decode=True)
+    api_response = net.request(api_url, method="GET", fields=query_data, cookies_list=COOKIE_INFO, json_decode=True)
     result = {
         "album_id_list": [],  # 全部相簿id
     }
@@ -195,7 +195,7 @@ def get_one_page_audio(account_id, page_count):
         "ps": EACH_PAGE_COUNT,
         "uid": account_id,
     }
-    api_response = net.http_request(api_url, method="GET", fields=query_data, json_decode=True)
+    api_response = net.request(api_url, method="GET", fields=query_data, json_decode=True)
     result = {
         "audio_info_list": [],  # 全部视频信息
     }
@@ -223,7 +223,7 @@ def get_one_page_audio(account_id, page_count):
 # 获取指定视频
 def get_video_page(video_id):
     video_play_url = "https://www.bilibili.com/video/av%s" % video_id
-    video_play_response = net.http_request(video_play_url, method="GET", cookies_list=COOKIE_INFO)
+    video_play_response = net.request(video_play_url, method="GET", cookies_list=COOKIE_INFO)
     result = {
         "is_private": False,  # 是否需要登录
         "video_part_info_list": [],  # 全部视频地址
@@ -263,7 +263,7 @@ def get_video_page(video_id):
             "qn": "116",  # 上限 高清 1080P+: 112, 高清 1080P: 80, 高清 720P: 64, 清晰 480P: 32, 流畅 360P: 16
             "otype": "json",
         }
-        video_info_response = net.http_request(video_info_url, method="GET", fields=query_data, cookies_list=COOKIE_INFO, header_list={"Referer": "https://www.bilibili.com/video/av%s" % video_id}, json_decode=True)
+        video_info_response = net.request(video_info_url, method="GET", fields=query_data, cookies_list=COOKIE_INFO, header_list={"Referer": "https://www.bilibili.com/video/av%s" % video_id}, json_decode=True)
         if video_info_response.status != net.HTTP_RETURN_CODE_SUCCEED:
             raise crawler.CrawlerException("视频信息，" + crawler.request_failre(video_info_response.status))
         try:
@@ -295,7 +295,7 @@ def get_album_page(album_id):
     query_data = {
         "doc_id": album_id,
     }
-    api_response = net.http_request(api_url, method="GET", fields=query_data, json_decode=True)
+    api_response = net.request(api_url, method="GET", fields=query_data, json_decode=True)
     result = {
         "photo_url_list": [],  # 全部图片地址
     }
@@ -313,7 +313,7 @@ def get_audio_info_page(audio_id):
     query_data = {
         "sid": audio_id,
     }
-    api_response = net.http_request(api_url, method="GET", fields=query_data, json_decode=True)
+    api_response = net.request(api_url, method="GET", fields=query_data, json_decode=True)
     result = {
         "audio_url": None,  # 音频地址
     }

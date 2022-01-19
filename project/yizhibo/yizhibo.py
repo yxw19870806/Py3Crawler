@@ -19,7 +19,7 @@ def get_photo_index_page(account_id):
     # https://www.yizhibo.com/member/personel/user_photos?memberid=6066534
     photo_index_url = "https://www.yizhibo.com/member/personel/user_photos"
     query_data = {"memberid": account_id}
-    photo_index_response = net.http_request(photo_index_url, method="GET", fields=query_data)
+    photo_index_response = net.request(photo_index_url, method="GET", fields=query_data)
     result = {
         "photo_url_list": [],  # 全部图片地址
     }
@@ -41,7 +41,7 @@ def get_photo_index_page(account_id):
 
 #  获取图片的header
 def get_photo_header(photo_url):
-    photo_head_response = net.http_request(photo_url, method="HEAD")
+    photo_head_response = net.request(photo_url, method="HEAD")
     result = {
         "photo_time": None,  # 图片上传时间
     }
@@ -65,7 +65,7 @@ def get_video_index_page(account_id):
     # https://www.yizhibo.com/member/personel/user_videos?memberid=6066534
     video_pagination_url = "https://www.yizhibo.com/member/personel/user_videos"
     query_data = {"memberid": account_id}
-    video_pagination_response = net.http_request(video_pagination_url, method="GET", fields=query_data)
+    video_pagination_response = net.request(video_pagination_url, method="GET", fields=query_data)
     result = {
         "is_exist": True,  # 是否存在视频
         "video_id_list": [],  # 全部视频id
@@ -90,7 +90,7 @@ def get_video_info_page(video_id):
     # https://api.xiaoka.tv/live/web/get_play_live?scid=xX9-TLVx0xTiSZ69
     video_info_url = "https://api.xiaoka.tv/live/web/get_play_live"
     query_data = {"scid": video_id}
-    video_info_response = net.http_request(video_info_url, method="GET", fields=query_data, json_decode=True)
+    video_info_response = net.request(video_info_url, method="GET", fields=query_data, json_decode=True)
     result = {
         "video_time": False,  # 视频上传时间
         "video_url_list": [],  # 全部视频分集地址
@@ -101,7 +101,7 @@ def get_video_info_page(video_id):
     result["video_time"] = crawler.get_json_value(video_info_response.json_data, "data", "createtime", type_check=int)
     # 获取视频地址所在文件地址
     video_file_url = crawler.get_json_value(video_info_response.json_data, "data", "linkurl", type_check=str)
-    video_file_response = net.http_request(video_file_url, method="GET")
+    video_file_response = net.request(video_file_url, method="GET")
     if video_file_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(video_info_response.status))
     video_file_response_content = video_file_response.data.decode(errors="ignore")

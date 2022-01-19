@@ -24,7 +24,7 @@ def get_one_page_blog(account_id, page_count):
         "ct": account_id,
         "page": str(page_count - 1),
     }
-    blog_pagination_response = net.http_request(blog_pagination_url, method="GET", fields=query_data)
+    blog_pagination_response = net.request(blog_pagination_url, method="GET", fields=query_data)
     result = {
         "blog_info_list": [],  # 全部日志信息
         "is_over": False,  # 是不是最后页日志

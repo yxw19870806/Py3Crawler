@@ -24,7 +24,7 @@ TEMPLATE_HTML_PATH = os.path.join(os.path.dirname(__file__), "template.html")
 def get_comic_index_page(comic_id):
     # https://www.manhuagui.com/comic/21175/
     index_url = "https://www.manhuagui.com/comic/%s/" % comic_id
-    index_response = net.http_request(index_url, method="GET")
+    index_response = net.request(index_url, method="GET")
     result = {
         "chapter_info_list": [],  # 漫画列表信息
     }
@@ -79,7 +79,7 @@ def get_comic_index_page(comic_id):
 def get_chapter_page(comic_id, chapter_id):
     # https://www.manhuagui.com/comic/7580/562894.html
     chapter_url = "https://www.manhuagui.com/comic/%s/%s.html" % (comic_id, chapter_id)
-    chapter_response = net.http_request(chapter_url, method="GET")
+    chapter_response = net.request(chapter_url, method="GET")
     result = {
         "photo_url_list": [],  # 全部漫画图片地址
     }

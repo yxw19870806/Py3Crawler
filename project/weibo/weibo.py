@@ -24,7 +24,7 @@ def check_login():
     if "SUB" not in COOKIE_INFO or not COOKIE_INFO["SUB"]:
         return False
     index_url = "https://weibo.com/"
-    index_response = net.http_request(index_url, method="GET", cookies_list=COOKIE_INFO)
+    index_response = net.request(index_url, method="GET", cookies_list=COOKIE_INFO)
     if index_response.status == net.HTTP_RETURN_CODE_SUCCEED:
         return True
         return index_response.data.decode(errors="ignore").find("$CONFIG['islogin']='1';") >= 0
@@ -35,7 +35,7 @@ def check_login():
 def init_session():
     login_url = "https://login.sina.com.cn/sso/login.php"
     query_data = {"url": "https://weibo.com"}
-    login_response = net.http_request(login_url, method="GET", fields=query_data, cookies_list=COOKIE_INFO)
+    login_response = net.request(login_url, method="GET", fields=query_data, cookies_list=COOKIE_INFO)
     if login_response.status == net.HTTP_RETURN_CODE_SUCCEED:
         COOKIE_INFO.update(net.get_cookies_from_response_header(login_response.headers))
         return True
@@ -48,7 +48,7 @@ def get_account_index_page(account_id):
     result = {
         "account_page_id": None,  # 账号page id
     }
-    account_index_response = net.http_request(account_index_url, method="GET", cookies_list=COOKIE_INFO)
+    account_index_response = net.request(account_index_url, method="GET", cookies_list=COOKIE_INFO)
     if account_index_response.status == net.HTTP_RETURN_CODE_SUCCEED:
         # 获取账号page id
         account_page_id = tool.find_sub_string(account_index_response.data.decode(errors="ignore"), "$CONFIG['page_id']='", "'")
@@ -81,7 +81,7 @@ def get_one_page_photo(account_id, page_count):
         "photo_info_list": [],  # 全部图片信息
         "is_over": False,  # 是否最后一页图片
     }
-    photo_pagination_response = net.http_request(photo_pagination_url, method="GET", fields=query_data, cookies_list=COOKIE_INFO, json_decode=True)
+    photo_pagination_response = net.request(photo_pagination_url, method="GET", fields=query_data, cookies_list=COOKIE_INFO, json_decode=True)
     if photo_pagination_response.status == net.HTTP_RETURN_CODE_JSON_DECODE_ERROR and photo_pagination_response.data.find('<p class="txt M_txtb">用户不存在或者获取用户信息失败</p>'.encode()) >= 0:
         raise crawler.CrawlerException("账号不存在")
     elif photo_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
@@ -122,7 +122,7 @@ def get_one_page_video(account_id, account_page_id, since_id):
         "next_page_since_id": None,  # 下一页视频指针
         "video_play_url_list": [],  # 全部视频地址
     }
-    video_pagination_response = net.http_request(video_pagination_url, method="GET", fields=query_data, cookies_list=COOKIE_INFO, json_decode=True)
+    video_pagination_response = net.request(video_pagination_url, method="GET", fields=query_data, cookies_list=COOKIE_INFO, json_decode=True)
     if video_pagination_response.status == net.HTTP_RETURN_CODE_JSON_DECODE_ERROR:
         time.sleep(5)
         log.step("since_id：%s页视频解返回异常" % since_id)
@@ -161,7 +161,7 @@ def get_video_url(video_play_url, error_count=0):
         #     raise crawler.CrawlerException("未知的第三方视频\n%s" % video_play_url)
     # https://video.weibo.com/show?fid=1034:e608e50d5fa95410748da61a7dfa2bff
     elif video_play_url.find("video.weibo.com/show?fid=") >= 0 or video_play_url.find("weibo.com/tv/v") >= 0:  # 微博视频
-        video_play_response = net.http_request(video_play_url, method="GET", cookies_list=COOKIE_INFO)
+        video_play_response = net.request(video_play_url, method="GET", cookies_list=COOKIE_INFO)
         if video_play_response.status == net.HTTP_RETURN_CODE_SUCCEED:
             video_play_response_content = video_play_response.data.decode(errors="ignore")
             video_sources = tool.find_sub_string(video_play_response_content, 'video-sources="', '"')
