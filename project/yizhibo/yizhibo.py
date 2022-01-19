@@ -262,7 +262,7 @@ class Download(crawler.DownloadThread):
         self.step("开始下载第%s个视频 %s" % (video_index, video_info["video_url_list"]))
 
         video_file_path = os.path.join(self.main_thread.video_download_path, self.display_name, "%04d.ts" % video_index)
-        save_file_return = net.save_net_file_list(video_info["video_url_list"], video_file_path)
+        save_file_return = net.download_from_list(video_info["video_url_list"], video_file_path)
         if save_file_return["status"] == 1:
             self.step("第%s个视频下载成功" % video_index)
         else:

@@ -574,7 +574,7 @@ def _check_multi_thread_download_file(file_path):
     return True
 
 
-def save_net_file_list(file_url_list, file_path, header_list=None, cookies_list=None):
+def download_from_list(file_url_list, file_path, header_list=None, cookies_list=None):
     """Visit web and save to local(multiple remote resource, single local file)
 
     :param file_url_list:
@@ -680,3 +680,12 @@ def save_net_file(file_url, file_path, need_content_type=False, head_check=False
         stacklevel=2,
     )
     return download(file_url, file_path, need_content_type=need_content_type, head_check=head_check, replace_if_exist=replace_if_exist, **kwargs)
+
+
+def save_net_file_list(file_url_list, file_path, header_list=None, cookies_list=None):
+    warnings.warn(
+        "save_net_file_list commands are deprecated. Please use download_from_list() instead",
+        DeprecationWarning,
+        stacklevel=2,
+    )
+    return download_from_list(file_url_list, file_path, header_list=header_list, cookies_list=cookies_list)
