@@ -404,53 +404,59 @@ class Download(crawler.DownloadThread):
         self.step("推特%s解析获取%s张图片和%s个视频" % (media_info["blog_id"], len(media_info["photo_url_list"]), len(media_info["video_url_list"])))
 
         # 图片下载
-        photo_index = 1
         if self.main_thread.is_download_photo:
-            for photo_url in media_info["photo_url_list"]:
-                self.main_thread_check()  # 检测主线程运行状态
-                self.step("开始下载推特%s的第%s张图片 %s" % (media_info["blog_id"], photo_index, photo_url))
-
-                photo_file_path = os.path.join(self.main_thread.photo_download_path, self.account_name, "%019d_%02d.%s" % (media_info["blog_id"], photo_index, net.get_file_type(photo_url)))
-                save_file_return = net.download(photo_url, photo_file_path)
-                for retry_count in range(0, 5):
-                    if save_file_return["status"] == 1:
-                        self.temp_path_list.append(photo_file_path)
-                        self.step("推特%s的第%s张图片下载成功" % (media_info["blog_id"], photo_index))
-                    else:
-                        # 502报错，重新下载
-                        if save_file_return["code"] == 502:
-                            self.error("推特%s的第%s张图片 %s 下载失败，重试" % (media_info["blog_id"], photo_index, photo_url))
-                            continue
-                        self.error("推特%s的第%s张图片 %s 下载失败，原因：%s" % (media_info["blog_id"], photo_index, photo_url, crawler.download_failre(save_file_return["code"])))
-                    photo_index += 1
-                    break
+            self.crawl_photo(media_info)
 
         # 视频下载
-        download_complete = False
-        video_index = 1
         if self.main_thread.is_download_video:
-            for video_url in media_info["video_url_list"]:
-                self.step("开始下载推特%s的第%s个视频 %s" % (media_info["blog_id"], video_index, video_url))
-
-                if len(media_info["video_url_list"]) > 1:
-                    video_file_path = os.path.join(self.main_thread.video_download_path, self.account_name, "%019d_%02d.%s" % (media_info["blog_id"], video_index, net.get_file_type(video_url)))
-                else:
-                    video_file_path = os.path.join(self.main_thread.video_download_path, self.account_name, "%019d.%s" % (media_info["blog_id"], net.get_file_type(video_url)))
-                save_file_return = net.download(video_url, video_file_path)
-                if save_file_return["status"] == 1:
-                    self.temp_path_list.append(video_file_path)
-                    self.step("推特%s的第%s个视频下载成功" % (media_info["blog_id"], video_index))
-                    download_complete = True
-                else:
-                    self.error("推特%s的第%s个视频 %s 下载失败，原因：%s" % (media_info["blog_id"], video_index, video_url, crawler.download_failre(save_file_return["code"])))
-                video_index += 1
+            self.crawl_video(media_info)
 
         # 推特内图片和视频全部下载完毕
         self.temp_path_list = []  # 临时目录设置清除
-        self.total_photo_count += photo_index - 1  # 计数累加
-        if download_complete:
-            self.total_video_count += 1  # 计数累加
         self.account_info[2] = str(media_info["blog_id"])
+
+    def crawl_photo(self, media_info):
+        photo_index = 1
+        for photo_url in media_info["photo_url_list"]:
+            self.main_thread_check()  # 检测主线程运行状态
+            self.step("开始下载推特%s的第%s张图片 %s" % (media_info["blog_id"], photo_index, photo_url))
+
+            photo_file_path = os.path.join(self.main_thread.photo_download_path, self.account_name, "%019d_%02d.%s" % (media_info["blog_id"], photo_index, net.get_file_type(photo_url)))
+            for retry_count in range(0, 5):
+                save_file_return = net.download(photo_url, photo_file_path)
+                if save_file_return["status"] == 1:
+                    self.temp_path_list.append(photo_file_path)  # 设置临时目录
+                    self.total_photo_count += 1  # 计数累加
+                    self.step("推特%s的第%s张图片下载成功" % (media_info["blog_id"], photo_index))
+                else:
+                    # 502报错，重新下载
+                    if save_file_return["code"] == 502:
+                        self.error("推特%s的第%s张图片 %s 下载失败，重试" % (media_info["blog_id"], photo_index, photo_url))
+                        continue
+                    self.error("推特%s的第%s张图片 %s 下载失败，原因：%s" % (media_info["blog_id"], photo_index, photo_url, crawler.download_failre(save_file_return["code"])))
+                    self.check_thread_exit_after_download_failure()
+                break
+            photo_index += 1
+
+    def crawl_video(self, media_info):
+        video_index = 1
+        for video_url in media_info["video_url_list"]:
+            self.main_thread_check()  # 检测主线程运行状态
+            self.step("开始下载推特%s的第%s个视频 %s" % (media_info["blog_id"], video_index, video_url))
+
+            if len(media_info["video_url_list"]) > 1:
+                video_file_path = os.path.join(self.main_thread.video_download_path, self.account_name, "%019d_%02d.%s" % (media_info["blog_id"], video_index, net.get_file_type(video_url)))
+            else:
+                video_file_path = os.path.join(self.main_thread.video_download_path, self.account_name, "%019d.%s" % (media_info["blog_id"], net.get_file_type(video_url)))
+            save_file_return = net.download(video_url, video_file_path)
+            if save_file_return["status"] == 1:
+                self.temp_path_list.append(video_file_path)  # 设置临时目录
+                self.total_video_count += 1  # 计数累加
+                self.step("推特%s的第%s个视频下载成功" % (media_info["blog_id"], video_index))
+            else:
+                self.error("推特%s的第%s个视频 %s 下载失败，原因：%s" % (media_info["blog_id"], video_index, video_url, crawler.download_failre(save_file_return["code"])))
+                self.check_thread_exit_after_download_failure()
+            video_index += 1
 
     def run(self):
         try:
