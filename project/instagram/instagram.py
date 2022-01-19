@@ -29,7 +29,7 @@ def init_session():
     if COOKIE_INFO["sessionid"]:
         return True
     home_url = "https://www.instagram.com/"
-    home_response = net.http_request(home_url, method="GET")
+    home_response = net.request(home_url, method="GET")
     if home_response.status == net.HTTP_RETURN_CODE_SUCCEED:
         set_cookie = net.get_cookies_from_response_header(home_response.headers)
         if "csrftoken" in set_cookie and "mid" in set_cookie:
@@ -49,7 +49,7 @@ def check_login():
                 return True
     else:
         index_url = "https://www.instagram.com/"
-        index_response = net.http_request(index_url, method="GET", cookies_list=COOKIE_INFO)
+        index_response = net.request(index_url, method="GET", cookies_list=COOKIE_INFO)
         if index_response.status == net.HTTP_RETURN_CODE_SUCCEED:
             return index_response.data.decode(errors="ignore").find('"viewer":{') >= 0
     return False
@@ -79,7 +79,7 @@ def _do_login(email, password):
     login_url = "https://www.instagram.com/accounts/login/ajax/"
     login_post = {"username": email, "password": password, "next": "/"}
     header_list = {"referer": "https://www.instagram.com/", "x-csrftoken": COOKIE_INFO["csrftoken"]}
-    login_response = net.http_request(login_url, method="POST", fields=login_post, cookies_list=COOKIE_INFO, header_list=header_list, json_decode=True)
+    login_response = net.request(login_url, method="POST", fields=login_post, cookies_list=COOKIE_INFO, header_list=header_list, json_decode=True)
     if login_response.status == net.HTTP_RETURN_CODE_SUCCEED:
         if crawler.get_json_value(login_response.json_data, "authenticated", default_value=False, type_check=bool) is True:
             set_cookie = net.get_cookies_from_response_header(login_response.headers)
@@ -95,7 +95,7 @@ def get_account_index_page(account_name):
     query_data = {
         "hl": "en"
     }
-    account_index_response = net.http_request(account_index_url, method="GET", fields=query_data, cookies_list=COOKIE_INFO)
+    account_index_response = net.request(account_index_url, method="GET", fields=query_data, cookies_list=COOKIE_INFO)
     result = {
         "account_id": None,  # account id
     }
@@ -124,7 +124,7 @@ def get_one_page_media(account_id, cursor):
     }
     if cursor:
         query_data["after"] = cursor
-    media_pagination_response = net.http_request(api_url, method="GET", fields=query_data, cookies_list=COOKIE_INFO, json_decode=True)
+    media_pagination_response = net.request(api_url, method="GET", fields=query_data, cookies_list=COOKIE_INFO, json_decode=True)
     result = {
         "media_info_list": [],  # 全部媒体信息
         "next_page_cursor": None,  # 下一页媒体信息的指针
@@ -173,7 +173,7 @@ def get_one_page_media(account_id, cursor):
 # 获取媒体详细页
 def get_media_page(page_id):
     media_url = "https://www.instagram.com/p/%s" % page_id
-    media_response = net.http_request(media_url, method="GET", cookies_list=COOKIE_INFO)
+    media_response = net.request(media_url, method="GET", cookies_list=COOKIE_INFO)
     result = {
         "photo_url_list": [],  # 全部图片地址
         "video_url_list": [],  # 全部视频地址

@@ -17,7 +17,7 @@ from common import *
 def get_book_index(book_id):
     # https://book.qidian.com/info/1016397637/
     index_url = "https://book.qidian.com/info/%s/" % book_id
-    index_response = net.http_request(index_url, method="GET")
+    index_response = net.request(index_url, method="GET")
     result = {
         "chapter_info_list": [],  # 章节信息列表
     }
@@ -67,7 +67,7 @@ def get_book_index(book_id):
 def get_chapter_page(chapter_url):
     # https://book.qidian.com/info/1016397637/
     # https://read.qidian.com/chapter/q2B9dFLoeqU3v1oFI-DX8Q2/yyg9pjNdd3y2uJcMpdsVgA2/
-    chapter_response = net.http_request(chapter_url, method="GET")
+    chapter_response = net.request(chapter_url, method="GET")
     result = {
         "content": "",  # 文章内容
         "is_vip": False,  # 是否需要vip解锁

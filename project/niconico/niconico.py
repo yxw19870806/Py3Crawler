@@ -21,7 +21,7 @@ def check_login():
     if not COOKIE_INFO:
         return False
     index_url = "http://www.nicovideo.jp/"
-    index_response = net.http_request(index_url, method="GET", cookies_list=COOKIE_INFO)
+    index_response = net.request(index_url, method="GET", cookies_list=COOKIE_INFO)
     if index_response.status == net.HTTP_RETURN_CODE_SUCCEED:
         return pq(index_response.data.decode(errors="ignore")).find('#siteHeaderUserNickNameContainer').length > 0
     return False
@@ -30,7 +30,7 @@ def check_login():
 # 获取指定账号下的所有视频列表
 def get_account_mylist(account_id):
     account_mylist_url = "https://www.nicovideo.jp/user/%s/mylist" % account_id
-    account_mylist_response = net.http_request(account_mylist_url, method="GET", is_auto_retry=False)
+    account_mylist_response = net.request(account_mylist_url, method="GET", is_auto_retry=False)
     result = {
         "list_id_list": [],  # 全部视频列表id
         "is_private": False,  # 是否未公开
@@ -66,7 +66,7 @@ def get_account_mylist(account_id):
 def get_one_page_account_video(account_id, page_count):
     video_index_url = "https://www.nicovideo.jp/user/%s/video" % account_id
     query_data = {"page": page_count}
-    video_index_response = net.http_request(video_index_url, method="GET", fields=query_data)
+    video_index_response = net.request(video_index_url, method="GET", fields=query_data)
     result = {
         "video_info_list": [],  # 全部视频信息
         "is_over": False,  # 是否最后页
@@ -117,7 +117,7 @@ def get_one_page_account_video(account_id, page_count):
 def get_mylist_index(list_id):
     # http://www.nicovideo.jp/mylist/15614906
     mylist_index_url = "http://www.nicovideo.jp/mylist/%s" % list_id
-    mylist_index_response = net.http_request(mylist_index_url, method="GET")
+    mylist_index_response = net.request(mylist_index_url, method="GET")
     result = {
         "video_info_list": [],  # 全部视频信息
     }
@@ -155,7 +155,7 @@ def get_mylist_index(list_id):
 # 根据视频id，获取视频的下载地址
 def get_video_info(video_id):
     video_play_url = "http://www.nicovideo.jp/watch/sm%s" % video_id
-    video_play_response = net.http_request(video_play_url, method="GET", cookies_list=COOKIE_INFO)
+    video_play_response = net.request(video_play_url, method="GET", cookies_list=COOKIE_INFO)
     result = {
         "extra_cookie": {},  # 额外的cookie
         "is_delete": False,  # 是否已删除

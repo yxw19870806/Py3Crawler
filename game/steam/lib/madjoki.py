@@ -25,7 +25,7 @@ def get_banned_game_list():
             "page": page_count,
             "desc": "0"
         }
-        index_response = net.http_request(index_url, method="GET", fields=query_data, is_random_ip=False)
+        index_response = net.request(index_url, method="GET", fields=query_data, is_random_ip=False)
         if index_response.status != net.HTTP_RETURN_CODE_SUCCEED:
             raise "第%s页，%s" % (page_count, crawler.CrawlerException(crawler.request_failre(index_response.status)))
         index_response_content = index_response.data.decode(errors="ignore")

@@ -21,7 +21,7 @@ FIRST_CHOICE_RESOLUTION = 720
 def init_session():
     global AUTHORIZATION
     index_url = "https://www.dailymotion.com"
-    index_page_response = net.http_request(index_url, method="GET")
+    index_page_response = net.request(index_url, method="GET")
     if index_page_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException("首页，" + crawler.request_failre(index_page_response.status))
     index_page_response_content = index_page_response.data.decode(errors="ignore")
@@ -38,7 +38,7 @@ def init_session():
         "visitor_id": tool.generate_random_string(32, 6),
         "traffic_segment": random.randint(100000, 999999)
     }
-    oauth_response = net.http_request(crawler.get_json_value(script_json, "context", "api", "auth_url", type_check=str), method="POST", fields=post_data, json_decode=True)
+    oauth_response = net.request(crawler.get_json_value(script_json, "context", "api", "auth_url", type_check=str), method="POST", fields=post_data, json_decode=True)
     if oauth_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException("获取token页，%s\n%s" % (crawler.request_failre(oauth_response.status), post_data))
     AUTHORIZATION = crawler.get_json_value(oauth_response.json_data, "access_token", type_check=str)
@@ -65,7 +65,7 @@ def get_one_page_video(account_id, page_count):
         "is_over": False,  # 是否最后一页视频
         "video_info_list": [],  # 全部视频信息
     }
-    api_response = net.http_request(api_url, method="POST", binary_data=json.dumps(post_data), header_list=header_list, json_decode=True)
+    api_response = net.request(api_url, method="POST", binary_data=json.dumps(post_data), header_list=header_list, json_decode=True)
     if api_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(api_response.status))
     # 获取所有视频
@@ -96,7 +96,7 @@ def get_video_page(video_id):
     # 获取视频播放页
     # https://www.dailymotion.com/player/metadata/video/x6lgrfa
     video_info_url = "https://www.dailymotion.com/player/metadata/video/%s" % video_id
-    video_info_response = net.http_request(video_info_url, method="GET", json_decode=True)
+    video_info_response = net.request(video_info_url, method="GET", json_decode=True)
     result = {
         "is_delete": False,  # 是否已删除
         "video_title": "",  # 视频标题

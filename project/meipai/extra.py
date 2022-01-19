@@ -17,7 +17,7 @@ def get_follow_list(account_id):
     while page_count <= max_page_count:
         follow_pagination_url = "http://www.meipai.com/user/%s/friends" % account_id
         query_data = {"p": page_count}
-        follow_pagination_response = net.http_request(follow_pagination_url, method="GET", fields=query_data)
+        follow_pagination_response = net.request(follow_pagination_url, method="GET", fields=query_data)
         if follow_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
             return None
         follow_pagination_response_content = follow_pagination_response.data.decode(errors="ignore")

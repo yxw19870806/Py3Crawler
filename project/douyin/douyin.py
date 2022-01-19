@@ -25,7 +25,7 @@ def get_account_index_page(account_id):
     header_list = {
         "User-Agent": USER_AGENT,
     }
-    account_index_response = net.http_request(account_index_url, method="GET", header_list=header_list)
+    account_index_response = net.request(account_index_url, method="GET", header_list=header_list)
     result = {
         "dytk": "",  # 账号dytk值（请求参数）
         "signature": "",  # 加密串（请求参数）
@@ -73,7 +73,7 @@ def get_one_page_video(account_id, cursor_id, dytk, signature):
         "Referer": "https://www.douyin.com/share/user/%s" % account_id,
         "User-Agent": USER_AGENT,
     }
-    video_pagination_response = net.http_request(api_url, method="GET", fields=query_data, header_list=header_list, json_decode=True)
+    video_pagination_response = net.request(api_url, method="GET", fields=query_data, header_list=header_list, json_decode=True)
     result = {
         "is_over": False,  # 是否最后一页视频
         "next_page_cursor_id": None,  # 下一页视频指针

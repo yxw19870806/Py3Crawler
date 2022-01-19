@@ -26,7 +26,7 @@ def get_one_page_album(account_id, since_id):
         "since": since_id,
         "uid": account_id,
     }
-    api_response = net.http_request(api_url, method="GET", fields=query_data, json_decode=True)
+    api_response = net.request(api_url, method="GET", fields=query_data, json_decode=True)
     result = {
         "album_id_list": [],  # 全部作品id
     }
@@ -47,7 +47,7 @@ def get_album_page(album_id):
     # https://bcy.net/item/detail/5969608017174355726 该作品已被作者设置为只有粉丝可见
     # https://bcy.net/item/detail/6363512825238806286 该作品已被作者设置为登录后可见
     album_url = "https://bcy.net/item/detail/%s" % album_id
-    album_response = net.http_request(album_url, method="GET")
+    album_response = net.request(album_url, method="GET")
     result = {
         "photo_url_list": [],  # 全部图片地址
         "video_id": None,  # 视频id
@@ -112,7 +112,7 @@ def get_album_page_by_selenium(album_id):
         raise crawler.CrawlerException("播放页匹配视频信息地址失败")
     chrome.quit()
     # 获取视频信息
-    video_info_response = net.http_request(video_info_url, method="GET", json_decode=True)
+    video_info_response = net.request(video_info_url, method="GET", json_decode=True)
     if video_info_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(video_info_response.status))
     video_info_list = crawler.get_json_value(video_info_response.json_data, "data", "video_list", type_check=dict)

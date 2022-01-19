@@ -26,7 +26,7 @@ def check_login():
     if not COOKIE_INFO:
         return False
     index_url = "https://www.tumblr.com/"
-    index_response = net.http_request(index_url, method="GET", cookies_list=COOKIE_INFO, header_list={"User-Agent": USER_AGENT}, is_auto_redirect=False)
+    index_response = net.request(index_url, method="GET", cookies_list=COOKIE_INFO, header_list={"User-Agent": USER_AGENT}, is_auto_redirect=False)
     if index_response.status == 302 and index_response.getheader("Location") == "https://www.tumblr.com/dashboard":
         return True
     return False
@@ -35,7 +35,7 @@ def check_login():
 # 获取首页，判断是否支持https以及是否启用safe-mode和"Show this blog on the web"
 def get_index_setting(account_id):
     index_url = "https://%s.tumblr.com/" % account_id
-    index_response = net.http_request(index_url, method="GET", is_auto_redirect=False)
+    index_response = net.request(index_url, method="GET", is_auto_redirect=False)
     is_https = True
     is_private = False
     if index_response.status == 301:
@@ -49,7 +49,7 @@ def get_index_setting(account_id):
         if redirect_url.find("http://%s.tumblr.com/" % account_id) == 0:
             is_https = False
             index_url = "http://%s.tumblr.com/" % account_id
-            index_response = net.http_request(index_url, method="GET", is_auto_redirect=False)
+            index_response = net.request(index_url, method="GET", is_auto_redirect=False)
             if index_response.status == net.HTTP_RETURN_CODE_SUCCEED:
                 return is_https, is_private
             elif index_response.status != 302:
@@ -62,7 +62,7 @@ def get_index_setting(account_id):
         # "Show this blog on the web" disabled
         elif redirect_url.find("//www.tumblr.com/login_required/%s" % account_id) > 0:
             is_private = True
-            index_response = net.http_request(redirect_url, method="GET", cookies_list=COOKIE_INFO)
+            index_response = net.request(redirect_url, method="GET", cookies_list=COOKIE_INFO)
             if index_response.status == 404:
                 raise crawler.CrawlerException("账号不存在")
     elif index_response.status == 404:
@@ -82,7 +82,7 @@ def get_one_page_post(account_id, page_count, is_https):
         post_pagination_url = "%s://%s.tumblr.com/" % (protocol_type, account_id)
     else:
         post_pagination_url = "%s://%s.tumblr.com/page/%s" % (protocol_type, account_id, page_count)
-    post_pagination_response = net.http_request(post_pagination_url, method="GET")
+    post_pagination_response = net.request(post_pagination_url, method="GET")
     result = {
         "is_over": False,  # 是否最后一页日志
         "post_info_list": [],  # 全部日志信息
@@ -141,7 +141,7 @@ def get_one_page_private_blog(account_id, page_count):
         "User-Agent": USER_AGENT,
         "X-Requested-With": "XMLHttpRequest",
     }
-    post_pagination_response = net.http_request(post_pagination_url, method="GET", fields=query_data, header_list=header_list, cookies_list=COOKIE_INFO, json_decode=True)
+    post_pagination_response = net.request(post_pagination_url, method="GET", fields=query_data, header_list=header_list, cookies_list=COOKIE_INFO, json_decode=True)
     result = {
         "is_over": [],  # 是不是最后一页日志
         "post_info_list": [],  # 全部日志信息
@@ -199,7 +199,7 @@ def get_one_page_private_blog(account_id, page_count):
 
 # 获取日志页面
 def get_post_page(post_url, post_id):
-    post_response = net.http_request(post_url, method="GET")
+    post_response = net.request(post_url, method="GET")
     result = {
         "has_video": False,  # 是不是包含视频
         "is_delete": False,  # 是否已删除
@@ -345,7 +345,7 @@ def get_video_play_page(account_id, post_id, is_https):
     else:
         protocol_type = "http"
     video_play_url = "%s://www.tumblr.com/video/%s/%s/0" % (protocol_type, account_id, post_id)
-    video_play_response = net.http_request(video_play_url, method="GET", is_auto_redirect=False)
+    video_play_response = net.request(video_play_url, method="GET", is_auto_redirect=False)
     result = {
         "is_password": False,  # 是否加密
         "video_url": None,  # 视频地址
@@ -353,7 +353,7 @@ def get_video_play_page(account_id, post_id, is_https):
     if video_play_response.status == 301:
         video_play_url = video_play_response.getheader("Location")
         if video_play_url is not None:
-            video_play_response = net.http_request(video_play_url, method="GET")
+            video_play_response = net.request(video_play_url, method="GET")
     if video_play_response.status == 403 and video_play_response.data.decode(errors="ignore").find("You do not have permission to access this page.") >= 0:
         result["is_password"] = True
         return result

@@ -24,7 +24,7 @@ def get_one_page_photo(account_id, page_count):
         "p3_photo_list": "true",
         "page": page_count,
     }
-    photo_pagination_response = net.http_request(photo_pagination_url, method="GET", fields=query_data, json_decode=True)
+    photo_pagination_response = net.request(photo_pagination_url, method="GET", fields=query_data, json_decode=True)
     result = {
         "photo_info_list": [],  # 全部图片信息
         "is_over": False,  # 是否最后一页图片

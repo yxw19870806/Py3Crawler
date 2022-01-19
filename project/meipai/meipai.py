@@ -27,7 +27,7 @@ def get_one_page_video(account_id, page_count):
         "count": EACH_PAGE_VIDEO_COUNT,
         "single_column": 1,
     }
-    video_pagination_response = net.http_request(video_pagination_url, method="GET", fields=query_data, json_decode=True)
+    video_pagination_response = net.request(video_pagination_url, method="GET", fields=query_data, json_decode=True)
     result = {
         "video_info_list": [],  # 全部视频信息
     }
@@ -55,7 +55,7 @@ def get_one_page_video(account_id, page_count):
 # 获取指定视频播放页
 def get_video_play_page(video_id):
     video_play_url = "http://www.meipai.com/media/%s" % video_id
-    video_play_response = net.http_request(video_play_url, method="GET")
+    video_play_response = net.request(video_play_url, method="GET")
     result = {
         "is_delete": False,  # 是否已删除
         "video_url": None,  # 视频地址

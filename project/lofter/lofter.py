@@ -21,7 +21,7 @@ def init_session():
     header_list = {
         "User-Agent": USER_AGENT,
     }
-    index_response = net.http_request(index_url, method="GET", header_list=header_list, is_auto_redirect=False, is_random_ip=False)
+    index_response = net.request(index_url, method="GET", header_list=header_list, is_auto_redirect=False, is_random_ip=False)
     if index_response.status in [net.HTTP_RETURN_CODE_SUCCEED, 302]:
         COOKIE_INFO.update(net.get_cookies_from_response_header(index_response.headers))
 
@@ -34,7 +34,7 @@ def get_one_page_blog(account_name, page_count):
     header_list = {
         "User-Agent": USER_AGENT,
     }
-    blog_pagination_response = net.http_request(blog_pagination_url, method="GET", fields=query_data, header_list=header_list, cookies_list=COOKIE_INFO, is_auto_redirect=False, is_random_ip=False)
+    blog_pagination_response = net.request(blog_pagination_url, method="GET", fields=query_data, header_list=header_list, cookies_list=COOKIE_INFO, is_auto_redirect=False, is_random_ip=False)
     result = {
         "blog_url_list": [],  # 全部日志地址
     }
@@ -57,7 +57,7 @@ def get_blog_page(blog_url):
     header_list = {
         "User-Agent": USER_AGENT,
     }
-    blog_response = net.http_request(blog_url, method="GET", header_list=header_list, cookies_list=COOKIE_INFO, is_random_ip=False)
+    blog_response = net.request(blog_url, method="GET", header_list=header_list, cookies_list=COOKIE_INFO, is_random_ip=False)
     result = {
         "photo_url_list": [],  # 全部图片地址
     }

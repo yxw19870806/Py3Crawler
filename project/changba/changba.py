@@ -17,7 +17,7 @@ from common import *
 # 获取账号首页页面
 def get_account_index_page(account_id):
     account_index_url = "http://changba.com/u/%s" % account_id
-    account_index_response = net.http_request(account_index_url, method="GET", is_auto_redirect=False)
+    account_index_response = net.request(account_index_url, method="GET", is_auto_redirect=False)
     result = {
         "user_id": None,  # user id
     }
@@ -43,7 +43,7 @@ def get_one_page_audio(user_id, page_count):
         "userid": user_id,
         "pageNum": page_count - 1,
     }
-    audit_pagination_response = net.http_request(audit_pagination_url, method="GET", fields=query_data, json_decode=True)
+    audit_pagination_response = net.request(audit_pagination_url, method="GET", fields=query_data, json_decode=True)
     result = {
         "audio_info_list": [],  # 全部歌曲信息
     }
@@ -75,7 +75,7 @@ def get_audio_play_page(audio_en_word_id):
         "audio_url": None,  # 歌曲地址
         "is_delete": False,  # 是不是已经被删除
     }
-    audio_play_response = net.http_request(audio_play_url, method="GET")
+    audio_play_response = net.request(audio_play_url, method="GET")
     if audio_play_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(audio_play_response.status))
     audio_play_response_content = audio_play_response.data.decode(errors="ignore")
