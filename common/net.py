@@ -418,7 +418,7 @@ def _random_ip_address():
     return "%s.%s.%s.%s" % (random.randint(1, 254), random.randint(0, 255), random.randint(0, 255), random.randint(0, 255))
 
 
-def save_net_file(file_url, file_path, need_content_type=False, head_check=False, replace_if_exist=None, **kwargs):
+def download(file_url, file_path, need_content_type=False, head_check=False, replace_if_exist=None, **kwargs):
     """Visit web and save to local
 
     :param file_url:
@@ -671,3 +671,12 @@ def http_request(url, method="GET", fields=None, binary_data=None, header_list=N
     return request(url, method=method, fields=fields, binary_data=binary_data, header_list=header_list, cookies_list=cookies_list, encode_multipart=encode_multipart,
                    json_decode=json_decode, is_auto_proxy=is_auto_proxy, is_auto_redirect=is_auto_redirect, is_gzip=is_gzip, is_url_encode=is_url_encode, is_auto_retry=is_auto_retry,
                    is_random_ip=is_random_ip, is_check_qps=is_check_qps, connection_timeout=connection_timeout, read_timeout=read_timeout)
+
+
+def save_net_file(file_url, file_path, need_content_type=False, head_check=False, replace_if_exist=None, **kwargs):
+    warnings.warn(
+        "save_net_file commands are deprecated. Please use download() instead",
+        DeprecationWarning,
+        stacklevel=2,
+    )
+    return download(file_url, file_path, need_content_type=need_content_type, head_check=head_check, replace_if_exist=replace_if_exist, **kwargs)
