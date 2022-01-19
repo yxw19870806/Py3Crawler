@@ -278,8 +278,8 @@ class Download(crawler.DownloadThread):
                         continue
                     self.error("作品%s第%s张图片 %s，下载失败，原因：%s" % (album_id, photo_index, photo_url, crawler.download_failre(save_file_return["code"])))
                     self.check_thread_exit_after_download_failure()
-                photo_index += 1
                 break
+            photo_index += 1
 
     def crawl_video(self, album_id):
         self.step("开始解析作品%s的视频" % album_id)
