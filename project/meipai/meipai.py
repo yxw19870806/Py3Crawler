@@ -226,13 +226,14 @@ class Download(crawler.DownloadThread):
         file_path = os.path.join(self.main_thread.video_download_path, self.display_name, "%010d.mp4" % video_info["video_id"])
         save_file_return = net.download(video_info["video_url"], file_path)
         if save_file_return["status"] == 1:
+            self.total_video_count += 1  # 计数累加
             self.step("视频%s下载成功" % video_info["video_id"])
         else:
             self.error("视频%s %s 下载失败，原因：%s" % (video_info["video_id"], video_info["video_url"], crawler.download_failre(save_file_return["code"])))
+            self.check_thread_exit_after_download_failure()
 
         # 视频下载完毕
         self.account_info[1] = str(video_info["video_id"])  # 设置存档记录
-        self.total_video_count += 1  # 计数累加
 
     def run(self):
         try:
