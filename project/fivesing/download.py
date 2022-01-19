@@ -9,12 +9,12 @@ email: hikaru870806@hotmail.com
 import tkinter
 from tkinter import filedialog
 from common import *
-from project.fiveSing import fiveSing
+from project.fivesing import fivesing
 
 
 def main():
     # 初始化
-    fiveSing_class = fiveSing.FiveSing(extra_sys_config={crawler.SYS_NOT_CHECK_SAVE_DATA: True})
+    fiveSing_class = fivesing.FiveSing(extra_sys_config={crawler.SYS_NOT_CHECK_SAVE_DATA: True})
     # GUI窗口
     gui = tkinter.Tk()
     gui.withdraw()
@@ -33,7 +33,7 @@ def main():
             continue
         # 访问歌曲播放页
         try:
-            audio_response = fiveSing.get_audio_play_page(audio_id, audio_type)
+            audio_response = fivesing.get_audio_play_page(audio_id, audio_type)
         except crawler.CrawlerException as e:
             log.error("解析歌曲下载地址失败，原因：%s" % e.message)
             tool.process_exit()

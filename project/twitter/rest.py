@@ -10,7 +10,7 @@ import base64
 import json
 import os
 from common import *
-from common import crypto
+from common import crypto, quicky
 
 API_HOST = "https://api.twitter.com"
 API_VERSION = "1.1"
@@ -20,7 +20,7 @@ token_file_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "info\
 
 def init():
     # 设置代理
-    crawler.quickly_set_proxy()
+    quicky.quickly_set_proxy()
 
     if ACCESS_TOKEN is not None:
         return True

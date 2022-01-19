@@ -6,11 +6,8 @@ http://www.kuwo.cn/
 email: hikaru870806@hotmail.com
 如有问题或建议请联系
 """
-import os
-import time
 import tkinter
 from tkinter import filedialog
-import traceback
 from common import *
 from project.kuwo import kuwo
 
