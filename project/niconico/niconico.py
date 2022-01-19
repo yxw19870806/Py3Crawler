@@ -312,13 +312,13 @@ class Download(crawler.DownloadThread):
             cookies_list.update(video_info_response["extra_cookie"])
         save_file_return = net.download(video_info_response["video_url"], video_file_path, cookies_list=cookies_list)
         if save_file_return["status"] == 1:
+            self.total_video_count += 1  # 计数累加
             self.step("视频%s 《%s》下载成功" % (video_info["video_id"], video_info["video_title"]))
         else:
             self.error("视频%s 《%s》 %s 下载失败，原因：%s" % (video_info["video_id"], video_info["video_title"], video_info_response["video_url"], crawler.download_failre(save_file_return["code"])))
-            return
+            self.check_thread_exit_after_download_failure()
 
         # 视频下载完毕
-        self.total_video_count += 1  # 计数累加
         self.account_info[1] = str(video_info["video_id"])  # 设置存档记录
 
     def run(self):
