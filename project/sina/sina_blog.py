@@ -239,14 +239,15 @@ class Download(crawler.DownloadThread):
                     self.error("第%s张图片 %s 资源已被删除，跳过" % (photo_index, photo_url))
                     continue
                 else:
+                    self.total_photo_count += photo_index - 1  # 计数累加
                     self.step("日志《%s》 第%s张图片下载成功" % (blog_info["blog_title"], photo_index))
-                    photo_index += 1
             else:
                 self.error("日志《%s》 第%s张图片 %s 下载失败，原因：%s" % (blog_info["blog_title"], photo_index, photo_url, crawler.download_failre(save_file_return["code"])))
+                self.check_thread_exit_after_download_failure()
+            photo_index += 1
 
         # 日志内图片全部下载完毕
         self.temp_path_list = []  # 临时目录设置清除
-        self.total_photo_count += photo_index - 1  # 计数累加
         self.account_info[1] = str(blog_info["blog_time"])  # 设置存档记录
 
     def run(self):
