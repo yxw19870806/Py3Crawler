@@ -186,14 +186,15 @@ class Download(crawler.DownloadThread):
             file_path = os.path.join(post_path, "%s.jpg" % photo_index)
             save_file_return = net.download(photo_url, file_path)
             if save_file_return["status"] == 1:
+                self.total_photo_count += 1  # 计数累加
                 self.step("相册%s《%s》第%s张图片下载成功" % (album_info["album_id"], album_info["album_title"], photo_index))
-                photo_index += 1
             else:
                 self.error("相册%s《%s》第%s张图片 %s 下载失败，原因：%s" % (album_info["album_id"], album_info["album_title"], photo_index, photo_url, crawler.download_failre(save_file_return["code"])))
+                self.check_thread_exit_after_download_failure()
+            photo_index += 1
 
         # 相册内图片全部下载完毕
         self.temp_path_list = []  # 临时目录设置清除
-        self.total_photo_count += photo_index - 1  # 计数累加
         self.account_info[1] = str(album_info["album_id"])  # 设置存档记录
 
     def run(self):
