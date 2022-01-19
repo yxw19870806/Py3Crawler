@@ -171,16 +171,17 @@ class Jigadori(crawler.Crawler):
                         file_path = os.path.join(self.photo_download_path, photo_info["account_name"], "%019d_%02d.%s" % (photo_info["tweet_id"], photo_index, net.get_file_type(photo_url, "jpg")))
                         save_file_return = net.download(photo_url, file_path)
                         if save_file_return["status"] == 1:
-                            # 设置临时目录
-                            temp_path_list.append(file_path)
+                            temp_path_list.append(file_path)  # 设置临时目录
+                            self.total_photo_count += 1  # 计数累加
                             log.step("tweet%s的第%s张图片下载成功" % (photo_info["tweet_id"], photo_index))
-                            photo_index += 1
                         else:
                             log.error("tweet%s的第%s张图片（account：%s) %s，下载失败，原因：%s" % (photo_info["tweet_id"], photo_index, photo_info["account_name"], photo_url, crawler.download_failre(save_file_return["code"])))
+                            if self.is_thread_exit_after_download_failure:
+                                tool.process_exit()
+                        photo_index += 1
 
                     # tweet内图片全部下载完毕
                     temp_path_list = []  # 临时目录设置清除
-                    self.total_photo_count += photo_index - 1  # 计数累加
                     last_tweet_id = photo_info["tweet_id"]  # 设置存档记录
 
                 if start_page_count == 1:
