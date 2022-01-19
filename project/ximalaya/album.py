@@ -128,22 +128,20 @@ class Download(crawler.DownloadThread):
 
         if audio_play_response["is_video"]:
             self.error("音频%s类型是视频" % audio_info["audio_id"])
-            self.account_info[1] = str(audio_info["audio_id"])  # 设置存档记录
-            return
-
-        audio_url = audio_play_response["audio_url"]
-        self.step("开始下载音频%s《%s》 %s" % (audio_info["audio_id"], audio_info["audio_title"], audio_url))
-
-        file_path = os.path.join(self.main_thread.audio_download_path, self.display_name, "%09d - %s.%s" % (audio_info["audio_id"], path.filter_text(audio_info["audio_title"]), net.get_file_type(audio_url)))
-        save_file_return = net.download(audio_url, file_path)
-        if save_file_return["status"] == 1:
-            self.step("音频%s《%s》下载成功" % (audio_info["audio_id"], audio_info["audio_title"]))
         else:
-            self.error("音频%s《%s》 %s 下载失败，原因：%s" % (audio_info["audio_id"], audio_info["audio_title"], audio_url, crawler.download_failre(save_file_return["code"])))
-            raise crawler.CrawlerException()
+            audio_url = audio_play_response["audio_url"]
+            self.step("开始下载音频%s《%s》 %s" % (audio_info["audio_id"], audio_info["audio_title"], audio_url))
+
+            file_path = os.path.join(self.main_thread.audio_download_path, self.display_name, "%09d - %s.%s" % (audio_info["audio_id"], path.filter_text(audio_info["audio_title"]), net.get_file_type(audio_url)))
+            save_file_return = net.download(audio_url, file_path)
+            if save_file_return["status"] == 1:
+                self.total_audio_count += 1  # 计数累加
+                self.step("音频%s《%s》下载成功" % (audio_info["audio_id"], audio_info["audio_title"]))
+            else:
+                self.error("音频%s《%s》 %s 下载失败，原因：%s" % (audio_info["audio_id"], audio_info["audio_title"], audio_url, crawler.download_failre(save_file_return["code"])))
+                self.check_thread_exit_after_download_failure()
 
         # 音频下载完毕
-        self.total_audio_count += 1  # 计数累加
         self.account_info[1] = str(audio_info["audio_id"])  # 设置存档记录
 
     def run(self):
