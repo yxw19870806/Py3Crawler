@@ -218,15 +218,16 @@ class Download(crawler.DownloadThread):
                     path.delete_dir_or_file(save_file_return["file_path"])
                     self.error("日志 %s (%s) 第%s张图片 %s 已被屏蔽，删除" % (blog_id, blog_url, photo_index, photo_url))
                 else:
-                    self.temp_path_list.append(file_path)
+                    self.temp_path_list.append(file_path)  # 设置临时目录
+                    self.total_photo_count += 1  # 计数累加
                     self.step("日志%s的第%s张图片下载成功" % (blog_id, photo_index))
             else:
                 self.error("日志 %s (%s) 第%s张图片 %s 下载失败，原因：%s" % (blog_id, blog_url, photo_index, photo_url, crawler.download_failre(save_file_return["code"])))
+                self.check_thread_exit_after_download_failure()
             photo_index += 1
 
         # 日志内图片全部下载完毕
         self.temp_path_list = []  # 临时目录设置清除
-        self.total_photo_count += photo_index - 1  # 计数累加
         self.account_info[1] = str(blog_id)  # 设置存档记录
 
     def run(self):
