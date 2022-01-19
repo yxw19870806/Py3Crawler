@@ -177,7 +177,7 @@ class Jigadori(crawler.Crawler):
                         else:
                             log.error("tweet%s的第%s张图片（account：%s) %s，下载失败，原因：%s" % (photo_info["tweet_id"], photo_index, photo_info["account_name"], photo_url, crawler.download_failre(save_file_return["code"])))
                             if self.is_thread_exit_after_download_failure:
-                                tool.process_exit()
+                                tool.process_exit(0)
                         photo_index += 1
 
                     # tweet内图片全部下载完毕

@@ -330,7 +330,7 @@ class DownloadThread(threading.Thread):
     def check_thread_exit_after_download_failure(self, is_process_exit=True):
         if self.main_thread.is_thread_exit_after_download_failure:
             if is_process_exit:
-                tool.process_exit()
+                tool.process_exit(0)
             else:
                 return True
         return False
