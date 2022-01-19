@@ -378,38 +378,19 @@ def _random_user_agent():
         "Windows 8.1": "Windows NT 6.3",
         "Windows 10": "Windows NT 10.0",
     }
-    firefox_version_max = 63
+    firefox_version_max = 96
     # https://zh.wikipedia.org/zh-cn/Google_Chrome
-    chrome_version_list = ["61.0.3163", "62.0.3202", "63.0.3239", "64.0.3282", "65.0.3325", "66.0.3359", "67.0.3396", "68.0.3423", "69.0.3497", "70.0.3538"]
-    # https://docs.microsoft.com/en-us/previous-versions/windows/internet-explorer/ie-developer/compatibility/hh869301(v=vs.85)
-    # https://en.wikipedia.org/wiki/Microsoft_Edge
-    edge_version_list = ["12.10240", "13.10586", "14.14393", "15.15063", "16.16299", "17.17134", "18.17763"]
+    chrome_version_list = ["94.0.4606.54", "94.0.4606.61", "94.0.4606.71", "94.0.4606.81", "95.0.4638.54", "95.0.4638.69", "96.0.4664.45", "96.0.4664.93", "96.0.4664.110", "97.0.4692.71"]
     # browser_type = random.choice(["IE", "firefox", "chrome", "Edge"])
     browser_type = random.choice(["firefox", "chrome"])
-    if browser_type == "IE":
-        ie_version = random.randint(8, 11)
-        os_type = random.choice(list(windows_version_dict.values()))
-        if ie_version == 8:
-            return "Mozilla/4.0 (compatible; MSIE %s.0; %s; WOW64)" % (ie_version, os_type)
-        elif ie_version == 9:
-            return "Mozilla/5.0 (compatible; MSIE %s.0; %s; WOW64; Trident/5.0)" % (ie_version, os_type)
-        elif ie_version == 10:
-            return "Mozilla/5.0 (compatible; MSIE %s.0; %s; WOW64; Trident/6.0)" % (ie_version, os_type)
-        else:
-            return "Mozilla/5.0 (%s; WOW64; Trident/7.0; rv:%s.0) like Gecko" % (os_type, ie_version)
-    elif browser_type == "edge":
-        chrome_version = random.choice(chrome_version_list)
-        edge_version = random.choice(edge_version_list)
-        return "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/%s.0 Safari/537.36 Edge/%s" % (chrome_version, edge_version)
-    elif browser_type == "firefox":
+    if browser_type == "firefox":
         firefox_version = random.randint(firefox_version_max - 10, firefox_version_max)
         os_type = random.choice(list(windows_version_dict.values()))
         return "Mozilla/5.0 (%s; WOW64; rv:%s.0) Gecko/20100101 Firefox/%s.0" % (os_type, firefox_version, firefox_version)
     elif browser_type == "chrome":
         chrome_version = random.choice(chrome_version_list)
-        sub_version = random.randint(1, 199)
         os_type = random.choice(list(windows_version_dict.values()))
-        return "Mozilla/5.0 (%s; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/%s.%s Safari/537.36" % (os_type, chrome_version, sub_version)
+        return "Mozilla/5.0 (%s; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/%s Safari/537.36" % (os_type, chrome_version)
     return ""
 
 
