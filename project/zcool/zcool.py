@@ -215,9 +215,9 @@ class Download(crawler.DownloadThread):
         self.trace("作品%s解析的全部图片：%s" % (album_info["album_id"], album_response["photo_url_list"]))
         self.step("作品%s解析获取%s张图片" % (album_info["album_id"], len(album_response["photo_url_list"])))
 
+        photo_index = 1
         album_path = os.path.join(self.main_thread.photo_download_path, self.account_name, "%s %s" % (album_info["album_id"], path.filter_text(album_info["album_title"])))
         self.temp_path_list.append(album_path)
-        photo_index = 1
         for photo_url in album_response["photo_url_list"]:
             self.main_thread_check()  # 检测主线程运行状态
             photo_url = get_photo_url(photo_url)
@@ -226,14 +226,15 @@ class Download(crawler.DownloadThread):
             file_path = os.path.join(album_path, "%02d.%s" % (photo_index, net.get_file_type(photo_url)))
             save_file_return = net.download(photo_url, file_path)
             if save_file_return["status"] == 1:
+                self.total_photo_count += 1  # 计数累加
                 self.step("作品%s《%s》的第%s张图片下载成功" % (album_info["album_id"], album_info["album_title"], photo_index))
             else:
                 self.error("作品%s《%s》的第%s张图片 %s 下载失败，原因：%s" % (album_info["album_id"], album_info["album_title"], photo_index, photo_url, crawler.download_failre(save_file_return["code"])))
+                self.check_thread_exit_after_download_failure()
             photo_index += 1
 
         # 作品内图片全部下载完毕
         self.temp_path_list = []  # 临时目录设置清除
-        self.total_photo_count += photo_index - 1  # 计数累加
         self.account_info[1] = str(album_info["album_time"])  # 设置存档记录
 
     def run(self):
