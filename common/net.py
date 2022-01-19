@@ -80,7 +80,7 @@ DOWNLOAD_REPLACE_IF_EXIST = False
 
 
 class ErrorResponse(object):
-    """Default http_request() response object(exception return)"""
+    """Default request() response object(exception return)"""
 
     def __init__(self, status=-1):
         self.status = status
@@ -168,6 +168,14 @@ def url_encode(url):
 
 
 def http_request(url, method="GET", fields=None, binary_data=None, header_list=None, cookies_list=None, encode_multipart=False, json_decode=False,
+                 is_auto_proxy=True, is_auto_redirect=True, is_gzip=True, is_url_encode=True, is_auto_retry=True, is_random_ip=True,
+                 is_check_qps=True, connection_timeout=NET_CONFIG["HTTP_CONNECTION_TIMEOUT"], read_timeout=NET_CONFIG["HTTP_READ_TIMEOUT"]):
+    return request(url, method=method, fields=fields, binary_data=binary_data, header_list=header_list, cookies_list=cookies_list, encode_multipart=encode_multipart,
+             json_decode=json_decode, is_auto_proxy=is_auto_proxy, is_auto_redirect=is_auto_redirect, is_gzip=is_gzip, is_url_encode=is_url_encode, is_auto_retry= is_auto_retry,
+             is_random_ip=is_random_ip, is_check_qps=is_check_qps, connection_timeout=connection_timeout, read_timeout=read_timeout)
+
+
+def request(url, method="GET", fields=None, binary_data=None, header_list=None, cookies_list=None, encode_multipart=False, json_decode=False,
                  is_auto_proxy=True, is_auto_redirect=True, is_gzip=True, is_url_encode=True, is_auto_retry=True, is_random_ip=True,
                  is_check_qps=True, connection_timeout=NET_CONFIG["HTTP_CONNECTION_TIMEOUT"], read_timeout=NET_CONFIG["HTTP_READ_TIMEOUT"]):
     """Http request via urllib3
@@ -320,7 +328,7 @@ def http_request(url, method="GET", fields=None, binary_data=None, header_list=N
                     return ErrorResponse(HTTP_RETURN_CODE_TOO_MANY_REDIRECTS)
             elif isinstance(e, urllib3.exceptions.DecodeError):
                 if message.find("'Received response with content-encoding: gzip, but failed to decode it.'") >= 0:
-                    return http_request(url, method=method, fields=fields, binary_data=binary_data, header_list=header_list, cookies_list=cookies_list,
+                    return request(url, method=method, fields=fields, binary_data=binary_data, header_list=header_list, cookies_list=cookies_list,
                                         encode_multipart=encode_multipart, json_decode=json_decode, is_auto_proxy=is_auto_proxy, is_auto_redirect=is_auto_redirect,
                                         is_gzip=False, is_url_encode=False, is_auto_retry=is_auto_retry, is_random_ip=is_random_ip, is_check_qps=is_check_qps,
                                         connection_timeout=connection_timeout, read_timeout=read_timeout)
@@ -453,7 +461,7 @@ def save_net_file(file_url, file_path, need_content_type=False, head_check=False
         else:
             request_method = "GET"
         # 获取头信息
-        response = http_request(file_url, request_method, is_check_qps=False, connection_timeout=NET_CONFIG["HTTP_CONNECTION_TIMEOUT"], read_timeout=NET_CONFIG["HTTP_READ_TIMEOUT"], **kwargs)
+        response = request(file_url, request_method, is_check_qps=False, connection_timeout=NET_CONFIG["HTTP_CONNECTION_TIMEOUT"], read_timeout=NET_CONFIG["HTTP_READ_TIMEOUT"], **kwargs)
         # 其他返回状态，退出
         if response.status != HTTP_RETURN_CODE_SUCCEED:
             # URL格式不正确
@@ -494,7 +502,7 @@ def save_net_file(file_url, file_path, need_content_type=False, head_check=False
         if not is_multi_thread:  # 单线程下载
             # 如果是先调用HEAD方法的，需要重新获取完整数据
             if head_check:
-                response = http_request(file_url, method="GET", connection_timeout=NET_CONFIG["DOWNLOAD_CONNECTION_TIMEOUT"], read_timeout=NET_CONFIG["DOWNLOAD_READ_TIMEOUT"], **kwargs)
+                response = request(file_url, method="GET", connection_timeout=NET_CONFIG["DOWNLOAD_CONNECTION_TIMEOUT"], read_timeout=NET_CONFIG["DOWNLOAD_READ_TIMEOUT"], **kwargs)
                 if response.status != HTTP_RETURN_CODE_SUCCEED:
                     continue
             # 下载
@@ -598,8 +606,7 @@ def save_net_file_list(file_url_list, file_path, header_list=None, cookies_list=
         # 下载
         with open(file_path, "wb") as file_handle:
             for file_url in file_url_list:
-                response = http_request(file_url, header_list=header_list, cookies_list=cookies_list,
-                                        connection_timeout=NET_CONFIG["DOWNLOAD_CONNECTION_TIMEOUT"], read_timeout=NET_CONFIG["DOWNLOAD_READ_TIMEOUT"])
+                response = request(file_url, header_list=header_list, cookies_list=cookies_list, connection_timeout=NET_CONFIG["DOWNLOAD_CONNECTION_TIMEOUT"], read_timeout=NET_CONFIG["DOWNLOAD_READ_TIMEOUT"])
                 if response.status == HTTP_RETURN_CODE_SUCCEED:
                     file_handle.write(response.data)
                 # 超过重试次数，直接退出
@@ -618,7 +625,7 @@ def save_net_file_list(file_url_list, file_path, header_list=None, cookies_list=
 
 
 def pause_request():
-    """Block thread when use http_request()"""
+    """Block thread when use request()"""
     if thread_event.isSet():
         output.print_msg("pause process")
         thread_event.clear()
@@ -644,7 +651,7 @@ class MultiThreadDownload(threading.Thread):
         headers_list = {"Range": "bytes=%s-%s" % (self.start_pos, self.end_pos)}
         range_size = self.end_pos - self.start_pos + 1
         for retry_count in range(0, NET_CONFIG["DOWNLOAD_RETRY_COUNT"]):
-            response = http_request(self.file_url, method="GET", header_list=headers_list)
+            response = request(self.file_url, method="GET", header_list=headers_list)
             if response.status == 206:
                 # 下载的文件和请求的文件大小不一致
                 if len(response.data) != range_size:
