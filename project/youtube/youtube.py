@@ -540,21 +540,19 @@ class Download(crawler.DownloadThread):
 
         if video_response["skip_reason"]:
             self.error("视频%s已跳过，原因：%s" % (video_id, video_response["skip_reason"]))
-            self.account_info[1] = video_id  # 设置存档记录
-            # self.account_info[2] = str(video_response["video_time"])  # 设置存档记录
-            return
-
-        self.step("开始下载视频%s《%s》 %s" % (video_id, video_response["video_title"], video_response["video_url"]))
-
-        video_file_path = os.path.join(self.main_thread.video_download_path, self.display_name, "%s - %s.mp4" % (video_id, path.filter_text(video_response["video_title"])))
-        save_file_return = net.download(video_response["video_url"], video_file_path, head_check=True)
-        if save_file_return["status"] == 1:
-            self.step("视频%s《%s》下载成功" % (video_id, video_response["video_title"]))
         else:
-            self.error("视频%s《%s》 %s 下载失败，原因：%s" % (video_id, video_response["video_title"], video_response["video_url"], crawler.download_failre(save_file_return["code"])))
+            self.step("开始下载视频%s《%s》 %s" % (video_id, video_response["video_title"], video_response["video_url"]))
+
+            video_file_path = os.path.join(self.main_thread.video_download_path, self.display_name, "%s - %s.mp4" % (video_id, path.filter_text(video_response["video_title"])))
+            save_file_return = net.download(video_response["video_url"], video_file_path, head_check=True)
+            if save_file_return["status"] == 1:
+                self.total_video_count += 1  # 计数累加
+                self.step("视频%s《%s》下载成功" % (video_id, video_response["video_title"]))
+            else:
+                self.error("视频%s《%s》 %s 下载失败，原因：%s" % (video_id, video_response["video_title"], video_response["video_url"], crawler.download_failre(save_file_return["code"])))
+                self.check_thread_exit_after_download_failure()
 
         # 媒体内图片和视频全部下载完毕
-        self.total_video_count += 1  # 计数累加
         self.account_info[1] = video_id  # 设置存档记录
         self.account_info[2] = str(video_response["video_time"])  # 设置存档记录
 
