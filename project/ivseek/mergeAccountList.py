@@ -11,7 +11,7 @@ import os
 from common import *
 from project.ivseek import ivseek
 from project.youtube import youtube
-from project.nicoNico import niconico
+from project.niconico import niconico
 
 
 def main():

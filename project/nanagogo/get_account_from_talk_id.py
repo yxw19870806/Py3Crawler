@@ -8,7 +8,7 @@ email: hikaru870806@hotmail.com
 """
 import os
 from common import *
-from project.nanaGoGo import nanagogo
+from project.nanagogo import nanagogo
 
 # 存放解析出的账号文件路径
 ACCOUNT_ID_FILE_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), "info/account.data"))

@@ -9,7 +9,7 @@ email: hikaru870806@hotmail.com
 import tkinter
 from tkinter import filedialog
 from common import *
-from project.nicoNico import niconico
+from project.niconico import niconico
 
 
 def main():

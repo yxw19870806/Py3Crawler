@@ -9,7 +9,7 @@ email: hikaru870806@hotmail.com
 import os
 from common import *
 from project.ivseek import ivseek
-from project.nicoNico import niconico
+from project.niconico import niconico
 
 NICONICO_VIDEO_DOWNLOAD_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), "niconico_video"))
 
