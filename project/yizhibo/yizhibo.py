@@ -213,15 +213,17 @@ class Download(crawler.DownloadThread):
         photo_file_path = os.path.join(self.main_thread.photo_download_path, self.display_name, "%04d.%s" % (photo_index, net.get_file_type(photo_info["photo_url"])))
         save_file_return = net.download(photo_info["photo_url"], photo_file_path)
         if save_file_return["status"] == 1:
+            self.total_photo_count += 1  # 计数累加
             self.step("第%s张图片下载成功" % photo_index)
         else:
             self.error("第%s张图片 %s 下载失败，原因：%s" % (photo_index, photo_info["photo_url"], crawler.download_failre(save_file_return["code"])))
-            return
+            if self.check_thread_exit_after_download_failure(False):
+                return False
 
         # 图片下载完毕
-        self.total_photo_count += 1  # 计数累加
         self.account_info[3] = str(photo_index)  # 设置存档记录
         self.account_info[4] = str(photo_info["photo_time"])  # 设置存档记录
+        return True
 
     # 获取所有可下载视频
     def get_crawl_video_list(self):
@@ -264,15 +266,17 @@ class Download(crawler.DownloadThread):
         video_file_path = os.path.join(self.main_thread.video_download_path, self.display_name, "%04d.ts" % video_index)
         save_file_return = net.download_from_list(video_info["video_url_list"], video_file_path)
         if save_file_return["status"] == 1:
+            self.total_video_count += 1  # 计数累加
             self.step("第%s个视频下载成功" % video_index)
         else:
             self.error("第%s个视频 %s 下载失败" % (video_index, video_info["video_url_list"]))
-            return
+            if self.check_thread_exit_after_download_failure(False):
+                return False
 
         # 视频下载完毕
-        self.total_video_count += 1  # 计数累加
         self.account_info[1] = str(video_index)  # 设置存档记录
         self.account_info[2] = str(video_info["video_time"])  # 设置存档记录
+        return True
 
     def run(self):
         try:
@@ -284,7 +288,8 @@ class Download(crawler.DownloadThread):
 
                 # 从最早的图片开始下载
                 while len(photo_info_list) > 0:
-                    self.crawl_photo(photo_info_list.pop())
+                    if not self.crawl_photo(photo_info_list.pop()):
+                        break
                     self.main_thread_check()  # 检测主线程运行状态
 
             # 视频下载
@@ -295,7 +300,8 @@ class Download(crawler.DownloadThread):
 
                 # 从最早的视频开始下载
                 while len(video_info_list) > 0:
-                    self.crawl_video(video_info_list.pop())
+                    if not self.crawl_video(video_info_list.pop()):
+                        break
                     self.main_thread_check()  # 检测主线程运行状态
         except (SystemExit, KeyboardInterrupt) as e:
             if isinstance(e, SystemExit) and e.code == 1:
