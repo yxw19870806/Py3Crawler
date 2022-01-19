@@ -14,6 +14,8 @@ import ssl
 import time
 import threading
 import urllib.parse
+import warnings
+
 import urllib3
 
 try:
@@ -167,17 +169,9 @@ def url_encode(url):
     return urllib.parse.quote(url, safe=";/?:@&=+$,%")
 
 
-def http_request(url, method="GET", fields=None, binary_data=None, header_list=None, cookies_list=None, encode_multipart=False, json_decode=False,
-                 is_auto_proxy=True, is_auto_redirect=True, is_gzip=True, is_url_encode=True, is_auto_retry=True, is_random_ip=True,
-                 is_check_qps=True, connection_timeout=NET_CONFIG["HTTP_CONNECTION_TIMEOUT"], read_timeout=NET_CONFIG["HTTP_READ_TIMEOUT"]):
-    return request(url, method=method, fields=fields, binary_data=binary_data, header_list=header_list, cookies_list=cookies_list, encode_multipart=encode_multipart,
-             json_decode=json_decode, is_auto_proxy=is_auto_proxy, is_auto_redirect=is_auto_redirect, is_gzip=is_gzip, is_url_encode=is_url_encode, is_auto_retry= is_auto_retry,
-             is_random_ip=is_random_ip, is_check_qps=is_check_qps, connection_timeout=connection_timeout, read_timeout=read_timeout)
-
-
 def request(url, method="GET", fields=None, binary_data=None, header_list=None, cookies_list=None, encode_multipart=False, json_decode=False,
-                 is_auto_proxy=True, is_auto_redirect=True, is_gzip=True, is_url_encode=True, is_auto_retry=True, is_random_ip=True,
-                 is_check_qps=True, connection_timeout=NET_CONFIG["HTTP_CONNECTION_TIMEOUT"], read_timeout=NET_CONFIG["HTTP_READ_TIMEOUT"]):
+            is_auto_proxy=True, is_auto_redirect=True, is_gzip=True, is_url_encode=True, is_auto_retry=True, is_random_ip=True,
+            is_check_qps=True, connection_timeout=NET_CONFIG["HTTP_CONNECTION_TIMEOUT"], read_timeout=NET_CONFIG["HTTP_READ_TIMEOUT"]):
     """Http request via urllib3
 
     :param url:
@@ -329,9 +323,9 @@ def request(url, method="GET", fields=None, binary_data=None, header_list=None, 
             elif isinstance(e, urllib3.exceptions.DecodeError):
                 if message.find("'Received response with content-encoding: gzip, but failed to decode it.'") >= 0:
                     return request(url, method=method, fields=fields, binary_data=binary_data, header_list=header_list, cookies_list=cookies_list,
-                                        encode_multipart=encode_multipart, json_decode=json_decode, is_auto_proxy=is_auto_proxy, is_auto_redirect=is_auto_redirect,
-                                        is_gzip=False, is_url_encode=False, is_auto_retry=is_auto_retry, is_random_ip=is_random_ip, is_check_qps=is_check_qps,
-                                        connection_timeout=connection_timeout, read_timeout=read_timeout)
+                                   encode_multipart=encode_multipart, json_decode=json_decode, is_auto_proxy=is_auto_proxy, is_auto_redirect=is_auto_redirect,
+                                   is_gzip=False, is_url_encode=False, is_auto_retry=is_auto_retry, is_random_ip=is_random_ip, is_check_qps=is_check_qps,
+                                   connection_timeout=connection_timeout, read_timeout=read_timeout)
             # import traceback
             # output.print_msg(message)
             # output.print_msg(traceback.format_exc())
@@ -664,3 +658,16 @@ class MultiThreadDownload(threading.Thread):
                     self.fd_handle.close()
                     return
         self.error_flag.append(self)
+
+
+def http_request(url, method="GET", fields=None, binary_data=None, header_list=None, cookies_list=None, encode_multipart=False, json_decode=False,
+                 is_auto_proxy=True, is_auto_redirect=True, is_gzip=True, is_url_encode=True, is_auto_retry=True, is_random_ip=True,
+                 is_check_qps=True, connection_timeout=NET_CONFIG["HTTP_CONNECTION_TIMEOUT"], read_timeout=NET_CONFIG["HTTP_READ_TIMEOUT"]):
+    warnings.warn(
+        "http_request commands are deprecated. Please use request() instead",
+        DeprecationWarning,
+        stacklevel=2,
+    )
+    return request(url, method=method, fields=fields, binary_data=binary_data, header_list=header_list, cookies_list=cookies_list, encode_multipart=encode_multipart,
+                   json_decode=json_decode, is_auto_proxy=is_auto_proxy, is_auto_redirect=is_auto_redirect, is_gzip=is_gzip, is_url_encode=is_url_encode, is_auto_retry=is_auto_retry,
+                   is_random_ip=is_random_ip, is_check_qps=is_check_qps, connection_timeout=connection_timeout, read_timeout=read_timeout)
