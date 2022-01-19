@@ -266,7 +266,7 @@ class Download(crawler.DownloadThread):
                 file_type = "jpg"
             file_path = os.path.join(album_path, "%03d.%s" % (photo_index, file_type))
             for retry_count in range(0, 10):
-                save_file_return = net.save_net_file(photo_url, file_path)
+                save_file_return = net.download(photo_url, file_path)
                 if save_file_return["status"] == 1:
                     self.total_photo_count += 1  # 计数累加
                     self.step("作品%s第%s张图片下载成功" % (album_id, photo_index))
@@ -292,7 +292,7 @@ class Download(crawler.DownloadThread):
         self.step("作品%s开始下载视频 %s" % (album_id, video_response["video_url"]))
 
         file_path = os.path.join(self.main_thread.photo_download_path, self.display_name, "%s.%s" % (album_id, video_response["video_type"]))
-        save_file_return = net.save_net_file(video_response["video_url"], file_path)
+        save_file_return = net.download(video_response["video_url"], file_path)
         if save_file_return["status"] == 1:
             self.total_video_count += 1  # 计数累加
             self.step("作品%s视频下载成功" % album_id)

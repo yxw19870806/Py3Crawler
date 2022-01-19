@@ -384,7 +384,7 @@ class Download(crawler.DownloadThread):
         self.step("开始下载图片%s %s" % (photo_info["photo_id"], photo_info["photo_url"]))
 
         photo_file_path = os.path.join(self.main_thread.photo_download_path, self.display_name, "%16d.%s" % (photo_info["photo_id"], net.get_file_type(photo_info["photo_url"], "jpg")))
-        save_file_return = net.save_net_file(photo_info["photo_url"], photo_file_path)
+        save_file_return = net.download(photo_info["photo_url"], photo_file_path)
         if save_file_return["status"] == 1:
             if check_photo_invalid(photo_file_path):
                 path.delete_dir_or_file(photo_file_path)
@@ -419,7 +419,7 @@ class Download(crawler.DownloadThread):
         self.step("开始下载第%s个视频 %s" % (video_index, video_url))
 
         video_file_path = os.path.join(self.main_thread.video_download_path, self.display_name, "%04d.mp4" % video_index)
-        save_file_return = net.save_net_file(video_url, video_file_path)
+        save_file_return = net.download(video_url, video_file_path)
         if save_file_return["status"] == 1:
             self.step("第%s个视频下载成功" % video_index)
         else:

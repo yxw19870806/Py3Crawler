@@ -184,7 +184,7 @@ class Download(crawler.DownloadThread):
             self.step("相册%s《%s》开始下载第%s张图片 %s" % (album_info["album_id"], album_info["album_title"], photo_index, photo_url))
 
             file_path = os.path.join(post_path, "%s.jpg" % photo_index)
-            save_file_return = net.save_net_file(photo_url, file_path)
+            save_file_return = net.download(photo_url, file_path)
             if save_file_return["status"] == 1:
                 self.step("相册%s《%s》第%s张图片下载成功" % (album_info["album_id"], album_info["album_title"], photo_index))
                 photo_index += 1

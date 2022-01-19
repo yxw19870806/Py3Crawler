@@ -148,7 +148,7 @@ class Download(crawler.DownloadThread):
         self.result = None
 
     def run(self):
-        self.result = net.save_net_file(self.photo_url, self.file_path)
+        self.result = net.download(self.photo_url, self.file_path)
         self.notify_main_thread()
 
     def get_result(self):

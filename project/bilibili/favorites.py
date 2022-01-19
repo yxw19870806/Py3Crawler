@@ -96,7 +96,7 @@ def main():
 
                     # 开始下载
                     log.step("\n视频标题：%s\n视频地址：%s\n下载路径：%s" % (video_play_response["video_title"], video_part_url, file_path))
-                    save_file_return = net.save_net_file(video_part_url, file_path, header_list={"Referer": "https://www.bilibili.com/video/av%s" % video_info["video_id"]})
+                    save_file_return = net.download(video_part_url, file_path, header_list={"Referer": "https://www.bilibili.com/video/av%s" % video_info["video_id"]})
                     if save_file_return["status"] == 1:
                         log.step("视频%s《%s》第%s个视频下载成功" % (video_info["video_id"], video_info["video_title"], video_index))
                     else:

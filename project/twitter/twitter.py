@@ -411,7 +411,7 @@ class Download(crawler.DownloadThread):
                 self.step("开始下载推特%s的第%s张图片 %s" % (media_info["blog_id"], photo_index, photo_url))
 
                 photo_file_path = os.path.join(self.main_thread.photo_download_path, self.account_name, "%019d_%02d.%s" % (media_info["blog_id"], photo_index, net.get_file_type(photo_url)))
-                save_file_return = net.save_net_file(photo_url, photo_file_path)
+                save_file_return = net.download(photo_url, photo_file_path)
                 for retry_count in range(0, 5):
                     if save_file_return["status"] == 1:
                         self.temp_path_list.append(photo_file_path)
@@ -436,7 +436,7 @@ class Download(crawler.DownloadThread):
                     video_file_path = os.path.join(self.main_thread.video_download_path, self.account_name, "%019d_%02d.%s" % (media_info["blog_id"], video_index, net.get_file_type(video_url)))
                 else:
                     video_file_path = os.path.join(self.main_thread.video_download_path, self.account_name, "%019d.%s" % (media_info["blog_id"], net.get_file_type(video_url)))
-                save_file_return = net.save_net_file(video_url, video_file_path)
+                save_file_return = net.download(video_url, video_file_path)
                 if save_file_return["status"] == 1:
                     self.temp_path_list.append(video_file_path)
                     self.step("推特%s的第%s个视频下载成功" % (media_info["blog_id"], video_index))

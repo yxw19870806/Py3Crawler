@@ -51,7 +51,7 @@ def main():
             continue
         # 开始下载
         log.step("\n视频地址：%s\n下载路径：%s" % (video_response["video_url"], file_path))
-        save_file_return = net.save_net_file(video_response["video_url"], file_path, head_check=True)
+        save_file_return = net.download(video_response["video_url"], file_path, head_check=True)
         if save_file_return["status"] == 1:
             log.step("视频下载成功")
         else:

@@ -48,7 +48,7 @@ def main():
         cookies_list = niconico.COOKIE_INFO
         if video_info_response["extra_cookie"]:
             cookies_list.update(video_info_response["extra_cookie"])
-        save_file_return = net.save_net_file(video_info_response["video_url"], file_path, cookies_list=cookies_list)
+        save_file_return = net.download(video_info_response["video_url"], file_path, cookies_list=cookies_list)
         if save_file_return["status"] == 1:
             output.print_msg("视频%s 《%s》下载成功" % (video_id, video_info_response["video_title"]))
         else:

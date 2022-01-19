@@ -307,7 +307,7 @@ class Download(crawler.DownloadThread):
             self.main_thread_check()  # 检测主线程运行状态
             self.step("开始下载图片%s %s" % (photo_info["photo_id"], photo_info["photo_url"]))
             file_path = os.path.join(self.main_thread.photo_download_path, self.account_name, "%011d.%s" % (photo_info["photo_id"], net.get_file_type(photo_info["photo_url"])))
-            save_file_return = net.save_net_file(photo_info["photo_url"], file_path)
+            save_file_return = net.download(photo_info["photo_url"], file_path)
             if save_file_return["status"] == 1:
                 self.temp_path_list.append(file_path)  # 设置临时目录
                 self.total_photo_count += 1  # 计数累加
