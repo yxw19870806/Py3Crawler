@@ -224,7 +224,7 @@ class Download(crawler.DownloadThread):
             self.step("开始下载作品%s《%s》的第%s张图片 %s" % (album_info["album_id"], album_info["album_title"], photo_index, photo_url))
 
             file_path = os.path.join(album_path, "%02d.%s" % (photo_index, net.get_file_type(photo_url)))
-            save_file_return = net.save_net_file(photo_url, file_path)
+            save_file_return = net.download(photo_url, file_path)
             if save_file_return["status"] == 1:
                 self.step("作品%s《%s》的第%s张图片下载成功" % (album_info["album_id"], album_info["album_title"], photo_index))
             else:

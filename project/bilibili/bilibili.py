@@ -570,7 +570,7 @@ class Download(crawler.DownloadThread):
                     video_name += " (%s)" % video_split_index
                 video_name = "%s.%s" % (path.filter_text(video_name), net.get_file_type(video_part_url))
                 file_path = os.path.join(self.main_thread.video_download_path, self.display_name, video_name)
-                save_file_return = net.save_net_file(video_part_url, file_path, header_list={"Referer": "https://www.bilibili.com/video/av%s" % video_info["video_id"]})
+                save_file_return = net.download(video_part_url, file_path, header_list={"Referer": "https://www.bilibili.com/video/av%s" % video_info["video_id"]})
                 if save_file_return["status"] == 1:
                     self.temp_path_list.append(file_path)  # 设置临时目录
                     self.total_video_count += 1  # 计数累加
@@ -603,7 +603,7 @@ class Download(crawler.DownloadThread):
         self.step("开始下载音频%s《%s》 %s" % (audio_info["audio_id"], audio_info["audio_title"], audio_info_response["audio_url"]))
 
         file_path = os.path.join(self.main_thread.audio_download_path, self.display_name, "%06d %s.%s" % (audio_info["audio_id"], path.filter_text(audio_info["audio_title"]), net.get_file_type(audio_info_response["audio_url"])))
-        save_file_return = net.save_net_file(audio_info_response["audio_url"], file_path, header_list={"Referer": "https://www.bilibili.com/"})
+        save_file_return = net.download(audio_info_response["audio_url"], file_path, header_list={"Referer": "https://www.bilibili.com/"})
         if save_file_return["status"] == 1:
             self.total_audio_count += 1  # 计数累加
             self.step("音频%s《%s》下载成功" % (audio_info["audio_id"], audio_info["audio_title"]))
@@ -636,7 +636,7 @@ class Download(crawler.DownloadThread):
             self.step("相簿%s开始下载第%s张图片 %s" % (album_id, photo_index, photo_url))
 
             file_path = os.path.join(self.main_thread.photo_download_path, self.display_name, "%09d_%02d.%s" % (album_id, photo_index, net.get_file_type(photo_url)))
-            save_file_return = net.save_net_file(photo_url, file_path)
+            save_file_return = net.download(photo_url, file_path)
             if save_file_return["status"] == 1:
                 self.temp_path_list.append(file_path)  # 设置临时目录
                 self.total_photo_count += 1  # 计数累加

@@ -160,7 +160,7 @@ class Download(crawler.DownloadThread):
 
                 file_type = net.get_file_type(photo_url)
                 photo_file_path = os.path.join(self.main_thread.photo_download_path, self.account_id, "%04d.%s" % (photo_index, file_type))
-                save_file_return = net.save_net_file(photo_url, photo_file_path)
+                save_file_return = net.download(photo_url, photo_file_path)
                 if save_file_return["status"] == 1:
                     # 设置临时目录
                     self.temp_path_list.append(photo_file_path)
@@ -179,7 +179,7 @@ class Download(crawler.DownloadThread):
 
                 file_type = net.get_file_type(video_url)
                 video_file_path = os.path.join(self.main_thread.video_download_path, self.account_id, "%04d.%s" % (video_index, file_type))
-                save_file_return = net.save_net_file(video_url, video_file_path)
+                save_file_return = net.download(video_url, video_file_path)
                 if save_file_return["status"] == 1:
                     # 设置临时目录
                     self.temp_path_list.append(video_file_path)
@@ -198,7 +198,7 @@ class Download(crawler.DownloadThread):
 
                 file_type = net.get_file_type(audio_url)
                 audio_file_path = os.path.join(self.main_thread.audio_download_path, self.account_id, "%04d.%s" % (audio_index, file_type))
-                save_file_return = net.save_net_file(audio_url, audio_file_path)
+                save_file_return = net.download(audio_url, audio_file_path)
                 if save_file_return["status"] == 1:
                     # 设置临时目录
                     self.temp_path_list.append(audio_file_path)

@@ -207,7 +207,7 @@ class Download(crawler.DownloadThread):
         self.step("开始下载视频%s %s" % (video_info["video_id"], video_info["video_url"]))
 
         file_path = os.path.join(self.main_thread.video_download_path, self.display_name, "%020d.mp4" % video_info["video_id"])
-        save_file_return = net.save_net_file(video_info["video_url"], file_path)
+        save_file_return = net.download(video_info["video_url"], file_path)
         if save_file_return["status"] == 1:
             self.total_video_count += 1  # 计数累加
             self.step("视频%s下载成功" % video_info["video_id"])

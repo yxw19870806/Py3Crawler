@@ -178,7 +178,7 @@ class Download(crawler.DownloadThread):
             self.step("漫画%s %s《%s》开始下载第%s张图片 %s" % (comic_info["page_id"], comic_info["version_name"], comic_info["chapter_name"], photo_index, photo_url))
 
             photo_file_path = os.path.join(chapter_path, "%03d.%s" % (photo_index, net.get_file_type(photo_url)))
-            save_file_return = net.save_net_file(photo_url, photo_file_path, header_list={"Referer": "https://m.dmzj.com/"})
+            save_file_return = net.download(photo_url, photo_file_path, header_list={"Referer": "https://m.dmzj.com/"})
             if save_file_return["status"] == 1:
                 self.total_photo_count += 1  # 计数累加
                 self.step("漫画%s %s《%s》第%s张图片下载成功" % (comic_info["page_id"], comic_info["version_name"], comic_info["chapter_name"], photo_index))

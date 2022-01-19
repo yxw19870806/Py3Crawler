@@ -53,7 +53,7 @@ def main():
             continue
         # 开始下载
         log.step("\n歌曲标题：%s\n歌曲地址：%s\n下载路径：%s" % (audio_response["audio_title"], audio_response["audio_url"], file_path))
-        save_file_return = net.save_net_file(audio_response["audio_url"], file_path, head_check=True)
+        save_file_return = net.download(audio_response["audio_url"], file_path, head_check=True)
         if save_file_return["status"] == 1:
             log.step("歌曲《%s》下载成功" % audio_response["audio_title"])
         else:

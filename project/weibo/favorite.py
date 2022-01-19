@@ -177,7 +177,7 @@ class Favorite(crawler.Crawler):
                     log.step("微博%s开始下载第%s张图片 %s" % (blog_info["blog_id"], photo_count, photo_url))
 
                     file_path = os.path.join(photo_path, "%s.%s" % (photo_count, net.get_file_type(photo_url)))
-                    save_file_return = net.save_net_file(photo_url, file_path)
+                    save_file_return = net.download(photo_url, file_path)
                     if save_file_return["status"] == 1:
                         if weibo.check_photo_invalid(file_path):
                             path.delete_dir_or_file(file_path)

@@ -179,7 +179,7 @@ class Download(crawler.DownloadThread):
             self.step("开始下载日志%s的第%s张图片 %s" % (blog_info["blog_id"], photo_index, photo_url))
 
             file_path = os.path.join(self.main_thread.photo_download_path, self.display_name, "%05d_%02d.%s" % (blog_info["blog_id"], photo_index, net.get_file_type(photo_url)))
-            save_file_return = net.save_net_file(photo_url, file_path)
+            save_file_return = net.download(photo_url, file_path)
             if save_file_return["status"] == 1:
                 self.temp_path_list.append(file_path)  # 设置临时目录
                 self.total_photo_count += 1  # 计数累加

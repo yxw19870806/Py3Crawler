@@ -169,7 +169,7 @@ class Jigadori(crawler.Crawler):
                         log.step("开始下载tweet%s的第%s张图片 %s" % (photo_info["tweet_id"], photo_index, photo_url))
 
                         file_path = os.path.join(self.photo_download_path, photo_info["account_name"], "%019d_%02d.%s" % (photo_info["tweet_id"], photo_index, net.get_file_type(photo_url, "jpg")))
-                        save_file_return = net.save_net_file(photo_url, file_path)
+                        save_file_return = net.download(photo_url, file_path)
                         if save_file_return["status"] == 1:
                             # 设置临时目录
                             temp_path_list.append(file_path)

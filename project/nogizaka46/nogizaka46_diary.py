@@ -229,7 +229,7 @@ class Download(crawler.DownloadThread):
             self.step("开始下载日志%s的第%s张图片 %s" % (blog_info["blog_id"], photo_index, photo_url))
 
             file_path = os.path.join(self.main_thread.photo_download_path, self.display_name, "%06d_%02d.%s" % (blog_info["blog_id"], photo_index, net.get_file_type(photo_url, "jpg")))
-            save_file_return = net.save_net_file(photo_url, file_path, cookies_list=big_photo_response["cookies"])
+            save_file_return = net.download(photo_url, file_path, cookies_list=big_photo_response["cookies"])
             if save_file_return["status"] == 1:
                 if check_photo_invalid(file_path):
                     path.delete_dir_or_file(file_path)

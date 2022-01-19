@@ -560,7 +560,7 @@ class Download(crawler.DownloadThread):
             self.step("日志 %s 开始下载视频 %s" % (post_info["post_id"], video_url))
 
             video_file_path = os.path.join(self.main_thread.video_download_path, self.account_id, "%012d.mp4" % post_info["post_id"])
-            save_file_return = net.save_net_file(video_url, video_file_path)
+            save_file_return = net.download(video_url, video_file_path)
             if save_file_return["status"] == 1:
                 # 设置临时目录
                 self.temp_path_list.append(video_file_path)
@@ -569,7 +569,7 @@ class Download(crawler.DownloadThread):
             else:
                 if save_file_return["code"] == 403 and video_url.find("_r1_720") != -1:
                     video_url = video_url.replace("_r1_720", "_r1")
-                    save_file_return = net.save_net_file(video_url, video_file_path)
+                    save_file_return = net.download(video_url, video_file_path)
                     if save_file_return["status"] == 1:
                         # 设置临时目录
                         self.temp_path_list.append(video_file_path)
@@ -595,7 +595,7 @@ class Download(crawler.DownloadThread):
                 self.step("日志 %s 开始下载第%s张图片 %s" % (post_info["post_id"], photo_index, photo_url))
 
                 photo_file_path = os.path.join(self.main_thread.photo_download_path, self.account_id, "%012d_%02d.%s" % (post_info["post_id"], photo_index, net.get_file_type(photo_url)))
-                save_file_return = net.save_net_file(photo_url, photo_file_path)
+                save_file_return = net.download(photo_url, photo_file_path)
                 if save_file_return["status"] == 1:
                     # 设置临时目录
                     self.temp_path_list.append(photo_file_path)

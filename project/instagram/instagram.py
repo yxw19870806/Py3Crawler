@@ -388,7 +388,7 @@ class Download(crawler.DownloadThread):
                 self.step("开始下载第%s张图片 %s" % (photo_index, photo_url))
 
                 photo_file_path = os.path.join(self.main_thread.photo_download_path, self.account_name, "%04d.%s" % (photo_index, net.get_file_type(photo_url)))
-                save_file_return = net.save_net_file(photo_url, photo_file_path)
+                save_file_return = net.download(photo_url, photo_file_path)
                 if save_file_return["status"] == 1:
                     self.temp_path_list.append(photo_file_path)  # 设置临时目录
                     self.total_photo_count += 1  # 计数累加
@@ -418,7 +418,7 @@ class Download(crawler.DownloadThread):
                 self.step("开始下载第%s个视频 %s" % (video_index, video_url))
 
                 video_file_path = os.path.join(self.main_thread.video_download_path, self.account_name, "%04d.%s" % (video_index, net.get_file_type(video_url)))
-                save_file_return = net.save_net_file(video_url, video_file_path)
+                save_file_return = net.download(video_url, video_file_path)
                 if save_file_return["status"] == 1:
                     self.temp_path_list.append(video_file_path)  # 设置临时目录
                     self.total_video_count += 1  # 计数累加

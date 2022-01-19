@@ -232,7 +232,7 @@ class Download(crawler.DownloadThread):
             self.step("日志《%s》 开始下载第%s张图片 %s" % (blog_info["blog_title"], photo_index, photo_url))
 
             file_path = os.path.join(photo_path, "%02d.%s" % (photo_index, net.get_file_type(photo_url, "jpg")))
-            save_file_return = net.save_net_file(photo_url, file_path)
+            save_file_return = net.download(photo_url, file_path)
             if save_file_return["status"] == 1:
                 if weibo.check_photo_invalid(file_path):
                     path.delete_dir_or_file(file_path)
