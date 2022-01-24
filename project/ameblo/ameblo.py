@@ -403,7 +403,7 @@ class Download(crawler.DownloadThread):
             # 查询当前任务大致需要从多少页开始爬取
             start_page_count = self.get_offset_page_count()
 
-            while True:
+            while start_page_count >= 1:
                 # 获取所有可下载日志
                 blog_id_list = self.get_crawl_list(start_page_count)
                 self.step("需要下载的全部日志解析完毕，共%s个" % len(blog_id_list))
@@ -413,10 +413,7 @@ class Download(crawler.DownloadThread):
                     self.crawl_blog(blog_id_list.pop())
                     self.main_thread_check()  # 检测主线程运行状态
 
-                if start_page_count == 1:
-                    break
-                else:
-                    start_page_count -= self.EACH_LOOP_MAX_PAGE_COUNT
+                start_page_count -= self.EACH_LOOP_MAX_PAGE_COUNT
         except (SystemExit, KeyboardInterrupt) as e:
             if isinstance(e, SystemExit) and e.code == 1:
                 self.error("异常退出")
