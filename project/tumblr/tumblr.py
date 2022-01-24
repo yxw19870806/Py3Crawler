@@ -14,6 +14,7 @@ import urllib.parse
 from pyquery import PyQuery as pq
 from common import *
 
+EACH_LOOP_MAX_PAGE_COUNT = 200  # 单次缓存多少页的日志
 EACH_PAGE_BLOG_COUNT = 100  # 每次请求获取的日志数量
 COOKIE_INFO = {}
 USER_AGENT = None
@@ -305,12 +306,12 @@ def analysis_photo(photo_url):
         # https://78.media.tumblr.com/tumblr_o7ec46zp5M1vpohsl_frame1.jpg
         # https://78.media.tumblr.com/tumblr_odtdlgTAbg1sg1lga_r1_frame1.jpg
         elif (
-            len(temp_list) == 2 or
-            (len(temp_list) == 3 and temp_list[1] == "inline") or
-            (len(temp_list) == 3 and temp_list[2] == "frame1") or
-            (len(temp_list) == 4 and temp_list[2] == "r1" and temp_list[3] == "frame1") or
-            (len(temp_list) == 3 and temp_list[2] == "smart1") or
-            (len(temp_list) == 4 and temp_list[2] == "r1" and temp_list[3] == "smart1")
+                len(temp_list) == 2 or
+                (len(temp_list) == 3 and temp_list[1] == "inline") or
+                (len(temp_list) == 3 and temp_list[2] == "frame1") or
+                (len(temp_list) == 4 and temp_list[2] == "r1" and temp_list[3] == "frame1") or
+                (len(temp_list) == 3 and temp_list[2] == "smart1") or
+                (len(temp_list) == 4 and temp_list[2] == "r1" and temp_list[3] == "smart1")
         ):
             pass
         else:
@@ -452,7 +453,6 @@ class Tumblr(crawler.Crawler):
 
 
 class Download(crawler.DownloadThread):
-    EACH_LOOP_MAX_PAGE_COUNT = 200  # 单次缓存多少页的日志
     is_https = True
     is_private = False
 
@@ -465,9 +465,9 @@ class Download(crawler.DownloadThread):
     # 获取偏移量，避免一次查询过多页数
     def get_offset_page_count(self):
         start_page_count = 1
-        while self.EACH_LOOP_MAX_PAGE_COUNT > 0:
+        while EACH_LOOP_MAX_PAGE_COUNT > 0:
             self.main_thread_check()  # 检测主线程运行状态
-            start_page_count += self.EACH_LOOP_MAX_PAGE_COUNT
+            start_page_count += EACH_LOOP_MAX_PAGE_COUNT
             try:
                 if self.is_private:
                     post_pagination_response = get_one_page_private_blog(self.account_id, start_page_count)
@@ -479,15 +479,15 @@ class Download(crawler.DownloadThread):
 
             # 这页没有任何内容，返回上一个检查节点
             if post_pagination_response["is_over"]:
-                start_page_count -= self.EACH_LOOP_MAX_PAGE_COUNT
+                start_page_count -= EACH_LOOP_MAX_PAGE_COUNT
                 break
 
             # 这页已经匹配到存档点，返回上一个节点
             if post_pagination_response["post_info_list"][-1]["post_id"] < int(self.account_info[1]):
-                start_page_count -= self.EACH_LOOP_MAX_PAGE_COUNT
+                start_page_count -= EACH_LOOP_MAX_PAGE_COUNT
                 break
 
-            self.step("前%s页日志全部符合条件，跳过%s页后继续查询" % (start_page_count, self.EACH_LOOP_MAX_PAGE_COUNT))
+            self.step("前%s页日志全部符合条件，跳过%s页后继续查询" % (start_page_count, EACH_LOOP_MAX_PAGE_COUNT))
         return start_page_count
 
     # 获取所有可下载日志
@@ -556,7 +556,7 @@ class Download(crawler.DownloadThread):
                 raise
             if post_response["is_delete"]:
                 if post_info["post_url"].find("/hey-this-post-may-contain-adult-content-so-weve") > 0 or \
-                    post_info["post_url"].find(urllib.parse.quote("/この投稿には成人向けコンテンツか含まれている可能性があるため非公開となりました-もっと知る")) > 0:
+                        post_info["post_url"].find(urllib.parse.quote("/この投稿には成人向けコンテンツか含まれている可能性があるため非公開となりました-もっと知る")) > 0:
                     self.step("日志 %s 已被删除，跳过" % post_info["post_url"])
                 else:
                     self.error("日志 %s 已被删除，跳过" % post_info["post_url"])
@@ -667,7 +667,7 @@ class Download(crawler.DownloadThread):
                     self.crawl_post(post_info_list.pop())
                     self.main_thread_check()  # 检测主线程运行状态
 
-                start_page_count -= self.EACH_LOOP_MAX_PAGE_COUNT
+                start_page_count -= EACH_LOOP_MAX_PAGE_COUNT
         except (SystemExit, KeyboardInterrupt) as e:
             if isinstance(e, SystemExit) and e.code == 1:
                 self.error("异常退出")
