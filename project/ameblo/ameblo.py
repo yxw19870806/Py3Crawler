@@ -277,6 +277,33 @@ class Download(crawler.DownloadThread):
             self.display_name = self.account_info[0]
         self.step("开始")
 
+    # 获取偏移量，避免一次查询过多页数
+    def get_offset_page_count(self):
+        start_page_count = 1
+        while self.EACH_LOOP_MAX_PAGE_COUNT > 0:
+            self.main_thread_check()  # 检测主线程运行状态
+
+            # 获取下一个检查节点页数的日志
+            start_page_count += self.EACH_LOOP_MAX_PAGE_COUNT
+            try:
+                blog_pagination_response = get_one_page_blog(self.account_id, start_page_count)
+            except crawler.CrawlerException as e:
+                self.error("第%s页日志解析失败，原因：%s" % (start_page_count, e.message))
+                raise
+
+            # 这页没有任何内容，返回上一个检查节点
+            if blog_pagination_response["is_over"]:
+                start_page_count -= self.EACH_LOOP_MAX_PAGE_COUNT
+                break
+
+            # 这页已经匹配到存档点，返回上一个节点
+            if blog_pagination_response["blog_id_list"][-1] < int(self.account_info[1]):
+                start_page_count -= self.EACH_LOOP_MAX_PAGE_COUNT
+                break
+
+            self.step("前%s页日志全部符合条件，跳过%s页后继续查询" % (start_page_count, self.EACH_LOOP_MAX_PAGE_COUNT))
+        return start_page_count
+
     # 获取所有可下载日志
     def get_crawl_list(self, page_count):
         blog_id_list = []
@@ -374,29 +401,7 @@ class Download(crawler.DownloadThread):
     def run(self):
         try:
             # 查询当前任务大致需要从多少页开始爬取
-            start_page_count = 1
-            while self.EACH_LOOP_MAX_PAGE_COUNT > 0:
-                self.main_thread_check()  # 检测主线程运行状态
-
-                # 获取下一个检查节点页数的日志
-                start_page_count += self.EACH_LOOP_MAX_PAGE_COUNT
-                try:
-                    blog_pagination_response = get_one_page_blog(self.account_id, start_page_count)
-                except crawler.CrawlerException as e:
-                    self.error("第%s页日志解析失败，原因：%s" % (start_page_count, e.message))
-                    raise
-
-                # 这页没有任何内容，返回上一个检查节点
-                if blog_pagination_response["is_over"]:
-                    start_page_count -= self.EACH_LOOP_MAX_PAGE_COUNT
-                    break
-
-                # 这页已经匹配到存档点，返回上一个节点
-                if blog_pagination_response["blog_id_list"][-1] < int(self.account_info[1]):
-                    start_page_count -= self.EACH_LOOP_MAX_PAGE_COUNT
-                    break
-
-                self.step("前%s页日志全部符合条件，跳过%s页后继续查询" % (start_page_count, self.EACH_LOOP_MAX_PAGE_COUNT))
+            start_page_count = self.get_offset_page_count()
 
             while True:
                 # 获取所有可下载日志
