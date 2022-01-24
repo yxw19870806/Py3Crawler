@@ -462,6 +462,34 @@ class Download(crawler.DownloadThread):
         self.display_name = self.account_id
         self.step("开始")
 
+    # 获取偏移量，避免一次查询过多页数
+    def get_offset_page_count(self):
+        start_page_count = 1
+        while self.EACH_LOOP_MAX_PAGE_COUNT > 0:
+            self.main_thread_check()  # 检测主线程运行状态
+            start_page_count += self.EACH_LOOP_MAX_PAGE_COUNT
+            try:
+                if self.is_private:
+                    post_pagination_response = get_one_page_private_blog(self.account_id, start_page_count)
+                else:
+                    post_pagination_response = get_one_page_post(self.account_id, start_page_count, self.is_https)
+            except crawler.CrawlerException as e:
+                self.error("第%s页日志解析失败，原因：%s" % (start_page_count, e.message))
+                raise
+
+            # 这页没有任何内容，返回上一个检查节点
+            if post_pagination_response["is_over"]:
+                start_page_count -= self.EACH_LOOP_MAX_PAGE_COUNT
+                break
+
+            # 这页已经匹配到存档点，返回上一个节点
+            if post_pagination_response["post_info_list"][-1]["post_id"] < int(self.account_info[1]):
+                start_page_count -= self.EACH_LOOP_MAX_PAGE_COUNT
+                break
+
+            self.step("前%s页日志全部符合条件，跳过%s页后继续查询" % (start_page_count, self.EACH_LOOP_MAX_PAGE_COUNT))
+        return start_page_count
+
     # 获取所有可下载日志
     def get_crawl_list(self, page_count):
         unique_list = []
@@ -627,32 +655,9 @@ class Download(crawler.DownloadThread):
                 tool.process_exit()
 
             # 查询当前任务大致需要从多少页开始爬取
-            start_page_count = 1
-            while self.EACH_LOOP_MAX_PAGE_COUNT > 0:
-                self.main_thread_check()  # 检测主线程运行状态
-                start_page_count += self.EACH_LOOP_MAX_PAGE_COUNT
-                try:
-                    if self.is_private:
-                        post_pagination_response = get_one_page_private_blog(self.account_id, start_page_count)
-                    else:
-                        post_pagination_response = get_one_page_post(self.account_id, start_page_count, self.is_https)
-                except crawler.CrawlerException as e:
-                    self.error("第%s页日志解析失败，原因：%s" % (start_page_count, e.message))
-                    raise
+            start_page_count = self.get_offset_page_count()
 
-                # 这页没有任何内容，返回上一个检查节点
-                if post_pagination_response["is_over"]:
-                    start_page_count -= self.EACH_LOOP_MAX_PAGE_COUNT
-                    break
-
-                # 这页已经匹配到存档点，返回上一个节点
-                if post_pagination_response["post_info_list"][-1]["post_id"] < int(self.account_info[1]):
-                    start_page_count -= self.EACH_LOOP_MAX_PAGE_COUNT
-                    break
-
-                self.step("前%s页日志全部符合条件，跳过%s页后继续查询" % (start_page_count, self.EACH_LOOP_MAX_PAGE_COUNT))
-
-            while True:
+            while start_page_count >= 1:
                 # 获取所有可下载日志
                 post_info_list = self.get_crawl_list(start_page_count)
                 self.step("需要下载的全部日志解析完毕，共%s个" % len(post_info_list))
@@ -662,10 +667,7 @@ class Download(crawler.DownloadThread):
                     self.crawl_post(post_info_list.pop())
                     self.main_thread_check()  # 检测主线程运行状态
 
-                if start_page_count == 1:
-                    break
-                else:
-                    start_page_count -= self.EACH_LOOP_MAX_PAGE_COUNT
+                start_page_count -= self.EACH_LOOP_MAX_PAGE_COUNT
         except (SystemExit, KeyboardInterrupt) as e:
             if isinstance(e, SystemExit) and e.code == 1:
                 self.error("异常退出")
