@@ -83,8 +83,8 @@ class Crawler(object):
             - app_config - 程序额外应用配置，存在相同配置参数时将会将其他值覆盖
             - app_config_path - 程序默认的app配置文件路径，赋值后将不会读取原本的app.ini文件
         - kwargs
-            - extra_sys_config
-            - extra_app_config
+            - extra_sys_config - 通过类实例化时传入的程序配置
+            - extra_app_config - 通过类实例化时传入的应用配置
         """
         self.start_time = time.time()
 
@@ -294,9 +294,10 @@ class Crawler(object):
         self.process_status = False
         net.EXIT_FLAG = True
 
-    # 获取程序已运行时间（seconds）
     def get_run_time(self):
-        """Get process runned time(seconds)"""
+        """
+        获取程序已运行时间（秒）
+        """
         return int(time.time() - self.start_time)
 
     def is_running(self):
@@ -304,18 +305,17 @@ class Crawler(object):
 
 
 class DownloadThread(threading.Thread):
-    """
-    Download sub-thread
-    """
     main_thread = None
     thread_lock = None
     display_name = None
 
     def __init__(self, account_info: list, main_thread: Crawler):
         """
+        多线程下载
+
         :Args:
-        - account_info
-        - main_thread - object of main thread(class Crawler)
+        - account_info - 线程用到的数据
+        - main_thread - 主线程对象
         """
         if not isinstance(main_thread, Crawler):
             output.print_msg("下载线程参数异常")
@@ -392,7 +392,7 @@ class CrawlerException(SystemExit):
 
 def read_config(config_path) -> dict:
     """
-    Read config file
+    读取配置文件
     """
     if not os.path.exists(config_path):
         return {}
@@ -406,21 +406,23 @@ def read_config(config_path) -> dict:
 
 
 def analysis_config(config: dict, key: str, default_value, mode: str = CONFIG_ANALYSIS_MODE_RAW):
-    """Analysis config
+    """
+    解析配置
 
     :Args:
-    - config - Dictionary of config
-    - key - key of config
-    - default_value - default value
-    - mode - type of analysis mode
-        None    direct assignment
-        1       conversion to integer
-        2       conversion to boolean
-                    the value Equivalent to False, or string of "0" and "false" will conversion to False
-                    other string will conversion to True
-        3       conversion to file path
-                    startup with '\', project root path
-                    startup with '\\', application root path
+    - config - 配置文件字典，通过read_config()获取
+    - key - 配置key
+    - default_value - 默认值
+    - mode - 解析模式
+        raw     直接读取
+        int     转换成int类型
+        float   转换成float类型
+        bool    转换成bool类型
+                    等价于False的值，或者值为"0"或"false"的字符串将转换为False
+                    其他字符串将转换为True
+        path    转换成路径
+                    当字符串以'\'开头，相对于crawler.PROJECT_ROOT_PATH
+                    当字符串以'\\'开头，相对于crawler.PROJECT_APP_PATH
     """
     key = key.lower()
     if isinstance(config, dict) and key in config:
@@ -460,11 +462,12 @@ def analysis_config(config: dict, key: str, default_value, mode: str = CONFIG_AN
 def sort_file(source_path: str, destination_path: str, start_count: int, file_name_length: int):
     """
     将指定文件夹内的所有文件排序重命名并复制到其他文件夹中
+
     :Args:
-    - source_path
-    - destination_path
-    - start_count
-    - file_name_length
+    - source_path - 待排序文件所在目录
+    - destination_path - 排序后所复制的目录
+    - start_count - 重命名开始的序号
+    - file_name_length - 复制后的文件名长度
     """
     file_list = path.get_dir_files_name(source_path, path.RETURN_FILE_LIST_DESC)
     # 判断排序目标文件夹是否存在
@@ -485,11 +488,12 @@ def sort_file(source_path: str, destination_path: str, start_count: int, file_na
 def read_save_data(save_data_path: str, key_index: int = 0, default_value_list: list = None, check_duplicate_index: bool = True):
     """
     读取存档文件，并根据指定列生成存档字典
+
     :Args:
-    - save_data_path
+    - save_data_path - 存档路径
     - key_index - 配置文件的主键（唯一）
     - default_value_list - 每一位的默认值
-    - check_duplicate_index
+    - check_duplicate_index - 是否检测主键的唯一性
     """
     if default_value_list is None:
         default_value_list = []
@@ -552,6 +556,7 @@ def get_time():
 def get_json_value(json_data, *args, **kwargs):
     """
     获取一个json文件的指定字段
+
     :Args:
     - json_data - 原始json数据
     - args - 如果是字母，取字典对应key；如果是整数，取列表对应下标

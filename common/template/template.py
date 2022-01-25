@@ -67,7 +67,7 @@ class Template(crawler.Crawler):
                     tool.process_exit()
                 elif input_str in ["c", "continue"]:
                     break
-                    
+
     def main(self):
         try:
             # 循环下载每个id
