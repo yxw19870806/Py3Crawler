@@ -9,8 +9,10 @@ import json
 import os
 import platform
 import sqlite3
+from typing import Optional
 from selenium import webdriver
 from selenium.common.exceptions import WebDriverException
+from selenium.webdriver.chrome.webdriver import WebDriver
 
 if platform.system() == "Windows":
     import win32crypt
@@ -26,12 +28,14 @@ BROWSER_TYPE_CHROME = 3
 BROWSER_TYPE_TEXT = 4  # 直接从文件里读取cookies
 
 
-class WebDriver():
+class Chrome:
     def __init__(self, url, **kwargs):
         """
         Creates a new instance of the chrome driver. (selenium.webdriver.Chrome())
-        :kwargs:
-        - headless - default True
+        :Args:
+        - url - 访问的地址，需要携带访问协议，如https://, file://
+        - kwargs
+            - headless - chrome-headless模式，默认值：True
         """
         if not os.path.exists(crawler.CHROME_WEBDRIVER_PATH):
             raise crawler.CrawlerException("CHROME_WEBDRIVER_PATH: %s不存在" % crawler.CHROME_WEBDRIVER_PATH)
@@ -51,7 +55,7 @@ class WebDriver():
                     raise
             break
 
-    def __enter__(self):
+    def __enter__(self) -> WebDriver:
         self.chrome.get(self.url)
         return self.chrome
 
@@ -59,8 +63,10 @@ class WebDriver():
         self.chrome.quit()
 
 
-# 根据浏览器和操作系统，返回浏览器程序文件所在的路径
-def get_default_browser_application_path(browser_type):
+def get_default_browser_application_path(browser_type) -> Optional[str]:
+    """
+    根据浏览器和操作系统，返回浏览器程序文件所在的路径
+    """
     if platform.system() != "Windows":
         return None
     if browser_type == BROWSER_TYPE_IE:
@@ -74,8 +80,10 @@ def get_default_browser_application_path(browser_type):
     return None
 
 
-# 根据浏览器和操作系统，自动查找默认浏览器cookie路径(只支持windows)
-def get_default_browser_cookie_path(browser_type):
+def get_default_browser_cookie_path(browser_type) -> Optional[str]:
+    """
+    根据浏览器和操作系统，自动查找默认浏览器cookie路径(只支持windows)
+    """
     if platform.system() != "Windows":
         return None
     if browser_type == BROWSER_TYPE_IE:
@@ -108,12 +116,16 @@ def get_default_browser_cookie_path(browser_type):
     return None
 
 
-# 从浏览器保存的cookie文件中读取所有cookie
-# return    {
-#           "domain1": {"key1": "value1", "key2": "value2", ......}
-#           "domain2": {"key1": "value1", "key2": "value2", ......}
-#           }
-def get_all_cookie_from_browser(browser_type, file_path):
+def get_all_cookie_from_browser(browser_type, file_path) -> dict:
+    """
+    从浏览器保存的cookie文件中读取所有cookie
+    :Returns:
+        {
+            "domain1": {"key1": "value1", "key2": "value2", ......},
+            "domain2": {"key1": "value1", "key2": "value2", ......},
+            ......
+        }
+    """
     if not os.path.exists(file_path):
         output.print_msg("cookie目录：" + file_path + " 不存在")
         return {}
