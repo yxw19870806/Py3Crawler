@@ -9,14 +9,17 @@ import base64
 import hashlib
 import socket
 import uuid
+from typing import Optional
+
 from cryptography.fernet import Fernet, InvalidToken
 
 
 class Crypto:
-    """Encrypt、Decrypt Algorithm
-        cryptography.fernet.Fernet
-        加解密算法为AES，密钥位长128，CBC模式，填充标准PKCS7
-        签名算法为SHA256的HMAC，密钥位长128位
+    """
+    Encrypt、Decrypt Algorithm
+    cryptography.fernet.Fernet
+    加解密算法为AES，密钥位长128，CBC模式，填充标准PKCS7
+    签名算法为SHA256的HMAC，密钥位长128位
     """
     SALT = "#@Py3Crawl@#"
 
@@ -33,7 +36,7 @@ class Crypto:
         f = Fernet(self.PRIVATE_KEY)
         return f.encrypt(s).decode()
 
-    def decrypt(self, s):
+    def decrypt(self, s) -> Optional[str]:
         if not s:
             return None
         f = Fernet(self.PRIVATE_KEY)

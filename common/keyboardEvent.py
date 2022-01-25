@@ -36,7 +36,6 @@ SUPPORT_SUB_KEYBOARD_LIST = {
 
 
 class KeyboardEvent(threading.Thread):
-    """Keyboard Event Listener Class"""
     key_down_list = {
         "LSHIFT": False,
         "RSHIFT": False,
@@ -48,12 +47,17 @@ class KeyboardEvent(threading.Thread):
     # 按键名 => 回调方法名
     event_key_list = {}
 
-    def __init__(self, event_list):
-        """Init keyboard Event Listener
+    def __init__(self, event_list: dict):
+        """
+        键盘监听事件
 
-        :param event_list:
-            dictionary of key and trigger function
-            key name => event function object
+        :Args:
+        - event_list - 触发按键以及对应回调方法的字典
+            {
+                "key1" => "function1",
+                "key2" => "function2",
+                ......
+            }
         """
         threading.Thread.__init__(self)
         for key, function in event_list.items():
@@ -74,7 +78,6 @@ class KeyboardEvent(threading.Thread):
             if key in SUPPORT_KEYBOARD_LIST:
                 self.event_key_list[sub_key + key] = event_function
 
-    # 按键判断并执行方法
     def on_keyboard_down(self, event):
         """Function of key down event listener"""
         key = str(event.Key).upper()
@@ -103,7 +106,6 @@ class KeyboardEvent(threading.Thread):
         return 1
 
     def run(self):
-        """Start listener"""
         try:
             hook_manager = pyHook.HookManager()
         except NameError:

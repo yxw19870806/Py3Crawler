@@ -31,7 +31,8 @@ BROWSER_TYPE_TEXT = 4  # 直接从文件里读取cookies
 class Chrome:
     def __init__(self, url, **kwargs):
         """
-        Creates a new instance of the chrome driver. (selenium.webdriver.Chrome())
+        返回selenium.webdriver.Chrome()方法创建的chrome驱动对象
+
         :Args:
         - url - 访问的地址，需要携带访问协议，如https://, file://
         - kwargs
@@ -119,6 +120,7 @@ def get_default_browser_cookie_path(browser_type: int) -> Optional[str]:
 def get_all_cookie_from_browser(browser_type: int, file_path: str) -> dict:
     """
     从浏览器保存的cookie文件中读取所有cookie
+
     :Returns:
         {
             "domain1": {"key1": "value1", "key2": "value2", ......},
