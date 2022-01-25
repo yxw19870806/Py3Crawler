@@ -590,7 +590,7 @@ def pause_request():
     """
     Block thread when use request()
     """
-    if thread_event.isSet():
+    if thread_event.is_set():
         output.print_msg("pause process")
         thread_event.clear()
 
@@ -599,7 +599,7 @@ def resume_request():
     """
     Resume thread
     """
-    if not thread_event.isSet():
+    if not thread_event.is_set():
         output.print_msg("resume process")
         thread_event.set()
 
