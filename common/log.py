@@ -39,8 +39,10 @@ NOTICE_LOG_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), LOG_CO
 thread_lock = threading.Lock()
 
 
-def error(msg):
-    """Error message logger"""
+def error(msg: str):
+    """
+    error日志
+    """
     msg = _get_time() + " [Error] " + str(msg)
     if LOG_CONFIG["IS_SHOW_ERROR"]:
         output.print_msg(msg, False)
@@ -49,8 +51,10 @@ def error(msg):
             file.write_file(msg, _replace_path_macro(ERROR_LOG_PATH))
 
 
-def step(msg):
-    """Step message logger"""
+def step(msg: str):
+    """
+    step日志
+    """
     msg = _get_time() + " " + str(msg)
     if LOG_CONFIG["IS_SHOW_STEP"]:
         output.print_msg(msg, False)
@@ -59,8 +63,10 @@ def step(msg):
             file.write_file(msg, _replace_path_macro(STEP_LOG_PATH))
 
 
-def trace(msg):
-    """Trace message logger"""
+def trace(msg: str):
+    """
+    trace日志
+    """
     msg = _get_time() + " " + str(msg)
     if LOG_CONFIG["IS_SHOW_TRACE"]:
         output.print_msg(msg, False)
@@ -69,8 +75,10 @@ def trace(msg):
             file.write_file(msg, _replace_path_macro(TRACE_LOG_PATH))
 
 
-def notice(msg):
-    """Debug message logger"""
+def notice(msg: str):
+    """
+    notice日志
+    """
     msg = _get_time() + " " + str(msg)
     if LOG_CONFIG["IS_SHOW_NOTICE"]:
         output.print_msg(msg, False)
@@ -79,11 +87,16 @@ def notice(msg):
             file.write_file(msg, _replace_path_macro(NOTICE_LOG_PATH))
 
 
-def _get_time():
-    """Get formatted time string(%m-%d %H:%M:%S)"""
+def _get_time() -> str:
+    """
+    获取当前时间
+    """
     return time.strftime("%m-%d %H:%M:%S", time.localtime(time.time()))
 
 
-def _replace_path_macro(file_path):
-    """Replace Macro in log file path {date} -> YYYYMMDD"""
+def _replace_path_macro(file_path: str) -> str:
+    """
+    宏替换
+        {date} - 当前日期, 格式：YYYYMMDD
+    """
     return file_path.replace("{date}", time.strftime("%Y%m%d", time.localtime(time.time())))
