@@ -9,6 +9,8 @@ import json
 import os
 import platform
 import sqlite3
+from selenium import webdriver
+from selenium.common.exceptions import WebDriverException
 
 if platform.system() == "Windows":
     import win32crypt
@@ -22,6 +24,39 @@ BROWSER_TYPE_IE = 1
 BROWSER_TYPE_FIREFOX = 2
 BROWSER_TYPE_CHROME = 3
 BROWSER_TYPE_TEXT = 4  # 直接从文件里读取cookies
+
+
+class WebDriver():
+    def __init__(self, url, **kwargs):
+        """
+        Creates a new instance of the chrome driver. (selenium.webdriver.Chrome())
+        :kwargs:
+        - headless - default True
+        """
+        if not os.path.exists(crawler.CHROME_WEBDRIVER_PATH):
+            raise crawler.CrawlerException("CHROME_WEBDRIVER_PATH: %s不存在" % crawler.CHROME_WEBDRIVER_PATH)
+
+        self.url = url
+        # 浏览器参数
+        chrome_options = webdriver.ChromeOptions()
+        chrome_options.headless = False if ("headless" in kwargs and not kwargs["headless"]) else True  # 不打开浏览器
+        while True:
+            try:
+                self.chrome = webdriver.Chrome(executable_path=crawler.CHROME_WEBDRIVER_PATH, options=chrome_options)
+            except WebDriverException as e:
+                message = str(e)
+                if message.find("chrome not reachable") >= 0:
+                    continue
+                else:
+                    raise
+            break
+
+    def __enter__(self):
+        self.chrome.get(self.url)
+        return self.chrome
+
+    def __exit__(self, exception_type, exception_val, traceback):
+        self.chrome.quit()
 
 
 # 根据浏览器和操作系统，返回浏览器程序文件所在的路径
