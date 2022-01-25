@@ -39,12 +39,12 @@ class WindowsApplication:
 
     # 设置暂停状态
     def pause_process(self):
-        if self.thread_event.isSet():
+        if self.thread_event.is_set():
             self.thread_event.clear()
 
     # 设置运行状态
     def resume_process(self):
-        if not self.thread_event.isSet():
+        if not self.thread_event.is_set():
             self.thread_event.set()
 
     @property
