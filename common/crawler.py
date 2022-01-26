@@ -13,6 +13,7 @@ import re
 import sys
 import threading
 import time
+import warnings
 from typing import Union
 
 # 项目根目录
@@ -304,6 +305,16 @@ class Crawler(object):
     def is_running(self):
         return self.process_status
 
+    def rewrite_save_file(self):
+        """
+        将临时存档文件按照主键排序后写入原始存档文件
+        只支持一行一条记录，每条记录格式相同的存档文件
+        """
+        account_list = read_save_data(self.temp_save_data_path, 0, [])
+        temp_list = [account_list[key] for key in sorted(account_list.keys())]
+        file.write_file(tool.list_to_string(temp_list), self.save_data_path, file.WRITE_FILE_TYPE_REPLACE)
+        path.delete_dir_or_file(self.temp_save_data_path)
+
 
 class DownloadThread(threading.Thread):
     main_thread = None
@@ -534,6 +545,11 @@ def rewrite_save_file(temp_save_data_path: str, save_data_path: str):
     将临时存档文件按照主键排序后写入原始存档文件
     只支持一行一条记录，每条记录格式相同的存档文件
     """
+    warnings.warn(
+        "rewrite_save_file commands are deprecated.",
+        DeprecationWarning,
+        stacklevel=2,
+    )
     account_list = read_save_data(temp_save_data_path, 0, [])
     temp_list = [account_list[key] for key in sorted(account_list.keys())]
     file.write_file(tool.list_to_string(temp_list), save_data_path, file.WRITE_FILE_TYPE_REPLACE)

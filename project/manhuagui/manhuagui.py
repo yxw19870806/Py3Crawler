@@ -156,7 +156,7 @@ class ManHuaGui(crawler.Crawler):
             file.write_file(tool.list_to_string(list(self.save_data.values())), self.temp_save_data_path)
 
         # 重新排序保存存档文件
-        crawler.rewrite_save_file(self.temp_save_data_path, self.save_data_path)
+        self.rewrite_save_file()
 
         # 删除临时缓存目录
         path.delete_dir_or_file(CACHE_FILE_PATH)
