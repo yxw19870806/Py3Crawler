@@ -35,9 +35,9 @@ def main():
     account_list_from_api = get_account_from_index()
     if len(account_list_from_api) > 0:
         for account_id in account_list_from_api:
-            if account_id not in nogizaka46Diary_class.account_list:
-                nogizaka46Diary_class.account_list[account_id] = [account_id, "", "0", account_list_from_api[account_id]]
-        temp_list = [nogizaka46Diary_class.account_list[key] for key in sorted(nogizaka46Diary_class.account_list.keys())]
+            if account_id not in nogizaka46Diary_class.save_data:
+                nogizaka46Diary_class.save_data[account_id] = [account_id, "", "0", account_list_from_api[account_id]]
+        temp_list = [nogizaka46Diary_class.save_data[key] for key in sorted(nogizaka46Diary_class.save_data.keys())]
         file.write_file(tool.list_to_string(temp_list), nogizaka46Diary_class.save_data_path, file.WRITE_FILE_TYPE_REPLACE)
 
 

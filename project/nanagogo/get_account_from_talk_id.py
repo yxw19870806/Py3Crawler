@@ -39,7 +39,7 @@ def main():
 
     # 存档位置
     account_list = list(crawler.read_save_data(ACCOUNT_ID_FILE_PATH, 0, []).keys())
-    for talk_id in nanaGoGo_class.account_list:
+    for talk_id in nanaGoGo_class.save_data:
         try:
             member_list = get_member_from_talk(talk_id)
         except crawler.CrawlerException as e:
