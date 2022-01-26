@@ -164,13 +164,13 @@ class YiZhiBo(crawler.Crawler):
 
 
 class Download(crawler.DownloadThread):
-    def __init__(self, account_info, main_thread):
-        crawler.DownloadThread.__init__(self, account_info, main_thread)
-        self.account_id = self.account_info[0]
-        if len(self.account_info) >= 6 and self.account_info[5]:
-            self.display_name = self.account_info[5]
+    def __init__(self, single_save_data, main_thread):
+        crawler.DownloadThread.__init__(self, single_save_data, main_thread)
+        self.account_id = self.single_save_data[0]
+        if len(self.single_save_data) >= 6 and self.single_save_data[5]:
+            self.display_name = self.single_save_data[5]
         else:
-            self.display_name = self.account_info[0]
+            self.display_name = self.single_save_data[0]
         self.step("开始")
 
     # 获取所有可下载图片
@@ -198,7 +198,7 @@ class Download(crawler.DownloadThread):
                 return []
 
             # 检查是否达到存档记录
-            if photo_head_response["photo_time"] > int(self.account_info[4]):
+            if photo_head_response["photo_time"] > int(self.single_save_data[4]):
                 photo_info_list.append({"photo_url": photo_url, "photo_time": photo_head_response["photo_time"]})
             else:
                 break
@@ -207,7 +207,7 @@ class Download(crawler.DownloadThread):
 
     # 解析单张图片
     def crawl_photo(self, photo_info):
-        photo_index = int(self.account_info[3]) + 1
+        photo_index = int(self.single_save_data[3]) + 1
         self.step("开始下载第%s张图片 %s" % (photo_index, photo_info["photo_url"]))
 
         photo_file_path = os.path.join(self.main_thread.photo_download_path, self.display_name, "%04d.%s" % (photo_index, net.get_file_type(photo_info["photo_url"])))
@@ -221,8 +221,8 @@ class Download(crawler.DownloadThread):
                 return False
 
         # 图片下载完毕
-        self.account_info[3] = str(photo_index)  # 设置存档记录
-        self.account_info[4] = str(photo_info["photo_time"])  # 设置存档记录
+        self.single_save_data[3] = str(photo_index)  # 设置存档记录
+        self.single_save_data[4] = str(photo_info["photo_time"])  # 设置存档记录
         return True
 
     # 获取所有可下载视频
@@ -251,7 +251,7 @@ class Download(crawler.DownloadThread):
                 return []
 
             # 检查是否达到存档记录
-            if video_info_response["video_time"] > int(self.account_info[2]):
+            if video_info_response["video_time"] > int(self.single_save_data[2]):
                 video_info_list.append(video_info_response)
             else:
                 break
@@ -260,7 +260,7 @@ class Download(crawler.DownloadThread):
 
     # 解析单个视频
     def crawl_video(self, video_info):
-        video_index = int(self.account_info[1]) + 1
+        video_index = int(self.single_save_data[1]) + 1
         self.step("开始下载第%s个视频 %s" % (video_index, video_info["video_url_list"]))
 
         video_file_path = os.path.join(self.main_thread.video_download_path, self.display_name, "%04d.ts" % video_index)
@@ -274,8 +274,8 @@ class Download(crawler.DownloadThread):
                 return False
 
         # 视频下载完毕
-        self.account_info[1] = str(video_index)  # 设置存档记录
-        self.account_info[2] = str(video_info["video_time"])  # 设置存档记录
+        self.single_save_data[1] = str(video_index)  # 设置存档记录
+        self.single_save_data[2] = str(video_info["video_time"])  # 设置存档记录
         return True
 
     def run(self):
@@ -314,7 +314,7 @@ class Download(crawler.DownloadThread):
 
         # 保存最后的信息
         with self.thread_lock:
-            file.write_file("\t".join(self.account_info), self.main_thread.temp_save_data_path)
+            file.write_file("\t".join(self.single_save_data), self.main_thread.temp_save_data_path)
             self.main_thread.total_photo_count += self.total_photo_count
             self.main_thread.total_video_count += self.total_video_count
             self.main_thread.save_data.pop(self.account_id)

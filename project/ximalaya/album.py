@@ -62,13 +62,13 @@ class XiMaLaYaAlbum(ximalaya.XiMaLaYa):
 
 
 class Download(crawler.DownloadThread):
-    def __init__(self, account_info, main_thread):
-        crawler.DownloadThread.__init__(self, account_info, main_thread)
-        self.album_id = self.account_info[0]
-        if len(self.account_info) >= 3 and self.account_info[2]:
-            self.display_name = self.account_info[2]
+    def __init__(self, single_save_data, main_thread):
+        crawler.DownloadThread.__init__(self, single_save_data, main_thread)
+        self.album_id = self.single_save_data[0]
+        if len(self.single_save_data) >= 3 and self.single_save_data[2]:
+            self.display_name = self.single_save_data[2]
         else:
-            self.display_name = self.account_info[0]
+            self.display_name = self.single_save_data[0]
         self.total_audio_count = 0
         self.step("开始")
 
@@ -96,7 +96,7 @@ class Download(crawler.DownloadThread):
             # 寻找这一页符合条件的媒体
             for audio_info in audit_pagination_response["audio_info_list"]:
                 # 检查是否达到存档记录
-                if audio_info["audio_id"] > int(self.account_info[1]):
+                if audio_info["audio_id"] > int(self.single_save_data[1]):
                     # 新增音频导致的重复判断
                     if audio_info["audio_id"] in unique_list:
                         continue
@@ -142,7 +142,7 @@ class Download(crawler.DownloadThread):
                 self.check_thread_exit_after_download_failure()
 
         # 音频下载完毕
-        self.account_info[1] = str(audio_info["audio_id"])  # 设置存档记录
+        self.single_save_data[1] = str(audio_info["audio_id"])  # 设置存档记录
 
     def run(self):
         try:
@@ -165,7 +165,7 @@ class Download(crawler.DownloadThread):
 
         # 保存最后的信息
         with self.thread_lock:
-            file.write_file("\t".join(self.account_info), self.main_thread.temp_save_data_path)
+            file.write_file("\t".join(self.single_save_data), self.main_thread.temp_save_data_path)
             self.main_thread.total_audio_count += self.total_audio_count
             self.main_thread.save_data.pop(self.album_id)
         self.step("下载完毕，总共获得%s首音频" % self.total_audio_count)

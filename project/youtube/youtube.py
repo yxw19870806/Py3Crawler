@@ -457,13 +457,13 @@ class Youtube(crawler.Crawler):
 class Download(crawler.DownloadThread):
     is_find = False
 
-    def __init__(self, account_info, main_thread):
-        crawler.DownloadThread.__init__(self, account_info, main_thread)
-        self.account_id = self.account_info[0]
-        if len(self.account_info) >= 4 and self.account_info[3]:
-            self.display_name = self.account_info[3]
+    def __init__(self, single_save_data, main_thread):
+        crawler.DownloadThread.__init__(self, single_save_data, main_thread)
+        self.account_id = self.single_save_data[0]
+        if len(self.single_save_data) >= 4 and self.single_save_data[3]:
+            self.display_name = self.single_save_data[3]
         else:
-            self.display_name = self.account_info[0]
+            self.display_name = self.single_save_data[0]
         self.step("开始")
 
     # 获取所有可下载视频
@@ -471,7 +471,7 @@ class Download(crawler.DownloadThread):
         token = ""
         video_id_list = []
         # 是否有根据视频id找到上一次的记录
-        if self.account_info[1] == "":
+        if self.single_save_data[1] == "":
             self.is_find = True
         is_over = False
         # 获取全部还未下载过需要解析的相册
@@ -489,15 +489,15 @@ class Download(crawler.DownloadThread):
             self.trace("token：%s页解析的全部视频：%s" % (token, video_pagination_response["video_id_list"]))
             self.step("token：%s页解析获取%s个视频" % (token, len(video_pagination_response["video_id_list"])))
 
-            if len(self.account_info) < 4:
+            if len(self.single_save_data) < 4:
                 self.step("频道名：%s" % video_pagination_response["channel_name"])
                 self.display_name = video_pagination_response["channel_name"]
-                self.account_info.append(self.display_name)
+                self.single_save_data.append(self.display_name)
 
             # 寻找这一页符合条件的日志
             for video_id in video_pagination_response["video_id_list"]:
                 # 检查是否达到存档记录
-                if video_id != self.account_info[1]:
+                if video_id != self.single_save_data[1]:
                     video_id_list.append(video_id)
                 else:
                     is_over = True
@@ -526,14 +526,14 @@ class Download(crawler.DownloadThread):
 
         # 如果解析需要下载的视频时没有找到上次的记录，表示存档所在的视频已被删除，则判断数字id
         if not self.is_find:
-            if video_response["video_time"] < int(self.account_info[2]):
+            if video_response["video_time"] < int(self.single_save_data[2]):
                 self.step("视频%s跳过" % video_id)
                 # 如果最后一个视频仍然没有找到，重新设置存档
                 if is_last:
-                    self.account_info[1] = video_id  # 设置存档记录
-                    self.account_info[2] = str(video_response["video_time"])  # 设置存档记录
+                    self.single_save_data[1] = video_id  # 设置存档记录
+                    self.single_save_data[2] = str(video_response["video_time"])  # 设置存档记录
                 return
-            elif video_response["video_time"] == int(self.account_info[2]):
+            elif video_response["video_time"] == int(self.single_save_data[2]):
                 self.error("视频%s与存档视频发布日期一致，无法过滤，再次下载" % video_id)
             else:
                 self.is_find = True
@@ -553,8 +553,8 @@ class Download(crawler.DownloadThread):
                 self.check_thread_exit_after_download_failure()
 
         # 媒体内图片和视频全部下载完毕
-        self.account_info[1] = video_id  # 设置存档记录
-        self.account_info[2] = str(video_response["video_time"])  # 设置存档记录
+        self.single_save_data[1] = video_id  # 设置存档记录
+        self.single_save_data[2] = str(video_response["video_time"])  # 设置存档记录
 
     def run(self):
         try:
@@ -579,7 +579,7 @@ class Download(crawler.DownloadThread):
 
         # 保存最后的信息
         with self.thread_lock:
-            file.write_file("\t".join(self.account_info), self.main_thread.temp_save_data_path)
+            file.write_file("\t".join(self.single_save_data), self.main_thread.temp_save_data_path)
             self.main_thread.total_video_count += self.total_video_count
             self.main_thread.save_data.pop(self.account_id)
         self.step("下载完毕，总共获得%s个视频" % self.total_video_count)

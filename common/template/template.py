@@ -56,7 +56,7 @@ class Template(crawler.Crawler):
         # todo 存档文件格式
         # 解析存档文件
         # account_id
-        self.account_list = crawler.read_save_data(self.save_data_path, 0, ["", ])
+        self.save_data = crawler.read_save_data(self.save_data_path, 0, ["", ])
 
         # 检测登录状态
         if not check_login():
@@ -72,13 +72,13 @@ class Template(crawler.Crawler):
         try:
             # 循环下载每个id
             thread_list = []
-            for account_id in sorted(self.account_list.keys()):
+            for account_id in sorted(self.save_data.keys()):
                 # 提前结束
                 if not self.is_running():
                     break
 
                 # 开始下载
-                thread = Download(self.account_list[account_id], self)
+                thread = Download(self.save_data[account_id], self)
                 thread.start()
                 thread_list.append(thread)
 
@@ -91,8 +91,8 @@ class Template(crawler.Crawler):
             self.stop_process()
 
         # 未完成的数据保存
-        if len(self.account_list) > 0:
-            file.write_file(tool.list_to_string(list(self.account_list.values())), self.temp_save_data_path)
+        if len(self.save_data) > 0:
+            file.write_file(tool.list_to_string(list(self.save_data.values())), self.temp_save_data_path)
 
         # 重新排序保存存档文件
         crawler.rewrite_save_file(self.temp_save_data_path, self.save_data_path)
@@ -102,11 +102,11 @@ class Template(crawler.Crawler):
 
 
 class Download(crawler.DownloadThread):
-    def __init__(self, account_info, main_thread):
-        crawler.DownloadThread.__init__(self, account_info, main_thread)
-        self.account_id = self.account_info[0]
+    def __init__(self, single_save_data, main_thread):
+        crawler.DownloadThread.__init__(self, single_save_data, main_thread)
+        self.account_id = self.single_save_data[0]
         # 日志前缀
-        self.display_name = self.account_info[0]
+        self.display_name = self.single_save_data[0]
         self.step("开始")
 
     # 获取所有可下载日志
@@ -132,7 +132,7 @@ class Download(crawler.DownloadThread):
             # 寻找这一页符合条件的媒体
             for blog_id in blog_pagination_response["blog_id_list"]:
                 # 检查是否达到存档记录
-                if int(blog_id) > int(self.account_info[3]):
+                if int(blog_id) > int(self.single_save_data[3]):
                     blog_id_list.append(blog_id)
                 else:
                     is_over = True
@@ -152,7 +152,7 @@ class Download(crawler.DownloadThread):
 
         # todo 图片下载逻辑
         # 图片下载
-        photo_index = self.account_info[1] + 1
+        photo_index = self.single_save_data[1] + 1
         if self.main_thread.is_download_photo:
             for photo_url in blog_response["photo_url_list"]:
                 self.main_thread_check()  # 检测主线程运行状态
@@ -171,7 +171,7 @@ class Download(crawler.DownloadThread):
 
         # todo 视频下载逻辑
         # 视频下载
-        video_index = self.account_info[2] + 1
+        video_index = self.single_save_data[2] + 1
         if self.main_thread.is_download_video:
             for video_url in blog_response["video_url_list"]:
                 self.main_thread_check()  # 检测主线程运行状态
@@ -190,7 +190,7 @@ class Download(crawler.DownloadThread):
 
         # todo 音频下载逻辑
         # 音频下载
-        audio_index = self.account_info[2] + 1
+        audio_index = self.single_save_data[2] + 1
         if self.main_thread.is_download_audio:
             for audio_url in blog_response["audio_url_list"]:
                 self.main_thread_check()  # 检测主线程运行状态
@@ -209,13 +209,13 @@ class Download(crawler.DownloadThread):
 
         # 日志内图片、视频和音频全部下载完毕
         self.temp_path_list = []  # 临时目录设置清除
-        self.total_photo_count += (photo_index - 1) - int(self.account_info[1])  # 计数累加
-        self.total_video_count += (video_index - 1) - int(self.account_info[2])  # 计数累加
-        self.total_audio_count += (audio_index - 1) - int(self.account_info[3])  # 计数累加
-        self.account_info[1] = str(photo_index - 1)  # 设置存档记录
-        self.account_info[2] = str(video_index - 1)  # 设置存档记录
-        self.account_info[3] = str(audio_index - 1)  # 设置存档记录
-        self.account_info[4] = ""  # 设置存档记录
+        self.total_photo_count += (photo_index - 1) - int(self.single_save_data[1])  # 计数累加
+        self.total_video_count += (video_index - 1) - int(self.single_save_data[2])  # 计数累加
+        self.total_audio_count += (audio_index - 1) - int(self.single_save_data[3])  # 计数累加
+        self.single_save_data[1] = str(photo_index - 1)  # 设置存档记录
+        self.single_save_data[2] = str(video_index - 1)  # 设置存档记录
+        self.single_save_data[3] = str(audio_index - 1)  # 设置存档记录
+        self.single_save_data[4] = ""  # 设置存档记录
 
     def run(self):
         try:
@@ -242,11 +242,11 @@ class Download(crawler.DownloadThread):
 
         # 保存最后的信息
         with self.thread_lock:
-            file.write_file("\t".join(self.account_info), self.main_thread.temp_save_data_path)
+            file.write_file("\t".join(self.single_save_data), self.main_thread.temp_save_data_path)
             self.main_thread.total_photo_count += self.total_photo_count
             self.main_thread.total_video_count += self.total_video_count
             self.main_thread.total_audio_count += self.total_audio_count
-            self.main_thread.account_list.pop(self.account_id)
+            self.main_thread.save_data.pop(self.account_id)
         self.step("下载完毕，总共获得%s张图片、%s个视频、%s个音频" % (self.total_photo_count, self.total_video_count, self.total_audio_count))
         self.notify_main_thread()
 

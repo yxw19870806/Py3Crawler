@@ -217,9 +217,9 @@ class DailyMotion(crawler.Crawler):
 class Download(crawler.DownloadThread):
     is_find = False
 
-    def __init__(self, account_info, main_thread):
-        crawler.DownloadThread.__init__(self, account_info, main_thread)
-        self.account_id = self.account_info[0]
+    def __init__(self, single_save_data, main_thread):
+        crawler.DownloadThread.__init__(self, single_save_data, main_thread)
+        self.account_id = self.single_save_data[0]
         self.display_name = self.account_id
         self.step("开始")
 
@@ -245,7 +245,7 @@ class Download(crawler.DownloadThread):
             # 寻找这一页符合条件的日志
             for video_info in blog_pagination_response["video_info_list"]:
                 # 检查是否达到存档记录
-                if video_info["video_time"] > int(self.account_info[1]):
+                if video_info["video_time"] > int(self.single_save_data[1]):
                     video_info_list.append(video_info)
                 else:
                     is_over = True
@@ -280,7 +280,7 @@ class Download(crawler.DownloadThread):
             self.check_thread_exit_after_download_failure()
 
         # 视频全部下载完毕
-        self.account_info[1] = str(video_info["video_time"])  # 设置存档记录
+        self.single_save_data[1] = str(video_info["video_time"])  # 设置存档记录
 
     def run(self):
         try:
@@ -303,7 +303,7 @@ class Download(crawler.DownloadThread):
 
         # 保存最后的信息
         with self.thread_lock:
-            file.write_file("\t".join(self.account_info), self.main_thread.temp_save_data_path)
+            file.write_file("\t".join(self.single_save_data), self.main_thread.temp_save_data_path)
             self.main_thread.total_video_count += self.total_video_count
             self.main_thread.save_data.pop(self.account_id)
         self.step("下载完毕，总共获得%s个视频" % self.total_video_count)

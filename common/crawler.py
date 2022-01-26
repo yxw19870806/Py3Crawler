@@ -310,12 +310,12 @@ class DownloadThread(threading.Thread):
     thread_lock = None
     display_name = None
 
-    def __init__(self, account_info: list, main_thread: Crawler):
+    def __init__(self, single_save_data: list, main_thread: Crawler):
         """
         多线程下载
 
         :Args:
-        - account_info - 线程用到的数据
+        - single_save_data - 线程用到的数据
         - main_thread - 主线程对象
         """
         if not isinstance(main_thread, Crawler):
@@ -323,7 +323,7 @@ class DownloadThread(threading.Thread):
             tool.process_exit()
         try:
             threading.Thread.__init__(self)
-            self.account_info = account_info
+            self.single_save_data = single_save_data
             self.main_thread = main_thread
             self.thread_lock = main_thread.thread_lock
             main_thread.thread_semaphore.acquire()

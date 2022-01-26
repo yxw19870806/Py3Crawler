@@ -257,9 +257,9 @@ class Flickr(crawler.Crawler):
 class Download(crawler.DownloadThread):
     request_id = tool.generate_random_string(8)  # 生成一个随机的request id用作访问（模拟页面传入）
 
-    def __init__(self, account_info, main_thread):
-        crawler.DownloadThread.__init__(self, account_info, main_thread)
-        self.account_name = self.account_info[0]
+    def __init__(self, single_save_data, main_thread):
+        crawler.DownloadThread.__init__(self, single_save_data, main_thread)
+        self.account_name = self.single_save_data[0]
         self.display_name = self.account_name
         self.step("开始")
 
@@ -287,7 +287,7 @@ class Download(crawler.DownloadThread):
             for photo_info in photo_pagination_response["photo_info_list"]:
                 # 检查是否达到存档记录
                 # photo_id是唯一的，但并不是递增的（分表主键），无法作为存档的判断依据
-                if photo_info["photo_time"] > int(self.account_info[1]):
+                if photo_info["photo_time"] > int(self.single_save_data[1]):
                     photo_info_list.append(photo_info)
                 else:
                     is_over = True
@@ -318,7 +318,7 @@ class Download(crawler.DownloadThread):
 
         # 图片下载完毕
         self.temp_path_list = []  # 临时目录设置清除
-        self.account_info[1] = str(photo_info_list[0]["photo_time"])  # 设置存档记
+        self.single_save_data[1] = str(photo_info_list[0]["photo_time"])  # 设置存档记
 
     def run(self):
         try:
@@ -359,7 +359,7 @@ class Download(crawler.DownloadThread):
 
         # 保存最后的信息
         with self.thread_lock:
-            file.write_file("\t".join(self.account_info), self.main_thread.temp_save_data_path)
+            file.write_file("\t".join(self.single_save_data), self.main_thread.temp_save_data_path)
             self.main_thread.total_photo_count += self.total_photo_count
             self.main_thread.save_data.pop(self.account_name)
         self.step("下载完毕，总共获得%s张图片" % self.total_photo_count)
