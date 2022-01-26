@@ -11,7 +11,7 @@ import platform
 import random
 import string
 import sys
-from typing import Optional, Union
+from typing import Optional, Union, List
 
 # if sys.stdout.encoding != "UTF-8":
 #     raise Exception("项目编码必须是UTF-8，请在IDE中修改相关设置")
@@ -98,26 +98,31 @@ def json_encode(json_obj: Union[list, dict], default_value=None) -> str:
     return default_value
 
 
-def list_to_string(source_lists: list, first_sign: str = "\n", second_sign: str = "\t") -> str:
+def list_to_string(source_lists: List[list], first_sign: str = "\n", second_sign: str = "\t") -> str:
     """
-    按照指定连接符合并二维数组生成字符串
+    按照指定连接符，合并二维列表生成字符串
+
+    :Args:
+    - source_lists - 需要合并的列表
+    - first_sign - 第一维列表的连接字符
+    - second_sign - 第二维列表的连接字符
     """
     temp_list = []
     for value in source_lists:
-        if second_sign != "":
-            temp_list.append(second_sign.join(map(str, value)))
-        else:
-            temp_list.append(str(value))
+        temp_list.append(second_sign.join(map(str, value)))
     return first_sign.join(temp_list)
 
 
-def string_to_list(source_string: str, first_split: str = "\n", second_split: str = "\t") -> list:
+def string_to_list(source_string: str, first_split: str = "\n", second_split: str = "\t") -> List[list]:
     """
-    按照指定分割符，分割字符串生成二维数组
+    按照指定分割符，分割字符串生成二维列表
+
+    :Args:
+    - source_string - 需要分割的字符串
+    - first_split - 第一维列表的分割字符
+    - second_split - 第二维列表的分割字符
     """
     result = source_string.split(first_split)
-    if second_split is None:
-        return result
     temp_list = []
     for line in result:
         temp_list.append(line.split(second_split))
