@@ -305,6 +305,13 @@ class Crawler(object):
     def is_running(self):
         return self.process_status
 
+    def write_remaining_save_data(self):
+        """
+        将剩余未处理的存档数据写入临时存档文件
+        """
+        if len(self.save_data) > 0:
+            file.write_file(tool.list_to_string(list(self.save_data.values())), self.temp_save_data_path)
+
     def rewrite_save_file(self):
         """
         将临时存档文件按照主键排序后写入原始存档文件
