@@ -317,8 +317,8 @@ class Crawler(object):
         将临时存档文件按照主键排序后写入原始存档文件
         只支持一行一条记录，每条记录格式相同的存档文件
         """
-        account_list = read_save_data(self.temp_save_data_path, 0, [])
-        temp_list = [account_list[key] for key in sorted(account_list.keys())]
+        save_data = read_save_data(self.temp_save_data_path, 0, [])
+        temp_list = [save_data[key] for key in sorted(save_data.keys())]
         file.write_file(tool.list_to_string(temp_list), self.save_data_path, file.WRITE_FILE_TYPE_REPLACE)
         path.delete_dir_or_file(self.temp_save_data_path)
 
