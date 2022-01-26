@@ -557,13 +557,6 @@ def rewrite_save_file(temp_save_data_path: str, save_data_path: str):
     path.delete_dir_or_file(temp_save_data_path)
 
 
-def replace_path(source_path: str) -> str:
-    """
-    替换目录中的指定字符串
-    """
-    return source_path.replace("{date}", time.strftime("%y-%m-%d", time.localtime(time.time())))
-
-
 def get_time() -> str:
     """
     获取当前时间
