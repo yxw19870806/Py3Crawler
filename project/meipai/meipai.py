@@ -155,8 +155,7 @@ class MeiPai(crawler.Crawler):
             self.stop_process()
 
         # 未完成的数据保存
-        if len(self.save_data) > 0:
-            file.write_file(tool.list_to_string(list(self.save_data.values())), self.temp_save_data_path)
+        self.write_remaining_save_data()
 
         # 重新排序保存存档文件
         self.rewrite_save_file()
