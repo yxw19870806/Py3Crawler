@@ -191,7 +191,7 @@ class Download(crawler.DownloadThread):
 
         # 保存最后的信息
         with self.thread_lock:
-            file.write_file("\t".join(self.single_save_data), self.main_thread.temp_save_data_path)
+            self.write_single_save_data()
             self.main_thread.total_audio_count += self.total_audio_count
             self.main_thread.save_data.pop(self.album_id)
         self.step("下载完毕，总共获得%s首音频" % self.total_audio_count)

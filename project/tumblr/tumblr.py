@@ -680,7 +680,7 @@ class Download(crawler.DownloadThread):
 
         # 保存最后的信息
         with self.thread_lock:
-            file.write_file("\t".join(self.single_save_data), self.main_thread.temp_save_data_path)
+            self.write_single_save_data()
             self.main_thread.total_photo_count += self.total_photo_count
             self.main_thread.total_video_count += self.total_video_count
             self.main_thread.save_data.pop(self.account_id)
