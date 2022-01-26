@@ -486,7 +486,7 @@ def sort_file(source_path: str, destination_path: str, start_count: int, file_na
     return True
 
 
-def read_save_data(save_data_path: str, key_index: int = 0, default_value_list: list = None, check_duplicate_index: bool = True):
+def read_save_data(save_data_path: str, key_index: int = 0, default_value_list: list = None, check_duplicate_index: bool = True) -> dict:
     """
     读取存档文件，并根据指定列生成存档字典
 
@@ -540,14 +540,14 @@ def rewrite_save_file(temp_save_data_path: str, save_data_path: str):
     path.delete_dir_or_file(temp_save_data_path)
 
 
-def replace_path(source_path: str):
+def replace_path(source_path: str) -> str:
     """
     替换目录中的指定字符串
     """
     return source_path.replace("{date}", time.strftime("%y-%m-%d", time.localtime(time.time())))
 
 
-def get_time():
+def get_time() -> str:
     """
     获取当前时间
     """
@@ -562,10 +562,10 @@ def get_json_value(json_data, *args, **kwargs):
     - json_data - 原始json数据
     - args - 如果是字母，取字典对应key；如果是整数，取列表对应下标
     - kwargs
-        - original_data
-        - default_value
-        - type_check
-        - value_check
+        - original_data     原始数据，主要用于异常输出
+        - default_value     当json对象中没有找到对应key的数据时的默认值，如果不设置则会在没有找到数据时抛出异常
+        - type_check        验证数据类型是否一致
+        - value_check       验证数值是否一致
     """
     if "original_data" in kwargs:
         original_data = kwargs["original_data"]
@@ -632,7 +632,7 @@ def get_json_value(json_data, *args, **kwargs):
     return json_data
 
 
-def check_sub_key(needles: Union[str, tuple], haystack: dict):
+def check_sub_key(needles: Union[str, tuple], haystack: dict) -> bool:
     """
     判断类型是否为字典，并且检测是否存在指定的key
     """
@@ -646,7 +646,7 @@ def check_sub_key(needles: Union[str, tuple], haystack: dict):
     return False
 
 
-def is_integer(number):
+def is_integer(number) -> bool:
     """
     判断是不是整数
     """
@@ -655,10 +655,10 @@ def is_integer(number):
     elif isinstance(number, bool) or isinstance(number, list) or isinstance(number, dict) or number is None:
         return False
     else:
-        return re.compile('^[-+]?[0-9]+$').match(str(number))
+        return not re.compile('^[-+]?[0-9]+$').match(str(number)) is None
 
 
-def filter_emoji(text: str):
+def filter_emoji(text: str) -> str:
     """
     替换文本中的表情符号
     """
@@ -669,7 +669,7 @@ def filter_emoji(text: str):
     return emoji.sub('', text)
 
 
-def download_failre(return_code: int):
+def download_failre(return_code: int) -> str:
     """
     获取网络文件下载失败的原因
     """
@@ -695,7 +695,7 @@ def download_failre(return_code: int):
         return "未知错误，下载返回码 %s" % return_code
 
 
-def request_failre(return_code: int):
+def request_failre(return_code: int) -> str:
     """
     获取网络文件下载失败的原因
     return_code = response.status
