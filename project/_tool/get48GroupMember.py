@@ -150,7 +150,7 @@ def jkt(file_handle):
     index_url = "http://www.jkt48.com/member/list"
     index_response = net.request(index_url, method="GET")
     if index_response.status == net.HTTP_RETURN_CODE_SUCCEED:
-        page = tool.find_sub_string(index_response.data, '<div id="mainCol">', "<!--end #mainCol-->", 1)
+        page = tool.find_sub_string(index_response.data, '<div id="mainCol">', "<!--end #mainCol-->", tool.SUB_STRING_MODE_ONLY_START)
         start_index = 0
         start_index_list = []
         while start_index != -1:

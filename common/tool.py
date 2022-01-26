@@ -22,11 +22,16 @@ if getattr(sys, "frozen", False):
 else:
     IS_EXECUTABLE = False
 
+SUB_STRING_MODE_NONE = 0  # 不包含start_string和end_string
+SUB_STRING_MODE_ONLY_START = 1  # 只包含start_string
+SUB_STRING_MODE_ONLY_END = 2  # 只包含end_string
+SUB_STRING_MODE_BOTH = 3  # 同时包含start_string和end_string
+
 PROCESS_EXIT_CODE_NORMAL = 0
 PROCESS_EXIT_CODE_ERROR = 1
 
 
-def find_sub_string(haystack, start_string: Optional[str] = None, end_string: Optional[str] = None, include_string: int = 0) -> str:
+def find_sub_string(haystack, start_string: Optional[str] = None, end_string: Optional[str] = None, include_string: int = SUB_STRING_MODE_NONE) -> str:
     """
     根据开始与结束的字符串，截取字符串
 
@@ -44,8 +49,8 @@ def find_sub_string(haystack, start_string: Optional[str] = None, end_string: Op
     if end_string is not None:
         end_string = str(end_string)
     include_string = int(include_string)
-    if 0 < include_string > 3:
-        include_string = 3
+    if SUB_STRING_MODE_NONE < include_string > SUB_STRING_MODE_BOTH:
+        include_string = SUB_STRING_MODE_BOTH
 
     if start_string is None:
         start_index = 0
@@ -68,9 +73,9 @@ def find_sub_string(haystack, start_string: Optional[str] = None, end_string: Op
 
     find_string = haystack[start_index:stop_index]
     # 是否需要追加开始或结束字符串
-    if include_string & 1 == 1 and start_string is not None:
+    if include_string & SUB_STRING_MODE_ONLY_START == SUB_STRING_MODE_ONLY_START and start_string is not None:
         find_string = start_string + find_string
-    if include_string & 2 == 2 and end_string is not None:
+    if include_string & SUB_STRING_MODE_ONLY_END == SUB_STRING_MODE_ONLY_END and end_string is not None:
         find_string += end_string
     return find_string
 
