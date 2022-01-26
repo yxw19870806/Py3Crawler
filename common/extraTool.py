@@ -7,6 +7,7 @@ email: hikaru870806@hotmail.com
 """
 import os
 import zipfile
+from common import path
 
 
 def zip_dir(source_dir: str, zip_file_path: str, need_source_dir=True) -> bool:
@@ -40,7 +41,7 @@ def zip_dir(source_dir: str, zip_file_path: str, need_source_dir=True) -> bool:
     return zipfile.is_zipfile(zip_file_path)
 
 
-def unzip_file(zip_file_path:str, destination_path:str) -> bool:
+def unzip_file(zip_file_path: str, destination_path: str) -> bool:
     """
     解压缩文件
     """
@@ -64,3 +65,29 @@ def unzip_file(zip_file_path:str, destination_path:str) -> bool:
             outfile.close()
 
     return os.path.exists(destination_path)
+
+
+def sort_file(source_path: str, destination_path: str, start_count: int, file_name_length: int):
+    """
+    将指定文件夹内的所有文件排序重命名并复制到其他文件夹中
+
+    :Args:
+    - source_path - 待排序文件所在目录
+    - destination_path - 排序后所复制的目录
+    - start_count - 重命名开始的序号
+    - file_name_length - 复制后的文件名长度
+    """
+    file_list = path.get_dir_files_name(source_path, path.RETURN_FILE_LIST_DESC)
+    # 判断排序目标文件夹是否存在
+    if len(file_list) >= 1:
+        if not path.create_dir(destination_path):
+            return False
+        # 倒叙排列
+        for file_name in file_list:
+            start_count += 1
+            file_type = os.path.splitext(file_name)[1]  # 包括 .扩展名
+            new_file_name = str(("%0" + str(file_name_length) + "d") % start_count) + file_type
+            path.copy_file(os.path.join(source_path, file_name), os.path.join(destination_path, new_file_name))
+        # 删除临时文件夹
+        path.delete_dir_or_file(source_path)
+    return True
