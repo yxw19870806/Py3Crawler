@@ -8,12 +8,18 @@ email: hikaru870806@hotmail.com
 import configparser
 import os
 from common import browser, crawler, net
+from typing import Optional
 
 
-# 读取配置文件，快速设置代理
-# is_auto = False   始终使用代理
-#           True    配置文件未禁止时使用代理（IS_PROXY = 1 or 2)
-def quickly_set_proxy(config=None, is_auto=True):
+def quickly_set_proxy(config: Optional[dict] = None, is_auto: bool = True):
+    """
+    读取配置文件，快速设置代理
+
+    :Args:
+    - is_auto
+        False   始终使用代理
+        True    配置文件未禁止时使用代理（IS_PROXY = 1 or 2)
+    """
     if not isinstance(config, configparser.SafeConfigParser):
         config = _get_config()
     # 设置代理
@@ -27,15 +33,24 @@ def quickly_set_proxy(config=None, is_auto=True):
     net.set_proxy(proxy_ip, proxy_port)
 
 
-# 读取配置文件，返回存档文件所在路径
-def quickly_get_save_data_path(config=None):
+def quickly_get_save_data_path(config: Optional[dict] = None) -> str:
+    """
+    读取配置文件，返回存档文件所在路径
+
+    :Args:
+    - is_auto
+        False   始终使用代理
+        True    配置文件未禁止时使用代理（IS_PROXY = 1 or 2)
+    """
     if not isinstance(config, configparser.SafeConfigParser):
         config = _get_config()
     return crawler.analysis_config(config, "SAVE_DATA_PATH", "\\\\info/save.data", crawler.CONFIG_ANALYSIS_MODE_PATH)
 
 
-# 读取浏览器cookies
-def quickly_get_all_cookies_from_browser(config=None):
+def quickly_get_all_cookies_from_browser(config: Optional[dict] = None) -> dict:
+    """
+    读取配置文件，读取浏览器cookies
+    """
     if not isinstance(config, configparser.SafeConfigParser):
         config = _get_config()
     # 是否自动查找cookies路径
