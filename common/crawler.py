@@ -276,6 +276,7 @@ class Crawler(object):
                 keyboard_control_thread.setDaemon(True)
                 keyboard_control_thread.start()
 
+        self.save_data = {}
         self.total_photo_count = 0
         self.total_video_count = 0
         self.total_audio_count = 0
