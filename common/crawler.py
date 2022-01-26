@@ -359,7 +359,7 @@ class DownloadThread(threading.Thread):
         """
         if not self.main_thread.is_running():
             self.notify_main_thread()
-            tool.process_exit(0)
+            tool.process_exit(tool.PROCESS_EXIT_CODE_NORMAL)
 
     def notify_main_thread(self):
         """
@@ -374,7 +374,7 @@ class DownloadThread(threading.Thread):
         """
         if self.main_thread.is_thread_exit_after_download_failure:
             if is_process_exit:
-                tool.process_exit(0)
+                tool.process_exit(tool.PROCESS_EXIT_CODE_NORMAL)
             else:
                 return True
         return False

@@ -22,6 +22,9 @@ if getattr(sys, "frozen", False):
 else:
     IS_EXECUTABLE = False
 
+PROCESS_EXIT_CODE_NORMAL = 0
+PROCESS_EXIT_CODE_ERROR = 1
+
 
 def find_sub_string(haystack, start_string: Optional[str] = None, end_string: Optional[str] = None, include_string: int = 0) -> str:
     """
@@ -159,7 +162,7 @@ def generate_random_string(string_length: int, char_lib_type: int = 7) -> str:
     return "".join(result)
 
 
-def process_exit(exit_code: int = 1):
+def process_exit(exit_code: int = PROCESS_EXIT_CODE_ERROR):
     """
     结束进程
 
