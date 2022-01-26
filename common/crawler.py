@@ -353,19 +353,25 @@ class DownloadThread(threading.Thread):
         self.total_content_count = 0
         self.temp_path_list = []
 
-    # 检测主线程是否已经结束（外部中断）
     def main_thread_check(self):
+        """
+        检测主线程是否已经结束（外部中断）
+        """
         if not self.main_thread.is_running():
             self.notify_main_thread()
             tool.process_exit(0)
 
-    # 线程下完完成后唤醒主线程，开启新的线程（必须在线程完成后手动调用，否则会卡死主线程）
     def notify_main_thread(self):
+        """
+        线程下完完成后唤醒主线程，开启新的线程（必须在线程完成后手动调用，否则会卡死主线程）
+        """
         if isinstance(self.main_thread, Crawler):
             self.main_thread.thread_semaphore.release()
 
-    # 当下载失败，检测是否要退出线程
     def check_thread_exit_after_download_failure(self, is_process_exit=True):
+        """
+        当下载失败，检测是否要退出线程
+        """
         if self.main_thread.is_thread_exit_after_download_failure:
             if is_process_exit:
                 tool.process_exit(0)
@@ -373,25 +379,39 @@ class DownloadThread(threading.Thread):
                 return True
         return False
 
-    # 中途退出，删除临时文件/目录
+    def write_single_save_data(self):
+        """
+        保存单条存档
+        """
+        file.write_file("\t".join(self.single_save_data), self.main_thread.temp_save_data_path, file.WRITE_FILE_TYPE_REPLACE)
+
     def clean_temp_path(self):
+        """
+        中途退出，删除临时文件/目录
+        """
         for temp_path in self.temp_path_list:
             path.delete_dir_or_file(temp_path)
 
-    # Trace log
     def trace(self, message, include_display_name=True):
+        """
+        trace log
+        """
         if include_display_name and self.display_name is not None:
             message = self.display_name + " " + message
         log.trace(message)
 
-    # step log
     def step(self, message, include_display_name=True):
+        """
+        step log
+        """
         if include_display_name and self.display_name is not None:
             message = self.display_name + " " + message
         log.step(message)
 
-    # error log
     def error(self, message, include_display_name=True):
+        """
+        error log
+        """
         if include_display_name and self.display_name is not None:
             message = self.display_name + " " + message
         log.error(message)
