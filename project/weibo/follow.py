@@ -52,7 +52,7 @@ def main():
     weibo_class = weibo.Weibo()
 
     # 读取存档文件
-    for account_id in sorted(weibo_class.account_list.keys()):
+    for account_id in sorted(weibo_class.save_data.keys()):
         while not follow_account(account_id):
             pass
 

@@ -173,7 +173,7 @@ class DailyMotion(crawler.Crawler):
 
         # 解析存档文件
         # account_id  video_time
-        self.account_list = crawler.read_save_data(self.save_data_path, 0, ["", "0"])
+        self.save_data = crawler.read_save_data(self.save_data_path, 0, ["", "0"])
 
         # 生成authorization，用于访问视频页
         try:
@@ -186,13 +186,13 @@ class DailyMotion(crawler.Crawler):
         try:
             # 循环下载每个id
             thread_list = []
-            for account_id in sorted(self.account_list.keys()):
+            for account_id in sorted(self.save_data.keys()):
                 # 提前结束
                 if not self.is_running():
                     break
 
                 # 开始下载
-                thread = Download(self.account_list[account_id], self)
+                thread = Download(self.save_data[account_id], self)
                 thread.start()
                 thread_list.append(thread)
 
@@ -205,8 +205,8 @@ class DailyMotion(crawler.Crawler):
             self.stop_process()
 
         # 未完成的数据保存
-        if len(self.account_list) > 0:
-            file.write_file(tool.list_to_string(list(self.account_list.values())), self.temp_save_data_path)
+        if len(self.save_data) > 0:
+            file.write_file(tool.list_to_string(list(self.save_data.values())), self.temp_save_data_path)
 
         # 重新排序保存存档文件
         crawler.rewrite_save_file(self.temp_save_data_path, self.save_data_path)
@@ -305,7 +305,7 @@ class Download(crawler.DownloadThread):
         with self.thread_lock:
             file.write_file("\t".join(self.account_info), self.main_thread.temp_save_data_path)
             self.main_thread.total_video_count += self.total_video_count
-            self.main_thread.account_list.pop(self.account_id)
+            self.main_thread.save_data.pop(self.account_id)
         self.step("下载完毕，总共获得%s个视频" % self.total_video_count)
         self.notify_main_thread()
 

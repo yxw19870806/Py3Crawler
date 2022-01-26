@@ -53,7 +53,7 @@ def main():
     nanaGoGo_class = nanagogo.NanaGoGo()
 
     count = 0
-    for account_id in nanaGoGo_class.account_list:
+    for account_id in nanaGoGo_class.save_data:
         if follow_account(account_id):
             count += 1
         time.sleep(0.1)

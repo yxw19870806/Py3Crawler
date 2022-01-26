@@ -27,19 +27,19 @@ class XiMaLaYaAlbum(ximalaya.XiMaLaYa):
 
         # 解析存档文件
         # album_id  last_audio_id
-        self.account_list = crawler.read_save_data(self.save_data_path, 0, ["", "0"])
+        self.save_data = crawler.read_save_data(self.save_data_path, 0, ["", "0"])
 
     def main(self):
         try:
             # 循环下载每个id
             thread_list = []
-            for album_id in sorted(self.account_list.keys()):
+            for album_id in sorted(self.save_data.keys()):
                 # 提前结束
                 if not self.is_running():
                     break
 
                 # 开始下载
-                thread = Download(self.account_list[album_id], self)
+                thread = Download(self.save_data[album_id], self)
                 thread.start()
                 thread_list.append(thread)
 
@@ -52,8 +52,8 @@ class XiMaLaYaAlbum(ximalaya.XiMaLaYa):
             self.stop_process()
 
         # 未完成的数据保存
-        if len(self.account_list) > 0:
-            file.write_file(tool.list_to_string(list(self.account_list.values())), self.temp_save_data_path)
+        if len(self.save_data) > 0:
+            file.write_file(tool.list_to_string(list(self.save_data.values())), self.temp_save_data_path)
 
         # 重新排序保存存档文件
         crawler.rewrite_save_file(self.temp_save_data_path, self.save_data_path)
@@ -167,7 +167,7 @@ class Download(crawler.DownloadThread):
         with self.thread_lock:
             file.write_file("\t".join(self.account_info), self.main_thread.temp_save_data_path)
             self.main_thread.total_audio_count += self.total_audio_count
-            self.main_thread.account_list.pop(self.album_id)
+            self.main_thread.save_data.pop(self.album_id)
         self.step("下载完毕，总共获得%s首音频" % self.total_audio_count)
         self.notify_main_thread()
 
