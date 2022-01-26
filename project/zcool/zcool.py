@@ -150,13 +150,13 @@ class ZCool(crawler.Crawler):
 
 
 class Download(crawler.DownloadThread):
-    def __init__(self, account_info, main_thread):
-        crawler.DownloadThread.__init__(self, account_info, main_thread)
-        self.account_name = self.account_info[0]
-        if len(self.account_info) >= 3 and self.account_info[2]:
-            self.display_name = self.account_info[2]
+    def __init__(self, single_save_data, main_thread):
+        crawler.DownloadThread.__init__(self, single_save_data, main_thread)
+        self.account_name = self.single_save_data[0]
+        if len(self.single_save_data) >= 3 and self.single_save_data[2]:
+            self.display_name = self.single_save_data[2]
         else:
-            self.display_name = self.account_info[0]
+            self.display_name = self.single_save_data[0]
         self.step("开始")
 
     # 获取所有可下载作品
@@ -182,7 +182,7 @@ class Download(crawler.DownloadThread):
             # 寻找这一页符合条件的作品
             for album_info in album_pagination_response["album_info_list"]:
                 # 检查是否达到存档记录
-                if album_info["album_time"] > int(self.account_info[1]):
+                if album_info["album_time"] > int(self.single_save_data[1]):
                     # 新增作品导致的重复判断
                     if album_info["album_id"] in unique_list:
                         continue
@@ -235,7 +235,7 @@ class Download(crawler.DownloadThread):
 
         # 作品内图片全部下载完毕
         self.temp_path_list = []  # 临时目录设置清除
-        self.account_info[1] = str(album_info["album_time"])  # 设置存档记录
+        self.single_save_data[1] = str(album_info["album_time"])  # 设置存档记录
 
     def run(self):
         try:
@@ -260,7 +260,7 @@ class Download(crawler.DownloadThread):
 
         # 保存最后的信息
         with self.thread_lock:
-            file.write_file("\t".join(self.account_info), self.main_thread.temp_save_data_path)
+            file.write_file("\t".join(self.single_save_data), self.main_thread.temp_save_data_path)
             self.main_thread.total_photo_count += self.total_photo_count
             self.main_thread.save_data.pop(self.account_name)
         self.step("下载完毕，总共获得%s张图片" % self.total_photo_count)

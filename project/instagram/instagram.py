@@ -309,9 +309,9 @@ class Instagram(crawler.Crawler):
 
 
 class Download(crawler.DownloadThread):
-    def __init__(self, account_info, main_thread):
-        crawler.DownloadThread.__init__(self, account_info, main_thread)
-        self.account_name = self.account_info[0]
+    def __init__(self, single_save_data, main_thread):
+        crawler.DownloadThread.__init__(self, single_save_data, main_thread)
+        self.account_name = self.single_save_data[0]
         self.display_name = self.account_name
         self.step("开始")
 
@@ -329,7 +329,7 @@ class Download(crawler.DownloadThread):
             add_request_count(self.thread_lock)
             # 获取指定时间后的一页媒体信息
             try:
-                media_pagination_response = get_one_page_media(self.account_info[1], cursor)
+                media_pagination_response = get_one_page_media(self.single_save_data[1], cursor)
             except crawler.CrawlerException as e:
                 self.error("cursor：%s页媒体解析失败，原因：%s" % (cursor, e.message))
                 raise
@@ -340,7 +340,7 @@ class Download(crawler.DownloadThread):
             # 寻找这一页符合条件的媒体
             for media_info in media_pagination_response["media_info_list"]:
                 # 检查是否达到存档记录
-                if media_info["media_time"] > int(self.account_info[4]):
+                if media_info["media_time"] > int(self.single_save_data[4]):
                     media_info_list.append(media_info)
                 else:
                     is_over = True
@@ -361,7 +361,7 @@ class Download(crawler.DownloadThread):
 
         media_response = None
         # 图片下载
-        photo_index = int(self.account_info[2]) + 1
+        photo_index = int(self.single_save_data[2]) + 1
         if self.main_thread.is_download_photo:
             # 多张图片
             if media_info["is_group"]:
@@ -399,7 +399,7 @@ class Download(crawler.DownloadThread):
                 photo_index += 1
 
         # 视频下载
-        video_index = int(self.account_info[3]) + 1
+        video_index = int(self.single_save_data[3]) + 1
         if self.main_thread.is_download_video and (media_info["is_group"] or media_info["is_video"]):
             # 如果图片那里没有获取过媒体页面，需要重新获取一下
             if media_response is None:
@@ -430,9 +430,9 @@ class Download(crawler.DownloadThread):
 
         # 媒体内图片和视频全部下载完毕
         self.temp_path_list = []  # 临时目录设置清除
-        self.account_info[2] = str(photo_index - 1)  # 设置存档记录
-        self.account_info[3] = str(video_index - 1)  # 设置存档记录
-        self.account_info[4] = str(media_info["media_time"])
+        self.single_save_data[2] = str(photo_index - 1)  # 设置存档记录
+        self.single_save_data[3] = str(video_index - 1)  # 设置存档记录
+        self.single_save_data[4] = str(media_info["media_time"])
 
     def run(self):
         try:
@@ -443,10 +443,10 @@ class Download(crawler.DownloadThread):
                 self.error("首页解析失败，原因：%s" % e.message)
                 raise
 
-            if self.account_info[1] == "":
-                self.account_info[1] = account_index_response["account_id"]
+            if self.single_save_data[1] == "":
+                self.single_save_data[1] = account_index_response["account_id"]
             else:
-                if self.account_info[1] != account_index_response["account_id"]:
+                if self.single_save_data[1] != account_index_response["account_id"]:
                     self.error("account id 不符合，原账号已改名")
                     tool.process_exit()
 
@@ -471,7 +471,7 @@ class Download(crawler.DownloadThread):
 
         # 保存最后的信息
         with self.thread_lock:
-            file.write_file("\t".join(self.account_info), self.main_thread.temp_save_data_path)
+            file.write_file("\t".join(self.single_save_data), self.main_thread.temp_save_data_path)
             self.main_thread.total_photo_count += self.total_photo_count
             self.main_thread.total_video_count += self.total_video_count
             self.main_thread.save_data.pop(self.account_name)

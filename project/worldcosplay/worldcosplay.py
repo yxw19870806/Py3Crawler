@@ -111,13 +111,13 @@ class WorldCosplay(crawler.Crawler):
 
 
 class Download(crawler.DownloadThread):
-    def __init__(self, account_info, main_thread):
-        crawler.DownloadThread.__init__(self, account_info, main_thread)
-        self.account_id = self.account_info[0]
-        if len(self.account_info) >= 3:
-            self.display_name = self.account_info[2]
+    def __init__(self, single_save_data, main_thread):
+        crawler.DownloadThread.__init__(self, single_save_data, main_thread)
+        self.account_id = self.single_save_data[0]
+        if len(self.single_save_data) >= 3:
+            self.display_name = self.single_save_data[2]
         else:
-            self.display_name = self.account_info[0]
+            self.display_name = self.single_save_data[0]
         self.step("开始")
 
     # 获取所有可下载图片
@@ -143,7 +143,7 @@ class Download(crawler.DownloadThread):
             # 寻找这一页符合条件的图片
             for photo_info in photo_pagination_response["photo_info_list"]:
                 # 检查是否达到存档记录
-                if photo_info["photo_id"] > int(self.account_info[1]):
+                if photo_info["photo_id"] > int(self.single_save_data[1]):
                     # 新增图片导致的重复判断
                     if photo_info["photo_id"] in unique_list:
                         continue
@@ -178,7 +178,7 @@ class Download(crawler.DownloadThread):
             self.check_thread_exit_after_download_failure()
 
         # 图片内图片下全部载完毕
-        self.account_info[1] = str(photo_info["photo_id"])  # 设置存档记录
+        self.single_save_data[1] = str(photo_info["photo_id"])  # 设置存档记录
 
     def run(self):
         try:
@@ -201,7 +201,7 @@ class Download(crawler.DownloadThread):
 
         # 保存最后的信息
         with self.thread_lock:
-            file.write_file("\t".join(self.account_info), self.main_thread.temp_save_data_path)
+            file.write_file("\t".join(self.single_save_data), self.main_thread.temp_save_data_path)
             self.main_thread.total_photo_count += self.total_photo_count
             self.main_thread.save_data.pop(self.account_id)
         self.step("下载完毕，总共获得%s张图片" % self.total_photo_count)

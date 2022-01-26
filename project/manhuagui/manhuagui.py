@@ -165,11 +165,11 @@ class ManHuaGui(crawler.Crawler):
 
 
 class Download(crawler.DownloadThread):
-    def __init__(self, account_info, main_thread):
-        crawler.DownloadThread.__init__(self, account_info, main_thread)
-        self.comic_id = self.account_info[0]
-        if len(self.account_info) >= 3 and self.account_info[2]:
-            self.display_name = self.account_info[2]
+    def __init__(self, single_save_data, main_thread):
+        crawler.DownloadThread.__init__(self, single_save_data, main_thread)
+        self.comic_id = self.single_save_data[0]
+        if len(self.single_save_data) >= 3 and self.single_save_data[2]:
+            self.display_name = self.single_save_data[2]
         else:
             self.display_name = self.comic_id
         self.step("开始")
@@ -192,7 +192,7 @@ class Download(crawler.DownloadThread):
         # 寻找符合条件的章节
         for chapter_info in blog_pagination_response["chapter_info_list"]:
             # 检查是否达到存档记录
-            if chapter_info["chapter_id"] > int(self.account_info[1]):
+            if chapter_info["chapter_id"] > int(self.single_save_data[1]):
                 chapter_info_list[chapter_info["chapter_id"]] = chapter_info
 
         return [chapter_info_list[key] for key in sorted(chapter_info_list.keys(), reverse=True)]
@@ -229,7 +229,7 @@ class Download(crawler.DownloadThread):
 
         # 媒体内图片全部下载完毕
         self.temp_path_list = []  # 临时目录设置清除
-        self.account_info[1] = str(chapter_info["chapter_id"])  # 设置存档记录
+        self.single_save_data[1] = str(chapter_info["chapter_id"])  # 设置存档记录
 
     def run(self):
         try:
@@ -253,7 +253,7 @@ class Download(crawler.DownloadThread):
 
         # 保存最后的信息
         with self.thread_lock:
-            file.write_file("\t".join(self.account_info), self.main_thread.temp_save_data_path)
+            file.write_file("\t".join(self.single_save_data), self.main_thread.temp_save_data_path)
             self.main_thread.total_photo_count += self.total_photo_count
             self.main_thread.save_data.pop(self.comic_id)
         self.step("下载完毕，总共获得%s张图片" % self.total_photo_count)

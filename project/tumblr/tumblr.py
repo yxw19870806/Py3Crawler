@@ -456,9 +456,9 @@ class Download(crawler.DownloadThread):
     is_https = True
     is_private = False
 
-    def __init__(self, account_info, main_thread):
-        crawler.DownloadThread.__init__(self, account_info, main_thread)
-        self.account_id = self.account_info[0]
+    def __init__(self, single_save_data, main_thread):
+        crawler.DownloadThread.__init__(self, single_save_data, main_thread)
+        self.account_id = self.single_save_data[0]
         self.display_name = self.account_id
         self.step("开始")
 
@@ -483,7 +483,7 @@ class Download(crawler.DownloadThread):
                 break
 
             # 这页已经匹配到存档点，返回上一个节点
-            if post_pagination_response["post_info_list"][-1]["post_id"] < int(self.account_info[1]):
+            if post_pagination_response["post_info_list"][-1]["post_id"] < int(self.single_save_data[1]):
                 start_page_count -= EACH_LOOP_MAX_PAGE_COUNT
                 break
 
@@ -519,7 +519,7 @@ class Download(crawler.DownloadThread):
             # 寻找这一页符合条件的日志
             for post_info in post_pagination_response["post_info_list"]:
                 # 检查是否达到存档记录
-                if post_info["post_id"] > int(self.account_info[1]):
+                if post_info["post_id"] > int(self.single_save_data[1]):
                     # 新增信息页导致的重复判断
                     if post_info["post_id"] in unique_list:
                         continue
@@ -639,7 +639,7 @@ class Download(crawler.DownloadThread):
 
         # 日志内图片和视频全部下载完毕
         self.temp_path_list = []  # 临时目录设置清除
-        self.account_info[1] = str(post_info["post_id"])  # 设置存档记录
+        self.single_save_data[1] = str(post_info["post_id"])  # 设置存档记录
 
     def run(self):
         try:
@@ -681,7 +681,7 @@ class Download(crawler.DownloadThread):
 
         # 保存最后的信息
         with self.thread_lock:
-            file.write_file("\t".join(self.account_info), self.main_thread.temp_save_data_path)
+            file.write_file("\t".join(self.single_save_data), self.main_thread.temp_save_data_path)
             self.main_thread.total_photo_count += self.total_photo_count
             self.main_thread.total_video_count += self.total_video_count
             self.main_thread.save_data.pop(self.account_id)

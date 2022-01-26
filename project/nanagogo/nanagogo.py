@@ -118,9 +118,9 @@ class NanaGoGo(crawler.Crawler):
 
 
 class Download(crawler.DownloadThread):
-    def __init__(self, account_info, main_thread):
-        crawler.DownloadThread.__init__(self, account_info, main_thread)
-        self.account_name = self.account_info[0]
+    def __init__(self, single_save_data, main_thread):
+        crawler.DownloadThread.__init__(self, single_save_data, main_thread)
+        self.account_name = self.single_save_data[0]
         self.display_name = self.account_name
         self.step("开始")
 
@@ -151,7 +151,7 @@ class Download(crawler.DownloadThread):
             # 寻找这一页符合条件的日志
             for blog_info in blog_pagination_response["blog_info_list"]:
                 # 检查是否达到存档记录
-                if blog_info["blog_id"] > int(self.account_info[1]):
+                if blog_info["blog_id"] > int(self.single_save_data[1]):
                     blog_info_list.append(blog_info)
                     # 设置下一页指针
                     target_id = blog_info["blog_id"]
@@ -175,7 +175,7 @@ class Download(crawler.DownloadThread):
 
         # 日志内图片和视频全部下载完毕
         self.temp_path_list = []  # 临时目录设置清除
-        self.account_info[1] = str(blog_info["blog_id"])
+        self.single_save_data[1] = str(blog_info["blog_id"])
 
     def crawl_photo(self, blog_info):
         self.trace("日志%s解析的全部图片：%s" % (blog_info["blog_id"], blog_info["photo_url_list"]))
@@ -247,7 +247,7 @@ class Download(crawler.DownloadThread):
 
         # 保存最后的信息
         with self.thread_lock:
-            file.write_file("\t".join(self.account_info), self.main_thread.temp_save_data_path)
+            file.write_file("\t".join(self.single_save_data), self.main_thread.temp_save_data_path)
             self.main_thread.total_photo_count += self.total_photo_count
             self.main_thread.total_video_count += self.total_video_count
             self.main_thread.save_data.pop(self.account_name)

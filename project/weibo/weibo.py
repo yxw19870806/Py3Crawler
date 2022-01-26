@@ -278,13 +278,13 @@ class Weibo(crawler.Crawler):
 
 
 class Download(crawler.DownloadThread):
-    def __init__(self, account_info, main_thread):
-        crawler.DownloadThread.__init__(self, account_info, main_thread)
-        self.account_id = self.account_info[0]
-        if len(self.account_info) >= 5 and self.account_info[4]:
-            self.display_name = self.account_info[4]
+    def __init__(self, single_save_data, main_thread):
+        crawler.DownloadThread.__init__(self, single_save_data, main_thread)
+        self.account_id = self.single_save_data[0]
+        if len(self.single_save_data) >= 5 and self.single_save_data[4]:
+            self.display_name = self.single_save_data[4]
         else:
-            self.display_name = self.account_info[0]
+            self.display_name = self.single_save_data[0]
         self.step("开始")
 
     # 获取所有可下载图片
@@ -311,7 +311,7 @@ class Download(crawler.DownloadThread):
             # 寻找这一页符合条件的图片
             for photo_info in photo_pagination_response["photo_info_list"]:
                 # 检查是否达到存档记录
-                if photo_info["photo_id"] > int(self.account_info[1]):
+                if photo_info["photo_id"] > int(self.single_save_data[1]):
                     # 新增图片导致的重复判断
                     if photo_info["photo_id"] in unique_list:
                         continue
@@ -360,7 +360,7 @@ class Download(crawler.DownloadThread):
             # 寻找这一页符合条件的视频
             for video_play_url in video_pagination_response["video_play_url_list"]:
                 # 检查是否达到存档记录
-                if self.account_info[3] != video_play_url:
+                if self.single_save_data[3] != video_play_url:
                     video_play_url_list.append(video_play_url)
                 else:
                     is_over = True
@@ -371,7 +371,7 @@ class Download(crawler.DownloadThread):
                     is_over = True
                     # todo 没有找到历史记录如何处理
                     # 有历史记录，但此次直接获取了全部视频
-                    if self.account_info[3] != "" and len(video_play_url_list) > 0:
+                    if self.single_save_data[3] != "" and len(video_play_url_list) > 0:
                         self.error("没有找到上次下载的最后一个视频地址")
                 else:
                     # 设置下一页指针
@@ -398,12 +398,12 @@ class Download(crawler.DownloadThread):
                 return False
 
         # 图片下载完毕
-        self.account_info[1] = str(photo_info["photo_id"])  # 设置存档记录
+        self.single_save_data[1] = str(photo_info["photo_id"])  # 设置存档记录
         return True
 
     # 解析单个视频
     def crawl_video(self, video_play_url):
-        video_index = int(self.account_info[2]) + 1
+        video_index = int(self.single_save_data[2]) + 1
         self.step("开始解析第%s个视频 %s" % (video_index, video_play_url))
 
         # 获取这个视频的下载地址
@@ -414,7 +414,7 @@ class Download(crawler.DownloadThread):
             raise
 
         if video_url is "":
-            self.account_info[3] = video_play_url  # 设置存档记录
+            self.single_save_data[3] = video_play_url  # 设置存档记录
             self.error("第%s个视频 %s 跳过" % (video_index, video_play_url))
             return
 
@@ -431,8 +431,8 @@ class Download(crawler.DownloadThread):
                 return False
 
         # 视频下载完毕
-        self.account_info[2] = str(video_index)  # 设置存档记录
-        self.account_info[3] = video_play_url  # 设置存档记录
+        self.single_save_data[2] = str(video_index)  # 设置存档记录
+        self.single_save_data[3] = video_play_url  # 设置存档记录
         return True
 
     def run(self):
@@ -471,7 +471,7 @@ class Download(crawler.DownloadThread):
 
         # 保存最后的信息
         with self.thread_lock:
-            file.write_file("\t".join(self.account_info), self.main_thread.temp_save_data_path)
+            file.write_file("\t".join(self.single_save_data), self.main_thread.temp_save_data_path)
             self.main_thread.total_photo_count += self.total_photo_count
             self.main_thread.save_data.pop(self.account_id)
         self.step("下载完毕，总共获得%s张图片" % self.total_photo_count)
