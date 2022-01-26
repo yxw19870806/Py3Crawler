@@ -141,7 +141,7 @@ class Favorite(crawler.Crawler):
         is_over = False
         while not is_over:
             if not self.is_running():
-                tool.process_exit(0)
+                tool.process_exit(tool.PROCESS_EXIT_CODE_NORMAL)
             log.step("开始解析第%s页收藏" % page_count)
 
             try:

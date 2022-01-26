@@ -58,7 +58,7 @@ class GetFileListMd5(crawler.Crawler):
         log.step("开始检测目录：" + dir_path)
         for file_name in path.get_dir_files_name(dir_path):
             if not self.is_running():
-                tool.process_exit(0)
+                tool.process_exit(tool.PROCESS_EXIT_CODE_NORMAL)
             net.thread_event.wait()
 
             file_path = os.path.join(dir_path, file_name)

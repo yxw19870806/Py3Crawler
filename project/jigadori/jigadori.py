@@ -88,7 +88,7 @@ class Jigadori(crawler.Crawler):
         start_page_count = 1
         while EACH_LOOP_MAX_PAGE_COUNT > 0:
             if not self.is_running():
-                tool.process_exit(0)
+                tool.process_exit(tool.PROCESS_EXIT_CODE_NORMAL)
 
             start_page_count += EACH_LOOP_MAX_PAGE_COUNT
             try:
@@ -117,7 +117,7 @@ class Jigadori(crawler.Crawler):
         # 获取全部还未下载过需要解析的图片
         while not is_over:
             if not self.is_running():
-                tool.process_exit(0)
+                tool.process_exit(tool.PROCESS_EXIT_CODE_NORMAL)
             log.step("开始解析第%s页图片" % page_count)
 
             # 获取一页图片
@@ -169,7 +169,7 @@ class Jigadori(crawler.Crawler):
             else:
                 log.error("tweet%s的第%s张图片（account：%s) %s，下载失败，原因：%s" % (photo_info["tweet_id"], photo_index, photo_info["account_name"], photo_url, crawler.download_failre(save_file_return["code"])))
                 if self.is_thread_exit_after_download_failure:
-                    tool.process_exit(0)
+                    tool.process_exit(tool.PROCESS_EXIT_CODE_NORMAL)
             photo_index += 1
 
         # tweet内图片全部下载完毕
@@ -197,7 +197,7 @@ class Jigadori(crawler.Crawler):
                 while len(photo_info_list) > 0:
                     self.crawl_photo(photo_info_list.pop())
                     if not self.is_running():
-                        tool.process_exit(0)
+                        tool.process_exit(tool.PROCESS_EXIT_CODE_NORMAL)
 
                 start_page_count -= EACH_LOOP_MAX_PAGE_COUNT
         except (SystemExit, KeyboardInterrupt) as e:

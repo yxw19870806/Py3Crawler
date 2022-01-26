@@ -188,7 +188,7 @@ class IvSeek(crawler.Crawler):
 
             for archive_id in range(save_id, index_response["max_archive_id"]):
                 if not self.is_running():
-                    tool.process_exit(0)
+                    tool.process_exit(tool.PROCESS_EXIT_CODE_NORMAL)
                 log.step("开始解析第%s个视频" % archive_id)
 
                 # 获取一页图片

@@ -73,7 +73,7 @@ class CNU(crawler.Crawler):
             # todo 获取最新的作品id
             while True:
                 if not self.is_running():
-                    tool.process_exit(0)
+                    tool.process_exit(tool.PROCESS_EXIT_CODE_NORMAL)
                 log.step("开始解析第%s页作品" % album_id)
 
                 # 获取作品
@@ -97,7 +97,7 @@ class CNU(crawler.Crawler):
                 thread_list = []
                 for photo_url in album_response["photo_url_list"]:
                     if not self.is_running():
-                        tool.process_exit(0)
+                        tool.process_exit(tool.PROCESS_EXIT_CODE_NORMAL)
                     log.step("作品%s《%s》开始下载第%s张图片 %s" % (album_id, album_response["album_title"], photo_index, photo_url))
 
                     # 开始下载
@@ -116,7 +116,7 @@ class CNU(crawler.Crawler):
                 if self.is_running():
                     log.step("作品%s《%s》全部图片下载完毕" % (album_id, album_response["album_title"]))
                 else:
-                    tool.process_exit(0)
+                    tool.process_exit(tool.PROCESS_EXIT_CODE_NORMAL)
 
                 # 作品内图片全部下载完毕
                 temp_path = ""  # 临时目录设置清除

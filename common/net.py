@@ -255,7 +255,7 @@ def request(url, method="GET", fields=None, binary_data=None, header_list=None, 
     while True:
         thread_event.wait()
         if EXIT_FLAG:
-            tool.process_exit(0)
+            tool.process_exit(tool.PROCESS_EXIT_CODE_NORMAL)
 
         if is_check_qps and _qps(url):
             time.sleep(random.randint(60, 120))
