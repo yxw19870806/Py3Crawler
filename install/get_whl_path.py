@@ -1,4 +1,5 @@
 import sys
+
 if len(sys.argv) <= 1:
     exit()
 whl_full_version = {
