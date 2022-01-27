@@ -45,9 +45,15 @@ class Chrome:
         # 浏览器参数
         chrome_options = webdriver.ChromeOptions()
         chrome_options.headless = False if ("headless" in kwargs and not kwargs["headless"]) else True  # 不打开浏览器
+
+        if "desired_capabilities" in kwargs:
+            desired_capabilities = kwargs["desired_capabilities"]
+        else:
+            desired_capabilities = None
+
         while True:
             try:
-                self.chrome = webdriver.Chrome(executable_path=crawler.CHROME_WEBDRIVER_PATH, options=chrome_options)
+                self.chrome = webdriver.Chrome(executable_path=crawler.CHROME_WEBDRIVER_PATH, options=chrome_options, desired_capabilities=desired_capabilities)
             except WebDriverException as e:
                 message = str(e)
                 if message.find("chrome not reachable") >= 0:

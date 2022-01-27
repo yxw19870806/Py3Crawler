@@ -11,9 +11,9 @@ import os
 import time
 import traceback
 import urllib.parse
-from selenium import webdriver
 from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
 from common import *
+from common import browser
 
 EACH_PAGE_ALBUM_COUNT = 20
 
@@ -94,23 +94,19 @@ def get_album_page_by_selenium(album_id):
         "video_url": None,  # 视频地址
         "video_type": None,  # 视频类型
     }
-    caps = DesiredCapabilities.CHROME
-    caps['loggingPrefs'] = {'performance': 'ALL'}  # 记录所有日志
-    chrome_options = webdriver.ChromeOptions()
-    chrome_options.headless = True  # 不打开浏览器
-    chrome = webdriver.Chrome(executable_path=crawler.CHROME_WEBDRIVER_PATH, options=chrome_options, desired_capabilities=caps)
+    desired_capabilities = DesiredCapabilities.CHROME
+    desired_capabilities['loggingPrefs'] = {'performance': 'ALL'}  # 记录所有日志
     album_url = "https://bcy.net/item/detail/%s" % album_id
-    chrome.get(album_url)
-    for log_info in chrome.get_log("performance"):
-        log_message = tool.json_decode(crawler.get_json_value(log_info, "message", type_check=str))
-        if crawler.get_json_value(log_message, "message", "method", default_value="", type_check=str) == "Network.requestWillBeSent":
-            video_info_url = crawler.get_json_value(log_message, "message", "params", "request", "url", default_value="", type_check=str)
-            if video_info_url.find("//ib.365yg.com/video/urls/") > 0:
-                video_info_url = video_info_url.replace("&callback=axiosJsonpCallback1", "")
-                break
-    else:
-        raise crawler.CrawlerException("播放页匹配视频信息地址失败")
-    chrome.quit()
+    with browser.Chrome(album_url, desired_capabilities=desired_capabilities) as chrome:
+        for log_info in chrome.get_log("performance"):
+            log_message = tool.json_decode(crawler.get_json_value(log_info, "message", type_check=str))
+            if crawler.get_json_value(log_message, "message", "method", default_value="", type_check=str) == "Network.requestWillBeSent":
+                video_info_url = crawler.get_json_value(log_message, "message", "params", "request", "url", default_value="", type_check=str)
+                if video_info_url.find("//ib.365yg.com/video/urls/") > 0:
+                    video_info_url = video_info_url.replace("&callback=axiosJsonpCallback1", "")
+                    break
+        else:
+            raise crawler.CrawlerException("播放页匹配视频信息地址失败")
     # 获取视频信息
     video_info_response = net.request(video_info_url, method="GET", json_decode=True)
     if video_info_response.status != net.HTTP_RETURN_CODE_SUCCEED:
