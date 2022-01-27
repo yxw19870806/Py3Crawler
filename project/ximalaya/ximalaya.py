@@ -13,6 +13,7 @@ import time
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from common import *
+from common import browser
 
 COOKIE_INFO = {}
 EACH_PAGE_AUDIO_COUNT = 30  # 每次请求获取的视频数量
@@ -166,12 +167,8 @@ def get_audio_info_page(audio_id):
     cache_html = os.path.join(CACHE_FILE_PATH, "%s.html" % audio_id)
     file.write_file(template_html, cache_html, file.WRITE_FILE_TYPE_REPLACE)
     # 使用喜马拉雅的加密JS方法解密url地址
-    chrome_options = webdriver.ChromeOptions()
-    chrome_options.headless = True  # 不打开浏览器
-    chrome = webdriver.Chrome(executable_path=crawler.CHROME_WEBDRIVER_PATH, options=chrome_options)
-    chrome.get("file:///" + os.path.realpath(cache_html))
-    audio_url = chrome.find_element(by=By.ID, value="result").get_attribute('value')
-    chrome.quit()
+    with browser.Chrome("file:///" + os.path.realpath(cache_html)) as chrome:
+        audio_url = chrome.find_element(by=By.ID, value="result").get_attribute('value')
     if not audio_url:
         raise crawler.CrawlerException("url解密失败\n%s" % decrypt_url)
     result["audio_url"] = audio_url
