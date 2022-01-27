@@ -52,7 +52,7 @@ def get_account_index_page(account_id):
     if account_index_response.status == net.HTTP_RETURN_CODE_SUCCEED:
         # 获取账号page id
         account_page_id = tool.find_sub_string(account_index_response.data.decode(errors="ignore"), "$CONFIG['page_id']='", "'")
-        if not crawler.is_integer(account_page_id):
+        if not tool.is_integer(account_page_id):
             raise crawler.CrawlerException("账号不存在")
         result["account_page_id"] = account_page_id
     else:
@@ -138,7 +138,7 @@ def get_one_page_video(account_id, account_page_id, since_id):
     # 获取下一页视频的指针
     next_page_since_id = tool.find_sub_string(response_data, "&since_id=", '">')
     if next_page_since_id:
-        if not crawler.is_integer(next_page_since_id):
+        if not tool.is_integer(next_page_since_id):
             raise crawler.CrawlerException("返回信息截取下一页指针失败\n%s" % video_pagination_response.json_data)
         result["next_page_since_id"] = next_page_since_id
     return result
@@ -173,7 +173,7 @@ def get_video_url(video_play_url, error_count=0):
                     if temp_video_url:
                         if video_quality == "fluency":
                             video_url = temp_video_url
-                        elif crawler.is_integer(video_quality):
+                        elif tool.is_integer(video_quality):
                             resolution_to_url[int(video_quality)] = temp_video_url
                 if len(resolution_to_url) > 0:
                     video_url = resolution_to_url[max(resolution_to_url)]

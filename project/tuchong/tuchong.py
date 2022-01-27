@@ -16,7 +16,7 @@ EACH_PAGE_PHOTO_COUNT = 20  # 每次请求获取的图片数量
 
 # 获取账号首页
 def get_account_index_page(account_name):
-    if crawler.is_integer(account_name):
+    if tool.is_integer(account_name):
         account_index_url = "https://tuchong.com/%s" % account_name
     else:
         account_index_url = "https://%s.tuchong.com" % account_name
@@ -35,7 +35,7 @@ def get_account_index_page(account_name):
     account_id = tool.find_sub_string(account_index_response_content, 'site_id":"', '",')
     if not account_id:
         raise crawler.CrawlerException("页面截取site id失败\n%s" % account_index_response_content)
-    if not crawler.is_integer(account_id):
+    if not tool.is_integer(account_id):
         raise crawler.CrawlerException("site id类型不正确\n%s" % account_index_response_content)
     result["account_id"] = account_id
     return result

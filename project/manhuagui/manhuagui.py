@@ -63,7 +63,7 @@ def get_comic_index_page(comic_id):
             # 获取章节ID
             page_url = chapter_selector.find("a").attr("href")
             chapter_id = tool.find_sub_string(page_url, "/comic/%s/" % comic_id, ".html")
-            if not crawler.is_integer(chapter_id):
+            if not tool.is_integer(chapter_id):
                 raise crawler.CrawlerException("页面地址截取页面id失败\n%s" % page_url)
             result_comic_info["chapter_id"] = int(chapter_id)
             # 获取章节名称

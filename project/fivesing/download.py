@@ -28,7 +28,7 @@ def main():
             temp_list = audio_url.split("/")
             audio_type = temp_list[-2]
             audio_id = temp_list[-1].split(".")[0]
-        if not crawler.is_integer(audio_id) or audio_type not in ["yc", "fc", "bz"]:
+        if not tool.is_integer(audio_id) or audio_type not in ["yc", "fc", "bz"]:
             log.step("错误的歌曲地址，正确的地址格式如：http://5sing.kugou.com/fc/15887314.html")
             continue
         # 访问歌曲播放页

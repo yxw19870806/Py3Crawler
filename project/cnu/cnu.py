@@ -62,7 +62,7 @@ class CNU(crawler.Crawler):
         album_id = 105000
         if os.path.exists(self.save_data_path):
             file_save_info = file.read_file(self.save_data_path)
-            if not crawler.is_integer(file_save_info):
+            if not tool.is_integer(file_save_info):
                 log.error("存档内数据格式不正确")
                 tool.process_exit()
             album_id = int(file_save_info)

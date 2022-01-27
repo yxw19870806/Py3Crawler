@@ -9,6 +9,7 @@ import json
 import os
 import platform
 import random
+import re
 import string
 import sys
 from typing import Optional, Union, List
@@ -78,6 +79,18 @@ def find_sub_string(haystack, start_string: Optional[str] = None, end_string: Op
     if include_string & SUB_STRING_MODE_ONLY_END == SUB_STRING_MODE_ONLY_END and end_string is not None:
         find_string += end_string
     return find_string
+
+
+def is_integer(number) -> bool:
+    """
+    判断是不是整型，或者纯数字的字符串
+    """
+    if isinstance(number, int):
+        return True
+    elif isinstance(number, bool) or isinstance(number, list) or isinstance(number, dict) or number is None:
+        return False
+    else:
+        return not re.compile('^[-+]?[0-9]+$').match(str(number)) is None
 
 
 def json_decode(json_string: str, default_value=None) -> Union[list, dict]:

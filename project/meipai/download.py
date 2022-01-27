@@ -25,9 +25,9 @@ def main():
         # http://www.meipai.com/media/209045867
         if video_url.find("//www.meipai.com/media/") > 0:
             video_id = video_url.split("/")[-1].split("?")[0]
-        elif crawler.is_integer(video_url):
+        elif tool.is_integer(video_url):
             video_id = video_url
-        if not crawler.is_integer(video_id):
+        if not tool.is_integer(video_id):
             log.step("错误的视频地址，正确的地址格式如：http://www.meipai.com/media/209045867")
             continue
         # 访问视频播放页

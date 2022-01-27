@@ -39,7 +39,7 @@ def get_one_page_photo(page_count):
         if not tweet_url:
             raise crawler.CrawlerException("图片信息截取tweet地址失败\n%s" % tweet_selector.html())
         tweet_id = tool.find_sub_string(tweet_url.strip(), "status/")
-        if not crawler.is_integer(tweet_id):
+        if not tool.is_integer(tweet_id):
             raise crawler.CrawlerException("tweet地址截取tweet id失败\n%s" % tweet_url)
         result_photo_info["tweet_id"] = int(tweet_id)
         # 获取twitter账号
@@ -180,7 +180,7 @@ class Jigadori(crawler.Crawler):
         # 解析存档文件，获取上一次的tweet id
         if os.path.exists(self.save_data_path):
             file_save_info = file.read_file(self.save_data_path)
-            if not crawler.is_integer(file_save_info):
+            if not tool.is_integer(file_save_info):
                 log.error("存档内数据格式不正确")
                 tool.process_exit()
             self.last_tweet_id = int(file_save_info)

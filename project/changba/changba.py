@@ -28,7 +28,7 @@ def get_account_index_page(account_id):
     account_index_response_content = account_index_response.data.decode(errors="ignore")
     # 获取user id
     user_id = tool.find_sub_string(account_index_response_content, "var userid = '", "'")
-    if not crawler.is_integer(user_id):
+    if not tool.is_integer(user_id):
         raise crawler.CrawlerException("页面截取userid失败\n%s" % account_index_response_content)
     result["user_id"] = user_id
     return result
@@ -84,7 +84,7 @@ def get_audio_play_page(audio_en_word_id):
         return result
     # 获取歌曲id
     audio_id = tool.find_sub_string(audio_play_response_content, "export_song.php?workid=", "&")
-    if not crawler.is_integer(audio_id):
+    if not tool.is_integer(audio_id):
         raise crawler.CrawlerException("页面截取歌曲id失败\n%s" % audio_play_response_content)
     result["audio_id"] = int(audio_id)
     # 获取歌曲标题
@@ -94,7 +94,7 @@ def get_audio_play_page(audio_en_word_id):
     result["audio_title"] = audio_title.strip()
     # 判断歌曲类型（音频或者视频）
     is_video = tool.find_sub_string(audio_play_response_content, "&isvideo=", "'")
-    if not crawler.is_integer(is_video):
+    if not tool.is_integer(is_video):
         raise crawler.CrawlerException("页面截取歌曲类型失败\n%s" % audio_play_response_content)
     is_video = False if is_video == "0" else True
     # 获取歌曲地址

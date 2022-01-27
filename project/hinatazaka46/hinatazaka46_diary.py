@@ -50,7 +50,7 @@ def get_one_page_blog(account_id, page_count):
         if not blog_url:
             raise crawler.CrawlerException("日志信息截取日志地址失败\n%s" % blog_selector.html())
         blog_id = blog_url.split("/")[-1].split("?")[0]
-        if not crawler.is_integer(blog_id):
+        if not tool.is_integer(blog_id):
             raise crawler.CrawlerException("日志地址截取日志id失败\n%s" % blog_url)
         result_blog_info["blog_id"] = int(blog_id)
         # 获取图片地址

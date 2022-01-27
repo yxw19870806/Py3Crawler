@@ -105,7 +105,7 @@ def get_account_index_page(account_name):
         raise crawler.CrawlerException(crawler.request_failre(account_index_response.status))
     account_index_response_content = account_index_response.data.decode(errors="ignore")
     account_id = tool.find_sub_string(account_index_response_content, '"profilePage_', '"')
-    if not crawler.is_integer(account_id):
+    if not tool.is_integer(account_id):
         if account_index_response_content.find("The link you followed may be broken, or the page may have been removed.") > 0:
             raise crawler.CrawlerException("账号不存在")
         raise crawler.CrawlerException("页面截取账号id失败\n%s" % account_index_response_content)

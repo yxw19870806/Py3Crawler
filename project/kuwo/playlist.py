@@ -24,10 +24,10 @@ def main():
         playlist_id = None
         if playlist_url.find("//www.kuwo.cn/playlist_detail/") > 0:
             playlist_id = playlist_url.split(playlist_url)[-1]
-        elif crawler.is_integer(playlist_url):
+        elif tool.is_integer(playlist_url):
             playlist_id = playlist_url
         # 无效的歌单地址
-        if not crawler.is_integer(playlist_id):
+        if not tool.is_integer(playlist_id):
             log.step("错误的歌单地址，正确的地址格式如：https://www.kuwo.cn/playlist_detail/123456789")
             continue
 

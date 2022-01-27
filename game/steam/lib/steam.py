@@ -84,7 +84,7 @@ def get_discount_game_list():
                 now_price = float(now_price)
             except ValueError:
                 now_price = 0
-            if not crawler.is_integer(discount):
+            if not tool.is_integer(discount):
                 if old_price == 0:
                     discount = 100
                 else:
@@ -191,7 +191,7 @@ def get_self_uncompleted_account_badges(account_id):
                 badge_level_find = re.findall("(\d*) 级,", badge_level_html)
                 if len(badge_level_find) == 0:
                     badge_level_find = re.findall("Level (\d*),", badge_level_html)
-                if len(badge_level_find) == 1 and crawler.is_integer(badge_level_find[0]):
+                if len(badge_level_find) == 1 and tool.is_integer(badge_level_find[0]):
                     if int(badge_level_find[0]) == 5:
                         continue
                 else:
@@ -233,7 +233,7 @@ def get_self_account_badge_card(badge_detail_url):
             badge_level_find = re.findall("Level (\d*),", badge_level_html)
         if len(badge_level_find) != 1:
             raise crawler.CrawlerException("徽章等级信息徽章等级失败\n%s" % badge_level_html)
-        if not crawler.is_integer(badge_level_find[0]):
+        if not tool.is_integer(badge_level_find[0]):
             raise crawler.CrawlerException("徽章等级类型不正确\n%s" % badge_level_html)
         badge_level = int(badge_level_find[0])
     else:
@@ -372,7 +372,7 @@ def get_account_badges(account_id):
             elif badge_detail_url.find("/gamecards/") == -1:
                 raise crawler.CrawlerException("页面截取的徽章详情地址 %s 格式不正确" % badge_detail_url)
             game_id = badge_detail_url.split("/")[-2]
-            if not crawler.is_integer(game_id):
+            if not tool.is_integer(game_id):
                 raise crawler.CrawlerException("徽章详情地址 %s 截取游戏id失败" % badge_detail_url)
             # 获取徽章等级
             badge_info_text = badge_selector.find('div.badge_content div.badge_info_description div').eq(1).html()

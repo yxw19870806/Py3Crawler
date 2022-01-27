@@ -261,7 +261,7 @@ def get_video_play_page(tweet_id):
         for media_file_element in media_file_elements:
             # 没有bit rate可能是m3u8文件
             bit_rate = media_file_element.get("bit_rate")
-            if not crawler.is_integer(bit_rate):
+            if not tool.is_integer(bit_rate):
                 continue
             url = media_file_element.get("url")
             if not url:

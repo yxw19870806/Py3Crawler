@@ -44,7 +44,7 @@ def get_book_index(book_id):
         if result_chapter_info["chapter_url"].find("//read.qidian.com") >= 0:
             pass
         elif result_chapter_info["chapter_url"].find("//vipreader.qidian.com/") >= 0:
-            if not crawler.is_integer(result_chapter_info["chapter_id"]):
+            if not tool.is_integer(result_chapter_info["chapter_id"]):
                 raise crawler.CrawlerException("章节地址%s截取章节id失败" % result_chapter_info["chapter_url"])
         else:
             raise crawler.CrawlerException("未知的章节域名%s" % result_chapter_info["chapter_url"])
