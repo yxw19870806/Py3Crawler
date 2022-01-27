@@ -18,6 +18,7 @@ class PortListenerEvent(threading.Thread):
     """
     程序运行状态控制
     """
+
     def __init__(self, port, event_list=None):
         threading.Thread.__init__(self)
         self.ip = SERVER_IP

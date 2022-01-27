@@ -30,6 +30,7 @@ def check_login():
         return crawler.get_json_value(api_response.json_data, "ret", type_check=int, default_value=0) == 200
     return False
 
+
 # 获取指定页数的全部音频信息
 def get_one_page_album(album_id, page_count):
     album_pagination_url = "https://www.ximalaya.com/revision/album/v1/getTracksList"
