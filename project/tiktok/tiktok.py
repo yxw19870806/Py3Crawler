@@ -10,9 +10,9 @@ import os
 import time
 import traceback
 import urllib.parse
-from selenium import webdriver
 from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
 from common import *
+from common import browser
 
 EACH_PAGE_VIDEO_COUNT = 48
 USER_AGENT = net._random_user_agent()
@@ -24,22 +24,18 @@ def get_account_index_page(account_id):
     result = {
         "signature": "",  # 加密串（请求参数）
     }
-    caps = DesiredCapabilities.CHROME
-    caps['loggingPrefs'] = {'performance': 'ALL'}  # 记录所有日志
-    chrome_options = webdriver.ChromeOptions()
-    chrome_options.headless = True  # 不打开浏览器
-    chrome_options.add_argument("user-agent=" + USER_AGENT)  # 使用指定UA
-    chrome = webdriver.Chrome(executable_path=crawler.CHROME_WEBDRIVER_PATH, options=chrome_options, desired_capabilities=caps)
-    chrome.get(account_index_url)
-    for log_info in chrome.get_log("performance"):
-        log_message = tool.json_decode(crawler.get_json_value(log_info, "message", type_check=str))
-        if crawler.get_json_value(log_message, "message", "method", default_value="", type_check=str) == "Network.requestWillBeSent":
-            video_info_url = crawler.get_json_value(log_message, "message", "params", "request", "url", default_value="", type_check=str)
-            if video_info_url.find("//www.tiktok.com/share/item/list?") > 0:
-                break
-    else:
-        raise crawler.CrawlerException("账号首页匹配视频信息地址失败")
-    chrome.quit()
+    desired_capabilities = DesiredCapabilities.CHROME
+    desired_capabilities['loggingPrefs'] = {'performance': 'ALL'}  # 记录所有日志
+    chrome_options_argument = ["user-agent=" + USER_AGENT]
+    with browser.Chrome(account_index_url, desired_capabilities=desired_capabilities, add_argument=chrome_options_argument) as chrome:
+        for log_info in chrome.get_log("performance"):
+            log_message = tool.json_decode(crawler.get_json_value(log_info, "message", type_check=str))
+            if crawler.get_json_value(log_message, "message", "method", default_value="", type_check=str) == "Network.requestWillBeSent":
+                video_info_url = crawler.get_json_value(log_message, "message", "params", "request", "url", default_value="", type_check=str)
+                if video_info_url.find("//www.tiktok.com/share/item/list?") > 0:
+                    break
+        else:
+            raise crawler.CrawlerException("账号首页匹配视频信息地址失败")
     video_info_param = urllib.parse.parse_qs(urllib.parse.urlparse(video_info_url)[4])
     result["signature"] = crawler.get_json_value(video_info_param, "_signature", 0, default_value="")
     if not result["signature"]:
