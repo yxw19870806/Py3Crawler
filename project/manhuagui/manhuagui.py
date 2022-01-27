@@ -15,6 +15,7 @@ from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.common.exceptions import WebDriverException
 from common import *
+from common import browser
 
 CACHE_FILE_PATH = os.path.join(os.path.dirname(__file__), "cache")
 TEMPLATE_HTML_PATH = os.path.join(os.path.dirname(__file__), "template.html")
@@ -93,19 +94,8 @@ def get_chapter_page(comic_id, chapter_id):
     template_html = template_html.replace("%%SCRIPT_CODE%%", script_code)
     cache_html_path = os.path.realpath(os.path.join(CACHE_FILE_PATH, "%s.html" % comic_id))
     file.write_file(template_html, cache_html_path, file.WRITE_FILE_TYPE_REPLACE)
-    chrome_options = webdriver.ChromeOptions()
-    chrome_options.headless = True  # 不打开浏览器
-    try:
-        chrome = webdriver.Chrome(executable_path=crawler.CHROME_WEBDRIVER_PATH, options=chrome_options)
-    except WebDriverException as e:
-        message = str(e)
-        if message.find("chrome not reachable") >= 0:
-            return get_chapter_page(comic_id, chapter_id)
-        else:
-            raise
-    chrome.get("file:///" + cache_html_path)
-    result_photo_list = chrome.find_element(by=By.ID, value="result").text
-    chrome.quit()
+    with browser.Chrome("file:///" + cache_html_path) as chrome:
+        result_photo_list = chrome.find_element(by=By.ID, value="result").text
     path.delete_dir_or_file(cache_html_path)
     photo_list = result_photo_list.split("\n")
     for photo_url in photo_list:
