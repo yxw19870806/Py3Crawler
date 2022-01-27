@@ -656,18 +656,6 @@ def check_sub_key(needles: Union[str, tuple], haystack: dict) -> bool:
     return False
 
 
-def is_integer(number) -> bool:
-    """
-    判断是不是整数
-    """
-    if isinstance(number, int):
-        return True
-    elif isinstance(number, bool) or isinstance(number, list) or isinstance(number, dict) or number is None:
-        return False
-    else:
-        return not re.compile('^[-+]?[0-9]+$').match(str(number)) is None
-
-
 def filter_emoji(text: str) -> str:
     """
     替换文本中的表情符号

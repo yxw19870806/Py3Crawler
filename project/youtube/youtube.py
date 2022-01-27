@@ -229,7 +229,7 @@ def get_video_page(video_id):
                     video_resolution = 360
                 elif value == "large":
                     video_resolution = 480
-                elif value[:2] == "hd" and crawler.is_integer(value[2:]):
+                elif value[:2] == "hd" and tool.is_integer(value[2:]):
                     video_resolution = int(value[2:])
                 else:
                     video_resolution = 1

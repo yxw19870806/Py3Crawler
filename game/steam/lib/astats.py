@@ -25,7 +25,7 @@ def get_game_invalid_achievements(game_id):
     if not achievement_text:
         return
     achievement_text = achievement_text.strip()
-    if not crawler.is_integer(achievement_text):
+    if not tool.is_integer(achievement_text):
         invalid_achievement_text = tool.find_sub_string(achievement_text, '<font color="#FF0000">', "</font>")
         if invalid_achievement_text:
             output.print_msg("游戏 %s, 存在无效成就，%s" % (game_id, invalid_achievement_text))

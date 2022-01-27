@@ -116,7 +116,7 @@ def get_one_page_post(account_id, page_count, is_https):
         result_post_info["post_url"] = net.url_encode(crawler.get_json_value(post_info, "url", type_check=str))
         # 获取日志id
         post_id = tool.find_sub_string(result_post_info["post_url"], "/post/").split("/")[0]
-        if not crawler.is_integer(post_id):
+        if not tool.is_integer(post_id):
             crawler.CrawlerException("日志地址截取日志id失败\n%s" % result_post_info["post_url"])
         result_post_info["post_id"] = int(post_id)
         result["post_info_list"].append(result_post_info)
@@ -167,7 +167,7 @@ def get_one_page_private_blog(account_id, page_count):
         result_post_info["post_url"] = net.url_encode(crawler.get_json_value(post_info, "post_url", type_check=str))
         # 获取日志id
         post_id = tool.find_sub_string(result_post_info["post_url"], "/post/").split("/")[0]
-        if not crawler.is_integer(post_id):
+        if not tool.is_integer(post_id):
             crawler.CrawlerException("日志地址截取日志id失败\n%s" % result_post_info["post_url"])
         result_post_info["post_id"] = int(post_id)
         # 视频
@@ -281,7 +281,7 @@ def analysis_photo(photo_url):
     temp_list = photo_url.split("/")[-1].split(".")[0].split("_")
     resolution = 0
     if temp_list[0] == "tumblr":
-        if temp_list[1] == "inline" and not crawler.is_integer(temp_list[2]):
+        if temp_list[1] == "inline" and not tool.is_integer(temp_list[2]):
             photo_id = temp_list[2]
         else:
             photo_id = temp_list[1]
@@ -292,13 +292,13 @@ def analysis_photo(photo_url):
         # https://78.media.tumblr.com/tumblr_lixa2piSdw1qc4p5zo1_500.jpg
         # https://78.media.tumblr.com/tumblr_lhrk7kBVz31qbijcho1_r1_500.gif
         # https://78.media.tumblr.com/4612757fb6b608d2d14939833ed2e244/tumblr_ouao969iP51rqmr8lo1_540.jpg
-        elif crawler.is_integer(temp_list[-1]):
+        elif tool.is_integer(temp_list[-1]):
             resolution = int(temp_list[-1])
         # https://78.media.tumblr.com/19b0b807d374ed9e4ed22caf74cb1ec0/tumblr_mxukamH4GV1s4or9ao1_500h.jpg
-        elif temp_list[-1][-1] == "h" and crawler.is_integer(temp_list[-1][:-1]):
+        elif temp_list[-1][-1] == "h" and tool.is_integer(temp_list[-1][:-1]):
             resolution = int(temp_list[-1][:-1])
         # https://78.media.tumblr.com/5c0b9f4e8ac839a628863bb5d7255938/tumblr_inline_p6ve89vOZA1uhchy5_250sq.jpg
-        elif temp_list[-1][-2:] == "sq" and crawler.is_integer(temp_list[-1][:-2]):
+        elif temp_list[-1][-2:] == "sq" and tool.is_integer(temp_list[-1][:-2]):
             photo_url = photo_url.replace("_250sq", "1280")
             resolution = 1280
         # http://78.media.tumblr.com/tumblr_m9rwkpsRwt1rr15s5.jpg
@@ -317,24 +317,24 @@ def analysis_photo(photo_url):
         else:
             log.notice("未知图片地址类型1：" + photo_url)
     # http://78.media.tumblr.com/TVeEqrZktkygbzi2tUbbKMGXo1_1280.jpg
-    elif not crawler.is_integer(temp_list[0]) and crawler.is_integer(temp_list[-1]):
+    elif not tool.is_integer(temp_list[0]) and tool.is_integer(temp_list[-1]):
         photo_id = temp_list[0]
         resolution = int(temp_list[-1])
     #  http://78.media.tumblr.com/_1364612391_cover.jpg
-    elif len(temp_list) == 3 and temp_list[0] == "" and crawler.is_integer(temp_list[1]) and temp_list[2] == "cover":
+    elif len(temp_list) == 3 and temp_list[0] == "" and tool.is_integer(temp_list[1]) and temp_list[2] == "cover":
         photo_id = temp_list[1]
     # http://78.media.tumblr.com/3562275_500.jpg
-    elif len(temp_list) == 2 and crawler.is_integer(temp_list[0]) and crawler.is_integer(temp_list[-1]):
+    elif len(temp_list) == 2 and tool.is_integer(temp_list[0]) and tool.is_integer(temp_list[-1]):
         photo_id = temp_list[0]
         resolution = int(temp_list[1])
     # http://78.media.tumblr.com/15427139_r1_500.jpg
-    elif len(temp_list) == 3 and crawler.is_integer(temp_list[0]) and crawler.is_integer(temp_list[-1]) and temp_list[1][0] == "r":
+    elif len(temp_list) == 3 and tool.is_integer(temp_list[0]) and tool.is_integer(temp_list[-1]) and temp_list[1][0] == "r":
         photo_id = temp_list[0]
         resolution = int(temp_list[2])
     else:
         photo_id = photo_url.split("/")[-1]
         log.notice("未知图片地址类型2：" + photo_url)
-    if len(photo_id) < 15 and not (crawler.is_integer(photo_id) and int(photo_id) < 2000000000):
+    if len(photo_id) < 15 and not (tool.is_integer(photo_id) and int(photo_id) < 2000000000):
         log.notice("未知图片地址类型3：" + photo_url)
     return photo_id, resolution
 
@@ -367,7 +367,7 @@ def get_video_play_page(account_id, post_id, is_https):
     video_play_response_content = video_play_response.data.decode(errors="ignore")
     video_url_find = re.findall('<source src="(http[s]?://' + account_id + '.tumblr.com/video_file/[^"]*)" type="[^"]*"', video_play_response_content)
     if len(video_url_find) == 1:
-        if crawler.is_integer(video_url_find[0].split("/")[-1]):
+        if tool.is_integer(video_url_find[0].split("/")[-1]):
             result["video_url"] = "/".join(video_url_find[0].split("/")[:-1])
         result["video_url"] = video_url_find[0]
     elif len(video_url_find) == 0:

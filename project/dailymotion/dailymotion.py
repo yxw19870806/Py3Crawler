@@ -112,7 +112,7 @@ def get_video_page(video_id):
     # 查找最高分辨率的视频源地址
     resolution_to_url = {}  # 各个分辨率下的视频地址
     for video_resolution, video_info_list in crawler.get_json_value(video_info_response.json_data, "qualities", type_check=dict).items():
-        if not crawler.is_integer(video_resolution):
+        if not tool.is_integer(video_resolution):
             continue
         video_resolution = int(video_resolution)
         if video_resolution not in [144, 240, 380, 480, 720, 1080]:

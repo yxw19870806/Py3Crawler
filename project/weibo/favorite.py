@@ -59,7 +59,7 @@ def get_one_page_favorite(page_count):
         }
         # 解析日志id
         blog_id = feed_selector.attr("mid")
-        if not crawler.is_integer(blog_id):
+        if not tool.is_integer(blog_id):
             raise crawler.CrawlerException("收藏信息解析微博id失败\n%s" % feed_selector.html())
         result_blog_info["blog_id"] = blog_id
         # WB_text       微博文本

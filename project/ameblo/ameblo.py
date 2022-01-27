@@ -55,7 +55,7 @@ def get_one_page_blog(account_name, page_count):
             for blog_url_index in range(0, blog_list_selector.length):
                 blog_url = blog_list_selector.eq(blog_url_index).attr("href")
                 blog_id = tool.find_sub_string(blog_url, "entry-", ".html")
-                if not crawler.is_integer(blog_id):
+                if not tool.is_integer(blog_id):
                     raise crawler.CrawlerException("日志地址截取日志id失败\n%s" % blog_url)
                 result["blog_id_list"].append(int(blog_id))
     if len(result["blog_id_list"]) == 0:
@@ -86,7 +86,7 @@ def get_one_page_blog(account_name, page_count):
         find_page_count_list = []
         for pagination_index in range(0, pagination_selector.length):
             temp_page_count = tool.find_sub_string(pagination_selector.eq(pagination_index).attr("href"), "/page-", ".html")
-            if crawler.is_integer(temp_page_count):
+            if tool.is_integer(temp_page_count):
                 find_page_count_list.append(int(temp_page_count))
         if len(find_page_count_list) == 0:
             raise crawler.CrawlerException("页面截取分页信息失败\n%s" % blog_pagination_response_content)
@@ -174,7 +174,7 @@ def get_origin_photo_url(photo_url):
                 temp_list[-1] = photo_name.replace("_s", "")
                 photo_url = "/".join(temp_list)
             # https://stat.ameba.jp/user_images/2a/ce/10091204420.jpg
-            elif crawler.is_integer(photo_name.split(".")[0]):
+            elif tool.is_integer(photo_name.split(".")[0]):
                 pass
             else:
                 log.trace("无法解析的图片地址 %s" % photo_url)

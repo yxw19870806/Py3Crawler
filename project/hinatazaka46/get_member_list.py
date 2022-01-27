@@ -29,7 +29,7 @@ def get_account_from_index():
         if not blog_url_path:
             raise crawler.CrawlerException("账号信息截取blog地址失败\n%s" % member_info_selector.html())
         account_id = tool.find_sub_string(blog_url_path, "&ct=")
-        if not crawler.is_integer(account_id):
+        if not tool.is_integer(account_id):
             raise crawler.CrawlerException("blog地址截取account id失败\n%s" % blog_url_path)
         # 获取成员名字
         account_name = member_info_selector.find(".c-blog-face__name").html()

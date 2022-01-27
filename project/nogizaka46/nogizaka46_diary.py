@@ -49,7 +49,7 @@ def get_one_page_blog(account_id, page_count):
         if blog_url is None:
             raise crawler.CrawlerException("日志内容截取日志地址失败\n%s" % blog_bottom_selector.eq(blog_body_index).html())
         blog_id = blog_url.split("/")[-1].split(".")[0]
-        if not crawler.is_integer(blog_id):
+        if not tool.is_integer(blog_id):
             raise crawler.CrawlerException("日志内容截取日志id失败\n%s" % blog_bottom_selector.eq(blog_body_index).html())
         result_photo_info["blog_id"] = int(blog_id)
         # 获取图片地址列表
@@ -68,7 +68,7 @@ def get_one_page_blog(account_id, page_count):
         if paginate_url is None:
             raise crawler.CrawlerException("页面截取分页信息失败\n%s" % paginate_selector.html())
         max_page_count = paginate_url.split("?p=")[-1]
-        if not crawler.is_integer(max_page_count):
+        if not tool.is_integer(max_page_count):
             raise crawler.CrawlerException("分页信息解析失败\n%s" % blog_bottom_selector.html())
         result["is_over"] = page_count >= int(max_page_count)
     else:

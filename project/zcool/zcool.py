@@ -16,7 +16,7 @@ from common import *
 # 获取指定页数的全部作品
 def get_one_page_album(account_name, page_count):
     # https://www.zcool.com.cn/u/17050872?myCate=0&sort=8&p=2
-    if crawler.is_integer(account_name):
+    if tool.is_integer(account_name):
         album_pagination_url = "https://www.zcool.com.cn/u/%s" % account_name
     else:
         album_pagination_url = "https://%s.zcool.com.cn/" % account_name

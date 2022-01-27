@@ -30,7 +30,7 @@ def main():
 
         output.print_msg("开始解析视频%s" % single_save_list[2])
         video_id = single_save_list[2].split("/")[-1].replace("sm", "")
-        if not crawler.is_integer(video_id):
+        if not tool.is_integer(video_id):
             output.print_msg("视频 %s 截取video id失败" % single_save_list[2])
             continue
 

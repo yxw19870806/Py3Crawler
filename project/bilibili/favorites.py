@@ -25,12 +25,12 @@ def main():
         favorites_id = None
         if video_url.find("//www.bilibili.com/medialist/play/ml") > 0:
             favorites_id = tool.find_sub_string(video_url, "//www.bilibili.com/medialist/play/ml").split("?")[0].split("/")[0]
-        elif crawler.is_integer(video_url):
+        elif tool.is_integer(video_url):
             favorites_id = video_url
-        elif video_url[:2] == "ml" and crawler.is_integer(video_url[2:]):
+        elif video_url[:2] == "ml" and tool.is_integer(video_url[2:]):
             favorites_id = video_url[2:]
         # 无效的视频地址
-        if not crawler.is_integer(favorites_id):
+        if not tool.is_integer(favorites_id):
             log.step("错误的收藏夹播放地址，正确的地址格式如：https://www.bilibili.com/medialist/play/ml1234567890")
             continue
         # 访问视频播放页
@@ -54,7 +54,7 @@ def main():
         for file_path in path.get_dir_files_name(root_dir):
             if file_path.find(" ") > 0:
                 video_id = file_path.split(" ")[0]
-                if crawler.is_integer(video_id):
+                if tool.is_integer(video_id):
                     exist_list.append(int(video_id))
 
         while len(favorites_response["video_info_list"]) > 0:

@@ -25,7 +25,7 @@ def get_account_index_page(account_name):
     if account_index_response.status == net.HTTP_RETURN_CODE_SUCCEED:
         # 获取账号id
         account_id = tool.find_sub_string(account_index_response.data, '"profilePage_', '"')
-        if not crawler.is_integer(account_id):
+        if not tool.is_integer(account_id):
             raise crawler.CrawlerException("页面截取账号id失败\n%s" % account_index_response.data)
         result["account_id"] = account_id
         # 判断是不是已经关注

@@ -56,7 +56,7 @@ def get_account_mylist(account_id):
         if mylist_url is None:
             raise crawler.CrawlerException("视频列表信息截取视频列表地址失败\n%s" % mylist_selector.html())
         list_id = tool.find_sub_string(mylist_url, "mylist/")
-        if not crawler.is_integer(list_id):
+        if not tool.is_integer(list_id):
             raise crawler.CrawlerException("视频列表地址截取视频列表id失败\n%s" % mylist_selector.html())
         result["list_id_list"].append(int(list_id))
     return result
@@ -97,7 +97,7 @@ def get_one_page_account_video(account_id, page_count):
         if video_url is None:
             raise crawler.CrawlerException("视频信息截取视频地址失败\n%s" % video_selector.html())
         video_id = tool.find_sub_string(video_url, "watch/sm", "?")
-        if not crawler.is_integer(video_id):
+        if not tool.is_integer(video_id):
             raise crawler.CrawlerException("视频地址截取视频id失败\n%s" % video_selector.html())
         result_video_info["video_id"] = int(video_id)
         # 获取视频标题
@@ -143,7 +143,7 @@ def get_mylist_index(list_id):
         }
         # 获取视频id
         video_id = crawler.get_json_value(video_info, "item_data", "video_id", type_check=str).replace("sm", "")
-        if not crawler.is_integer(video_id):
+        if not tool.is_integer(video_id):
             raise crawler.CrawlerException("视频信息'video_id'字段类型不正确\n%s" % video_info)
         result_video_info["video_id"] = int(video_id)
         # 获取视频辩题

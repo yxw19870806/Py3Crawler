@@ -31,7 +31,7 @@ def get_album_index_page(album_id):
         }
         audio_info_selector = audio_list_selector.eq(audio_index - 1)
         audio_id = audio_info_selector.find("a").attr("title")
-        if crawler.is_integer(audio_id):
+        if tool.is_integer(audio_id):
             result_audio_info["audio_id"] = int(audio_id)
         audio_play_url = audio_info_selector.find("a").attr("href")
         if audio_play_url[0] == "/":

@@ -42,7 +42,7 @@ def main():
     for account_id in account_id_list["niconico"]:
         if account_id in niconico_mylist_list:
             continue
-        if not crawler.is_integer(account_id):
+        if not tool.is_integer(account_id):
             continue
         try:
             account_mylist_response = niconico.get_account_mylist(account_id)
