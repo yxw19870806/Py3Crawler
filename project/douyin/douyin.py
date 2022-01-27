@@ -10,7 +10,7 @@ import os
 import time
 import traceback
 from common import *
-from selenium import webdriver
+from common import browser
 from selenium.webdriver.common.by import By
 
 EACH_PAGE_VIDEO_COUNT = 21
@@ -46,13 +46,9 @@ def get_account_index_page(account_id):
     cache_html = os.path.join(CACHE_FILE_PATH, "%s.html" % account_id)
     file.write_file(template_html, cache_html, file.WRITE_FILE_TYPE_REPLACE)
     # 使用抖音的加密JS方法算出signature的值
-    chrome_options = webdriver.ChromeOptions()
-    chrome_options.headless = True  # 不打开浏览器
-    chrome_options.add_argument("user-agent=" + USER_AGENT)  # 使用指定UA
-    chrome = webdriver.Chrome(executable_path=crawler.CHROME_WEBDRIVER_PATH, options=chrome_options)
-    chrome.get("file:///" + os.path.realpath(cache_html))
-    signature = chrome.find_element(by=By.ID, value="result").text
-    chrome.quit()
+    chrome_options_argument = ["user-agent=" + USER_AGENT]
+    with browser.Chrome("file:///" + os.path.realpath(cache_html), add_argument=chrome_options_argument) as chrome:
+        signature = chrome.find_element(by=By.ID, value="result").text
     if not signature:
         raise crawler.CrawlerException("signature参数计算失败\n%s" % account_index_response_content)
     result["signature"] = signature
