@@ -14,7 +14,6 @@ import ssl
 import time
 import threading
 import urllib.parse
-import warnings
 import urllib3
 from typing import Optional
 from urllib3._collections import HTTPHeaderDict
@@ -86,6 +85,7 @@ class ErrorResponse(object):
     """
     request()方法异常对象
     """
+
     def __init__(self, status=-1):
         self.status = status
         self.data = b''
@@ -630,34 +630,3 @@ class MultiThreadDownload(threading.Thread):
                     self.fd_handle.close()
                     return
         self.error_flag.append(self)
-
-
-def http_request(url, method="GET", fields=None, binary_data=None, header_list=None, cookies_list=None, encode_multipart=False, json_decode=False,
-                 is_auto_proxy=True, is_auto_redirect=True, is_gzip=True, is_url_encode=True, is_auto_retry=True, is_random_ip=True,
-                 is_check_qps=True, connection_timeout=NET_CONFIG["HTTP_CONNECTION_TIMEOUT"], read_timeout=NET_CONFIG["HTTP_READ_TIMEOUT"]):
-    warnings.warn(
-        "http_request commands are deprecated. Please use request() instead",
-        DeprecationWarning,
-        stacklevel=2,
-    )
-    return request(url, method=method, fields=fields, binary_data=binary_data, header_list=header_list, cookies_list=cookies_list, encode_multipart=encode_multipart,
-                   json_decode=json_decode, is_auto_proxy=is_auto_proxy, is_auto_redirect=is_auto_redirect, is_gzip=is_gzip, is_url_encode=is_url_encode, is_auto_retry=is_auto_retry,
-                   is_random_ip=is_random_ip, is_check_qps=is_check_qps, connection_timeout=connection_timeout, read_timeout=read_timeout)
-
-
-def save_net_file(file_url, file_path, need_content_type=False, head_check=False, replace_if_exist=None, **kwargs):
-    warnings.warn(
-        "save_net_file commands are deprecated. Please use download() instead",
-        DeprecationWarning,
-        stacklevel=2,
-    )
-    return download(file_url, file_path, need_content_type=need_content_type, head_check=head_check, replace_if_exist=replace_if_exist, **kwargs)
-
-
-def save_net_file_list(file_url_list, file_path, header_list=None, cookies_list=None):
-    warnings.warn(
-        "save_net_file_list commands are deprecated. Please use download_from_list() instead",
-        DeprecationWarning,
-        stacklevel=2,
-    )
-    return download_from_list(file_url_list, file_path, header_list=header_list, cookies_list=cookies_list)
