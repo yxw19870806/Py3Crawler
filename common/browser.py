@@ -45,6 +45,9 @@ class Chrome:
         # 浏览器参数
         chrome_options = webdriver.ChromeOptions()
         chrome_options.headless = False if ("headless" in kwargs and not kwargs["headless"]) else True  # 不打开浏览器
+        if "add_argument" in kwargs and isinstance(kwargs["add_argument"], list):
+            for argument in kwargs["add_argument"]:
+                chrome_options.add_argument(argument)
 
         if "desired_capabilities" in kwargs:
             desired_capabilities = kwargs["desired_capabilities"]
