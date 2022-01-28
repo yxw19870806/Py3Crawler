@@ -11,9 +11,7 @@ import os
 import time
 import traceback
 from pyquery import PyQuery as pq
-from selenium import webdriver
 from selenium.webdriver.common.by import By
-from selenium.common.exceptions import WebDriverException
 from common import *
 from common import browser
 
