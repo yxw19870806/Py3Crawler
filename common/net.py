@@ -107,7 +107,7 @@ def set_proxy(ip: str, port: str):
     """
     if not str(port).isdigit() or int(port) <= 0:
         return
-    match = re.match("((25[0-5]|2[0-4]\d|((1\d{2})|([1-9]?\d)))\.){3}(25[0-5]|2[0-4]\d|((1\d{2})|([1-9]?\d)))", ip)
+    match = re.match(r"((25[0-5]|2[0-4]\d|((1\d{2})|([1-9]?\d)))\.){3}(25[0-5]|2[0-4]\d|((1\d{2})|([1-9]?\d)))", ip)
     if not match or match.group() != ip:
         return
     global PROXY_HTTP_CONNECTION_POOL
@@ -284,7 +284,9 @@ def request(url, method="GET", fields=None, binary_data=None, header_list=None, 
                                 charset = "GBK"
                             try:
                                 response.json_data = json.loads(response.data.decode(charset))
-                            except:
+                            except LookupError:
+                                pass
+                            except AttributeError:
                                 pass
                             else:
                                 is_error = False
