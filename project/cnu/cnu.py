@@ -14,7 +14,7 @@ from common import *
 # 获取作品页面
 def get_album_page(album_id):
     album_url = "http://www.cnu.cc/works/%s" % album_id
-    album_response = net.http_request(album_url, method="GET")
+    album_response = net.request(album_url, method="GET")
     result = {
         "album_title": "",  # 作品标题
         "photo_url_list": [],  # 全部图片地址
@@ -62,7 +62,7 @@ class CNU(crawler.Crawler):
         album_id = 105000
         if os.path.exists(self.save_data_path):
             file_save_info = file.read_file(self.save_data_path)
-            if not crawler.is_integer(file_save_info):
+            if not tool.is_integer(file_save_info):
                 log.error("存档内数据格式不正确")
                 tool.process_exit()
             album_id = int(file_save_info)
@@ -73,7 +73,7 @@ class CNU(crawler.Crawler):
             # todo 获取最新的作品id
             while True:
                 if not self.is_running():
-                    tool.process_exit(0)
+                    tool.process_exit(tool.PROCESS_EXIT_CODE_NORMAL)
                 log.step("开始解析第%s页作品" % album_id)
 
                 # 获取作品
@@ -97,7 +97,7 @@ class CNU(crawler.Crawler):
                 thread_list = []
                 for photo_url in album_response["photo_url_list"]:
                     if not self.is_running():
-                        tool.process_exit(0)
+                        tool.process_exit(tool.PROCESS_EXIT_CODE_NORMAL)
                     log.step("作品%s《%s》开始下载第%s张图片 %s" % (album_id, album_response["album_title"], photo_index, photo_url))
 
                     # 开始下载
@@ -116,7 +116,7 @@ class CNU(crawler.Crawler):
                 if self.is_running():
                     log.step("作品%s《%s》全部图片下载完毕" % (album_id, album_response["album_title"]))
                 else:
-                    tool.process_exit(0)
+                    tool.process_exit(tool.PROCESS_EXIT_CODE_NORMAL)
 
                 # 作品内图片全部下载完毕
                 temp_path = ""  # 临时目录设置清除
@@ -136,7 +136,8 @@ class CNU(crawler.Crawler):
 
         # 重新保存存档文件
         file.write_file(str(album_id), self.save_data_path, file.WRITE_FILE_TYPE_REPLACE)
-        log.step("全部下载完毕，耗时%s秒，共计图片%s张" % (self.get_run_time(), self.total_photo_count))
+
+        self.end_message()
 
 
 class Download(crawler.DownloadThread):
@@ -148,7 +149,7 @@ class Download(crawler.DownloadThread):
         self.result = None
 
     def run(self):
-        self.result = net.save_net_file(self.photo_url, self.file_path)
+        self.result = net.download(self.photo_url, self.file_path)
         self.notify_main_thread()
 
     def get_result(self):

@@ -17,8 +17,7 @@ def main(file_path):
     group_id = 1
     group_list = []
     with open(file_path, encoding="UTF-8") as file_handle:
-        csv_reader = csv.DictReader(file_handle)
-        for row in csv_reader:
+        for row in csv.DictReader(file_handle):
             # 处理一个组别的
             if group_id != int(row["组别"]):
                 deal_one_group(group_list)

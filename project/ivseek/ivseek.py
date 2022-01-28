@@ -12,7 +12,7 @@ import time
 import traceback
 from pyquery import PyQuery as pq
 from common import *
-from project.nicoNico import niconico
+from project.niconico import niconico
 
 DONE_SING = "~"
 
@@ -36,14 +36,14 @@ def read_save_data(save_data_path):
 # 获取首页
 def get_index_page():
     index_url = "http://www.ivseek.com/"
-    index_response = net.http_request(index_url, method="GET")
+    index_response = net.request(index_url, method="GET")
     result = {
         "max_archive_id": None,  # 最新图集id
     }
     if index_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(index_response.status))
     index_response_content = index_response.data.decode(errors="ignore")
-    archive_id_find = re.findall('<a class="no-deco" href="http://www.ivseek.com/archives/(\d*).html">', index_response_content)
+    archive_id_find = re.findall(r'<a class="no-deco" href="http://www.ivseek.com/archives/(\d*).html">', index_response_content)
     if len(archive_id_find) == 0:
         raise crawler.CrawlerException("页面匹配视频id失败\n%s" % index_response_content)
     result["max_archive_id"] = max(list(map(int, archive_id_find)))
@@ -52,7 +52,7 @@ def get_index_page():
 
 def get_archive_page(archive_id):
     archive_url = "http://www.ivseek.com/archives/%s.html" % archive_id
-    archive_response = net.http_request(archive_url, method="GET")
+    archive_response = net.request(archive_url, method="GET")
     result = {
         "is_delete": "",  # 是否已删除
         "video_title": "",  # 标题
@@ -65,8 +65,8 @@ def get_archive_page(archive_id):
         raise crawler.CrawlerException(crawler.request_failre(archive_response.status))
     archive_response_content = archive_response.data.decode(errors="ignore")
     # 获取视频地址
-    video_url_find1 = re.findall('<iframe[\s|\S]*?src="([^"]*)"', archive_response_content)
-    video_url_find2 = re.findall('<script type="\w*/javascript" src="(http[s]?://\w*.nicovideo.jp/[^"]*)"></script>', archive_response_content)
+    video_url_find1 = re.findall(r'<iframe[\s|\S]*?src="([^"]*)"', archive_response_content)
+    video_url_find2 = re.findall(r'<script type="\w*/javascript" src="(http[s]?://\w*.nicovideo.jp/[^"]*)"></script>', archive_response_content)
     video_url_find = video_url_find1 + video_url_find2
     if len(video_url_find) == 0:
         return result
@@ -84,7 +84,7 @@ def get_archive_page(archive_id):
             video_id = video_url.split("/")[-1].split("?")[0]
             result_video_info["video_url"] = "https://www.youtube.com/watch?v=%s" % video_id
             # 获取视频发布账号
-            video_play_response = net.http_request(result_video_info["video_url"], method="GET", header_list={"accept-language": "en-US"})
+            video_play_response = net.request(result_video_info["video_url"], method="GET", header_list={"accept-language": "en-US"})
             if video_play_response.status != net.HTTP_RETURN_CODE_SUCCEED:
                 raise crawler.CrawlerException("视频播放页 %s，%s" % (result_video_info["video_url"], crawler.request_failre(video_play_response.status)))
             video_play_response_content = video_play_response.data.decode(errors="ignore")
@@ -112,11 +112,11 @@ def get_archive_page(archive_id):
                 raise crawler.CrawlerException("未知视频来源" + video_url)
             result_video_info["video_url"] = "http://www.nicovideo.jp/watch/%s" % video_id
             # 获取视频发布账号
-            video_play_response = net.http_request(result_video_info["video_url"], method="GET", cookies_list=niconico.COOKIE_INFO)
+            video_play_response = net.request(result_video_info["video_url"], method="GET", cookies_list=niconico.COOKIE_INFO)
             while video_play_response.status == 403:
                 log.step("视频%s访问异常，重试" % video_id)
                 time.sleep(60)
-                video_play_response = net.http_request(result_video_info["video_url"], method="GET", cookies_list=niconico.COOKIE_INFO)
+                video_play_response = net.request(result_video_info["video_url"], method="GET", cookies_list=niconico.COOKIE_INFO)
             if video_play_response.status != net.HTTP_RETURN_CODE_SUCCEED:
                 raise crawler.CrawlerException("视频播放页 %s，%s" % (result_video_info["video_url"], crawler.request_failre(video_play_response.status)))
             video_play_response_content = video_play_response.data.decode(errors="ignore")
@@ -134,7 +134,7 @@ def get_archive_page(archive_id):
             video_id = video_url.split("/")[-1][0]
             result_video_info["video_url"] = "http://www.dailymotion.com/video/%s" % video_id
             # 获取视频发布账号
-            video_play_response = net.http_request(result_video_info["video_url"], method="GET")
+            video_play_response = net.request(result_video_info["video_url"], method="GET")
             if video_play_response.status != net.HTTP_RETURN_CODE_SUCCEED:
                 raise crawler.CrawlerException("视频播放页%s，%s" % (result_video_info["video_url"], crawler.request_failre(video_play_response.status)))
             account_id = tool.find_sub_string(video_play_response.data.decode(errors="ignore"), '"screenname":"', '"')
@@ -188,7 +188,7 @@ class IvSeek(crawler.Crawler):
 
             for archive_id in range(save_id, index_response["max_archive_id"]):
                 if not self.is_running():
-                    tool.process_exit(0)
+                    tool.process_exit(tool.PROCESS_EXIT_CODE_NORMAL)
                 log.step("开始解析第%s个视频" % archive_id)
 
                 # 获取一页图片

@@ -9,7 +9,7 @@ email: hikaru870806@hotmail.com
 import os
 from common import *
 from project.ivseek import ivseek
-from project.nicoNico import niconico
+from project.niconico import niconico
 
 NICONICO_VIDEO_DOWNLOAD_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), "niconico_video"))
 
@@ -30,7 +30,7 @@ def main():
 
         output.print_msg("开始解析视频%s" % single_save_list[2])
         video_id = single_save_list[2].split("/")[-1].replace("sm", "")
-        if not crawler.is_integer(video_id):
+        if not tool.is_integer(video_id):
             output.print_msg("视频 %s 截取video id失败" % single_save_list[2])
             continue
 
@@ -48,7 +48,7 @@ def main():
         cookies_list = niconico.COOKIE_INFO
         if video_info_response["extra_cookie"]:
             cookies_list.update(video_info_response["extra_cookie"])
-        save_file_return = net.save_net_file(video_info_response["video_url"], file_path, cookies_list=cookies_list)
+        save_file_return = net.download(video_info_response["video_url"], file_path, cookies_list=cookies_list)
         if save_file_return["status"] == 1:
             output.print_msg("视频%s 《%s》下载成功" % (video_id, video_info_response["video_title"]))
         else:

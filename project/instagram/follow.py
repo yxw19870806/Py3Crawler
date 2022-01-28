@@ -16,7 +16,7 @@ IS_FOLLOW_PRIVATE_ACCOUNT = False  # 是否对私密账号发出关注请求
 # 获取账号首页
 def get_account_index_page(account_name):
     account_index_url = "https://www.instagram.com/%s" % account_name
-    account_index_response = net.http_request(account_index_url, method="GET", cookies_list=instagram.COOKIE_INFO)
+    account_index_response = net.request(account_index_url, method="GET", cookies_list=instagram.COOKIE_INFO)
     result = {
         "is_follow": False,  # 是否已经关注
         "is_private": False,  # 是否私密账号
@@ -25,7 +25,7 @@ def get_account_index_page(account_name):
     if account_index_response.status == net.HTTP_RETURN_CODE_SUCCEED:
         # 获取账号id
         account_id = tool.find_sub_string(account_index_response.data, '"profilePage_', '"')
-        if not crawler.is_integer(account_id):
+        if not tool.is_integer(account_id):
             raise crawler.CrawlerException("页面截取账号id失败\n%s" % account_index_response.data)
         result["account_id"] = account_id
         # 判断是不是已经关注
@@ -43,7 +43,7 @@ def get_account_index_page(account_name):
 def follow_account(account_name, account_id):
     follow_api_url = "https://www.instagram.com/web/friendships/%s/follow/" % account_id
     header_list = {"Referer": "https://www.instagram.com/", "x-csrftoken": instagram.COOKIE_INFO["csrftoken"], "X-Instagram-AJAX": 1}
-    follow_response = net.http_request(follow_api_url, method="POST", header_list=header_list, cookies_list=instagram.COOKIE_INFO, json_decode=True)
+    follow_response = net.request(follow_api_url, method="POST", header_list=header_list, cookies_list=instagram.COOKIE_INFO, json_decode=True)
     if follow_response.status == net.HTTP_RETURN_CODE_SUCCEED:
         follow_result = crawler.get_json_value(follow_response.json_data, "result", default_value="", type_check=str)
         if follow_result == "following":
@@ -70,7 +70,7 @@ def main():
     instagram_class = instagram.Instagram()
 
     count = 0
-    for account_name in sorted(instagram_class.account_list.keys()):
+    for account_name in sorted(instagram_class.save_data.keys()):
         try:
             account_index_response = get_account_index_page(account_name)
         except crawler.CrawlerException as e:

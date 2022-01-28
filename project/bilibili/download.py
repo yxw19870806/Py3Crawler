@@ -34,9 +34,9 @@ class BiliBiliDownload(bilibili.BiliBili):
         elif lower_video_url.find("bilibili.com/video/bv") > 0:
             bv_id = tool.find_sub_string(video_url, "bilibili.com/video/").split("?")[0]
             video_id = bilibili.bv_id_2_av_id(bv_id)
-        elif crawler.is_integer(lower_video_url):
+        elif tool.is_integer(lower_video_url):
             video_id = lower_video_url
-        elif lower_video_url[:2] == "av" and crawler.is_integer(lower_video_url[2:]):
+        elif lower_video_url[:2] == "av" and tool.is_integer(lower_video_url[2:]):
             video_id = lower_video_url[2:]
         elif lower_video_url[:2] == "bv":
             video_id = bilibili.bv_id_2_av_id(video_url)
@@ -49,7 +49,7 @@ class BiliBiliDownload(bilibili.BiliBili):
     def download(self):
         video_id = self.get_video_id_from_console()
         # 无效的视频地址
-        if not crawler.is_integer(video_id):
+        if not tool.is_integer(video_id):
             log.step("错误的视频地址，正确的地址格式如：https://www.bilibili.com/video/av123456")
             return
 
@@ -108,7 +108,7 @@ class BiliBiliDownload(bilibili.BiliBili):
                 else:
                     file_real_path = file_path
 
-                save_file_return = net.save_net_file(video_url, file_real_path, header_list={"Referer": "https://www.bilibili.com/video/av%s" % video_id})
+                save_file_return = net.download(video_url, file_real_path, header_list={"Referer": "https://www.bilibili.com/video/av%s" % video_id})
                 if save_file_return["status"] == 1:
                     if len(video_part_info["video_url_list"]) == 1:
                         log.step("视频《%s》下载成功" % video_title)

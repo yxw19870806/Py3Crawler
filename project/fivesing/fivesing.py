@@ -18,7 +18,7 @@ from common import *
 def get_one_page_audio(account_id, page_type, page_count):
     # http://5sing.kugou.com/inory/yc/1.html
     audio_pagination_url = "http://5sing.kugou.com/%s/%s/%s.html" % (account_id, page_type, page_count)
-    audio_pagination_response = net.http_request(audio_pagination_url, method="GET")
+    audio_pagination_response = net.request(audio_pagination_url, method="GET")
     result = {
         "audio_info_list": [],  # 全部歌曲信息
     }
@@ -46,7 +46,7 @@ def get_audio_play_page(audio_id, song_type):
         "songid": audio_id,
         "songtype": song_type,
     }
-    audio_info_response = net.http_request(audio_info_url, method="GET", fields=query_data, json_decode=True)
+    audio_info_response = net.request(audio_info_url, method="GET", fields=query_data, json_decode=True)
     result = {
         "audio_title": "",  # 歌曲标题
         "audio_url": None,  # 歌曲地址
@@ -88,19 +88,19 @@ class FiveSing(crawler.Crawler):
 
         # 解析存档文件
         # account_id  last_yc_audio_id  last_fc_audio_id
-        self.account_list = crawler.read_save_data(self.save_data_path, 0, ["", "0", "0"])
+        self.save_data = crawler.read_save_data(self.save_data_path, 0, ["", "0", "0"])
 
     def main(self):
         try:
             # 循环下载每个id
             thread_list = []
-            for account_id in sorted(self.account_list.keys()):
+            for account_id in sorted(self.save_data.keys()):
                 # 提前结束
                 if not self.is_running():
                     break
 
                 # 开始下载
-                thread = Download(self.account_list[account_id], self)
+                thread = Download(self.save_data[account_id], self)
                 thread.start()
                 thread_list.append(thread)
 
@@ -113,13 +113,12 @@ class FiveSing(crawler.Crawler):
             self.stop_process()
 
         # 未完成的数据保存
-        if len(self.account_list) > 0:
-            file.write_file(tool.list_to_string(list(self.account_list.values())), self.temp_save_data_path)
+        self.write_remaining_save_data()
 
         # 重新排序保存存档文件
-        crawler.rewrite_save_file(self.temp_save_data_path, self.save_data_path)
+        self.rewrite_save_file()
 
-        log.step("全部下载完毕，耗时%s秒，共计歌曲%s首" % (self.get_run_time(), self.total_audio_count))
+        self.end_message()
 
 
 class Download(crawler.DownloadThread):
@@ -130,13 +129,13 @@ class Download(crawler.DownloadThread):
     audio_type_to_index_dict = {AUDIO_TYPE_YC: 1, AUDIO_TYPE_FC: 2}  # 存档文件里的下标
     audio_type_name_dict = {AUDIO_TYPE_YC: "原唱", AUDIO_TYPE_FC: "翻唱"}  # 显示名字
 
-    def __init__(self, account_info, main_thread):
-        crawler.DownloadThread.__init__(self, account_info, main_thread)
-        self.account_id = self.account_info[0]
-        if len(self.account_info) >= 4 and self.account_info[3]:
-            self.display_name = self.account_info[3]
+    def __init__(self, single_save_data, main_thread):
+        crawler.DownloadThread.__init__(self, single_save_data, main_thread)
+        self.account_id = self.single_save_data[0]
+        if len(self.single_save_data) >= 4 and self.single_save_data[3]:
+            self.display_name = self.single_save_data[3]
         else:
-            self.display_name = self.account_info[0]
+            self.display_name = self.single_save_data[0]
         self.step("开始")
 
     # 获取所有可下载歌曲
@@ -166,7 +165,7 @@ class Download(crawler.DownloadThread):
             # 寻找这一页符合条件的歌曲
             for audio_info in audio_pagination_response["audio_info_list"]:
                 # 检查是否达到存档记录
-                if audio_info["audio_id"] > int(self.account_info[audio_type_index]):
+                if audio_info["audio_id"] > int(self.single_save_data[audio_type_index]):
                     # 新增歌曲导致的重复判断
                     if audio_info["audio_id"] in unique_list:
                         continue
@@ -201,18 +200,17 @@ class Download(crawler.DownloadThread):
 
         self.step("开始下载%s歌曲%s《%s》 %s" % (audio_type_name, audio_info["audio_id"], audio_info["audio_title"], audio_info_response["audio_url"]))
 
-        file_type = net.get_file_type(audio_info_response["audio_url"])
-        file_path = os.path.join(self.main_thread.audio_download_path, self.display_name, audio_type_name, "%08d - %s.%s" % (audio_info["audio_id"], path.filter_text(audio_info["audio_title"]), file_type))
-        save_file_return = net.save_net_file(audio_info_response["audio_url"], file_path)
+        file_path = os.path.join(self.main_thread.audio_download_path, self.display_name, audio_type_name, "%08d - %s.%s" % (audio_info["audio_id"], path.filter_text(audio_info["audio_title"]), net.get_file_type(audio_info_response["audio_url"])))
+        save_file_return = net.download(audio_info_response["audio_url"], file_path)
         if save_file_return["status"] == 1:
+            self.total_audio_count += 1  # 计数累加
             self.step("%s歌曲%s《%s》下载成功" % (audio_type_name, audio_info["audio_id"], audio_info["audio_title"]))
         else:
             self.error("%s歌曲%s《%s》 %s 下载失败，原因：%s" % (audio_type_name, audio_info["audio_id"], audio_info["audio_title"], audio_info_response["audio_url"], crawler.download_failre(save_file_return["code"])))
-            return
+            self.check_thread_exit_after_download_failure()
 
         # 歌曲下载完毕
-        self.total_audio_count += 1  # 计数累加
-        self.account_info[self.audio_type_to_index_dict[audio_type]] = str(audio_info["audio_id"])  # 设置存档记录
+        self.single_save_data[self.audio_type_to_index_dict[audio_type]] = str(audio_info["audio_id"])  # 设置存档记录
 
     def run(self):
         try:
@@ -236,9 +234,9 @@ class Download(crawler.DownloadThread):
 
         # 保存最后的信息
         with self.thread_lock:
-            file.write_file("\t".join(self.account_info), self.main_thread.temp_save_data_path)
+            self.write_single_save_data()
             self.main_thread.total_audio_count += self.total_audio_count
-            self.main_thread.account_list.pop(self.account_id)
+            self.main_thread.save_data.pop(self.account_id)
         self.step("下载完毕，总共获得%s首歌曲" % self.total_audio_count)
         self.notify_main_thread()
 

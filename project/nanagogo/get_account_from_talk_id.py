@@ -8,7 +8,7 @@ email: hikaru870806@hotmail.com
 """
 import os
 from common import *
-from project.nanaGoGo import nanagogo
+from project.nanagogo import nanagogo
 
 # 存放解析出的账号文件路径
 ACCOUNT_ID_FILE_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), "info/account.data"))
@@ -17,7 +17,7 @@ ACCOUNT_ID_FILE_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), "
 # 根据talk id获取全部参与者
 def get_member_from_talk(talk_id):
     talk_index_url = "https://7gogo.jp/%s" % talk_id
-    talk_index_response = net.http_request(talk_index_url, method="GET")
+    talk_index_response = net.request(talk_index_url, method="GET")
     account_list = {}
     if talk_index_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(talk_index_response.status))
@@ -39,7 +39,7 @@ def main():
 
     # 存档位置
     account_list = list(crawler.read_save_data(ACCOUNT_ID_FILE_PATH, 0, []).keys())
-    for talk_id in nanaGoGo_class.account_list:
+    for talk_id in nanaGoGo_class.save_data:
         try:
             member_list = get_member_from_talk(talk_id)
         except crawler.CrawlerException as e:

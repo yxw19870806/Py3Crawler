@@ -25,7 +25,7 @@ def get_banned_game_list():
             "page": page_count,
             "desc": "0"
         }
-        index_response = net.http_request(index_url, method="GET", fields=query_data, is_random_ip=False)
+        index_response = net.request(index_url, method="GET", fields=query_data, is_random_ip=False)
         if index_response.status != net.HTTP_RETURN_CODE_SUCCEED:
             raise "第%s页，%s" % (page_count, crawler.CrawlerException(crawler.request_failre(index_response.status)))
         index_response_content = index_response.data.decode(errors="ignore")
@@ -46,7 +46,7 @@ def get_banned_game_list():
             # 获取游戏ID
             game_url = game_info_selector.find("td").eq(2).find("a:first").attr("href")
             game_id = game_url.split("/")[-1]
-            if crawler.is_integer(game_id):
+            if tool.is_integer(game_id):
                 result_game_info["game_id"] = int(game_id)
             # 获取游戏下线时间
             game_banned_time_text = game_info_selector.find("td").eq(3).find("time").attr("datetime")
@@ -61,7 +61,7 @@ def get_banned_game_list():
             result.append(result_game_info)
         # 获取总页数
         max_page_count = pq(index_response_content).find("nav[aria-label='Pages']:first li.page-item").eq(-2).text()
-        if not crawler.is_integer(max_page_count):
+        if not tool.is_integer(max_page_count):
             raise crawler.CrawlerException("页面截取分页信息失败\n%s" % index_response_content.html())
         max_page_count = int(max_page_count)
         page_count += 1

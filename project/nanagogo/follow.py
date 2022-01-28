@@ -8,7 +8,8 @@ email: hikaru870806@hotmail.com
 """
 import time
 from common import *
-from project.nanaGoGo import nanagogo
+from common import quicky
+from project.nanagogo import nanagogo
 
 COOKIE_INFO = {}
 
@@ -22,7 +23,7 @@ def follow_account(account_id):
     header_list = {
         "X-7gogo-WebAuth": "yTRBxlzKsGnYfln9VQCx9ZQTZFERgoELVRh82k_lwDy=",
     }
-    follow_response = net.http_request(follow_api_url, method="POST", fields=post_data, header_list=header_list, cookies_list=COOKIE_INFO, json_decode=True)
+    follow_response = net.request(follow_api_url, method="POST", fields=post_data, header_list=header_list, cookies_list=COOKIE_INFO, json_decode=True)
     if follow_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         output.print_msg("关注%s失败，请求返回结果：%s，退出程序！" % (account_id, crawler.request_failre(follow_response.status)))
         tool.process_exit()
@@ -38,7 +39,7 @@ def follow_account(account_id):
 
 def main():
     # 获取cookies
-    all_cookie_from_browser = crawler.quickly_get_all_cookies_from_browser()
+    all_cookie_from_browser = quicky.quickly_get_all_cookies_from_browser()
     if "api.7gogo.jp" in all_cookie_from_browser and ".7gogo.jp" in all_cookie_from_browser:
         for cookie_key in all_cookie_from_browser["api.7gogo.jp"]:
             COOKIE_INFO[cookie_key] = all_cookie_from_browser["api.7gogo.jp"][cookie_key]
@@ -52,7 +53,7 @@ def main():
     nanaGoGo_class = nanagogo.NanaGoGo()
 
     count = 0
-    for account_id in nanaGoGo_class.account_list:
+    for account_id in nanaGoGo_class.save_data:
         if follow_account(account_id):
             count += 1
         time.sleep(0.1)

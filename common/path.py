@@ -9,6 +9,7 @@ import os
 import platform
 import shutil
 import time
+from typing import Optional
 
 CREATE_DIR_MODE_IGNORE_IF_EXIST = 1
 CREATE_DIR_MODE_DELETE_IF_EXIST = 2
@@ -16,16 +17,18 @@ RETURN_FILE_LIST_ASC = 1
 RETURN_FILE_LIST_DESC = 2
 
 
-def create_dir(dir_path, create_mode=CREATE_DIR_MODE_IGNORE_IF_EXIST):
-    """Create directory
+def create_dir(dir_path: str, create_mode: int = CREATE_DIR_MODE_IGNORE_IF_EXIST) -> bool:
+    """
+    创建文件夹
 
-    :param create_mode:
-        CREATE_DIR_MODE_IGNORE_IF_EXIST   create if not exist; do nothing if exist
-        CREATE_DIR_MODE_DELETE_IF_EXIST   delete first if exist and not empty
+    :Args:
+    - create_mode - 创建模式
+        CREATE_DIR_MODE_IGNORE_IF_EXIST   当目标不能存在时创建，如果目标目录存在则跳过
+        CREATE_DIR_MODE_DELETE_IF_EXIST   当目录
 
-    :return:
-        True    create succeed
-        False   create failed（include file_path is a file, not a directory）
+    :Returns:
+        True    创建成功
+        False   创建失败
     """
     if create_mode not in [CREATE_DIR_MODE_IGNORE_IF_EXIST, CREATE_DIR_MODE_DELETE_IF_EXIST]:
         create_mode = CREATE_DIR_MODE_IGNORE_IF_EXIST
@@ -52,13 +55,17 @@ def create_dir(dir_path, create_mode=CREATE_DIR_MODE_IGNORE_IF_EXIST):
     return False
 
 
-def delete_dir_or_file(dir_path):
-    """Delete file or directory（include subdirectory or files）"""
+def delete_dir_or_file(dir_path: str) -> bool:
+    """
+    删除目录（包括所有子目录和文件）或者文件
+    """
     dir_path = os.path.abspath(dir_path)
     if not os.path.exists(dir_path):
         return True
     if os.path.isdir(dir_path):
+        # todo 异常捕获
         shutil.rmtree(dir_path, True)
+        return True
     else:
         for retry_count in range(0, 5):
             try:
@@ -76,8 +83,10 @@ def delete_dir_or_file(dir_path):
             return False
 
 
-def delete_null_dir(dir_path):
-    """Delete all empty subdirectory"""
+def delete_null_dir(dir_path: str):
+    """
+    删除所有空的子目录
+    """
     dir_path = os.path.abspath(dir_path)
     if os.path.isdir(dir_path):
         for file_name in os.listdir(dir_path):
@@ -88,16 +97,17 @@ def delete_null_dir(dir_path):
             os.rmdir(dir_path)
 
 
-def get_dir_files_name(dir_path, order=None, recursive=False, full_path=False):
-    """Get list of filename from specified directory
+def get_dir_files_name(dir_path: str, order: Optional[str] = None, recursive: bool = False, full_path: bool = False) -> list:
+    """
+    获取目录下的所有文件名
 
-    :param order:
-        RETURN_FILE_LIST_ASC    ascending order of files list
-        RETURN_FILE_LIST_DESC   descending order of files list
-        Other                   default files list
-
-    :return:
-        list of files list(unicode)
+    :Args:
+    - order - 排序模式
+        RETURN_FILE_LIST_ASC    根据文件名升序
+        RETURN_FILE_LIST_DESC   根据文件名降序
+        Other                   系统默认返回数据
+    - recursive - 是否递归获取子目录
+    - full_path - 返回的列表是否包含完整路径
     """
     dir_path = os.path.abspath(dir_path)
     if not os.path.exists(dir_path):
@@ -129,8 +139,10 @@ def get_dir_files_name(dir_path, order=None, recursive=False, full_path=False):
         return files_list
 
 
-def copy_file(source_file_path, destination_file_path):
-    """Copy File from source directory to destination directory"""
+def copy_file(source_file_path: str, destination_file_path: str) -> bool:
+    """
+    复制文件
+    """
     source_file_path = os.path.abspath(source_file_path)
     destination_file_path = os.path.abspath(destination_file_path)
     # 源文件未存在 或者 目标文件已存在
@@ -142,11 +154,13 @@ def copy_file(source_file_path, destination_file_path):
     if not create_dir(os.path.dirname(destination_file_path)):
         return False
     shutil.copyfile(source_file_path, destination_file_path)
-    return True
+    return os.path.exists(destination_file_path)
 
 
-def copy_directory(source_dir_path, destination_dir_path):
-    """Copy directory from source path to destination path"""
+def copy_directory(source_dir_path: str, destination_dir_path: str) -> bool:
+    """
+    复制目录
+    """
     # 源文件未存在 或者 目标文件已存在
     source_dir_path = os.path.abspath(source_dir_path)
     destination_dir_path = os.path.abspath(destination_dir_path)
@@ -158,11 +172,13 @@ def copy_directory(source_dir_path, destination_dir_path):
     if not create_dir(os.path.dirname(destination_dir_path)):
         return False
     shutil.copytree(source_dir_path, destination_dir_path)
-    return True
+    return os.path.isdir(destination_dir_path)
 
 
-def move_file(source_path, destination_path):
-    """Move/Rename file from source path to destination path"""
+def move_file(source_path: str, destination_path: str) -> bool:
+    """
+    移动文件
+    """
     source_path = os.path.abspath(source_path)
     destination_path = os.path.abspath(destination_path)
     if not os.path.exists(source_path) or os.path.exists(destination_path):
@@ -170,19 +186,20 @@ def move_file(source_path, destination_path):
     if not create_dir(os.path.dirname(destination_path)):
         return False
     shutil.move(source_path, destination_path)
+    return os.path.isdir(destination_path)
 
 
-def filter_text(text):
-    """Filter the character which OS not support in filename or directory name"""
+def filter_text(text: str) -> str:
+    """
+    过滤字符串中的无效字符（无效的操作系统文件名）
+    """
     filter_character_list = ["\t", "\n", "\r", "\b"]
     if platform.system() == "Windows":
         filter_character_list += ["\\", "/", ":", "*", "?", '"', "<", ">", "|"]
     for filter_character in filter_character_list:
         text = text.replace(filter_character, " ")  # 过滤一些windows文件名屏蔽的字符
-    while True:
-        new_text = text.strip().strip(".")  # 去除前后空格以及点
-        # 如果前后没有区别则直接返回
-        if text == new_text:
-            return text
-        else:
-            text = new_text
+    # 去除前后空格以及点
+    # 如果前后没有区别则直接返回
+    while (new_text := text.strip().strip(".")) != text:
+        text = new_text
+    return text

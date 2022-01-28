@@ -17,7 +17,7 @@ from common import *
 def get_book_index(book_id):
     # https://book.qidian.com/info/1016397637/
     index_url = "https://book.qidian.com/info/%s/" % book_id
-    index_response = net.http_request(index_url, method="GET")
+    index_response = net.request(index_url, method="GET")
     result = {
         "chapter_info_list": [],  # 章节信息列表
     }
@@ -44,7 +44,7 @@ def get_book_index(book_id):
         if result_chapter_info["chapter_url"].find("//read.qidian.com") >= 0:
             pass
         elif result_chapter_info["chapter_url"].find("//vipreader.qidian.com/") >= 0:
-            if not crawler.is_integer(result_chapter_info["chapter_id"]):
+            if not tool.is_integer(result_chapter_info["chapter_id"]):
                 raise crawler.CrawlerException("章节地址%s截取章节id失败" % result_chapter_info["chapter_url"])
         else:
             raise crawler.CrawlerException("未知的章节域名%s" % result_chapter_info["chapter_url"])
@@ -67,7 +67,7 @@ def get_book_index(book_id):
 def get_chapter_page(chapter_url):
     # https://book.qidian.com/info/1016397637/
     # https://read.qidian.com/chapter/q2B9dFLoeqU3v1oFI-DX8Q2/yyg9pjNdd3y2uJcMpdsVgA2/
-    chapter_response = net.http_request(chapter_url, method="GET")
+    chapter_response = net.request(chapter_url, method="GET")
     result = {
         "content": "",  # 文章内容
         "is_vip": False,  # 是否需要vip解锁
@@ -105,19 +105,19 @@ class QiDian(crawler.Crawler):
 
         # 解析存档文件
         # book_id  chapter_id
-        self.account_list = crawler.read_save_data(self.save_data_path, 0, ["", "0"])
+        self.save_data = crawler.read_save_data(self.save_data_path, 0, ["", "0"])
 
     def main(self):
         try:
             # 循环下载每个id
             thread_list = []
-            for account_id in sorted(self.account_list.keys()):
+            for book_id in sorted(self.save_data.keys()):
                 # 提前结束
                 if not self.is_running():
                     break
 
                 # 开始下载
-                thread = Download(self.account_list[account_id], self)
+                thread = Download(self.save_data[book_id], self)
                 thread.start()
                 thread_list.append(thread)
 
@@ -130,21 +130,20 @@ class QiDian(crawler.Crawler):
             self.stop_process()
 
         # 未完成的数据保存
-        if len(self.account_list) > 0:
-            file.write_file(tool.list_to_string(list(self.account_list.values())), self.temp_save_data_path)
+        self.write_remaining_save_data()
 
         # 重新排序保存存档文件
-        crawler.rewrite_save_file(self.temp_save_data_path, self.save_data_path)
+        self.rewrite_save_file()
 
-        log.step("全部下载完毕，耗时%s秒，共计图片%s张" % (self.get_run_time(), self.total_photo_count))
+        self.end_message()
 
 
 class Download(crawler.DownloadThread):
-    def __init__(self, account_info, main_thread):
-        crawler.DownloadThread.__init__(self, account_info, main_thread)
-        self.book_id = self.account_info[0]
-        if len(self.account_info) >= 3 and self.account_info[2]:
-            self.display_name = self.account_info[2]
+    def __init__(self, single_save_data, main_thread):
+        crawler.DownloadThread.__init__(self, single_save_data, main_thread)
+        self.book_id = self.single_save_data[0]
+        if len(self.single_save_data) >= 3 and self.single_save_data[2]:
+            self.display_name = self.single_save_data[2]
         else:
             self.display_name = self.book_id
         self.step("开始")
@@ -167,7 +166,7 @@ class Download(crawler.DownloadThread):
         # 寻找符合条件的章节
         for chapter_info in index_response["chapter_info_list"]:
             # 检查是否达到存档记录
-            if chapter_info["chapter_id"] != self.account_info[1]:
+            if chapter_info["chapter_id"] != self.single_save_data[1]:
                 chapter_info_list.append(chapter_info)
             else:
                 break
@@ -195,7 +194,7 @@ class Download(crawler.DownloadThread):
 
         # 章节内图片全部下载完毕
         self.total_content_count += 1  # 计数累加
-        self.account_info[1] = chapter_info["chapter_id"]  # 设置存档记录
+        self.single_save_data[1] = chapter_info["chapter_id"]  # 设置存档记录
 
     def run(self):
         try:
@@ -220,9 +219,9 @@ class Download(crawler.DownloadThread):
 
         # 保存最后的信息
         with self.thread_lock:
-            file.write_file("\t".join(self.account_info), self.main_thread.temp_save_data_path)
+            self.write_single_save_data()
             self.main_thread.total_photo_count += self.total_photo_count
-            self.main_thread.account_list.pop(self.book_id)
+            self.main_thread.save_data.pop(self.book_id)
         self.step("下载完毕，总共获得%s张图片" % self.total_photo_count)
         self.notify_main_thread()
 

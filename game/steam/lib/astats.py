@@ -13,7 +13,7 @@ from common import output, net, crawler, tool
 def get_game_invalid_achievements(game_id):
     game_index_url = "http://astats.astats.nl/astats/Steam_Game_Info.php"
     query_data = {"AppID": game_id}
-    game_index_response = net.http_request(game_index_url, method="GET", fields=query_data)
+    game_index_response = net.request(game_index_url, method="GET", fields=query_data)
     if game_index_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         output.print_msg("游戏 %s 访问失败" % game_id)
         tool.process_exit()
@@ -25,7 +25,7 @@ def get_game_invalid_achievements(game_id):
     if not achievement_text:
         return
     achievement_text = achievement_text.strip()
-    if not crawler.is_integer(achievement_text):
+    if not tool.is_integer(achievement_text):
         invalid_achievement_text = tool.find_sub_string(achievement_text, '<font color="#FF0000">', "</font>")
         if invalid_achievement_text:
             output.print_msg("游戏 %s, 存在无效成就，%s" % (game_id, invalid_achievement_text))

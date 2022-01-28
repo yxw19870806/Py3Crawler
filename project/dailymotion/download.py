@@ -36,7 +36,7 @@ def main():
             video_response = dailymotion.get_video_page(video_id)
         except crawler.CrawlerException as e:
             log.error("解析视频下载地址失败，原因：%s" % e.message)
-            tool.process_exit()
+            break
         if video_response["is_delete"]:
             log.step("视频不存在，跳过")
             continue
@@ -52,7 +52,7 @@ def main():
             continue
         # 开始下载
         log.step("\n视频标题：%s\n视频地址：%s\n下载路径：%s" % (video_response["video_title"], video_response["video_url"], file_path))
-        save_file_return = net.save_net_file(video_response["video_url"], file_path, head_check=True)
+        save_file_return = net.download(video_response["video_url"], file_path, head_check=True)
         if save_file_return["status"] == 1:
             log.step("视频《%s》下载成功" % video_response["video_title"])
         else:

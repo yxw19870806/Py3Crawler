@@ -10,7 +10,7 @@ import base64
 import json
 import os
 from common import *
-from common import crypto
+from common import crypto, quicky
 
 API_HOST = "https://api.twitter.com"
 API_VERSION = "1.1"
@@ -20,7 +20,7 @@ token_file_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "info\
 
 def init():
     # 设置代理
-    crawler.quickly_set_proxy()
+    quicky.quickly_set_proxy()
 
     if ACCESS_TOKEN is not None:
         return True
@@ -51,7 +51,6 @@ def init():
             output.print_msg("access token get succeed!")
             return True
         output.print_msg("incorrect api info, please type again!")
-    return False
 
 
 def get_access_token(api_key, api_secret):
@@ -63,7 +62,7 @@ def get_access_token(api_key, api_secret):
     post_data = {
         "grant_type": "client_credentials"
     }
-    response = net.http_request(auth_url, method="POST", header_list=header_list, fields=post_data, json_decode=True)
+    response = net.request(auth_url, method="POST", header_list=header_list, fields=post_data, json_decode=True)
     if (
         response.status == net.HTTP_RETURN_CODE_SUCCEED and
         crawler.check_sub_key(("token_type", "access_token"), response.json_data) and
@@ -84,7 +83,7 @@ def get_user_info_by_user_id(user_id):
     api_url = _get_api_url("users/show.json")
     query_data = {"user_id": user_id}
     header_list = {"Authorization": "Bearer %s" % ACCESS_TOKEN}
-    response = net.http_request(api_url, method="GET", fields=query_data, header_list=header_list, json_decode=True)
+    response = net.request(api_url, method="GET", fields=query_data, header_list=header_list, json_decode=True)
     if response.status == net.HTTP_RETURN_CODE_SUCCEED:
         return response.json_data
     return {}
@@ -97,7 +96,7 @@ def follow_account(user_id):
     header_list = {
         "Authorization": "Bearer %s" % ACCESS_TOKEN,
     }
-    response = net.http_request(api_url, method="POST", header_list=header_list, json_decode=True)
+    response = net.request(api_url, method="POST", header_list=header_list, json_decode=True)
     if response.status == net.HTTP_RETURN_CODE_SUCCEED:
         pass
     return False

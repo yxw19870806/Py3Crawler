@@ -11,10 +11,9 @@ import os
 import time
 import traceback
 from pyquery import PyQuery as pq
-from selenium import webdriver
 from selenium.webdriver.common.by import By
-from selenium.common.exceptions import WebDriverException
 from common import *
+from common import browser
 
 CACHE_FILE_PATH = os.path.join(os.path.dirname(__file__), "cache")
 TEMPLATE_HTML_PATH = os.path.join(os.path.dirname(__file__), "template.html")
@@ -24,7 +23,7 @@ TEMPLATE_HTML_PATH = os.path.join(os.path.dirname(__file__), "template.html")
 def get_comic_index_page(comic_id):
     # https://www.manhuagui.com/comic/21175/
     index_url = "https://www.manhuagui.com/comic/%s/" % comic_id
-    index_response = net.http_request(index_url, method="GET")
+    index_response = net.request(index_url, method="GET")
     result = {
         "chapter_info_list": [],  # 漫画列表信息
     }
@@ -63,7 +62,7 @@ def get_comic_index_page(comic_id):
             # 获取章节ID
             page_url = chapter_selector.find("a").attr("href")
             chapter_id = tool.find_sub_string(page_url, "/comic/%s/" % comic_id, ".html")
-            if not crawler.is_integer(chapter_id):
+            if not tool.is_integer(chapter_id):
                 raise crawler.CrawlerException("页面地址截取页面id失败\n%s" % page_url)
             result_comic_info["chapter_id"] = int(chapter_id)
             # 获取章节名称
@@ -79,7 +78,7 @@ def get_comic_index_page(comic_id):
 def get_chapter_page(comic_id, chapter_id):
     # https://www.manhuagui.com/comic/7580/562894.html
     chapter_url = "https://www.manhuagui.com/comic/%s/%s.html" % (comic_id, chapter_id)
-    chapter_response = net.http_request(chapter_url, method="GET")
+    chapter_response = net.request(chapter_url, method="GET")
     result = {
         "photo_url_list": [],  # 全部漫画图片地址
     }
@@ -91,22 +90,11 @@ def get_chapter_page(comic_id, chapter_id):
         raise crawler.CrawlerException("页面截取脚本代码失败\n%s" % chapter_response_content)
     template_html = file.read_file(TEMPLATE_HTML_PATH)
     template_html = template_html.replace("%%SCRIPT_CODE%%", script_code)
-    cache_html_path = os.path.join(CACHE_FILE_PATH, "%s.html" % comic_id)
+    cache_html_path = os.path.realpath(os.path.join(CACHE_FILE_PATH, "%s.html" % comic_id))
     file.write_file(template_html, cache_html_path, file.WRITE_FILE_TYPE_REPLACE)
-    # 使用抖音的加密JS方法算出signature的值
-    chrome_options = webdriver.ChromeOptions()
-    chrome_options.headless = True  # 不打开浏览器
-    try:
-        chrome = webdriver.Chrome(executable_path=crawler.CHROME_WEBDRIVER_PATH, options=chrome_options)
-    except WebDriverException as e:
-        message = str(e)
-        if message.find("chrome not reachable") >= 0:
-            return get_chapter_page(comic_id, chapter_id)
-        else:
-            raise
-    chrome.get("file:///" + os.path.realpath(cache_html_path))
-    result_photo_list = chrome.find_element(by=By.ID, value="result").text
-    chrome.quit()
+    with browser.Chrome("file:///" + cache_html_path) as chrome:
+        result_photo_list = chrome.find_element(by=By.ID, value="result").text
+    path.delete_dir_or_file(cache_html_path)
     photo_list = result_photo_list.split("\n")
     for photo_url in photo_list:
         result["photo_url_list"].append("https://i.hamreus.com" + photo_url)
@@ -127,19 +115,19 @@ class ManHuaGui(crawler.Crawler):
 
         # 解析存档文件
         # comic_name  last_chapter_id
-        self.account_list = crawler.read_save_data(self.save_data_path, 0, ["", "0"])
+        self.save_data = crawler.read_save_data(self.save_data_path, 0, ["", "0"])
 
     def main(self):
         try:
             # 循环下载每个id
             thread_list = []
-            for account_id in sorted(self.account_list.keys()):
+            for comic_id in sorted(self.save_data.keys()):
                 # 提前结束
                 if not self.is_running():
                     break
 
                 # 开始下载
-                thread = Download(self.account_list[account_id], self)
+                thread = Download(self.save_data[comic_id], self)
                 thread.start()
                 thread_list.append(thread)
 
@@ -152,21 +140,23 @@ class ManHuaGui(crawler.Crawler):
             self.stop_process()
 
         # 未完成的数据保存
-        if len(self.account_list) > 0:
-            file.write_file(tool.list_to_string(list(self.account_list.values())), self.temp_save_data_path)
+        self.write_remaining_save_data()
 
         # 重新排序保存存档文件
-        crawler.rewrite_save_file(self.temp_save_data_path, self.save_data_path)
+        self.rewrite_save_file()
 
-        log.step("全部下载完毕，耗时%s秒，共计图片%s张" % (self.get_run_time(), self.total_photo_count))
+        # 删除临时缓存目录
+        path.delete_dir_or_file(CACHE_FILE_PATH)
+
+        self.end_message()
 
 
 class Download(crawler.DownloadThread):
-    def __init__(self, account_info, main_thread):
-        crawler.DownloadThread.__init__(self, account_info, main_thread)
-        self.comic_id = self.account_info[0]
-        if len(self.account_info) >= 3 and self.account_info[2]:
-            self.display_name = self.account_info[2]
+    def __init__(self, single_save_data, main_thread):
+        crawler.DownloadThread.__init__(self, single_save_data, main_thread)
+        self.comic_id = self.single_save_data[0]
+        if len(self.single_save_data) >= 3 and self.single_save_data[2]:
+            self.display_name = self.single_save_data[2]
         else:
             self.display_name = self.comic_id
         self.step("开始")
@@ -189,7 +179,7 @@ class Download(crawler.DownloadThread):
         # 寻找符合条件的章节
         for chapter_info in blog_pagination_response["chapter_info_list"]:
             # 检查是否达到存档记录
-            if chapter_info["chapter_id"] > int(self.account_info[1]):
+            if chapter_info["chapter_id"] > int(self.single_save_data[1]):
                 chapter_info_list[chapter_info["chapter_id"]] = chapter_info
 
         return [chapter_info_list[key] for key in sorted(chapter_info_list.keys(), reverse=True)]
@@ -215,17 +205,18 @@ class Download(crawler.DownloadThread):
             self.step("漫画%s %s《%s》开始下载第%s张图片 %s" % (chapter_info["chapter_id"], chapter_info["group_name"], chapter_info["chapter_name"], photo_index, photo_url))
 
             photo_file_path = os.path.join(chapter_path, "%03d.%s" % (photo_index, net.get_file_type(photo_url)))
-            save_file_return = net.save_net_file(photo_url, photo_file_path, header_list={"Referer": "https://www.manhuagui.com/comic/%s/%s.html" % (self.comic_id, chapter_info["chapter_id"])}, is_auto_proxy=False)
+            save_file_return = net.download(photo_url, photo_file_path, header_list={"Referer": "https://www.manhuagui.com/comic/%s/%s.html" % (self.comic_id, chapter_info["chapter_id"])}, is_auto_proxy=False)
             if save_file_return["status"] == 1:
+                self.total_photo_count += 1  # 计数累加
                 self.step("漫画%s %s《%s》第%s张图片下载成功" % (chapter_info["chapter_id"], chapter_info["group_name"], chapter_info["chapter_name"], photo_index))
             else:
                 self.error("漫画%s %s《%s》第%s张图片 %s 下载失败，原因：%s" % (chapter_info["chapter_id"], chapter_info["group_name"], chapter_info["chapter_name"], photo_index, photo_url, crawler.download_failre(save_file_return["code"])))
+                self.check_thread_exit_after_download_failure()
             photo_index += 1
 
         # 媒体内图片全部下载完毕
         self.temp_path_list = []  # 临时目录设置清除
-        self.total_photo_count += photo_index - 1  # 计数累加
-        self.account_info[1] = str(chapter_info["chapter_id"])  # 设置存档记录
+        self.single_save_data[1] = str(chapter_info["chapter_id"])  # 设置存档记录
 
     def run(self):
         try:
@@ -249,9 +240,9 @@ class Download(crawler.DownloadThread):
 
         # 保存最后的信息
         with self.thread_lock:
-            file.write_file("\t".join(self.account_info), self.main_thread.temp_save_data_path)
+            self.write_single_save_data()
             self.main_thread.total_photo_count += self.total_photo_count
-            self.main_thread.account_list.pop(self.comic_id)
+            self.main_thread.save_data.pop(self.comic_id)
         self.step("下载完毕，总共获得%s张图片" % self.total_photo_count)
         self.notify_main_thread()
 

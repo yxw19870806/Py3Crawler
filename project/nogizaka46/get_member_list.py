@@ -14,7 +14,7 @@ from project.nogizaka46 import nogizaka46_diary
 # 从页面获取全部成员账号
 def get_account_from_index():
     index_url = "https://blog.nogizaka46.com/"
-    index_response = net.http_request(index_url, method="GET")
+    index_response = net.request(index_url, method="GET")
     account_list = {}
     if index_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(index_response.status))
@@ -35,9 +35,9 @@ def main():
     account_list_from_api = get_account_from_index()
     if len(account_list_from_api) > 0:
         for account_id in account_list_from_api:
-            if account_id not in nogizaka46Diary_class.account_list:
-                nogizaka46Diary_class.account_list[account_id] = [account_id, "", "0", account_list_from_api[account_id]]
-        temp_list = [nogizaka46Diary_class.account_list[key] for key in sorted(nogizaka46Diary_class.account_list.keys())]
+            if account_id not in nogizaka46Diary_class.save_data:
+                nogizaka46Diary_class.save_data[account_id] = [account_id, "", "0", account_list_from_api[account_id]]
+        temp_list = [nogizaka46Diary_class.save_data[key] for key in sorted(nogizaka46Diary_class.save_data.keys())]
         file.write_file(tool.list_to_string(temp_list), nogizaka46Diary_class.save_data_path, file.WRITE_FILE_TYPE_REPLACE)
 
 

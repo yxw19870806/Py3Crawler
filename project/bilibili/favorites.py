@@ -25,12 +25,12 @@ def main():
         favorites_id = None
         if video_url.find("//www.bilibili.com/medialist/play/ml") > 0:
             favorites_id = tool.find_sub_string(video_url, "//www.bilibili.com/medialist/play/ml").split("?")[0].split("/")[0]
-        elif crawler.is_integer(video_url):
+        elif tool.is_integer(video_url):
             favorites_id = video_url
-        elif video_url[:2] == "ml" and crawler.is_integer(video_url[2:]):
+        elif video_url[:2] == "ml" and tool.is_integer(video_url[2:]):
             favorites_id = video_url[2:]
         # 无效的视频地址
-        if not crawler.is_integer(favorites_id):
+        if not tool.is_integer(favorites_id):
             log.step("错误的收藏夹播放地址，正确的地址格式如：https://www.bilibili.com/medialist/play/ml1234567890")
             continue
         # 访问视频播放页
@@ -54,7 +54,7 @@ def main():
         for file_path in path.get_dir_files_name(root_dir):
             if file_path.find(" ") > 0:
                 video_id = file_path.split(" ")[0]
-                if crawler.is_integer(video_id):
+                if tool.is_integer(video_id):
                     exist_list.append(int(video_id))
 
         while len(favorites_response["video_info_list"]) > 0:
@@ -96,7 +96,7 @@ def main():
 
                     # 开始下载
                     log.step("\n视频标题：%s\n视频地址：%s\n下载路径：%s" % (video_play_response["video_title"], video_part_url, file_path))
-                    save_file_return = net.save_net_file(video_part_url, file_path, header_list={"Referer": "https://www.bilibili.com/video/av%s" % video_info["video_id"]})
+                    save_file_return = net.download(video_part_url, file_path, header_list={"Referer": "https://www.bilibili.com/video/av%s" % video_info["video_id"]})
                     if save_file_return["status"] == 1:
                         log.step("视频%s《%s》第%s个视频下载成功" % (video_info["video_id"], video_info["video_title"], video_index))
                     else:

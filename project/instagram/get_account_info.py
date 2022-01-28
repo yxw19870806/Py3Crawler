@@ -14,7 +14,7 @@ from project.instagram import instagram
 # 获取账号首页
 def get_account_index_page(account_name):
     account_index_url = "https://www.instagram.com/%s/" % account_name
-    account_index_response = net.http_request(account_index_url, method="GET")
+    account_index_response = net.request(account_index_url, method="GET")
     result = {
         "account_info": "",  # 自我介绍
         "external_url": "",  # 外部链接地址
@@ -46,7 +46,7 @@ def main():
     instagram_class = instagram.Instagram()
 
     result_file_path = os.path.join(os.path.dirname(__file__), "info/account_info.data")
-    for account in sorted(instagram_class.account_list.keys()):
+    for account in sorted(instagram_class.save_data.keys()):
         try:
             account_index_response = get_account_index_page(account)
         except crawler.CrawlerException as e:

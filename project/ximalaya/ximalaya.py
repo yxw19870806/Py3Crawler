@@ -10,9 +10,9 @@ import math
 import os
 import random
 import time
-from selenium import webdriver
 from selenium.webdriver.common.by import By
 from common import *
+from common import browser
 
 COOKIE_INFO = {}
 EACH_PAGE_AUDIO_COUNT = 30  # 每次请求获取的视频数量
@@ -25,10 +25,11 @@ def check_login():
     if not COOKIE_INFO:
         return False
     api_url = "https://www.ximalaya.com/revision/main/getCurrentUser"
-    api_response = net.http_request(api_url, method="GET", cookies_list=COOKIE_INFO, json_decode=True)
+    api_response = net.request(api_url, method="GET", cookies_list=COOKIE_INFO, json_decode=True)
     if api_response.status == net.HTTP_RETURN_CODE_SUCCEED:
         return crawler.get_json_value(api_response.json_data, "ret", type_check=int, default_value=0) == 200
     return False
+
 
 # 获取指定页数的全部音频信息
 def get_one_page_album(album_id, page_count):
@@ -38,7 +39,7 @@ def get_one_page_album(album_id, page_count):
         "pageNum": page_count,
         "sort": "1",
     }
-    album_pagination_response = net.http_request(album_pagination_url, method="GET", fields=query_data, json_decode=True)
+    album_pagination_response = net.request(album_pagination_url, method="GET", fields=query_data, json_decode=True)
     result = {
         "audio_info_list": [],  # 全部音频信息
         "is_over": False,  # 是否最后一页音频
@@ -79,7 +80,7 @@ def get_one_page_audio(account_id, page_count):
     header_list = {
         "xm-sign": "%s(%s)%s(%s)%s" % (tool.string_md5("himalaya-" + str(now)), random.randint(1, 100), now, random.randint(1, 100), now + random.randint(1, 100 * 60))
     }
-    audit_pagination_response = net.http_request(audio_pagination_url, method="GET", fields=query_data, header_list=header_list, json_decode=True)
+    audit_pagination_response = net.request(audio_pagination_url, method="GET", fields=query_data, header_list=header_list, json_decode=True)
     result = {
         "audio_info_list": [],  # 全部音频信息
         "is_over": False,  # 是否最后一页音频
@@ -117,7 +118,7 @@ def get_audio_info_page(audio_id):
     query_data = {
         "trackId": audio_id,
     }
-    audio_simple_info_response = net.http_request(audio_simple_info_url, fields=query_data, method="GET", json_decode=True)
+    audio_simple_info_response = net.request(audio_simple_info_url, method="GET", fields=query_data, json_decode=True)
     if audio_simple_info_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException("音频简易信息 " + crawler.request_failre(audio_simple_info_response.status))
     if crawler.get_json_value(audio_simple_info_response.json_data, "ret", type_check=int) == 200:
@@ -139,7 +140,7 @@ def get_audio_info_page(audio_id):
         "id": audio_id,
         "ptype": 1,
     }
-    audio_info_response = net.http_request(audio_info_url, fields=query_data, method="GET", json_decode=True)
+    audio_info_response = net.request(audio_info_url, method="GET", fields=query_data, json_decode=True)
     if audio_info_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException("音频详细信息" + crawler.request_failre(audio_info_response.status))
     # 获取音频地址
@@ -147,15 +148,15 @@ def get_audio_info_page(audio_id):
         result["audio_url"] = crawler.get_json_value(audio_info_response.json_data, "data", "src", type_check=str)
         return result
     except:
-        crawler.get_json_value(audio_info_response.json_data, "data", "hasBuy", type_check=bool, value_check=True)
+        crawler.get_json_value(audio_info_response.json_data, "data", "hasBuy", type_check=bool)
 
     # 需要购买或者vip才能解锁的音频
-    vip_audio_info_url = "https://mobile.ximalaya.com/mobile-playpage/track/v3/baseInfo/1642399208220"
+    vip_audio_info_url = "https://mobile.ximalaya.com/mobile-playpage/track/v3/baseInfo/%s" % int(time.time() * 1000)
     query_data = {
         "device": "web",
         "trackId": audio_id,
     }
-    vip_audio_info_response = net.http_request(vip_audio_info_url, fields=query_data, method="GET", json_decode=True)
+    vip_audio_info_response = net.request(vip_audio_info_url, method="GET", fields=query_data, cookies_list=COOKIE_INFO, json_decode=True)
     if vip_audio_info_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException("vip音频详细信息" + crawler.request_failre(vip_audio_info_response.status))
     decrypt_url = crawler.get_json_value(vip_audio_info_response.json_data, "trackInfo", "playUrlList", 0, "url", type_check=str)
@@ -165,12 +166,8 @@ def get_audio_info_page(audio_id):
     cache_html = os.path.join(CACHE_FILE_PATH, "%s.html" % audio_id)
     file.write_file(template_html, cache_html, file.WRITE_FILE_TYPE_REPLACE)
     # 使用喜马拉雅的加密JS方法解密url地址
-    chrome_options = webdriver.ChromeOptions()
-    chrome_options.headless = True  # 不打开浏览器
-    chrome = webdriver.Chrome(executable_path=crawler.CHROME_WEBDRIVER_PATH, options=chrome_options)
-    chrome.get("file:///" + os.path.realpath(cache_html))
-    audio_url = chrome.find_element(by=By.ID, value="result").get_attribute('value')
-    chrome.quit()
+    with browser.Chrome("file:///" + os.path.realpath(cache_html)) as chrome:
+        audio_url = chrome.find_element(by=By.ID, value="result").get_attribute('value')
     if not audio_url:
         raise crawler.CrawlerException("url解密失败\n%s" % decrypt_url)
     result["audio_url"] = audio_url
@@ -178,7 +175,9 @@ def get_audio_info_page(audio_id):
 
 
 class XiMaLaYa(crawler.Crawler):
-    def __init__(self, sys_config, **kwargs):
+    def __init__(self, sys_config=None, **kwargs):
+        if sys_config is None:
+            sys_config = {}
         global COOKIE_INFO, IS_LOGIN
         # 设置APP目录
         crawler.PROJECT_APP_PATH = os.path.abspath(os.path.dirname(__file__))
@@ -194,7 +193,7 @@ class XiMaLaYa(crawler.Crawler):
 
         # 设置全局变量，供子线程调用
         COOKIE_INFO = self.cookie_value
-        
+
         # 检测登录状态
         if check_login():
             IS_LOGIN = True

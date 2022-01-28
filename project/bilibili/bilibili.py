@@ -46,7 +46,7 @@ def check_login():
     if not COOKIE_INFO:
         return False
     api_url = "https://api.bilibili.com/x/member/web/account"
-    api_response = net.http_request(api_url, method="GET", cookies_list=COOKIE_INFO, json_decode=True)
+    api_response = net.request(api_url, method="GET", cookies_list=COOKIE_INFO, json_decode=True)
     if api_response.status == net.HTTP_RETURN_CODE_SUCCEED:
         return crawler.get_json_value(api_response.json_data, "data", "mid", type_check=int, default_value=0) != 0
     return False
@@ -70,10 +70,10 @@ def get_favorites_list(favorites_id):
             "ps": EACH_PAGE_COUNT,
             "direction": "false",
         }
-        api_response = net.http_request(api_url, method="GET", fields=query_data, cookies_list=COOKIE_INFO, json_decode=True)
+        api_response = net.request(api_url, method="GET", fields=query_data, cookies_list=COOKIE_INFO, json_decode=True)
         try:
             video_info_list = crawler.get_json_value(api_response.json_data, "data", "media_list", type_check=list)
-        except crawler.CrawlerException as e:
+        except crawler.CrawlerException:
             if crawler.get_json_value(api_response.json_data, "data", "media_list", value_check=None) is None:
                 video_info_list = []
             else:
@@ -107,7 +107,7 @@ def get_one_page_video(account_id, page_count):
         "ps": EACH_PAGE_COUNT,
         "tid": "0",
     }
-    api_response = net.http_request(api_url, method="GET", fields=query_data, json_decode=True)
+    api_response = net.request(api_url, method="GET", fields=query_data, json_decode=True)
     result = {
         "video_info_list": [],  # 全部视频信息
     }
@@ -137,7 +137,7 @@ def get_one_page_short_video(account_id, nex_offset):
         "uid": account_id,
         "next_offset": nex_offset,
     }
-    api_response = net.http_request(api_url, method="GET", fields=query_data, json_decode=True)
+    api_response = net.request(api_url, method="GET", fields=query_data, json_decode=True)
     result = {
         "video_info_list": [],  # 全部视频信息
         "next_page_offset": None,  # 下一页指针
@@ -173,7 +173,7 @@ def get_one_page_album(account_id, page_count):
         "page_size": EACH_PAGE_COUNT,
         "biz": "all",
     }
-    api_response = net.http_request(api_url, method="GET", fields=query_data, cookies_list=COOKIE_INFO, json_decode=True)
+    api_response = net.request(api_url, method="GET", fields=query_data, cookies_list=COOKIE_INFO, json_decode=True)
     result = {
         "album_id_list": [],  # 全部相簿id
     }
@@ -195,7 +195,7 @@ def get_one_page_audio(account_id, page_count):
         "ps": EACH_PAGE_COUNT,
         "uid": account_id,
     }
-    api_response = net.http_request(api_url, method="GET", fields=query_data, json_decode=True)
+    api_response = net.request(api_url, method="GET", fields=query_data, json_decode=True)
     result = {
         "audio_info_list": [],  # 全部视频信息
     }
@@ -223,7 +223,7 @@ def get_one_page_audio(account_id, page_count):
 # 获取指定视频
 def get_video_page(video_id):
     video_play_url = "https://www.bilibili.com/video/av%s" % video_id
-    video_play_response = net.http_request(video_play_url, method="GET", cookies_list=COOKIE_INFO)
+    video_play_response = net.request(video_play_url, method="GET", cookies_list=COOKIE_INFO)
     result = {
         "is_private": False,  # 是否需要登录
         "video_part_info_list": [],  # 全部视频地址
@@ -263,7 +263,7 @@ def get_video_page(video_id):
             "qn": "116",  # 上限 高清 1080P+: 112, 高清 1080P: 80, 高清 720P: 64, 清晰 480P: 32, 流畅 360P: 16
             "otype": "json",
         }
-        video_info_response = net.http_request(video_info_url, method="GET", fields=query_data, cookies_list=COOKIE_INFO, header_list={"Referer": "https://www.bilibili.com/video/av%s" % video_id}, json_decode=True)
+        video_info_response = net.request(video_info_url, method="GET", fields=query_data, cookies_list=COOKIE_INFO, header_list={"Referer": "https://www.bilibili.com/video/av%s" % video_id}, json_decode=True)
         if video_info_response.status != net.HTTP_RETURN_CODE_SUCCEED:
             raise crawler.CrawlerException("视频信息，" + crawler.request_failre(video_info_response.status))
         try:
@@ -295,7 +295,7 @@ def get_album_page(album_id):
     query_data = {
         "doc_id": album_id,
     }
-    api_response = net.http_request(api_url, method="GET", fields=query_data, json_decode=True)
+    api_response = net.request(api_url, method="GET", fields=query_data, json_decode=True)
     result = {
         "photo_url_list": [],  # 全部图片地址
     }
@@ -313,7 +313,7 @@ def get_audio_info_page(audio_id):
     query_data = {
         "sid": audio_id,
     }
-    api_response = net.http_request(api_url, method="GET", fields=query_data, json_decode=True)
+    api_response = net.request(api_url, method="GET", fields=query_data, json_decode=True)
     result = {
         "audio_url": None,  # 音频地址
     }
@@ -344,7 +344,7 @@ class BiliBili(crawler.Crawler):
 
         # 解析存档文件
         # account_name  last_video_id  last_audio_id  last_album_id
-        self.account_list = crawler.read_save_data(self.save_data_path, 0, ["", "0", "0", "0"])
+        self.save_data = crawler.read_save_data(self.save_data_path, 0, ["", "0", "0", "0"])
 
         # 检测登录状态
         if self.is_download_video:
@@ -364,13 +364,13 @@ class BiliBili(crawler.Crawler):
         try:
             # 循环下载每个id
             thread_list = []
-            for account_id in sorted(self.account_list.keys()):
+            for account_id in sorted(self.save_data.keys()):
                 # 提前结束
                 if not self.is_running():
                     break
 
                 # 开始下载
-                thread = Download(self.account_list[account_id], self)
+                thread = Download(self.save_data[account_id], self)
                 thread.start()
                 thread_list.append(thread)
 
@@ -383,23 +383,22 @@ class BiliBili(crawler.Crawler):
             self.stop_process()
 
         # 未完成的数据保存
-        if len(self.account_list) > 0:
-            file.write_file(tool.list_to_string(list(self.account_list.values())), self.temp_save_data_path)
+        self.write_remaining_save_data()
 
         # 重新排序保存存档文件
-        crawler.rewrite_save_file(self.temp_save_data_path, self.save_data_path)
+        self.rewrite_save_file()
 
-        log.step("全部下载完毕，耗时%s秒，共计图片%s张，%s个视频，%s个音频" % (self.get_run_time(), self.total_photo_count, self.total_video_count, self.total_audio_count))
+        self.end_message()
 
 
 class Download(crawler.DownloadThread):
-    def __init__(self, account_info, main_thread):
-        crawler.DownloadThread.__init__(self, account_info, main_thread)
-        self.account_id = self.account_info[0]
-        if len(self.account_info) >= 5 and self.account_info[4]:
-            self.display_name = self.account_info[4]
+    def __init__(self, single_save_data, main_thread):
+        crawler.DownloadThread.__init__(self, single_save_data, main_thread)
+        self.account_id = self.single_save_data[0]
+        if len(self.single_save_data) >= 5 and self.single_save_data[4]:
+            self.display_name = self.single_save_data[4]
         else:
-            self.display_name = self.account_info[0]
+            self.display_name = self.single_save_data[0]
         self.step("开始")
 
     # 获取所有可下载视频
@@ -425,7 +424,7 @@ class Download(crawler.DownloadThread):
             # 寻找这一页符合条件的视频
             for video_info in album_pagination_response["video_info_list"]:
                 # 检查是否达到存档记录
-                if video_info["video_time"] > int(self.account_info[1]):
+                if video_info["video_time"] > int(self.single_save_data[1]):
                     # 新增相簿导致的重复判断
                     if video_info["video_id"] in unique_list:
                         continue
@@ -469,7 +468,7 @@ class Download(crawler.DownloadThread):
             # 寻找这一页符合条件的音频
             for audio_info in album_pagination_response["audio_info_list"]:
                 # 检查是否达到存档记录
-                if audio_info["audio_id"] > int(self.account_info[2]):
+                if audio_info["audio_id"] > int(self.single_save_data[2]):
                     # 新增相簿导致的重复判断
                     if audio_info["audio_id"] in unique_list:
                         continue
@@ -513,7 +512,7 @@ class Download(crawler.DownloadThread):
             # 寻找这一页符合条件的相簿
             for album_id in album_pagination_response["album_id_list"]:
                 # 检查是否达到存档记录
-                if album_id > int(self.account_info[3]):
+                if album_id > int(self.single_save_data[3]):
                     # 新增相簿导致的重复判断
                     if album_id in unique_list:
                         continue
@@ -568,26 +567,25 @@ class Download(crawler.DownloadThread):
                         video_name += "_" + str(video_part_index)
                 if len(video_part_info["video_url_list"]) > 1:
                     video_name += " (%s)" % video_split_index
-                video_name = path.filter_text(video_name)
-                video_name = "%s.%s" % (video_name, net.get_file_type(video_part_url))
+                video_name = "%s.%s" % (path.filter_text(video_name), net.get_file_type(video_part_url))
                 file_path = os.path.join(self.main_thread.video_download_path, self.display_name, video_name)
-                save_file_return = net.save_net_file(video_part_url, file_path, header_list={"Referer": "https://www.bilibili.com/video/av%s" % video_info["video_id"]})
+                save_file_return = net.download(video_part_url, file_path, header_list={"Referer": "https://www.bilibili.com/video/av%s" % video_info["video_id"]})
                 if save_file_return["status"] == 1:
+                    self.temp_path_list.append(file_path)  # 设置临时目录
+                    self.total_video_count += 1  # 计数累加
                     self.step("视频%s《%s》第%s个视频下载成功" % (video_info["video_id"], video_info["video_title"], video_index))
-                    # 设置临时目录
-                    self.temp_path_list.append(file_path)
                 else:
                     self.error("视频%s《%s》第%s个视频 %s，下载失败，原因：%s" % (video_info["video_id"], video_info["video_title"], video_index, video_part_url, crawler.download_failre(save_file_return["code"])))
                     if save_file_return["code"] != -4:
-                        return False
+                        if self.check_thread_exit_after_download_failure(False):
+                            return False
                 video_split_index += 1
                 video_index += 1
             video_part_index += 1
 
         # 视频内所有分P全部下载完毕
         self.temp_path_list = []  # 临时目录设置清除
-        self.total_video_count += video_index - 1  # 计数累加
-        self.account_info[1] = str(video_info["video_time"])  # 设置存档记录
+        self.single_save_data[1] = str(video_info["video_time"])  # 设置存档记录
         return True
 
     # 解析单个相簿
@@ -604,16 +602,17 @@ class Download(crawler.DownloadThread):
         self.step("开始下载音频%s《%s》 %s" % (audio_info["audio_id"], audio_info["audio_title"], audio_info_response["audio_url"]))
 
         file_path = os.path.join(self.main_thread.audio_download_path, self.display_name, "%06d %s.%s" % (audio_info["audio_id"], path.filter_text(audio_info["audio_title"]), net.get_file_type(audio_info_response["audio_url"])))
-        save_file_return = net.save_net_file(audio_info_response["audio_url"], file_path, header_list={"Referer": "https://www.bilibili.com/"})
+        save_file_return = net.download(audio_info_response["audio_url"], file_path, header_list={"Referer": "https://www.bilibili.com/"})
         if save_file_return["status"] == 1:
+            self.total_audio_count += 1  # 计数累加
             self.step("音频%s《%s》下载成功" % (audio_info["audio_id"], audio_info["audio_title"]))
         else:
             self.error("音频%s《%s》 %s，下载失败，原因：%s" % (audio_info["audio_id"], audio_info["audio_title"], audio_info_response["audio_url"], crawler.download_failre(save_file_return["code"])))
-            return False
+            if self.check_thread_exit_after_download_failure(False):
+                return False
 
         # 音频下载完毕
-        self.total_audio_count += 1  # 计数累加
-        self.account_info[2] = str(audio_info["audio_id"])  # 设置存档记录
+        self.single_save_data[2] = str(audio_info["audio_id"])  # 设置存档记录
         return True
 
     # 解析单个相簿
@@ -636,20 +635,20 @@ class Download(crawler.DownloadThread):
             self.step("相簿%s开始下载第%s张图片 %s" % (album_id, photo_index, photo_url))
 
             file_path = os.path.join(self.main_thread.photo_download_path, self.display_name, "%09d_%02d.%s" % (album_id, photo_index, net.get_file_type(photo_url)))
-            save_file_return = net.save_net_file(photo_url, file_path)
+            save_file_return = net.download(photo_url, file_path)
             if save_file_return["status"] == 1:
+                self.temp_path_list.append(file_path)  # 设置临时目录
+                self.total_photo_count += 1  # 计数累加
                 self.step("相簿%s第%s张图片下载成功" % (album_id, photo_index))
-                # 设置临时目录
-                self.temp_path_list.append(file_path)
             else:
                 self.error("相簿%s第%s张图片 %s，下载失败，原因：%s" % (album_id, photo_index, photo_url, crawler.download_failre(save_file_return["code"])))
-                return False
+                if self.check_thread_exit_after_download_failure(False):
+                    return False
             photo_index += 1
 
         # 相簿内图片全部下载完毕
         self.temp_path_list = []  # 临时目录设置清除
-        self.total_photo_count += photo_index - 1  # 计数累加
-        self.account_info[3] = str(album_id)  # 设置存档记录
+        self.single_save_data[3] = str(album_id)  # 设置存档记录
         return True
 
     def run(self):
@@ -702,11 +701,11 @@ class Download(crawler.DownloadThread):
 
         # 保存最后的信息
         with self.thread_lock:
-            file.write_file("\t".join(self.account_info), self.main_thread.temp_save_data_path)
+            self.write_single_save_data()
             self.main_thread.total_photo_count += self.total_photo_count
             self.main_thread.total_video_count += self.total_video_count
             self.main_thread.total_audio_count += self.total_audio_count
-            self.main_thread.account_list.pop(self.account_id)
+            self.main_thread.save_data.pop(self.account_id)
         self.step("下载完毕，总共获得%s张图片，%s个视频，%s个音频" % (self.total_photo_count, self.total_video_count, self.total_audio_count))
         self.notify_main_thread()
 

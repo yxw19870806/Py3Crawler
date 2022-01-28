@@ -21,7 +21,7 @@ FIRST_CHOICE_RESOLUTION = 720
 def init_session():
     global AUTHORIZATION
     index_url = "https://www.dailymotion.com"
-    index_page_response = net.http_request(index_url, method="GET")
+    index_page_response = net.request(index_url, method="GET")
     if index_page_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException("首页，" + crawler.request_failre(index_page_response.status))
     index_page_response_content = index_page_response.data.decode(errors="ignore")
@@ -38,7 +38,7 @@ def init_session():
         "visitor_id": tool.generate_random_string(32, 6),
         "traffic_segment": random.randint(100000, 999999)
     }
-    oauth_response = net.http_request(crawler.get_json_value(script_json, "context", "api", "auth_url", type_check=str), method="POST", fields=post_data, json_decode=True)
+    oauth_response = net.request(crawler.get_json_value(script_json, "context", "api", "auth_url", type_check=str), method="POST", fields=post_data, json_decode=True)
     if oauth_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException("获取token页，%s\n%s" % (crawler.request_failre(oauth_response.status), post_data))
     AUTHORIZATION = crawler.get_json_value(oauth_response.json_data, "access_token", type_check=str)
@@ -65,7 +65,7 @@ def get_one_page_video(account_id, page_count):
         "is_over": False,  # 是否最后一页视频
         "video_info_list": [],  # 全部视频信息
     }
-    api_response = net.http_request(api_url, method="POST", binary_data=json.dumps(post_data), header_list=header_list, json_decode=True)
+    api_response = net.request(api_url, method="POST", binary_data=json.dumps(post_data), header_list=header_list, json_decode=True)
     if api_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(api_response.status))
     # 获取所有视频
@@ -96,7 +96,7 @@ def get_video_page(video_id):
     # 获取视频播放页
     # https://www.dailymotion.com/player/metadata/video/x6lgrfa
     video_info_url = "https://www.dailymotion.com/player/metadata/video/%s" % video_id
-    video_info_response = net.http_request(video_info_url, method="GET", json_decode=True)
+    video_info_response = net.request(video_info_url, method="GET", json_decode=True)
     result = {
         "is_delete": False,  # 是否已删除
         "video_title": "",  # 视频标题
@@ -112,7 +112,7 @@ def get_video_page(video_id):
     # 查找最高分辨率的视频源地址
     resolution_to_url = {}  # 各个分辨率下的视频地址
     for video_resolution, video_info_list in crawler.get_json_value(video_info_response.json_data, "qualities", type_check=dict).items():
-        if not crawler.is_integer(video_resolution):
+        if not tool.is_integer(video_resolution):
             continue
         video_resolution = int(video_resolution)
         if video_resolution not in [144, 240, 380, 480, 720, 1080]:
@@ -173,7 +173,7 @@ class DailyMotion(crawler.Crawler):
 
         # 解析存档文件
         # account_id  video_time
-        self.account_list = crawler.read_save_data(self.save_data_path, 0, ["", "0"])
+        self.save_data = crawler.read_save_data(self.save_data_path, 0, ["", "0"])
 
         # 生成authorization，用于访问视频页
         try:
@@ -186,13 +186,13 @@ class DailyMotion(crawler.Crawler):
         try:
             # 循环下载每个id
             thread_list = []
-            for account_id in sorted(self.account_list.keys()):
+            for account_id in sorted(self.save_data.keys()):
                 # 提前结束
                 if not self.is_running():
                     break
 
                 # 开始下载
-                thread = Download(self.account_list[account_id], self)
+                thread = Download(self.save_data[account_id], self)
                 thread.start()
                 thread_list.append(thread)
 
@@ -205,21 +205,20 @@ class DailyMotion(crawler.Crawler):
             self.stop_process()
 
         # 未完成的数据保存
-        if len(self.account_list) > 0:
-            file.write_file(tool.list_to_string(list(self.account_list.values())), self.temp_save_data_path)
+        self.write_remaining_save_data()
 
         # 重新排序保存存档文件
-        crawler.rewrite_save_file(self.temp_save_data_path, self.save_data_path)
+        self.rewrite_save_file()
 
-        log.step("全部下载完毕，耗时%s秒，共计视频%s个" % (self.get_run_time(), self.total_video_count))
+        self.end_message()
 
 
 class Download(crawler.DownloadThread):
     is_find = False
 
-    def __init__(self, account_info, main_thread):
-        crawler.DownloadThread.__init__(self, account_info, main_thread)
-        self.account_id = self.account_info[0]
+    def __init__(self, single_save_data, main_thread):
+        crawler.DownloadThread.__init__(self, single_save_data, main_thread)
+        self.account_id = self.single_save_data[0]
         self.display_name = self.account_id
         self.step("开始")
 
@@ -245,7 +244,7 @@ class Download(crawler.DownloadThread):
             # 寻找这一页符合条件的日志
             for video_info in blog_pagination_response["video_info_list"]:
                 # 检查是否达到存档记录
-                if video_info["video_time"] > int(self.account_info[1]):
+                if video_info["video_time"] > int(self.single_save_data[1]):
                     video_info_list.append(video_info)
                 else:
                     is_over = True
@@ -271,16 +270,16 @@ class Download(crawler.DownloadThread):
         self.step("开始下载视频%s 《%s》 %s" % (video_info["video_id"], video_info["video_title"], video_response["video_url"]))
 
         video_file_path = os.path.join(self.main_thread.video_download_path, self.account_id, "%s - %s.mp4" % (video_info["video_id"], path.filter_text(video_info["video_title"])))
-        save_file_return = net.save_net_file(video_response["video_url"], video_file_path, head_check=True)
+        save_file_return = net.download(video_response["video_url"], video_file_path, head_check=True)
         if save_file_return["status"] == 1:
-            # 设置临时目录
+            self.total_video_count += 1  # 计数累加
             self.step("视频%s 《%s》下载成功" % (video_info["video_id"], video_info["video_title"]))
         else:
             self.error("视频%s 《%s》 %s 下载失败，原因：%s" % (video_info["video_id"], video_info["video_title"], video_response["video_url"], crawler.download_failre(save_file_return["code"])))
+            self.check_thread_exit_after_download_failure()
 
-        # 媒体内图片和视频全部下载完毕
-        self.total_video_count += 1  # 计数累加
-        self.account_info[1] = str(video_info["video_time"])  # 设置存档记录
+        # 视频全部下载完毕
+        self.single_save_data[1] = str(video_info["video_time"])  # 设置存档记录
 
     def run(self):
         try:
@@ -303,9 +302,9 @@ class Download(crawler.DownloadThread):
 
         # 保存最后的信息
         with self.thread_lock:
-            file.write_file("\t".join(self.account_info), self.main_thread.temp_save_data_path)
+            self.write_single_save_data()
             self.main_thread.total_video_count += self.total_video_count
-            self.main_thread.account_list.pop(self.account_id)
+            self.main_thread.save_data.pop(self.account_id)
         self.step("下载完毕，总共获得%s个视频" % self.total_video_count)
         self.notify_main_thread()
 

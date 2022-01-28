@@ -21,7 +21,7 @@ def check_login():
     if not COOKIE_INFO:
         return False
     index_url = "http://www.nicovideo.jp/"
-    index_response = net.http_request(index_url, method="GET", cookies_list=COOKIE_INFO)
+    index_response = net.request(index_url, method="GET", cookies_list=COOKIE_INFO)
     if index_response.status == net.HTTP_RETURN_CODE_SUCCEED:
         return pq(index_response.data.decode(errors="ignore")).find('#siteHeaderUserNickNameContainer').length > 0
     return False
@@ -30,7 +30,7 @@ def check_login():
 # 获取指定账号下的所有视频列表
 def get_account_mylist(account_id):
     account_mylist_url = "https://www.nicovideo.jp/user/%s/mylist" % account_id
-    account_mylist_response = net.http_request(account_mylist_url, method="GET", is_auto_retry=False)
+    account_mylist_response = net.request(account_mylist_url, method="GET", is_auto_retry=False)
     result = {
         "list_id_list": [],  # 全部视频列表id
         "is_private": False,  # 是否未公开
@@ -56,7 +56,7 @@ def get_account_mylist(account_id):
         if mylist_url is None:
             raise crawler.CrawlerException("视频列表信息截取视频列表地址失败\n%s" % mylist_selector.html())
         list_id = tool.find_sub_string(mylist_url, "mylist/")
-        if not crawler.is_integer(list_id):
+        if not tool.is_integer(list_id):
             raise crawler.CrawlerException("视频列表地址截取视频列表id失败\n%s" % mylist_selector.html())
         result["list_id_list"].append(int(list_id))
     return result
@@ -66,7 +66,7 @@ def get_account_mylist(account_id):
 def get_one_page_account_video(account_id, page_count):
     video_index_url = "https://www.nicovideo.jp/user/%s/video" % account_id
     query_data = {"page": page_count}
-    video_index_response = net.http_request(video_index_url, method="GET", fields=query_data)
+    video_index_response = net.request(video_index_url, method="GET", fields=query_data)
     result = {
         "video_info_list": [],  # 全部视频信息
         "is_over": False,  # 是否最后页
@@ -97,7 +97,7 @@ def get_one_page_account_video(account_id, page_count):
         if video_url is None:
             raise crawler.CrawlerException("视频信息截取视频地址失败\n%s" % video_selector.html())
         video_id = tool.find_sub_string(video_url, "watch/sm", "?")
-        if not crawler.is_integer(video_id):
+        if not tool.is_integer(video_id):
             raise crawler.CrawlerException("视频地址截取视频id失败\n%s" % video_selector.html())
         result_video_info["video_id"] = int(video_id)
         # 获取视频标题
@@ -117,7 +117,7 @@ def get_one_page_account_video(account_id, page_count):
 def get_mylist_index(list_id):
     # http://www.nicovideo.jp/mylist/15614906
     mylist_index_url = "http://www.nicovideo.jp/mylist/%s" % list_id
-    mylist_index_response = net.http_request(mylist_index_url, method="GET")
+    mylist_index_response = net.request(mylist_index_url, method="GET")
     result = {
         "video_info_list": [],  # 全部视频信息
     }
@@ -143,7 +143,7 @@ def get_mylist_index(list_id):
         }
         # 获取视频id
         video_id = crawler.get_json_value(video_info, "item_data", "video_id", type_check=str).replace("sm", "")
-        if not crawler.is_integer(video_id):
+        if not tool.is_integer(video_id):
             raise crawler.CrawlerException("视频信息'video_id'字段类型不正确\n%s" % video_info)
         result_video_info["video_id"] = int(video_id)
         # 获取视频辩题
@@ -155,7 +155,7 @@ def get_mylist_index(list_id):
 # 根据视频id，获取视频的下载地址
 def get_video_info(video_id):
     video_play_url = "http://www.nicovideo.jp/watch/sm%s" % video_id
-    video_play_response = net.http_request(video_play_url, method="GET", cookies_list=COOKIE_INFO)
+    video_play_response = net.request(video_play_url, method="GET", cookies_list=COOKIE_INFO)
     result = {
         "extra_cookie": {},  # 额外的cookie
         "is_delete": False,  # 是否已删除
@@ -214,7 +214,7 @@ class NicoNico(crawler.Crawler):
 
         # 解析存档文件
         # mylist_id  last_video_id
-        self.account_list = crawler.read_save_data(self.save_data_path, 0, ["", "0"])
+        self.save_data = crawler.read_save_data(self.save_data_path, 0, ["", "0"])
 
         # 检测登录状态
         if not check_login():
@@ -225,13 +225,13 @@ class NicoNico(crawler.Crawler):
         try:
             # 循环下载每个id
             thread_list = []
-            for list_id in sorted(self.account_list.keys()):
+            for list_id in sorted(self.save_data.keys()):
                 # 提前结束
                 if not self.is_running():
                     break
 
                 # 开始下载
-                thread = Download(self.account_list[list_id], self)
+                thread = Download(self.save_data[list_id], self)
                 thread.start()
                 thread_list.append(thread)
 
@@ -244,23 +244,22 @@ class NicoNico(crawler.Crawler):
             self.stop_process()
 
         # 未完成的数据保存
-        if len(self.account_list) > 0:
-            file.write_file(tool.list_to_string(list(self.account_list.values())), self.temp_save_data_path)
+        self.write_remaining_save_data()
 
         # 重新排序保存存档文件
-        crawler.rewrite_save_file(self.temp_save_data_path, self.save_data_path)
+        self.rewrite_save_file()
 
-        log.step("全部下载完毕，耗时%s秒，共计视频%s个" % (self.get_run_time(), self.total_video_count))
+        self.end_message()
 
 
 class Download(crawler.DownloadThread):
-    def __init__(self, account_info, main_thread):
-        crawler.DownloadThread.__init__(self, account_info, main_thread)
-        self.list_id = self.account_info[0]
-        if len(self.account_info) >= 3 and self.account_info[2]:
-            self.display_name = self.account_info[2]
+    def __init__(self, single_save_data, main_thread):
+        crawler.DownloadThread.__init__(self, single_save_data, main_thread)
+        self.list_id = self.single_save_data[0]
+        if len(self.single_save_data) >= 3 and self.single_save_data[2]:
+            self.display_name = self.single_save_data[2]
         else:
-            self.display_name = self.account_info[0]
+            self.display_name = self.single_save_data[0]
         self.step("开始")
 
     # 获取所有可下载图片
@@ -279,7 +278,7 @@ class Download(crawler.DownloadThread):
         # 寻找这一页符合条件的视频
         for video_info in mylist_index_response["video_info_list"]:
             # 检查是否达到存档记录
-            if video_info["video_id"] > int(self.account_info[1]):
+            if video_info["video_id"] > int(self.single_save_data[1]):
                 video_info_list.append(video_info)
             else:
                 break
@@ -310,16 +309,16 @@ class Download(crawler.DownloadThread):
         cookies_list = COOKIE_INFO
         if video_info_response["extra_cookie"]:
             cookies_list.update(video_info_response["extra_cookie"])
-        save_file_return = net.save_net_file(video_info_response["video_url"], video_file_path, cookies_list=cookies_list)
+        save_file_return = net.download(video_info_response["video_url"], video_file_path, cookies_list=cookies_list)
         if save_file_return["status"] == 1:
+            self.total_video_count += 1  # 计数累加
             self.step("视频%s 《%s》下载成功" % (video_info["video_id"], video_info["video_title"]))
         else:
             self.error("视频%s 《%s》 %s 下载失败，原因：%s" % (video_info["video_id"], video_info["video_title"], video_info_response["video_url"], crawler.download_failre(save_file_return["code"])))
-            return
+            self.check_thread_exit_after_download_failure()
 
         # 视频下载完毕
-        self.total_video_count += 1  # 计数累加
-        self.account_info[1] = str(video_info["video_id"])  # 设置存档记录
+        self.single_save_data[1] = str(video_info["video_id"])  # 设置存档记录
 
     def run(self):
         try:
@@ -342,9 +341,9 @@ class Download(crawler.DownloadThread):
 
         # 保存最后的信息
         with self.thread_lock:
-            file.write_file("\t".join(self.account_info), self.main_thread.temp_save_data_path)
+            self.write_single_save_data()
             self.main_thread.total_video_count += self.total_video_count
-            self.main_thread.account_list.pop(self.list_id)
+            self.main_thread.save_data.pop(self.list_id)
         self.step("完成")
         self.notify_main_thread()
 

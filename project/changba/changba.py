@@ -17,7 +17,7 @@ from common import *
 # 获取账号首页页面
 def get_account_index_page(account_id):
     account_index_url = "http://changba.com/u/%s" % account_id
-    account_index_response = net.http_request(account_index_url, method="GET", is_auto_redirect=False)
+    account_index_response = net.request(account_index_url, method="GET", is_auto_redirect=False)
     result = {
         "user_id": None,  # user id
     }
@@ -28,7 +28,7 @@ def get_account_index_page(account_id):
     account_index_response_content = account_index_response.data.decode(errors="ignore")
     # 获取user id
     user_id = tool.find_sub_string(account_index_response_content, "var userid = '", "'")
-    if not crawler.is_integer(user_id):
+    if not tool.is_integer(user_id):
         raise crawler.CrawlerException("页面截取userid失败\n%s" % account_index_response_content)
     result["user_id"] = user_id
     return result
@@ -43,7 +43,7 @@ def get_one_page_audio(user_id, page_count):
         "userid": user_id,
         "pageNum": page_count - 1,
     }
-    audit_pagination_response = net.http_request(audit_pagination_url, method="GET", fields=query_data, json_decode=True)
+    audit_pagination_response = net.request(audit_pagination_url, method="GET", fields=query_data, json_decode=True)
     result = {
         "audio_info_list": [],  # 全部歌曲信息
     }
@@ -75,7 +75,7 @@ def get_audio_play_page(audio_en_word_id):
         "audio_url": None,  # 歌曲地址
         "is_delete": False,  # 是不是已经被删除
     }
-    audio_play_response = net.http_request(audio_play_url, method="GET")
+    audio_play_response = net.request(audio_play_url, method="GET")
     if audio_play_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(audio_play_response.status))
     audio_play_response_content = audio_play_response.data.decode(errors="ignore")
@@ -84,7 +84,7 @@ def get_audio_play_page(audio_en_word_id):
         return result
     # 获取歌曲id
     audio_id = tool.find_sub_string(audio_play_response_content, "export_song.php?workid=", "&")
-    if not crawler.is_integer(audio_id):
+    if not tool.is_integer(audio_id):
         raise crawler.CrawlerException("页面截取歌曲id失败\n%s" % audio_play_response_content)
     result["audio_id"] = int(audio_id)
     # 获取歌曲标题
@@ -94,7 +94,7 @@ def get_audio_play_page(audio_en_word_id):
     result["audio_title"] = audio_title.strip()
     # 判断歌曲类型（音频或者视频）
     is_video = tool.find_sub_string(audio_play_response_content, "&isvideo=", "'")
-    if not crawler.is_integer(is_video):
+    if not tool.is_integer(is_video):
         raise crawler.CrawlerException("页面截取歌曲类型失败\n%s" % audio_play_response_content)
     is_video = False if is_video == "0" else True
     # 获取歌曲地址
@@ -141,19 +141,19 @@ class ChangBa(crawler.Crawler):
 
         # 解析存档文件
         # account_id  last_audio_id
-        self.account_list = crawler.read_save_data(self.save_data_path, 0, ["", "0"])
+        self.save_data = crawler.read_save_data(self.save_data_path, 0, ["", "0"])
 
     def main(self):
         try:
             # 循环下载每个id
             thread_list = []
-            for account_id in sorted(self.account_list.keys()):
+            for account_id in sorted(self.save_data.keys()):
                 # 提前结束
                 if not self.is_running():
                     break
 
                 # 开始下载
-                thread = Download(self.account_list[account_id], self)
+                thread = Download(self.save_data[account_id], self)
                 thread.start()
                 thread_list.append(thread)
 
@@ -166,25 +166,24 @@ class ChangBa(crawler.Crawler):
             self.stop_process()
 
         # 未完成的数据保存
-        if len(self.account_list) > 0:
-            file.write_file(tool.list_to_string(list(self.account_list.values())), self.temp_save_data_path)
+        self.write_remaining_save_data()
 
         # 重新排序保存存档文件
-        crawler.rewrite_save_file(self.temp_save_data_path, self.save_data_path)
+        self.rewrite_save_file()
 
-        log.step("全部下载完毕，耗时%s秒，共计歌曲%s首" % (self.get_run_time(), self.total_audio_count))
+        self.end_message()
 
 
 class Download(crawler.DownloadThread):
     EACH_PAGE_AUDIO_COUNT = 20  # 每页歌曲数量上限（请求数量是无法修改的，只做判断使用）
 
-    def __init__(self, account_info, main_thread):
-        crawler.DownloadThread.__init__(self, account_info, main_thread)
-        self.account_id = self.account_info[0]
-        if len(self.account_info) >= 3 and self.account_info[2]:
-            self.display_name = self.account_info[2]
+    def __init__(self, single_save_data, main_thread):
+        crawler.DownloadThread.__init__(self, single_save_data, main_thread)
+        self.account_id = self.single_save_data[0]
+        if len(self.single_save_data) >= 3 and self.single_save_data[2]:
+            self.display_name = self.single_save_data[2]
         else:
-            self.display_name = self.account_info[0]
+            self.display_name = self.single_save_data[0]
         self.step("开始")
 
     # 获取所有可下载歌曲
@@ -211,7 +210,7 @@ class Download(crawler.DownloadThread):
             # 寻找这一页符合条件的歌曲
             for audio_info in audit_pagination_response["audio_info_list"]:
                 # 检查是否达到存档记录
-                if audio_info["audio_id"] > int(self.account_info[1]):
+                if audio_info["audio_id"] > int(self.single_save_data[1]):
                     # 新增歌曲导致的重复判断
                     if audio_info["audio_id"] in unique_list:
                         continue
@@ -249,19 +248,17 @@ class Download(crawler.DownloadThread):
 
         self.step("开始下载歌曲%s《%s》 %s" % (audio_info["audio_key"], audio_info["audio_title"], audio_play_response["audio_url"]))
 
-        file_type = audio_play_response["audio_url"].split(".")[-1]
-        file_path = os.path.join(self.main_thread.audio_download_path, self.display_name, "%010d - %s.%s" % (audio_info["audio_id"], path.filter_text(audio_info["audio_title"]), file_type))
-        save_file_return = net.save_net_file(audio_play_response["audio_url"], file_path)
+        file_path = os.path.join(self.main_thread.audio_download_path, self.display_name, "%010d - %s.%s" % (audio_info["audio_id"], path.filter_text(audio_info["audio_title"]), net.get_file_type(audio_play_response["audio_url"])))
+        save_file_return = net.download(audio_play_response["audio_url"], file_path)
         if save_file_return["status"] == 1:
+            self.total_audio_count += 1  # 计数累加
             self.step("歌曲%s《%s》下载成功" % (audio_info["audio_key"], audio_info["audio_title"]))
         else:
             self.error("歌曲%s《%s》 %s 下载失败，原因：%s" % (audio_info["audio_key"], audio_info["audio_title"], audio_play_response["audio_url"], crawler.download_failre(save_file_return["code"])))
-            return
+            self.check_thread_exit_after_download_failure()
 
         # 歌曲下载完毕
-        if save_file_return["status"] == 1:
-            self.total_audio_count += 1  # 计数累加
-        self.account_info[1] = str(audio_info["audio_id"])  # 设置存档
+        self.single_save_data[1] = str(audio_info["audio_id"])  # 设置存档
 
     def run(self):
         try:
@@ -291,9 +288,9 @@ class Download(crawler.DownloadThread):
 
         # 保存最后的信息
         with self.thread_lock:
-            file.write_file("\t".join(self.account_info), self.main_thread.temp_save_data_path)
+            self.write_single_save_data()
             self.main_thread.total_audio_count += self.total_audio_count
-            self.main_thread.account_list.pop(self.account_id)
+            self.main_thread.save_data.pop(self.account_id)
         self.step("下载完毕，总共获得%s首歌曲" % self.total_audio_count)
         self.notify_main_thread()
 

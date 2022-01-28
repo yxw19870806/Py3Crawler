@@ -11,7 +11,7 @@ import os
 from common import *
 from project.ivseek import ivseek
 from project.youtube import youtube
-from project.nicoNico import niconico
+from project.niconico import niconico
 
 
 def main():
@@ -42,7 +42,7 @@ def main():
     for account_id in account_id_list["niconico"]:
         if account_id in niconico_mylist_list:
             continue
-        if not crawler.is_integer(account_id):
+        if not tool.is_integer(account_id):
             continue
         try:
             account_mylist_response = niconico.get_account_mylist(account_id)
@@ -54,17 +54,17 @@ def main():
 
     # 更新youtube的存档文件
     for account_id in account_id_list["youtube"]:
-        if account_id not in youtube_class.account_list:
-            youtube_class.account_list[account_id] = [account_id]
-    file.write_file(tool.list_to_string(youtube_class.account_list.values()), youtube_class.save_data_path, file.WRITE_FILE_TYPE_REPLACE)
+        if account_id not in youtube_class.save_data:
+            youtube_class.save_data[account_id] = [account_id]
+    file.write_file(tool.list_to_string(youtube_class.save_data.values()), youtube_class.save_data_path, file.WRITE_FILE_TYPE_REPLACE)
 
     # 更新niconico的存档文件
     for account_id in niconico_mylist_list:
         for mylist_id in niconico_mylist_list[account_id]:
             mylist_id = str(mylist_id)
-            if mylist_id not in nicoNico_class.account_list:
-                nicoNico_class.account_list[mylist_id] = [mylist_id]
-    file.write_file(tool.list_to_string(nicoNico_class.account_list.values()), nicoNico_class.save_data_path, file.WRITE_FILE_TYPE_REPLACE)
+            if mylist_id not in nicoNico_class.save_data:
+                nicoNico_class.save_data[mylist_id] = [mylist_id]
+    file.write_file(tool.list_to_string(nicoNico_class.save_data.values()), nicoNico_class.save_data_path, file.WRITE_FILE_TYPE_REPLACE)
 
     file.write_file(tool.list_to_string(save_data_list), ivseek_class.save_data_path, file.WRITE_FILE_TYPE_REPLACE)
 

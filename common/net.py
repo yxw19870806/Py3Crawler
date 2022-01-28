@@ -15,6 +15,8 @@ import time
 import threading
 import urllib.parse
 import urllib3
+from typing import Optional
+from urllib3._collections import HTTPHeaderDict
 
 try:
     from . import file, output, path, tool
@@ -58,7 +60,7 @@ for config_key in DEFAULT_NET_CONFIG:
 QPS = {}
 
 # 连接池
-HTTP_CONNECTION_POOL = None
+HTTP_CONNECTION_POOL: Optional[urllib3.PoolManager] = None
 PROXY_HTTP_CONNECTION_POOL = None
 # 网络访问相关阻塞/继续事件
 thread_event = threading.Event()
@@ -80,7 +82,9 @@ DOWNLOAD_REPLACE_IF_EXIST = False
 
 
 class ErrorResponse(object):
-    """Default http_request() response object(exception return)"""
+    """
+    request()方法异常对象
+    """
 
     def __init__(self, status=-1):
         self.status = status
@@ -90,33 +94,40 @@ class ErrorResponse(object):
 
 
 def init_http_connection_pool():
-    """init urllib3 connection pool"""
+    """
+    初始化连接池
+    """
     global HTTP_CONNECTION_POOL
     HTTP_CONNECTION_POOL = urllib3.PoolManager(retries=False)
 
 
-def set_proxy(ip, port):
-    """init urllib3 proxy connection pool"""
+def set_proxy(ip: str, port: str):
+    """
+    初始化代理连接池
+    """
     if not str(port).isdigit() or int(port) <= 0:
         return
-    match = re.match("((25[0-5]|2[0-4]\d|((1\d{2})|([1-9]?\d)))\.){3}(25[0-5]|2[0-4]\d|((1\d{2})|([1-9]?\d)))", ip)
+    match = re.match(r"((25[0-5]|2[0-4]\d|((1\d{2})|([1-9]?\d)))\.){3}(25[0-5]|2[0-4]\d|((1\d{2})|([1-9]?\d)))", ip)
     if not match or match.group() != ip:
         return
     global PROXY_HTTP_CONNECTION_POOL
-    PROXY_HTTP_CONNECTION_POOL = urllib3.ProxyManager("http://%s:%s" % (ip, port), retries=False)
-    output.print_msg("设置代理成功(%s:%s)" % (ip, port))
+    PROXY_HTTP_CONNECTION_POOL = urllib3.ProxyManager(f"http://{ip}:{port}", retries=False)
+    output.print_msg(f"设置代理成功({ip}:{port})")
 
 
-def build_header_cookie_string(cookies_list):
-    """generate cookies string for http request header
+def build_header_cookie_string(cookies_list: dict) -> str:
+    """
+    根据cookies字典生成header中的cookie字符串
 
-    :param cookies_list:
+    :Args:
+    - cookies_list
         {
             "cookie1":“value1",
-            "cookie2":“value2"
+            "cookie2":“value2",
+            ......
         }
 
-    :return:
+    :Returns:
         cookie1=value1; cookie2=value2
     """
     if not cookies_list:
@@ -127,7 +138,10 @@ def build_header_cookie_string(cookies_list):
     return "; ".join(temp_string)
 
 
-def split_cookies_from_cookie_string(cookie_string):
+def split_cookies_from_cookie_string(cookie_string: str) -> dict:
+    """
+    根据response header中的cookie字符串分隔生成cookies字典
+    """
     cookies_list = {}
     for single_cookie in cookie_string.split(";"):
         single_cookie = single_cookie.strip()
@@ -140,9 +154,11 @@ def split_cookies_from_cookie_string(cookie_string):
     return cookies_list
 
 
-def get_cookies_from_response_header(response_headers):
-    """Get dictionary of cookies values from http response header list"""
-    if not isinstance(response_headers, urllib3._collections.HTTPHeaderDict):
+def get_cookies_from_response_header(response_headers: HTTPHeaderDict) -> dict:
+    """
+    根据response header获取Set-Cookie的值
+    """
+    if not isinstance(response_headers, HTTPHeaderDict):
         return {}
     if "Set-Cookie" not in response_headers:
         return {}
@@ -153,7 +169,10 @@ def get_cookies_from_response_header(response_headers):
     return cookies_list
 
 
-def get_file_type(file_url, default_file_type=""):
+def get_file_type(file_url: str, default_file_type: str = ""):
+    """
+    获取url地址的文件类型
+    """
     # http://www.example.com/sub_path/file_name.file_type?parm1=value1&parm2=value2/value3
     file_name_and_type = urllib.parse.urlparse(file_url)[2].split("/")[-1].split(".")
     if len(file_name_and_type) == 1:
@@ -163,57 +182,35 @@ def get_file_type(file_url, default_file_type=""):
 
 
 def url_encode(url):
-    # encode url(Percent-encoding), e.g. 'http://www.example.com/测 试/' -> 'http://www.example.com/%E6%B5%8B%20%E8%AF%95/'
+    """
+    url编码：百分号编码(Percent-Encoding)
+    e.g. 'https://www.example.com/测 试/' -> 'https://www.example.com/%E6%B5%8B%20%E8%AF%95/'
+    """
     return urllib.parse.quote(url, safe=";/?:@&=+$,%")
 
 
-def http_request(url, method="GET", fields=None, binary_data=None, header_list=None, cookies_list=None, encode_multipart=False, json_decode=False,
-                 is_auto_proxy=True, is_auto_redirect=True, is_gzip=True, is_url_encode=True, is_auto_retry=True, is_random_ip=True,
-                 is_check_qps=True, connection_timeout=NET_CONFIG["HTTP_CONNECTION_TIMEOUT"], read_timeout=NET_CONFIG["HTTP_READ_TIMEOUT"]):
-    """Http request via urllib3
+def request(url, method="GET", fields=None, binary_data=None, header_list=None, cookies_list=None, encode_multipart=False, json_decode=False,
+            is_auto_proxy=True, is_auto_redirect=True, is_gzip=True, is_url_encode=True, is_auto_retry=True, is_random_ip=True,
+            is_check_qps=True, connection_timeout=NET_CONFIG["HTTP_CONNECTION_TIMEOUT"], read_timeout=NET_CONFIG["HTTP_READ_TIMEOUT"]):
+    """
+    HTTP请求
 
-    :param url:
-        the url which you want visit, start with "http://" or "https://"
-
-    :param method:
-        request method, value in ["GET", "POST", "HEAD", "PUT", "DELETE", "OPTIONS", "TRACE"]
-
-    :param fields:
-        dictionary type of request data, will urlencode() them to string. like post data, query string, etc
+    :Args:
+    - url - the url which you want visit, start with "http://" or "https://"
+    - method - request method, value in ["GET", "POST", "HEAD", "PUT", "DELETE", "OPTIONS", "TRACE"]
+    - fields - dictionary type of request data, will urlencode() them to string. like post data, query string, etc
         not work with binary_data
-
-    :param binary_data:
-        binary type of request data, not work with post_data
-
-    :param header_list:
-        customize header dictionary
-
-    :param cookies_list:
-        customize cookies dictionary, will replaced header_list["Cookie"]
-
-    :param encode_multipart:
-        see "encode_multipart" in urllib3.request_encode_body
-
-    :param is_auto_proxy:
-        is auto use proxy when init PROXY_HTTP_CONNECTION_POOL
-
-    :param is_auto_redirect:
-        is auto redirect, when response.status in [301, 302, 303, 307, 308]
-
-    :param is_auto_retry:
-        is auto retry, when response.status in [500, 502, 503, 504]
-
-    :param connection_timeout:
-        customize connection timeout seconds
-
-    :param read_timeout:
-        customize read timeout seconds
-
-    :param is_random_ip:
-        is counterfeit a request header with random ip, will replaced header_list["X-Forwarded-For"] and header_list["X-Real-Ip"]
-
-    :param json_decode:
-        is return a decoded json data when response status = 200
+    - binary_data - binary type of request data, not work with post_data
+    - header_list - customize header dictionary
+    - cookies_list - customize cookies dictionary, will replaced header_list["Cookie"]
+    - encode_multipart - see "encode_multipart" in urllib3.request_encode_body
+    - is_auto_proxy - is auto use proxy when init PROXY_HTTP_CONNECTION_POOL
+    - is_auto_redirect - is auto redirect, when response.status in [301, 302, 303, 307, 308]
+    - is_auto_retry - is auto retry, when response.status in [500, 502, 503, 504]
+    - connection_timeout - customize connection timeout seconds
+    - read_timeout - customize read timeout seconds
+    - is_random_ip - is counterfeit a request header with random ip, will replaced header_list["X-Forwarded-For"] and header_list["X-Real-Ip"]
+    - json_decode - is return a decoded json data when response status = 200
         if decode failure will replace response status with HTTP_RETURN_CODE_JSON_DECODE_ERROR
     """
     url = str(url).strip()
@@ -258,7 +255,7 @@ def http_request(url, method="GET", fields=None, binary_data=None, header_list=N
     while True:
         thread_event.wait()
         if EXIT_FLAG:
-            tool.process_exit(0)
+            tool.process_exit(tool.PROCESS_EXIT_CODE_NORMAL)
 
         if is_check_qps and _qps(url):
             time.sleep(random.randint(60, 120))
@@ -287,7 +284,9 @@ def http_request(url, method="GET", fields=None, binary_data=None, header_list=N
                                 charset = "GBK"
                             try:
                                 response.json_data = json.loads(response.data.decode(charset))
-                            except:
+                            except LookupError:
+                                pass
+                            except AttributeError:
                                 pass
                             else:
                                 is_error = False
@@ -320,10 +319,10 @@ def http_request(url, method="GET", fields=None, binary_data=None, header_list=N
                     return ErrorResponse(HTTP_RETURN_CODE_TOO_MANY_REDIRECTS)
             elif isinstance(e, urllib3.exceptions.DecodeError):
                 if message.find("'Received response with content-encoding: gzip, but failed to decode it.'") >= 0:
-                    return http_request(url, method=method, fields=fields, binary_data=binary_data, header_list=header_list, cookies_list=cookies_list,
-                                        encode_multipart=encode_multipart, json_decode=json_decode, is_auto_proxy=is_auto_proxy, is_auto_redirect=is_auto_redirect,
-                                        is_gzip=False, is_url_encode=False, is_auto_retry=is_auto_retry, is_random_ip=is_random_ip, is_check_qps=is_check_qps,
-                                        connection_timeout=connection_timeout, read_timeout=read_timeout)
+                    return request(url, method=method, fields=fields, binary_data=binary_data, header_list=header_list, cookies_list=cookies_list,
+                                   encode_multipart=encode_multipart, json_decode=json_decode, is_auto_proxy=is_auto_proxy, is_auto_redirect=is_auto_redirect,
+                                   is_gzip=False, is_url_encode=False, is_auto_retry=is_auto_retry, is_random_ip=is_random_ip, is_check_qps=is_check_qps,
+                                   connection_timeout=connection_timeout, read_timeout=read_timeout)
             # import traceback
             # output.print_msg(message)
             # output.print_msg(traceback.format_exc())
@@ -364,8 +363,8 @@ def _qps(url):
 
 
 def _random_user_agent():
-    """Get a random valid Firefox or Chrome user agent
-
+    """
+    随机获取一个user agent
         Common firefox user agent   "Mozilla/5.0 (Windows NT 6.1; WOW64; rv:46.0) Gecko/20100101 Firefox/46.0"
         Common chrome user agent    "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/51.0.2704.103 Safari/537.36"
         Common IE user agent        "Mozilla/4.0 (compatible; MSIE 8.0; Windows NT 6.1; WOW64)"
@@ -376,70 +375,48 @@ def _random_user_agent():
         "Windows 8.1": "Windows NT 6.3",
         "Windows 10": "Windows NT 10.0",
     }
-    firefox_version_max = 63
+    firefox_version_max = 96
     # https://zh.wikipedia.org/zh-cn/Google_Chrome
-    chrome_version_list = ["61.0.3163", "62.0.3202", "63.0.3239", "64.0.3282", "65.0.3325", "66.0.3359", "67.0.3396", "68.0.3423", "69.0.3497", "70.0.3538"]
-    # https://docs.microsoft.com/en-us/previous-versions/windows/internet-explorer/ie-developer/compatibility/hh869301(v=vs.85)
-    # https://en.wikipedia.org/wiki/Microsoft_Edge
-    edge_version_list = ["12.10240", "13.10586", "14.14393", "15.15063", "16.16299", "17.17134", "18.17763"]
+    chrome_version_list = ["94.0.4606.54", "94.0.4606.61", "94.0.4606.71", "94.0.4606.81", "95.0.4638.54", "95.0.4638.69", "96.0.4664.45", "96.0.4664.93", "96.0.4664.110", "97.0.4692.71"]
     # browser_type = random.choice(["IE", "firefox", "chrome", "Edge"])
     browser_type = random.choice(["firefox", "chrome"])
-    if browser_type == "IE":
-        ie_version = random.randint(8, 11)
-        os_type = random.choice(list(windows_version_dict.values()))
-        if ie_version == 8:
-            return "Mozilla/4.0 (compatible; MSIE %s.0; %s; WOW64)" % (ie_version, os_type)
-        elif ie_version == 9:
-            return "Mozilla/5.0 (compatible; MSIE %s.0; %s; WOW64; Trident/5.0)" % (ie_version, os_type)
-        elif ie_version == 10:
-            return "Mozilla/5.0 (compatible; MSIE %s.0; %s; WOW64; Trident/6.0)" % (ie_version, os_type)
-        else:
-            return "Mozilla/5.0 (%s; WOW64; Trident/7.0; rv:%s.0) like Gecko" % (os_type, ie_version)
-    elif browser_type == "edge":
-        chrome_version = random.choice(chrome_version_list)
-        edge_version = random.choice(edge_version_list)
-        return "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/%s.0 Safari/537.36 Edge/%s" % (chrome_version, edge_version)
-    elif browser_type == "firefox":
+    if browser_type == "firefox":
         firefox_version = random.randint(firefox_version_max - 10, firefox_version_max)
         os_type = random.choice(list(windows_version_dict.values()))
-        return "Mozilla/5.0 (%s; WOW64; rv:%s.0) Gecko/20100101 Firefox/%s.0" % (os_type, firefox_version, firefox_version)
+        return f"Mozilla/5.0 ({os_type}; WOW64; rv:{firefox_version}.0) Gecko/20100101 Firefox/{firefox_version}.0"
     elif browser_type == "chrome":
         chrome_version = random.choice(chrome_version_list)
-        sub_version = random.randint(1, 199)
         os_type = random.choice(list(windows_version_dict.values()))
-        return "Mozilla/5.0 (%s; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/%s.%s Safari/537.36" % (os_type, chrome_version, sub_version)
+        return f"Mozilla/5.0 ({os_type}; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/{chrome_version} Safari/537.36"
     return ""
 
 
 def _random_ip_address():
-    """Get a random IP address(not necessarily correct)"""
-    return "%s.%s.%s.%s" % (random.randint(1, 254), random.randint(0, 255), random.randint(0, 255), random.randint(0, 255))
+    """
+    Get a random IP address(not necessarily correct)
+    """
+    return f"{random.randint(1, 254)}.{random.randint(0, 255)}.{random.randint(0, 255)}.{random.randint(0, 255)}"
 
 
-def save_net_file(file_url, file_path, need_content_type=False, head_check=False, replace_if_exist=None, **kwargs):
-    """Visit web and save to local
+def download(file_url, file_path, need_content_type=False, head_check=False, replace_if_exist=None, **kwargs):
+    """
+    现在远程文件到本地
 
-    :param file_url:
-        the remote resource URL which you want to save
+    :Args:
+    - file_url - the remote resource URL which you want to save
+    - file_path - the local file path which you want to save remote resource
+    - need_content_type - is auto rename file according to "Content-Type" in response headers
+    - head_check -"HEAD" method request to check response status and file size before download file
 
-    :param file_path:
-        the local file path which you want to save remote resource
-
-    :param need_content_type:
-        is auto rename file according to "Content-Type" in response headers
-
-    :param head_check:
-        "HEAD" method request to check response status and file size before download file
-
-    :return:
-        status      0 download failure, 1 download successful
-        code        failure reason
-        file_path   finally local file path(when need_content_type is True, will rename it)
+    :Returns:
+        - status - 0 download failure, 1 download successful
+        - code - failure reason
+        - file_path - finally local file path(when need_content_type is True, will rename it)
     """
     if not isinstance(replace_if_exist, bool):
         replace_if_exist = DOWNLOAD_REPLACE_IF_EXIST
     if not replace_if_exist and os.path.exists(file_path) and os.path.getsize(file_path) > 0:
-        output.print_msg("文件%s（%s）已存在，跳过" % (file_path, file_url))
+        output.print_msg(f"文件{file_path}（{file_url}）已存在，跳过")
         return {"status": 1, "code": 0, "file_path": file_path}
     # 判断保存目录是否存在
     if not path.create_dir(os.path.dirname(file_path)):
@@ -453,7 +430,7 @@ def save_net_file(file_url, file_path, need_content_type=False, head_check=False
         else:
             request_method = "GET"
         # 获取头信息
-        response = http_request(file_url, request_method, is_check_qps = False, connection_timeout=NET_CONFIG["HTTP_CONNECTION_TIMEOUT"], read_timeout=NET_CONFIG["HTTP_READ_TIMEOUT"], **kwargs)
+        response = request(file_url, request_method, is_check_qps=False, connection_timeout=NET_CONFIG["HTTP_CONNECTION_TIMEOUT"], read_timeout=NET_CONFIG["HTTP_READ_TIMEOUT"], **kwargs)
         # 其他返回状态，退出
         if response.status != HTTP_RETURN_CODE_SUCCEED:
             # URL格式不正确
@@ -494,7 +471,7 @@ def save_net_file(file_url, file_path, need_content_type=False, head_check=False
         if not is_multi_thread:  # 单线程下载
             # 如果是先调用HEAD方法的，需要重新获取完整数据
             if head_check:
-                response = http_request(file_url, method="GET", connection_timeout=NET_CONFIG["DOWNLOAD_CONNECTION_TIMEOUT"], read_timeout=NET_CONFIG["DOWNLOAD_READ_TIMEOUT"], **kwargs)
+                response = request(file_url, method="GET", connection_timeout=NET_CONFIG["DOWNLOAD_CONNECTION_TIMEOUT"], read_timeout=NET_CONFIG["DOWNLOAD_READ_TIMEOUT"], **kwargs)
                 if response.status != HTTP_RETURN_CODE_SUCCEED:
                     continue
             # 下载
@@ -534,7 +511,7 @@ def save_net_file(file_url, file_path, need_content_type=False, head_check=False
             if len(error_flag) > 0:
                 continue
             if not _check_multi_thread_download_file(file_path):
-                output.print_msg("网络文件%s多线程下载后发现无效字节" % file_url)
+                output.print_msg(f"网络文件{file_url}多线程下载后发现无效字节")
                 continue
         if content_length is None:
             return {"status": 1, "code": 0, "file_path": file_path}
@@ -543,7 +520,7 @@ def save_net_file(file_url, file_path, need_content_type=False, head_check=False
         if content_length == file_size:
             return {"status": 1, "code": 0, "file_path": file_path}
         else:
-            output.print_msg("本地文件%s：%s和网络文件%s：%s不一致" % (file_path, content_length, file_url, file_size))
+            output.print_msg(f"本地文件{file_path}：{content_length}和网络文件{file_url}：{file_size}不一致")
             time.sleep(NET_CONFIG["HTTP_REQUEST_RETRY_WAIT_TIME"])
     if is_create_file:
         path.delete_dir_or_file(file_path)
@@ -551,45 +528,37 @@ def save_net_file(file_url, file_path, need_content_type=False, head_check=False
 
 
 def _check_multi_thread_download_file(file_path):
-    """Check fhe file download with multi thread
+    """
+    Check fhe file download with multi thread
 
-    :return:
+    :Returns:
         True    file is valid
         False   file is invalid(download failure)
     """
-
     file_path = os.path.abspath(file_path)
     if not os.path.exists(file_path):
         return True
     with open(file_path, "rb") as file_handle:
         buffer_size = 2 ** 20  # 1M
-        while True:
-            file_buffer = file_handle.read(buffer_size)
-            if not file_buffer:
-                break
-            if file_buffer.find(b"\x00" * (2**10)) >= 0:
+        while file_buffer := file_handle.read(buffer_size):
+            if file_buffer.find(b"\x00" * (2 ** 10)) >= 0:
                 return False
     return True
 
 
-def save_net_file_list(file_url_list, file_path, header_list=None, cookies_list=None):
-    """Visit web and save to local(multiple remote resource, single local file)
+def download_from_list(file_url_list, file_path, header_list=None, cookies_list=None):
+    """
+    Visit web and save to local(multiple remote resource, single local file)
 
-    :param file_url_list:
-        the list of remote resource URL which you want to save
+    :Args:
+    - file_url_list - the list of remote resource URL which you want to save
+    - file_path - the local file path which you want to save remote resource
+    - header_list - customize header dictionary
+    - cookies_list - customize cookies dictionary, will replaced header_list["Cookie"]
 
-    :param file_path:
-        the local file path which you want to save remote resource
-
-    :param header_list:
-        customize header dictionary
-
-    :param cookies_list:
-        customize cookies dictionary, will replaced header_list["Cookie"]
-
-    :return:
-        status      0 download failure, 1 download successful
-        code        failure reason
+    :Returns:
+        - status - 0 download failure, 1 download successful
+        - code - failure reason
     """
     # 判断保存目录是否存在
     if not path.create_dir(os.path.dirname(file_path)):
@@ -598,8 +567,7 @@ def save_net_file_list(file_url_list, file_path, header_list=None, cookies_list=
         # 下载
         with open(file_path, "wb") as file_handle:
             for file_url in file_url_list:
-                response = http_request(file_url, header_list=header_list, cookies_list=cookies_list,
-                                        connection_timeout=NET_CONFIG["DOWNLOAD_CONNECTION_TIMEOUT"], read_timeout=NET_CONFIG["DOWNLOAD_READ_TIMEOUT"])
+                response = request(file_url, header_list=header_list, cookies_list=cookies_list, connection_timeout=NET_CONFIG["DOWNLOAD_CONNECTION_TIMEOUT"], read_timeout=NET_CONFIG["DOWNLOAD_READ_TIMEOUT"])
                 if response.status == HTTP_RETURN_CODE_SUCCEED:
                     file_handle.write(response.data)
                 # 超过重试次数，直接退出
@@ -618,15 +586,19 @@ def save_net_file_list(file_url_list, file_path, header_list=None, cookies_list=
 
 
 def pause_request():
-    """Block thread when use http_request()"""
-    if thread_event.isSet():
+    """
+    Block thread when use request()
+    """
+    if thread_event.is_set():
         output.print_msg("pause process")
         thread_event.clear()
 
 
 def resume_request():
-    """Resume thread"""
-    if not thread_event.isSet():
+    """
+    Resume thread
+    """
+    if not thread_event.is_set():
         output.print_msg("resume process")
         thread_event.set()
 
@@ -641,14 +613,14 @@ class MultiThreadDownload(threading.Thread):
         self.error_flag = error_flag
 
     def run(self):
-        headers_list = {"Range": "bytes=%s-%s" % (self.start_pos, self.end_pos)}
+        headers_list = {"Range": f"bytes={self.start_pos}-{self.end_pos}"}
         range_size = self.end_pos - self.start_pos + 1
         for retry_count in range(0, NET_CONFIG["DOWNLOAD_RETRY_COUNT"]):
-            response = http_request(self.file_url, method="GET", header_list=headers_list)
+            response = request(self.file_url, method="GET", header_list=headers_list)
             if response.status == 206:
                 # 下载的文件和请求的文件大小不一致
                 if len(response.data) != range_size:
-                    output.print_msg("网络文件%s：range %s - %s实际下载大小 %s 不一致" % (self.file_url, self.start_pos, self.end_pos, len(response.data)))
+                    output.print_msg(f"网络文件{self.file_url}：range {self.start_pos} - {self.end_pos}实际下载大小 {len(response.data)} 不一致")
                     time.sleep(NET_CONFIG["HTTP_REQUEST_RETRY_WAIT_TIME"])
                 else:
                     # 写入本地文件后退出

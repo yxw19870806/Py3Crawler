@@ -23,7 +23,8 @@ def get_account_from_index():
             pagination_account_list = get_one_page_account(page_count)
         except crawler.CrawlerException as e:
             output.print_msg("第%s页账号解析失败，原因：%s" % (page_count, e.message))
-        if len(pagination_account_list) > 0:
+            break
+        if pagination_account_list:
             account_list.update(pagination_account_list)
             page_count += 1
         else:
@@ -35,7 +36,7 @@ def get_account_from_index():
 def get_one_page_account(page_count):
     account_pagination_url = "http://jigadori.fkoji.com/users"
     query_data = {"p": page_count}
-    account_pagination_response = net.http_request(account_pagination_url, method="GET", fields=query_data)
+    account_pagination_response = net.request(account_pagination_url, method="GET", fields=query_data)
     pagination_account_list = {}
     if account_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         crawler.CrawlerException(crawler.request_failre(account_pagination_response.status))
@@ -52,7 +53,7 @@ def get_one_page_account(page_count):
         # 获取twitter账号
         account_id = account_selector.find(".screen-name a").text()
         if not account_id:
-            raise crawler.CrawlerException("成员信息截取twitter账号失败\n\%s" % account_selector.html())
+            raise crawler.CrawlerException("成员信息截取twitter账号失败\n%s" % account_selector.html())
         account_id = account_id.strip().replace("@", "")
         pagination_account_list[account_id] = account_name
     return pagination_account_list

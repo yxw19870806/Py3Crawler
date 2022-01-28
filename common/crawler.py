@@ -13,6 +13,8 @@ import re
 import sys
 import threading
 import time
+import warnings
+from typing import Union
 
 # 项目根目录
 PROJECT_ROOT_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
@@ -48,10 +50,10 @@ SYS_NOT_CHECK_SAVE_DATA = "no_save_data"
 SYS_NOT_DOWNLOAD = "no_download"
 # 程序是否需要从浏览器存储的cookie中获取指定cookie的值
 SYS_GET_COOKIE = "get_cookie"
-# 应用额外配置
+# 程序额外应用配置
 # 传入参数类型为tuple，每一位参数为长度3的tuple，顺序为(配置名字，默认值，配置读取方式)，同analysis_config方法后三个参数
 SYS_APP_CONFIG = "app_config"
-# 自定义的app配置文件路径（默认
+# 程序默认的app配置文件路径
 SYS_APP_CONFIG_PATH = 'app_config_path'
 
 CONFIG_ANALYSIS_MODE_RAW = "raw"
@@ -68,6 +70,23 @@ class Crawler(object):
 
     # 程序全局变量的设置
     def __init__(self, sys_config, **kwargs):
+        """
+        :Args:
+        - sys_config
+            - download_photo - 程序是否支持下载图片功能，默认值：False
+            - download_video - 程序是否支持下载视频功能，默认值：False
+            - download_audio - 程序是否支持下载音频功能，默认值：False
+            - download_content - 程序是否支持下载文本内容功能，默认值：False
+            - set_proxy - 程序是否默认需要设置代理，默认值：False
+            - no_save_data - 程序是否支持不需要存档文件就可以开始运行，默认值：False
+            - no_download - 程序没有任何下载行为，默认值：False
+            - get_cookie - 程序是否需要从浏览器存储的cookie中获取指定cookie的值，默认值：False
+            - app_config - 程序额外应用配置，存在相同配置参数时将会将其他值覆盖
+            - app_config_path - 程序默认的app配置文件路径，赋值后将不会读取原本的app.ini文件
+        - kwargs
+            - extra_sys_config - 通过类实例化时传入的程序配置
+            - extra_app_config - 通过类实例化时传入的应用配置
+        """
         self.start_time = time.time()
 
         # 程序启动配置
@@ -86,7 +105,7 @@ class Crawler(object):
         sys_get_cookie = SYS_GET_COOKIE in sys_config and sys_config[SYS_GET_COOKIE]
         sys_not_check_save_data = SYS_NOT_CHECK_SAVE_DATA in sys_config and sys_config[SYS_NOT_CHECK_SAVE_DATA]
         sys_not_download = SYS_NOT_DOWNLOAD in sys_config and sys_config[SYS_NOT_DOWNLOAD]
-        
+
         # exe程序
         if tool.IS_EXECUTABLE:
             application_path = os.path.dirname(sys.executable)
@@ -135,14 +154,14 @@ class Crawler(object):
         if not sys_not_check_save_data:
             if not os.path.exists(self.save_data_path):
                 # 存档文件不存在
-                output.print_msg("存档文件%s不存在！" % self.save_data_path)
+                output.print_msg(f"存档文件{self.save_data_path}不存在！")
                 tool.process_exit()
                 return
             temp_file_name = time.strftime("%m-%d_%H_%M_", time.localtime(time.time())) + os.path.basename(self.save_data_path)
             self.temp_save_data_path = os.path.join(os.path.dirname(self.save_data_path), temp_file_name)
             if os.path.exists(self.temp_save_data_path):
                 # 临时文件已存在
-                output.print_msg("存档临时文件%s已存在！" % self.temp_save_data_path)
+                output.print_msg(f"存档临时文件{self.temp_save_data_path}已存在！")
                 tool.process_exit()
                 return
 
@@ -224,15 +243,12 @@ class Crawler(object):
 
         # 启用线程监控是否需要暂停其他下载线程
         if analysis_config(config, "IS_PORT_LISTENER_EVENT", False, CONFIG_ANALYSIS_MODE_BOOLEAN):
-            listener_event_bind = {}
-            # 暂停进程
-            listener_event_bind[str(portListenerEvent.PROCESS_STATUS_PAUSE)] = net.pause_request
-            # 继续进程
-            listener_event_bind[str(portListenerEvent.PROCESS_STATUS_RUN)] = net.resume_request
-            # 结束进程（取消当前的线程，完成任务）
-            listener_event_bind[str(portListenerEvent.PROCESS_STATUS_STOP)] = self.stop_process
-
             listener_port = analysis_config(config, "LISTENER_PORT", 12345, CONFIG_ANALYSIS_MODE_INTEGER)
+            listener_event_bind = {
+                str(portListenerEvent.PROCESS_STATUS_PAUSE): net.pause_request,  # 暂停进程
+                str(portListenerEvent.PROCESS_STATUS_RUN): net.resume_request,  # 继续进程
+                str(portListenerEvent.PROCESS_STATUS_STOP): self.stop_process  # 结束进程（取消当前的线程，完成任务）
+            }
             process_control_thread = portListenerEvent.PortListenerEvent(port=listener_port, event_list=listener_event_bind)
             process_control_thread.setDaemon(True)
             process_control_thread.start()
@@ -258,6 +274,7 @@ class Crawler(object):
                 keyboard_control_thread.setDaemon(True)
                 keyboard_control_thread.start()
 
+        self.save_data = {}
         self.total_photo_count = 0
         self.total_video_count = 0
         self.total_audio_count = 0
@@ -276,34 +293,65 @@ class Crawler(object):
         self.process_status = False
         net.EXIT_FLAG = True
 
-    # 获取程序已运行时间（seconds）
     def get_run_time(self):
-        """Get process runned time(seconds)"""
+        """
+        获取程序已运行时间（秒）
+        """
         return int(time.time() - self.start_time)
 
     def is_running(self):
         return self.process_status
 
+    def write_remaining_save_data(self):
+        """
+        将剩余未处理的存档数据写入临时存档文件
+        """
+        if len(self.save_data) > 0:
+            file.write_file(tool.list_to_string(list(self.save_data.values())), self.temp_save_data_path)
+
+    def rewrite_save_file(self):
+        """
+        将临时存档文件按照主键排序后写入原始存档文件
+        只支持一行一条记录，每条记录格式相同的存档文件
+        """
+        save_data = read_save_data(self.temp_save_data_path, 0, [])
+        temp_list = [save_data[key] for key in sorted(save_data.keys())]
+        file.write_file(tool.list_to_string(temp_list), self.save_data_path, file.WRITE_FILE_TYPE_REPLACE)
+        path.delete_dir_or_file(self.temp_save_data_path)
+
+    def end_message(self):
+        message = f"全部下载完毕，耗时{self.get_run_time()}秒"
+        download_result = []
+        if self.is_download_photo:
+            download_result.append(f"图片{self.total_photo_count}张")
+        if self.is_download_video:
+            download_result.append(f"视频{self.total_video_count}个")
+        if self.is_download_audio:
+            download_result.append(f"音频{self.total_audio_count}个")
+        if download_result:
+            message += "，共计下载" + "，".join(download_result)
+        log.step(message)
+
 
 class DownloadThread(threading.Thread):
-    """Download sub-thread"""
     main_thread = None
     thread_lock = None
     display_name = None
 
-    def __init__(self, account_info, main_thread):
+    def __init__(self, single_save_data: list, main_thread: Crawler):
         """
-        :param account_info:
+        多线程下载
 
-        :param main_thread:
-            object of main thread(class Crawler)
+        :Args:
+        - single_save_data - 线程用到的数据
+        - main_thread - 主线程对象
         """
         if not isinstance(main_thread, Crawler):
             output.print_msg("下载线程参数异常")
             tool.process_exit()
         try:
             threading.Thread.__init__(self)
-            self.account_info = account_info
+            self.single_save_data = single_save_data
             self.main_thread = main_thread
             self.thread_lock = main_thread.thread_lock
             main_thread.thread_semaphore.acquire()
@@ -315,66 +363,88 @@ class DownloadThread(threading.Thread):
         self.total_content_count = 0
         self.temp_path_list = []
 
-    # 检测主线程是否已经结束（外部中断）
     def main_thread_check(self):
+        """
+        检测主线程是否已经结束（外部中断）
+        """
         if not self.main_thread.is_running():
             self.notify_main_thread()
-            tool.process_exit(0)
+            tool.process_exit(tool.PROCESS_EXIT_CODE_NORMAL)
 
-    # 线程下完完成后唤醒主线程，开启新的线程（必须在线程完成后手动调用，否则会卡死主线程）
     def notify_main_thread(self):
+        """
+        线程下完完成后唤醒主线程，开启新的线程（必须在线程完成后手动调用，否则会卡死主线程）
+        """
         if isinstance(self.main_thread, Crawler):
             self.main_thread.thread_semaphore.release()
 
-    # 当下载失败，检测是否要退出线程
     def check_thread_exit_after_download_failure(self, is_process_exit=True):
+        """
+        当下载失败，检测是否要退出线程
+        """
         if self.main_thread.is_thread_exit_after_download_failure:
             if is_process_exit:
-                tool.process_exit()
+                tool.process_exit(tool.PROCESS_EXIT_CODE_NORMAL)
             else:
                 return True
         return False
 
-    # 中途退出，删除临时文件/目录
+    def write_single_save_data(self):
+        """
+        保存单条存档
+        """
+        file.write_file("\t".join(self.single_save_data), self.main_thread.temp_save_data_path, file.WRITE_FILE_TYPE_REPLACE)
+
     def clean_temp_path(self):
+        """
+        中途退出，删除临时文件/目录
+        """
         for temp_path in self.temp_path_list:
             path.delete_dir_or_file(temp_path)
 
-    # Trace log
     def trace(self, message, include_display_name=True):
+        """
+        trace log
+        """
         if include_display_name and self.display_name is not None:
             message = self.display_name + " " + message
         log.trace(message)
 
-    # step log
     def step(self, message, include_display_name=True):
+        """
+        step log
+        """
         if include_display_name and self.display_name is not None:
             message = self.display_name + " " + message
         log.step(message)
 
-    # error log
     def error(self, message, include_display_name=True):
+        """
+        error log
+        """
         if include_display_name and self.display_name is not None:
             message = self.display_name + " " + message
         log.error(message)
 
 
 class CrawlerException(SystemExit):
-    def __init__(self, msg="", print=True):
+    def __init__(self, msg: str = "", is_print: bool = True):
         SystemExit.__init__(self, 1)
-        if print:
+        if is_print:
             output.print_msg(msg)
         self.exception_message = msg
 
     @property
-    def message(self):
+    def message(self) -> str:
         return self.exception_message
 
 
-def read_config(config_path):
+def read_config(config_path) -> dict:
+    """
+    读取配置文件
+    """
     if not os.path.exists(config_path):
         return {}
-    """Read config file"""
     config = {}
     with codecs.open(config_path, encoding="UTF-8-SIG") as file_handle:
         config_file = configparser.ConfigParser()
@@ -384,28 +454,24 @@ def read_config(config_path):
     return config
 
 
-def analysis_config(config, key, default_value, mode=CONFIG_ANALYSIS_MODE_RAW):
-    """Analysis config
+def analysis_config(config: dict, key: str, default_value, mode: str = CONFIG_ANALYSIS_MODE_RAW):
+    """
+    解析配置
 
-    :param config:
-        Dictionary of config
-
-    :param key:
-        key of config
-
-    :param default_value:
-        default value
-
-    :param mode:
-        type of analysis mode
-        None    direct assignment
-        1       conversion to integer
-        2       conversion to boolean
-                    the value Equivalent to False, or string of "0" and "false" will conversion to False
-                    other string will conversion to True
-        3       conversion to file path
-                    startup with '\', project root path
-                    startup with '\\', application root path
+    :Args:
+    - config - 配置文件字典，通过read_config()获取
+    - key - 配置key
+    - default_value - 默认值
+    - mode - 解析模式
+        raw     直接读取
+        int     转换成int类型
+        float   转换成float类型
+        bool    转换成bool类型
+                    等价于False的值，或者值为"0"或"false"的字符串将转换为False
+                    其他字符串将转换为True
+        path    转换成路径
+                    当字符串以'\'开头，相对于crawler.PROJECT_ROOT_PATH
+                    当字符串以'\\'开头，相对于crawler.PROJECT_APP_PATH
     """
     key = key.lower()
     if isinstance(config, dict) and key in config:
@@ -442,27 +508,18 @@ def analysis_config(config, key, default_value, mode=CONFIG_ANALYSIS_MODE_RAW):
     return value
 
 
-# 将指定文件夹内的所有文件排序重命名并复制到其他文件夹中
-def sort_file(source_path, destination_path, start_count, file_name_length):
-    file_list = path.get_dir_files_name(source_path, path.RETURN_FILE_LIST_DESC)
-    # 判断排序目标文件夹是否存在
-    if len(file_list) >= 1:
-        if not path.create_dir(destination_path):
-            return False
-        # 倒叙排列
-        for file_name in file_list:
-            start_count += 1
-            file_type = os.path.splitext(file_name)[1]  # 包括 .扩展名
-            new_file_name = str(("%0" + str(file_name_length) + "d") % start_count) + file_type
-            path.copy_file(os.path.join(source_path, file_name), os.path.join(destination_path, new_file_name))
-        # 删除临时文件夹
-        path.delete_dir_or_file(source_path)
-    return True
+def read_save_data(save_data_path: str, key_index: int = 0, default_value_list: list = None, check_duplicate_index: bool = True) -> dict:
+    """
+    读取存档文件，并根据指定列生成存档字典
 
-
-# 读取存档文件，并根据指定列生成存档字典
-# default_value_list 每一位的默认值
-def read_save_data(save_data_path, key_index=0, default_value_list=[], check_duplicate_index=True):
+    :Args:
+    - save_data_path - 存档路径
+    - key_index - 配置文件的主键（唯一）
+    - default_value_list - 每一位的默认值
+    - check_duplicate_index - 是否检测主键的唯一性
+    """
+    if default_value_list is None:
+        default_value_list = []
     result_list = {}
     if not os.path.exists(save_data_path):
         return result_list
@@ -473,7 +530,7 @@ def read_save_data(save_data_path, key_index=0, default_value_list=[], check_dup
         single_save_list = single_save_data.split("\t")
 
         if check_duplicate_index and single_save_list[key_index] in result_list:
-            output.print_msg("存档中存在重复行 %s" % single_save_list[key_index])
+            output.print_msg(f"存档中存在重复行{single_save_list[key_index]}")
             tool.process_exit()
 
         # 去除前后空格
@@ -494,33 +551,42 @@ def read_save_data(save_data_path, key_index=0, default_value_list=[], check_dup
     return result_list
 
 
-# 将临时存档文件按照主键排序后写入原始存档文件
-# 只支持一行一条记录，每条记录格式相同的存档文件
-def rewrite_save_file(temp_save_data_path, save_data_path):
+def rewrite_save_file(temp_save_data_path: str, save_data_path: str):
+    """
+    将临时存档文件按照主键排序后写入原始存档文件
+    只支持一行一条记录，每条记录格式相同的存档文件
+    """
+    warnings.warn(
+        "rewrite_save_file commands are deprecated.",
+        DeprecationWarning,
+        stacklevel=2,
+    )
     account_list = read_save_data(temp_save_data_path, 0, [])
     temp_list = [account_list[key] for key in sorted(account_list.keys())]
     file.write_file(tool.list_to_string(temp_list), save_data_path, file.WRITE_FILE_TYPE_REPLACE)
     path.delete_dir_or_file(temp_save_data_path)
 
 
-# 替换目录中的指定字符串
-def replace_path(path):
-    return path.replace("{date}", time.strftime("%y-%m-%d", time.localtime(time.time())))
-
-
-# 获取当前时间
-def get_time():
+def get_time() -> str:
+    """
+    获取当前时间
+    """
     return time.strftime("%m-%d %H:%M:%S", time.localtime(time.time()))
 
 
-# 获取一个json文件的指定字段
-# arg如果是字母，取字典对应key；如果是整数，取列表对应下标
-# 支持的kwargs
-#       original_data
-#       default_value
-#       type_check
-#       value_check
 def get_json_value(json_data, *args, **kwargs):
+    """
+    获取一个json文件的指定字段
+
+    :Args:
+    - json_data - 原始json数据
+    - args - 如果是字母，取字典对应key；如果是整数，取列表对应下标
+    - kwargs
+        - original_data     原始数据，主要用于异常输出
+        - default_value     当json对象中没有找到对应key的数据时的默认值，如果不设置则会在没有找到数据时抛出异常
+        - type_check        验证数据类型是否一致
+        - value_check       验证数值是否一致
+    """
     if "original_data" in kwargs:
         original_data = kwargs["original_data"]
     else:
@@ -530,16 +596,16 @@ def get_json_value(json_data, *args, **kwargs):
     for arg in args:
         if isinstance(arg, str):
             if not isinstance(json_data, dict):
-                exception_string = "'%s'字段不是字典\n%s" % (last_arg, original_data)
+                exception_string = f"'{last_arg}'字段不是字典\n{original_data}"
             elif arg not in json_data:
-                exception_string = "'%s'字段不存在\n%s" % (arg, original_data)
+                exception_string = f"'{arg}'字段不存在\n{original_data}"
         elif isinstance(arg, int):
             if not isinstance(json_data, list):
-                exception_string =  "'%s'字段不是列表\n%s" % (last_arg, original_data)
+                exception_string = f"'{last_arg}'字段不是列表\n{original_data}"
             elif len(json_data) <= arg:
-                exception_string = "'%s'字段长度不正确\n%s" % (last_arg, original_data)
+                exception_string = f"'{last_arg}'字段长度不正确\n{original_data}"
         else:
-            exception_string = "arg: %s类型不正确" % arg
+            exception_string = f"arg: {arg}类型不正确"
         if exception_string:
             break
         last_arg = arg
@@ -548,7 +614,7 @@ def get_json_value(json_data, *args, **kwargs):
     if not exception_string and "type_check" in kwargs:
         type_error = False
         if kwargs["type_check"] is int:  # 整数（包含int和符合整型规则的字符串）
-            if is_integer(json_data):
+            if tool.is_integer(json_data):
                 json_data = int(json_data)
             else:
                 type_error = True
@@ -564,9 +630,9 @@ def get_json_value(json_data, *args, **kwargs):
         elif kwargs["type_check"] in [dict, list, bool]:  # 标准数据类型
             type_error = not isinstance(json_data, kwargs["type_check"])
         else:
-            exception_string = "type_check: %s类型不正确" % kwargs["type_check"]
+            exception_string = f"type_check: {kwargs['type_check']}类型不正确"
         if type_error:
-            exception_string = "'%s'字段类型不正确\n%s" % (last_arg, original_data)
+            exception_string = f"'{last_arg}'字段类型不正确\n{original_data}"
     # 检测结果数值
     if not exception_string and "value_check" in kwargs:
         value_error = False
@@ -577,7 +643,7 @@ def get_json_value(json_data, *args, **kwargs):
             if not (json_data == kwargs["value_check"]):
                 value_error = True
         if value_error:
-            exception_string = "'%s'字段取值不正确\n%s" % (last_arg, original_data)
+            exception_string = f"'{last_arg}'字段取值不正确\n{original_data}"
     if exception_string:
         if "default_value" in kwargs:
             return kwargs["default_value"]
@@ -586,8 +652,10 @@ def get_json_value(json_data, *args, **kwargs):
     return json_data
 
 
-# 判断类型是否为字典，并且检测是否存在指定的key
-def check_sub_key(needles, haystack):
+def check_sub_key(needles: Union[str, tuple], haystack: dict) -> bool:
+    """
+    判断类型是否为字典，并且检测是否存在指定的key
+    """
     if not isinstance(needles, tuple):
         needles = tuple(needles)
     if isinstance(haystack, dict):
@@ -598,18 +666,10 @@ def check_sub_key(needles, haystack):
     return False
 
 
-# 判断是不是整数
-def is_integer(number):
-    if isinstance(number, int):
-        return True
-    elif isinstance(number, bool) or isinstance(number, list) or isinstance(number, dict) or number is None:
-        return False
-    else:
-        return re.compile('^[-+]?[0-9]+$').match(str(number))
-
-
-# 替换文本中的表情符号
-def filter_emoji(text):
+def filter_emoji(text: str) -> str:
+    """
+    替换文本中的表情符号
+    """
     try:
         emoji = re.compile('[\U00010000-\U0010ffff]')
     except re.error:
@@ -617,8 +677,10 @@ def filter_emoji(text):
     return emoji.sub('', text)
 
 
-# 获取网络文件下载失败的原因
-def download_failre(return_code):
+def download_failre(return_code: int) -> str:
+    """
+    获取网络文件下载失败的原因
+    """
     if return_code == 404:
         return "源文件已被删除"
     elif return_code == 403:
@@ -636,14 +698,16 @@ def download_failre(return_code):
     elif return_code == -11:
         return "文件所在保存目录创建失败"
     elif return_code > 0:
-        return "未知错误，http code %s" % return_code
+        return f"未知错误，http code {return_code}"
     else:
-        return "未知错误，下载返回码 %s" % return_code
+        return f"未知错误，下载返回码 {return_code}"
 
 
-# 获取网络文件下载失败的原因
-def request_failre(return_code):
-    # return_code = response.status
+def request_failre(return_code: int) -> str:
+    """
+    获取网络文件下载失败的原因
+    return_code = response.status
+    """
     if return_code == 404:
         return "页面已被删除"
     elif return_code == 403:
@@ -661,50 +725,6 @@ def request_failre(return_code):
     elif return_code == net.HTTP_RETURN_CODE_TOO_MANY_REDIRECTS:
         return "重定向次数过多"
     elif return_code > 0:
-        return "未知错误，http code %s" % return_code
+        return f"未知错误，http code {return_code}"
     else:
-        return "未知错误，return code %s" % return_code
-
-
-# 读取配置文件，快速设置代理
-# is_auto = False   始终使用代理
-#           True    配置文件未禁止时使用代理（IS_PROXY = 1 or 2)
-def quickly_set_proxy(config=None, is_auto=True):
-    if not isinstance(config, configparser.SafeConfigParser):
-        config = _get_config()
-    # 设置代理
-    if is_auto:
-        is_proxy = analysis_config(config, "IS_PROXY", 2, CONFIG_ANALYSIS_MODE_INTEGER)
-        if is_proxy == 0:
-            return
-    proxy_ip = analysis_config(config, "PROXY_IP", "127.0.0.1")
-    proxy_port = analysis_config(config, "PROXY_PORT", "8087")
-    # 使用代理的线程池
-    net.set_proxy(proxy_ip, proxy_port)
-
-
-# 读取配置文件，返回存档文件所在路径
-def quickly_get_save_data_path(config=None):
-    if not isinstance(config, configparser.SafeConfigParser):
-        config = _get_config()
-    return analysis_config(config, "SAVE_DATA_PATH", "\\\\info/save.data", CONFIG_ANALYSIS_MODE_PATH)
-
-
-# 读取浏览器cookies
-def quickly_get_all_cookies_from_browser(config=None):
-    if not isinstance(config, configparser.SafeConfigParser):
-        config = _get_config()
-    # 是否自动查找cookies路径
-    # 操作系统&浏览器
-    browser_type = analysis_config(config, "BROWSER_TYPE", browser.BROWSER_TYPE_CHROME, CONFIG_ANALYSIS_MODE_INTEGER)
-    cookie_path = browser.get_default_browser_cookie_path(browser_type)
-    return browser.get_all_cookie_from_browser(browser_type, cookie_path)
-
-
-def _get_config():
-    config = read_config(PROJECT_CONFIG_PATH)
-    app_config_path = os.path.abspath(os.path.join(PROJECT_APP_PATH, "app.ini"))
-    if os.path.exists(app_config_path):
-        app_config = read_config(app_config_path)
-        config.update(app_config)
-    return config
+        return f"未知错误，return code {return_code}"

@@ -27,19 +27,19 @@ class XiMaLaYaAlbum(ximalaya.XiMaLaYa):
 
         # 解析存档文件
         # album_id  last_audio_id
-        self.account_list = crawler.read_save_data(self.save_data_path, 0, ["", "0"])
+        self.save_data = crawler.read_save_data(self.save_data_path, 0, ["", "0"])
 
     def main(self):
         try:
             # 循环下载每个id
             thread_list = []
-            for album_id in sorted(self.account_list.keys()):
+            for album_id in sorted(self.save_data.keys()):
                 # 提前结束
                 if not self.is_running():
                     break
 
                 # 开始下载
-                thread = Download(self.account_list[album_id], self)
+                thread = Download(self.save_data[album_id], self)
                 thread.start()
                 thread_list.append(thread)
 
@@ -52,23 +52,22 @@ class XiMaLaYaAlbum(ximalaya.XiMaLaYa):
             self.stop_process()
 
         # 未完成的数据保存
-        if len(self.account_list) > 0:
-            file.write_file(tool.list_to_string(list(self.account_list.values())), self.temp_save_data_path)
+        self.write_remaining_save_data()
 
         # 重新排序保存存档文件
-        crawler.rewrite_save_file(self.temp_save_data_path, self.save_data_path)
+        self.rewrite_save_file()
 
-        log.step("全部下载完毕，耗时%s秒，共计音频%s首" % (self.get_run_time(), self.total_audio_count))
+        self.end_message()
 
 
 class Download(crawler.DownloadThread):
-    def __init__(self, account_info, main_thread):
-        crawler.DownloadThread.__init__(self, account_info, main_thread)
-        self.album_id = self.account_info[0]
-        if len(self.account_info) >= 3 and self.account_info[2]:
-            self.display_name = self.account_info[2]
+    def __init__(self, single_save_data, main_thread):
+        crawler.DownloadThread.__init__(self, single_save_data, main_thread)
+        self.album_id = self.single_save_data[0]
+        if len(self.single_save_data) >= 3 and self.single_save_data[2]:
+            self.display_name = self.single_save_data[2]
         else:
-            self.display_name = self.account_info[0]
+            self.display_name = self.single_save_data[0]
         self.total_audio_count = 0
         self.step("开始")
 
@@ -96,7 +95,7 @@ class Download(crawler.DownloadThread):
             # 寻找这一页符合条件的媒体
             for audio_info in audit_pagination_response["audio_info_list"]:
                 # 检查是否达到存档记录
-                if audio_info["audio_id"] > int(self.account_info[1]):
+                if audio_info["audio_id"] > int(self.single_save_data[1]):
                     # 新增音频导致的重复判断
                     if audio_info["audio_id"] in unique_list:
                         continue
@@ -128,23 +127,21 @@ class Download(crawler.DownloadThread):
 
         if audio_play_response["is_video"]:
             self.error("音频%s类型是视频" % audio_info["audio_id"])
-            self.account_info[1] = str(audio_info["audio_id"])  # 设置存档记录
-            return
-
-        audio_url = audio_play_response["audio_url"]
-        self.step("开始下载音频%s《%s》 %s" % (audio_info["audio_id"], audio_info["audio_title"], audio_url))
-
-        file_path = os.path.join(self.main_thread.audio_download_path, self.display_name, "%09d - %s.%s" % (audio_info["audio_id"], path.filter_text(audio_info["audio_title"]), net.get_file_type(audio_url)))
-        save_file_return = net.save_net_file(audio_url, file_path)
-        if save_file_return["status"] == 1:
-            self.step("音频%s《%s》下载成功" % (audio_info["audio_id"], audio_info["audio_title"]))
         else:
-            self.error("音频%s《%s》 %s 下载失败，原因：%s" % (audio_info["audio_id"], audio_info["audio_title"], audio_url, crawler.download_failre(save_file_return["code"])))
-            raise crawler.CrawlerException()
+            audio_url = audio_play_response["audio_url"]
+            self.step("开始下载音频%s《%s》 %s" % (audio_info["audio_id"], audio_info["audio_title"], audio_url))
+
+            file_path = os.path.join(self.main_thread.audio_download_path, self.display_name, "%09d - %s.%s" % (audio_info["audio_id"], path.filter_text(audio_info["audio_title"]), net.get_file_type(audio_url)))
+            save_file_return = net.download(audio_url, file_path)
+            if save_file_return["status"] == 1:
+                self.total_audio_count += 1  # 计数累加
+                self.step("音频%s《%s》下载成功" % (audio_info["audio_id"], audio_info["audio_title"]))
+            else:
+                self.error("音频%s《%s》 %s 下载失败，原因：%s" % (audio_info["audio_id"], audio_info["audio_title"], audio_url, crawler.download_failre(save_file_return["code"])))
+                self.check_thread_exit_after_download_failure()
 
         # 音频下载完毕
-        self.total_audio_count += 1  # 计数累加
-        self.account_info[1] = str(audio_info["audio_id"])  # 设置存档记录
+        self.single_save_data[1] = str(audio_info["audio_id"])  # 设置存档记录
 
     def run(self):
         try:
@@ -167,9 +164,9 @@ class Download(crawler.DownloadThread):
 
         # 保存最后的信息
         with self.thread_lock:
-            file.write_file("\t".join(self.account_info), self.main_thread.temp_save_data_path)
+            self.write_single_save_data()
             self.main_thread.total_audio_count += self.total_audio_count
-            self.main_thread.account_list.pop(self.album_id)
+            self.main_thread.save_data.pop(self.album_id)
         self.step("下载完毕，总共获得%s首音频" % self.total_audio_count)
         self.notify_main_thread()
 

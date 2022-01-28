@@ -24,7 +24,7 @@ def get_one_page_playlist(playlist_id, page_count):
         "httpsStatus": "1",
         "reqId": REQ_ID,
     }
-    playlist_pagination_response = net.http_request(playlist_pagination_url, method="GET", fields=query_data, cookies_list={"kw_token": CSRF_TOKEN}, header_list={"csrf": CSRF_TOKEN}, json_decode=True)
+    playlist_pagination_response = net.request(playlist_pagination_url, method="GET", fields=query_data, cookies_list={"kw_token": CSRF_TOKEN}, header_list={"csrf": CSRF_TOKEN}, json_decode=True)
     result = {
         "audio_info_list": [],  # 全部音频信息
         "is_over": False,  # 是否最后一页音频
@@ -38,7 +38,7 @@ def get_one_page_playlist(playlist_id, page_count):
         }
         # 获取音频id
         result_audio_info["audio_id"] = crawler.get_json_value(audio_info, "rid")
-        if not crawler.is_integer(result_audio_info["audio_id"]):
+        if not tool.is_integer(result_audio_info["audio_id"]):
             raise crawler.CrawlerException("获音频id失败\n%s" % audio_info)
         # 获取音频标题
         result_audio_info["audio_title"] = crawler.get_json_value(audio_info, "name")
@@ -54,7 +54,7 @@ def get_audio_info_page(audio_id):
         "httpsStatus": "1",
         "reqId": REQ_ID,
     }
-    audio_info_response = net.http_request(audio_info_url, method="GET", fields=query_data, cookies_list={"kw_token": CSRF_TOKEN}, header_list={"csrf": CSRF_TOKEN}, json_decode=True)
+    audio_info_response = net.request(audio_info_url, method="GET", fields=query_data, cookies_list={"kw_token": CSRF_TOKEN}, header_list={"csrf": CSRF_TOKEN}, json_decode=True)
     result = {
         "audio_url": None,  # 音频地址
     }
@@ -67,8 +67,6 @@ def get_audio_info_page(audio_id):
 
 class KuWo(crawler.Crawler):
     def __init__(self, **kwargs):
-        global COOKIE_INFO
-
         # 设置APP目录
         crawler.PROJECT_APP_PATH = os.path.abspath(os.path.dirname(__file__))
 

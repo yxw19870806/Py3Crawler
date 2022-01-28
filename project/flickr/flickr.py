@@ -22,7 +22,7 @@ def check_login():
     if not COOKIE_INFO:
         return False
     index_url = "https://www.flickr.com/"
-    index_response = net.http_request(index_url, method="GET", cookies_list=COOKIE_INFO)
+    index_response = net.request(index_url, method="GET", cookies_list=COOKIE_INFO)
     if index_response.status == net.HTTP_RETURN_CODE_SUCCEED:
         return index_response.data.decode(errors="ignore").find('data-track="gnYouMainClick"') >= 0
     return False
@@ -36,7 +36,7 @@ def check_safe_search():
     query_data = {
         "from": "privacy"
     }
-    setting_response = net.http_request(setting_url, method="GET", fields=query_data, cookies_list=COOKIE_INFO, is_auto_redirect=False)
+    setting_response = net.request(setting_url, method="GET", fields=query_data, cookies_list=COOKIE_INFO, is_auto_redirect=False)
     if setting_response.status == net.HTTP_RETURN_CODE_SUCCEED:
         if pq(setting_response.data.decode(errors="ignore")).find("input[name='safe_search']:checked").val() == "2":
             return True
@@ -46,7 +46,7 @@ def check_safe_search():
 # 获取账号相册首页
 def get_account_index_page(account_name):
     account_index_url = "https://www.flickr.com/photos/%s" % account_name
-    account_index_response = net.http_request(account_index_url, method="GET", cookies_list=COOKIE_INFO)
+    account_index_response = net.request(account_index_url, method="GET", cookies_list=COOKIE_INFO)
     result = {
         "site_key": None,  # site key
         "user_id": None,  # user id
@@ -137,7 +137,7 @@ def get_one_page_photo(user_id, page_count, api_key, csrf, request_id):
         "extras": "date_upload,url_c,url_f,url_h,url_k,url_l,url_m,url_n,url_o,url_q,url_s,url_sq,url_t,url_z",
     }
     # COOKIE_INFO = {}
-    photo_pagination_response = net.http_request(api_url, method="GET", fields=query_data, cookies_list=COOKIE_INFO, json_decode=True)
+    photo_pagination_response = net.request(api_url, method="GET", fields=query_data, cookies_list=COOKIE_INFO, json_decode=True)
     result = {
         "photo_info_list": [],  # 全部图片信息
         "is_over": False,  # 是否最后一页图片
@@ -202,7 +202,7 @@ class Flickr(crawler.Crawler):
 
         # 解析存档文件
         # account_id  last_photo_time
-        self.account_list = crawler.read_save_data(self.save_data_path, 0, ["", "0"])
+        self.save_data = crawler.read_save_data(self.save_data_path, 0, ["", "0"])
 
         # 检测登录状态
         console_string = ""
@@ -226,13 +226,13 @@ class Flickr(crawler.Crawler):
         try:
             # 循环下载每个id
             thread_list = []
-            for account_id in sorted(self.account_list.keys()):
+            for account_id in sorted(self.save_data.keys()):
                 # 提前结束
                 if not self.is_running():
                     break
 
                 # 开始下载
-                thread = Download(self.account_list[account_id], self)
+                thread = Download(self.save_data[account_id], self)
                 thread.start()
                 thread_list.append(thread)
 
@@ -245,21 +245,20 @@ class Flickr(crawler.Crawler):
             self.stop_process()
 
         # 未完成的数据保存
-        if len(self.account_list) > 0:
-            file.write_file(tool.list_to_string(list(self.account_list.values())), self.temp_save_data_path)
+        self.write_remaining_save_data()
 
         # 重新排序保存存档文件
-        crawler.rewrite_save_file(self.temp_save_data_path, self.save_data_path)
+        self.rewrite_save_file()
 
-        log.step("全部下载完毕，耗时%s秒，共计图片%s张" % (self.get_run_time(), self.total_photo_count))
+        self.end_message()
 
 
 class Download(crawler.DownloadThread):
     request_id = tool.generate_random_string(8)  # 生成一个随机的request id用作访问（模拟页面传入）
 
-    def __init__(self, account_info, main_thread):
-        crawler.DownloadThread.__init__(self, account_info, main_thread)
-        self.account_name = self.account_info[0]
+    def __init__(self, single_save_data, main_thread):
+        crawler.DownloadThread.__init__(self, single_save_data, main_thread)
+        self.account_name = self.single_save_data[0]
         self.display_name = self.account_name
         self.step("开始")
 
@@ -287,7 +286,7 @@ class Download(crawler.DownloadThread):
             for photo_info in photo_pagination_response["photo_info_list"]:
                 # 检查是否达到存档记录
                 # photo_id是唯一的，但并不是递增的（分表主键），无法作为存档的判断依据
-                if photo_info["photo_time"] > int(self.account_info[1]):
+                if photo_info["photo_time"] > int(self.single_save_data[1]):
                     photo_info_list.append(photo_info)
                 else:
                     is_over = True
@@ -307,18 +306,18 @@ class Download(crawler.DownloadThread):
             self.main_thread_check()  # 检测主线程运行状态
             self.step("开始下载图片%s %s" % (photo_info["photo_id"], photo_info["photo_url"]))
             file_path = os.path.join(self.main_thread.photo_download_path, self.account_name, "%011d.%s" % (photo_info["photo_id"], net.get_file_type(photo_info["photo_url"])))
-            save_file_return = net.save_net_file(photo_info["photo_url"], file_path)
+            save_file_return = net.download(photo_info["photo_url"], file_path)
             if save_file_return["status"] == 1:
-                # 设置临时目录
-                self.temp_path_list.append(file_path)
+                self.temp_path_list.append(file_path)  # 设置临时目录
+                self.total_photo_count += 1  # 计数累加
                 self.step("图片%s下载成功" % photo_info["photo_id"])
             else:
                 self.error("图片%s %s 下载失败，原因：%s" % (photo_info["photo_id"], photo_info["photo_url"], crawler.download_failre(save_file_return["code"])))
+                self.check_thread_exit_after_download_failure()
 
         # 图片下载完毕
         self.temp_path_list = []  # 临时目录设置清除
-        self.total_photo_count += len(photo_info_list)  # 计数累加
-        self.account_info[1] = str(photo_info_list[0]["photo_time"])  # 设置存档记
+        self.single_save_data[1] = str(photo_info_list[0]["photo_time"])  # 设置存档记
 
     def run(self):
         try:
@@ -359,9 +358,9 @@ class Download(crawler.DownloadThread):
 
         # 保存最后的信息
         with self.thread_lock:
-            file.write_file("\t".join(self.account_info), self.main_thread.temp_save_data_path)
+            self.write_single_save_data()
             self.main_thread.total_photo_count += self.total_photo_count
-            self.main_thread.account_list.pop(self.account_name)
+            self.main_thread.save_data.pop(self.account_name)
         self.step("下载完毕，总共获得%s张图片" % self.total_photo_count)
         self.notify_main_thread()
 

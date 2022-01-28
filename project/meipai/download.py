@@ -25,9 +25,9 @@ def main():
         # http://www.meipai.com/media/209045867
         if video_url.find("//www.meipai.com/media/") > 0:
             video_id = video_url.split("/")[-1].split("?")[0]
-        elif crawler.is_integer(video_url):
+        elif tool.is_integer(video_url):
             video_id = video_url
-        if not crawler.is_integer(video_id):
+        if not tool.is_integer(video_id):
             log.step("错误的视频地址，正确的地址格式如：http://www.meipai.com/media/209045867")
             continue
         # 访问视频播放页
@@ -35,7 +35,7 @@ def main():
             video_response = meipai.get_video_play_page(video_id)
         except crawler.CrawlerException as e:
             log.error("解析视频下载地址失败，原因：%s" % e.message)
-            tool.process_exit()
+            break
         if video_response["is_delete"]:
             log.step("视频不存在，跳过")
             continue
@@ -51,7 +51,7 @@ def main():
             continue
         # 开始下载
         log.step("\n视频地址：%s\n下载路径：%s" % (video_response["video_url"], file_path))
-        save_file_return = net.save_net_file(video_response["video_url"], file_path, head_check=True)
+        save_file_return = net.download(video_response["video_url"], file_path, head_check=True)
         if save_file_return["status"] == 1:
             log.step("视频下载成功")
         else:

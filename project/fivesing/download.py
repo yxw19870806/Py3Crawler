@@ -9,12 +9,12 @@ email: hikaru870806@hotmail.com
 import tkinter
 from tkinter import filedialog
 from common import *
-from project.fiveSing import fiveSing
+from project.fivesing import fivesing
 
 
 def main():
     # 初始化
-    fiveSing_class = fiveSing.FiveSing(extra_sys_config={crawler.SYS_NOT_CHECK_SAVE_DATA: True})
+    fiveSing_class = fivesing.FiveSing(extra_sys_config={crawler.SYS_NOT_CHECK_SAVE_DATA: True})
     # GUI窗口
     gui = tkinter.Tk()
     gui.withdraw()
@@ -28,15 +28,15 @@ def main():
             temp_list = audio_url.split("/")
             audio_type = temp_list[-2]
             audio_id = temp_list[-1].split(".")[0]
-        if not crawler.is_integer(audio_id) or audio_type not in ["yc", "fc", "bz"]:
+        if not tool.is_integer(audio_id) or audio_type not in ["yc", "fc", "bz"]:
             log.step("错误的歌曲地址，正确的地址格式如：http://5sing.kugou.com/fc/15887314.html")
             continue
         # 访问歌曲播放页
         try:
-            audio_response = fiveSing.get_audio_play_page(audio_id, audio_type)
+            audio_response = fivesing.get_audio_play_page(audio_id, audio_type)
         except crawler.CrawlerException as e:
             log.error("解析歌曲下载地址失败，原因：%s" % e.message)
-            tool.process_exit()
+            break
         if audio_response["is_delete"]:
             log.step("歌曲不存在，跳过")
             continue
@@ -53,7 +53,7 @@ def main():
             continue
         # 开始下载
         log.step("\n歌曲标题：%s\n歌曲地址：%s\n下载路径：%s" % (audio_response["audio_title"], audio_response["audio_url"], file_path))
-        save_file_return = net.save_net_file(audio_response["audio_url"], file_path, head_check=True)
+        save_file_return = net.download(audio_response["audio_url"], file_path, head_check=True)
         if save_file_return["status"] == 1:
             log.step("歌曲《%s》下载成功" % audio_response["audio_title"])
         else:

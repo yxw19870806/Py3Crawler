@@ -7,11 +7,11 @@ def akb(file_handle):
     for team_id in [1, 2, 3, 4, 12]:
         member_index_url = "http://www.akb48.co.jp/about/members/"
         query_data = {"team_id": team_id}
-        member_index_response = net.http_request(member_index_url, method="GET", fields=query_data)
+        member_index_response = net.request(member_index_url, method="GET", fields=query_data)
         if member_index_response.status == net.HTTP_RETURN_CODE_SUCCEED:
             member_list_page = tool.find_sub_string(member_index_response.data, '<ul class="memberListUl">', "</ul>")
             if member_list_page:
-                member_list = re.findall("<li>([\s|\S]*?)</li>", member_list_page)
+                member_list = re.findall(r"<li>([\s|\S]*?)</li>", member_list_page)
                 for member in member_list:
                     member = member.replace("<br />", "").replace("\n", "").replace("\r", "").replace("\t", "")
                     japanese_name = tool.find_sub_string(member, '<h4 class="memberListNamej">', "</h4>")
@@ -44,14 +44,14 @@ def ske(file_handle):
         "SKE48 Team Kenkyusei": ("<!-- LIST - KENKYUSEI -->", "<!-- //LIST - KENKYUSEI -->")
     }
     index_url = "http://www.ske48.co.jp/profile/list.php"
-    index_response = net.http_request(index_url, method="GET")
+    index_response = net.request(index_url, method="GET")
     if index_response.status == net.HTTP_RETURN_CODE_SUCCEED:
         for team_name in split_list:
             team_page = tool.find_sub_string(index_response.data, split_list[team_name][0], split_list[team_name][1])
-            member_list = re.findall("<dl>([\s|\S]*?)</dl>", team_page)
+            member_list = re.findall(r"<dl>([\s|\S]*?)</dl>", team_page)
             for member in member_list:
                 member = member.replace("<br />", "").replace("\n", "").replace("\r", "").replace("\t", "")
-                japanese_name_find = re.findall('<h3><a href="./\?id=[^"]*">([^<]*)</a></h3>', member)
+                japanese_name_find = re.findall(r'<h3><a href="./\?id=[^"]*">([^<]*)</a></h3>', member)
                 english_name = tool.find_sub_string(member, '<h3 class="en">', "</h3>")
                 plus_text = tool.find_sub_string(member, '<li class="textPlus">', "</li>")
                 if len(japanese_name_find) != 1:
@@ -80,20 +80,20 @@ def nmb(file_handle):
         "kenkyusei": "NMB48 Team Kenkyusei",
     }
     index_url = "http://www.nmb48.com/member/"
-    index_response = net.http_request(index_url, method="GET")
+    index_response = net.request(index_url, method="GET")
     if index_response.status == net.HTTP_RETURN_CODE_SUCCEED:
-        team_page_list = re.findall("<!--▼チーム別領域ボックス▼-->([\s|\S]*?)<!--▲チーム別領域ボックス▲--> ", index_response.data)
+        team_page_list = re.findall(r"<!--▼チーム別領域ボックス▼-->([\s|\S]*?)<!--▲チーム別領域ボックス▲--> ", index_response.data)
         for team_page in team_page_list:
             team_find = tool.find_sub_string(team_page, '<a name="', '"></a>')
             if team_find:
                 if team_find not in team_list:
                     output.print_msg("not found %s in team_list" % team_find)
                     continue
-                member_list = re.findall('<li class="member-box[^"]*">([\s|\S]*?)</li>', team_page)
+                member_list = re.findall(r'<li class="member-box[^"]*">([\s|\S]*?)</li>', team_page)
                 for member in member_list:
                     member = member.replace("<br />", "").replace("\n", "").replace("\r", "").replace("\t", "").replace("&nbsp;", " ")
                     japanese_name_find = re.findall('<h4><a href="[^"]*">([^<]*)</a></h4>', member)
-                    english_name_find = re.findall("<p[\s|\S]*?>([\s|\S]*?)</[p|a]>", member)
+                    english_name_find = re.findall(r"<p[\s|\S]*?>([\s|\S]*?)</[p|a]>", member)
                     if len(japanese_name_find) != 1:
                         output.print_msg("error japanese_name_find")
                         continue
@@ -118,19 +118,19 @@ def nmb(file_handle):
 
 def hkt(file_handle):
     index_url = "http://www.hkt48.jp/profile/"
-    index_response = net.http_request(index_url, method="GET")
+    index_response = net.request(index_url, method="GET")
     if index_response.status == net.HTTP_RETURN_CODE_SUCCEED:
-        team_find = re.findall("(<h3>[\s|\S]*?)<!-- / .contsbox --></div>", index_response.data)
+        team_find = re.findall(r"(<h3>[\s|\S]*?)<!-- / .contsbox --></div>", index_response.data)
         for team_page in team_find:
             team = tool.find_sub_string(team_page, "<h3>", "</h3>")
             if not team:
                 output.print_msg("error team")
                 continue
             team = team.strip()
-            member_list = re.findall("<li>([\s|\S]*?)</li>", team_page)
+            member_list = re.findall(r"<li>([\s|\S]*?)</li>", team_page)
             for member in member_list:
                 member = member.replace("<br />", "").replace("\n", "").replace("\r", "").replace("\t", "")
-                name_find = re.findall("""<a href="/profile/[\d]*"><img src="[^"]*" alt="[^"]*" width="120" height="150" /><span class='name_j'>([^"]*)</span><span class='name_e'>([^<]*)</span></a> """, member)
+                name_find = re.findall(r"""<a href="/profile/[\d]*"><img src="[^"]*" alt="[^"]*" width="120" height="150" /><span class='name_j'>([^"]*)</span><span class='name_e'>([^<]*)</span></a> """, member)
                 if len(name_find) != 1:
                     output.print_msg("error name_find")
                     continue
@@ -148,9 +148,9 @@ def hkt(file_handle):
 
 def jkt(file_handle):
     index_url = "http://www.jkt48.com/member/list"
-    index_response = net.http_request(index_url, method="GET")
+    index_response = net.request(index_url, method="GET")
     if index_response.status == net.HTTP_RETURN_CODE_SUCCEED:
-        page = tool.find_sub_string(index_response.data, '<div id="mainCol">', "<!--end #mainCol-->", 1)
+        page = tool.find_sub_string(index_response.data, '<div id="mainCol">', "<!--end #mainCol-->", tool.SUB_STRING_MODE_ONLY_START)
         start_index = 0
         start_index_list = []
         while start_index != -1:
@@ -166,7 +166,7 @@ def jkt(file_handle):
             if team_name.find("Team") == -1:
                 team_name = "Team kenkyusei"
             team_name = "JKT48 " + team_name
-            member_list = re.findall('<div class="profileWrap">([\s|\S]*?)</div><!--/loop-->', split_page)
+            member_list = re.findall(r'<div class="profileWrap">([\s|\S]*?)</div><!--/loop-->', split_page)
             for member in member_list:
                 member = member.replace("<br>", "").replace("\n", "").replace("\r", "").replace("\t", "")
                 japanese_name = english_name = tool.find_sub_string(member, 'alt="', '"')

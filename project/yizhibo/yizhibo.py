@@ -19,7 +19,7 @@ def get_photo_index_page(account_id):
     # https://www.yizhibo.com/member/personel/user_photos?memberid=6066534
     photo_index_url = "https://www.yizhibo.com/member/personel/user_photos"
     query_data = {"memberid": account_id}
-    photo_index_response = net.http_request(photo_index_url, method="GET", fields=query_data)
+    photo_index_response = net.request(photo_index_url, method="GET", fields=query_data)
     result = {
         "photo_url_list": [],  # 全部图片地址
     }
@@ -41,7 +41,7 @@ def get_photo_index_page(account_id):
 
 #  获取图片的header
 def get_photo_header(photo_url):
-    photo_head_response = net.http_request(photo_url, method="HEAD")
+    photo_head_response = net.request(photo_url, method="HEAD")
     result = {
         "photo_time": None,  # 图片上传时间
     }
@@ -65,7 +65,7 @@ def get_video_index_page(account_id):
     # https://www.yizhibo.com/member/personel/user_videos?memberid=6066534
     video_pagination_url = "https://www.yizhibo.com/member/personel/user_videos"
     query_data = {"memberid": account_id}
-    video_pagination_response = net.http_request(video_pagination_url, method="GET", fields=query_data)
+    video_pagination_response = net.request(video_pagination_url, method="GET", fields=query_data)
     result = {
         "is_exist": True,  # 是否存在视频
         "video_id_list": [],  # 全部视频id
@@ -90,7 +90,7 @@ def get_video_info_page(video_id):
     # https://api.xiaoka.tv/live/web/get_play_live?scid=xX9-TLVx0xTiSZ69
     video_info_url = "https://api.xiaoka.tv/live/web/get_play_live"
     query_data = {"scid": video_id}
-    video_info_response = net.http_request(video_info_url, method="GET", fields=query_data, json_decode=True)
+    video_info_response = net.request(video_info_url, method="GET", fields=query_data, json_decode=True)
     result = {
         "video_time": False,  # 视频上传时间
         "video_url_list": [],  # 全部视频分集地址
@@ -101,11 +101,11 @@ def get_video_info_page(video_id):
     result["video_time"] = crawler.get_json_value(video_info_response.json_data, "data", "createtime", type_check=int)
     # 获取视频地址所在文件地址
     video_file_url = crawler.get_json_value(video_info_response.json_data, "data", "linkurl", type_check=str)
-    video_file_response = net.http_request(video_file_url, method="GET")
+    video_file_response = net.request(video_file_url, method="GET")
     if video_file_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(video_info_response.status))
     video_file_response_content = video_file_response.data.decode(errors="ignore")
-    ts_id_list = re.findall("([\S]*.ts)", video_file_response_content)
+    ts_id_list = re.findall(r"([\S]*.ts)", video_file_response_content)
     if len(ts_id_list) == 0:
         raise crawler.CrawlerException("分集文件匹配视频地址失败\n%s" % video_file_response_content)
     # http://alcdn.hls.xiaoka.tv/20161122/6b6/c5f/xX9-TLVx0xTiSZ69/
@@ -129,19 +129,19 @@ class YiZhiBo(crawler.Crawler):
 
         # 解析存档文件
         # account_id  video_count  last_video_time  photo_count  last_photo_time(account_name)
-        self.account_list = crawler.read_save_data(self.save_data_path, 0, ["", "0", "0", "0", "0"])
+        self.save_data = crawler.read_save_data(self.save_data_path, 0, ["", "0", "0", "0", "0"])
 
     def main(self):
         try:
             # 循环下载每个id
             thread_list = []
-            for account_id in sorted(self.account_list.keys()):
+            for account_id in sorted(self.save_data.keys()):
                 # 提前结束
                 if not self.is_running():
                     break
 
                 # 开始下载
-                thread = Download(self.account_list[account_id], self)
+                thread = Download(self.save_data[account_id], self)
                 thread.start()
                 thread_list.append(thread)
 
@@ -154,23 +154,22 @@ class YiZhiBo(crawler.Crawler):
             self.stop_process()
 
         # 未完成的数据保存
-        if len(self.account_list) > 0:
-            file.write_file(tool.list_to_string(list(self.account_list.values())), self.temp_save_data_path)
+        self.write_remaining_save_data()
 
         # 重新排序保存存档文件
-        crawler.rewrite_save_file(self.temp_save_data_path, self.save_data_path)
+        self.rewrite_save_file()
 
-        log.step("全部下载完毕，耗时%s秒，共计图片%s张，视频%s个" % (self.get_run_time(), self.total_photo_count, self.total_video_count))
+        self.end_message()
 
 
 class Download(crawler.DownloadThread):
-    def __init__(self, account_info, main_thread):
-        crawler.DownloadThread.__init__(self, account_info, main_thread)
-        self.account_id = self.account_info[0]
-        if len(self.account_info) >= 6 and self.account_info[5]:
-            self.display_name = self.account_info[5]
+    def __init__(self, single_save_data, main_thread):
+        crawler.DownloadThread.__init__(self, single_save_data, main_thread)
+        self.account_id = self.single_save_data[0]
+        if len(self.single_save_data) >= 6 and self.single_save_data[5]:
+            self.display_name = self.single_save_data[5]
         else:
-            self.display_name = self.account_info[0]
+            self.display_name = self.single_save_data[0]
         self.step("开始")
 
     # 获取所有可下载图片
@@ -198,7 +197,7 @@ class Download(crawler.DownloadThread):
                 return []
 
             # 检查是否达到存档记录
-            if photo_head_response["photo_time"] > int(self.account_info[4]):
+            if photo_head_response["photo_time"] > int(self.single_save_data[4]):
                 photo_info_list.append({"photo_url": photo_url, "photo_time": photo_head_response["photo_time"]})
             else:
                 break
@@ -207,21 +206,23 @@ class Download(crawler.DownloadThread):
 
     # 解析单张图片
     def crawl_photo(self, photo_info):
-        photo_index = int(self.account_info[3]) + 1
+        photo_index = int(self.single_save_data[3]) + 1
         self.step("开始下载第%s张图片 %s" % (photo_index, photo_info["photo_url"]))
 
         photo_file_path = os.path.join(self.main_thread.photo_download_path, self.display_name, "%04d.%s" % (photo_index, net.get_file_type(photo_info["photo_url"])))
-        save_file_return = net.save_net_file(photo_info["photo_url"], photo_file_path)
+        save_file_return = net.download(photo_info["photo_url"], photo_file_path)
         if save_file_return["status"] == 1:
+            self.total_photo_count += 1  # 计数累加
             self.step("第%s张图片下载成功" % photo_index)
         else:
             self.error("第%s张图片 %s 下载失败，原因：%s" % (photo_index, photo_info["photo_url"], crawler.download_failre(save_file_return["code"])))
-            return
+            if self.check_thread_exit_after_download_failure(False):
+                return False
 
         # 图片下载完毕
-        self.total_photo_count += 1  # 计数累加
-        self.account_info[3] = str(photo_index)  # 设置存档记录
-        self.account_info[4] = str(photo_info["photo_time"])  # 设置存档记录
+        self.single_save_data[3] = str(photo_index)  # 设置存档记录
+        self.single_save_data[4] = str(photo_info["photo_time"])  # 设置存档记录
+        return True
 
     # 获取所有可下载视频
     def get_crawl_video_list(self):
@@ -249,7 +250,7 @@ class Download(crawler.DownloadThread):
                 return []
 
             # 检查是否达到存档记录
-            if video_info_response["video_time"] > int(self.account_info[2]):
+            if video_info_response["video_time"] > int(self.single_save_data[2]):
                 video_info_list.append(video_info_response)
             else:
                 break
@@ -258,21 +259,23 @@ class Download(crawler.DownloadThread):
 
     # 解析单个视频
     def crawl_video(self, video_info):
-        video_index = int(self.account_info[1]) + 1
+        video_index = int(self.single_save_data[1]) + 1
         self.step("开始下载第%s个视频 %s" % (video_index, video_info["video_url_list"]))
 
         video_file_path = os.path.join(self.main_thread.video_download_path, self.display_name, "%04d.ts" % video_index)
-        save_file_return = net.save_net_file_list(video_info["video_url_list"], video_file_path)
+        save_file_return = net.download_from_list(video_info["video_url_list"], video_file_path)
         if save_file_return["status"] == 1:
+            self.total_video_count += 1  # 计数累加
             self.step("第%s个视频下载成功" % video_index)
         else:
             self.error("第%s个视频 %s 下载失败" % (video_index, video_info["video_url_list"]))
-            return
+            if self.check_thread_exit_after_download_failure(False):
+                return False
 
         # 视频下载完毕
-        self.total_video_count += 1  # 计数累加
-        self.account_info[1] = str(video_index)  # 设置存档记录
-        self.account_info[2] = str(video_info["video_time"])  # 设置存档记录
+        self.single_save_data[1] = str(video_index)  # 设置存档记录
+        self.single_save_data[2] = str(video_info["video_time"])  # 设置存档记录
+        return True
 
     def run(self):
         try:
@@ -284,7 +287,8 @@ class Download(crawler.DownloadThread):
 
                 # 从最早的图片开始下载
                 while len(photo_info_list) > 0:
-                    self.crawl_photo(photo_info_list.pop())
+                    if not self.crawl_photo(photo_info_list.pop()):
+                        break
                     self.main_thread_check()  # 检测主线程运行状态
 
             # 视频下载
@@ -295,7 +299,8 @@ class Download(crawler.DownloadThread):
 
                 # 从最早的视频开始下载
                 while len(video_info_list) > 0:
-                    self.crawl_video(video_info_list.pop())
+                    if not self.crawl_video(video_info_list.pop()):
+                        break
                     self.main_thread_check()  # 检测主线程运行状态
         except (SystemExit, KeyboardInterrupt) as e:
             if isinstance(e, SystemExit) and e.code == 1:
@@ -308,10 +313,10 @@ class Download(crawler.DownloadThread):
 
         # 保存最后的信息
         with self.thread_lock:
-            file.write_file("\t".join(self.account_info), self.main_thread.temp_save_data_path)
+            self.write_single_save_data()
             self.main_thread.total_photo_count += self.total_photo_count
             self.main_thread.total_video_count += self.total_video_count
-            self.main_thread.account_list.pop(self.account_id)
+            self.main_thread.save_data.pop(self.account_id)
         self.step("下载完毕，总共获得%s张图片和%s个视频" % (self.total_photo_count, self.total_video_count))
         self.notify_main_thread()
 

@@ -6,13 +6,11 @@ http://www.kuwo.cn/
 email: hikaru870806@hotmail.com
 如有问题或建议请联系
 """
-import os
-import time
 import tkinter
 from tkinter import filedialog
-import traceback
 from common import *
 from project.kuwo import kuwo
+
 
 def main():
     # 初始化
@@ -26,10 +24,10 @@ def main():
         playlist_id = None
         if playlist_url.find("//www.kuwo.cn/playlist_detail/") > 0:
             playlist_id = playlist_url.split(playlist_url)[-1]
-        elif crawler.is_integer(playlist_url):
+        elif tool.is_integer(playlist_url):
             playlist_id = playlist_url
         # 无效的歌单地址
-        if not crawler.is_integer(playlist_id):
+        if not tool.is_integer(playlist_id):
             log.step("错误的歌单地址，正确的地址格式如：https://www.kuwo.cn/playlist_detail/123456789")
             continue
 
@@ -55,8 +53,6 @@ def main():
             "parent": gui,
         }
         file_path = tkinter.filedialog.asksaveasfilename(**options)
-
-
 
 
 if __name__ == "__main__":

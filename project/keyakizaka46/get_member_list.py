@@ -15,7 +15,7 @@ from project.keyakizaka46 import keyakizaka46_diary
 def get_account_from_index():
     index_url = "https://www.keyakizaka46.com/s/k46o/diary/member/list"
     query_data = {"cd": "member"}
-    index_response = net.http_request(index_url, method="GET", fields=query_data)
+    index_response = net.request(index_url, method="GET", fields=query_data)
     account_list = {}
     if index_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(index_response.status))
@@ -23,7 +23,7 @@ def get_account_from_index():
     member_list_data = tool.find_sub_string(index_response_content, '<ul class="thumb">', "</ul>")
     if not member_list_data:
         raise crawler.CrawlerException("页面截取账号列表失败\n%s" % index_response_content)
-    member_list_find = re.findall("<li ([\S|\s]*?)</li>", member_list_data)
+    member_list_find = re.findall(r"<li ([\S|\s]*?)</li>", member_list_data)
     for member_info in member_list_find:
         # 获取账号id
         account_id = tool.find_sub_string(member_info, "&ct=", '">')
@@ -45,9 +45,9 @@ def main():
     account_list_from_api = get_account_from_index()
     if len(account_list_from_api) > 0:
         for account_id in account_list_from_api:
-            if account_id not in keyakizaka46Diary_class.account_list:
-                keyakizaka46Diary_class.account_list[account_id] = [account_id, "0", account_list_from_api[account_id]]
-        temp_list = [keyakizaka46Diary_class.account_list[key] for key in sorted(keyakizaka46Diary_class.account_list.keys())]
+            if account_id not in keyakizaka46Diary_class.save_data:
+                keyakizaka46Diary_class.save_data[account_id] = [account_id, "0", account_list_from_api[account_id]]
+        temp_list = [keyakizaka46Diary_class.save_data[key] for key in sorted(keyakizaka46Diary_class.save_data.keys())]
         file.write_file(tool.list_to_string(temp_list), keyakizaka46Diary_class.save_data_path, file.WRITE_FILE_TYPE_REPLACE)
 
 

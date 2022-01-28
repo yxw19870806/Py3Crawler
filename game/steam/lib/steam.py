@@ -31,7 +31,7 @@ def get_discount_game_list():
     while True:
         output.print_msg("开始解析第%s页打折游戏" % page_count)
         discount_game_pagination_url = "https://store.steampowered.com/search/results?sort_by=Price_ASC&category1=996,998&os=win&specials=1&page=%s" % page_count
-        discount_game_pagination_response = net.http_request(discount_game_pagination_url, method="GET", cookies_list=COOKIE_INFO)
+        discount_game_pagination_response = net.request(discount_game_pagination_url, method="GET", cookies_list=COOKIE_INFO)
         if discount_game_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
             raise crawler.CrawlerException("第%s页打折游戏访问失败，原因：%s" % (page_count, crawler.request_failre(discount_game_pagination_response.status)))
         discount_game_pagination_response_content = discount_game_pagination_response.data.decode(errors="ignore")
@@ -84,7 +84,7 @@ def get_discount_game_list():
                 now_price = float(now_price)
             except ValueError:
                 now_price = 0
-            if not crawler.is_integer(discount):
+            if not tool.is_integer(discount):
                 if old_price == 0:
                     discount = 100
                 else:
@@ -115,7 +115,7 @@ def get_discount_game_list():
 # 获取游戏商店首页
 def get_game_store_index(game_id):
     game_index_url = "https://store.steampowered.com/app/%s" % game_id
-    game_index_response = net.http_request(game_index_url, method="GET", cookies_list=COOKIE_INFO, is_auto_redirect=False)
+    game_index_response = net.request(game_index_url, method="GET", cookies_list=COOKIE_INFO, is_auto_redirect=False)
     result = {
         "dlc_list": [],  # 游戏下的DLC列表
         "reviewed": False,  # 是否评测过
@@ -130,7 +130,7 @@ def get_game_store_index(game_id):
             return result
         else:
             COOKIE_INFO.update(net.get_cookies_from_response_header(game_index_response.headers))
-            game_index_response = net.http_request(game_index_response.getheader("Location"), method="GET", cookies_list=COOKIE_INFO)
+            game_index_response = net.request(game_index_response.getheader("Location"), method="GET", cookies_list=COOKIE_INFO)
     if game_index_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(game_index_response.status))
     game_index_response_content = game_index_response.data.decode(errors="ignore")
@@ -163,7 +163,7 @@ def get_self_uncompleted_account_badges(account_id):
         output.print_msg("开始解析第%s页徽章" % page_count)
         badges_pagination_url = "https://steamcommunity.com/profiles/%s/badges/" % account_id
         query_data = {"p": page_count}
-        badges_pagination_response = net.http_request(badges_pagination_url, method="GET", fields=query_data, cookies_list=COOKIE_INFO)
+        badges_pagination_response = net.request(badges_pagination_url, method="GET", fields=query_data, cookies_list=COOKIE_INFO)
         if badges_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
             raise crawler.CrawlerException("第%s页徽章访问失败，原因：%s" % (page_count, crawler.request_failre(badges_pagination_response.status)))
         badges_pagination_response_content = badges_pagination_response.data.decode(errors="ignore")
@@ -191,7 +191,7 @@ def get_self_uncompleted_account_badges(account_id):
                 badge_level_find = re.findall("(\d*) 级,", badge_level_html)
                 if len(badge_level_find) == 0:
                     badge_level_find = re.findall("Level (\d*),", badge_level_html)
-                if len(badge_level_find) == 1 and crawler.is_integer(badge_level_find[0]):
+                if len(badge_level_find) == 1 and tool.is_integer(badge_level_find[0]):
                     if int(badge_level_find[0]) == 5:
                         continue
                 else:
@@ -215,7 +215,7 @@ def get_self_uncompleted_account_badges(account_id):
 # 获取指定徽章仍然缺少的集换式卡牌名字和对应缺少的数量
 # badge_detail_url -> https://steamcommunity.com/profiles/76561198172925593/gamecards/459820/
 def get_self_account_badge_card(badge_detail_url):
-    badge_detail_response = net.http_request(badge_detail_url, method="GET", cookies_list=COOKIE_INFO)
+    badge_detail_response = net.request(badge_detail_url, method="GET", cookies_list=COOKIE_INFO)
     if badge_detail_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(badge_detail_response.status))
     badge_detail_response_content = badge_detail_response.data.decode(errors="ignore")
@@ -233,7 +233,7 @@ def get_self_account_badge_card(badge_detail_url):
             badge_level_find = re.findall("Level (\d*),", badge_level_html)
         if len(badge_level_find) != 1:
             raise crawler.CrawlerException("徽章等级信息徽章等级失败\n%s" % badge_level_html)
-        if not crawler.is_integer(badge_level_find[0]):
+        if not tool.is_integer(badge_level_find[0]):
             raise crawler.CrawlerException("徽章等级类型不正确\n%s" % badge_level_html)
         badge_level = int(badge_level_find[0])
     else:
@@ -266,7 +266,7 @@ def get_market_game_trade_card_price(game_id):
         "category_753_cardborder[0]": "tag_cardborder_0",
         "norender": "1",
     }
-    market_search_response = net.http_request(market_search_url, method="GET", fields=query_data, cookies_list=COOKIE_INFO, json_decode=True, is_url_encode=False)
+    market_search_response = net.request(market_search_url, method="GET", fields=query_data, cookies_list=COOKIE_INFO, json_decode=True, is_url_encode=False)
     if market_search_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(market_search_response.status))
     market_item_list = {}
@@ -293,7 +293,7 @@ def get_account_inventory(account_id):
         }
         if last_assert_id != "0":
             query_data["start_assetid"] = last_assert_id
-        api_response = net.http_request(api_url, method="GET", fields=query_data, json_decode=True)
+        api_response = net.request(api_url, method="GET", fields=query_data, json_decode=True)
         if api_response.status == 403:
             raise crawler.CrawlerException("账号隐私设置中未公开库存详情")
         if api_response.status != net.HTTP_RETURN_CODE_SUCCEED:
@@ -351,7 +351,7 @@ def get_account_badges(account_id):
         output.print_msg("开始解析第%s页徽章" % page_count)
         badges_pagination_url = "https://steamcommunity.com/profiles/%s/badges/" % account_id
         query_data = {"p": page_count}
-        badges_pagination_response = net.http_request(badges_pagination_url, method="GET", fields=query_data, cookies_list=cookies_list)
+        badges_pagination_response = net.request(badges_pagination_url, method="GET", fields=query_data, cookies_list=cookies_list)
         if badges_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
             raise crawler.CrawlerException("第%s页徽章访问失败，原因：%s" % (page_count, crawler.request_failre(badges_pagination_response.status)))
         badges_pagination_response_content = badges_pagination_response.data.decode(errors="ignore")
@@ -372,7 +372,7 @@ def get_account_badges(account_id):
             elif badge_detail_url.find("/gamecards/") == -1:
                 raise crawler.CrawlerException("页面截取的徽章详情地址 %s 格式不正确" % badge_detail_url)
             game_id = badge_detail_url.split("/")[-2]
-            if not crawler.is_integer(game_id):
+            if not tool.is_integer(game_id):
                 raise crawler.CrawlerException("徽章详情地址 %s 截取游戏id失败" % badge_detail_url)
             # 获取徽章等级
             badge_info_text = badge_selector.find('div.badge_content div.badge_info_description div').eq(1).html()
@@ -395,7 +395,7 @@ def get_account_badges(account_id):
 # 获取指定账号的全部游戏id列表
 def get_account_owned_app_list(user_id, is_played=False):
     game_index_url = "https://steamcommunity.com/profiles/%s/games/?tab=all" % user_id
-    game_index_response = net.http_request(game_index_url, method="GET")
+    game_index_response = net.request(game_index_url, method="GET")
     if game_index_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(game_index_response.status))
     game_index_response_content = game_index_response.data.decode(errors="ignore")
@@ -453,7 +453,7 @@ class Steam(crawler.Crawler):
         if need_login:
             # 检测是否登录
             login_url = "https://store.steampowered.com/login/checkstoredlogin/?redirectURL="
-            login_response = net.http_request(login_url, method="GET", cookies_list=self.cookie_value, is_auto_redirect=False)
+            login_response = net.request(login_url, method="GET", cookies_list=self.cookie_value, is_auto_redirect=False)
             if login_response.status != 302:
                 output.print_msg("登录返回code不正确，\n%s" % login_response.status)
                 tool.process_exit()

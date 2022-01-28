@@ -15,19 +15,26 @@ PROCESS_STATUS_STOP = 2  # 进程立刻停止，删除还未完成的数据
 
 
 class PortListenerEvent(threading.Thread):
-    """program status controller Class"""
+    """
+    程序运行状态控制
+    """
 
     def __init__(self, port, event_list=None):
         threading.Thread.__init__(self)
         self.ip = SERVER_IP
         self.port = int(port)
         self.event_list = event_list
+        self.listener = None
+
+    def __del__(self):
+        if isinstance(self.listener, Listener):
+            self.listener.close()
 
     def run(self):
-        listener = Listener((self.ip, self.port))
+        self.listener = Listener((self.ip, self.port))
         while True:
+            conn = self.listener.accept()
             try:
-                conn = listener.accept()
                 command = str(conn.recv())
                 if self.event_list and command in self.event_list:
                     self.event_list[command]()
@@ -35,4 +42,3 @@ class PortListenerEvent(threading.Thread):
                 pass
             finally:
                 conn.close()
-        listener.close()

@@ -16,10 +16,10 @@ from project.weibo import weibo
 # 获取一页的收藏微博ge
 def get_one_page_favorite(page_count):
     # https://www.weibo.com/fav?page=1
-    favorite_pagination_url = "http://www.weibo.com/fav"
+    favorite_pagination_url = "https://www.weibo.com/fav"
     query_data = {"page": page_count}
     cookies_list = {"SUB": weibo.COOKIE_INFO["SUB"]}
-    favorite_pagination_response = net.http_request(favorite_pagination_url, method="GET", fields=query_data, cookies_list=cookies_list)
+    favorite_pagination_response = net.request(favorite_pagination_url, method="GET", fields=query_data, cookies_list=cookies_list)
     result = {
         "blog_info_list": [],  # 所有微博信息
         "delete_blog_id_list": [],  # 全部已删除的微博ID
@@ -28,7 +28,7 @@ def get_one_page_favorite(page_count):
     if favorite_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(favorite_pagination_response.status))
     favorite_pagination_content = favorite_pagination_response.data.decode(errors="ignore")
-    favorite_data_html = tool.find_sub_string(favorite_pagination_content, '"ns":"pl.content.favoriteFeed.index"', '"})</script>', 2)
+    favorite_data_html = tool.find_sub_string(favorite_pagination_content, '"ns":"pl.content.favoriteFeed.index"', '"})</script>', tool.SUB_STRING_MODE_ONLY_END)
     favorite_data_html = tool.find_sub_string(favorite_data_html, '"html":"', '"})')
     if not favorite_data_html:
         raise crawler.CrawlerException("页面截取收藏信息失败\n%s" % favorite_pagination_content)
@@ -59,7 +59,7 @@ def get_one_page_favorite(page_count):
         }
         # 解析日志id
         blog_id = feed_selector.attr("mid")
-        if not crawler.is_integer(blog_id):
+        if not tool.is_integer(blog_id):
             raise crawler.CrawlerException("收藏信息解析微博id失败\n%s" % feed_selector.html())
         result_blog_info["blog_id"] = blog_id
         # WB_text       微博文本
@@ -85,7 +85,7 @@ def get_one_page_favorite(page_count):
     # 最后一条feed是分页信息
     page_selector = children_selector.eq(children_selector.length - 1)
     # 判断是不是最后一页
-    page_count_find = re.findall("第(\d*)页", page_selector.html())
+    page_count_find = re.findall(r"第(\d*)页", page_selector.html())
     if len(page_count_find) > 0:
         page_count_find = list(map(int, page_count_find))
         result["is_over"] = page_count >= max(page_count_find)
@@ -105,7 +105,7 @@ def delete_favorite(blog_id):
         "Referer": "https://weibo.com/fav",
     }
     cookies_list = {"SUB": weibo.COOKIE_INFO["SUB"]}
-    api_response = net.http_request(api_url, method="POST", fields=post_data, cookies_list=cookies_list, header_list=header_list, json_decode=True)
+    api_response = net.request(api_url, method="POST", fields=post_data, cookies_list=cookies_list, header_list=header_list, json_decode=True)
     if api_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(api_response.status))
     crawler.get_json_value(api_response.json_data, "code", type_check=int, value_check=100000)
@@ -141,7 +141,7 @@ class Favorite(crawler.Crawler):
         is_over = False
         while not is_over:
             if not self.is_running():
-                tool.process_exit(0)
+                tool.process_exit(tool.PROCESS_EXIT_CODE_NORMAL)
             log.step("开始解析第%s页收藏" % page_count)
 
             try:
@@ -177,7 +177,7 @@ class Favorite(crawler.Crawler):
                     log.step("微博%s开始下载第%s张图片 %s" % (blog_info["blog_id"], photo_count, photo_url))
 
                     file_path = os.path.join(photo_path, "%s.%s" % (photo_count, net.get_file_type(photo_url)))
-                    save_file_return = net.save_net_file(photo_url, file_path)
+                    save_file_return = net.download(photo_url, file_path)
                     if save_file_return["status"] == 1:
                         if weibo.check_photo_invalid(file_path):
                             path.delete_dir_or_file(file_path)
@@ -194,7 +194,7 @@ class Favorite(crawler.Crawler):
             else:
                 page_count += 1
 
-        log.step("全部下载完毕，耗时%s秒，共计图片%s张" % (self.get_run_time(), self.total_photo_count))
+        self.end_message()
 
 
 if __name__ == "__main__":

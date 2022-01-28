@@ -9,6 +9,10 @@ import json
 import os
 import platform
 import sqlite3
+from typing import Optional
+from selenium import webdriver
+from selenium.common.exceptions import WebDriverException
+from selenium.webdriver.chrome.webdriver import WebDriver
 
 if platform.system() == "Windows":
     import win32crypt
@@ -24,8 +28,56 @@ BROWSER_TYPE_CHROME = 3
 BROWSER_TYPE_TEXT = 4  # 直接从文件里读取cookies
 
 
-# 根据浏览器和操作系统，返回浏览器程序文件所在的路径
-def get_default_browser_application_path(browser_type):
+class Chrome:
+    def __init__(self, url, **kwargs):
+        """
+        返回selenium.webdriver.Chrome()方法创建的chrome驱动对象
+
+        :Args:
+        - url - 访问的地址，需要携带访问协议，如https://, file://
+        - kwargs
+            - headless - chrome-headless模式，默认值：True
+        """
+        if not os.path.exists(crawler.CHROME_WEBDRIVER_PATH):
+            raise crawler.CrawlerException(f"CHROME_WEBDRIVER_PATH: {crawler.CHROME_WEBDRIVER_PATH}不存在")
+
+        self.url = url
+        # 浏览器参数
+        chrome_options = webdriver.ChromeOptions()
+        chrome_options.headless = False if ("headless" in kwargs and not kwargs["headless"]) else True  # 不打开浏览器
+        if "add_argument" in kwargs and isinstance(kwargs["add_argument"], list):
+            for argument in kwargs["add_argument"]:
+                chrome_options.add_argument(argument)
+
+        if "desired_capabilities" in kwargs:
+            desired_capabilities = kwargs["desired_capabilities"]
+        else:
+            desired_capabilities = None
+
+        while True:
+            try:
+                self.chrome = webdriver.Chrome(executable_path=crawler.CHROME_WEBDRIVER_PATH, options=chrome_options, desired_capabilities=desired_capabilities)
+            except WebDriverException as e:
+                message = str(e)
+                if message.find("chrome not reachable") >= 0:
+                    continue
+                else:
+                    raise
+            else:
+                break
+
+    def __enter__(self) -> WebDriver:
+        self.chrome.get(self.url)
+        return self.chrome
+
+    def __exit__(self, exception_type, exception_val, traceback):
+        self.chrome.quit()
+
+
+def get_default_browser_application_path(browser_type: int) -> Optional[str]:
+    """
+    根据浏览器和操作系统，返回浏览器程序文件所在的路径
+    """
     if platform.system() != "Windows":
         return None
     if browser_type == BROWSER_TYPE_IE:
@@ -35,12 +87,14 @@ def get_default_browser_application_path(browser_type):
     elif browser_type == BROWSER_TYPE_CHROME:
         return os.path.abspath(os.path.join(os.getenv("ProgramFiles"), "Google\\Chrome\\Application\\chrome.exe"))
     else:
-        output.print_msg("不支持的浏览器类型：" + browser_type)
+        output.print_msg("不支持的浏览器类型：" + str(browser_type))
     return None
 
 
-# 根据浏览器和操作系统，自动查找默认浏览器cookie路径(只支持windows)
-def get_default_browser_cookie_path(browser_type):
+def get_default_browser_cookie_path(browser_type: int) -> Optional[str]:
+    """
+    根据浏览器和操作系统，自动查找默认浏览器cookie路径(只支持windows)
+    """
     if platform.system() != "Windows":
         return None
     if browser_type == BROWSER_TYPE_IE:
@@ -69,16 +123,21 @@ def get_default_browser_cookie_path(browser_type):
     elif browser_type == BROWSER_TYPE_TEXT:
         return os.path.abspath(os.path.join(crawler.PROJECT_APP_PATH, "info/cookies.data"))
     else:
-        output.print_msg("不支持的浏览器类型：" + browser_type)
+        output.print_msg("不支持的浏览器类型：" + str(browser_type))
     return None
 
 
-# 从浏览器保存的cookie文件中读取所有cookie
-# return    {
-#           "domain1": {"key1": "value1", "key2": "value2", ......}
-#           "domain2": {"key1": "value1", "key2": "value2", ......}
-#           }
-def get_all_cookie_from_browser(browser_type, file_path):
+def get_all_cookie_from_browser(browser_type: int, file_path: str) -> dict:
+    """
+    从浏览器保存的cookie文件中读取所有cookie
+
+    :Returns:
+        {
+            "domain1": {"key1": "value1", "key2": "value2", ......},
+            "domain2": {"key1": "value1", "key2": "value2", ......},
+            ......
+        }
+    """
     if not os.path.exists(file_path):
         output.print_msg("cookie目录：" + file_path + " 不存在")
         return {}
@@ -134,6 +193,6 @@ def get_all_cookie_from_browser(browser_type, file_path):
     elif browser_type == BROWSER_TYPE_TEXT:
         all_cookies["DEFAULT"] = net.split_cookies_from_cookie_string(file.read_file(file_path, file.READ_FILE_TYPE_FULL))
     else:
-        output.print_msg("不支持的浏览器类型：" + browser_type)
+        output.print_msg("不支持的浏览器类型：" + str(browser_type))
         return {}
     return all_cookies

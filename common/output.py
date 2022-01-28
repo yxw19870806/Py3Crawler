@@ -10,8 +10,10 @@ import time
 thread_lock = threading.Lock()
 
 
-def print_msg(msg, is_time=True):
-    """Console print message, thread safe"""
+def print_msg(msg, is_time: bool = True):
+    """
+    console输出（线程安全）
+    """
     msg = str(msg)
     if is_time:
         msg = _get_time() + " " + msg
@@ -19,6 +21,8 @@ def print_msg(msg, is_time=True):
         print(msg)
 
 
-def _get_time():
-    """Get formatted time string(%m-%d %H:%M:%S)"""
+def _get_time() -> str:
+    """
+    获取当前时间
+    """
     return time.strftime("%m-%d %H:%M:%S", time.localtime(time.time()))

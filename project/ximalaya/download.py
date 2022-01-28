@@ -24,7 +24,7 @@ def main():
         audio_id = None
         if audio_url.find("//www.ximalaya.com/") > 0:
             temp_list = audio_url.split("/")
-            if len(temp_list) >= 4 and crawler.is_integer(temp_list[-1]) and crawler.is_integer(temp_list[-2]):
+            if len(temp_list) >= 4 and tool.is_integer(temp_list[-1]) and tool.is_integer(temp_list[-2]):
                 audio_id = temp_list[-1]
         if audio_id is None:
             log.step("错误的歌曲地址，正确的地址格式如：https://www.ximalaya.com/xiangsheng/9723091/46106824")
@@ -34,7 +34,7 @@ def main():
             audio_response = ximalaya.get_audio_info_page(audio_id)
         except crawler.CrawlerException as e:
             log.error("解析歌曲下载地址失败，原因：%s" % e.message)
-            tool.process_exit()
+            break
         if audio_response["is_delete"]:
             log.step("歌曲不存在，跳过")
             continue
@@ -51,7 +51,7 @@ def main():
             continue
         # 开始下载
         log.step("\n歌曲标题：%s\n歌曲地址：%s\n下载路径：%s" % (audio_response["audio_title"], audio_response["audio_url"], file_path))
-        save_file_return = net.save_net_file(audio_response["audio_url"], file_path, head_check=True)
+        save_file_return = net.download(audio_response["audio_url"], file_path, head_check=True)
         if save_file_return["status"] == 1:
             log.step("歌曲《%s》下载成功" % audio_response["audio_title"])
         else:

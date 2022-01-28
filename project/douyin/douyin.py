@@ -10,7 +10,7 @@ import os
 import time
 import traceback
 from common import *
-from selenium import webdriver
+from common import browser
 from selenium.webdriver.common.by import By
 
 EACH_PAGE_VIDEO_COUNT = 21
@@ -25,7 +25,7 @@ def get_account_index_page(account_id):
     header_list = {
         "User-Agent": USER_AGENT,
     }
-    account_index_response = net.http_request(account_index_url, method="GET", header_list=header_list)
+    account_index_response = net.request(account_index_url, method="GET", header_list=header_list)
     result = {
         "dytk": "",  # 账号dytk值（请求参数）
         "signature": "",  # 加密串（请求参数）
@@ -46,13 +46,9 @@ def get_account_index_page(account_id):
     cache_html = os.path.join(CACHE_FILE_PATH, "%s.html" % account_id)
     file.write_file(template_html, cache_html, file.WRITE_FILE_TYPE_REPLACE)
     # 使用抖音的加密JS方法算出signature的值
-    chrome_options = webdriver.ChromeOptions()
-    chrome_options.headless = True  # 不打开浏览器
-    chrome_options.add_argument("user-agent=" + USER_AGENT)  # 使用指定UA
-    chrome = webdriver.Chrome(executable_path=crawler.CHROME_WEBDRIVER_PATH, options=chrome_options)
-    chrome.get("file:///" + os.path.realpath(cache_html))
-    signature = chrome.find_element(by=By.ID, value="result").text
-    chrome.quit()
+    chrome_options_argument = ["user-agent=" + USER_AGENT]
+    with browser.Chrome("file:///" + os.path.realpath(cache_html), add_argument=chrome_options_argument) as chrome:
+        signature = chrome.find_element(by=By.ID, value="result").text
     if not signature:
         raise crawler.CrawlerException("signature参数计算失败\n%s" % account_index_response_content)
     result["signature"] = signature
@@ -73,7 +69,7 @@ def get_one_page_video(account_id, cursor_id, dytk, signature):
         "Referer": "https://www.douyin.com/share/user/%s" % account_id,
         "User-Agent": USER_AGENT,
     }
-    video_pagination_response = net.http_request(api_url, method="GET", fields=query_data, header_list=header_list, json_decode=True)
+    video_pagination_response = net.request(api_url, method="GET", fields=query_data, header_list=header_list, json_decode=True)
     result = {
         "is_over": False,  # 是否最后一页视频
         "next_page_cursor_id": None,  # 下一页视频指针
@@ -112,19 +108,19 @@ class DouYin(crawler.Crawler):
 
         # 解析存档文件
         # account_id last_video_id
-        self.account_list = crawler.read_save_data(self.save_data_path, 0, ["", "0"])
+        self.save_data = crawler.read_save_data(self.save_data_path, 0, ["", "0"])
 
     def main(self):
         try:
             # 循环下载每个id
             thread_list = []
-            for account_id in sorted(self.account_list.keys()):
+            for account_id in sorted(self.save_data.keys()):
                 # 提前结束
                 if not self.is_running():
                     break
 
                 # 开始下载
-                thread = Download(self.account_list[account_id], self)
+                thread = Download(self.save_data[account_id], self)
                 thread.start()
                 thread_list.append(thread)
 
@@ -137,26 +133,25 @@ class DouYin(crawler.Crawler):
             self.stop_process()
 
         # 未完成的数据保存
-        if len(self.account_list) > 0:
-            file.write_file(tool.list_to_string(list(self.account_list.values())), self.temp_save_data_path)
+        self.write_remaining_save_data()
 
         # 重新排序保存存档文件
-        crawler.rewrite_save_file(self.temp_save_data_path, self.save_data_path)
+        self.rewrite_save_file()
 
         # 删除临时缓存目录
         path.delete_dir_or_file(CACHE_FILE_PATH)
 
-        log.step("全部下载完毕，耗时%s秒，共计视频%s个" % (self.get_run_time(), self.total_video_count))
+        self.end_message()
 
 
 class Download(crawler.DownloadThread):
-    def __init__(self, account_info, main_thread):
-        crawler.DownloadThread.__init__(self, account_info, main_thread)
-        self.account_id = self.account_info[0]
-        if len(self.account_info) >= 3 and self.account_info[2]:
-            self.display_name = self.account_info[2]
+    def __init__(self, single_save_data, main_thread):
+        crawler.DownloadThread.__init__(self, single_save_data, main_thread)
+        self.account_id = self.single_save_data[0]
+        if len(self.single_save_data) >= 3 and self.single_save_data[2]:
+            self.display_name = self.single_save_data[2]
         else:
-            self.display_name = self.account_info[0]
+            self.display_name = self.single_save_data[0]
         self.step("开始")
 
     # 获取所有可下载视频
@@ -189,7 +184,7 @@ class Download(crawler.DownloadThread):
             # 寻找这一页符合条件的视频
             for video_info in video_pagination_response["video_info_list"]:
                 # 检查是否达到存档记录
-                if video_info["video_id"] > int(self.account_info[1]):
+                if video_info["video_id"] > int(self.single_save_data[1]):
                     video_info_list.append(video_info)
                 else:
                     is_over = True
@@ -207,15 +202,16 @@ class Download(crawler.DownloadThread):
         self.step("开始下载视频%s %s" % (video_info["video_id"], video_info["video_url"]))
 
         file_path = os.path.join(self.main_thread.video_download_path, self.display_name, "%020d.mp4" % video_info["video_id"])
-        save_file_return = net.save_net_file(video_info["video_url"], file_path)
+        save_file_return = net.download(video_info["video_url"], file_path)
         if save_file_return["status"] == 1:
+            self.total_video_count += 1  # 计数累加
             self.step("视频%s下载成功" % video_info["video_id"])
         else:
             self.error("视频%s %s 下载失败，原因：%s" % (video_info["video_id"], video_info["video_url"], crawler.download_failre(save_file_return["code"])))
+            self.check_thread_exit_after_download_failure()
 
         # 视频下载完毕
-        self.account_info[1] = str(video_info["video_id"])  # 设置存档记录
-        self.total_video_count += 1  # 计数累加
+        self.single_save_data[1] = str(video_info["video_id"])  # 设置存档记录
 
     def run(self):
         try:
@@ -238,9 +234,9 @@ class Download(crawler.DownloadThread):
 
         # 保存最后的信息
         with self.thread_lock:
-            file.write_file("\t".join(self.account_info), self.main_thread.temp_save_data_path)
+            self.write_single_save_data()
             self.main_thread.total_video_count += self.total_video_count
-            self.main_thread.account_list.pop(self.account_id)
+            self.main_thread.save_data.pop(self.account_id)
         self.step("下载完毕，总共获得%s个视频" % self.total_video_count)
         self.notify_main_thread()
 

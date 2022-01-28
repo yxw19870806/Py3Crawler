@@ -17,9 +17,8 @@ from project.weibo import weibo
 
 # 获取指定页数的全部日志
 def get_one_page_blog(account_id, page_count):
-    # http://moexia.lofter.com/?page=1
     blog_pagination_url = "http://blog.sina.com.cn/s/articlelist_%s_0_%s.html" % (account_id, page_count)
-    blog_pagination_response = net.http_request(blog_pagination_url, method="GET")
+    blog_pagination_response = net.request(blog_pagination_url, method="GET")
     result = {
         "blog_info_list": [],  # 全部日志地址
         "is_over": False,  # 是否最后一页日志
@@ -66,7 +65,7 @@ def get_one_page_blog(account_id, page_count):
         else:
             result["is_over"] = True
     else:
-        max_page_count_find = re.findall("共(\d*)页", pagination_selector.html())
+        max_page_count_find = re.findall(r"共(\d*)页", pagination_selector.html())
         if len(max_page_count_find) != 1:
             raise crawler.CrawlerException("分页信息截取总页数失败\n%s" % blog_pagination_response_content)
         result["is_over"] = page_count >= int(max_page_count_find[0])
@@ -75,7 +74,7 @@ def get_one_page_blog(account_id, page_count):
 
 # 获取日志
 def get_blog_page(blog_url):
-    blog_response = net.http_request(blog_url, method="GET")
+    blog_response = net.request(blog_url, method="GET")
     result = {
         "photo_url_list": [],  # 全部图片地址
     }
@@ -116,19 +115,19 @@ class SinaBlog(crawler.Crawler):
 
         # 解析存档文件
         # account_name  last_blog_id
-        self.account_list = crawler.read_save_data(self.save_data_path, 0, ["", "0"])
+        self.save_data = crawler.read_save_data(self.save_data_path, 0, ["", "0"])
 
     def main(self):
         try:
             # 循环下载每个id
             thread_list = []
-            for account_name in sorted(self.account_list.keys()):
+            for account_name in sorted(self.save_data.keys()):
                 # 提前结束
                 if not self.is_running():
                     break
 
                 # 开始下载
-                thread = Download(self.account_list[account_name], self)
+                thread = Download(self.save_data[account_name], self)
                 thread.start()
                 thread_list.append(thread)
 
@@ -141,21 +140,20 @@ class SinaBlog(crawler.Crawler):
             self.stop_process()
 
         # 未完成的数据保存
-        if len(self.account_list) > 0:
-            file.write_file(tool.list_to_string(list(self.account_list.values())), self.temp_save_data_path)
+        self.write_remaining_save_data()
 
         # 重新排序保存存档文件
-        crawler.rewrite_save_file(self.temp_save_data_path, self.save_data_path)
+        self.rewrite_save_file()
 
-        log.step("全部下载完毕，耗时%s秒，共计图片%s张" % (self.get_run_time(), self.total_photo_count))
+        self.end_message()
 
 
 class Download(crawler.DownloadThread):
-    def __init__(self, account_info, main_thread):
-        crawler.DownloadThread.__init__(self, account_info, main_thread)
-        self.account_id = self.account_info[0]
-        if len(self.account_info) > 2 and self.account_info[2]:
-            self.display_name = self.account_info[2]
+    def __init__(self, single_save_data, main_thread):
+        crawler.DownloadThread.__init__(self, single_save_data, main_thread)
+        self.account_id = self.single_save_data[0]
+        if len(self.single_save_data) > 2 and self.single_save_data[2]:
+            self.display_name = self.single_save_data[2]
         else:
             self.display_name = self.account_id
         self.step("开始")
@@ -183,7 +181,7 @@ class Download(crawler.DownloadThread):
             # 寻找这一页符合条件的日志
             for blog_info in blog_pagination_response["blog_info_list"]:
                 # 检查是否达到存档记录
-                if blog_info["blog_time"] > int(self.account_info[1]):
+                if blog_info["blog_time"] > int(self.single_save_data[1]):
                     # 新增日志导致的重复判断
                     if blog_info["blog_url"] in unique_list:
                         continue
@@ -232,22 +230,23 @@ class Download(crawler.DownloadThread):
             self.step("日志《%s》 开始下载第%s张图片 %s" % (blog_info["blog_title"], photo_index, photo_url))
 
             file_path = os.path.join(photo_path, "%02d.%s" % (photo_index, net.get_file_type(photo_url, "jpg")))
-            save_file_return = net.save_net_file(photo_url, file_path)
+            save_file_return = net.download(photo_url, file_path)
             if save_file_return["status"] == 1:
                 if weibo.check_photo_invalid(file_path):
                     path.delete_dir_or_file(file_path)
                     self.error("第%s张图片 %s 资源已被删除，跳过" % (photo_index, photo_url))
                     continue
                 else:
+                    self.total_photo_count += photo_index - 1  # 计数累加
                     self.step("日志《%s》 第%s张图片下载成功" % (blog_info["blog_title"], photo_index))
-                    photo_index += 1
             else:
                 self.error("日志《%s》 第%s张图片 %s 下载失败，原因：%s" % (blog_info["blog_title"], photo_index, photo_url, crawler.download_failre(save_file_return["code"])))
+                self.check_thread_exit_after_download_failure()
+            photo_index += 1
 
         # 日志内图片全部下载完毕
         self.temp_path_list = []  # 临时目录设置清除
-        self.total_photo_count += photo_index - 1  # 计数累加
-        self.account_info[1] = str(blog_info["blog_time"])  # 设置存档记录
+        self.single_save_data[1] = str(blog_info["blog_time"])  # 设置存档记录
 
     def run(self):
         try:
@@ -272,9 +271,9 @@ class Download(crawler.DownloadThread):
 
         # 保存最后的信息
         with self.thread_lock:
-            file.write_file("\t".join(self.account_info), self.main_thread.temp_save_data_path)
+            self.write_single_save_data()
             self.main_thread.total_photo_count += self.total_photo_count
-            self.main_thread.account_list.pop(self.account_id)
+            self.main_thread.save_data.pop(self.account_id)
         self.step("下载完毕，总共获得%s张图片" % self.total_photo_count)
         self.notify_main_thread()
 
