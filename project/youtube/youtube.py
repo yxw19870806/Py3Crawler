@@ -450,7 +450,7 @@ class Youtube(crawler.Crawler):
         # 重新排序保存存档文件
         self.rewrite_save_file()
 
-        log.step("全部下载完毕，耗时%s秒，共计视频%s个" % (self.get_run_time(), self.total_video_count))
+        self.end_message()
 
 
 class Download(crawler.DownloadThread):

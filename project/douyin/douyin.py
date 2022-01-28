@@ -141,7 +141,7 @@ class DouYin(crawler.Crawler):
         # 删除临时缓存目录
         path.delete_dir_or_file(CACHE_FILE_PATH)
 
-        log.step("全部下载完毕，耗时%s秒，共计视频%s个" % (self.get_run_time(), self.total_video_count))
+        self.end_message()
 
 
 class Download(crawler.DownloadThread):

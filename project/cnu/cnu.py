@@ -136,7 +136,8 @@ class CNU(crawler.Crawler):
 
         # 重新保存存档文件
         file.write_file(str(album_id), self.save_data_path, file.WRITE_FILE_TYPE_REPLACE)
-        log.step("全部下载完毕，耗时%s秒，共计图片%s张" % (self.get_run_time(), self.total_photo_count))
+
+        self.end_message()
 
 
 class Download(crawler.DownloadThread):
