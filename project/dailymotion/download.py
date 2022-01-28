@@ -36,7 +36,7 @@ def main():
             video_response = dailymotion.get_video_page(video_id)
         except crawler.CrawlerException as e:
             log.error("解析视频下载地址失败，原因：%s" % e.message)
-            tool.process_exit()
+            break
         if video_response["is_delete"]:
             log.step("视频不存在，跳过")
             continue

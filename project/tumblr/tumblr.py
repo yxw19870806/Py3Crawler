@@ -1,7 +1,7 @@
 # -*- coding:UTF-8  -*-
 """
 tumblr图片&视频爬虫
-http://www.tumblr.com/
+https://www.tumblr.com/
 @author: hikaru
 email: hikaru870806@hotmail.com
 如有问题或建议请联系
@@ -144,7 +144,7 @@ def get_one_page_private_blog(account_id, page_count):
     }
     post_pagination_response = net.request(post_pagination_url, method="GET", fields=query_data, header_list=header_list, cookies_list=COOKIE_INFO, json_decode=True)
     result = {
-        "is_over": [],  # 是不是最后一页日志
+        "is_over": False,  # 是不是最后一页日志
         "post_info_list": [],  # 全部日志信息
     }
     if post_pagination_response.status == 404:
@@ -160,6 +160,7 @@ def get_one_page_private_blog(account_id, page_count):
         result_post_info = {
             "has_video": False,  # 是不是包含视频
             "photo_url_list": [],  # 全部图片地址
+            "post_id": None,  # 日志id
             "post_url": None,  # 日志地址
             "video_url": None,  # 视频地址
         }
@@ -258,13 +259,13 @@ def get_post_page(post_url, post_id):
             raise crawler.CrawlerException("页面脚本数据'image'字段类型错误\n%s" % script_json)
     else:
         # 获取全部图片地址
-        photo_url_list = re.findall('"(http[s]?://\d*[.]?media.tumblr.com/[^"]*)"', post_page_head)
+        photo_url_list = re.findall(r'"(http[s]?://\d*[.]?media.tumblr.com/[^"]*)"', post_page_head)
         new_photo_url_list = {}
         for photo_url in photo_url_list:
             # 头像，跳过
             if photo_url.find("/avatar_") != -1 or photo_url[-9:] == "_75sq.gif" or photo_url[-9:] == "_75sq.jpg" or photo_url[-9:] == "_75sq.png":
                 continue
-            elif len(re.findall("/birthday\d_", photo_url)) == 1:
+            elif len(re.findall(r"/birthday\d_", photo_url)) == 1:
                 continue
             photo_id, resolution = analysis_photo(photo_url)
             # 判断是否有分辨率更小的相同图片

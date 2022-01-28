@@ -67,7 +67,7 @@ def get_one_page_video(account_id, cursor_id, signature):
     if video_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(video_pagination_response.status))
     # 判断是不是最后一页
-    result["is_over"] = crawler.get_json_value(video_pagination_response.json_data, "body", "hasMore", type_check=bool) == True
+    result["is_over"] = crawler.get_json_value(video_pagination_response.json_data, "body", "hasMore", type_check=bool) is True
     # 判断是不是最后一页
     if not result["is_over"]:
         result["next_page_cursor_id"] = crawler.get_json_value(video_pagination_response.json_data, "body", "maxCursor", type_check=int)

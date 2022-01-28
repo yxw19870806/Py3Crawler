@@ -17,7 +17,6 @@ from project.weibo import weibo
 
 # 获取指定页数的全部日志
 def get_one_page_blog(account_id, page_count):
-    # http://moexia.lofter.com/?page=1
     blog_pagination_url = "http://blog.sina.com.cn/s/articlelist_%s_0_%s.html" % (account_id, page_count)
     blog_pagination_response = net.request(blog_pagination_url, method="GET")
     result = {
@@ -66,7 +65,7 @@ def get_one_page_blog(account_id, page_count):
         else:
             result["is_over"] = True
     else:
-        max_page_count_find = re.findall("共(\d*)页", pagination_selector.html())
+        max_page_count_find = re.findall(r"共(\d*)页", pagination_selector.html())
         if len(max_page_count_find) != 1:
             raise crawler.CrawlerException("分页信息截取总页数失败\n%s" % blog_pagination_response_content)
         result["is_over"] = page_count >= int(max_page_count_find[0])

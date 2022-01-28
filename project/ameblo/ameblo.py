@@ -45,7 +45,7 @@ def get_one_page_blog(account_name, page_count):
         raise crawler.CrawlerException(crawler.request_failre(blog_pagination_response.status))
     blog_pagination_response_content = blog_pagination_response.data.decode(errors="ignore")
     # 获取日志id
-    blog_id_list = re.findall('data-unique-entry-id="([\d]*)"', blog_pagination_response_content)
+    blog_id_list = re.findall(r'data-unique-entry-id="([\d]*)"', blog_pagination_response_content)
     result["blog_id_list"] = list(map(int, blog_id_list))
     # 另一种页面格式
     if len(result["blog_id_list"]) == 0:

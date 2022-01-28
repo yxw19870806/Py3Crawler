@@ -73,7 +73,7 @@ def get_favorites_list(favorites_id):
         api_response = net.request(api_url, method="GET", fields=query_data, cookies_list=COOKIE_INFO, json_decode=True)
         try:
             video_info_list = crawler.get_json_value(api_response.json_data, "data", "media_list", type_check=list)
-        except crawler.CrawlerException as e:
+        except crawler.CrawlerException:
             if crawler.get_json_value(api_response.json_data, "data", "media_list", value_check=None) is None:
                 video_info_list = []
             else:

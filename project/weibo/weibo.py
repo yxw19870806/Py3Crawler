@@ -70,7 +70,7 @@ def check_photo_invalid(file_path):
 
 # 获取一页的图片信息
 def get_one_page_photo(account_id, page_count):
-    photo_pagination_url = "http://photo.weibo.com/photos/get_all"
+    photo_pagination_url = "https://photo.weibo.com/photos/get_all"
     query_data = {
         "uid": account_id,
         "count": EACH_PAGE_PHOTO_COUNT,
@@ -88,8 +88,8 @@ def get_one_page_photo(account_id, page_count):
         raise crawler.CrawlerException(crawler.request_failre(photo_pagination_response.status))
     for photo_info in crawler.get_json_value(photo_pagination_response.json_data, "data", "photo_list", type_check=list):
         result_photo_info = {
-            "photo_time": None,  # 图片上传时间
             "photo_id": None,  # 图片上传时间
+            "photo_time": None,  # 图片上传时间
             "photo_url": None,  # 图片地址
         }
         # 获取图片上传时间

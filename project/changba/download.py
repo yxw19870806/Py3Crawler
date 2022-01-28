@@ -36,7 +36,7 @@ def main():
             audio_response = changba.get_audio_play_page(audio_key)
         except crawler.CrawlerException as e:
             log.error("解析歌曲下载地址失败，原因：%s" % e.message)
-            tool.process_exit()
+            break
         if audio_response["is_delete"]:
             log.step("歌曲不存在，跳过")
             continue

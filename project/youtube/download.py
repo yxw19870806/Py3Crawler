@@ -47,7 +47,7 @@ def main():
             video_response = youtube.get_video_page(video_id)
         except crawler.CrawlerException as e:
             log.error("解析视频下载地址失败，原因：%s" % e.message)
-            tool.process_exit()
+            break
         if video_response["skip_reason"]:
             log.error("视频%s %s" % (video_id, video_response["skip_reason"]))
             continue

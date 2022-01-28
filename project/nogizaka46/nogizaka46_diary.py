@@ -55,7 +55,7 @@ def get_one_page_blog(account_id, page_count):
         # 获取图片地址列表
         result_photo_info["photo_url_list"] = re.findall('src="(http[^"]*)"', blog_body_html)
         # 获取全部大图对应的小图
-        big_photo_list_find = re.findall('<a href="([^"]*)"><img[\S|\s]*? src="([^"]*)"', blog_body_html)
+        big_photo_list_find = re.findall(r'<a href="([^"]*)"><img[\S|\s]*? src="([^"]*)"', blog_body_html)
         big_2_small_photo_lust = {}
         for big_photo_url, small_photo_url in big_photo_list_find:
             big_2_small_photo_lust[small_photo_url] = big_photo_url

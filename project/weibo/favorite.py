@@ -16,7 +16,7 @@ from project.weibo import weibo
 # 获取一页的收藏微博ge
 def get_one_page_favorite(page_count):
     # https://www.weibo.com/fav?page=1
-    favorite_pagination_url = "http://www.weibo.com/fav"
+    favorite_pagination_url = "https://www.weibo.com/fav"
     query_data = {"page": page_count}
     cookies_list = {"SUB": weibo.COOKIE_INFO["SUB"]}
     favorite_pagination_response = net.request(favorite_pagination_url, method="GET", fields=query_data, cookies_list=cookies_list)
@@ -85,7 +85,7 @@ def get_one_page_favorite(page_count):
     # 最后一条feed是分页信息
     page_selector = children_selector.eq(children_selector.length - 1)
     # 判断是不是最后一页
-    page_count_find = re.findall("第(\d*)页", page_selector.html())
+    page_count_find = re.findall(r"第(\d*)页", page_selector.html())
     if len(page_count_find) > 0:
         page_count_find = list(map(int, page_count_find))
         result["is_over"] = page_count >= max(page_count_find)
