@@ -198,10 +198,8 @@ def filter_text(text: str) -> str:
         filter_character_list += ["\\", "/", ":", "*", "?", '"', "<", ">", "|"]
     for filter_character in filter_character_list:
         text = text.replace(filter_character, " ")  # 过滤一些windows文件名屏蔽的字符
-    while True:
-        new_text = text.strip().strip(".")  # 去除前后空格以及点
-        # 如果前后没有区别则直接返回
-        if text == new_text:
-            return text
-        else:
-            text = new_text
+    # 去除前后空格以及点
+    # 如果前后没有区别则直接返回
+    while (new_text := text.strip().strip(".")) != text:
+        text = new_text
+    return text

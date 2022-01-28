@@ -538,10 +538,7 @@ def _check_multi_thread_download_file(file_path):
         return True
     with open(file_path, "rb") as file_handle:
         buffer_size = 2 ** 20  # 1M
-        while True:
-            file_buffer = file_handle.read(buffer_size)
-            if not file_buffer:
-                break
+        while file_buffer := file_handle.read(buffer_size):
             if file_buffer.find(b"\x00" * (2 ** 10)) >= 0:
                 return False
     return True
