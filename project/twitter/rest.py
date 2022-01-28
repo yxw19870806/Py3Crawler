@@ -51,7 +51,6 @@ def init():
             output.print_msg("access token get succeed!")
             return True
         output.print_msg("incorrect api info, please type again!")
-    return False
 
 
 def get_access_token(api_key, api_secret):

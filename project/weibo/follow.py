@@ -12,12 +12,12 @@ from project.weibo import weibo
 
 # 关注指定账号
 def follow_account(account_id):
-    api_url = "http://weibo.com/aj/f/followed?ajwvr=6"
+    api_url = "https://weibo.com/aj/f/followed?ajwvr=6"
     post_data = {
         "uid": account_id,
         "refer_flag": "1005050001_",
     }
-    header_list = {"Referer": "http://weibo.com/%s/follow" % account_id}
+    header_list = {"Referer": "https://weibo.com/%s/follow" % account_id}
     cookies_list = {"SUB": weibo.COOKIE_INFO["SUB"]}
     follow_response = net.request(api_url, method="POST", fields=post_data, header_list=header_list, cookies_list=cookies_list, json_decode=True)
     if follow_response.status != net.HTTP_RETURN_CODE_SUCCEED:

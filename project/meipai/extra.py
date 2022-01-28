@@ -21,7 +21,7 @@ def get_follow_list(account_id):
         if follow_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
             return None
         follow_pagination_response_content = follow_pagination_response.data.decode(errors="ignore")
-        follow_list_find = re.findall('<div class="ucard-info">([\s|\S]*?)</div>', follow_pagination_response_content)
+        follow_list_find = re.findall(r'<div class="ucard-info">([\s|\S]*?)</div>', follow_pagination_response_content)
         for follow_info in follow_list_find:
             follow_account_id = tool.find_sub_string(follow_info, '<a hidefocus href="/user/', '"').strip()
             follow_account_name = tool.find_sub_string(follow_info, 'title="', '"')
@@ -29,7 +29,7 @@ def get_follow_list(account_id):
         if max_page_count == 1:
             page_info = tool.find_sub_string(follow_pagination_response_content, '<div class="paging-wrap">', "</div>")
             if page_info:
-                page_count_find = re.findall("friends\?p=(\d*)", page_info)
+                page_count_find = re.findall(r"friends\?p=(\d*)", page_info)
                 max_page_count = max(list(map(int, page_count_find)))
         page_count += 1
     return follow_list

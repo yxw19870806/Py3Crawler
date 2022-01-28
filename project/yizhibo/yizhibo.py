@@ -105,7 +105,7 @@ def get_video_info_page(video_id):
     if video_file_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(video_info_response.status))
     video_file_response_content = video_file_response.data.decode(errors="ignore")
-    ts_id_list = re.findall("([\S]*.ts)", video_file_response_content)
+    ts_id_list = re.findall(r"([\S]*.ts)", video_file_response_content)
     if len(ts_id_list) == 0:
         raise crawler.CrawlerException("分集文件匹配视频地址失败\n%s" % video_file_response_content)
     # http://alcdn.hls.xiaoka.tv/20161122/6b6/c5f/xX9-TLVx0xTiSZ69/

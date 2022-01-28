@@ -67,8 +67,6 @@ def get_audio_info_page(audio_id):
 
 class KuWo(crawler.Crawler):
     def __init__(self, **kwargs):
-        global COOKIE_INFO
-
         # 设置APP目录
         crawler.PROJECT_APP_PATH = os.path.abspath(os.path.dirname(__file__))
 

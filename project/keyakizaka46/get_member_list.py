@@ -23,7 +23,7 @@ def get_account_from_index():
     member_list_data = tool.find_sub_string(index_response_content, '<ul class="thumb">', "</ul>")
     if not member_list_data:
         raise crawler.CrawlerException("页面截取账号列表失败\n%s" % index_response_content)
-    member_list_find = re.findall("<li ([\S|\s]*?)</li>", member_list_data)
+    member_list_find = re.findall(r"<li ([\S|\s]*?)</li>", member_list_data)
     for member_info in member_list_find:
         # 获取账号id
         account_id = tool.find_sub_string(member_info, "&ct=", '">')

@@ -43,7 +43,7 @@ def get_index_page():
     if index_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(index_response.status))
     index_response_content = index_response.data.decode(errors="ignore")
-    archive_id_find = re.findall('<a class="no-deco" href="http://www.ivseek.com/archives/(\d*).html">', index_response_content)
+    archive_id_find = re.findall(r'<a class="no-deco" href="http://www.ivseek.com/archives/(\d*).html">', index_response_content)
     if len(archive_id_find) == 0:
         raise crawler.CrawlerException("页面匹配视频id失败\n%s" % index_response_content)
     result["max_archive_id"] = max(list(map(int, archive_id_find)))
@@ -65,8 +65,8 @@ def get_archive_page(archive_id):
         raise crawler.CrawlerException(crawler.request_failre(archive_response.status))
     archive_response_content = archive_response.data.decode(errors="ignore")
     # 获取视频地址
-    video_url_find1 = re.findall('<iframe[\s|\S]*?src="([^"]*)"', archive_response_content)
-    video_url_find2 = re.findall('<script type="\w*/javascript" src="(http[s]?://\w*.nicovideo.jp/[^"]*)"></script>', archive_response_content)
+    video_url_find1 = re.findall(r'<iframe[\s|\S]*?src="([^"]*)"', archive_response_content)
+    video_url_find2 = re.findall(r'<script type="\w*/javascript" src="(http[s]?://\w*.nicovideo.jp/[^"]*)"></script>', archive_response_content)
     video_url_find = video_url_find1 + video_url_find2
     if len(video_url_find) == 0:
         return result

@@ -1,7 +1,7 @@
 # -*- coding:UTF-8  -*-
 # 判断存档文件中的数量和保存目录中的数量是否一致
 import os
-from common import output, tool
+from common import output, file
 
 # 文件保存目录
 FILE_STORAGE_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), "photo"))
@@ -29,7 +29,6 @@ def get_storage_file_count():
         total_file_count = len(file_list)
         # 如果文件名全部是整数，那么判断最大的序号是否和总数一致
         if IS_INTEGER:
-            dir_name = dir_name.decode("GBK")
             file_max_index = 0
             for file_name in file_list:
                 file_max_index = max(int(file_name.split(".")[0]), file_max_index)
@@ -47,7 +46,7 @@ def get_save_data_file_count():
     account_list = {}
     for line in file.read_file(SAVE_DATA_FILE_PATH, file.READ_FILE_TYPE_LINE):
         temp_list = line.replace("\n", "").split("\t")
-        account_list[temp_list[PRIME_KEY_INDEX].decode("UTF-8")] = int(temp_list[COUNT_INDEX])
+        account_list[temp_list[PRIME_KEY_INDEX]] = int(temp_list[COUNT_INDEX])
     return account_list
 
 

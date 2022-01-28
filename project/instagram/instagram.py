@@ -20,7 +20,7 @@ COOKIE_INFO = {"csrftoken": "", "mid": "", "sessionid": ""}
 REQUEST_LIMIT_DURATION = 10  # 请求统计的分钟数量
 REQUEST_LIMIT_COUNT = 300  # 一定时间范围内的请求次数限制
 REQUEST_MINTER_COUNT = {}  # 每分钟的请求次数
-SESSION_DATA_PATH = None
+SESSION_DATA_PATH = ''
 
 
 # 生成session cookies
@@ -41,7 +41,7 @@ def init_session():
 
 # 检测登录状态
 def check_login():
-    if not COOKIE_INFO["sessionid"] and SESSION_DATA_PATH is not None:
+    if not COOKIE_INFO["sessionid"] and SESSION_DATA_PATH:
         # 从文件中读取账号密码
         account_data = tool.json_decode(crypto.Crypto().decrypt(file.read_file(SESSION_DATA_PATH)), {})
         if crawler.check_sub_key(("email", "password"), account_data):
@@ -66,7 +66,7 @@ def login_from_console():
             input_str = input_str.lower()
             if input_str in ["y", "yes"]:
                 if _do_login(email, password):
-                    if IS_LOCAL_SAVE_SESSION and SESSION_DATA_PATH is not None:
+                    if IS_LOCAL_SAVE_SESSION and SESSION_DATA_PATH:
                         file.write_file(crypto.Crypto().encrypt(json.dumps({"email": email, "password": password})), SESSION_DATA_PATH, file.WRITE_FILE_TYPE_REPLACE)
                     return True
                 return False

@@ -161,8 +161,8 @@ def get_video_page(video_id):
         raise crawler.CrawlerException("ytInitialData加载失败\n%s" % script_json_html)
     # 获取视频发布时间
     try:
-        video_time_string = crawler.get_json_value(script_json, "contents", "twoColumnWatchNextResults", "results", "results", "contents", 1, "videoSecondaryInfoRenderer",
-                                               "dateText", "simpleText", type_check=str)
+        video_time_string = crawler.get_json_value(script_json, "contents", "twoColumnWatchNextResults", "results", "results",
+                                                   "contents", 1, "videoSecondaryInfoRenderer", "dateText", "simpleText", type_check=str)
     except crawler.CrawlerException:
         if video_status == "ERROR":
             result["skip_reason"] = "视频不存在"
@@ -171,7 +171,7 @@ def get_video_page(video_id):
             raise
     video_time = 0
     # en
-    video_time_find = re.findall("(\w* \d*, \d*)", video_time_string)
+    video_time_find = re.findall(r"(\w* \d*, \d*)", video_time_string)
     if len(video_time_find) == 1:
         try:
             video_time = time.strptime(video_time_string, "%b %d, %Y")
@@ -179,10 +179,10 @@ def get_video_page(video_id):
             pass
     else:
         # zh、zh-hk
-        video_time_find = re.findall("(\d*)年(\d*)月(\d*)日", video_time_string)
+        video_time_find = re.findall(r"(\d*)年(\d*)月(\d*)日", video_time_string)
         if len(video_time_find) != 1:
             # ja
-            video_time_find = re.findall("(\d*)/(\d*)/(\d*)", video_time_string)
+            video_time_find = re.findall(r"(\d*)/(\d*)/(\d*)", video_time_string)
         if len(video_time_find) == 1:
             try:
                 video_time = time.strptime("%s %s %s" % (video_time_find[0][0], video_time_find[0][1], video_time_find[0][2]), "%Y %m %d")
@@ -314,7 +314,7 @@ def get_decrypt_step(js_file_url):
         if not sub_decrypt_step:
             continue
         # (加密方法所在变量名，加密方法名，加密方法参数)
-        sub_decrypt_step_find = re.findall("([\w\$_]*)\.(\w*)\(a,(\d*)\)", sub_decrypt_step)
+        sub_decrypt_step_find = re.findall(r"([\w$_]*)\.(\w*)\(a,(\d*)\)", sub_decrypt_step)
         if len(sub_decrypt_step_find) != 1:
             raise crawler.CrawlerException("播放器JS文件 %s，加密步骤匹配失败\n%s" % (js_file_url, sub_decrypt_step))
         if decrypt_function_var is None:

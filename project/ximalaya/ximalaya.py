@@ -175,7 +175,9 @@ def get_audio_info_page(audio_id):
 
 
 class XiMaLaYa(crawler.Crawler):
-    def __init__(self, sys_config, **kwargs):
+    def __init__(self, sys_config=None, **kwargs):
+        if sys_config is None:
+            sys_config = {}
         global COOKIE_INFO, IS_LOGIN
         # 设置APP目录
         crawler.PROJECT_APP_PATH = os.path.abspath(os.path.dirname(__file__))
