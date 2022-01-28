@@ -111,8 +111,8 @@ def set_proxy(ip: str, port: str):
     if not match or match.group() != ip:
         return
     global PROXY_HTTP_CONNECTION_POOL
-    PROXY_HTTP_CONNECTION_POOL = urllib3.ProxyManager("http://%s:%s" % (ip, port), retries=False)
-    output.print_msg("设置代理成功(%s:%s)" % (ip, port))
+    PROXY_HTTP_CONNECTION_POOL = urllib3.ProxyManager(f"http://{ip}:{port}", retries=False)
+    output.print_msg(f"设置代理成功({ip}:{port})")
 
 
 def build_header_cookie_string(cookies_list: dict) -> str:
@@ -383,11 +383,11 @@ def _random_user_agent():
     if browser_type == "firefox":
         firefox_version = random.randint(firefox_version_max - 10, firefox_version_max)
         os_type = random.choice(list(windows_version_dict.values()))
-        return "Mozilla/5.0 (%s; WOW64; rv:%s.0) Gecko/20100101 Firefox/%s.0" % (os_type, firefox_version, firefox_version)
+        return f"Mozilla/5.0 ({os_type}; WOW64; rv:{firefox_version}.0) Gecko/20100101 Firefox/{firefox_version}.0"
     elif browser_type == "chrome":
         chrome_version = random.choice(chrome_version_list)
         os_type = random.choice(list(windows_version_dict.values()))
-        return "Mozilla/5.0 (%s; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/%s Safari/537.36" % (os_type, chrome_version)
+        return f"Mozilla/5.0 ({os_type}; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/{chrome_version} Safari/537.36"
     return ""
 
 
@@ -395,7 +395,7 @@ def _random_ip_address():
     """
     Get a random IP address(not necessarily correct)
     """
-    return "%s.%s.%s.%s" % (random.randint(1, 254), random.randint(0, 255), random.randint(0, 255), random.randint(0, 255))
+    return f"{random.randint(1, 254)}.{random.randint(0, 255)}.{random.randint(0, 255)}.{random.randint(0, 255)}"
 
 
 def download(file_url, file_path, need_content_type=False, head_check=False, replace_if_exist=None, **kwargs):
@@ -416,7 +416,7 @@ def download(file_url, file_path, need_content_type=False, head_check=False, rep
     if not isinstance(replace_if_exist, bool):
         replace_if_exist = DOWNLOAD_REPLACE_IF_EXIST
     if not replace_if_exist and os.path.exists(file_path) and os.path.getsize(file_path) > 0:
-        output.print_msg("文件%s（%s）已存在，跳过" % (file_path, file_url))
+        output.print_msg(f"文件{file_path}（{file_url}）已存在，跳过")
         return {"status": 1, "code": 0, "file_path": file_path}
     # 判断保存目录是否存在
     if not path.create_dir(os.path.dirname(file_path)):
@@ -511,7 +511,7 @@ def download(file_url, file_path, need_content_type=False, head_check=False, rep
             if len(error_flag) > 0:
                 continue
             if not _check_multi_thread_download_file(file_path):
-                output.print_msg("网络文件%s多线程下载后发现无效字节" % file_url)
+                output.print_msg(f"网络文件{file_url}多线程下载后发现无效字节")
                 continue
         if content_length is None:
             return {"status": 1, "code": 0, "file_path": file_path}
@@ -520,7 +520,7 @@ def download(file_url, file_path, need_content_type=False, head_check=False, rep
         if content_length == file_size:
             return {"status": 1, "code": 0, "file_path": file_path}
         else:
-            output.print_msg("本地文件%s：%s和网络文件%s：%s不一致" % (file_path, content_length, file_url, file_size))
+            output.print_msg(f"本地文件{file_path}：{content_length}和网络文件{file_url}：{file_size}不一致")
             time.sleep(NET_CONFIG["HTTP_REQUEST_RETRY_WAIT_TIME"])
     if is_create_file:
         path.delete_dir_or_file(file_path)
@@ -613,14 +613,14 @@ class MultiThreadDownload(threading.Thread):
         self.error_flag = error_flag
 
     def run(self):
-        headers_list = {"Range": "bytes=%s-%s" % (self.start_pos, self.end_pos)}
+        headers_list = {"Range": f"bytes={self.start_pos}-{self.end_pos}"}
         range_size = self.end_pos - self.start_pos + 1
         for retry_count in range(0, NET_CONFIG["DOWNLOAD_RETRY_COUNT"]):
             response = request(self.file_url, method="GET", header_list=headers_list)
             if response.status == 206:
                 # 下载的文件和请求的文件大小不一致
                 if len(response.data) != range_size:
-                    output.print_msg("网络文件%s：range %s - %s实际下载大小 %s 不一致" % (self.file_url, self.start_pos, self.end_pos, len(response.data)))
+                    output.print_msg(f"网络文件{self.file_url}：range {self.start_pos} - {self.end_pos}实际下载大小 {len(response.data)} 不一致")
                     time.sleep(NET_CONFIG["HTTP_REQUEST_RETRY_WAIT_TIME"])
                 else:
                     # 写入本地文件后退出
