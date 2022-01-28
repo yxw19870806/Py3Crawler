@@ -194,7 +194,7 @@ class Favorite(crawler.Crawler):
             else:
                 page_count += 1
 
-        log.step("全部下载完毕，耗时%s秒，共计图片%s张" % (self.get_run_time(), self.total_photo_count))
+        self.end_message()
 
 
 if __name__ == "__main__":

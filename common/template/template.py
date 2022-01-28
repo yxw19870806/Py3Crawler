@@ -96,8 +96,7 @@ class Template(crawler.Crawler):
         # 重新排序保存存档文件
         self.rewrite_save_file()
 
-        # todo 是否需要下载图片或视频
-        log.step(f"全部下载完毕，耗时{self.get_run_time()}秒，共计图片{self.total_photo_count}张，视频{self.total_video_count}个，音频{self.total_audio_count}个")
+        self.end_message()
 
 
 class Download(crawler.DownloadThread):

@@ -215,7 +215,8 @@ class Jigadori(crawler.Crawler):
 
         # 保存新的存档文件
         file.write_file(str(self.last_tweet_id), self.save_data_path, file.WRITE_FILE_TYPE_REPLACE)
-        log.step("全部下载完毕，耗时%s秒，共计图片%s张" % (self.get_run_time(), self.total_photo_count))
+
+        self.end_message()
 
 
 if __name__ == "__main__":
