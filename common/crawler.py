@@ -243,15 +243,12 @@ class Crawler(object):
 
         # 启用线程监控是否需要暂停其他下载线程
         if analysis_config(config, "IS_PORT_LISTENER_EVENT", False, CONFIG_ANALYSIS_MODE_BOOLEAN):
-            listener_event_bind = {}
-            # 暂停进程
-            listener_event_bind[str(portListenerEvent.PROCESS_STATUS_PAUSE)] = net.pause_request
-            # 继续进程
-            listener_event_bind[str(portListenerEvent.PROCESS_STATUS_RUN)] = net.resume_request
-            # 结束进程（取消当前的线程，完成任务）
-            listener_event_bind[str(portListenerEvent.PROCESS_STATUS_STOP)] = self.stop_process
-
             listener_port = analysis_config(config, "LISTENER_PORT", 12345, CONFIG_ANALYSIS_MODE_INTEGER)
+            listener_event_bind = {
+                str(portListenerEvent.PROCESS_STATUS_PAUSE): net.pause_request,  # 暂停进程
+                str(portListenerEvent.PROCESS_STATUS_RUN): net.resume_request,  # 继续进程
+                str(portListenerEvent.PROCESS_STATUS_STOP): self.stop_process  # 结束进程（取消当前的线程，完成任务）
+            }
             process_control_thread = portListenerEvent.PortListenerEvent(port=listener_port, event_list=listener_event_bind)
             process_control_thread.setDaemon(True)
             process_control_thread.start()
@@ -604,7 +601,7 @@ def get_json_value(json_data, *args, **kwargs):
     if not exception_string and "type_check" in kwargs:
         type_error = False
         if kwargs["type_check"] is int:  # 整数（包含int和符合整型规则的字符串）
-            if is_integer(json_data):
+            if tool.is_integer(json_data):
                 json_data = int(json_data)
             else:
                 type_error = True
