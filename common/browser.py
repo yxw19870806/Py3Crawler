@@ -63,7 +63,8 @@ class Chrome:
                     continue
                 else:
                     raise
-            break
+            else:
+                break
 
     def __enter__(self) -> WebDriver:
         self.chrome.get(self.url)
