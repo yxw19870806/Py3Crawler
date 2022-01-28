@@ -319,6 +319,19 @@ class Crawler(object):
         file.write_file(tool.list_to_string(temp_list), self.save_data_path, file.WRITE_FILE_TYPE_REPLACE)
         path.delete_dir_or_file(self.temp_save_data_path)
 
+    def end_message(self):
+        message = f"全部下载完毕，耗时{self.get_run_time()}秒"
+        download_result = []
+        if self.is_download_photo:
+            download_result.append(f"图片{self.total_photo_count}张")
+        if self.is_download_video:
+            download_result.append(f"视频{self.total_video_count}个")
+        if self.is_download_audio:
+            download_result.append(f"音频{self.total_audio_count}个")
+        if download_result:
+            message += "，共计下载" + "，".join(download_result)
+        log.step(message)
+
 
 class DownloadThread(threading.Thread):
     main_thread = None
