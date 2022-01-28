@@ -10,7 +10,6 @@ import math
 import os
 import random
 import time
-from selenium import webdriver
 from selenium.webdriver.common.by import By
 from common import *
 from common import browser
