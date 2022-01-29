@@ -4,7 +4,7 @@ Python Crawler（auto download from website）
 # Required
 
 * OS：windows（maybe Linux and mac）<br>
-* Python：v3.6+, not supported Python 2.X
+* Python：v3.8+, not supported Python 2.X
 
 # Suggest
 
