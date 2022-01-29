@@ -101,7 +101,6 @@ def get_blog_page(account_name, blog_id):
     result = {
         "photo_url_list": [],  # 全部图片地址
         "is_delete": False,  # 是否已删除
-        "is_follow": False,  # 是否只有关注者可见
     }
     if blog_response.status == 404:
         result["is_delete"] = True
@@ -110,8 +109,7 @@ def get_blog_page(account_name, blog_id):
         raise crawler.CrawlerException(crawler.request_failre(blog_response.status))
     blog_response_content = blog_response.data.decode(errors="ignore")
     if blog_response_content.find('この記事はアメンバーさん限定です。') >= 0:
-        result["is_follow"] = True
-        return result
+        raise crawler.CrawlerException("需要关注后才能访问，请在 https://profile.ameba.jp/ameba/%s，选择'アメンバー申請'")
     # 截取日志正文部分（有多种页面模板）
     article_class_list = ["subContentsInner", "articleText", "skin-entryInner"]
     article_html_selector = None
@@ -355,11 +353,6 @@ class Download(crawler.DownloadThread):
         if blog_response["is_delete"]:
             self.error("日志%s已被删除，跳过" % blog_id)
             return
-
-        # 日志只对关注者可见
-        if blog_response["is_follow"]:
-            self.error("日志%s需要关注后才能访问，请在 https://profile.ameba.jp/ameba/%s，选择'アメンバー申請'" % (blog_id, self.account_id))
-            tool.process_exit()
 
         self.trace("日志%s解析的全部图片：%s" % (blog_id, blog_response["photo_url_list"]))
         self.step("日志%s解析获取%s张图片" % (blog_id, len(blog_response["photo_url_list"])))

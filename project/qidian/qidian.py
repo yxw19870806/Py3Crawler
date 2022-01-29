@@ -186,7 +186,7 @@ class Download(crawler.DownloadThread):
 
         if chapter_response["is_vip"]:
             self.error("章节《%s》 %s需要vip才能解锁" % (chapter_info["chapter_title"], chapter_info["chapter_url"]))
-            return
+            raise
 
         content_file_path = os.path.join(self.main_thread.content_download_path, self.display_name, "%s %s.txt" % (chapter_info["chapter_time_string"], chapter_info["chapter_title"]))
         file.write_file(chapter_response['content'], content_file_path)
