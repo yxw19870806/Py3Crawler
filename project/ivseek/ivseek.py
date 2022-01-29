@@ -196,7 +196,7 @@ class IvSeek(crawler.Crawler):
                     archive_response = get_archive_page(archive_id)
                 except crawler.CrawlerException as e:
                     log.error("第%s个视频解析失败，原因：%s" % (archive_id, e.message))
-                    continue
+                    raise
 
                 if archive_response["is_delete"]:
                     continue
