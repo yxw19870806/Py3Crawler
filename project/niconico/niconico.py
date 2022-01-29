@@ -293,7 +293,7 @@ class Download(crawler.DownloadThread):
             video_info_response = get_video_info(video_info["video_id"])
         except crawler.CrawlerException as e:
             self.error("视频%s 《%s》解析失败，原因：%s" % (video_info["video_id"], video_info["video_title"], e.message))
-            return
+            raise
 
         if video_info_response["is_delete"]:
             self.error("视频%s 《%s》已删除，跳过" % (video_info["video_id"], video_info["video_title"]))

@@ -87,7 +87,7 @@ class Download(crawler.DownloadThread):
                 audit_pagination_response = ximalaya.get_one_page_audio(self.account_id, page_count)
             except crawler.CrawlerException as e:
                 self.error("第%s页音频解析失败，原因：%s" % (page_count, e.message))
-                break
+                raise
 
             self.trace("第%s页解析的全部音频：%s" % (page_count, audit_pagination_response["audio_info_list"]))
             self.step("第%s页解析获取%s首音频" % (page_count, len(audit_pagination_response["audio_info_list"])))
@@ -123,11 +123,11 @@ class Download(crawler.DownloadThread):
             audio_play_response = ximalaya.get_audio_info_page(audio_info["audio_id"])
         except crawler.CrawlerException as e:
             self.error("音频%s解析失败，原因：%s" % (audio_info["audio_id"], e.message))
-            return
+            raise
 
         if audio_play_response["is_delete"]:
             self.error("音频%s不存在" % audio_info["audio_id"])
-            return
+            raise
 
         audio_url = audio_play_response["audio_url"]
         self.step("开始下载音频%s《%s》 %s" % (audio_info["audio_id"], audio_info["audio_title"], audio_url))

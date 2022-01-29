@@ -157,7 +157,7 @@ class Download(crawler.DownloadThread):
                 audio_pagination_response = get_one_page_audio(self.account_id, audio_type, page_count)
             except crawler.CrawlerException as e:
                 self.error("第%s页%s歌曲解析失败，原因：%s" % (page_count, audio_type_name, e.message))
-                break
+                raise
 
             self.trace("第%s页%s解析的全部歌曲：%s" % (page_count, audio_type_name, audio_pagination_response["audio_info_list"]))
             self.step("第%s页%s解析获取%s首歌曲" % (page_count, audio_type_name, len(audio_pagination_response["audio_info_list"])))
@@ -196,7 +196,7 @@ class Download(crawler.DownloadThread):
             audio_info_response = get_audio_play_page(audio_info["audio_id"], audio_type)
         except crawler.CrawlerException as e:
             self.error("%s歌曲%s《%s》解析失败，原因：%s" % (audio_type_name, audio_info["audio_id"], audio_info["audio_title"], e.message))
-            return
+            raise
 
         self.step("开始下载%s歌曲%s《%s》 %s" % (audio_type_name, audio_info["audio_id"], audio_info["audio_title"], audio_info_response["audio_url"]))
 
