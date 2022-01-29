@@ -150,6 +150,8 @@ def get_audio_info_page(audio_id):
     except:
         crawler.get_json_value(audio_info_response.json_data, "data", "hasBuy", type_check=bool)
 
+    if not COOKIE_INFO:
+        raise crawler.CrawlerException("非免费音频")
     # 需要购买或者vip才能解锁的音频
     vip_audio_info_url = "https://mobile.ximalaya.com/mobile-playpage/track/v3/baseInfo/%s" % int(time.time() * 1000)
     query_data = {
@@ -204,6 +206,7 @@ class XiMaLaYa(crawler.Crawler):
                 if input_str in ["e", "exit"]:
                     tool.process_exit()
                 elif input_str in ["c", "continue"]:
+                    COOKIE_INFO = {}
                     break
 
     def main(self):
