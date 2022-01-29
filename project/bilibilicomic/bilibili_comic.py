@@ -64,7 +64,8 @@ def get_chapter_page(ep_id):
     }
     if api_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(api_response.status))
-    result["need_buy"] = crawler.get_json_value(api_response.json_data, "code", type_check=int) == 1
+    if crawler.get_json_value(api_response.json_data, "code", type_check=int) == 1:
+        raise crawler.CrawlerException("需要购买")
     image_path_list = []
     for image_info in crawler.get_json_value(api_response.json_data, "data", "images", type_check=list):
         image_path_list.append(crawler.get_json_value(image_info, "path"))
@@ -187,10 +188,6 @@ class Download(crawler.DownloadThread):
         except crawler.CrawlerException as e:
             self.error("漫画%s 《%s》解析失败，原因：%s" % (comic_info["ep_id"], comic_info["ep_name"], e.message))
             raise
-
-        if chapter_response["need_buy"]:
-            self.error("漫画%s 《%s》需要购买" % (comic_info["ep_id"], comic_info["ep_name"]))
-            tool.process_exit()
 
         # 图片下载
         photo_index = 1
