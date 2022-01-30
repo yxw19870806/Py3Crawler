@@ -15,6 +15,9 @@ from common import *
 from common import browser
 
 COOKIE_INFO = {}
+MAX_DAILY_VIP_DOWNLOAD_COUNT = 500
+DAILY_VIP_DOWNLOAD_COUNT_CACHE_FILE = ''
+DAILY_VIP_DOWNLOAD_COUNT = {}
 EACH_PAGE_AUDIO_COUNT = 30  # 每次请求获取的视频数量
 CACHE_FILE_PATH = os.path.join(os.path.dirname(__file__), "cache")
 TEMPLATE_HTML_PATH = os.path.join(os.path.dirname(__file__), "template", "template.html")
@@ -153,6 +156,13 @@ def get_audio_info_page(audio_id):
 
     if not COOKIE_INFO:
         raise crawler.CrawlerException("非免费音频")
+
+    day = crawler.get_time("%Y-%m-%d")
+    if day not in DAILY_VIP_DOWNLOAD_COUNT:
+        DAILY_VIP_DOWNLOAD_COUNT[day] = 0
+    if DAILY_VIP_DOWNLOAD_COUNT[day] > MAX_DAILY_VIP_DOWNLOAD_COUNT:
+        raise crawler.CrawlerException("当然免费下载次数已达到限制")
+
     # 需要购买或者vip才能解锁的音频
     vip_audio_info_url = "https://mobile.ximalaya.com/mobile-playpage/track/v3/baseInfo/%s" % int(time.time() * 1000)
     query_data = {
@@ -172,6 +182,7 @@ def get_audio_info_page(audio_id):
             COOKIE_INFO = {}
             raise crawler.CrawlerException("达到vip每日限制")
         raise
+
     # 读取模板并替换相关参数
     template_html = file.read_file(TEMPLATE_HTML_PATH)
     template_html = template_html.replace("%%URL%%", decrypt_url)
@@ -183,6 +194,11 @@ def get_audio_info_page(audio_id):
     if not audio_url:
         raise crawler.CrawlerException("url解密失败\n%s" % decrypt_url)
     result["audio_url"] = audio_url
+
+    # 保存每日vip下载计数
+    DAILY_VIP_DOWNLOAD_COUNT[day] += 1
+    file.write_file(tool.json_encode(DAILY_VIP_DOWNLOAD_COUNT), DAILY_VIP_DOWNLOAD_COUNT_CACHE_FILE, file.WRITE_FILE_TYPE_REPLACE)
+
     return result
 
 
@@ -190,7 +206,7 @@ class XiMaLaYa(crawler.Crawler):
     def __init__(self, sys_config=None, **kwargs):
         if sys_config is None:
             sys_config = {}
-        global COOKIE_INFO, IS_LOGIN
+        global COOKIE_INFO, DAILY_VIP_DOWNLOAD_COUNT, DAILY_VIP_DOWNLOAD_COUNT_CACHE_FILE, IS_LOGIN
         # 设置APP目录
         crawler.PROJECT_APP_PATH = os.path.abspath(os.path.dirname(__file__))
 
@@ -205,6 +221,11 @@ class XiMaLaYa(crawler.Crawler):
 
         # 设置全局变量，供子线程调用
         COOKIE_INFO = self.cookie_value
+
+        DAILY_VIP_DOWNLOAD_COUNT_CACHE_FILE = os.path.join(self.cache_data_path, "daily_vip_count.data")
+        DAILY_VIP_DOWNLOAD_COUNT = tool.json_decode(file.read_file(DAILY_VIP_DOWNLOAD_COUNT_CACHE_FILE))
+        if not isinstance(DAILY_VIP_DOWNLOAD_COUNT, dict):
+            DAILY_VIP_DOWNLOAD_COUNT = {}
 
         # 检测登录状态
         if check_login():
