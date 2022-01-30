@@ -9,7 +9,7 @@ import os
 import platform
 import shutil
 import time
-from typing import Optional
+from typing import Optional, List
 
 CREATE_DIR_MODE_IGNORE_IF_EXIST = 1
 CREATE_DIR_MODE_DELETE_IF_EXIST = 2
@@ -97,7 +97,7 @@ def delete_null_dir(dir_path: str):
             os.rmdir(dir_path)
 
 
-def get_dir_files_name(dir_path: str, order: Optional[str] = None, recursive: bool = False, full_path: bool = False) -> list:
+def get_dir_files_name(dir_path: str, order: Optional[str] = None, recursive: bool = False, full_path: bool = False) -> List[str]:
     """
     获取目录下的所有文件名
 
