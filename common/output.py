@@ -25,4 +25,4 @@ def _get_time() -> str:
     """
     获取当前时间
     """
-    return time.strftime("%m-%d %H:%M:%S", time.localtime(time.time()))
+    return time.strftime("%m-%d %H:%M:%S")
