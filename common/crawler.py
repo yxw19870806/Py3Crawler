@@ -393,7 +393,7 @@ class DownloadThread(threading.Thread):
         """
         保存单条存档
         """
-        file.write_file("\t".join(self.single_save_data), self.main_thread.temp_save_data_path, file.WRITE_FILE_TYPE_REPLACE)
+        file.write_file("\t".join(self.single_save_data), self.main_thread.temp_save_data_path, file.WRITE_FILE_TYPE_APPEND)
 
     def clean_temp_path(self):
         """
