@@ -567,11 +567,11 @@ def rewrite_save_file(temp_save_data_path: str, save_data_path: str):
     path.delete_dir_or_file(temp_save_data_path)
 
 
-def get_time() -> str:
+def get_time(string_format: str = "%m-%d %H:%M:%S", timestamp: Union[float, int] = time.time()) -> str:
     """
     获取当前时间
     """
-    return time.strftime("%m-%d %H:%M:%S", time.localtime(time.time()))
+    return time.strftime(string_format, time.localtime(timestamp))
 
 
 def get_json_value(json_data, *args, **kwargs):
