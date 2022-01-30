@@ -94,6 +94,7 @@ def get_chapter_page(comic_id, chapter_id):
     file.write_file(template_html, cache_html_path, file.WRITE_FILE_TYPE_REPLACE)
     with browser.Chrome("file:///" + cache_html_path) as chrome:
         result_photo_list = chrome.find_element(by=By.ID, value="result").text
+    # 删除临时模板文件
     path.delete_dir_or_file(cache_html_path)
     photo_list = result_photo_list.split("\n")
     for photo_url in photo_list:
@@ -103,6 +104,7 @@ def get_chapter_page(comic_id, chapter_id):
 
 class ManHuaGui(crawler.Crawler):
     def __init__(self, **kwargs):
+        global CACHE_FILE_PATH
         # 设置APP目录
         crawler.PROJECT_APP_PATH = os.path.abspath(os.path.dirname(__file__))
 
@@ -116,6 +118,9 @@ class ManHuaGui(crawler.Crawler):
         # 解析存档文件
         # comic_name  last_chapter_id
         self.save_data = crawler.read_save_data(self.save_data_path, 0, ["", "0"])
+
+        # 临时文件目录
+        CACHE_FILE_PATH = self.cache_data_path
 
     def main(self):
         try:
