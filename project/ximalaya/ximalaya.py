@@ -108,6 +108,7 @@ def get_one_page_audio(account_id, page_count):
 # 获取指定id的音频播放页
 # audio_id -> 16558983
 def get_audio_info_page(audio_id):
+    global COOKIE_INFO
     result = {
         "audio_title": "",  # 音频标题
         "audio_url": None,  # 音频地址
@@ -161,7 +162,16 @@ def get_audio_info_page(audio_id):
     vip_audio_info_response = net.request(vip_audio_info_url, method="GET", fields=query_data, cookies_list=COOKIE_INFO, json_decode=True)
     if vip_audio_info_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException("vip音频详细信息" + crawler.request_failre(vip_audio_info_response.status))
-    decrypt_url = crawler.get_json_value(vip_audio_info_response.json_data, "trackInfo", "playUrlList", 0, "url", type_check=str)
+    try:
+        decrypt_url = crawler.get_json_value(vip_audio_info_response.json_data, "trackInfo", "playUrlList", 0, "url", type_check=str)
+    except crawler.CrawlerException:
+        # 达到每日限制
+        if crawler.get_json_value(vip_audio_info_response.json_data, "ret", type_check=int, value_check=999, default_value=0) and \
+                crawler.get_json_value(vip_audio_info_response.json_data, "msg", type_check=str, value_check="今天操作太频繁啦，可以明天再试试哦~", default_value=""):
+            # 清除cookies
+            COOKIE_INFO = {}
+            raise crawler.CrawlerException("达到vip每日限制")
+        raise
     # 读取模板并替换相关参数
     template_html = file.read_file(TEMPLATE_HTML_PATH)
     template_html = template_html.replace("%%URL%%", decrypt_url)
