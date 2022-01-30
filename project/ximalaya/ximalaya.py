@@ -15,6 +15,9 @@ from common import *
 from common import browser
 
 COOKIE_INFO = {}
+MAX_DAILY_VIP_DOWNLOAD_COUNT = 500
+DAILY_VIP_DOWNLOAD_COUNT_CACHE_FILE = ''
+DAILY_VIP_DOWNLOAD_COUNT = {}
 EACH_PAGE_AUDIO_COUNT = 30  # 每次请求获取的视频数量
 CACHE_FILE_PATH = os.path.join(os.path.dirname(__file__), "cache")
 TEMPLATE_HTML_PATH = os.path.join(os.path.dirname(__file__), "template", "template.html")
@@ -108,6 +111,7 @@ def get_one_page_audio(account_id, page_count):
 # 获取指定id的音频播放页
 # audio_id -> 16558983
 def get_audio_info_page(audio_id):
+    global COOKIE_INFO
     result = {
         "audio_title": "",  # 音频标题
         "audio_url": None,  # 音频地址
@@ -152,6 +156,13 @@ def get_audio_info_page(audio_id):
 
     if not COOKIE_INFO:
         raise crawler.CrawlerException("非免费音频")
+
+    day = crawler.get_time("%Y-%m-%d")
+    if day not in DAILY_VIP_DOWNLOAD_COUNT:
+        DAILY_VIP_DOWNLOAD_COUNT[day] = 0
+    if DAILY_VIP_DOWNLOAD_COUNT[day] > MAX_DAILY_VIP_DOWNLOAD_COUNT:
+        raise crawler.CrawlerException("当然免费下载次数已达到限制")
+
     # 需要购买或者vip才能解锁的音频
     vip_audio_info_url = "https://mobile.ximalaya.com/mobile-playpage/track/v3/baseInfo/%s" % int(time.time() * 1000)
     query_data = {
@@ -161,18 +172,35 @@ def get_audio_info_page(audio_id):
     vip_audio_info_response = net.request(vip_audio_info_url, method="GET", fields=query_data, cookies_list=COOKIE_INFO, json_decode=True)
     if vip_audio_info_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException("vip音频详细信息" + crawler.request_failre(vip_audio_info_response.status))
-    decrypt_url = crawler.get_json_value(vip_audio_info_response.json_data, "trackInfo", "playUrlList", 0, "url", type_check=str)
+    try:
+        decrypt_url = crawler.get_json_value(vip_audio_info_response.json_data, "trackInfo", "playUrlList", 0, "url", type_check=str)
+    except crawler.CrawlerException:
+        # 达到每日限制
+        if crawler.get_json_value(vip_audio_info_response.json_data, "ret", type_check=int, value_check=999, default_value=0) and \
+                crawler.get_json_value(vip_audio_info_response.json_data, "msg", type_check=str, value_check="今天操作太频繁啦，可以明天再试试哦~", default_value=""):
+            # 清除cookies
+            COOKIE_INFO = {}
+            raise crawler.CrawlerException("达到vip每日限制")
+        raise
+
     # 读取模板并替换相关参数
     template_html = file.read_file(TEMPLATE_HTML_PATH)
     template_html = template_html.replace("%%URL%%", decrypt_url)
-    cache_html = os.path.join(CACHE_FILE_PATH, "%s.html" % audio_id)
-    file.write_file(template_html, cache_html, file.WRITE_FILE_TYPE_REPLACE)
+    cache_html_path = os.path.join(CACHE_FILE_PATH, "%s.html" % audio_id)
+    file.write_file(template_html, cache_html_path, file.WRITE_FILE_TYPE_REPLACE)
     # 使用喜马拉雅的加密JS方法解密url地址
-    with browser.Chrome("file:///" + os.path.realpath(cache_html)) as chrome:
+    with browser.Chrome("file:///" + os.path.realpath(cache_html_path)) as chrome:
         audio_url = chrome.find_element(by=By.ID, value="result").get_attribute('value')
+    # 删除临时模板文件
+    path.delete_dir_or_file(cache_html_path)
     if not audio_url:
         raise crawler.CrawlerException("url解密失败\n%s" % decrypt_url)
     result["audio_url"] = audio_url
+
+    # 保存每日vip下载计数
+    DAILY_VIP_DOWNLOAD_COUNT[day] += 1
+    file.write_file(tool.json_encode(DAILY_VIP_DOWNLOAD_COUNT), DAILY_VIP_DOWNLOAD_COUNT_CACHE_FILE, file.WRITE_FILE_TYPE_REPLACE)
+
     return result
 
 
@@ -180,7 +208,7 @@ class XiMaLaYa(crawler.Crawler):
     def __init__(self, sys_config=None, **kwargs):
         if sys_config is None:
             sys_config = {}
-        global COOKIE_INFO, IS_LOGIN
+        global COOKIE_INFO, DAILY_VIP_DOWNLOAD_COUNT, DAILY_VIP_DOWNLOAD_COUNT_CACHE_FILE, CACHE_FILE_PATH, IS_LOGIN
         # 设置APP目录
         crawler.PROJECT_APP_PATH = os.path.abspath(os.path.dirname(__file__))
 
@@ -195,6 +223,14 @@ class XiMaLaYa(crawler.Crawler):
 
         # 设置全局变量，供子线程调用
         COOKIE_INFO = self.cookie_value
+
+        DAILY_VIP_DOWNLOAD_COUNT_CACHE_FILE = os.path.join(self.cache_data_path, "daily_vip_count.data")
+        DAILY_VIP_DOWNLOAD_COUNT = tool.json_decode(file.read_file(DAILY_VIP_DOWNLOAD_COUNT_CACHE_FILE))
+        if not isinstance(DAILY_VIP_DOWNLOAD_COUNT, dict):
+            DAILY_VIP_DOWNLOAD_COUNT = {}
+
+        # 临时文件目录
+        CACHE_FILE_PATH = self.cache_data_path
 
         # 检测登录状态
         if check_login():
