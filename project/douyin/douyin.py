@@ -43,12 +43,14 @@ def get_account_index_page(account_id):
     # 读取模板并替换相关参数
     template_html = file.read_file(TEMPLATE_HTML_PATH)
     template_html = template_html.replace("%%USER_AGENT%%", USER_AGENT).replace("%%TAC%%", script_tac).replace("%%UID%%", str(account_id))
-    cache_html = os.path.join(CACHE_FILE_PATH, "%s.html" % account_id)
-    file.write_file(template_html, cache_html, file.WRITE_FILE_TYPE_REPLACE)
+    cache_html_path = os.path.join(CACHE_FILE_PATH, "%s.html" % account_id)
+    file.write_file(template_html, cache_html_path, file.WRITE_FILE_TYPE_REPLACE)
     # 使用抖音的加密JS方法算出signature的值
     chrome_options_argument = ["user-agent=" + USER_AGENT]
-    with browser.Chrome("file:///" + os.path.realpath(cache_html), add_argument=chrome_options_argument) as chrome:
+    with browser.Chrome("file:///" + os.path.realpath(cache_html_path), add_argument=chrome_options_argument) as chrome:
         signature = chrome.find_element(by=By.ID, value="result").text
+    # 删除临时模板文件
+    path.delete_dir_or_file(cache_html_path)
     if not signature:
         raise crawler.CrawlerException("signature参数计算失败\n%s" % account_index_response_content)
     result["signature"] = signature
@@ -98,6 +100,7 @@ def get_one_page_video(account_id, cursor_id, dytk, signature):
 
 class DouYin(crawler.Crawler):
     def __init__(self, **kwargs):
+        global CACHE_FILE_PATH
         # 设置APP目录
         crawler.PROJECT_APP_PATH = os.path.abspath(os.path.dirname(__file__))
 
@@ -109,6 +112,9 @@ class DouYin(crawler.Crawler):
         # 解析存档文件
         # account_id last_video_id
         self.save_data = crawler.read_save_data(self.save_data_path, 0, ["", "0"])
+
+        # 临时文件目录
+        CACHE_FILE_PATH = self.cache_data_path
 
     def main(self):
         try:
