@@ -157,7 +157,7 @@ class Crawler(object):
                 output.print_msg(f"存档文件{self.save_data_path}不存在！")
                 tool.process_exit()
                 return
-            temp_file_name = time.strftime("%m-%d_%H_%M_", time.localtime(time.time())) + os.path.basename(self.save_data_path)
+            temp_file_name = get_time("%m-%d_%H_%M_") + os.path.basename(self.save_data_path)
             self.temp_save_data_path = os.path.join(os.path.dirname(self.save_data_path), temp_file_name)
             if os.path.exists(self.temp_save_data_path):
                 # 临时文件已存在

@@ -8,6 +8,7 @@ email: hikaru870806@hotmail.com
 import os
 import threading
 import time
+from typing import Union
 
 try:
     from . import file, output, tool
@@ -87,11 +88,11 @@ def notice(msg: str):
             file.write_file(msg, _replace_path_macro(NOTICE_LOG_PATH))
 
 
-def _get_time() -> str:
+def _get_time(string_format: str = "%m-%d %H:%M:%S") -> str:
     """
     获取当前时间
     """
-    return time.strftime("%m-%d %H:%M:%S", time.localtime(time.time()))
+    return time.strftime(string_format)
 
 
 def _replace_path_macro(file_path: str) -> str:
@@ -99,4 +100,4 @@ def _replace_path_macro(file_path: str) -> str:
     宏替换
         {date} - 当前日期, 格式：YYYYMMDD
     """
-    return file_path.replace("{date}", time.strftime("%Y%m%d", time.localtime(time.time())))
+    return file_path.replace("{date}", _get_time("%Y%m%d"))
