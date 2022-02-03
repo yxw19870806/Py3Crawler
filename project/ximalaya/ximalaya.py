@@ -15,7 +15,7 @@ from common import *
 from common import browser
 
 COOKIE_INFO = {}
-MAX_DAILY_VIP_DOWNLOAD_COUNT = 500
+MAX_DAILY_VIP_DOWNLOAD_COUNT = 550
 DAILY_VIP_DOWNLOAD_COUNT_CACHE_FILE = ''
 DAILY_VIP_DOWNLOAD_COUNT = {}
 EACH_PAGE_AUDIO_COUNT = 30  # 每次请求获取的视频数量
@@ -160,8 +160,8 @@ def get_audio_info_page(audio_id):
     day = crawler.get_time("%Y-%m-%d")
     if day not in DAILY_VIP_DOWNLOAD_COUNT:
         DAILY_VIP_DOWNLOAD_COUNT[day] = 0
-    if DAILY_VIP_DOWNLOAD_COUNT[day] > MAX_DAILY_VIP_DOWNLOAD_COUNT:
-        raise crawler.CrawlerException("当然免费下载次数已达到限制")
+    if DAILY_VIP_DOWNLOAD_COUNT[day] >= MAX_DAILY_VIP_DOWNLOAD_COUNT:
+        raise crawler.CrawlerException("当日免费下载次数已达到限制")
 
     # 需要购买或者vip才能解锁的音频
     vip_audio_info_url = "https://mobile.ximalaya.com/mobile-playpage/track/v3/baseInfo/%s" % int(time.time() * 1000)
