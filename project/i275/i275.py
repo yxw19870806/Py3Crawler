@@ -1,6 +1,6 @@
 # -*- coding:UTF-8  -*-
 """
-i275听书网
+i275听书网音频爬虫
 https://www.i275.com/
 @author: hikaru
 email: hikaru870806@hotmail.com
