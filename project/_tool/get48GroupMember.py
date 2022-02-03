@@ -87,7 +87,7 @@ def nmb(file_handle):
             team_find = tool.find_sub_string(team_page, '<a name="', '"></a>')
             if team_find:
                 if team_find not in team_list:
-                    output.print_msg("not found %s in team_list" % team_find)
+                    output.print_msg(f"not found {team_find} in team_list")
                     continue
                 member_list = re.findall(r'<li class="member-box[^"]*">([\s|\S]*?)</li>', team_page)
                 for member in member_list:
