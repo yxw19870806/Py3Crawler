@@ -33,7 +33,7 @@ def check_login():
 
 # 获取指定页数的全部日志
 def get_one_page_blog(account_name, page_count):
-    blog_pagination_url = "https://ameblo.jp/%s/page-%s.html" % (account_name, page_count)
+    blog_pagination_url = f"https://ameblo.jp/{account_name}/page-{page_count}.html"
     blog_pagination_response = net.request(blog_pagination_url, method="GET")
     result = {
         "blog_id_list": [],  # 全部日志id
@@ -56,11 +56,11 @@ def get_one_page_blog(account_name, page_count):
                 blog_url = blog_list_selector.eq(blog_url_index).attr("href")
                 blog_id = tool.find_sub_string(blog_url, "entry-", ".html")
                 if not tool.is_integer(blog_id):
-                    raise crawler.CrawlerException("日志地址截取日志id失败\n%s" % blog_url)
+                    raise crawler.CrawlerException(f"日志地址{blog_url}截取日志id失败")
                 result["blog_id_list"].append(int(blog_id))
     if len(result["blog_id_list"]) == 0:
         if page_count == 1:
-            raise crawler.CrawlerException("页面匹配日志id失败\n%s" % blog_pagination_response_content)
+            raise crawler.CrawlerException("页面匹配日志id失败\n" + blog_pagination_response_content)
         else:
             log.error(account_name + " 新的分页页面")
             result["is_over"] = True
@@ -70,14 +70,14 @@ def get_one_page_blog(account_name, page_count):
     if pq(blog_pagination_response_content).find("div.pagingArea").length > 0:
         if pq(blog_pagination_response_content).find("div.pagingArea a.pagingNext").length == 0:
             if pq(blog_pagination_response_content).find("div.pagingArea a.pagingPrev").length == 0:
-                raise crawler.CrawlerException("页面截取分页信息div.pagingArea失败\n%s" % blog_pagination_response_content)
+                raise crawler.CrawlerException("页面截取分页信息div.pagingArea失败\n" + blog_pagination_response_content)
             else:
                 result["is_over"] = True
     # https://ameblo.jp/1108ayanyan/
     elif pq(blog_pagination_response_content).find("ul.skin-paging").length > 0:
         if pq(blog_pagination_response_content).find("ul.skin-paging a.skin-pagingNext").length == 0:
             if pq(blog_pagination_response_content).find("ul.skin-paging a.skin-pagingPrev").length == 0:
-                raise crawler.CrawlerException("页面截取分页信息ul.skin-paging失败\n%s" % blog_pagination_response_content)
+                raise crawler.CrawlerException("页面截取分页信息ul.skin-paging失败\n" + blog_pagination_response_content)
             else:
                 result["is_over"] = True
     # https://ameblo.jp/48orii48/
@@ -89,14 +89,14 @@ def get_one_page_blog(account_name, page_count):
             if tool.is_integer(temp_page_count):
                 find_page_count_list.append(int(temp_page_count))
         if len(find_page_count_list) == 0:
-            raise crawler.CrawlerException("页面截取分页信息失败\n%s" % blog_pagination_response_content)
+            raise crawler.CrawlerException("页面截取分页信息失败\n" + blog_pagination_response_content)
         result["is_over"] = page_count >= max(find_page_count_list)
     return result
 
 
 # 获取指定id的日志
 def get_blog_page(account_name, blog_id):
-    blog_url = "https://ameblo.jp/%s/entry-%s.html" % (account_name, blog_id)
+    blog_url = f"https://ameblo.jp/{account_name}/entry-{blog_id}.html"
     blog_response = net.request(blog_url, method="GET", cookies_list=COOKIE_INFO)
     result = {
         "photo_url_list": [],  # 全部图片地址
@@ -109,7 +109,7 @@ def get_blog_page(account_name, blog_id):
         raise crawler.CrawlerException(crawler.request_failre(blog_response.status))
     blog_response_content = blog_response.data.decode(errors="ignore")
     if blog_response_content.find('この記事はアメンバーさん限定です。') >= 0:
-        raise crawler.CrawlerException("需要关注后才能访问，请在 https://profile.ameba.jp/ameba/%s，选择'アメンバー申請'")
+        raise crawler.CrawlerException(f"需要关注后才能访问，请在 https://profile.ameba.jp/ameba/{account_name}，选择'アメンバー申請'")
     # 截取日志正文部分（有多种页面模板）
     article_class_list = ["subContentsInner", "articleText", "skin-entryInner"]
     article_html_selector = None
@@ -118,7 +118,7 @@ def get_blog_page(account_name, blog_id):
         if article_html_selector.length > 0:
             break
     if article_html_selector is None or article_html_selector.length == 0:
-        raise crawler.CrawlerException("页面截取正文失败\n%s" % blog_response_content)
+        raise crawler.CrawlerException("页面截取正文失败\n" + blog_response_content)
     # 获取图片地址
     photo_list_selector = article_html_selector.find("img")
     for photo_index in range(0, photo_list_selector.length):
@@ -142,7 +142,7 @@ def get_blog_page(account_name, blog_id):
         elif photo_url.find("data:image/gif;base64,") == 0 or photo_url.find("file://") == 0:
             pass
         else:
-            log.notice("未知图片地址：%s (%s)" % (photo_url, blog_url))
+            log.notice(f"未知图片地址：{photo_url} ({blog_url})")
     # todo 含有视频
     # https://ameblo.jp/kawasaki-nozomi/entry-12111279076.html
     return result
@@ -175,7 +175,7 @@ def get_origin_photo_url(photo_url):
             elif tool.is_integer(photo_name.split(".")[0]):
                 pass
             else:
-                log.trace("无法解析的图片地址 %s" % photo_url)
+                log.trace(f"无法解析的图片地址 {photo_url}")
     elif photo_url.find("//stat100.ameba.jp/blog/img/") > 0:
         pass
     return photo_url
@@ -284,7 +284,7 @@ class Download(crawler.DownloadThread):
             try:
                 blog_pagination_response = get_one_page_blog(self.account_id, start_page_count)
             except crawler.CrawlerException as e:
-                self.error("第%s页日志解析失败，原因：%s" % (start_page_count, e.message))
+                self.error(f"第{start_page_count}页日志解析失败，原因：{e.message}")
                 raise
 
             # 这页没有任何内容，返回上一个检查节点
@@ -297,7 +297,7 @@ class Download(crawler.DownloadThread):
                 start_page_count -= EACH_LOOP_MAX_PAGE_COUNT
                 break
 
-            self.step("前%s页日志全部符合条件，跳过%s页后继续查询" % (start_page_count, EACH_LOOP_MAX_PAGE_COUNT))
+            self.step(f"前{start_page_count}页日志全部符合条件，跳过{EACH_LOOP_MAX_PAGE_COUNT}页后继续查询")
         return start_page_count
 
     # 获取所有可下载日志
@@ -307,17 +307,17 @@ class Download(crawler.DownloadThread):
         # 获取全部还未下载过需要解析的日志
         while not is_over:
             self.main_thread_check()  # 检测主线程运行状态
-            self.step("开始解析第%s页日志" % page_count)
+            self.step(f"开始解析第{page_count}页日志")
 
             # 获取一页日志
             try:
                 blog_pagination_response = get_one_page_blog(self.account_id, page_count)
             except crawler.CrawlerException as e:
-                self.error("第%s页日志解析失败，原因：%s" % (page_count, e.message))
+                self.error(f"第{page_count}页日志解析失败，原因：{e.message}")
                 raise
 
-            self.trace("第%s页解析的全部日志：%s" % (page_count, blog_pagination_response["blog_id_list"]))
-            self.step("第%s页解析获取%s个日志" % (page_count, len(blog_pagination_response["blog_id_list"])))
+            self.trace(f"第{page_count}页解析的全部日志：{blog_pagination_response['blog_id_list']}")
+            self.step(f"第{page_count}页解析获取{len(blog_pagination_response['blog_id_list'])}个日志")
 
             for blog_id in blog_pagination_response["blog_id_list"]:
                 # 检查是否达到存档记录
@@ -340,22 +340,22 @@ class Download(crawler.DownloadThread):
 
     # 解析单个日志
     def crawl_blog(self, blog_id):
-        self.step("开始解析日志%s" % blog_id)
+        self.step(f"开始解析日志{blog_id}")
 
         # 获取日志
         try:
             blog_response = get_blog_page(self.account_id, blog_id)
         except crawler.CrawlerException as e:
-            self.error("日志%s解析失败，原因：%s" % (blog_id, e.message))
+            self.error(f"日志{blog_id}解析失败，原因：{e.message}")
             raise
 
         # 日志只对关注者可见
         if blog_response["is_delete"]:
-            self.error("日志%s已被删除，跳过" % blog_id)
+            self.error(f"日志{blog_id}已被删除，跳过")
             return
 
-        self.trace("日志%s解析的全部图片：%s" % (blog_id, blog_response["photo_url_list"]))
-        self.step("日志%s解析获取%s张图片" % (blog_id, len(blog_response["photo_url_list"])))
+        self.trace(f"日志{blog_id}解析的全部图片：{blog_response['photo_url_list']}")
+        self.step(f"日志{blog_id}解析获取{len(blog_response['photo_url_list'])}张图片")
 
         photo_index = 1
         for photo_url in blog_response["photo_url_list"]:
@@ -363,25 +363,25 @@ class Download(crawler.DownloadThread):
             # 获取原始图片下载地址
             photo_url = get_origin_photo_url(photo_url)
             if photo_url in self.duplicate_list:
-                self.step("日志%s的图片 %s 已存在" % (blog_id, photo_url))
+                self.step(f"日志{blog_id}的图片 {photo_url} 已存在")
                 continue
             else:
                 self.duplicate_list[photo_url] = 1
-            self.step("开始下载日志%s的第%s张图片 %s" % (blog_id, photo_index, photo_url))
+            self.step(f"开始下载日志{blog_id}的第{photo_index}张图片 {photo_url}")
 
-            file_path = os.path.join(self.main_thread.photo_download_path, self.account_id, "%011d_%02d.%s" % (blog_id, photo_index, net.get_file_type(photo_url, "jpg")))
+            file_path = os.path.join(self.main_thread.photo_download_path, self.account_id, f"%011d_%02d.{net.get_file_type(photo_url, 'jpg')}" % (blog_id, photo_index))
             save_file_return = net.download(photo_url, file_path)
             if save_file_return["status"] == 1:
                 if check_photo_invalid(file_path):
                     path.delete_dir_or_file(file_path)
-                    self.step("日志%s的第%s张图片 %s 不符合规则，删除" % (blog_id, photo_index, photo_url))
+                    self.step(f"日志{blog_id}的第{photo_index}张图片 {photo_url} 不符合规则，删除")
                     continue
                 else:
                     self.temp_path_list.append(file_path)  # 设置临时目录
                     self.total_photo_count += 1  # 计数累加
-                    self.step("日志%s的第%s张图片下载成功" % (blog_id, photo_index))
+                    self.step(f"日志{blog_id}的第{photo_index}张图片下载成功")
             else:
-                self.error("日志%s的第%s张图片 %s 下载失败，原因：%s" % (blog_id, photo_index, photo_url, crawler.download_failre(save_file_return["code"])))
+                self.error(f"日志{blog_id}的第{photo_index}张图片 {photo_url} 下载失败，原因：{crawler.download_failre(save_file_return['code'])}")
                 self.check_thread_exit_after_download_failure()
             photo_index += 1
 
@@ -397,7 +397,7 @@ class Download(crawler.DownloadThread):
             while start_page_count >= 1:
                 # 获取所有可下载日志
                 blog_id_list = self.get_crawl_list(start_page_count)
-                self.step("需要下载的全部日志解析完毕，共%s个" % len(blog_id_list))
+                self.step(f"需要下载的全部日志解析完毕，共{len(blog_id_list)}个")
 
                 # 从最早的日志开始下载
                 while len(blog_id_list) > 0:
@@ -421,7 +421,7 @@ class Download(crawler.DownloadThread):
             self.write_single_save_data()
             self.main_thread.total_photo_count += self.total_photo_count
             self.main_thread.save_data.pop(self.account_id)
-        self.step("下载完毕，总共获得%s张图片" % self.total_photo_count)
+        self.step(f"下载完毕，总共获得{self.total_photo_count}张图片")
         self.notify_main_thread()
 
 
