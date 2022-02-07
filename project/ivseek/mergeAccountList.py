@@ -47,7 +47,7 @@ def main():
         try:
             account_mylist_response = niconico.get_account_mylist(account_id)
         except crawler.CrawlerException as e:
-            print("niconico账号%s的视频列表解析失败，原因：%s" % (account_id, e.message))
+            print(f"niconico账号{account_id}的视频列表解析失败，原因：{e.message}")
             continue
         niconico_mylist_list[account_id] = account_mylist_response["list_id_list"]
         file.write_file(json.dumps(niconico_mylist_list), niconico_mylist_cache_path, file.WRITE_FILE_TYPE_REPLACE)
