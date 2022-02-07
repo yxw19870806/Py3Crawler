@@ -15,4 +15,4 @@ if sys.version.find("64 bit") == -1:
     suffix = "win32"
 else:
     suffix = "win_amd64"
-print("%s/%s-cp%s-cp%sm-%s.whl" % (whl_host, whl_full_version[package_name], python_version, python_version, suffix))
+print(f"{whl_host}/{whl_full_version[package_name]}-cp{python_version}-cp{python_version}m-{suffix}.whl")
