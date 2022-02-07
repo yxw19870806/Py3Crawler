@@ -34,7 +34,7 @@ def load_discount_list(cache_file_path):
         return discount_game_list
     cache_time = crawler.get_time("%Y-%m-%d %H:%M", os.path.getmtime(cache_file_path))
     while True:
-        input_str = input(crawler.get_time() + " 缓存文件时间：%s，是否使用？使用缓存数据(Y)es，删除缓存数据并重新获取(N)o，退出程序(E)xit：" % cache_time)
+        input_str = input(f"{crawler.get_time()} 缓存文件时间：{cache_time}，是否使用？使用缓存数据(Y)es，删除缓存数据并重新获取(N)o，退出程序(E)xit：")
         input_str = input_str.lower()
         if input_str in ["y", "yes"]:
             break
@@ -78,7 +78,7 @@ def main():
         try:
             discount_game_list = steam.get_discount_game_list()
         except crawler.CrawlerException as e:
-            output.print_msg("打折游戏解析失败，原因：%s" % e.message)
+            output.print_msg(f"打折游戏解析失败，原因：{e.message}")
             raise
         # 将打折列表写入文件
         save_discount_list(cache_file_path, discount_game_list)
@@ -89,7 +89,7 @@ def main():
     try:
         owned_game_list = steam.get_account_owned_app_list(steam_class.account_id)
     except crawler.CrawlerException as e:
-        output.print_msg("个人游戏主页解析失败，原因：%s" % e.message)
+        output.print_msg(f"个人游戏主页解析失败，原因：{e.message}")
         raise
     for discount_info in discount_game_list:
         # 获取到的价格不大于0的跳过
@@ -116,16 +116,16 @@ def main():
                         # break
                 if not is_all:
                     if discount_info["type"] == "bundle":
-                        output.print_msg("http://store.steampowered.com/bundle/%s/ ,discount %s%%, old price: %s, discount price: %s" % (discount_info["id"], discount_info["discount"], discount_info["old_price"], discount_info["now_price"]), False)
+                        output.print_msg(f"http://store.steampowered.com/bundle/{discount_info['id']}/ ,discount {discount_info['discount']}%%, old price: {discount_info['old_price']}, discount price: {discount_info['now_price']}", False)
                     else:
-                        output.print_msg("http://store.steampowered.com/sub/%s ,discount %s%%, old price: %s, discount price: %s" % (discount_info["id"], discount_info["discount"], discount_info["old_price"], discount_info["now_price"]), False)
+                        output.print_msg(f"http://store.steampowered.com/sub/{discount_info['id']}/ ,discount {discount_info['discount']}%%, old price: {discount_info['old_price']}, discount price: {discount_info['now_price']}", False)
             else:
                 if not INCLUDE_GAME:
                     continue
                 if SKIP_RESTRICTED_GAME and discount_info["app_id"] in restricted_app_list:
                     continue
                 if discount_info["app_id"] not in owned_game_list and discount_info["app_id"] not in game_dlc_list:
-                    output.print_msg("http://store.steampowered.com/app/%s/ ,discount %s%%, old price: %s, discount price: %s" % (discount_info["id"], discount_info["discount"], discount_info["old_price"], discount_info["now_price"]), False)
+                    output.print_msg(f"http://store.steampowered.com/app/{discount_info['id']}/ ,discount {discount_info['discount']}%%, old price: {discount_info['old_price']}, discount price: {discount_info['now_price']}", False)
 
 
 if __name__ == "__main__":
