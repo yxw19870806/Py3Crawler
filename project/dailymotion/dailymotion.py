@@ -27,10 +27,10 @@ def init_session():
     index_page_response_content = index_page_response.data.decode(errors="ignore")
     script_json_html = tool.find_sub_string(index_page_response_content, "var __PLAYER_CONFIG__ = ", ";</script>\n")
     if not script_json_html:
-        raise crawler.CrawlerException("页面信息截取失败\n%s" % index_page_response_content)
+        raise crawler.CrawlerException("页面信息截取失败\n" + index_page_response_content)
     script_json = tool.json_decode(script_json_html)
     if script_json is None:
-        raise crawler.CrawlerException("页面信息加载失败\n%s" % index_page_response_content)
+        raise crawler.CrawlerException("页面信息加载失败\n" + index_page_response_content)
     post_data = {
         "client_id": crawler.get_json_value(script_json, "context", "api", "client_id", type_check=str),
         "client_secret": crawler.get_json_value(script_json, "context", "api", "client_secret", type_check=str),
@@ -40,7 +40,7 @@ def init_session():
     }
     oauth_response = net.request(crawler.get_json_value(script_json, "context", "api", "auth_url", type_check=str), method="POST", fields=post_data, json_decode=True)
     if oauth_response.status != net.HTTP_RETURN_CODE_SUCCEED:
-        raise crawler.CrawlerException("获取token页，%s\n%s" % (crawler.request_failre(oauth_response.status), post_data))
+        raise crawler.CrawlerException(f"获取token页，{crawler.request_failre(oauth_response.status)}\n" + str(post_data))
     AUTHORIZATION = crawler.get_json_value(oauth_response.json_data, "access_token", type_check=str)
 
 
@@ -51,7 +51,7 @@ def get_one_page_video(account_id, page_count):
         "operationName": "CHANNEL_VIDEOS_QUERY",
         "variables": {
             "channel_xid": account_id,
-            "uri": "/%s/videos" % account_id,
+            "uri": f"/{account_id}/videos",
             "page": page_count,
             "sort": "recent",
         },
@@ -95,7 +95,7 @@ def get_one_page_video(account_id, page_count):
 def get_video_page(video_id):
     # 获取视频播放页
     # https://www.dailymotion.com/player/metadata/video/x6lgrfa
-    video_info_url = "https://www.dailymotion.com/player/metadata/video/%s" % video_id
+    video_info_url = f"https://www.dailymotion.com/player/metadata/video/{video_id}"
     video_info_response = net.request(video_info_url, method="GET", json_decode=True)
     result = {
         "is_delete": False,  # 是否已删除
@@ -116,12 +116,12 @@ def get_video_page(video_id):
             continue
         video_resolution = int(video_resolution)
         if video_resolution not in [144, 240, 380, 480, 720, 1080]:
-            log.notice("未知视频分辨率：%s" % video_resolution)
+            log.notice(f"未知视频分辨率：{video_resolution}")
         for video_info in video_info_list:
             if crawler.get_json_value(video_info, "type", type_check=str) == "video/mp4":
                 resolution_to_url[video_resolution] = crawler.get_json_value(video_info, "url", type_check=str)
     if len(resolution_to_url) == 0:
-        raise crawler.CrawlerException("匹配不同分辨率视频源失败\n%s" % video_info_response.json_data)
+        raise crawler.CrawlerException("匹配不同分辨率视频源失败\n" + video_info_response.json_data)
     # 优先使用配置中的分辨率
     if FIRST_CHOICE_RESOLUTION in resolution_to_url:
         result["video_url"] = resolution_to_url[FIRST_CHOICE_RESOLUTION]
@@ -179,7 +179,7 @@ class DailyMotion(crawler.Crawler):
         try:
             init_session()
         except crawler.CrawlerException as e:
-            log.error("生成authorization失败，原因：%s" % e.message)
+            log.error(f"生成authorization失败，原因：{e.message}")
             raise
 
     def main(self):
@@ -230,16 +230,16 @@ class Download(crawler.DownloadThread):
         # 获取全部还未下载过需要解析的相册
         while not is_over:
             self.main_thread_check()  # 检测主线程运行状态
-            self.step("开始解析第%s页视频" % page_count)
+            self.step(f"开始解析第{page_count}页视频")
 
             try:
                 blog_pagination_response = get_one_page_video(self.account_id, page_count)
             except crawler.CrawlerException as e:
-                self.error("第%s页视频解析失败，原因：%s" % (page_count, e.message))
+                self.error(f"第{page_count}页视频解析失败，原因：{e.message}")
                 raise
 
-            self.trace("第%s页解析的全部视频：%s" % (page_count, blog_pagination_response["video_info_list"]))
-            self.step("第%s页解析获取%s个视频" % (page_count, len(blog_pagination_response["video_info_list"])))
+            self.trace(f"第{page_count}页解析的全部视频：{blog_pagination_response['video_info_list']}")
+            self.step(f"第{page_count}页解析获取{len(blog_pagination_response['video_info_list'])}个视频")
 
             # 寻找这一页符合条件的日志
             for video_info in blog_pagination_response["video_info_list"]:
@@ -258,25 +258,25 @@ class Download(crawler.DownloadThread):
 
     # 解析单个视频
     def crawl_video(self, video_info):
-        self.step("开始解析视频%s" % video_info["video_id"])
+        self.step(f"开始解析视频{video_info['video_id']}")
 
         # 获取指定视频信息
         try:
             video_response = get_video_page(video_info["video_id"])
         except crawler.CrawlerException as e:
-            self.error("视频%s解析失败，原因：%s" % (video_info["video_id"], e.message))
+            self.error(f"视频{video_info['video_id']}解析失败，原因：{e.message}")
             raise
 
-        self.step("开始下载视频%s 《%s》 %s" % (video_info["video_id"], video_info["video_title"], video_response["video_url"]))
+        self.step(f"开始下载视频{video_info['video_id']} 《{video_info['video_title']}》 {video_response['video_url']}")
 
-        video_file_path = os.path.join(self.main_thread.video_download_path, self.account_id, "%s - %s.mp4" % (video_info["video_id"], path.filter_text(video_info["video_title"])))
+        video_file_path = os.path.join(self.main_thread.video_download_path, self.account_id, f"{video_info['video_id']} - {path.filter_text(video_info['video_title'])}.mp4")
         save_file_return = net.download(video_response["video_url"], video_file_path, head_check=True)
         if save_file_return["status"] == 1:
             self.total_video_count += 1  # 计数累加
-            self.step("视频%s 《%s》下载成功" % (video_info["video_id"], video_info["video_title"]))
+            self.step(f"视频{video_info['video_id']} 《{video_info['video_title']}》下载成功")
         else:
-            self.error("视频%s 《%s》 %s 下载失败，原因：%s" % (video_info["video_id"], video_info["video_title"], video_response["video_url"], crawler.download_failre(save_file_return["code"])))
-            self.check_thread_exit_after_download_failure()
+            self.error(f"视频{video_info['video_id']} 《{video_info['video_title']}》 {video_response['video_url']} 下载失败，原因：{crawler.download_failre(save_file_return['code'])}")
+            self.check_download_failure_exit()
 
         # 视频全部下载完毕
         self.single_save_data[1] = str(video_info["video_time"])  # 设置存档记录
@@ -285,7 +285,7 @@ class Download(crawler.DownloadThread):
         try:
             # 获取所有可下载视频
             video_info_list = self.get_crawl_list()
-            self.step("需要下载的全部视频解析完毕，共%s个" % len(video_info_list))
+            self.step(f"需要下载的全部视频解析完毕，共{len(video_info_list)}个")
 
             # 从最早的视频开始下载
             while len(video_info_list) > 0:
@@ -300,13 +300,8 @@ class Download(crawler.DownloadThread):
             self.error("未知异常")
             self.error(str(e) + "\n" + traceback.format_exc(), False)
 
-        # 保存最后的信息
-        with self.thread_lock:
-            self.write_single_save_data()
-            self.main_thread.total_video_count += self.total_video_count
-            self.main_thread.save_data.pop(self.account_id)
-        self.step("下载完毕，总共获得%s个视频" % self.total_video_count)
-        self.notify_main_thread()
+        self.main_thread.save_data.pop(self.account_id)
+        self.done()
 
 
 if __name__ == "__main__":

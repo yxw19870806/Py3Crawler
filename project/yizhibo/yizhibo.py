@@ -216,7 +216,7 @@ class Download(crawler.DownloadThread):
             self.step("第%s张图片下载成功" % photo_index)
         else:
             self.error("第%s张图片 %s 下载失败，原因：%s" % (photo_index, photo_info["photo_url"], crawler.download_failre(save_file_return["code"])))
-            if self.check_thread_exit_after_download_failure(False):
+            if self.check_download_failure_exit(False):
                 return False
 
         # 图片下载完毕
@@ -269,7 +269,7 @@ class Download(crawler.DownloadThread):
             self.step("第%s个视频下载成功" % video_index)
         else:
             self.error("第%s个视频 %s 下载失败" % (video_index, video_info["video_url_list"]))
-            if self.check_thread_exit_after_download_failure(False):
+            if self.check_download_failure_exit(False):
                 return False
 
         # 视频下载完毕
@@ -311,14 +311,8 @@ class Download(crawler.DownloadThread):
             self.error("未知异常")
             self.error(str(e) + "\n" + traceback.format_exc(), False)
 
-        # 保存最后的信息
-        with self.thread_lock:
-            self.write_single_save_data()
-            self.main_thread.total_photo_count += self.total_photo_count
-            self.main_thread.total_video_count += self.total_video_count
-            self.main_thread.save_data.pop(self.account_id)
-        self.step("下载完毕，总共获得%s张图片和%s个视频" % (self.total_photo_count, self.total_video_count))
-        self.notify_main_thread()
+        self.main_thread.save_data.pop(self.account_id)
+        self.done()
 
 
 if __name__ == "__main__":

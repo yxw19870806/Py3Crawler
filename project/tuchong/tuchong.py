@@ -189,7 +189,7 @@ class Download(crawler.DownloadThread):
                 self.step("相册%s《%s》第%s张图片下载成功" % (album_info["album_id"], album_info["album_title"], photo_index))
             else:
                 self.error("相册%s《%s》第%s张图片 %s 下载失败，原因：%s" % (album_info["album_id"], album_info["album_title"], photo_index, photo_url, crawler.download_failre(save_file_return["code"])))
-                self.check_thread_exit_after_download_failure()
+                self.check_download_failure_exit()
             photo_index += 1
 
         # 相册内图片全部下载完毕
@@ -217,19 +217,12 @@ class Download(crawler.DownloadThread):
                 self.error("异常退出")
             else:
                 self.step("提前退出")
-            # 如果临时目录变量不为空，表示某个相册正在下载中，需要把下载了部分的内容给清理掉
-            self.clean_temp_path()
         except Exception as e:
             self.error("未知异常")
             self.error(str(e) + "\n" + traceback.format_exc(), False)
 
-        # 保存最后的信息
-        with self.thread_lock:
-            self.write_single_save_data()
-            self.main_thread.total_photo_count += self.total_photo_count
-            self.main_thread.save_data.pop(self.account_name)
-        self.step("下载完毕，总共获得%s张图片" % self.total_photo_count)
-        self.notify_main_thread()
+        self.main_thread.save_data.pop(self.account_name)
+        self.done()
 
 
 if __name__ == "__main__":

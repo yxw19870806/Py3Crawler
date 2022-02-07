@@ -138,7 +138,7 @@ class Download(crawler.DownloadThread):
                 self.step("音频%s《%s》下载成功" % (audio_info["audio_id"], audio_info["audio_title"]))
             else:
                 self.error("音频%s《%s》 %s 下载失败，原因：%s" % (audio_info["audio_id"], audio_info["audio_title"], audio_url, crawler.download_failre(save_file_return["code"])))
-                self.check_thread_exit_after_download_failure()
+                self.check_download_failure_exit()
 
         # 音频下载完毕
         self.single_save_data[1] = str(audio_info["audio_id"])  # 设置存档记录
@@ -162,13 +162,8 @@ class Download(crawler.DownloadThread):
             self.error("未知异常")
             self.error(str(e) + "\n" + traceback.format_exc(), False)
 
-        # 保存最后的信息
-        with self.thread_lock:
-            self.write_single_save_data()
-            self.main_thread.total_audio_count += self.total_audio_count
-            self.main_thread.save_data.pop(self.album_id)
-        self.step("下载完毕，总共获得%s首音频" % self.total_audio_count)
-        self.notify_main_thread()
+        self.main_thread.save_data.pop(self.album_id)
+        self.done()
 
 
 if __name__ == "__main__":

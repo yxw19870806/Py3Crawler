@@ -174,7 +174,7 @@ class Download(crawler.DownloadThread):
             self.step("图片%s下载成功" % photo_info["photo_id"])
         else:
             self.error("图片%s %s，下载失败，原因：%s" % (photo_info["photo_id"], photo_info["photo_url"], crawler.download_failre(save_file_return["code"])))
-            self.check_thread_exit_after_download_failure()
+            self.check_download_failure_exit()
 
         # 图片内图片下全部载完毕
         self.single_save_data[1] = str(photo_info["photo_id"])  # 设置存档记录
@@ -198,13 +198,8 @@ class Download(crawler.DownloadThread):
             self.error("未知异常")
             self.error(str(e) + "\n" + traceback.format_exc(), False)
 
-        # 保存最后的信息
-        with self.thread_lock:
-            self.write_single_save_data()
-            self.main_thread.total_photo_count += self.total_photo_count
-            self.main_thread.save_data.pop(self.account_id)
-        self.step("下载完毕，总共获得%s张图片" % self.total_photo_count)
-        self.notify_main_thread()
+        self.main_thread.save_data.pop(self.account_id)
+        self.done()
 
 
 if __name__ == "__main__":

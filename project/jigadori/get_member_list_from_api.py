@@ -22,7 +22,7 @@ def get_account_from_index():
         try:
             pagination_account_list = get_one_page_account(page_count)
         except crawler.CrawlerException as e:
-            output.print_msg("第%s页账号解析失败，原因：%s" % (page_count, e.message))
+            output.print_msg(f"第{page_count}页账号解析失败，原因：{e.message}")
             break
         if pagination_account_list:
             account_list.update(pagination_account_list)
@@ -47,13 +47,13 @@ def get_one_page_account(page_count):
         account_name = account_selector.find(".profile-name").eq(0).text()
         if not account_name:
             account_name = ""
-            # raise robot.CrawlerException("成员信息截取成员名字失败\n\%s" % account_selector.html())
+            # raise robot.CrawlerException("成员信息截取成员名字失败\n" + account_selector.html())
         else:
             account_name = account_name.strip()
         # 获取twitter账号
         account_id = account_selector.find(".screen-name a").text()
         if not account_id:
-            raise crawler.CrawlerException("成员信息截取twitter账号失败\n%s" % account_selector.html())
+            raise crawler.CrawlerException("成员信息截取twitter账号失败\n" + account_selector.html())
         account_id = account_id.strip().replace("@", "")
         pagination_account_list[account_id] = account_name
     return pagination_account_list
@@ -80,13 +80,13 @@ def main():
         account_list_from_save_data = crawler.read_save_data(save_data_path, 0, [])
         for account_id in account_list_from_save_data:
             if account_id not in account_list_from_api:
-                output.print_msg("%s (%s) not found from API result" % (account_id, account_list_from_save_data[account_id]))
+                output.print_msg(f"{account_id} ({account_list_from_save_data[account_id]}) not found from API result")
         for account_id in account_list_from_api:
             if account_id not in account_list_from_save_data:
                 account_list_from_save_data[account_id] = [account_id, "", "", "", "", account_list_from_api[account_id]]
             else:
                 if len(account_list_from_save_data[account_id]) >= 6 and account_list_from_save_data[account_id][5] != account_list_from_api[account_id]:
-                    output.print_msg("%s name changed" % account_id)
+                    output.print_msg(f"{account_id} name changed")
                     account_list_from_save_data[account_id][5] = account_list_from_api[account_id]
         temp_list = [account_list_from_save_data[key] for key in sorted(account_list_from_save_data.keys())]
         file.write_file(tool.list_to_string(temp_list), save_data_path, file.WRITE_FILE_TYPE_REPLACE)

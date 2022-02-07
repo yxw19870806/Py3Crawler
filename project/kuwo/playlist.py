@@ -38,7 +38,7 @@ def main():
             try:
                 playlist_pagination_response = kuwo.get_one_page_playlist(playlist_id, page_count)
             except crawler.CrawlerException as e:
-                log.error("解析视频下载地址失败，原因：%s" % e.message)
+                log.error(f"解析视频下载地址失败，原因：{e.message}")
                 return
 
             audio_info_list += playlist_pagination_response["audio_info_list"]
@@ -48,7 +48,7 @@ def main():
         # 选择下载目录
         options = {
             "initialdir": kuwo_class.audio_download_path,
-            "initialfile": "%s - %s.mp4" % (video_id, path.filter_text(video_response["video_title"])),
+            "initialfile": f"{video_id} - {path.filter_text(video_response['video_title'])}.mp4",
             "filetypes": [("mp4", ".mp4")],
             "parent": gui,
         }
