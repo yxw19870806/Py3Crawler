@@ -402,6 +402,31 @@ class DownloadThread(threading.Thread):
         for temp_path in self.temp_path_list:
             path.delete_dir_or_file(temp_path)
 
+    def done(self):
+        """
+        线程完成
+        """
+        # 保存最后的信息
+        with self.thread_lock:
+            self.write_single_save_data()
+
+        # 清理临时文件（未完整下载的内容）
+        self.clean_temp_path()
+        # 日志
+        message = "下载完毕"
+        download_result = []
+        if self.main_thread.is_download_photo:
+            download_result.append(f"图片{self.total_photo_count}张")
+        if self.main_thread.is_download_video:
+            download_result.append(f"视频{self.total_video_count}个")
+        if self.main_thread.is_download_audio:
+            download_result.append(f"音频{self.total_audio_count}个")
+        if download_result:
+            message += "，共计下载" + "，".join(download_result)
+        self.step(message)
+        # 唤醒主线程
+        self.notify_main_thread()
+
     def trace(self, message, include_display_name=True):
         """
         trace log
