@@ -389,19 +389,6 @@ class DownloadThread(threading.Thread):
                 return True
         return False
 
-    def write_single_save_data(self):
-        """
-        保存单条存档
-        """
-        file.write_file("\t".join(self.single_save_data), self.main_thread.temp_save_data_path, file.WRITE_FILE_TYPE_APPEND)
-
-    def clean_temp_path(self):
-        """
-        中途退出，删除临时文件/目录
-        """
-        for temp_path in self.temp_path_list:
-            path.delete_dir_or_file(temp_path)
-
     def done(self):
         """
         线程完成
@@ -409,7 +396,7 @@ class DownloadThread(threading.Thread):
         # 保存最后的信息
         if self.single_save_data:
             with self.thread_lock:
-                self.write_single_save_data()
+                file.write_file("\t".join(self.single_save_data), self.main_thread.temp_save_data_path, file.WRITE_FILE_TYPE_APPEND)
 
         # 主线程计数累加
         if self.main_thread.is_download_photo:
@@ -420,7 +407,8 @@ class DownloadThread(threading.Thread):
             self.main_thread.total_audio_count += self.total_audio_count
 
         # 清理临时文件（未完整下载的内容）
-        self.clean_temp_path()
+        for temp_path in self.temp_path_list:
+            path.delete_dir_or_file(temp_path)
 
         # 日志
         message = "下载完毕"
