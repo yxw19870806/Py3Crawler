@@ -57,20 +57,20 @@ class BiliBiliDownload(bilibili.BiliBili):
         try:
             video_response = bilibili.get_video_page(video_id)
         except crawler.CrawlerException as e:
-            log.error("解析视频下载地址失败，原因：%s" % e.message)
+            log.error(f"解析视频下载地址失败，原因：{e.message}")
             return
         if video_response["is_private"]:
             log.step("视频需要登录才能访问，跳过")
             return
 
         if len(video_response["video_part_info_list"]) > 1:
-            log.step("视频共获取%s个分段" % len(video_response["video_part_info_list"]))
+            log.step(f"视频共获取{len(video_response['video_part_info_list'])}个分段")
 
         part_index = 1
         for video_part_info in video_response["video_part_info_list"]:
             if len(video_part_info["video_url_list"]) == 0:
                 if len(video_response["video_part_info_list"]) > 1:
-                    log.step("视频第%s个分段已删除" % part_index)
+                    log.step(f"视频第{part_index}个分段已删除")
                 else:
                     log.step("视频已删除")
                 return
@@ -81,7 +81,7 @@ class BiliBiliDownload(bilibili.BiliBili):
                     video_title += "_" + video_part_info["video_part_title"]
                 else:
                     video_title += "_" + str(part_index)
-            video_name = "%010d %s.%s" % (int(video_id), path.filter_text(video_title), net.get_file_type(video_part_info["video_url_list"][0]))
+            video_name = f"%010d {path.filter_text(video_title)}.{net.get_file_type(video_part_info['video_url_list'][0])}" % int(video_id)
 
             log.step("请选择下载目录")
             # 选择下载目录
@@ -95,7 +95,7 @@ class BiliBiliDownload(bilibili.BiliBili):
             if not file_path:
                 continue
 
-            log.step("\n视频标题：%s\n视频地址：%s\n下载路径：%s" % (video_title, video_part_info["video_url_list"], file_path))
+            log.step(f"\n视频标题：{video_title}\n视频地址：{video_part_info['video_url_list']}\n下载路径：{file_path}")
             # 开始下载
             video_index = 1
             for video_url in video_part_info["video_url_list"]:
@@ -103,22 +103,22 @@ class BiliBiliDownload(bilibili.BiliBili):
                     temp_list = os.path.basename(file_path).split(".")
                     file_type = temp_list[-1]
                     file_name = ".".join(temp_list[:-1])
-                    file_name += " (%s)" % video_index
-                    file_real_path = os.path.abspath(os.path.join(os.path.dirname(file_path), "%s.%s" % (file_name, file_type)))
+                    file_name += f" ({video_index})"
+                    file_real_path = os.path.abspath(os.path.join(os.path.dirname(file_path), f"{file_name}.{file_type}"))
                 else:
                     file_real_path = file_path
 
-                save_file_return = net.download(video_url, file_real_path, header_list={"Referer": "https://www.bilibili.com/video/av%s" % video_id})
+                save_file_return = net.download(video_url, file_real_path, header_list={"Referer": f"https://www.bilibili.com/video/av{video_id}"})
                 if save_file_return["status"] == 1:
                     if len(video_part_info["video_url_list"]) == 1:
-                        log.step("视频《%s》下载成功" % video_title)
+                        log.step(f"视频《{video_title}》下载成功")
                     else:
-                        log.step("视频《%s》第%s段下载成功" % (video_title, video_index))
+                        log.step(f"视频《{video_title}》第{video_index}段下载成功")
                 else:
                     if len(video_part_info["video_url_list"]) == 1:
-                        log.step("视频《%s》下载失败，原因：%s" % (video_title, crawler.download_failre(save_file_return["code"])))
+                        log.step(f"视频《{video_title}》下载失败，原因：{crawler.download_failre(save_file_return['code'])}")
                     else:
-                        log.step("视频《%s》第%s段下载失败，原因：%s" % (video_title, video_index, crawler.download_failre(save_file_return["code"])))
+                        log.step(f"视频《{video_title}》第{video_index}段下载失败，原因：{crawler.download_failre(save_file_return['code'])}")
                 video_index += 1
 
 
