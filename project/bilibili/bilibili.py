@@ -693,21 +693,12 @@ class Download(crawler.DownloadThread):
                 self.error("异常退出")
             else:
                 self.step("提前退出")
-            # 如果临时目录变量不为空，表示某个视频/相簿正在下载中，需要把下载了部分的内容给清理掉
-            self.clean_temp_path()
         except Exception as e:
             self.error("未知异常")
             self.error(str(e) + "\n" + traceback.format_exc(), False)
 
-        # 保存最后的信息
-        with self.thread_lock:
-            self.write_single_save_data()
-            self.main_thread.total_photo_count += self.total_photo_count
-            self.main_thread.total_video_count += self.total_video_count
-            self.main_thread.total_audio_count += self.total_audio_count
-            self.main_thread.save_data.pop(self.account_id)
-        self.step(f"下载完毕，总共获得{self.total_photo_count}张图片，{self.total_video_count}个视频，{self.total_audio_count}个音频")
-        self.notify_main_thread()
+        self.main_thread.save_data.pop(self.account_id)
+        self.done()
 
 
 if __name__ == "__main__":

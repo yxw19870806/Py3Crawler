@@ -410,6 +410,13 @@ class DownloadThread(threading.Thread):
         with self.thread_lock:
             self.write_single_save_data()
 
+        # 主线程计数累加
+        if self.main_thread.is_download_photo:
+            self.main_thread.total_photo_count += self.total_photo_count
+        if self.main_thread.is_download_video:
+            self.main_thread.total_video_count += self.total_video_count
+        if self.main_thread.is_download_audio:
+            self.main_thread.total_audio_count += self.total_audio_count
         # 清理临时文件（未完整下载的内容）
         self.clean_temp_path()
         # 日志
