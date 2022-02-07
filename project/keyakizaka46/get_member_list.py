@@ -22,17 +22,17 @@ def get_account_from_index():
     index_response_content = index_response.data.decode(errors="ignore")
     member_list_data = tool.find_sub_string(index_response_content, '<ul class="thumb">', "</ul>")
     if not member_list_data:
-        raise crawler.CrawlerException("页面截取账号列表失败\n%s" % index_response_content)
+        raise crawler.CrawlerException("页面截取账号列表失败\n" + index_response_content)
     member_list_find = re.findall(r"<li ([\S|\s]*?)</li>", member_list_data)
     for member_info in member_list_find:
         # 获取账号id
         account_id = tool.find_sub_string(member_info, "&ct=", '">')
         if not account_id:
-            raise crawler.CrawlerException("账号信息截取账号id失败\n%s" % member_info)
+            raise crawler.CrawlerException(f"账号信息{member_info}中截取账号id失败")
         # 获取成员名字
         account_name = tool.find_sub_string(member_info, '<p class="name">', "</p>").strip().replace(" ", "")
         if not account_name:
-            raise crawler.CrawlerException("账号信息截取成员名字失败\n%s" % member_info)
+            raise crawler.CrawlerException(f"账号信息{member_info}中截取成员名字失败")
         account_list[account_id] = account_name
     return account_list
 
