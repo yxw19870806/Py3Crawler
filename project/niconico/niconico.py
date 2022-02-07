@@ -339,13 +339,8 @@ class Download(crawler.DownloadThread):
             self.error("未知异常")
             self.error(str(e) + "\n" + traceback.format_exc(), False)
 
-        # 保存最后的信息
-        with self.thread_lock:
-            self.write_single_save_data()
-            self.main_thread.total_video_count += self.total_video_count
-            self.main_thread.save_data.pop(self.list_id)
-        self.step("完成")
-        self.notify_main_thread()
+        self.main_thread.save_data.pop(self.list_id)
+        self.done()
 
 
 if __name__ == "__main__":
