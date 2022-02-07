@@ -50,6 +50,14 @@ def get_one_page_album(album_id, page_count):
     if album_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(album_pagination_response.status))
     # 获取音频信息
+    try:
+        audio_info_list = crawler.get_json_value(album_pagination_response.json_data, "data", "tracks", type_check=list)
+    except crawler.CrawlerException:
+        error_message = crawler.get_json_value(album_pagination_response.json_data, "msg", type_check=str, default_value="")
+        if error_message == f"该专辑[id:{album_id}]已被删除~" or error_message == f"该专辑[id:{album_id}]已下架~":
+            raise crawler.CrawlerException("专辑已被删除")
+        else:
+            raise
     for audio_info in crawler.get_json_value(album_pagination_response.json_data, "data", "tracks", type_check=list):
         result_audio_info = {
             "audio_id": None,  # 音频id
