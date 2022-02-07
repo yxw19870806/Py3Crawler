@@ -39,7 +39,7 @@ def get_one_page_playlist(playlist_id, page_count):
         # 获取音频id
         result_audio_info["audio_id"] = crawler.get_json_value(audio_info, "rid")
         if not tool.is_integer(result_audio_info["audio_id"]):
-            raise crawler.CrawlerException("获音频id失败\n%s" % audio_info)
+            raise crawler.CrawlerException("获音频id失败\n" + audio_info)
         # 获取音频标题
         result_audio_info["audio_title"] = crawler.get_json_value(audio_info, "name")
         result["audio_info_list"].append(result_audio_info)
