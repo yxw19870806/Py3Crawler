@@ -216,7 +216,7 @@ class Download(crawler.DownloadThread):
                 self.step("漫画%s %s《%s》第%s张图片下载成功" % (chapter_info["chapter_id"], chapter_info["group_name"], chapter_info["chapter_name"], photo_index))
             else:
                 self.error("漫画%s %s《%s》第%s张图片 %s 下载失败，原因：%s" % (chapter_info["chapter_id"], chapter_info["group_name"], chapter_info["chapter_name"], photo_index, photo_url, crawler.download_failre(save_file_return["code"])))
-                self.check_thread_exit_after_download_failure()
+                self.check_download_failure_exit()
             photo_index += 1
 
         # 媒体内图片全部下载完毕

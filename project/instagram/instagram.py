@@ -394,7 +394,7 @@ class Download(crawler.DownloadThread):
                     self.step("第%s张图片下载成功" % photo_index)
                 else:
                     self.error("第%s张图片 %s 下载失败，原因：%s" % (photo_index, photo_url, crawler.download_failre(save_file_return["code"])))
-                    self.check_thread_exit_after_download_failure()
+                    self.check_download_failure_exit()
                 photo_index += 1
 
         # 视频下载
@@ -424,7 +424,7 @@ class Download(crawler.DownloadThread):
                     self.step("第%s个视频下载成功" % video_index)
                 else:
                     self.error("第%s个视频 %s 下载失败，原因：%s" % (video_index, video_url, crawler.download_failre(save_file_return["code"])))
-                    self.check_thread_exit_after_download_failure()
+                    self.check_download_failure_exit()
                 video_index += 1
 
         # 媒体内图片和视频全部下载完毕

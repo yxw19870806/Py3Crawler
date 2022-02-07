@@ -163,7 +163,7 @@ class Download(crawler.DownloadThread):
             self.step(f"音频{audio_info['audio_id']}《{audio_info['audio_title']}》下载成功")
         else:
             self.error(f"音频{audio_info['audio_id']}《{audio_info['audio_title']}》 {audio_url} 下载失败，原因：{crawler.download_failre(save_file_return['code'])}")
-            self.check_thread_exit_after_download_failure()
+            self.check_download_failure_exit()
 
         # 音频下载完毕
         self.single_save_data[1] = str(audio_info["audio_id"])  # 设置存档记录

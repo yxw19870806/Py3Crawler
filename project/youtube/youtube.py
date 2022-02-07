@@ -549,7 +549,7 @@ class Download(crawler.DownloadThread):
                 self.step("视频%s《%s》下载成功" % (video_id, video_response["video_title"]))
             else:
                 self.error("视频%s《%s》 %s 下载失败，原因：%s" % (video_id, video_response["video_title"], video_response["video_url"], crawler.download_failre(save_file_return["code"])))
-                self.check_thread_exit_after_download_failure()
+                self.check_download_failure_exit()
 
         # 媒体内图片和视频全部下载完毕
         self.single_save_data[1] = video_id  # 设置存档记录

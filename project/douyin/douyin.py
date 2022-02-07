@@ -214,7 +214,7 @@ class Download(crawler.DownloadThread):
             self.step(f"视频{video_info['video_id']}下载成功")
         else:
             self.error(f"视频{video_info['video_id']} {video_info['video_url']} 下载失败，原因：{crawler.download_failre(save_file_return['code'])}")
-            self.check_thread_exit_after_download_failure()
+            self.check_download_failure_exit()
 
         # 视频下载完毕
         self.single_save_data[1] = str(video_info["video_id"])  # 设置存档记录

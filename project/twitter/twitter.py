@@ -433,7 +433,7 @@ class Download(crawler.DownloadThread):
                         self.error("推特%s的第%s张图片 %s 下载失败，重试" % (media_info["blog_id"], photo_index, photo_url))
                         continue
                     self.error("推特%s的第%s张图片 %s 下载失败，原因：%s" % (media_info["blog_id"], photo_index, photo_url, crawler.download_failre(save_file_return["code"])))
-                    self.check_thread_exit_after_download_failure()
+                    self.check_download_failure_exit()
                 break
             photo_index += 1
 
@@ -454,7 +454,7 @@ class Download(crawler.DownloadThread):
                 self.step("推特%s的第%s个视频下载成功" % (media_info["blog_id"], video_index))
             else:
                 self.error("推特%s的第%s个视频 %s 下载失败，原因：%s" % (media_info["blog_id"], video_index, video_url, crawler.download_failre(save_file_return["code"])))
-                self.check_thread_exit_after_download_failure()
+                self.check_download_failure_exit()
             video_index += 1
 
     def run(self):

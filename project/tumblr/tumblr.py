@@ -607,7 +607,7 @@ class Download(crawler.DownloadThread):
                     self.step(error_message)
                 else:
                     self.error(error_message)
-                    self.check_thread_exit_after_download_failure()
+                    self.check_download_failure_exit()
             break
 
         # 图片下载
@@ -634,7 +634,7 @@ class Download(crawler.DownloadThread):
                         continue
                     else:
                         self.error(error_message)
-                        self.check_thread_exit_after_download_failure()
+                        self.check_download_failure_exit()
                 photo_index += 1
 
         # 日志内图片和视频全部下载完毕

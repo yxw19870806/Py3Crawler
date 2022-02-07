@@ -577,7 +577,7 @@ class Download(crawler.DownloadThread):
                 else:
                     self.error(f"视频{video_info['video_id']}《{video_info['video_title']}》第{video_index}个视频 {video_part_url}，下载失败，原因：{crawler.download_failre(save_file_return['code'])}")
                     if save_file_return["code"] != -4:
-                        if self.check_thread_exit_after_download_failure(False):
+                        if self.check_download_failure_exit(False):
                             return False
                 video_split_index += 1
                 video_index += 1
@@ -608,7 +608,7 @@ class Download(crawler.DownloadThread):
             self.step(f"音频{audio_info['audio_id']}《{audio_info['audio_title']}》下载成功")
         else:
             self.error(f"音频{audio_info['audio_id']}《{audio_info['audio_title']}》 {audio_info_response['audio_url']}，下载失败，原因：{crawler.download_failre(save_file_return['code'])}")
-            if self.check_thread_exit_after_download_failure(False):
+            if self.check_download_failure_exit(False):
                 return False
 
         # 音频下载完毕
@@ -642,7 +642,7 @@ class Download(crawler.DownloadThread):
                 self.step(f"相簿{album_id}第{photo_index}张图片下载成功")
             else:
                 self.error(f"相簿{album_id}第{photo_index}张图片 {photo_url}，下载失败，原因：{crawler.download_failre(save_file_return['code'])}")
-                if self.check_thread_exit_after_download_failure(False):
+                if self.check_download_failure_exit(False):
                     return False
             photo_index += 1
 

@@ -378,7 +378,7 @@ class DownloadThread(threading.Thread):
         if isinstance(self.main_thread, Crawler):
             self.main_thread.thread_semaphore.release()
 
-    def check_thread_exit_after_download_failure(self, is_process_exit=True):
+    def check_download_failure_exit(self, is_process_exit=True):
         """
         当下载失败，检测是否要退出线程
         """

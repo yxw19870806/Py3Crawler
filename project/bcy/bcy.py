@@ -272,7 +272,7 @@ class Download(crawler.DownloadThread):
                         time.sleep(5)
                         continue
                     self.error(f"作品{album_id}第{photo_index}张图片 {photo_url}，下载失败，原因：{crawler.download_failre(save_file_return['code'])}")
-                    self.check_thread_exit_after_download_failure()
+                    self.check_download_failure_exit()
                 break
             photo_index += 1
 
@@ -293,7 +293,7 @@ class Download(crawler.DownloadThread):
             self.step(f"作品{album_id}视频下载成功")
         else:
             self.error(f"作品{album_id}视频 {video_response['video_url']}，下载失败，原因：{crawler.download_failre(save_file_return['code'])}")
-            self.check_thread_exit_after_download_failure()
+            self.check_download_failure_exit()
 
     def run(self):
         try:
