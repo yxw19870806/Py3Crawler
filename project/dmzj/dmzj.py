@@ -183,7 +183,7 @@ class Download(crawler.DownloadThread):
                 self.step(f"漫画{comic_info['page_id']} {comic_info['version_name']}《{comic_info['chapter_name']}》第{photo_index}张图片下载成功")
             else:
                 self.error(f"漫画{comic_info['page_id']} {comic_info['version_name']}《{comic_info['chapter_name']}》第{photo_index}张图片 {photo_url} 下载失败，原因：{crawler.download_failre(save_file_return['code'])}")
-                self.check_thread_exit_after_download_failure()
+                self.check_download_failure_exit()
             photo_index += 1
 
         # 章节内图片全部下载完毕

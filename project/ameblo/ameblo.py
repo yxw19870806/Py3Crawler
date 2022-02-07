@@ -382,7 +382,7 @@ class Download(crawler.DownloadThread):
                     self.step(f"日志{blog_id}的第{photo_index}张图片下载成功")
             else:
                 self.error(f"日志{blog_id}的第{photo_index}张图片 {photo_url} 下载失败，原因：{crawler.download_failre(save_file_return['code'])}")
-                self.check_thread_exit_after_download_failure()
+                self.check_download_failure_exit()
             photo_index += 1
 
         # 日志内图片全部下载完毕
