@@ -407,8 +407,9 @@ class DownloadThread(threading.Thread):
         线程完成
         """
         # 保存最后的信息
-        with self.thread_lock:
-            self.write_single_save_data()
+        if self.single_save_data:
+            with self.thread_lock:
+                self.write_single_save_data()
 
         # 主线程计数累加
         if self.main_thread.is_download_photo:
@@ -417,8 +418,10 @@ class DownloadThread(threading.Thread):
             self.main_thread.total_video_count += self.total_video_count
         if self.main_thread.is_download_audio:
             self.main_thread.total_audio_count += self.total_audio_count
+
         # 清理临时文件（未完整下载的内容）
         self.clean_temp_path()
+
         # 日志
         message = "下载完毕"
         download_result = []
@@ -431,6 +434,7 @@ class DownloadThread(threading.Thread):
         if download_result:
             message += "，共计下载" + "，".join(download_result)
         self.step(message)
+
         # 唤醒主线程
         self.notify_main_thread()
 
