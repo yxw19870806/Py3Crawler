@@ -16,7 +16,7 @@ ACCOUNT_ID_FILE_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), "
 
 # 根据talk id获取全部参与者
 def get_member_from_talk(talk_id):
-    talk_index_url = "https://7gogo.jp/%s" % talk_id
+    talk_index_url = f"https://7gogo.jp/{talk_id}"
     talk_index_response = net.request(talk_index_url, method="GET")
     account_list = {}
     if talk_index_response.status != net.HTTP_RETURN_CODE_SUCCEED:
@@ -24,10 +24,10 @@ def get_member_from_talk(talk_id):
     talk_index_response_content = talk_index_response.data.decode(errors="ignore")
     script_json_html = tool.find_sub_string(talk_index_response_content, "window.__DEHYDRATED_STATES__ = ", "</script>")
     if not script_json_html:
-        raise crawler.CrawlerException("页面截取talk信息失败\n%s" % talk_index_response_content)
+        raise crawler.CrawlerException("页面截取talk信息失败\n" + talk_index_response_content)
     script_json = tool.json_decode(script_json_html)
     if script_json is None:
-        raise crawler.CrawlerException("talk信息加载失败\n%s" % script_json_html)
+        raise crawler.CrawlerException("talk信息加载失败\n" + script_json_html)
     for member_info in crawler.get_json_value(script_json, "page:talk:service:entity:talkMembers", "members", type_check=list):
         account_list[crawler.get_json_value(member_info, "userId", type_check=str)] = crawler.get_json_value(member_info, "name", type_check=str).replace(" ", "")
     return account_list
@@ -43,12 +43,12 @@ def main():
         try:
             member_list = get_member_from_talk(talk_id)
         except crawler.CrawlerException as e:
-            output.print_msg(talk_id + " 获取成员失败，原因：%s" % e.message)
+            output.print_msg(f"{talk_id} 获取成员失败，原因：{e.message}")
             continue
         for account_id in member_list:
             if account_id not in account_list:
-                output.print_msg("%s %s" % (account_id, member_list[account_id]))
-                file.write_file("%s\t%s" % (account_id, member_list[account_id]), ACCOUNT_ID_FILE_PATH)
+                output.print_msg(f"{account_id} {member_list[account_id]}")
+                file.write_file(f"{account_id}\t{member_list[account_id]}", ACCOUNT_ID_FILE_PATH)
                 account_list.append(account_id)
 
 
