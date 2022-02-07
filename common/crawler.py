@@ -378,7 +378,7 @@ class DownloadThread(threading.Thread):
         if isinstance(self.main_thread, Crawler):
             self.main_thread.thread_semaphore.release()
 
-    def check_thread_exit_after_download_failure(self, is_process_exit=True):
+    def check_download_failure_exit(self, is_process_exit=True):
         """
         当下载失败，检测是否要退出线程
         """
@@ -389,18 +389,42 @@ class DownloadThread(threading.Thread):
                 return True
         return False
 
-    def write_single_save_data(self):
+    def done(self):
         """
-        保存单条存档
+        线程完成
         """
-        file.write_file("\t".join(self.single_save_data), self.main_thread.temp_save_data_path, file.WRITE_FILE_TYPE_APPEND)
+        # 保存最后的信息
+        if self.single_save_data:
+            with self.thread_lock:
+                file.write_file("\t".join(self.single_save_data), self.main_thread.temp_save_data_path, file.WRITE_FILE_TYPE_APPEND)
 
-    def clean_temp_path(self):
-        """
-        中途退出，删除临时文件/目录
-        """
+        # 主线程计数累加
+        if self.main_thread.is_download_photo:
+            self.main_thread.total_photo_count += self.total_photo_count
+        if self.main_thread.is_download_video:
+            self.main_thread.total_video_count += self.total_video_count
+        if self.main_thread.is_download_audio:
+            self.main_thread.total_audio_count += self.total_audio_count
+
+        # 清理临时文件（未完整下载的内容）
         for temp_path in self.temp_path_list:
             path.delete_dir_or_file(temp_path)
+
+        # 日志
+        message = "下载完毕"
+        download_result = []
+        if self.main_thread.is_download_photo:
+            download_result.append(f"图片{self.total_photo_count}张")
+        if self.main_thread.is_download_video:
+            download_result.append(f"视频{self.total_video_count}个")
+        if self.main_thread.is_download_audio:
+            download_result.append(f"音频{self.total_audio_count}个")
+        if download_result:
+            message += "，共计下载" + "，".join(download_result)
+        self.step(message)
+
+        # 唤醒主线程
+        self.notify_main_thread()
 
     def trace(self, message, include_display_name=True):
         """

@@ -29,7 +29,7 @@ def init_session():
 # 获取指定页数的全部日志
 def get_one_page_blog(account_name, page_count):
     # http://moexia.lofter.com/?page=1
-    blog_pagination_url = "http://%s.lofter.com/" % account_name
+    blog_pagination_url = f"http://{account_name}.lofter.com/"
     query_data = {"page": page_count}
     header_list = {
         "User-Agent": USER_AGENT,
@@ -152,16 +152,16 @@ class Download(crawler.DownloadThread):
         # 获取全部还未下载过需要解析的日志
         while not is_over:
             self.main_thread_check()  # 检测主线程运行状态
-            self.step("开始解析第%s页日志" % page_count)
+            self.step(f"开始解析第{page_count}页日志")
 
             try:
                 blog_pagination_response = get_one_page_blog(self.account_name, page_count)
             except crawler.CrawlerException as e:
-                self.error("第%s页日志解析失败，原因：%s" % (page_count, e.message))
+                self.error(f"第{page_count}页日志解析失败，原因：{e.message}")
                 raise
 
-            self.trace("第%s页解析的全部日志：%s" % (page_count, blog_pagination_response["blog_url_list"]))
-            self.step("第%s页解析获取%s个日志" % (page_count, len(blog_pagination_response["blog_url_list"])))
+            self.trace(f"第{page_count}页解析的全部日志：{blog_pagination_response['blog_url_list']}")
+            self.step(f"第{page_count}页解析获取{len(blog_pagination_response['blog_url_list'])}个日志")
 
             # 已经没有日志了
             if len(blog_pagination_response["blog_url_list"]) == 0:
@@ -190,17 +190,17 @@ class Download(crawler.DownloadThread):
 
     # 解析单个日志
     def crawl_blog(self, blog_url):
-        self.step("开始解析日志 %s" % blog_url)
+        self.step(f"开始解析日志 {blog_url}")
 
         # 获取日志
         try:
             blog_response = get_blog_page(blog_url)
         except crawler.CrawlerException as e:
-            self.error("日志 %s 解析失败，原因：%s" % (blog_url, e.message))
+            self.error(f"日志 {blog_url} 解析失败，原因：{e.message}")
             raise
 
-        self.trace("日志 %s 解析的全部图片：%s" % (blog_url, blog_response["photo_url_list"]))
-        self.step("日志 %s 解析获取%s张图片" % (blog_url, len(blog_response["photo_url_list"])))
+        self.trace(f"日志 {blog_url} 解析的全部图片：{blog_response['photo_url_list']}")
+        self.step(f"日志 {blog_url} 解析获取{len(blog_response['photo_url_list'])}张图片")
 
         blog_id = get_blog_id(blog_url)
         photo_index = 1
@@ -208,21 +208,21 @@ class Download(crawler.DownloadThread):
             self.main_thread_check()  # 检测主线程运行状态
             # 去除图片地址的参数
             photo_url = get_photo_url(photo_url)
-            self.step("开始下载日志%s的第%s张图片 %s" % (blog_id, photo_index, photo_url))
+            self.step(f"开始下载日志{blog_id}的第{photo_index}张图片 {photo_url}")
 
-            file_path = os.path.join(self.main_thread.photo_download_path, self.account_name, "%09d_%02d.%s" % (blog_id, photo_index, net.get_file_type(photo_url)))
+            file_path = os.path.join(self.main_thread.photo_download_path, self.account_name, f"%09d_%02d.{net.get_file_type(photo_url)}" % (blog_id, photo_index))
             save_file_return = net.download(photo_url, file_path)
             if save_file_return["status"] == 1:
                 if check_photo_invalid(save_file_return["file_path"]):
                     path.delete_dir_or_file(save_file_return["file_path"])
-                    self.error("日志 %s (%s) 第%s张图片 %s 已被屏蔽，删除" % (blog_id, blog_url, photo_index, photo_url))
+                    self.error(f"日志{blog_id}({blog_url}) 第{photo_index}张图片 {photo_url} 已被屏蔽，删除")
                 else:
                     self.temp_path_list.append(file_path)  # 设置临时目录
                     self.total_photo_count += 1  # 计数累加
-                    self.step("日志%s的第%s张图片下载成功" % (blog_id, photo_index))
+                    self.step(f"日志{blog_id}的第{photo_index}张图片下载成功")
             else:
-                self.error("日志 %s (%s) 第%s张图片 %s 下载失败，原因：%s" % (blog_id, blog_url, photo_index, photo_url, crawler.download_failre(save_file_return["code"])))
-                self.check_thread_exit_after_download_failure()
+                self.error(f"日志{blog_id}({blog_url}) 第{photo_index}张图片 {photo_url} 下载失败，原因：{crawler.download_failre(save_file_return['code'])}")
+                self.check_download_failure_exit()
             photo_index += 1
 
         # 日志内图片全部下载完毕
@@ -233,7 +233,7 @@ class Download(crawler.DownloadThread):
         try:
             # 获取所有可下载日志
             blog_url_list = self.get_crawl_list()
-            self.step("需要下载的全部日志解析完毕，共%s个" % len(blog_url_list))
+            self.step(f"需要下载的全部日志解析完毕，共{len(blog_url_list)}个")
 
             # 从最早的日志开始下载
             while len(blog_url_list) > 0:
@@ -244,19 +244,12 @@ class Download(crawler.DownloadThread):
                 self.error("异常退出")
             else:
                 self.step("提前退出")
-            # 如果临时目录变量不为空，表示某个日志正在下载中，需要把下载了部分的内容给清理掉
-            self.clean_temp_path()
         except Exception as e:
             self.error("未知异常")
             self.error(str(e) + "\n" + traceback.format_exc(), False)
 
-        # 保存最后的信息
-        with self.thread_lock:
-            self.write_single_save_data()
-            self.main_thread.total_photo_count += self.total_photo_count
-            self.main_thread.save_data.pop(self.account_name)
-        self.step("下载完毕，总共获得%s张图片" % self.total_photo_count)
-        self.notify_main_thread()
+        self.main_thread.save_data.pop(self.account_name)
+        self.done()
 
 
 if __name__ == "__main__":

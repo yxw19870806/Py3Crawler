@@ -21,7 +21,7 @@ USER_AGENT = net._random_user_agent()
 
 # 获取账号首页
 def get_account_index_page(account_id):
-    account_index_url = "https://www.douyin.com/share/user/%s" % account_id
+    account_index_url = f"https://www.douyin.com/share/user/{account_id}"
     header_list = {
         "User-Agent": USER_AGENT,
     }
@@ -35,15 +35,15 @@ def get_account_index_page(account_id):
     account_index_response_content = account_index_response.data.decode(errors="ignore")
     script_tac = tool.find_sub_string(account_index_response_content, "<script>tac='", "'</script>")
     if not script_tac:
-        raise crawler.CrawlerException("页面截取tac参数失败\n%s" % account_index_response_content)
+        raise crawler.CrawlerException("页面截取tac参数失败\n" + account_index_response_content)
     script_dytk = tool.find_sub_string(account_index_response_content, "dytk: '", "'")
     if not script_dytk:
-        raise crawler.CrawlerException("页面截取dytk参数失败\n%s" % account_index_response_content)
+        raise crawler.CrawlerException("页面截取dytk参数失败\n" + account_index_response_content)
     result["dytk"] = script_dytk
     # 读取模板并替换相关参数
     template_html = file.read_file(TEMPLATE_HTML_PATH)
     template_html = template_html.replace("%%USER_AGENT%%", USER_AGENT).replace("%%TAC%%", script_tac).replace("%%UID%%", str(account_id))
-    cache_html_path = os.path.join(CACHE_FILE_PATH, "%s.html" % account_id)
+    cache_html_path = os.path.join(CACHE_FILE_PATH, f"{account_id}.html")
     file.write_file(template_html, cache_html_path, file.WRITE_FILE_TYPE_REPLACE)
     # 使用抖音的加密JS方法算出signature的值
     chrome_options_argument = ["user-agent=" + USER_AGENT]
@@ -52,7 +52,7 @@ def get_account_index_page(account_id):
     # 删除临时模板文件
     path.delete_dir_or_file(cache_html_path)
     if not signature:
-        raise crawler.CrawlerException("signature参数计算失败\n%s" % account_index_response_content)
+        raise crawler.CrawlerException(f"signature参数计算失败\n" + account_index_response_content)
     result["signature"] = signature
     return result
 
@@ -68,7 +68,7 @@ def get_one_page_video(account_id, cursor_id, dytk, signature):
         "user_id": account_id,
     }
     header_list = {
-        "Referer": "https://www.douyin.com/share/user/%s" % account_id,
+        "Referer": f"https://www.douyin.com/share/user/{account_id}",
         "User-Agent": USER_AGENT,
     }
     video_pagination_response = net.request(api_url, method="GET", fields=query_data, header_list=header_list, json_decode=True)
@@ -166,7 +166,7 @@ class Download(crawler.DownloadThread):
         try:
             account_index_response = get_account_index_page(self.account_id)
         except crawler.CrawlerException as e:
-            self.error("账号首页访问失败，原因：%s" % e.message)
+            self.error(f"账号首页访问失败，原因：{e.message}")
             raise
 
         cursor_id = 0
@@ -175,17 +175,17 @@ class Download(crawler.DownloadThread):
         # 获取全部还未下载过需要解析的视频
         while not is_over:
             self.main_thread_check()  # 检测主线程运行状态
-            self.step("开始解析cursor %s后的一页视频" % cursor_id)
+            self.step(f"开始解析cursor {cursor_id}后的一页视频")
 
             # 获取指定一页的视频信息
             try:
                 video_pagination_response = get_one_page_video(self.account_id, cursor_id, account_index_response["dytk"], account_index_response["signature"])
             except crawler.CrawlerException as e:
-                self.error("cursor %s后的一页视频解析失败，原因：%s" % (cursor_id, e.message))
+                self.error(f"cursor {cursor_id}后的一页视频解析失败，原因：{e.message}")
                 raise
 
-            self.trace("cursor %s页获取的全部视频：%s" % (cursor_id, video_pagination_response["video_info_list"]))
-            self.step("cursor %s页获取%s个视频" % (cursor_id, len(video_pagination_response["video_info_list"])))
+            self.trace(f"cursor {cursor_id}页获取的全部视频：{video_pagination_response['video_info_list']}")
+            self.step(f"cursor {cursor_id}页获取{len(video_pagination_response['video_info_list'])}个视频")
 
             # 寻找这一页符合条件的视频
             for video_info in video_pagination_response["video_info_list"]:
@@ -205,16 +205,16 @@ class Download(crawler.DownloadThread):
 
     # 解析单个视频
     def crawl_video(self, video_info):
-        self.step("开始下载视频%s %s" % (video_info["video_id"], video_info["video_url"]))
+        self.step(f"开始下载视频{video_info['video_id']} {video_info['video_url']}")
 
         file_path = os.path.join(self.main_thread.video_download_path, self.display_name, "%020d.mp4" % video_info["video_id"])
         save_file_return = net.download(video_info["video_url"], file_path)
         if save_file_return["status"] == 1:
             self.total_video_count += 1  # 计数累加
-            self.step("视频%s下载成功" % video_info["video_id"])
+            self.step(f"视频{video_info['video_id']}下载成功")
         else:
-            self.error("视频%s %s 下载失败，原因：%s" % (video_info["video_id"], video_info["video_url"], crawler.download_failre(save_file_return["code"])))
-            self.check_thread_exit_after_download_failure()
+            self.error(f"视频{video_info['video_id']} {video_info['video_url']} 下载失败，原因：{crawler.download_failre(save_file_return['code'])}")
+            self.check_download_failure_exit()
 
         # 视频下载完毕
         self.single_save_data[1] = str(video_info["video_id"])  # 设置存档记录
@@ -223,7 +223,7 @@ class Download(crawler.DownloadThread):
         try:
             # 获取所有可下载视频
             video_id_list = self.get_crawl_list()
-            self.step("需要下载的全部视频解析完毕，共%s个" % len(video_id_list))
+            self.step(f"需要下载的全部视频解析完毕，共{len(video_id_list)}个")
 
             # 从最早的视频开始下载
             while len(video_id_list) > 0:
@@ -238,13 +238,8 @@ class Download(crawler.DownloadThread):
             self.error("未知异常")
             self.error(str(e) + "\n" + traceback.format_exc(), False)
 
-        # 保存最后的信息
-        with self.thread_lock:
-            self.write_single_save_data()
-            self.main_thread.total_video_count += self.total_video_count
-            self.main_thread.save_data.pop(self.account_id)
-        self.step("下载完毕，总共获得%s个视频" % self.total_video_count)
-        self.notify_main_thread()
+        self.main_thread.save_data.pop(self.account_id)
+        self.done()
 
 
 if __name__ == "__main__":
