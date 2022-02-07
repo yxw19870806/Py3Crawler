@@ -16,25 +16,25 @@ def main():
     # 已删除的游戏
     restricted_app_list = steam_class.load_restricted_app_list()
 
-    output.print_msg("总共获取%s个已受限游戏" % len(restricted_app_list))
+    output.print_msg(f"总共获取{len(restricted_app_list)}个已受限游戏")
 
     result_game_ids = []
     while len(restricted_app_list) > 0:
         game_id = restricted_app_list.pop()
 
-        output.print_msg("游戏：%s，剩余数量：%s" % (game_id, len(restricted_app_list)))
+        output.print_msg(f"游戏：{game_id}，剩余数量：{len(restricted_app_list)}")
 
         # 获取游戏信息
         try:
             game_data = steam.get_game_store_index(game_id)
         except crawler.CrawlerException as e:
-            output.print_msg("游戏：%s解析失败，原因：%s" % (game_id, e.message))
+            output.print_msg(f"游戏 {game_id} 解析失败，原因：{e.message}")
             continue
         if game_data["error"]:
-            output.print_msg("游戏 %s 访问错误，%s" % (game_id, game_data["error"]))
+            output.print_msg(f"游戏 {game_id} 访问错误，{game_data['error']}")
             result_game_ids.append(game_id)
         elif game_data["restricted"] is False:
-            output.print_msg("游戏 %s 不在已受限列表中" % game_id)
+            output.print_msg(f"游戏 {game_id} 不在已受限列表中")
             result_game_ids.append(game_id)
 
     output.print_msg(result_game_ids)
