@@ -17,9 +17,9 @@ from common import *
 def get_one_page_album(account_name, page_count):
     # https://www.zcool.com.cn/u/17050872?myCate=0&sort=8&p=2
     if tool.is_integer(account_name):
-        album_pagination_url = "https://www.zcool.com.cn/u/%s" % account_name
+        album_pagination_url = f"https://www.zcool.com.cn/u/{account_name}"
     else:
-        album_pagination_url = "https://%s.zcool.com.cn/" % account_name
+        album_pagination_url = f"https://{account_name}.zcool.com.cn/"
     query_data = {
         "myCate": "0",
         "sort": "8",  # 按时间倒叙
@@ -46,30 +46,30 @@ def get_one_page_album(account_name, page_count):
         # 获取作品id
         album_url = album_selector.find(".card-img>a").attr("href")
         if not album_url:
-            raise crawler.CrawlerException("作品信息截取作品地址失败\n%s" % album_selector.html())
+            raise crawler.CrawlerException("作品信息截取作品地址失败\n" + album_selector.html())
         # 文章
         if album_url.find("www.zcool.com.cn/article/") > 0:
             continue
         album_id = tool.find_sub_string(album_url, "/work/", ".html")
         if not album_id:
-            raise crawler.CrawlerException("作品地址截取作品id失败\n%s" % album_selector.html())
+            raise crawler.CrawlerException("作品地址截取作品id失败\n" + album_selector.html())
         result_album_info["album_id"] = album_id
         # 获取作品标题
         album_title = album_selector.find(".card-img>a").attr("title")
         if not album_title:
-            raise crawler.CrawlerException("作品信息截取作品标题失败\n%s" % album_selector.html())
+            raise crawler.CrawlerException("作品信息截取作品标题失败\n" + album_selector.html())
         result_album_info["album_title"] = album_title
         # 获取作品创建日期
         album_time_text = album_selector.find(".card-item>span").attr("title")
         if not album_time_text:
-            raise crawler.CrawlerException("作品信息截取作品日期信息失败\n%s" % album_selector.html())
+            raise crawler.CrawlerException("作品信息截取作品日期信息失败\n" + album_selector.html())
         album_time_string = tool.find_sub_string(album_time_text, "创建时间：")
         if not album_time_string:
-            raise crawler.CrawlerException("作品日期信息截取作品发布日期失败\n%s" % album_time_text)
+            raise crawler.CrawlerException(f"作品日期信息{album_time_text}截取作品发布日期失败")
         try:
             album_time = time.strptime(album_time_string, "%Y-%m-%d %H:%M:%S")
         except ValueError:
-            raise crawler.CrawlerException("作品发布日期文本格式不正确\n%s" % album_time_string)
+            raise crawler.CrawlerException(f"作品发布日期{album_time_string}的格式不正确")
         result_album_info["album_time"] = int(time.mktime(album_time))
         result["album_info_list"].append(result_album_info)
     result["is_over"] = album_list_selector.length == 0
@@ -78,7 +78,7 @@ def get_one_page_album(account_name, page_count):
 
 # 获取作品
 def get_album_page(album_id):
-    album_url = "https://www.zcool.com.cn/work/%s.html" % album_id
+    album_url = f"https://www.zcool.com.cn/work/{album_id}.html"
     album_response = net.request(album_url, method="GET")
     result = {
         "photo_url_list": [],  # 全部图片地址
@@ -88,7 +88,7 @@ def get_album_page(album_id):
     album_response_content = album_response.data.decode(errors="ignore")
     photo_list_selector = pq(album_response_content).find(".work-show-box .reveal-work-wrap img")
     if photo_list_selector.length == 0:
-        raise crawler.CrawlerException("页面截取图片列表失败\n%s" % album_response_content)
+        raise crawler.CrawlerException("页面截取图片列表失败\n" + album_response_content)
     for photo_index in range(0, photo_list_selector.length):
         result["photo_url_list"].append(photo_list_selector.eq(photo_index).attr("src"))
     return result
@@ -167,16 +167,16 @@ class Download(crawler.DownloadThread):
         # 获取全部还未下载过需要解析的作品
         while not is_over:
             self.main_thread_check()  # 检测主线程运行状态
-            self.step("开始解析第%s页作品" % page_count)
+            self.step(f"开始解析第{page_count}页作品")
 
             try:
                 album_pagination_response = get_one_page_album(self.account_name, page_count)
             except crawler.CrawlerException as e:
-                self.error("第%s页作品解析失败，原因：%s" % (page_count, e.message))
+                self.error(f"第{page_count}页作品解析失败，原因：{e.message}")
                 raise
 
-            self.trace("第%s页解析的全部作品：%s" % (page_count, album_pagination_response["album_info_list"]))
-            self.step("第%s页解析获取%s个作品" % (page_count, len(album_pagination_response["album_info_list"])))
+            self.trace(f"第{page_count}页解析的全部作品：{album_pagination_response['album_info_list']}")
+            self.step(f"第{page_count}页解析获取{len(album_pagination_response['album_info_list'])}个作品")
 
             # 寻找这一页符合条件的作品
             for album_info in album_pagination_response["album_info_list"]:
@@ -202,33 +202,33 @@ class Download(crawler.DownloadThread):
 
     # 解析单个作品
     def crawl_album(self, album_info):
-        self.step("开始解析作品 %s" % album_info["album_id"])
+        self.step(f"开始解析作品 {album_info['album_id']}")
 
         # 获取作品
         try:
             album_response = get_album_page(album_info["album_id"])
         except crawler.CrawlerException as e:
-            self.error("作品%s《%s》解析失败，原因：%s" % (album_info["album_id"], album_info["album_title"], e.message))
+            self.error(f"作品{album_info['album_id']}《{album_info['album_title']}》解析失败，原因：{e.message}")
             raise
 
-        self.trace("作品%s解析的全部图片：%s" % (album_info["album_id"], album_response["photo_url_list"]))
-        self.step("作品%s解析获取%s张图片" % (album_info["album_id"], len(album_response["photo_url_list"])))
+        self.trace(f"作品{album_info['album_id']}解析的全部图片：{album_response['photo_url_list']}")
+        self.step(f"作品{album_info['album_id']}解析获取{len(album_response['photo_url_list'])}张图片")
 
         photo_index = 1
-        album_path = os.path.join(self.main_thread.photo_download_path, self.account_name, "%s %s" % (album_info["album_id"], path.filter_text(album_info["album_title"])))
+        album_path = os.path.join(self.main_thread.photo_download_path, self.account_name, f"{album_info['album_id']} {path.filter_text(album_info['album_title'])}")
         self.temp_path_list.append(album_path)
         for photo_url in album_response["photo_url_list"]:
             self.main_thread_check()  # 检测主线程运行状态
             photo_url = get_photo_url(photo_url)
-            self.step("开始下载作品%s《%s》的第%s张图片 %s" % (album_info["album_id"], album_info["album_title"], photo_index, photo_url))
+            self.step(f"开始下载作品{album_info['album_id']}《{album_info['album_title']}》的第{photo_index}张图片 {photo_url}")
 
-            file_path = os.path.join(album_path, "%02d.%s" % (photo_index, net.get_file_type(photo_url)))
+            file_path = os.path.join(album_path, f"%02d.{net.get_file_type(photo_url)}" % photo_index)
             save_file_return = net.download(photo_url, file_path)
             if save_file_return["status"] == 1:
                 self.total_photo_count += 1  # 计数累加
-                self.step("作品%s《%s》的第%s张图片下载成功" % (album_info["album_id"], album_info["album_title"], photo_index))
+                self.step(f"作品{album_info['album_id']}《{album_info['album_title']}》的第{photo_index}张图片下载成功")
             else:
-                self.error("作品%s《%s》的第%s张图片 %s 下载失败，原因：%s" % (album_info["album_id"], album_info["album_title"], photo_index, photo_url, crawler.download_failre(save_file_return["code"])))
+                self.error(f"作品{album_info['album_id']}《{album_info['album_title']}》的第{photo_index}张图片 {photo_url} 下载失败，原因：{crawler.download_failre(save_file_return['code'])}")
                 self.check_download_failure_exit()
             photo_index += 1
 
@@ -240,7 +240,7 @@ class Download(crawler.DownloadThread):
         try:
             # 获取所有可下载作品
             album_info_list = self.get_crawl_list()
-            self.step("需要下载的全部作品解析完毕，共%s个" % len(album_info_list))
+            self.step(f"需要下载的全部作品解析完毕，共{len(album_info_list)}个")
 
             # 从最早的作品开始下载
             while len(album_info_list) > 0:
