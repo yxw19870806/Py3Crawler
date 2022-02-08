@@ -17,31 +17,31 @@ def follow_account(account_id):
         "uid": account_id,
         "refer_flag": "1005050001_",
     }
-    header_list = {"Referer": "https://weibo.com/%s/follow" % account_id}
+    header_list = {"Referer": f"https://weibo.com/{account_id}/follow"}
     cookies_list = {"SUB": weibo.COOKIE_INFO["SUB"]}
     follow_response = net.request(api_url, method="POST", fields=post_data, header_list=header_list, cookies_list=cookies_list, json_decode=True)
     if follow_response.status != net.HTTP_RETURN_CODE_SUCCEED:
-        output.print_msg("关注%s失败，请求返回结果：%s" % (account_id, crawler.request_failre(follow_response.status)))
+        output.print_msg(f"关注{account_id}失败，请求返回结果：{crawler.request_failre(follow_response.status)}")
         tool.process_exit()
     try:
         return_code = crawler.get_json_value(follow_response.json_data, "code", type_check=int)
     except crawler.CrawlerException():
-        output.print_msg("关注%s失败，返回内容：%s，退出程序！" % (account_id, follow_response.json_data))
+        output.print_msg(f"关注{account_id}失败，返回内容：{follow_response.json_data}，退出程序！")
         tool.process_exit()
     else:
         if return_code == 100000:
-            output.print_msg("关注%s成功" % account_id)
+            output.print_msg(f"关注{account_id}成功")
             time.sleep(5)
             return True
         elif return_code == 100027:
-            output.print_msg("关注%s失败，连续关注太多用户需要输入验证码，等待一会儿继续尝试" % account_id)
+            output.print_msg(f"关注{account_id}失败，连续关注太多用户需要输入验证码，等待一会儿继续尝试")
             # sleep 一段时间后再试
             time.sleep(60)
         elif return_code == 100001:
-            output.print_msg("达到今日关注上限，退出程序" % account_id)
+            output.print_msg("达到今日关注上限，退出程序")
             tool.process_exit()
         else:
-            output.print_msg("关注%s失败，返回内容：%s，退出程序！" % (account_id, follow_response.json_data))
+            output.print_msg(f"关注{account_id}失败，返回内容：{follow_response.json_data}，退出程序！")
             tool.process_exit()
 
     return False
