@@ -21,7 +21,7 @@ def get_account_from_index():
     index_response_content = index_response.data.decode(errors="ignore")
     member_list_find = re.findall('<div class="unit"><a href="./([^"]*)"><img src="[^>]*alt="([^"]*)" />', index_response_content)
     if len(member_list_find) == 0:
-        raise crawler.CrawlerException("页面截取成员类别失败\n%s" % index_response_content)
+        raise crawler.CrawlerException("页面截取成员类别失败\n" + index_response_content)
     for member_info in member_list_find:
         account_list[member_info[0]] = member_info[1].replace(" ", "")
     return account_list
