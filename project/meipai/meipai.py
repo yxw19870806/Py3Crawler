@@ -44,9 +44,10 @@ def get_one_page_video(account_id, page_count):
         # 获取视频id
         result_video_info["video_id"] = crawler.get_json_value(media_info, "id", type_check=int)
         # 获取视频下载地址
-        video_url = decrypt_video_url(crawler.get_json_value(media_info, "video", type_check=str))
+        decrypt_video_url = crawler.get_json_value(media_info, "video", type_check=str)
+        video_url = decrypt_video_url(decrypt_video_url)
         if video_url is None:
-            raise crawler.CrawlerException("加密视频地址解密失败\n%s" % media_info)
+            raise crawler.CrawlerException(f"加密视频地址 {decrypt_video_url} 解密失败")
         result_video_info["video_url"] = video_url
         result["video_info_list"].append(result_video_info)
     return result
@@ -54,7 +55,7 @@ def get_one_page_video(account_id, page_count):
 
 # 获取指定视频播放页
 def get_video_play_page(video_id):
-    video_play_url = "http://www.meipai.com/media/%s" % video_id
+    video_play_url = f"http://www.meipai.com/media/{video_id}"
     video_play_response = net.request(video_play_url, method="GET")
     result = {
         "is_delete": False,  # 是否已删除
@@ -73,10 +74,10 @@ def get_video_play_page(video_id):
             if error_message == "为建设清朗网络空间，视频正在审核中，暂时无法播放。" or error_message == "可能已被删除或网址输入错误,请再核对下吧~":
                 result["is_delete"] = True
                 return result
-        raise crawler.CrawlerException("页面截取加密视频地址失败\n%s" % video_play_response_content)
+        raise crawler.CrawlerException("页面截取加密视频地址失败\n" + video_play_response_content)
     video_url = decrypt_video_url(video_url_crypt_string)
     if not video_url:
-        raise crawler.CrawlerException("加密视频地址解密失败\n%s" % video_url_crypt_string)
+        raise crawler.CrawlerException(f"加密视频地址 {video_url_crypt_string} 解密失败")
     result["video_url"] = video_url
     return result
 
@@ -182,17 +183,17 @@ class Download(crawler.DownloadThread):
         # 获取全部还未下载过需要解析的视频
         while not is_over:
             self.main_thread_check()  # 检测主线程运行状态
-            self.step("开始解析第%s页视频" % page_count)
+            self.step(f"开始解析第{page_count}页视频")
 
             # 获取一页视频
             try:
                 video_pagination_response = get_one_page_video(self.account_id, page_count)
             except crawler.CrawlerException as e:
-                self.error("第%s页视频解析失败，原因：%s" % (page_count, e.message))
+                self.error(f"第{page_count}页视频解析失败，原因：{e.message}")
                 raise
 
-            self.trace("第%s页解析的全部视频：%s" % (page_count, video_pagination_response["video_info_list"]))
-            self.step("第%s页解析获取%s个视频" % (page_count, len(video_pagination_response["video_info_list"])))
+            self.trace(f"第{page_count}页解析的全部视频：{video_pagination_response['video_info_list']}")
+            self.step(f"第{page_count}页解析获取{len(video_pagination_response['video_info_list'])}个视频")
 
             # 寻找这一页符合条件的视频
             for video_info in video_pagination_response["video_info_list"]:
@@ -220,16 +221,16 @@ class Download(crawler.DownloadThread):
 
     # 下载单个视频
     def crawl_video(self, video_info):
-        self.step("开始下载视频%s %s" % (video_info["video_id"], video_info["video_url"]))
+        self.step(f"开始下载视频{video_info['video_id']} {video_info['video_url']}")
 
         file_path = os.path.join(self.main_thread.video_download_path, self.display_name, "%010d.mp4" % video_info["video_id"])
         save_file_return = net.download(video_info["video_url"], file_path)
         if save_file_return["status"] == 1:
             self.total_video_count += 1  # 计数累加
-            self.step("视频%s下载成功" % video_info["video_id"])
+            self.step(f"视频{video_info['video_id']}下载成功")
         else:
-            self.error("视频%s %s 下载失败，原因：%s" % (video_info["video_id"], video_info["video_url"], crawler.download_failre(save_file_return["code"])))
-            self.check_thread_exit_after_download_failure()
+            self.error(f"视频{video_info['video_id']} {video_info['video_url']} 下载失败，原因：{crawler.download_failre(save_file_return['code'])}")
+            self.check_download_failure_exit()
 
         # 视频下载完毕
         self.single_save_data[1] = str(video_info["video_id"])  # 设置存档记录
@@ -238,7 +239,7 @@ class Download(crawler.DownloadThread):
         try:
             # 获取所有可下载视频
             video_info_list = self.get_crawl_list()
-            self.step("需要下载的全部视频解析完毕，共%s个" % len(video_info_list))
+            self.step(f"需要下载的全部视频解析完毕，共{len(video_info_list)}个")
 
             # 从最早的视频开始下载
             while len(video_info_list) > 0:
@@ -253,13 +254,8 @@ class Download(crawler.DownloadThread):
             self.error("未知异常")
             self.error(str(e) + "\n" + traceback.format_exc(), False)
 
-        # 保存最后的信息
-        with self.thread_lock:
-            self.write_single_save_data()
-            self.main_thread.total_video_count += self.total_video_count
-            self.main_thread.save_data.pop(self.account_id)
-        self.step("下载完毕，总共获得%s个视频" % self.total_video_count)
-        self.notify_main_thread()
+        self.main_thread.save_data.pop(self.account_id)
+        self.done()
 
 
 if __name__ == "__main__":

@@ -23,7 +23,7 @@ def main():
     try:
         inventory_item_list = steam.get_account_inventory(steam_class.account_id)
     except crawler.CrawlerException as e:
-        output.print_msg("库存解析失败，原因：%s" % e.message)
+        output.print_msg(f"库存解析失败，原因：{e.message}")
         raise
     badges_list = {}
     if CHECK_EXTRA_CARD:
@@ -31,7 +31,7 @@ def main():
         try:
             badges_list = steam.get_account_badges(steam_class.account_id)
         except crawler.CrawlerException as e:
-            output.print_msg("获取徽章等级失败，原因：%s" % e.message)
+            output.print_msg(f"获取徽章等级失败，原因：{e.message}")
             raise
     for item_id, item_info in inventory_item_list.items():
         if item_info["type"] == steam.INVENTORY_ITEM_TYPE_PROFILE_BACKGROUND:

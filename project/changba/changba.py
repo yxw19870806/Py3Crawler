@@ -16,7 +16,7 @@ from common import *
 
 # 获取账号首页页面
 def get_account_index_page(account_id):
-    account_index_url = "http://changba.com/u/%s" % account_id
+    account_index_url = f"http://changba.com/u/{account_id}"
     account_index_response = net.request(account_index_url, method="GET", is_auto_redirect=False)
     result = {
         "user_id": None,  # user id
@@ -29,7 +29,7 @@ def get_account_index_page(account_id):
     # 获取user id
     user_id = tool.find_sub_string(account_index_response_content, "var userid = '", "'")
     if not tool.is_integer(user_id):
-        raise crawler.CrawlerException("页面截取userid失败\n%s" % account_index_response_content)
+        raise crawler.CrawlerException("页面截取userid失败\n" + account_index_response_content)
     result["user_id"] = user_id
     return result
 
@@ -68,7 +68,7 @@ def get_one_page_audio(user_id, page_count):
 # 获取指定id的歌曲播放页
 # audio_en_word_id => w-ptydrV23KVyIPbWPoKsA
 def get_audio_play_page(audio_en_word_id):
-    audio_play_url = "http://changba.com/s/%s" % audio_en_word_id
+    audio_play_url = f"http://changba.com/s/{audio_en_word_id}"
     result = {
         "audio_id": None,  # 歌曲id
         "audio_title": "",  # 歌曲标题
@@ -85,23 +85,23 @@ def get_audio_play_page(audio_en_word_id):
     # 获取歌曲id
     audio_id = tool.find_sub_string(audio_play_response_content, "export_song.php?workid=", "&")
     if not tool.is_integer(audio_id):
-        raise crawler.CrawlerException("页面截取歌曲id失败\n%s" % audio_play_response_content)
+        raise crawler.CrawlerException("页面截取歌曲id失败\n" + audio_play_response_content)
     result["audio_id"] = int(audio_id)
     # 获取歌曲标题
     audio_title = tool.find_sub_string(audio_play_response_content, '<div class="title">', "</div>")
     if not audio_title:
-        raise crawler.CrawlerException("页面截取歌曲标题失败\n%s" % audio_play_response_content)
+        raise crawler.CrawlerException("页面截取歌曲标题失败\n" + audio_play_response_content)
     result["audio_title"] = audio_title.strip()
     # 判断歌曲类型（音频或者视频）
     is_video = tool.find_sub_string(audio_play_response_content, "&isvideo=", "'")
     if not tool.is_integer(is_video):
-        raise crawler.CrawlerException("页面截取歌曲类型失败\n%s" % audio_play_response_content)
+        raise crawler.CrawlerException("页面截取歌曲类型失败\n" + audio_play_response_content)
     is_video = False if is_video == "0" else True
     # 获取歌曲地址
     if not is_video:  # 音频
         audio_source_url = tool.find_sub_string(audio_play_response_content, 'var a="', '"')
         if not audio_source_url:
-            raise crawler.CrawlerException("页面截取歌曲原始地址失败\n%s" % audio_play_response_content)
+            raise crawler.CrawlerException("页面截取歌曲原始地址失败\n" + audio_play_response_content)
         # 从JS处解析的规则
         special_find = re.findall("userwork/([abc])(\d+)/(\w+)/(\w+)\.mp3", audio_source_url)
         if len(special_find) == 0:
@@ -111,19 +111,19 @@ def get_audio_play_page(audio_en_word_id):
             f = int(int(special_find[0][2], 16) / e / e)
             g = int(int(special_find[0][3], 16) / e / e)
             if "a" == special_find[0][0] and g % 1000 == f:
-                result["audio_url"] = "http://a%smp3.changba.com/userdata/userwork/%s/%g.mp3" % (e, f, g)
+                result["audio_url"] = f"http://a{e}mp3.changba.com/userdata/userwork/{f}/{g}.mp3"
             else:
-                result["audio_url"] = "http://aliuwmp3.changba.com/userdata/userwork/%s.mp3" % g
+                result["audio_url"] = f"http://aliuwmp3.changba.com/userdata/userwork/{g}.mp3"
         else:
-            raise crawler.CrawlerException("歌曲原始地址解密歌曲地址失败\n%s" % audio_source_url)
+            raise crawler.CrawlerException(f"歌曲原始地址{audio_source_url}解密歌曲地址失败")
     else:  # 视频
         encryption_video_url = tool.find_sub_string(audio_play_response_content, "video_url: '", "',")
         if not encryption_video_url:
-            raise crawler.CrawlerException("页面截取加密视频地址失败\n%s" % audio_play_response_content)
+            raise crawler.CrawlerException("页面截取加密视频地址失败\n" + audio_play_response_content)
         try:
             video_url = "http:" + base64.b64decode(encryption_video_url).decode(errors="ignore")
         except TypeError:
-            raise crawler.CrawlerException("歌曲加密地址解密失败\n%s" % encryption_video_url)
+            raise crawler.CrawlerException(f"歌曲加密地址{encryption_video_url}解密失败")
         result["audio_url"] = video_url
     return result
 
@@ -195,17 +195,17 @@ class Download(crawler.DownloadThread):
         # 获取全部还未下载过需要解析的歌曲
         while not is_over:
             self.main_thread_check()  # 检测主线程运行状态
-            self.step("开始解析第%s页歌曲" % page_count)
+            self.step(f"开始解析第{page_count}页歌曲")
 
             # 获取一页歌曲
             try:
                 audit_pagination_response = get_one_page_audio(user_id, page_count)
             except crawler.CrawlerException as e:
-                self.error("第%s页歌曲解析失败，原因：%s" % (page_count, e.message))
+                self.error(f"第{page_count}页歌曲解析失败，原因：{e.message}")
                 raise
 
-            self.trace("第%s页解析的全部歌曲：%s" % (page_count, audit_pagination_response["audio_info_list"]))
-            self.step("第%s页解析获取%s首歌曲" % (page_count, len(audit_pagination_response["audio_info_list"])))
+            self.trace(f"第{page_count}页解析的全部歌曲：{audit_pagination_response['audio_info_list']}")
+            self.step(f"第{page_count}页解析获取{len(audit_pagination_response['audio_info_list'])}首歌曲")
 
             # 寻找这一页符合条件的歌曲
             for audio_info in audit_pagination_response["audio_info_list"]:
@@ -233,29 +233,29 @@ class Download(crawler.DownloadThread):
 
     # 解析单首歌曲
     def crawl_audio(self, audio_info):
-        self.step("开始解析歌曲%s《%s》" % (audio_info["audio_key"], audio_info["audio_title"]))
+        self.step(f"开始解析歌曲{audio_info['audio_key']}《{audio_info['audio_title']}》")
 
         # 获取歌曲播放页
         try:
             audio_play_response = get_audio_play_page(audio_info["audio_key"])
         except crawler.CrawlerException as e:
-            self.error("歌曲%s《%s》解析失败，原因：%s" % (audio_info["audio_key"], audio_info["audio_title"], e.message))
+            self.error(f"歌曲{audio_info['audio_key']}《{audio_info['audio_title']}》解析失败，原因：{e.message}")
             raise
 
         if audio_play_response["is_delete"]:
-            self.error("歌曲%s《%s》异常，跳过" % (audio_info["audio_key"], audio_info["audio_title"]))
+            self.error(f"歌曲{audio_info['audio_key']}《{audio_info['audio_title']}》异常，跳过")
             return
 
-        self.step("开始下载歌曲%s《%s》 %s" % (audio_info["audio_key"], audio_info["audio_title"], audio_play_response["audio_url"]))
+        self.step(f"开始下载歌曲{audio_info['audio_key']}《{audio_info['audio_title']}》 {audio_play_response['audio_url']}")
 
-        file_path = os.path.join(self.main_thread.audio_download_path, self.display_name, "%010d - %s.%s" % (audio_info["audio_id"], path.filter_text(audio_info["audio_title"]), net.get_file_type(audio_play_response["audio_url"])))
+        file_path = os.path.join(self.main_thread.audio_download_path, self.display_name, f"%010d - {path.filter_text(audio_info['audio_title'])}.{net.get_file_type(audio_play_response['audio_url'])}" % audio_info["audio_id"])
         save_file_return = net.download(audio_play_response["audio_url"], file_path)
         if save_file_return["status"] == 1:
             self.total_audio_count += 1  # 计数累加
-            self.step("歌曲%s《%s》下载成功" % (audio_info["audio_key"], audio_info["audio_title"]))
+            self.step(f"歌曲{audio_info['audio_key']}《{audio_info['audio_title']}》下载成功")
         else:
-            self.error("歌曲%s《%s》 %s 下载失败，原因：%s" % (audio_info["audio_key"], audio_info["audio_title"], audio_play_response["audio_url"], crawler.download_failre(save_file_return["code"])))
-            self.check_thread_exit_after_download_failure()
+            self.error(f"歌曲{audio_info['audio_key']}《{audio_info['audio_title']}》 {audio_play_response['audio_url']} 下载失败，原因：{crawler.download_failre(save_file_return['code'])}")
+            self.check_download_failure_exit()
 
         # 歌曲下载完毕
         self.single_save_data[1] = str(audio_info["audio_id"])  # 设置存档
@@ -266,12 +266,12 @@ class Download(crawler.DownloadThread):
             try:
                 account_index_response = get_account_index_page(self.account_id)
             except crawler.CrawlerException as e:
-                self.error("主页解析失败，原因：%s" % e.message)
+                self.error(f"主页解析失败，原因：{e.message}")
                 raise
 
             # 获取所有可下载歌曲
             audio_info_list = self.get_crawl_list(account_index_response["user_id"])
-            self.step("需要下载的全部歌曲解析完毕，共%s首" % len(audio_info_list))
+            self.step(f"需要下载的全部歌曲解析完毕，共{len(audio_info_list)}首")
 
             # 从最早的歌曲开始下载
             while len(audio_info_list) > 0:
@@ -286,13 +286,8 @@ class Download(crawler.DownloadThread):
             self.error("未知异常")
             self.error(str(e) + "\n" + traceback.format_exc(), False)
 
-        # 保存最后的信息
-        with self.thread_lock:
-            self.write_single_save_data()
-            self.main_thread.total_audio_count += self.total_audio_count
-            self.main_thread.save_data.pop(self.account_id)
-        self.step("下载完毕，总共获得%s首歌曲" % self.total_audio_count)
-        self.notify_main_thread()
+        self.main_thread.save_data.pop(self.account_id)
+        self.done()
 
 
 if __name__ == "__main__":

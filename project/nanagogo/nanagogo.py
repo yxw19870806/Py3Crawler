@@ -17,7 +17,7 @@ EACH_PAGE_BLOG_COUNT = 30  # 每次请求获取的日志数量
 
 # 获取talk首页
 def get_index_page(account_name):
-    index_url = "https://7gogo.jp/%s" % account_name
+    index_url = f"https://7gogo.jp/{account_name}"
     index_response = net.request(index_url, method="GET")
     if index_response.status == 404:
         raise crawler.CrawlerException("talk已被删除")
@@ -26,7 +26,7 @@ def get_index_page(account_name):
 
 # 获取指定页数的全部日志信息
 def get_one_page_blog(account_name, target_id):
-    blog_pagination_url = "https://api.7gogo.jp/web/v2/talks/%s/images" % account_name
+    blog_pagination_url = f"https://api.7gogo.jp/web/v2/talks/{account_name}/images"
     query_data = {
         "targetId": target_id,
         "limit": EACH_PAGE_BLOG_COUNT,
@@ -63,7 +63,7 @@ def get_one_page_blog(account_name, target_id):
             elif body_type == 8:  # video
                 result_blog_info["video_url_list"].append(crawler.get_json_value(blog_body_info, "movieUrlHq", type_check=str))
             else:
-                raise crawler.CrawlerException("日志信息'bodyType'字段取值不正确\n%s" % blog_body_info)
+                raise crawler.CrawlerException(f"日志信息{blog_body_info}中'bodyType'字段取值不正确")
         result["blog_info_list"].append(result_blog_info)
     return result
 
@@ -131,17 +131,17 @@ class Download(crawler.DownloadThread):
         # 获取全部还未下载过需要解析的日志
         while not is_over:
             self.main_thread_check()  # 检测主线程运行状态
-            self.step("开始解析target：%s页" % target_id)
+            self.step(f"开始解析target：{target_id}页")
 
             # 获取一页日志信息
             try:
                 blog_pagination_response = get_one_page_blog(self.account_name, target_id)
             except crawler.CrawlerException as e:
-                self.error("target：%s页解析失败，原因：%s" % (target_id, e.message))
+                self.error(f"target：{target_id}页解析失败，原因：{e.message}")
                 raise
 
-            self.trace("target：%s页解析的全部日志：%s" % (target_id, blog_pagination_response["blog_info_list"]))
-            self.step("target：%s页解析获取%s个日志" % (target_id, len(blog_pagination_response["blog_info_list"])))
+            self.trace(f"target：{target_id}页解析的全部日志：{blog_pagination_response['blog_info_list']}")
+            self.step(f"target：{target_id}页解析获取{len(blog_pagination_response['blog_info_list'])}个日志")
 
             # 已经没有日志了
             if len(blog_pagination_response["blog_info_list"]) == 0:
@@ -162,7 +162,7 @@ class Download(crawler.DownloadThread):
 
     # 解析单个日志
     def crawl_blog(self, blog_info):
-        self.step("开始解析日志%s" % blog_info["blog_id"])
+        self.step(f"开始解析日志{blog_info['blog_id']}")
 
         # 图片下载
         if self.main_thread.is_download_photo:
@@ -177,43 +177,43 @@ class Download(crawler.DownloadThread):
         self.single_save_data[1] = str(blog_info["blog_id"])
 
     def crawl_photo(self, blog_info):
-        self.trace("日志%s解析的全部图片：%s" % (blog_info["blog_id"], blog_info["photo_url_list"]))
-        self.step("日志%s解析获取%s张图片" % (blog_info["blog_id"], len(blog_info["photo_url_list"])))
+        self.trace(f"日志{blog_info['blog_id']}解析的全部图片：{blog_info['photo_url_list']}")
+        self.step(f"日志{blog_info['blog_id']}解析获取{len(blog_info['photo_url_list'])}张图片")
 
         photo_index = 1
         for photo_url in blog_info["photo_url_list"]:
             self.main_thread_check()  # 检测主线程运行状态
-            self.step("开始下载日志%s的第%s张图片 %s" % (blog_info["blog_id"], photo_index, photo_url))
+            self.step(f"开始下载日志{blog_info['blog_id']}的第{photo_index}张图片 {photo_url}")
 
-            photo_file_path = os.path.join(self.main_thread.photo_download_path, self.account_name, "%05d_%02d.%s" % (blog_info["blog_id"], photo_index, net.get_file_type(photo_url)))
+            photo_file_path = os.path.join(self.main_thread.photo_download_path, self.account_name, f"%05d_%02d.{net.get_file_type(photo_url)}" % (blog_info["blog_id"], photo_index))
             save_file_return = net.download(photo_url, photo_file_path)
             if save_file_return["status"] == 1:
                 self.temp_path_list.append(photo_file_path)  # 设置临时目录
                 self.total_photo_count += 1  # 计数累加
-                self.step("日志%s的第%s张图片下载成功" % (blog_info["blog_id"], photo_index))
+                self.step(f"日志{blog_info['blog_id']}的第{photo_index}张图片下载成功")
             else:
-                self.error("日志%s第%s张图片 %s 下载失败，原因：%s" % (blog_info["blog_id"], photo_index, photo_url, crawler.download_failre(save_file_return["code"])))
-                self.check_thread_exit_after_download_failure()
+                self.error(f"日志{blog_info['blog_id']}第{photo_index}张图片 {photo_url} 下载失败，原因：{crawler.download_failre(save_file_return['code'])}")
+                self.check_download_failure_exit()
             photo_index += 1
 
     def crawl_video(self, blog_info):
-        self.trace("日志%s解析的全部视频：%s" % (blog_info["blog_id"], blog_info["video_url_list"]))
-        self.step("日志%s解析获取%s个视频" % (blog_info["blog_id"], len(blog_info["video_url_list"])))
+        self.trace(f"日志{blog_info['blog_id']}解析的全部视频：{blog_info['video_url_list']}")
+        self.step(f"日志{blog_info['blog_id']}解析获取{len(blog_info['video_url_list'])}个视频")
 
         video_index = 1
         for video_url in blog_info["video_url_list"]:
             self.main_thread_check()  # 检测主线程运行状态
-            self.step("开始下载日志%s的第%s个视频 %s" % (blog_info["blog_id"], video_index, video_url))
+            self.step(f"开始下载日志{blog_info['blog_id']}的第{video_index}个视频 {video_url}")
 
-            video_file_path = os.path.join(self.main_thread.video_download_path, self.account_name, "%05d_%02d.%s" % (blog_info["blog_id"], video_index, net.get_file_type(video_url)))
+            video_file_path = os.path.join(self.main_thread.video_download_path, self.account_name, f"%05d_%02d.{net.get_file_type(video_url)}" % (blog_info["blog_id"], video_index))
             save_file_return = net.download(video_url, video_file_path)
             if save_file_return["status"] == 1:
                 self.temp_path_list.append(video_file_path)  # 设置临时目录
                 self.total_video_count += 1  # 计数累加
-                self.step("日志%s的第%s个视频下载成功" % (blog_info["blog_id"], video_index))
+                self.step(f"日志{blog_info['blog_id']}的第{video_index}个视频下载成功")
             else:
-                self.error("日志%s的第%s个视频 %s 下载失败，原因：%s" % (blog_info["blog_id"], video_index, video_url, crawler.download_failre(save_file_return["code"])))
-                self.check_thread_exit_after_download_failure()
+                self.error(f"日志{blog_info['blog_id']}的第{video_index}个视频 {video_url} 下载失败，原因：{crawler.download_failre(save_file_return['code'])}")
+                self.check_download_failure_exit()
             video_index += 1
 
     def run(self):
@@ -222,12 +222,12 @@ class Download(crawler.DownloadThread):
             try:
                 get_index_page(self.account_name)
             except crawler.CrawlerException as e:
-                self.error("首页访问失败，原因：%s" % e.message)
+                self.error(f"首页访问失败，原因：{e.message}")
                 raise
 
             # 获取所有可下载日志
             blog_info_list = self.get_crawl_list()
-            self.step("需要下载的全部日志解析完毕，共%s个" % len(blog_info_list))
+            self.step(f"需要下载的全部日志解析完毕，共{len(blog_info_list)}个")
 
             # 从最早的日志开始下载
             while len(blog_info_list) > 0:
@@ -238,20 +238,12 @@ class Download(crawler.DownloadThread):
                 self.error("异常退出")
             else:
                 self.step("提前退出")
-            # 如果临时目录变量不为空，表示某个日志正在下载中，需要把下载了部分的内容给清理掉
-            self.clean_temp_path()
         except Exception as e:
             self.error("未知异常")
             self.error(str(e) + "\n" + traceback.format_exc(), False)
 
-        # 保存最后的信息
-        with self.thread_lock:
-            self.write_single_save_data()
-            self.main_thread.total_photo_count += self.total_photo_count
-            self.main_thread.total_video_count += self.total_video_count
-            self.main_thread.save_data.pop(self.account_name)
-        self.step("下载完毕，总共获得%s张图片，%s个视频" % (self.total_photo_count, self.total_video_count))
-        self.notify_main_thread()
+        self.main_thread.save_data.pop(self.account_name)
+        self.done()
 
 
 if __name__ == "__main__":

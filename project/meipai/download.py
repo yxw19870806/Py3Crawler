@@ -34,7 +34,7 @@ def main():
         try:
             video_response = meipai.get_video_play_page(video_id)
         except crawler.CrawlerException as e:
-            log.error("解析视频下载地址失败，原因：%s" % e.message)
+            log.error(f"解析视频下载地址失败，原因：{e.message}")
             break
         if video_response["is_delete"]:
             log.step("视频不存在，跳过")
@@ -50,12 +50,12 @@ def main():
         if not file_path:
             continue
         # 开始下载
-        log.step("\n视频地址：%s\n下载路径：%s" % (video_response["video_url"], file_path))
+        log.step(f"\n视频地址：{video_response['video_url']}\n下载路径：{file_path}")
         save_file_return = net.download(video_response["video_url"], file_path, head_check=True)
         if save_file_return["status"] == 1:
             log.step("视频下载成功")
         else:
-            log.error("视频下载失败，原因：%s" % crawler.download_failre(save_file_return["code"]))
+            log.error(f"视频下载失败，原因：{crawler.download_failre(save_file_return['code'])}")
 
 
 if __name__ == "__main__":

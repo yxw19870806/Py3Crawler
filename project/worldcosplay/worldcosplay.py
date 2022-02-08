@@ -46,11 +46,11 @@ def get_one_page_photo(account_id, page_count):
             photo_url = crawler.get_json_value(photo_info, "photo", key_name, default_value="", type_check=str)
             if photo_url:
                 if photo_url.find("-350x600.") == -1:
-                    raise crawler.CrawlerException("返回信息截取图片地址失败\n%s" % photo_info)
+                    raise crawler.CrawlerException(f"图片信息{photo_info}中截取图片地址失败")
                 result_photo_info["photo_url"] = photo_url
                 break
         else:
-            raise crawler.CrawlerException("图片信息匹配图片地址失败\n%s" % photo_info)
+            raise crawler.CrawlerException(f"图片信息{photo_info}中匹配图片地址失败")
         result["photo_info_list"].append(result_photo_info)
     # 判断是不是最后一页
     if crawler.get_json_value(photo_pagination_response.json_data, "pager", "next_page") is None:
@@ -127,17 +127,17 @@ class Download(crawler.DownloadThread):
         is_over = False
         while not is_over:
             self.main_thread_check()  # 检测主线程运行状态
-            self.step("开始解析第%s页图片" % page_count)
+            self.step(f"开始解析第{page_count}页图片")
 
             # 获取一页图片
             try:
                 photo_pagination_response = get_one_page_photo(self.account_id, page_count)
             except crawler.CrawlerException as e:
-                self.error("第%s页图片解析失败，原因：%s" % (page_count, e.message))
+                self.error(f"第{page_count}页图片解析失败，原因：{e.message}")
                 raise
 
-            self.trace("第%s页解析的全部图片：%s" % (page_count, photo_pagination_response["photo_info_list"]))
-            self.step("第%s页解析获取%s张图片" % (page_count, len(photo_pagination_response["photo_info_list"])))
+            self.trace(f"第{page_count}页解析的全部图片：{photo_pagination_response['photo_info_list']}")
+            self.step(f"第{page_count}页解析获取{len(photo_pagination_response['photo_info_list'])}张图片")
 
             # 寻找这一页符合条件的图片
             for photo_info in photo_pagination_response["photo_info_list"]:
@@ -164,17 +164,17 @@ class Download(crawler.DownloadThread):
     # 解析单个图片
     def crawl_photo(self, photo_info):
         # 禁用指定分辨率
-        self.step("开始下载图片%s %s" % (photo_info["photo_id"], photo_info["photo_url"]))
+        self.step(f"开始下载图片{photo_info['photo_id']} {photo_info['photo_url']}")
 
         photo_url = get_photo_url(photo_info["photo_url"])
-        file_path = os.path.join(self.main_thread.photo_download_path, self.display_name, "%08d.%s" % (photo_info["photo_id"], net.get_file_type(photo_url)))
+        file_path = os.path.join(self.main_thread.photo_download_path, self.display_name, f"%08d.{net.get_file_type(photo_url)}" % photo_info["photo_id"])
         save_file_return = net.download(photo_url, file_path)
         if save_file_return["status"] == 1:
             self.total_photo_count += 1  # 计数累加
-            self.step("图片%s下载成功" % photo_info["photo_id"])
+            self.step(f"图片{photo_info['photo_id']}下载成功")
         else:
-            self.error("图片%s %s，下载失败，原因：%s" % (photo_info["photo_id"], photo_info["photo_url"], crawler.download_failre(save_file_return["code"])))
-            self.check_thread_exit_after_download_failure()
+            self.error(f"图片{photo_info['photo_id']} {photo_info['photo_url']}，下载失败，原因：{crawler.download_failre(save_file_return['code'])}")
+            self.check_download_failure_exit()
 
         # 图片内图片下全部载完毕
         self.single_save_data[1] = str(photo_info["photo_id"])  # 设置存档记录
@@ -183,7 +183,7 @@ class Download(crawler.DownloadThread):
         try:
             # 获取所有可下载图片
             photo_info_list = self.get_crawl_list()
-            self.step("需要下载的全部图片解析完毕，共%s个" % len(photo_info_list))
+            self.step(f"需要下载的全部图片解析完毕，共{len(photo_info_list)}个")
 
             # 从最早的图片开始下载
             while len(photo_info_list) > 0:
@@ -198,13 +198,8 @@ class Download(crawler.DownloadThread):
             self.error("未知异常")
             self.error(str(e) + "\n" + traceback.format_exc(), False)
 
-        # 保存最后的信息
-        with self.thread_lock:
-            self.write_single_save_data()
-            self.main_thread.total_photo_count += self.total_photo_count
-            self.main_thread.save_data.pop(self.account_id)
-        self.step("下载完毕，总共获得%s张图片" % self.total_photo_count)
-        self.notify_main_thread()
+        self.main_thread.save_data.pop(self.account_id)
+        self.done()
 
 
 if __name__ == "__main__":

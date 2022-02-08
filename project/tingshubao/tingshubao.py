@@ -15,7 +15,7 @@ from common import *
 
 # 获取有声书首页
 def get_album_index_page(album_id):
-    album_index_url = "http://m.tingshubao.com/book/%s.html" % album_id
+    album_index_url = f"http://m.tingshubao.com/book/{album_id}.html"
     album_index_response = net.request(album_index_url, method="GET")
     result = {
         "audio_info_list": [],  # 全部音频信息
@@ -132,8 +132,8 @@ class Download(crawler.DownloadThread):
 
         self.step("开始解析首页")
         album_index_response = get_album_index_page(self.album_id)
-        self.trace("首页解析的全部音频：%s" % (album_index_response["audio_info_list"]))
-        self.step("首页解析获取%s首音频" % (len(album_index_response["audio_info_list"])))
+        self.trace(f"首页解析的全部音频：{album_index_response['audio_info_list']}")
+        self.step(f"首页解析获取{len(album_index_response['audio_info_list'])}首音频")
 
         for audio_info in album_index_response["audio_info_list"]:
             # 检查是否达到存档记录
@@ -146,26 +146,26 @@ class Download(crawler.DownloadThread):
 
     # 解析单首音频
     def crawl_audio(self, audio_info):
-        self.step("开始解析音频%s" % audio_info["audio_id"])
+        self.step(f"开始解析音频{audio_info['audio_id']}")
 
         # 获取音频播放页
         try:
             audio_play_response = get_audio_info_page(audio_info["audio_play_url"])
         except crawler.CrawlerException as e:
-            self.error("音频%s解析失败，原因：%s" % (audio_info["audio_id"], e.message))
+            self.error(f"音频{audio_info['audio_id']}解析失败，原因：{e.message}")
             raise
 
         audio_url = audio_play_response["audio_url"]
-        self.step("开始下载音频%s %s" % (audio_info["audio_id"], audio_url))
+        self.step(f"开始下载音频{audio_info['audio_id']} {audio_url}")
 
-        file_path = os.path.join(self.main_thread.audio_download_path, self.display_name, "%04d.%s" % (audio_info["audio_id"], net.get_file_type(audio_url)))
+        file_path = os.path.join(self.main_thread.audio_download_path, self.display_name, f"%04d.{net.get_file_type(audio_url)}" % audio_info["audio_id"])
         save_file_return = net.download(audio_url, file_path)
         if save_file_return["status"] == 1:
             self.total_audio_count += 1  # 计数累加
-            self.step("音频%s下载成功" % audio_info["audio_id"])
+            self.step(f"音频{audio_info['audio_id']}下载成功")
         else:
-            self.error("音频%s %s 下载失败，原因：%s" % (audio_info["audio_id"], audio_url, crawler.download_failre(save_file_return["code"])))
-            self.check_thread_exit_after_download_failure()
+            self.error(f"音频{audio_info['audio_id']} {audio_url} 下载失败，原因：{crawler.download_failre(save_file_return['code'])}")
+            self.check_download_failure_exit()
 
         # 音频下载完毕
         self.single_save_data[1] = str(audio_info["audio_id"])  # 设置存档记录
@@ -174,7 +174,7 @@ class Download(crawler.DownloadThread):
         try:
             # 获取所有可下载音频
             audio_info_list = self.get_crawl_list()
-            self.step("需要下载的全部音频解析完毕，共%s个" % len(audio_info_list))
+            self.step(f"需要下载的全部音频解析完毕，共{len(audio_info_list)}个")
 
             # 从最早的媒体开始下载
             while len(audio_info_list) > 0:
@@ -189,13 +189,8 @@ class Download(crawler.DownloadThread):
             self.error("未知异常")
             self.error(str(e) + "\n" + traceback.format_exc(), False)
 
-        # 保存最后的信息
-        with self.thread_lock:
-            self.write_single_save_data()
-            self.main_thread.total_audio_count += self.total_audio_count
-            self.main_thread.save_data.pop(self.album_id)
-        self.step("下载完毕，总共获得%s首音频" % self.total_audio_count)
-        self.notify_main_thread()
+        self.main_thread.save_data.pop(self.album_id)
+        self.done()
 
 
 if __name__ == "__main__":

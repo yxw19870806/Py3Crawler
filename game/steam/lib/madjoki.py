@@ -18,7 +18,7 @@ def get_banned_game_list():
     page_count = max_page_count = 1
     result = []
     while page_count <= max_page_count:
-        output.print_msg("开始解析第%s页删除游戏" % page_count)
+        output.print_msg(f"开始解析第{page_count}页删除游戏")
         index_url = "https://steam.madjoki.com/apps/banned"
         query_data = {
             "type": "1",
@@ -27,7 +27,7 @@ def get_banned_game_list():
         }
         index_response = net.request(index_url, method="GET", fields=query_data, is_random_ip=False)
         if index_response.status != net.HTTP_RETURN_CODE_SUCCEED:
-            raise "第%s页，%s" % (page_count, crawler.CrawlerException(crawler.request_failre(index_response.status)))
+            raise crawler.CrawlerException(f"第{page_count}页，{crawler.request_failre(index_response.status)}")
         index_response_content = index_response.data.decode(errors="ignore")
         # 获取游戏名字
         game_info_selector_list = pq(index_response_content).find("table.table-data tr")
@@ -41,7 +41,7 @@ def get_banned_game_list():
             # 获取游戏名字
             game_name = game_info_selector.find("td").eq(2).find("a:first").text()
             if not game_name:
-                raise crawler.CrawlerException("游戏信息截取游戏名字失败\n%s" % game_info_selector.html())
+                raise crawler.CrawlerException("游戏信息截取游戏名字失败\n" + game_info_selector.html())
             result_game_info["game_name"] = game_name.strip()
             # 获取游戏ID
             game_url = game_info_selector.find("td").eq(2).find("a:first").attr("href")
@@ -62,7 +62,7 @@ def get_banned_game_list():
         # 获取总页数
         max_page_count = pq(index_response_content).find("nav[aria-label='Pages']:first li.page-item").eq(-2).text()
         if not tool.is_integer(max_page_count):
-            raise crawler.CrawlerException("页面截取分页信息失败\n%s" % index_response_content.html())
+            raise crawler.CrawlerException("页面截取分页信息失败\n" + index_response_content.html())
         max_page_count = int(max_page_count)
         page_count += 1
     return result

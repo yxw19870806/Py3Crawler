@@ -268,11 +268,11 @@ class Download(crawler.DownloadThread):
                 else:
                     # 560报错，重新下载
                     if save_file_return["code"] == 404 and retry_count < 4:
-                        log.step(f"图片 {photo_url}s 访问异常，重试")
+                        log.step(f"图片 {photo_url} 访问异常，重试")
                         time.sleep(5)
                         continue
                     self.error(f"作品{album_id}第{photo_index}张图片 {photo_url}，下载失败，原因：{crawler.download_failre(save_file_return['code'])}")
-                    self.check_thread_exit_after_download_failure()
+                    self.check_download_failure_exit()
                 break
             photo_index += 1
 
@@ -293,7 +293,7 @@ class Download(crawler.DownloadThread):
             self.step(f"作品{album_id}视频下载成功")
         else:
             self.error(f"作品{album_id}视频 {video_response['video_url']}，下载失败，原因：{crawler.download_failre(save_file_return['code'])}")
-            self.check_thread_exit_after_download_failure()
+            self.check_download_failure_exit()
 
     def run(self):
         try:
@@ -310,19 +310,12 @@ class Download(crawler.DownloadThread):
                 self.error("异常退出")
             else:
                 self.step("提前退出")
-            # 如果临时目录变量不为空，表示某个图集正在下载中，需要把下载了部分的内容给清理掉
-            self.clean_temp_path()
         except Exception as e:
             self.error("未知异常")
             self.error(str(e) + "\n" + traceback.format_exc(), False)
 
-        # 保存最后的信息
-        with self.thread_lock:
-            self.write_single_save_data()
-            self.main_thread.total_photo_count += self.total_photo_count
-            self.main_thread.save_data.pop(self.account_id)
-        self.step(f"下载完毕，总共获得{self.total_photo_count}张图片和{self.total_video_count}个视频")
-        self.notify_main_thread()
+        self.main_thread.save_data.pop(self.account_id)
+        self.done()
 
 
 if __name__ == "__main__":

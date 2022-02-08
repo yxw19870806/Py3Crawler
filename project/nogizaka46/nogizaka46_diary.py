@@ -19,7 +19,7 @@ from common import *
 # account_id -> asuka.saito
 def get_one_page_blog(account_id, page_count):
     # https://blog.nogizaka46.com/asuka.saito
-    blog_pagination_url = "https://blog.nogizaka46.com/%s/" % account_id
+    blog_pagination_url = f"https://blog.nogizaka46.com/{account_id}/"
     query_data = {"p": page_count}
     blog_pagination_response = net.request(blog_pagination_url, method="GET", fields=query_data)
     result = {
@@ -34,9 +34,9 @@ def get_one_page_blog(account_id, page_count):
     blog_body_selector = pq(blog_pagination_response_content).find("div#sheet div.entrybody")
     blog_bottom_selector = pq(blog_pagination_response_content).find("div#sheet div.entrybottom")
     if blog_body_selector.length == 0 or blog_bottom_selector.length == 0:
-        raise crawler.CrawlerException("页面截取正文失败\n%s" % blog_pagination_response_content)
+        raise crawler.CrawlerException("页面截取正文失败\n" + blog_pagination_response_content)
     if blog_body_selector.length != blog_bottom_selector.length:
-        raise crawler.CrawlerException("页面截取正文数量不匹配\n%s" % blog_pagination_response_content)
+        raise crawler.CrawlerException("页面截取正文数量不匹配\n" + blog_pagination_response_content)
     for blog_body_index in range(0, blog_body_selector.length):
         result_photo_info = {
             "big_2_small_photo_list": {},  # 全部含有大图的图片
@@ -47,10 +47,10 @@ def get_one_page_blog(account_id, page_count):
         # 获取日志id
         blog_url = blog_bottom_selector.eq(blog_body_index).find("a").eq(0).attr("href")
         if blog_url is None:
-            raise crawler.CrawlerException("日志内容截取日志地址失败\n%s" % blog_bottom_selector.eq(blog_body_index).html())
+            raise crawler.CrawlerException("日志内容截取日志地址失败\n" + blog_bottom_selector.eq(blog_body_index).html())
         blog_id = blog_url.split("/")[-1].split(".")[0]
         if not tool.is_integer(blog_id):
-            raise crawler.CrawlerException("日志内容截取日志id失败\n%s" % blog_bottom_selector.eq(blog_body_index).html())
+            raise crawler.CrawlerException("日志内容截取日志id失败\n" + blog_bottom_selector.eq(blog_body_index).html())
         result_photo_info["blog_id"] = int(blog_id)
         # 获取图片地址列表
         result_photo_info["photo_url_list"] = re.findall('src="(http[^"]*)"', blog_body_html)
@@ -66,10 +66,10 @@ def get_one_page_blog(account_id, page_count):
     if paginate_selector.length > 0:
         paginate_url = paginate_selector.eq(0).find("a:last").attr("href")
         if paginate_url is None:
-            raise crawler.CrawlerException("页面截取分页信息失败\n%s" % paginate_selector.html())
+            raise crawler.CrawlerException("页面截取分页信息失败\n" + paginate_selector.html())
         max_page_count = paginate_url.split("?p=")[-1]
         if not tool.is_integer(max_page_count):
-            raise crawler.CrawlerException("分页信息解析失败\n%s" % blog_bottom_selector.html())
+            raise crawler.CrawlerException("分页信息解析失败\n" + blog_bottom_selector.html())
         result["is_over"] = page_count >= int(max_page_count)
     else:
         result["is_over"] = True
@@ -182,17 +182,17 @@ class Download(crawler.DownloadThread):
         # 获取全部还未下载过需要解析的日志
         while not is_over:
             self.main_thread_check()  # 检测主线程运行状态
-            self.step("开始解析第%s页日志" % page_count)
+            self.step(f"开始解析第{page_count}页日志")
 
             # 获取一页图片
             try:
                 blog_pagination_response = get_one_page_blog(self.account_id, page_count)
             except crawler.CrawlerException as e:
-                self.error("第%s页日志解析失败，原因：%s" % (page_count, e.message))
+                self.error(f"第{page_count}页日志解析失败，原因：{e.message}")
                 raise
 
-            self.trace("第%s页解析的全部日志：%s" % (page_count, blog_pagination_response["blog_info_list"]))
-            self.step("第%s页解析获取%s个日志" % (page_count, len(blog_pagination_response["blog_info_list"])))
+            self.trace(f"第{page_count}页解析的全部日志：{blog_pagination_response['blog_info_list']}")
+            self.step(f"第{page_count}页解析获取{len(blog_pagination_response['blog_info_list'])}个日志")
 
             # 寻找这一页符合条件的日志
             for blog_info in blog_pagination_response["blog_info_list"]:
@@ -213,10 +213,10 @@ class Download(crawler.DownloadThread):
 
     # 解析单个日志
     def crawl_blog(self, blog_info):
-        self.step("开始解析日志%s" % blog_info["blog_id"])
+        self.step(f"开始解析日志{blog_info['blog_id']}")
 
-        self.trace("日志%s解析的全部图片：%s" % (blog_info["blog_id"], blog_info["photo_url_list"]))
-        self.step("日志%s解析获取%s张图片" % (blog_info["blog_id"], len(blog_info["photo_url_list"])))
+        self.trace(f"日志{blog_info['blog_id']}解析的全部图片：{blog_info['photo_url_list']}")
+        self.step(f"日志{blog_info['blog_id']}解析获取{len(blog_info['photo_url_list'])}张图片")
 
         photo_index = 1
         for photo_url in blog_info["photo_url_list"]:
@@ -225,22 +225,22 @@ class Download(crawler.DownloadThread):
             big_photo_response = check_big_photo(photo_url, blog_info["big_2_small_photo_lust"])
             if big_photo_response["photo_url"] is not None:
                 photo_url = big_photo_response["photo_url"]
-            self.step("开始下载日志%s的第%s张图片 %s" % (blog_info["blog_id"], photo_index, photo_url))
+            self.step(f"开始下载日志{blog_info['blog_id']}的第{photo_index}张图片 {photo_url}")
 
-            file_path = os.path.join(self.main_thread.photo_download_path, self.display_name, "%06d_%02d.%s" % (blog_info["blog_id"], photo_index, net.get_file_type(photo_url, "jpg")))
+            file_path = os.path.join(self.main_thread.photo_download_path, self.display_name, f"%06d_%02d.{net.get_file_type(photo_url, 'jpg')}" % (blog_info["blog_id"], photo_index))
             save_file_return = net.download(photo_url, file_path, cookies_list=big_photo_response["cookies"])
             if save_file_return["status"] == 1:
                 if check_photo_invalid(file_path):
                     path.delete_dir_or_file(file_path)
-                    self.step("日志%s的第%s张图片 %s 不符合规则，删除" % (blog_info["blog_id"], photo_index, photo_url))
+                    self.step(f"日志{blog_info['blog_id']}的第{photo_index}张图片 {photo_url} 不符合规则，删除")
                     continue
                 else:
                     self.temp_path_list.append(file_path)  # 设置临时目录
                     self.total_photo_count += 1  # 计数累加
-                    self.step("日志%s的第%s张图片下载成功" % (blog_info["blog_id"], photo_index))
+                    self.step(f"日志{blog_info['blog_id']}的第{photo_index}张图片下载成功")
             else:
-                self.error("日志%s的第%s张图片 %s 下载失败，原因：%s" % (blog_info["blog_id"], photo_index, photo_url, crawler.download_failre(save_file_return["code"])))
-                self.check_thread_exit_after_download_failure()
+                self.error(f"日志{blog_info['blog_id']}的第{photo_index}张图片 {photo_url} 下载失败，原因：{crawler.download_failre(save_file_return['code'])}")
+                self.check_download_failure_exit()
             photo_index += 1
 
         # 日志内图片全部下载完毕
@@ -251,7 +251,7 @@ class Download(crawler.DownloadThread):
         try:
             # 获取所有可下载日志
             blog_info_list = self.get_crawl_list()
-            self.step("需要下载的全部日志解析完毕，共%s个" % len(blog_info_list))
+            self.step(f"需要下载的全部日志解析完毕，共{len(blog_info_list)}个")
 
             # 从最早的日志开始下载
             while len(blog_info_list) > 0:
@@ -262,19 +262,12 @@ class Download(crawler.DownloadThread):
                 self.error("异常退出")
             else:
                 self.step("提前退出")
-            # 如果临时目录变量不为空，表示某个日志正在下载中，需要把下载了部分的内容给清理掉
-            self.clean_temp_path()
         except Exception as e:
             self.error("未知异常")
             self.error(str(e) + "\n" + traceback.format_exc(), False)
 
-        # 保存最后的信息
-        with self.thread_lock:
-            self.write_single_save_data()
-            self.main_thread.total_photo_count += self.total_photo_count
-            self.main_thread.save_data.pop(self.account_id)
-        self.step("下载完毕，总共获得%s张图片" % self.total_photo_count)
-        self.notify_main_thread()
+        self.main_thread.save_data.pop(self.account_id)
+        self.done()
 
 
 if __name__ == "__main__":

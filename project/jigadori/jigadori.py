@@ -37,30 +37,30 @@ def get_one_page_photo(page_count):
         # 获取tweet id
         tweet_url = tweet_selector.find(".photo-link-outer a").attr("href")
         if not tweet_url:
-            raise crawler.CrawlerException("图片信息截取tweet地址失败\n%s" % tweet_selector.html())
+            raise crawler.CrawlerException("图片信息截取tweet地址失败\n" + tweet_selector.html())
         tweet_id = tool.find_sub_string(tweet_url.strip(), "status/")
         if not tool.is_integer(tweet_id):
-            raise crawler.CrawlerException("tweet地址截取tweet id失败\n%s" % tweet_url)
+            raise crawler.CrawlerException(f"tweet地址{tweet_url}截取tweet id失败")
         result_photo_info["tweet_id"] = int(tweet_id)
         # 获取twitter账号
         account_name = tweet_selector.find(".user-info .user-name .screen-name").text()
         if not account_name:
-            raise crawler.CrawlerException("图片信息截取twitter账号失败\n%s" % tweet_selector.html())
+            raise crawler.CrawlerException("图片信息截取twitter账号失败\n" + tweet_selector.html())
         result_photo_info["account_name"] = account_name.strip().replace("@", "")
         # 获取tweet发布时间
         tweet_time = tweet_selector.find(".tweet-text .tweet-created-at").text().strip()
         if not tweet_time:
-            raise crawler.CrawlerException("图片信息截取tweet发布时间失败\n%s" % tweet_selector.html())
+            raise crawler.CrawlerException("图片信息截取tweet发布时间失败\n" + tweet_selector.html())
         try:
             result_photo_info["tweet_time"] = int(time.mktime(time.strptime(tweet_time.strip(), "%Y-%m-%d %H:%M:%S")))
         except ValueError:
-            raise crawler.CrawlerException("tweet发布时间文本格式不正确\n%s" % tweet_time)
+            raise crawler.CrawlerException(f"tweet发布时间{tweet_time}的格式不正确")
         # 获取图片地址
         photo_list_selector = tweet_selector.find(".photo-link-outer a img")
         for photo_index in range(0, photo_list_selector.length):
             photo_url = photo_list_selector.eq(photo_index).attr("src")
             if not photo_url:
-                raise crawler.CrawlerException("图片列表截取图片地址失败\n%s" % photo_list_selector.eq(photo_index).html())
+                raise crawler.CrawlerException("图片列表截取图片地址失败" + photo_list_selector.eq(photo_index).html())
             result_photo_info["photo_url_list"].append(photo_url.strip())
         result["photo_info_list"].append(result_photo_info)
     return result
@@ -94,7 +94,7 @@ class Jigadori(crawler.Crawler):
             try:
                 photo_pagination_response = get_one_page_photo(start_page_count)
             except crawler.CrawlerException as e:
-                log.error("第%s页图片解析失败，原因：%s" % (start_page_count, e.message))
+                log.error(f"第{start_page_count}页图片解析失败，原因：{e.message}")
                 raise
 
             # 这页没有任何内容，返回上一个检查节点
@@ -107,7 +107,7 @@ class Jigadori(crawler.Crawler):
                 start_page_count -= EACH_LOOP_MAX_PAGE_COUNT
                 break
 
-            log.step("前%s页图片全部符合条件，跳过%s页后继续查询" % (start_page_count, EACH_LOOP_MAX_PAGE_COUNT))
+            log.step(f"前{start_page_count}页图片全部符合条件，跳过{EACH_LOOP_MAX_PAGE_COUNT}页后继续查询")
         return start_page_count
 
     # 获取所有可下载图片
@@ -118,17 +118,17 @@ class Jigadori(crawler.Crawler):
         while not is_over:
             if not self.is_running():
                 tool.process_exit(tool.PROCESS_EXIT_CODE_NORMAL)
-            log.step("开始解析第%s页图片" % page_count)
+            log.step(f"开始解析第{page_count}页图片")
 
             # 获取一页图片
             try:
                 photo_pagination_response = get_one_page_photo(page_count)
             except crawler.CrawlerException as e:
-                log.error("第%s页图片解析失败，原因：%s" % (page_count, e.message))
+                log.error(f"第{page_count}页图片解析失败，原因：{e.message}")
                 raise
 
-            log.trace("第%s页解析的全部图片：%s" % (page_count, photo_pagination_response["photo_info_list"]))
-            log.step("第%s页解析获取%s张图片" % (page_count, len(photo_pagination_response["photo_info_list"])))
+            log.trace(f"第{page_count}页解析的全部图片：{photo_pagination_response['photo_info_list']}")
+            log.step(f"第{page_count}页解析获取{len(photo_pagination_response['photo_info_list'])}张图片")
 
             # 已经没有图片了
             if len(photo_pagination_response["photo_info_list"]) == 0:
@@ -154,20 +154,20 @@ class Jigadori(crawler.Crawler):
 
     # 解析单个tweet下的图片
     def crawl_photo(self, photo_info):
-        log.step("开始解析tweet %s的图片" % photo_info["tweet_id"])
+        log.step(f"开始解析tweet {photo_info['tweet_id']}的图片")
 
         photo_index = 1
         for photo_url in photo_info["photo_url_list"]:
-            log.step("开始下载tweet%s的第%s张图片 %s" % (photo_info["tweet_id"], photo_index, photo_url))
+            log.step(f"开始下载tweet {photo_info['tweet_id']}的第{photo_index}张图片 {photo_url}")
 
-            file_path = os.path.join(self.photo_download_path, photo_info["account_name"], "%019d_%02d.%s" % (photo_info["tweet_id"], photo_index, net.get_file_type(photo_url, "jpg")))
+            file_path = os.path.join(self.photo_download_path, photo_info["account_name"], f"%019d_%02d.{net.get_file_type(photo_url, 'jpg')}" % (photo_info["tweet_id"], photo_index))
             save_file_return = net.download(photo_url, file_path)
             if save_file_return["status"] == 1:
                 self.temp_path_list.append(file_path)  # 设置临时目录
                 self.total_photo_count += 1  # 计数累加
-                log.step("tweet%s的第%s张图片下载成功" % (photo_info["tweet_id"], photo_index))
+                log.step(f"tweet {photo_info['tweet_id']}的第{photo_index}张图片下载成功")
             else:
-                log.error("tweet%s的第%s张图片（account：%s) %s，下载失败，原因：%s" % (photo_info["tweet_id"], photo_index, photo_info["account_name"], photo_url, crawler.download_failre(save_file_return["code"])))
+                log.error(f"tweet {photo_info['tweet_id']}的第{photo_index}张图片（account：{photo_info['account_name']}) {photo_url}，下载失败，原因：{crawler.download_failre(save_file_return['code'])}")
                 if self.is_thread_exit_after_download_failure:
                     tool.process_exit(tool.PROCESS_EXIT_CODE_NORMAL)
             photo_index += 1
@@ -191,7 +191,7 @@ class Jigadori(crawler.Crawler):
 
             while start_page_count >= 1:
                 photo_info_list = self.get_crawl_list(start_page_count)
-                log.step("需要下载的全部图片解析完毕，共%s个" % len(photo_info_list))
+                log.step(f"需要下载的全部图片解析完毕，共{len(photo_info_list)}个")
 
                 # 从最早的图片开始下载
                 while len(photo_info_list) > 0:

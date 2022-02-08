@@ -27,7 +27,7 @@ def get_account_from_file():
 
 # 根据talk id获取全部参与者
 def get_account_talks(account_id, account_name, talk_list):
-    account_index = "https://7gogo.jp/users/%s" % account_id
+    account_index = f"https://7gogo.jp/users/{account_id}"
     account_index_response = net.request(account_index, method="GET")
     if account_index_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(account_index_response.status))
@@ -37,14 +37,14 @@ def get_account_talks(account_id, account_name, talk_list):
         # 获取talk地址
         talk_url_path = talk_selector.attr("href")
         if not talk_url_path:
-            raise crawler.CrawlerException("talk信息截取talk地址失败\n%s" % talk_selector.html())
+            raise crawler.CrawlerException("talk信息截取talk地址失败\n" + talk_selector.html())
         talk_id = talk_url_path.replace("/", "")
         if not talk_id:
-            raise crawler.CrawlerException("talk地址截取talk id失败\n%s" % talk_url_path)
+            raise crawler.CrawlerException(f"talk地址{talk_url_path}截取talk id失败")
         # 获取talk名字
         talk_name = talk_selector.find(".UserTalk__talkname").text()
         if not talk_name:
-            raise crawler.CrawlerException("talk信息截取talk名字失败\n%s" % talk_selector.html())
+            raise crawler.CrawlerException("talk信息截取talk名字失败\n" + talk_selector.html())
         talk_name = crawler.filter_emoji(talk_name.strip())
         # 获取talk描述
         talk_description = crawler.filter_emoji(talk_selector.find(".UserTalk__description").text())
@@ -70,11 +70,12 @@ def main():
         try:
             get_account_talks(account_id, account_list[account_id], talk_list)
         except crawler.CrawlerException as e:
-            output.print_msg(account_id + " 获取talk列表失败，原因：%s" % e.message)
+            output.print_msg(f"{account_id} 获取talk列表失败，原因：{e.message}")
     if len(talk_list) > 0:
         with open(TALK_ID_FILE_PATH, "w", encoding="UTF-8") as file_handle:
             for talk_id in talk_list:
-                file_handle.write("%s\t%s\t%s\t%s\n" % (talk_id, talk_list[talk_id]["talk_name"], talk_list[talk_id]["talk_description"], " & ".join(talk_list[talk_id]["account_list"])))
+                account_list = " & ".join(talk_list[talk_id]["account_list'"])
+                file_handle.write(f"{talk_id}\t{talk_list[talk_id]['talk_name']}\t{talk_list[talk_id]['talk_description']}\t{account_list}")
 
 
 if __name__ == "__main__":
