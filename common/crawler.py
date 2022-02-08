@@ -384,7 +384,7 @@ class DownloadThread(threading.Thread):
         """
         if self.main_thread.is_thread_exit_after_download_failure:
             if is_process_exit:
-                tool.process_exit(tool.PROCESS_EXIT_CODE_NORMAL)
+                tool.process_exit(tool.PROCESS_EXIT_CODE_ERROR)
             else:
                 return True
         return False
