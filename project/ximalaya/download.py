@@ -33,7 +33,7 @@ def main():
         try:
             audio_response = ximalaya.get_audio_info_page(audio_id)
         except crawler.CrawlerException as e:
-            log.error("解析歌曲下载地址失败，原因：%s" % e.message)
+            log.error(f"解析歌曲下载地址失败，原因：{e.message}")
             break
         if audio_response["is_delete"]:
             log.step("歌曲不存在，跳过")
@@ -42,7 +42,7 @@ def main():
         file_type = net.get_file_type(audio_response["audio_url"])
         options = {
             "initialdir": ximalaya_class.audio_download_path,
-            "initialfile": "%s - %s.%s" % (audio_id, path.filter_text(audio_response["audio_title"]), file_type),
+            "initialfile": f"{audio_id} - {path.filter_text(audio_response['audio_title'])}.{file_type}",
             "filetypes": [(file_type, "." + file_type)],
             "parent": gui,
         }
@@ -50,12 +50,12 @@ def main():
         if not file_path:
             continue
         # 开始下载
-        log.step("\n歌曲标题：%s\n歌曲地址：%s\n下载路径：%s" % (audio_response["audio_title"], audio_response["audio_url"], file_path))
+        log.step(f"\n歌曲标题：{audio_response['audio_title']}\n歌曲地址：{audio_response['audio_url']}\n下载路径：{file_path}")
         save_file_return = net.download(audio_response["audio_url"], file_path, head_check=True)
         if save_file_return["status"] == 1:
-            log.step("歌曲《%s》下载成功" % audio_response["audio_title"])
+            log.step(f"歌曲《{audio_response['audio_title']}》下载成功")
         else:
-            log.error("歌曲《%s》下载失败，原因：%s" % (audio_response["audio_title"], crawler.download_failre(save_file_return["code"])))
+            log.error(f"歌曲《{audio_response['audio_title']}》下载失败，原因：{crawler.download_failre(save_file_return['code'])}")
 
 
 if __name__ == "__main__":

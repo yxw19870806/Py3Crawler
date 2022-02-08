@@ -89,7 +89,7 @@ def get_one_page_audio(account_id, page_count):
     now = int(time.time() * 1000)
     # 加密方法解析来自 https://s1.xmcdn.com/yx/ximalaya-web-static/last/dist/scripts/b20b549ee.js
     header_list = {
-        "xm-sign": "%s(%s)%s(%s)%s" % (tool.string_md5("himalaya-" + str(now)), random.randint(1, 100), now, random.randint(1, 100), now + random.randint(1, 100 * 60))
+        "xm-sign": f"{tool.string_md5('himalaya-' + str(now))}({random.randint(1, 100)}){now}({random.randint(1, 100)}){now + random.randint(1, 100 * 60)}"
     }
     audit_pagination_response = net.request(audio_pagination_url, method="GET", fields=query_data, header_list=header_list, json_decode=True)
     result = {
@@ -139,7 +139,7 @@ def get_audio_info_page(audio_id):
         result["is_delete"] = True
         return result
     else:
-        raise crawler.CrawlerException("音频简易信息 ret返回值不正确\n%s" % audio_simple_info_response.json_data)
+        raise crawler.CrawlerException(f"音频简易信息{audio_simple_info_response.json_data}中'ret'返回值不正确")
     # 获取音频标题
     result["audio_title"] = crawler.get_json_value(audio_simple_info_response.json_data, "data", "trackInfo", "title", type_check=str)
     # 判断是否是视频
@@ -172,7 +172,7 @@ def get_audio_info_page(audio_id):
         raise crawler.CrawlerException("当日免费下载次数已达到限制")
 
     # 需要购买或者vip才能解锁的音频
-    vip_audio_info_url = "https://mobile.ximalaya.com/mobile-playpage/track/v3/baseInfo/%s" % int(time.time() * 1000)
+    vip_audio_info_url = f"https://mobile.ximalaya.com/mobile-playpage/track/v3/baseInfo/{int(time.time() * 1000)}"
     query_data = {
         "device": "web",
         "trackId": audio_id,
@@ -194,7 +194,7 @@ def get_audio_info_page(audio_id):
     # 读取模板并替换相关参数
     template_html = file.read_file(TEMPLATE_HTML_PATH)
     template_html = template_html.replace("%%URL%%", decrypt_url)
-    cache_html_path = os.path.join(CACHE_FILE_PATH, "%s.html" % audio_id)
+    cache_html_path = os.path.join(CACHE_FILE_PATH, f"{audio_id}.html")
     file.write_file(template_html, cache_html_path, file.WRITE_FILE_TYPE_REPLACE)
     # 使用喜马拉雅的加密JS方法解密url地址
     with browser.Chrome("file:///" + os.path.realpath(cache_html_path)) as chrome:
@@ -202,7 +202,7 @@ def get_audio_info_page(audio_id):
     # 删除临时模板文件
     path.delete_dir_or_file(cache_html_path)
     if not audio_url:
-        raise crawler.CrawlerException("url解密失败\n%s" % decrypt_url)
+        raise crawler.CrawlerException(f"url{decrypt_url}解密失败")
     result["audio_url"] = audio_url
 
     # 保存每日vip下载计数
