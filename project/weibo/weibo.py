@@ -412,7 +412,7 @@ class Download(crawler.DownloadThread):
             self.error(f"第{video_index}个视频 {video_play_url} 解析失败，原因：{e.message}")
             raise
 
-        if video_url is "":
+        if video_url == "":
             self.single_save_data[3] = video_play_url  # 设置存档记录
             self.error(f"第{video_index}个视频 {video_play_url} 跳过")
             return
