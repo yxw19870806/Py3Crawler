@@ -387,14 +387,17 @@ class Download(crawler.DownloadThread):
         if save_file_return["status"] == 1:
             if check_photo_invalid(photo_file_path):
                 path.delete_dir_or_file(photo_file_path)
-                self.error(f"图片{photo_info['photo_id']} {photo_info['photo_url']} 资源已被删除，跳过")
+                self.error(f"图片{photo_info['photo_id']} {photo_info['photo_url']} 资源已被限制，跳过")
             else:
                 self.total_photo_count += 1  # 计数累加
                 self.step(f"图片{photo_info['photo_id']}下载成功")
         else:
-            self.error(f"图片{photo_info['photo_id']} {photo_info['photo_url']} 下载失败，原因：{crawler.download_failre(save_file_return['code'])}")
-            if self.check_download_failure_exit(False):
-                return False
+            if save_file_return['code'] == 403:
+                self.error(f"图片{photo_info['photo_id']} {photo_info['photo_url']} 资源已被限制，跳过")
+            else:
+                self.error(f"图片{photo_info['photo_id']} {photo_info['photo_url']} 下载失败，原因：{crawler.download_failre(save_file_return['code'])}")
+                if self.check_download_failure_exit(False):
+                    return False
 
         # 图片下载完毕
         self.single_save_data[1] = str(photo_info["photo_id"])  # 设置存档记录
