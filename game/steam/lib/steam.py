@@ -365,22 +365,22 @@ def get_account_badges(account_id):
             # 获取game id
             badge_detail_url = badge_selector.find('a.badge_row_overlay').attr("href")
             if badge_detail_url is None:
-                raise crawler.CrawlerException("页面截取徽章详情地址失败\n%s" % badge_selector.html())
+                raise crawler.CrawlerException("页面截取徽章详情地址失败\n" + badge_selector.html())
             # 非游戏徽章
             if badge_detail_url.find("/badges/") >= 0:
                 continue
             elif badge_detail_url.find("/gamecards/") == -1:
-                raise crawler.CrawlerException("页面截取的徽章详情地址 %s 格式不正确" % badge_detail_url)
+                raise crawler.CrawlerException(f"页面截取的徽章详情地址 {badge_detail_url} 格式不正确")
             game_id = badge_detail_url.split("/")[-2]
             if not tool.is_integer(game_id):
-                raise crawler.CrawlerException("徽章详情地址 %s 截取游戏id失败" % badge_detail_url)
+                raise crawler.CrawlerException(f"徽章详情地址 {badge_detail_url} 截取游戏id失败")
             # 获取徽章等级
             badge_info_text = badge_selector.find('div.badge_content div.badge_info_description div').eq(1).html()
             if badge_info_text is None:
-                raise crawler.CrawlerException("页面截取徽章详情失败\n%s" % badge_selector.html())
+                raise crawler.CrawlerException("页面截取徽章详情失败\n" + badge_selector.html())
             badge_level_find = re.findall("Level (\d*),", badge_info_text)
             if len(badge_level_find) != 1:
-                raise crawler.CrawlerException("徽章详情截取徽章等级失败\n%s" % badge_info_text)
+                raise crawler.CrawlerException(f"徽章详情{badge_info_text}中截取徽章等级失败")
             badge_level_list[game_id] = int(badge_level_find[0])
         # 判断是不是还有下一页
         next_page_selector = pq(badges_pagination_response_content).find("div.profile_paging div.pageLinks a.pagelink:last")
@@ -394,7 +394,7 @@ def get_account_badges(account_id):
 
 # 获取指定账号的全部游戏id列表
 def get_account_owned_app_list(user_id, is_played=False):
-    game_index_url = "https://steamcommunity.com/profiles/%s/games/?tab=all" % user_id
+    game_index_url = f"https://steamcommunity.com/profiles/{user_id}/games/?tab=all"
     game_index_response = net.request(game_index_url, method="GET")
     if game_index_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(game_index_response.status))
@@ -404,14 +404,14 @@ def get_account_owned_app_list(user_id, is_played=False):
         raise crawler.CrawlerException("账号隐私设置中未公开游戏详情")
     owned_all_game_data = tool.find_sub_string(game_index_response_content, "var rgGames = ", "\n")
     if not owned_all_game_data:
-        raise crawler.CrawlerException("页面截取游戏列表失败\n%s" % game_index_response_content)
-    owned_all_game_data = tool.json_decode(owned_all_game_data.strip().rstrip(";"))
-    if owned_all_game_data is None:
-        raise crawler.CrawlerException("游戏列表加载失败\n%s" % owned_all_game_data)
+        raise crawler.CrawlerException("页面截取游戏列表失败\n" + game_index_response_content)
+    owned_all_game_json_data = tool.json_decode(owned_all_game_data.strip().rstrip(";"))
+    if owned_all_game_json_data is None:
+        raise crawler.CrawlerException("游戏列表加载失败\n" + owned_all_game_data)
     app_id_list = []
-    for game_data in owned_all_game_data:
+    for game_data in owned_all_game_json_data:
         if "appid" not in game_data:
-            raise crawler.CrawlerException("游戏信息'appid'字段不存在\n%s" % game_data)
+            raise crawler.CrawlerException(f"游戏信息{game_data}中'appid'字段不存在")
         # 只需要玩过的游戏
         if is_played and "hours_forever" not in game_data:
             continue
@@ -448,18 +448,18 @@ class Steam(crawler.Crawler):
         # 游戏的DLC列表
         self.game_dlc_list_path = os.path.join(self.data_path, "game_dlc_list.txt")
         # 个人账号应用缓存
-        self.apps_cache_file_path = os.path.join(self.cache_data_path, "%s_apps.txt" % self.account_id)
+        self.apps_cache_file_path = os.path.join(self.cache_data_path, f"{self.account_id}_apps.txt")
 
         if need_login:
             # 检测是否登录
             login_url = "https://store.steampowered.com/login/checkstoredlogin/?redirectURL="
             login_response = net.request(login_url, method="GET", cookies_list=self.cookie_value, is_auto_redirect=False)
             if login_response.status != 302:
-                output.print_msg("登录返回code不正确，\n%s" % login_response.status)
+                output.print_msg(f"登录返回code{login_response.status}不正确")
                 tool.process_exit()
             set_cookies = net.get_cookies_from_response_header(login_response.headers)
             if "steamLogin" not in set_cookies and "steamLoginSecure" not in set_cookies:
-                output.print_msg("登录返回cookies不正确，\n%s" % set_cookies)
+                output.print_msg(f"登录返回cookies{set_cookies}不正确")
                 tool.process_exit()
             COOKIE_INFO.update(self.cookie_value)
             COOKIE_INFO.update(set_cookies)
@@ -480,7 +480,7 @@ class Steam(crawler.Crawler):
         while not account_id:
             console_account_id = input(crawler.get_time() + " 请输入STEAM账号ID: ")
             while True:
-                input_str = input(crawler.get_time() + " 是否使用输入的STEAM账号ID '%s' 是Y(es) / 否N(o) ?" % console_account_id)
+                input_str = input(f"{crawler.get_time()} 是否使用输入的STEAM账号ID '{console_account_id}' 是Y(es) / 否N(o) ?")
                 input_str = input_str.lower()
                 if input_str in ["y", "yes"]:
                     account_id = console_account_id
