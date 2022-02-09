@@ -13,7 +13,6 @@ import time
 import traceback
 import urllib.parse
 import xml.etree.ElementTree as ElementTree
-from pyquery import PyQuery as pq
 from common import *
 
 AUTHORIZATION = ""
