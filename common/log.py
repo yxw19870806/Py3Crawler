@@ -8,7 +8,6 @@ email: hikaru870806@hotmail.com
 import os
 import threading
 import time
-from typing import Union
 
 try:
     from . import file, output, tool

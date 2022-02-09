@@ -8,7 +8,6 @@ email: hikaru870806@hotmail.com
 """
 import json
 import os
-import time
 from common import *
 from game.steam.lib import steam
 
