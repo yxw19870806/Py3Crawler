@@ -162,7 +162,7 @@ class Download(crawler.DownloadThread):
         try:
             blog_pagination_response = get_comic_index_page(self.comic_id)
         except crawler.CrawlerException as e:
-            self.error(f"漫画首页解析失败，原因：{e.message}")
+            self.error(e.http_error("漫画首页"))
             raise
 
         self.trace(f"漫画首页解析的全部漫画：{blog_pagination_response['comic_info_list']}")
@@ -186,7 +186,7 @@ class Download(crawler.DownloadThread):
         try:
             chapter_response = get_chapter_page(comic_info["ep_id"])
         except crawler.CrawlerException as e:
-            self.error(f"漫画{comic_info['ep_id']} 《{comic_info['ep_name']}》解析失败，原因：{e.message}")
+            self.error(e.http_error(f"漫画{comic_info['ep_id']} 《{comic_info['ep_name']}》"))
             raise
 
         # 图片下载

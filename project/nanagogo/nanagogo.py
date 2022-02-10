@@ -137,7 +137,7 @@ class Download(crawler.DownloadThread):
             try:
                 blog_pagination_response = get_one_page_blog(self.account_name, target_id)
             except crawler.CrawlerException as e:
-                self.error(f"target：{target_id}页解析失败，原因：{e.message}")
+                self.error(e.http_error(f"target：{target_id}后一页日志"))
                 raise
 
             self.trace(f"target：{target_id}页解析的全部日志：{blog_pagination_response['blog_info_list']}")
@@ -222,7 +222,7 @@ class Download(crawler.DownloadThread):
             try:
                 get_index_page(self.account_name)
             except crawler.CrawlerException as e:
-                self.error(f"首页访问失败，原因：{e.message}")
+                self.error(e.http_error("首页"))
                 raise
 
             # 获取所有可下载日志

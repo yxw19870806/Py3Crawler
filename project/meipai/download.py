@@ -34,7 +34,7 @@ def main():
         try:
             video_response = meipai.get_video_play_page(video_id)
         except crawler.CrawlerException as e:
-            log.error(f"解析视频下载地址失败，原因：{e.message}")
+            log.error(e.http_error("视频"))
             break
         if video_response["is_delete"]:
             log.step("视频不存在，跳过")

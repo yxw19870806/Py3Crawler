@@ -276,7 +276,7 @@ class Download(crawler.DownloadThread):
             try:
                 photo_pagination_response = get_one_page_photo(user_id, page_count, site_key, csrf, self.request_id)
             except crawler.CrawlerException as e:
-                self.error(f"第{page_count}页图片解析失败，原因：{e.message}")
+                self.error(e.http_error(f"第{page_count}页图片"))
                 raise
 
             self.trace(f"第{page_count}页解析的全部图片：{photo_pagination_response['photo_info_list']}")
@@ -325,7 +325,7 @@ class Download(crawler.DownloadThread):
             try:
                 account_index_response = get_account_index_page(self.account_name)
             except crawler.CrawlerException as e:
-                self.error(f"相册首页解析失败，原因：{e.message}")
+                self.error(e.http_error("相册首页"))
                 raise
 
             # 获取所有可下载图片

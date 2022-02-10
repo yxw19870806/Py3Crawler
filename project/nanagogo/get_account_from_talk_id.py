@@ -43,7 +43,7 @@ def main():
         try:
             member_list = get_member_from_talk(talk_id)
         except crawler.CrawlerException as e:
-            output.print_msg(f"{talk_id} 获取成员失败，原因：{e.message}")
+            output.print_msg(e.http_error(f"talk {talk_id}"))
             continue
         for account_id in member_list:
             if account_id not in account_list:

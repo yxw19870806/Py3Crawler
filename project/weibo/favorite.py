@@ -147,7 +147,7 @@ class Favorite(crawler.Crawler):
             try:
                 favorite_pagination_response = get_one_page_favorite(page_count)
             except crawler.CrawlerException as e:
-                log.error(f"第{page_count}页收藏解析失败，原因：{e.message}")
+                log.error(e.http_error(f"第{page_count}页收藏"))
                 raise
 
             log.trace(f"第{page_count}页解析的已删除微博：{favorite_pagination_response['delete_blog_id_list']}")
@@ -158,7 +158,7 @@ class Favorite(crawler.Crawler):
                 try:
                     delete_favorite(blog_id)
                 except crawler.CrawlerException as e:
-                    log.error(f"微博{blog_id}删除失败，原因：{e.message}")
+                    log.error(e.http_error(f"微博{blog_id}"))
                     raise
                 log.step(f"删除微博{blog_id}成功")
 

@@ -172,7 +172,7 @@ class Download(crawler.DownloadThread):
             try:
                 blog_pagination_response = get_one_page_blog(self.account_id, page_count)
             except crawler.CrawlerException as e:
-                self.error(f"第{page_count}页日志解析失败，原因：{e.message}")
+                self.error(e.http_error(f"第{page_count}页日志"))
                 raise
 
             self.trace(f"第{page_count}页解析的全部日志：{blog_pagination_response['blog_info_list']}")
@@ -208,7 +208,7 @@ class Download(crawler.DownloadThread):
         try:
             blog_response = get_blog_page(blog_info["blog_url"])
         except crawler.CrawlerException as e:
-            self.error(f"日志《{blog_info['blog_title']}》 {blog_info['blog_url']} 解析失败，原因：{e.message}")
+            self.error(e.http_error(f"日志《{blog_info['blog_title']}》 {blog_info['blog_url']}"))
             raise
 
         self.trace(f"日志《{blog_info['blog_title']}》 {blog_info['blog_url']} 解析的全部图片：{blog_response['photo_url_list']}")

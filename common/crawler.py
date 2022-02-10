@@ -462,6 +462,9 @@ class CrawlerException(SystemExit):
     def message(self) -> str:
         return self.exception_message
 
+    def http_error(self, target: str):
+        return f"{target}解析失败，原因：{self.message}"
+
 
 def read_config(config_path) -> dict:
     """

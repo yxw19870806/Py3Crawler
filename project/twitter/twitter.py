@@ -311,7 +311,7 @@ class Twitter(crawler.Crawler):
                     elif input_str in ["e", "exit"]:
                         tool.process_exit()
         except crawler.CrawlerException as e:
-            log.error(f"生成authorization失败，原因：{e.message}")
+            log.error(e.http_error("生成authorization"))
             tool.process_exit()
 
     def main(self):
@@ -366,7 +366,7 @@ class Download(crawler.DownloadThread):
             try:
                 media_pagination_response = get_one_page_media(self.account_name, self.single_save_data[1], cursor)
             except crawler.CrawlerException as e:
-                self.error(f"cursor：{cursor}页推特解析失败，原因：{e.message}")
+                self.error(e.http_error(f"cursor：{cursor}后一页推特"))
                 raise
 
             if media_pagination_response["is_over"]:
@@ -461,7 +461,7 @@ class Download(crawler.DownloadThread):
             try:
                 account_index_response = get_account_index_page(self.account_name)
             except crawler.CrawlerException as e:
-                self.error(f"首页解析失败，原因：{e.message}")
+                self.error(e.http_error("首页"))
                 raise
 
             if self.single_save_data[1] == "":

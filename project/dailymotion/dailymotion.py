@@ -179,7 +179,7 @@ class DailyMotion(crawler.Crawler):
         try:
             init_session()
         except crawler.CrawlerException as e:
-            log.error(f"生成authorization失败，原因：{e.message}")
+            log.error(e.http_error("生成authorization"))
             raise
 
     def main(self):
@@ -235,7 +235,7 @@ class Download(crawler.DownloadThread):
             try:
                 blog_pagination_response = get_one_page_video(self.account_id, page_count)
             except crawler.CrawlerException as e:
-                self.error(f"第{page_count}页视频解析失败，原因：{e.message}")
+                self.error(e.http_error(f"第{page_count}页视频"))
                 raise
 
             self.trace(f"第{page_count}页解析的全部视频：{blog_pagination_response['video_info_list']}")
@@ -264,7 +264,7 @@ class Download(crawler.DownloadThread):
         try:
             video_response = get_video_page(video_info["video_id"])
         except crawler.CrawlerException as e:
-            self.error(f"视频{video_info['video_id']}解析失败，原因：{e.message}")
+            self.error(e.http_error(f"视频{video_info['video_id']}"))
             raise
 
         self.step(f"开始下载视频{video_info['video_id']} 《{video_info['video_title']}》 {video_response['video_url']}")

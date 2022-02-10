@@ -57,7 +57,7 @@ class BiliBiliDownload(bilibili.BiliBili):
         try:
             video_response = bilibili.get_video_page(video_id)
         except crawler.CrawlerException as e:
-            log.error(f"解析视频下载地址失败，原因：{e.message}")
+            log.error(e.http_error("视频下载地址"))
             return
         if video_response["is_private"]:
             log.step("视频需要登录才能访问，跳过")

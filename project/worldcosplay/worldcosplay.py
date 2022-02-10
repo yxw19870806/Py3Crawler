@@ -133,7 +133,7 @@ class Download(crawler.DownloadThread):
             try:
                 photo_pagination_response = get_one_page_photo(self.account_id, page_count)
             except crawler.CrawlerException as e:
-                self.error(f"第{page_count}页图片解析失败，原因：{e.message}")
+                self.error(e.http_error(f"第{page_count}页图片"))
                 raise
 
             self.trace(f"第{page_count}页解析的全部图片：{photo_pagination_response['photo_info_list']}")

@@ -268,7 +268,7 @@ class Download(crawler.DownloadThread):
         try:
             mylist_index_response = get_mylist_index(self.list_id)
         except crawler.CrawlerException as e:
-            self.error(f"视频列表解析失败，原因：{e.message}")
+            self.error(e.http_error("视频列表"))
             raise
 
         self.trace(f"解析的全部视频：{mylist_index_response['video_info_list']}")
@@ -292,7 +292,7 @@ class Download(crawler.DownloadThread):
         try:
             video_info_response = get_video_info(video_info["video_id"])
         except crawler.CrawlerException as e:
-            self.error(f"视频{video_info['video_id']} 《{video_info['video_title']}》解析失败，原因：{e.message}")
+            self.error(e.http_error(f"视频{video_info['video_id']} 《{video_info['video_title']}》"))
             raise
 
         if video_info_response["is_delete"]:

@@ -330,7 +330,7 @@ class Download(crawler.DownloadThread):
             try:
                 media_pagination_response = get_one_page_media(self.single_save_data[1], cursor)
             except crawler.CrawlerException as e:
-                self.error(f"cursor：{cursor}页媒体解析失败，原因：{e.message}")
+                self.error(e.http_error(f"cursor：{cursor}后一页媒体"))
                 raise
 
             self.trace(f"cursor：{cursor}页解析的全部媒体：{media_pagination_response['media_info_list']}")
@@ -371,7 +371,7 @@ class Download(crawler.DownloadThread):
                 try:
                     media_response = get_media_page(media_info["page_id"])
                 except crawler.CrawlerException as e:
-                    self.error(f"媒体{media_info['page_id']}解析失败，原因：{e.message}")
+                    self.error(e.http_error(f"媒体{media_info['page_id']}"))
                     raise
                 photo_url_list = media_response["photo_url_list"]
             # 单张图片 或者 视频的预览图片
@@ -406,7 +406,7 @@ class Download(crawler.DownloadThread):
                 try:
                     media_response = get_media_page(media_info["page_id"])
                 except crawler.CrawlerException as e:
-                    self.error(f"媒体{media_info['page_id']}解析失败，原因：{e.message}")
+                    self.error(e.http_error(f"媒体{media_info['page_id']}"))
                     raise
 
             self.trace(f"媒体{media_info['page_id']}解析的全部视频：{media_response['video_url_list']}")
@@ -439,7 +439,7 @@ class Download(crawler.DownloadThread):
             try:
                 account_index_response = get_account_index_page(self.account_name)
             except crawler.CrawlerException as e:
-                self.error(f"首页解析失败，原因：{e.message}")
+                self.error(e.http_error("首页"))
                 raise
 
             if self.single_save_data[1] == "":
