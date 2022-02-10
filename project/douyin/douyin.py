@@ -15,7 +15,7 @@ from selenium.webdriver.common.by import By
 
 EACH_PAGE_VIDEO_COUNT = 21
 CACHE_FILE_PATH = os.path.join(os.path.dirname(__file__), "cache")
-TEMPLATE_HTML_PATH = os.path.join(os.path.dirname(__file__), "template.html")
+TEMPLATE_HTML_PATH = os.path.join(os.path.dirname(__file__), "html/template.html")
 USER_AGENT = net._random_user_agent()
 
 
@@ -166,7 +166,7 @@ class Download(crawler.DownloadThread):
         try:
             account_index_response = get_account_index_page(self.account_id)
         except crawler.CrawlerException as e:
-            self.error(f"账号首页访问失败，原因：{e.message}")
+            self.error(e.http_error("账号首页"))
             raise
 
         cursor_id = 0
@@ -181,7 +181,7 @@ class Download(crawler.DownloadThread):
             try:
                 video_pagination_response = get_one_page_video(self.account_id, cursor_id, account_index_response["dytk"], account_index_response["signature"])
             except crawler.CrawlerException as e:
-                self.error(f"cursor {cursor_id}后的一页视频解析失败，原因：{e.message}")
+                self.error(e.http_error(f"cursor: {cursor_id}后的一页视频"))
                 raise
 
             self.trace(f"cursor {cursor_id}页获取的全部视频：{video_pagination_response['video_info_list']}")

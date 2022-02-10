@@ -22,7 +22,7 @@ def get_account_from_index():
         try:
             pagination_account_list = get_one_page_account(page_count)
         except crawler.CrawlerException as e:
-            output.print_msg(f"第{page_count}页账号解析失败，原因：{e.message}")
+            output.print_msg(e.http_error(f"第{page_count}页账号"))
             break
         if pagination_account_list:
             account_list.update(pagination_account_list)

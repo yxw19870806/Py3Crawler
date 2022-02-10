@@ -172,7 +172,7 @@ class Download(crawler.DownloadThread):
             try:
                 album_pagination_response = get_one_page_album(self.account_name, page_count)
             except crawler.CrawlerException as e:
-                self.error(f"第{page_count}页作品解析失败，原因：{e.message}")
+                self.error(e.http_error(f"第{page_count}页作品"))
                 raise
 
             self.trace(f"第{page_count}页解析的全部作品：{album_pagination_response['album_info_list']}")
@@ -208,7 +208,7 @@ class Download(crawler.DownloadThread):
         try:
             album_response = get_album_page(album_info["album_id"])
         except crawler.CrawlerException as e:
-            self.error(f"作品{album_info['album_id']}《{album_info['album_title']}》解析失败，原因：{e.message}")
+            self.error(e.http_error(f"作品{album_info['album_id']}《{album_info['album_title']}》"))
             raise
 
         self.trace(f"作品{album_info['album_id']}解析的全部图片：{album_response['photo_url_list']}")
@@ -222,7 +222,7 @@ class Download(crawler.DownloadThread):
             photo_url = get_photo_url(photo_url)
             self.step(f"开始下载作品{album_info['album_id']}《{album_info['album_title']}》的第{photo_index}张图片 {photo_url}")
 
-            file_path = os.path.join(album_path, f"%02d.{net.get_file_type(photo_url)}" % photo_index)
+            file_path = os.path.join(album_path, f"%02d.{net.get_file_extension(photo_url)}" % photo_index)
             save_file_return = net.download(photo_url, file_path)
             if save_file_return["status"] == 1:
                 self.total_photo_count += 1  # 计数累加

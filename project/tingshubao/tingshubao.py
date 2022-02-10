@@ -152,13 +152,13 @@ class Download(crawler.DownloadThread):
         try:
             audio_play_response = get_audio_info_page(audio_info["audio_play_url"])
         except crawler.CrawlerException as e:
-            self.error(f"音频{audio_info['audio_id']}解析失败，原因：{e.message}")
+            self.error(e.http_error(f"音频{audio_info['audio_id']}"))
             raise
 
         audio_url = audio_play_response["audio_url"]
         self.step(f"开始下载音频{audio_info['audio_id']} {audio_url}")
 
-        file_path = os.path.join(self.main_thread.audio_download_path, self.display_name, f"%04d.{net.get_file_type(audio_url)}" % audio_info["audio_id"])
+        file_path = os.path.join(self.main_thread.audio_download_path, self.display_name, f"%04d.{net.get_file_extension(audio_url)}" % audio_info["audio_id"])
         save_file_return = net.download(audio_url, file_path)
         if save_file_return["status"] == 1:
             self.total_audio_count += 1  # 计数累加

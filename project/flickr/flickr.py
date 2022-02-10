@@ -276,7 +276,7 @@ class Download(crawler.DownloadThread):
             try:
                 photo_pagination_response = get_one_page_photo(user_id, page_count, site_key, csrf, self.request_id)
             except crawler.CrawlerException as e:
-                self.error(f"第{page_count}页图片解析失败，原因：{e.message}")
+                self.error(e.http_error(f"第{page_count}页图片"))
                 raise
 
             self.trace(f"第{page_count}页解析的全部图片：{photo_pagination_response['photo_info_list']}")
@@ -305,7 +305,7 @@ class Download(crawler.DownloadThread):
         for photo_info in photo_info_list:
             self.main_thread_check()  # 检测主线程运行状态
             self.step(f"开始下载图片{photo_info['photo_id']} {photo_info['photo_url']}")
-            file_path = os.path.join(self.main_thread.photo_download_path, self.account_name, f"%011d.{net.get_file_type(photo_info['photo_url'])}" % photo_info["photo_id"])
+            file_path = os.path.join(self.main_thread.photo_download_path, self.account_name, f"%011d.{net.get_file_extension(photo_info['photo_url'])}" % photo_info["photo_id"])
             save_file_return = net.download(photo_info["photo_url"], file_path)
             if save_file_return["status"] == 1:
                 self.temp_path_list.append(file_path)  # 设置临时目录
@@ -325,7 +325,7 @@ class Download(crawler.DownloadThread):
             try:
                 account_index_response = get_account_index_page(self.account_name)
             except crawler.CrawlerException as e:
-                self.error(f"相册首页解析失败，原因：{e.message}")
+                self.error(e.http_error("相册首页"))
                 raise
 
             # 获取所有可下载图片

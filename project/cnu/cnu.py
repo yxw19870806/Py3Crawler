@@ -80,7 +80,7 @@ class CNU(crawler.Crawler):
                 try:
                     album_response = get_album_page(album_id)
                 except crawler.CrawlerException as e:
-                    log.error(f"作品{album_id}解析失败，原因：{e.message}")
+                    log.error(e.http_error(f"作品{album_id}"))
                     raise
 
                 if album_response["is_delete"]:
@@ -101,7 +101,7 @@ class CNU(crawler.Crawler):
                     log.step(f"作品{album_id}《{album_response['album_title']}》开始下载第{photo_index}张图片 {photo_url}")
 
                     # 开始下载
-                    file_path = os.path.join(album_path, f"%03d.{net.get_file_type(photo_url)}" % photo_index)
+                    file_path = os.path.join(album_path, f"%03d.{net.get_file_extension(photo_url)}" % photo_index)
                     thread = Download(self, file_path, photo_url, photo_index)
                     thread.start()
                     thread_list.append(thread)

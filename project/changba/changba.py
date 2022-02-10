@@ -201,7 +201,7 @@ class Download(crawler.DownloadThread):
             try:
                 audit_pagination_response = get_one_page_audio(user_id, page_count)
             except crawler.CrawlerException as e:
-                self.error(f"第{page_count}页歌曲解析失败，原因：{e.message}")
+                self.error(e.http_error(f"第{page_count}页歌曲"))
                 raise
 
             self.trace(f"第{page_count}页解析的全部歌曲：{audit_pagination_response['audio_info_list']}")
@@ -239,7 +239,7 @@ class Download(crawler.DownloadThread):
         try:
             audio_play_response = get_audio_play_page(audio_info["audio_key"])
         except crawler.CrawlerException as e:
-            self.error(f"歌曲{audio_info['audio_key']}《{audio_info['audio_title']}》解析失败，原因：{e.message}")
+            self.error(e.http_error(f"歌曲{audio_info['audio_key']}《{audio_info['audio_title']}》"))
             raise
 
         if audio_play_response["is_delete"]:
@@ -248,7 +248,7 @@ class Download(crawler.DownloadThread):
 
         self.step(f"开始下载歌曲{audio_info['audio_key']}《{audio_info['audio_title']}》 {audio_play_response['audio_url']}")
 
-        file_path = os.path.join(self.main_thread.audio_download_path, self.display_name, f"%010d - {path.filter_text(audio_info['audio_title'])}.{net.get_file_type(audio_play_response['audio_url'])}" % audio_info["audio_id"])
+        file_path = os.path.join(self.main_thread.audio_download_path, self.display_name, f"%010d - {path.filter_text(audio_info['audio_title'])}.{net.get_file_extension(audio_play_response['audio_url'])}" % audio_info["audio_id"])
         save_file_return = net.download(audio_play_response["audio_url"], file_path)
         if save_file_return["status"] == 1:
             self.total_audio_count += 1  # 计数累加
@@ -266,7 +266,7 @@ class Download(crawler.DownloadThread):
             try:
                 account_index_response = get_account_index_page(self.account_id)
             except crawler.CrawlerException as e:
-                self.error(f"主页解析失败，原因：{e.message}")
+                self.error(e.http_error("主页"))
                 raise
 
             # 获取所有可下载歌曲

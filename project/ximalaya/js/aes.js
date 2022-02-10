@@ -82,11 +82,9 @@ var CryptoJS = CryptoJS || function (u, p) {
             }
         }, x = w.Utf8 = {
             stringify: function (a) {
-                console.log(b.stringify(a))
                 try {
                     return decodeURIComponent(escape(b.stringify(a)))
                 } catch (c) {
-                    console.log(c.toString())
                     throw Error("Malformed UTF-8 data");
                 }
             }, parse: function (a) {

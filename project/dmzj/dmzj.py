@@ -139,7 +139,7 @@ class Download(crawler.DownloadThread):
         try:
             blog_pagination_response = get_comic_index_page(self.comic_id)
         except crawler.CrawlerException as e:
-            self.error(f"漫画首页解析失败，原因：{e.message}")
+            self.error(e.http_error("漫画首页"))
             raise
 
         self.trace(f"漫画首页解析的全部漫画：{blog_pagination_response['comic_info_list']}")
@@ -164,7 +164,7 @@ class Download(crawler.DownloadThread):
         try:
             chapter_response = get_chapter_page(comic_info["comic_id"], comic_info["page_id"])
         except crawler.CrawlerException as e:
-            self.error(f"漫画{comic_info['page_id']} {comic_info['version_name']}《{comic_info['chapter_name']}》解析失败，原因：{e.message}")
+            self.error(e.http_error(f"漫画{comic_info['page_id']} {comic_info['version_name']}《{comic_info['chapter_name']}》"))
             raise
 
         # 图片下载
@@ -176,7 +176,7 @@ class Download(crawler.DownloadThread):
             self.main_thread_check()  # 检测主线程运行状态
             self.step(f"漫画{comic_info['page_id']} {comic_info['version_name']}《{comic_info['chapter_name']}》开始下载第{photo_index}张图片 {photo_url}")
 
-            photo_file_path = os.path.join(chapter_path, f"%03d.{net.get_file_type(photo_url)}" % photo_index)
+            photo_file_path = os.path.join(chapter_path, f"%03d.{net.get_file_extension(photo_url)}" % photo_index)
             save_file_return = net.download(photo_url, photo_file_path, header_list={"Referer": "https://m.dmzj.com/"})
             if save_file_return["status"] == 1:
                 self.total_photo_count += 1  # 计数累加

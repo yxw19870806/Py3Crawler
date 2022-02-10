@@ -122,7 +122,7 @@ class Download(crawler.DownloadThread):
             try:
                 blog_pagination_response = get_one_page_blog(self.account_id, page_count)
             except crawler.CrawlerException as e:
-                self.error(f"第{page_count}页日志解析失败，原因：{e.message}")
+                self.error(e.http_error(f"第{page_count}页日志"))
                 raise
 
             self.trace(f"第{page_count}页解析的全部日志：{blog_pagination_response['blog_id_list']}")
@@ -145,7 +145,7 @@ class Download(crawler.DownloadThread):
         try:
             blog_response = get_blog_page(self.account_id, blog_id)
         except crawler.CrawlerException as e:
-            self.error(f"日志{blog_id}解析失败，原因：{e.message}")
+            self.error(e.http_error(f"日志{blog_id}"))
             raise
 
         # todo 图片下载逻辑
@@ -156,7 +156,7 @@ class Download(crawler.DownloadThread):
                 self.main_thread_check()  # 检测主线程运行状态
                 self.step(f"开始下载第{photo_index}张图片 {photo_url}")
 
-                file_type = net.get_file_type(photo_url)
+                file_extension = net.get_file_extension(photo_url)
                 photo_file_path = os.path.join(self.main_thread.photo_download_path, self.account_id, f"%04d.{file_type}" % photo_index)
                 save_file_return = net.download(photo_url, photo_file_path)
                 if save_file_return["status"] == 1:
@@ -175,7 +175,7 @@ class Download(crawler.DownloadThread):
                 self.main_thread_check()  # 检测主线程运行状态
                 self.step(f"开始下载第{video_index}个视频 {video_url}")
 
-                file_type = net.get_file_type(video_url)
+                file_extension = net.get_file_extension(video_url)
                 video_file_path = os.path.join(self.main_thread.video_download_path, self.account_id, f"%04d.{file_type}" % video_index)
                 save_file_return = net.download(video_url, video_file_path)
                 if save_file_return["status"] == 1:
@@ -194,7 +194,7 @@ class Download(crawler.DownloadThread):
                 self.main_thread_check()  # 检测主线程运行状态
                 self.step(f"开始下载第{audio_index}个音频 {audio_url}")
 
-                file_type = net.get_file_type(audio_url)
+                file_extension = net.get_file_extension(audio_url)
                 audio_file_path = os.path.join(self.main_thread.audio_download_path, self.account_id, f"%04d.{file_type}" % audio_index)
                 save_file_return = net.download(audio_url, audio_file_path)
                 if save_file_return["status"] == 1:

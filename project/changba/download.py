@@ -35,17 +35,17 @@ def main():
         try:
             audio_response = changba.get_audio_play_page(audio_key)
         except crawler.CrawlerException as e:
-            log.error(f"解析歌曲下载地址失败，原因：{e.message}")
+            log.error(e.http_error("歌曲"))
             break
         if audio_response["is_delete"]:
             log.step("歌曲不存在，跳过")
             continue
         # 选择下载目录
-        file_type = net.get_file_type(audio_response["audio_url"])
+        file_extension = net.get_file_extension(audio_response["audio_url"])
         options = {
             "initialdir": changba_class.audio_download_path,
-            "initialfile": f"%010d - {path.filter_text(audio_response['audio_title'])}.{file_type}" % audio_response["audio_id"],
-            "filetypes": [(file_type, "." + file_type)],
+            "initialfile": f"%010d - {path.filter_text(audio_response['audio_title'])}.{file_extension}" % audio_response["audio_id"],
+            "filetypes": [(file_extension, "." + file_extension)],
             "parent": gui,
         }
         file_path = tkinter.filedialog.asksaveasfilename(**options)

@@ -474,7 +474,7 @@ class Download(crawler.DownloadThread):
                 else:
                     post_pagination_response = get_one_page_post(self.account_id, start_page_count, self.is_https)
             except crawler.CrawlerException as e:
-                self.error(f"第{start_page_count}页日志解析失败，原因：{e.message}")
+                self.error(e.http_error(f"第{start_page_count}页日志"))
                 raise
 
             # 这页没有任何内容，返回上一个检查节点
@@ -507,7 +507,7 @@ class Download(crawler.DownloadThread):
                 else:
                     post_pagination_response = get_one_page_post(self.account_id, page_count, self.is_https)
             except crawler.CrawlerException as e:
-                self.error(f"第{page_count}页日志解析失败，原因：{e.message}")
+                self.error(e.http_error(f"第{page_count}页日志"))
                 raise
 
             if not self.is_private and post_pagination_response["is_over"]:
@@ -552,7 +552,7 @@ class Download(crawler.DownloadThread):
             try:
                 post_response = get_post_page(post_info["post_url"], post_info["post_id"])
             except crawler.CrawlerException as e:
-                self.error(f"日志 {post_url} 解析失败，原因：{e.message}")
+                self.error(e.http_error(f"日志 {post_url}"))
                 raise
             if post_response["is_delete"]:
                 if post_info["post_url"].find("/hey-this-post-may-contain-adult-content-so-weve") > 0 or \
@@ -570,7 +570,7 @@ class Download(crawler.DownloadThread):
                 try:
                     video_play_response = get_video_play_page(self.account_id, post_info["post_id"], self.is_https)
                 except crawler.CrawlerException as e:
-                    self.error(f"日志 {post_url} 视频解析失败，原因：{e.message}")
+                    self.error(e.http_error(f"日志 {post_url}"))
                     raise
 
                 if video_play_response["is_password"]:
@@ -620,7 +620,7 @@ class Download(crawler.DownloadThread):
                 self.main_thread_check()  # 检测主线程运行状态
                 self.step(f"日志 {post_info['post_id']} 开始下载第{photo_index}张图片 {photo_url}")
 
-                photo_file_path = os.path.join(self.main_thread.photo_download_path, self.account_id, f"%012d_%02d.{net.get_file_type(photo_url)}" % (post_info["post_id"], photo_index))
+                photo_file_path = os.path.join(self.main_thread.photo_download_path, self.account_id, f"%012d_%02d.{net.get_file_extension(photo_url)}" % (post_info["post_id"], photo_index))
                 save_file_return = net.download(photo_url, photo_file_path)
                 if save_file_return["status"] == 1:
                     self.temp_path_list.append(photo_file_path)  # 设置临时目录
@@ -646,7 +646,7 @@ class Download(crawler.DownloadThread):
             try:
                 self.is_https, self.is_private = get_index_setting(self.account_id)
             except crawler.CrawlerException as e:
-                self.error(f"账号设置解析失败，原因：{e.message}")
+                self.error(e.http_error("账号设置"))
                 raise
 
             # 未登录&开启safe mode直接退出

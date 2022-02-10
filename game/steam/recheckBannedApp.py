@@ -19,7 +19,7 @@ def main():
     try:
         banned_game_list = madjoki.get_banned_game_list()
     except crawler.CrawlerException as e:
-        output.print_msg(f"已下线游戏列表获取失败，原因：{e.message}")
+        output.print_msg(e.http_error("已下线游戏列表"))
     else:
         output.print_msg(f"总共获取{len(banned_game_list)}个已删除游戏")
 
@@ -32,7 +32,7 @@ def main():
                 try:
                     game_data = steam.get_game_store_index(game_id)
                 except crawler.CrawlerException as e:
-                    output.print_msg(f"游戏 {game_id} 解析失败，原因：{e.message}")
+                    output.print_msg(e.http_error(f"游戏{game_id}"))
                     continue
                 if game_data["deleted"] is False:
                     output.print_msg(f"游戏 {game_id} 不在已删除列表中")

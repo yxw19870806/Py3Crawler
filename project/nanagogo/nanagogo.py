@@ -137,7 +137,7 @@ class Download(crawler.DownloadThread):
             try:
                 blog_pagination_response = get_one_page_blog(self.account_name, target_id)
             except crawler.CrawlerException as e:
-                self.error(f"target：{target_id}页解析失败，原因：{e.message}")
+                self.error(e.http_error(f"target：{target_id}后一页日志"))
                 raise
 
             self.trace(f"target：{target_id}页解析的全部日志：{blog_pagination_response['blog_info_list']}")
@@ -185,7 +185,7 @@ class Download(crawler.DownloadThread):
             self.main_thread_check()  # 检测主线程运行状态
             self.step(f"开始下载日志{blog_info['blog_id']}的第{photo_index}张图片 {photo_url}")
 
-            photo_file_path = os.path.join(self.main_thread.photo_download_path, self.account_name, f"%05d_%02d.{net.get_file_type(photo_url)}" % (blog_info["blog_id"], photo_index))
+            photo_file_path = os.path.join(self.main_thread.photo_download_path, self.account_name, f"%05d_%02d.{net.get_file_extension(photo_url)}" % (blog_info["blog_id"], photo_index))
             save_file_return = net.download(photo_url, photo_file_path)
             if save_file_return["status"] == 1:
                 self.temp_path_list.append(photo_file_path)  # 设置临时目录
@@ -205,7 +205,7 @@ class Download(crawler.DownloadThread):
             self.main_thread_check()  # 检测主线程运行状态
             self.step(f"开始下载日志{blog_info['blog_id']}的第{video_index}个视频 {video_url}")
 
-            video_file_path = os.path.join(self.main_thread.video_download_path, self.account_name, f"%05d_%02d.{net.get_file_type(video_url)}" % (blog_info["blog_id"], video_index))
+            video_file_path = os.path.join(self.main_thread.video_download_path, self.account_name, f"%05d_%02d.{net.get_file_extension(video_url)}" % (blog_info["blog_id"], video_index))
             save_file_return = net.download(video_url, video_file_path)
             if save_file_return["status"] == 1:
                 self.temp_path_list.append(video_file_path)  # 设置临时目录
@@ -222,7 +222,7 @@ class Download(crawler.DownloadThread):
             try:
                 get_index_page(self.account_name)
             except crawler.CrawlerException as e:
-                self.error(f"首页访问失败，原因：{e.message}")
+                self.error(e.http_error("首页"))
                 raise
 
             # 获取所有可下载日志

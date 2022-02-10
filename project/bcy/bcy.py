@@ -198,7 +198,7 @@ class Download(crawler.DownloadThread):
             try:
                 album_pagination_response = get_one_page_album(self.account_id, page_since_id)
             except crawler.CrawlerException as e:
-                self.error(f"since {page_since_id}后一页作品解析失败，原因：{e.message}")
+                self.error(e.http_error(f"since: {page_since_id}后一页作品"))
                 raise
 
             self.trace(f"since {page_since_id}后一页解析的全部作品：{album_pagination_response['album_id_list']}")
@@ -228,7 +228,7 @@ class Download(crawler.DownloadThread):
         try:
             album_response = get_album_page(album_id)
         except crawler.CrawlerException as e:
-            self.error(f"作品{album_id}解析失败，原因：{e.message}")
+            self.error(e.http_error(f"作品{album_id}"))
             raise
 
         # 图片
@@ -256,10 +256,10 @@ class Download(crawler.DownloadThread):
             # 禁用指定分辨率
             self.step(f"作品{album_id}开始下载第{photo_index}张图片 {photo_url}")
 
-            file_type = net.get_file_type(photo_url, "jpg")
-            if file_type == 'image':
-                file_type = "jpg"
-            file_path = os.path.join(album_path, f"%03d.{file_type}" % photo_index)
+            file_extension = net.get_file_extension(photo_url, "jpg")
+            if file_extension == 'image':
+                file_extension = "jpg"
+            file_path = os.path.join(album_path, f"%03d.{file_extension}" % photo_index)
             for retry_count in range(0, 10):
                 save_file_return = net.download(photo_url, file_path)
                 if save_file_return["status"] == 1:
@@ -281,7 +281,7 @@ class Download(crawler.DownloadThread):
         try:
             video_response = get_album_page_by_selenium(album_id)
         except crawler.CrawlerException as e:
-            self.error(f"作品{album_id}的视频解析失败，原因：{e.message}")
+            self.error(e.http_error(f"作品{album_id}"))
             raise
 
         self.step(f"作品{album_id}开始下载视频 {video_response['video_url']}")

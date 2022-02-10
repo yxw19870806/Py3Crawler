@@ -284,7 +284,7 @@ class Download(crawler.DownloadThread):
             try:
                 blog_pagination_response = get_one_page_blog(self.account_id, start_page_count)
             except crawler.CrawlerException as e:
-                self.error(f"第{start_page_count}页日志解析失败，原因：{e.message}")
+                self.error(e.http_error(f"第{start_page_count}页日志"))
                 raise
 
             # 这页没有任何内容，返回上一个检查节点
@@ -313,7 +313,7 @@ class Download(crawler.DownloadThread):
             try:
                 blog_pagination_response = get_one_page_blog(self.account_id, page_count)
             except crawler.CrawlerException as e:
-                self.error(f"第{page_count}页日志解析失败，原因：{e.message}")
+                self.error(e.http_error(f"第{page_count}页日志"))
                 raise
 
             self.trace(f"第{page_count}页解析的全部日志：{blog_pagination_response['blog_id_list']}")
@@ -346,7 +346,7 @@ class Download(crawler.DownloadThread):
         try:
             blog_response = get_blog_page(self.account_id, blog_id)
         except crawler.CrawlerException as e:
-            self.error(f"日志{blog_id}解析失败，原因：{e.message}")
+            self.error(e.http_error(f"日志{blog_id}"))
             raise
 
         # 日志只对关注者可见
@@ -369,7 +369,7 @@ class Download(crawler.DownloadThread):
                 self.duplicate_list[photo_url] = 1
             self.step(f"开始下载日志{blog_id}的第{photo_index}张图片 {photo_url}")
 
-            file_path = os.path.join(self.main_thread.photo_download_path, self.account_id, f"%011d_%02d.{net.get_file_type(photo_url, 'jpg')}" % (blog_id, photo_index))
+            file_path = os.path.join(self.main_thread.photo_download_path, self.account_id, f"%011d_%02d.{net.get_file_extension(photo_url, 'jpg')}" % (blog_id, photo_index))
             save_file_return = net.download(photo_url, file_path)
             if save_file_return["status"] == 1:
                 if check_photo_invalid(file_path):

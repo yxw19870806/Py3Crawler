@@ -156,7 +156,7 @@ class Download(crawler.DownloadThread):
             try:
                 audio_pagination_response = get_one_page_audio(self.account_id, audio_type, page_count)
             except crawler.CrawlerException as e:
-                self.error(f"第{page_count}页{audio_type_name}歌曲解析失败，原因：{e.message}")
+                self.error(e.http_error(f"第{page_count}页{audio_type_name}歌曲"))
                 raise
 
             self.trace(f"第{page_count}页{audio_type_name}解析的全部歌曲：{audio_pagination_response['audio_info_list']}")
@@ -195,12 +195,12 @@ class Download(crawler.DownloadThread):
         try:
             audio_info_response = get_audio_play_page(audio_info["audio_id"], audio_type)
         except crawler.CrawlerException as e:
-            self.error(f"{audio_type_name}歌曲{audio_info['audio_id']}《{audio_info['audio_title']}》解析失败，原因：{e.message}")
+            self.error(e.http_error(f"{audio_type_name}歌曲{audio_info['audio_id']}《{audio_info['audio_title']}》"))
             raise
 
         self.step(f"开始下载{audio_type_name}歌曲{audio_info['audio_id']}《{audio_info['audio_title']}》 {audio_info_response['audio_url']}")
 
-        file_path = os.path.join(self.main_thread.audio_download_path, self.display_name, audio_type_name, f"%08d - {path.filter_text(audio_info['audio_title'])}.{net.get_file_type(audio_info_response['audio_url'])}" % audio_info["audio_id"])
+        file_path = os.path.join(self.main_thread.audio_download_path, self.display_name, audio_type_name, f"%08d - {path.filter_text(audio_info['audio_title'])}.{net.get_file_extension(audio_info_response['audio_url'])}" % audio_info["audio_id"])
         save_file_return = net.download(audio_info_response["audio_url"], file_path)
         if save_file_return["status"] == 1:
             self.total_audio_count += 1  # 计数累加

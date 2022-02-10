@@ -181,7 +181,7 @@ class IvSeek(crawler.Crawler):
             try:
                 index_response = get_index_page()
             except crawler.CrawlerException as e:
-                log.error(f"首页解析失败，原因：{e.message}")
+                log.error(e.http_error("首页"))
                 raise
 
             log.step(f"最新视频id：{index_response['max_archive_id']}")
@@ -189,13 +189,13 @@ class IvSeek(crawler.Crawler):
             for archive_id in range(save_id, index_response["max_archive_id"]):
                 if not self.is_running():
                     tool.process_exit(tool.PROCESS_EXIT_CODE_NORMAL)
-                log.step(f"开始解析第{archive_id}个视频")
+                log.step(f"开始解析视频{archive_id}")
 
                 # 获取一页图片
                 try:
                     archive_response = get_archive_page(archive_id)
                 except crawler.CrawlerException as e:
-                    log.error(f"第{archive_id}个视频解析失败，原因：{e.message}")
+                    log.error(e.http_error(f"视频{archive_id}"))
                     raise
 
                 if archive_response["is_delete"]:

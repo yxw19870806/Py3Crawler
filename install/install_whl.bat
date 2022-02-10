@@ -7,6 +7,9 @@ python.exe -m pip install --upgrade pip
 echo install lzstring
 pip.exe install lzstring
 
+echo install PyExecJS
+pip.exe install PyExecJS
+
 echo install Pillow
 pip.exe install Pillow
 

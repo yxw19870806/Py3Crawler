@@ -188,7 +188,7 @@ class Download(crawler.DownloadThread):
             try:
                 blog_pagination_response = get_one_page_blog(self.account_id, page_count)
             except crawler.CrawlerException as e:
-                self.error(f"第{page_count}页日志解析失败，原因：{e.message}")
+                self.error(e.http_error(f"第{page_count}页日志"))
                 raise
 
             self.trace(f"第{page_count}页解析的全部日志：{blog_pagination_response['blog_info_list']}")
@@ -227,7 +227,7 @@ class Download(crawler.DownloadThread):
                 photo_url = big_photo_response["photo_url"]
             self.step(f"开始下载日志{blog_info['blog_id']}的第{photo_index}张图片 {photo_url}")
 
-            file_path = os.path.join(self.main_thread.photo_download_path, self.display_name, f"%06d_%02d.{net.get_file_type(photo_url, 'jpg')}" % (blog_info["blog_id"], photo_index))
+            file_path = os.path.join(self.main_thread.photo_download_path, self.display_name, f"%06d_%02d.{net.get_file_extension(photo_url, 'jpg')}" % (blog_info["blog_id"], photo_index))
             save_file_return = net.download(photo_url, file_path, cookies_list=big_photo_response["cookies"])
             if save_file_return["status"] == 1:
                 if check_photo_invalid(file_path):

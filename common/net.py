@@ -169,7 +169,7 @@ def get_cookies_from_response_header(response_headers: HTTPHeaderDict) -> dict:
     return cookies_list
 
 
-def get_file_type(file_url: str, default_file_type: str = ""):
+def get_file_extension(file_url: str, default_file_type: str = ""):
     """
     获取url地址的文件类型
     """
@@ -463,10 +463,10 @@ def download(file_url, file_path, need_content_type=False, head_check=False, rep
                 if MIME_DICTIONARY is None:
                     MIME_DICTIONARY = tool.json_decode(file.read_file(os.path.join(os.path.dirname(__file__), "mime.json")), {})
                 if content_type in MIME_DICTIONARY:
-                    new_file_type = MIME_DICTIONARY[content_type]
+                    new_file_extension = MIME_DICTIONARY[content_type]
                 else:
-                    new_file_type = content_type.split("/")[-1]
-                file_path = os.path.splitext(file_path)[0] + "." + new_file_type
+                    new_file_extension = content_type.split("/")[-1]
+                file_path = os.path.splitext(file_path)[0] + "." + new_file_extension
 
         if not is_multi_thread:  # 单线程下载
             # 如果是先调用HEAD方法的，需要重新获取完整数据

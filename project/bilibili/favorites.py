@@ -37,7 +37,7 @@ def main():
         try:
             favorites_response = bilibili.get_favorites_list(favorites_id)
         except crawler.CrawlerException as e:
-            log.error(f"解析收藏列表失败，原因：{e.message}")
+            log.error(e.http_error("收藏列表"))
             continue
 
         # 选择下载目录
@@ -67,7 +67,7 @@ def main():
             try:
                 video_play_response = bilibili.get_video_page(video_info["video_id"])
             except crawler.CrawlerException as e:
-                log.error(f"解析视频{video_info['video_id']}《{video_info['video_title']}》下载地址失败，原因：{e.message}")
+                log.error(e.http_error(f"视频{video_info['video_id']}《{video_info['video_title']}》"))
                 continue
 
             if video_play_response["is_private"]:
@@ -91,7 +91,7 @@ def main():
                     if len(video_part_info["video_url_list"]) > 1:
                         video_name += f" ({video_split_index})"
                     video_name = path.filter_text(video_name)
-                    video_name = f"{video_name}.{net.get_file_type(video_part_url)}"
+                    video_name = f"{video_name}.{net.get_file_extension(video_part_url)}"
                     file_path = os.path.join(root_dir, video_name)
 
                     # 开始下载

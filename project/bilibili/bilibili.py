@@ -415,7 +415,7 @@ class Download(crawler.DownloadThread):
             try:
                 album_pagination_response = get_one_page_video(self.account_id, page_count)
             except crawler.CrawlerException as e:
-                self.error(f"第{page_count}页视频解析失败，原因：{e.message}")
+                self.error(e.http_error(f"第{page_count}页视频"))
                 raise
 
             self.trace(f"第{page_count}页解析的全部视频：{album_pagination_response['video_info_list']}")
@@ -459,7 +459,7 @@ class Download(crawler.DownloadThread):
             try:
                 album_pagination_response = get_one_page_audio(self.account_id, page_count)
             except crawler.CrawlerException as e:
-                self.error(f"第{page_count}页音频解析失败，原因：{e.message}")
+                self.error(e.http_error(f"第{page_count}页音频"))
                 raise
 
             self.trace(f"第{page_count}页解析的全部音频：{album_pagination_response['audio_info_list']}")
@@ -503,7 +503,7 @@ class Download(crawler.DownloadThread):
             try:
                 album_pagination_response = get_one_page_album(self.account_id, page_count)
             except crawler.CrawlerException as e:
-                self.error(f"第{page_count}页相簿解析失败，原因：{e.message}")
+                self.error(e.http_error(f"第{page_count}页相簿"))
                 raise
 
             self.trace(f"第{page_count}页解析的全部相簿：{album_pagination_response['album_id_list']}")
@@ -541,7 +541,7 @@ class Download(crawler.DownloadThread):
         try:
             video_play_response = get_video_page(video_info["video_id"])
         except crawler.CrawlerException as e:
-            self.error(f"视频{video_info['video_id']}《{video_info['video_title']}》解析失败，原因：{e.message}")
+            self.error(e.http_error(f"视频{video_info['video_id']}《{video_info['video_title']}》"))
             raise
 
         if video_play_response["is_private"]:
@@ -567,7 +567,7 @@ class Download(crawler.DownloadThread):
                         video_name += "_" + str(video_part_index)
                 if len(video_part_info["video_url_list"]) > 1:
                     video_name += f" ({video_split_index})"
-                video_name = f"{path.filter_text(video_name)}.{net.get_file_type(video_part_url)}"
+                video_name = f"{path.filter_text(video_name)}.{net.get_file_extension(video_part_url)}"
                 file_path = os.path.join(self.main_thread.video_download_path, self.display_name, video_name)
                 save_file_return = net.download(video_part_url, file_path, header_list={"Referer": f"https://www.bilibili.com/video/av{video_info['video_id']}"})
                 if save_file_return["status"] == 1:
@@ -596,12 +596,12 @@ class Download(crawler.DownloadThread):
         try:
             audio_info_response = get_audio_info_page(audio_info["audio_id"])
         except crawler.CrawlerException as e:
-            self.error(f"音频{audio_info['audio_id']}《{audio_info['audio_title']}》解析失败，原因：{e.message}")
+            self.error(e.http_error(f"音频{audio_info['audio_id']}《{audio_info['audio_title']}》"))
             raise
 
         self.step(f"开始下载音频{audio_info['audio_id']}《{audio_info['audio_title']}》 {audio_info_response['audio_url']}")
 
-        file_path = os.path.join(self.main_thread.audio_download_path, self.display_name, f"%06d {path.filter_text(audio_info['audio_title'])}.{net.get_file_type(audio_info_response['audio_url'])}" % audio_info["audio_id"])
+        file_path = os.path.join(self.main_thread.audio_download_path, self.display_name, f"%06d {path.filter_text(audio_info['audio_title'])}.{net.get_file_extension(audio_info_response['audio_url'])}" % audio_info["audio_id"])
         save_file_return = net.download(audio_info_response["audio_url"], file_path, header_list={"Referer": "https://www.bilibili.com/"})
         if save_file_return["status"] == 1:
             self.total_audio_count += 1  # 计数累加
@@ -623,7 +623,7 @@ class Download(crawler.DownloadThread):
         try:
             album_response = get_album_page(album_id)
         except crawler.CrawlerException as e:
-            self.error(f"相簿{album_id}解析失败，原因：{e.message}")
+            self.error(e.http_error(f"相簿{album_id}"))
             raise
 
         self.trace(f"相簿{album_id}解析的全部图片：{album_response['photo_url_list']}")
@@ -634,7 +634,7 @@ class Download(crawler.DownloadThread):
             self.main_thread_check()  # 检测主线程运行状态
             self.step(f"相簿{album_id}开始下载第{photo_index}张图片 {photo_url}")
 
-            file_path = os.path.join(self.main_thread.photo_download_path, self.display_name, f"%09d_%02d.{net.get_file_type(photo_url)}" % (album_id, photo_index))
+            file_path = os.path.join(self.main_thread.photo_download_path, self.display_name, f"%09d_%02d.{net.get_file_extension(photo_url)}" % (album_id, photo_index))
             save_file_return = net.download(photo_url, file_path)
             if save_file_return["status"] == 1:
                 self.temp_path_list.append(file_path)  # 设置临时目录

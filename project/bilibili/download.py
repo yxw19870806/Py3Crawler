@@ -57,7 +57,7 @@ class BiliBiliDownload(bilibili.BiliBili):
         try:
             video_response = bilibili.get_video_page(video_id)
         except crawler.CrawlerException as e:
-            log.error(f"解析视频下载地址失败，原因：{e.message}")
+            log.error(e.http_error("视频下载地址"))
             return
         if video_response["is_private"]:
             log.step("视频需要登录才能访问，跳过")
@@ -81,7 +81,7 @@ class BiliBiliDownload(bilibili.BiliBili):
                     video_title += "_" + video_part_info["video_part_title"]
                 else:
                     video_title += "_" + str(part_index)
-            video_name = f"%010d {path.filter_text(video_title)}.{net.get_file_type(video_part_info['video_url_list'][0])}" % int(video_id)
+            video_name = f"%010d {path.filter_text(video_title)}.{net.get_file_extension(video_part_info['video_url_list'][0])}" % int(video_id)
 
             log.step("请选择下载目录")
             # 选择下载目录
@@ -101,10 +101,10 @@ class BiliBiliDownload(bilibili.BiliBili):
             for video_url in video_part_info["video_url_list"]:
                 if len(video_part_info["video_url_list"]) > 1:
                     temp_list = os.path.basename(file_path).split(".")
-                    file_type = temp_list[-1]
+                    file_extension = temp_list[-1]
                     file_name = ".".join(temp_list[:-1])
                     file_name += f" ({video_index})"
-                    file_real_path = os.path.abspath(os.path.join(os.path.dirname(file_path), f"{file_name}.{file_type}"))
+                    file_real_path = os.path.abspath(os.path.join(os.path.dirname(file_path), f"{file_name}.{file_extension}"))
                 else:
                     file_real_path = file_path
 
