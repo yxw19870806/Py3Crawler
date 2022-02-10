@@ -12,12 +12,7 @@ import os
 import time
 import traceback
 from pyquery import PyQuery as pq
-from selenium.webdriver.common.by import By
 from common import *
-from common import browser
-
-CACHE_FILE_PATH = os.path.join(os.path.dirname(__file__), "cache")
-TEMPLATE_HTML_PATH = os.path.join(os.path.dirname(__file__), "template.html")
 
 
 # 获取指定一页的图集
@@ -90,17 +85,7 @@ def get_chapter_page(comic_id, chapter_id):
     if not script_code:
         raise crawler.CrawlerException("页面截取脚本代码失败\n" + chapter_response_content)
 
-    # template_html = file.read_file(TEMPLATE_HTML_PATH)
-    # template_html = template_html.replace("%%SCRIPT_CODE%%", script_code)
-    # cache_html_path = os.path.realpath(os.path.join(CACHE_FILE_PATH, f"{comic_id}.html"))
-    # file.write_file(template_html, cache_html_path, file.WRITE_FILE_TYPE_REPLACE)
-    # with browser.Chrome("file:///" + cache_html_path) as chrome:
-    #     result_photo_list = chrome.find_element(by=By.ID, value="result").text
-    # # 删除临时模板文件
-    # path.delete_dir_or_file(cache_html_path)
-    # photo_list = result_photo_list.split("\n")
-    # for photo_url in photo_list:
-    #     result["photo_url_list"].append("https://i.hamreus.com" + photo_url)
+    # 使用网站的加密JS方法解密图片地址
     js_code = file.read_file(os.path.join("template", "lz-string.js"))
     js_code += """
     var photoList = [];
@@ -118,21 +103,20 @@ def get_chapter_page(comic_id, chapter_id):
     }    
     """
     js_code += "eval" + script_code
-
     try:
         photo_list = execjs.compile(js_code).call("getPhotoLists")
     except execjs._exceptions.ProgramError:
-        raise crawler.CrawlerException("脚本代码解密失败\n" + js_code)
+        raise crawler.CrawlerException("脚本执行失败\n" + js_code)
     if len(photo_list) == 0:
-        raise crawler.CrawlerException("脚本代码执行无效\n" + js_code)
+        raise crawler.CrawlerException("脚本执行失败\n" + js_code)
     for photo_url in photo_list:
         result["photo_url_list"].append("https://i.hamreus.com" + photo_url)
+
     return result
 
 
 class ManHuaGui(crawler.Crawler):
     def __init__(self, **kwargs):
-        global CACHE_FILE_PATH
         # 设置APP目录
         crawler.PROJECT_APP_PATH = os.path.abspath(os.path.dirname(__file__))
 
@@ -146,9 +130,6 @@ class ManHuaGui(crawler.Crawler):
         # 解析存档文件
         # comic_name  last_chapter_id
         self.save_data = crawler.read_save_data(self.save_data_path, 0, ["", "0"])
-
-        # 临时文件目录
-        CACHE_FILE_PATH = self.cache_data_path
 
     def main(self):
         try:
@@ -177,9 +158,6 @@ class ManHuaGui(crawler.Crawler):
 
         # 重新排序保存存档文件
         self.rewrite_save_file()
-
-        # 删除临时缓存目录
-        path.delete_dir_or_file(CACHE_FILE_PATH)
 
         self.end_message()
 
