@@ -77,7 +77,7 @@ def main():
         try:
             discount_game_list = steam.get_discount_game_list()
         except crawler.CrawlerException as e:
-            output.print_msg(f"打折游戏解析失败，原因：{e.message}")
+            output.print_msg(e.http_error("打折游戏"))
             raise
         # 将打折列表写入文件
         save_discount_list(cache_file_path, discount_game_list)
@@ -88,7 +88,7 @@ def main():
     try:
         owned_game_list = steam.get_account_owned_app_list(steam_class.account_id)
     except crawler.CrawlerException as e:
-        output.print_msg(f"个人游戏主页解析失败，原因：{e.message}")
+        output.print_msg(e.http_error("个人游戏主页"))
         raise
     for discount_info in discount_game_list:
         # 获取到的价格不大于0的跳过

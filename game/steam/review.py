@@ -56,7 +56,7 @@ def main(check_game=True):
     try:
         played_game_list = steam.get_account_owned_app_list(steam_class.account_id, True)
     except crawler.CrawlerException as e:
-        output.print_msg(f"个人游戏主页解析失败，原因：{e.message}")
+        output.print_msg(e.http_error("个人游戏主页"))
         raise
 
     if check_game:
@@ -74,6 +74,7 @@ def main(check_game=True):
                 game_data = steam.get_game_store_index(game_id)
             except crawler.CrawlerException as e:
                 output.print_msg(f"游戏 {game_id} 解析失败，原因：{e.message}")
+                output.print_msg(e.http_error(f"游戏{game_id}"))
                 continue
 
             is_change = False
@@ -98,7 +99,7 @@ def main(check_game=True):
                     try:
                         dlc_data = steam.get_game_store_index(dlc_id)
                     except crawler.CrawlerException as e:
-                        output.print_msg(f"游戏 {dlc_id} 解析失败，原因：{e.message}")
+                        output.print_msg(e.http_error(f"游戏{dlc_id}"))
                         continue
 
                     if dlc_data["owned"]:

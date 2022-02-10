@@ -54,7 +54,7 @@ def main():
         try:
             game_data = steam.get_game_store_index(game_id)
         except crawler.CrawlerException as e:
-            output.print_msg(f"游戏：{game_id}解析失败，原因：{e.message}")
+            output.print_msg(e.http_error(f"游戏{game_id}"))
             continue
 
         if len(game_data["dlc_list"]) > 0:
