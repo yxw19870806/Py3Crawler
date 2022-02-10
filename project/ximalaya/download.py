@@ -42,8 +42,8 @@ def main():
         file_extension = net.get_file_extension(audio_response["audio_url"])
         options = {
             "initialdir": ximalaya_class.audio_download_path,
-            "initialfile": f"{audio_id} - {path.filter_text(audio_response['audio_title'])}.{file_type}",
-            "filetypes": [(file_type, "." + file_type)],
+            "initialfile": f"{audio_id} - {path.filter_text(audio_response['audio_title'])}.{file_extension}",
+            "filetypes": [(file_extension, "." + file_extension)],
             "parent": gui,
         }
         file_path = tkinter.filedialog.asksaveasfilename(**options)

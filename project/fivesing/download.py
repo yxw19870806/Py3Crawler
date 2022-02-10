@@ -44,8 +44,8 @@ def main():
         file_extension = net.get_file_extension(audio_response["audio_url"])
         options = {
             "initialdir": fiveSing_class.audio_download_path,
-            "initialfile": f"%08d - {path.filter_text(audio_response['audio_title'])}.{file_type}" % int(audio_id),
-            "filetypes": [(file_type, "." + file_type)],
+            "initialfile": f"%08d - {path.filter_text(audio_response['audio_title'])}.{file_extension}" % int(audio_id),
+            "filetypes": [(file_extension, "." + file_extension)],
             "parent": gui,
         }
         file_path = tkinter.filedialog.asksaveasfilename(**options)
