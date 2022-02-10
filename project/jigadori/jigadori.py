@@ -94,7 +94,7 @@ class Jigadori(crawler.Crawler):
             try:
                 photo_pagination_response = get_one_page_photo(start_page_count)
             except crawler.CrawlerException as e:
-                log.error(f"第{start_page_count}页图片解析失败，原因：{e.message}")
+                log.error(e.http_error(f"第{start_page_count}页图片"))
                 raise
 
             # 这页没有任何内容，返回上一个检查节点
@@ -124,7 +124,7 @@ class Jigadori(crawler.Crawler):
             try:
                 photo_pagination_response = get_one_page_photo(page_count)
             except crawler.CrawlerException as e:
-                log.error(f"第{page_count}页图片解析失败，原因：{e.message}")
+                log.error(e.http_error(f"第{page_count}页图片"))
                 raise
 
             log.trace(f"第{page_count}页解析的全部图片：{photo_pagination_response['photo_info_list']}")

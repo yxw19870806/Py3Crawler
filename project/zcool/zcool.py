@@ -172,7 +172,7 @@ class Download(crawler.DownloadThread):
             try:
                 album_pagination_response = get_one_page_album(self.account_name, page_count)
             except crawler.CrawlerException as e:
-                self.error(f"第{page_count}页作品解析失败，原因：{e.message}")
+                self.error(e.http_error(f"第{page_count}页作品"))
                 raise
 
             self.trace(f"第{page_count}页解析的全部作品：{album_pagination_response['album_info_list']}")
@@ -208,7 +208,7 @@ class Download(crawler.DownloadThread):
         try:
             album_response = get_album_page(album_info["album_id"])
         except crawler.CrawlerException as e:
-            self.error(f"作品{album_info['album_id']}《{album_info['album_title']}》解析失败，原因：{e.message}")
+            self.error(e.http_error(f"作品{album_info['album_id']}《{album_info['album_title']}》"))
             raise
 
         self.trace(f"作品{album_info['album_id']}解析的全部图片：{album_response['photo_url_list']}")

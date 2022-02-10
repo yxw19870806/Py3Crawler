@@ -178,7 +178,7 @@ class Download(crawler.DownloadThread):
         try:
             photo_index_response = get_photo_index_page(self.account_id)
         except crawler.CrawlerException as e:
-            self.error(f"图片首页解析失败，原因：{e.message}")
+            self.error(e.http_error("图片首页"))
             return []
 
         self.trace(f"解析的全部图片：{photo_index_response['photo_url_list']}")
@@ -193,7 +193,7 @@ class Download(crawler.DownloadThread):
             try:
                 photo_head_response = get_photo_header(photo_url)
             except crawler.CrawlerException as e:
-                self.error(f"图片{photo_url}解析失败，原因：{e.message}")
+                self.error(e.http_error(f"图片{photo_url}"))
                 return []
 
             # 检查是否达到存档记录
@@ -231,7 +231,7 @@ class Download(crawler.DownloadThread):
         try:
             video_pagination_response = get_video_index_page(self.account_id)
         except crawler.CrawlerException as e:
-            self.error(f"视频首页解析失败，原因：{e.message}")
+            self.error(e.http_error("视频首页"))
             return []
 
         self.trace(f"解析的全部视频：{video_pagination_response['video_id_list']}")
@@ -246,7 +246,7 @@ class Download(crawler.DownloadThread):
             try:
                 video_info_response = get_video_info_page(video_id)
             except crawler.CrawlerException as e:
-                self.error(f"视频{video_id}解析失败，原因：{e.message}")
+                self.error(e.http_error(f"视频{video_id}"))
                 return []
 
             # 检查是否达到存档记录

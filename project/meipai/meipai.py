@@ -189,7 +189,7 @@ class Download(crawler.DownloadThread):
             try:
                 video_pagination_response = get_one_page_video(self.account_id, page_count)
             except crawler.CrawlerException as e:
-                self.error(f"第{page_count}页视频解析失败，原因：{e.message}")
+                self.error(e.http_error(f"第{page_count}页视频"))
                 raise
 
             self.trace(f"第{page_count}页解析的全部视频：{video_pagination_response['video_info_list']}")

@@ -37,7 +37,7 @@ def main():
         try:
             video_info_response = niconico.get_video_info(video_id)
         except crawler.CrawlerException as e:
-            log.error(f"视频{single_save_list[2]}解析失败，原因：{e.message}")
+            log.error(e.http_error(f"视频{single_save_list[2]}"))
             continue
 
         if video_info_response["is_delete"]:

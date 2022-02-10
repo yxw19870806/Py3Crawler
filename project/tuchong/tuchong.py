@@ -144,7 +144,7 @@ class Download(crawler.DownloadThread):
             try:
                 album_pagination_response = get_one_page_album(account_id, post_time)
             except crawler.CrawlerException as e:
-                self.error(f"{post_time}后一页相册解析失败，原因：{e.message}")
+                self.error(e.http_error(f"{post_time}后一页相册"))
                 raise
 
             self.trace(f"{post_time}后一页解析的全部相册：{album_pagination_response['album_info_list']}")
@@ -201,7 +201,7 @@ class Download(crawler.DownloadThread):
             try:
                 account_index_response = get_account_index_page(self.account_name)
             except crawler.CrawlerException as e:
-                self.error(f"主页解析失败，原因：{e.message}")
+                self.error(e.http_error("主页"))
                 raise
 
             # 获取所有可下载相册

@@ -70,7 +70,7 @@ def main():
         try:
             get_account_talks(account_id, account_list[account_id], talk_list)
         except crawler.CrawlerException as e:
-            output.print_msg(f"{account_id} 获取talk列表失败，原因：{e.message}")
+            output.print_msg(e.http_error(f"账号{account_id}"))
     if len(talk_list) > 0:
         with open(TALK_ID_FILE_PATH, "w", encoding="UTF-8") as file_handle:
             for talk_id in talk_list:

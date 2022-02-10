@@ -302,7 +302,7 @@ class Download(crawler.DownloadThread):
             try:
                 photo_pagination_response = get_one_page_photo(self.account_id, page_count)
             except crawler.CrawlerException as e:
-                self.error(f"第{page_count}页图片解析失败，原因：{e.message}")
+                self.error(e.http_error(f"第{page_count}页图片"))
                 raise
 
             self.trace(f"第{page_count}页解析的全部图片：{photo_pagination_response['photo_info_list']}")
@@ -336,7 +336,7 @@ class Download(crawler.DownloadThread):
         try:
             account_index_response = get_account_index_page(self.account_id)
         except crawler.CrawlerException as e:
-            self.error(f"首页解析失败，原因：{e.message}")
+            self.error(e.http_error("首页"))
             raise
 
         video_play_url_list = []
@@ -351,7 +351,7 @@ class Download(crawler.DownloadThread):
             try:
                 video_pagination_response = get_one_page_video(self.account_id, account_index_response["account_page_id"], since_id)
             except crawler.CrawlerException as e:
-                self.error(f"since_id：{since_id}页视频解析失败，原因：{e.message}")
+                self.error(e.http_error(f"since_id：{since_id}后一页视频"))
                 raise
 
             self.trace(f"since_id：{since_id}页解析的全部视频：{video_pagination_response['video_play_url_list']}")
@@ -413,7 +413,7 @@ class Download(crawler.DownloadThread):
         try:
             video_url = get_video_url(video_play_url)
         except crawler.CrawlerException as e:
-            self.error(f"第{video_index}个视频 {video_play_url} 解析失败，原因：{e.message}")
+            self.error(e.http_error(f"第{video_index}个视频 {video_play_url}"))
             raise
 
         if video_url == "":

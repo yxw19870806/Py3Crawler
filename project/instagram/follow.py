@@ -74,7 +74,7 @@ def main():
         try:
             account_index_response = get_account_index_page(account_name)
         except crawler.CrawlerException as e:
-            log.error(f"{account_name} 首页解析失败，原因：{e.message}")
+            log.error(e.http_error(f"账号{account_name}首页"))
             continue
 
         if account_index_response["is_follow"]:

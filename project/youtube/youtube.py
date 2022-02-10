@@ -482,7 +482,7 @@ class Download(crawler.DownloadThread):
             try:
                 video_pagination_response = get_one_page_video(self.account_id, token)
             except crawler.CrawlerException as e:
-                self.error(f"token：{token}页视频解析失败，原因：{e.message}")
+                self.error(e.http_error(f"token：{token}后一页视频"))
                 raise
 
             self.trace(f"token：{token}页解析的全部视频：{video_pagination_response['video_id_list']}")
@@ -520,7 +520,7 @@ class Download(crawler.DownloadThread):
         try:
             video_response = get_video_page(video_id)
         except crawler.CrawlerException as e:
-            self.error(f"视频{video_id}解析失败，原因：{e.message}")
+            self.error(e.http_error(f"视频{video_id}"))
             raise
 
         # 如果解析需要下载的视频时没有找到上次的记录，表示存档所在的视频已被删除，则判断数字id

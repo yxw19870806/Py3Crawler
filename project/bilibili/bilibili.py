@@ -415,7 +415,7 @@ class Download(crawler.DownloadThread):
             try:
                 album_pagination_response = get_one_page_video(self.account_id, page_count)
             except crawler.CrawlerException as e:
-                self.error(f"第{page_count}页视频解析失败，原因：{e.message}")
+                self.error(e.http_error(f"第{page_count}页视频"))
                 raise
 
             self.trace(f"第{page_count}页解析的全部视频：{album_pagination_response['video_info_list']}")
@@ -459,7 +459,7 @@ class Download(crawler.DownloadThread):
             try:
                 album_pagination_response = get_one_page_audio(self.account_id, page_count)
             except crawler.CrawlerException as e:
-                self.error(f"第{page_count}页音频解析失败，原因：{e.message}")
+                self.error(e.http_error(f"第{page_count}页音频"))
                 raise
 
             self.trace(f"第{page_count}页解析的全部音频：{album_pagination_response['audio_info_list']}")
@@ -503,7 +503,7 @@ class Download(crawler.DownloadThread):
             try:
                 album_pagination_response = get_one_page_album(self.account_id, page_count)
             except crawler.CrawlerException as e:
-                self.error(f"第{page_count}页相簿解析失败，原因：{e.message}")
+                self.error(e.http_error(f"第{page_count}页相簿"))
                 raise
 
             self.trace(f"第{page_count}页解析的全部相簿：{album_pagination_response['album_id_list']}")
@@ -541,7 +541,7 @@ class Download(crawler.DownloadThread):
         try:
             video_play_response = get_video_page(video_info["video_id"])
         except crawler.CrawlerException as e:
-            self.error(f"视频{video_info['video_id']}《{video_info['video_title']}》解析失败，原因：{e.message}")
+            self.error(e.http_error(f"视频{video_info['video_id']}《{video_info['video_title']}》"))
             raise
 
         if video_play_response["is_private"]:
@@ -596,7 +596,7 @@ class Download(crawler.DownloadThread):
         try:
             audio_info_response = get_audio_info_page(audio_info["audio_id"])
         except crawler.CrawlerException as e:
-            self.error(f"音频{audio_info['audio_id']}《{audio_info['audio_title']}》解析失败，原因：{e.message}")
+            self.error(e.http_error(f"音频{audio_info['audio_id']}《{audio_info['audio_title']}》"))
             raise
 
         self.step(f"开始下载音频{audio_info['audio_id']}《{audio_info['audio_title']}》 {audio_info_response['audio_url']}")
@@ -623,7 +623,7 @@ class Download(crawler.DownloadThread):
         try:
             album_response = get_album_page(album_id)
         except crawler.CrawlerException as e:
-            self.error(f"相簿{album_id}解析失败，原因：{e.message}")
+            self.error(e.http_error(f"相簿{album_id}"))
             raise
 
         self.trace(f"相簿{album_id}解析的全部图片：{album_response['photo_url_list']}")

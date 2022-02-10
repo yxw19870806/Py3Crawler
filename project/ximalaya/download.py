@@ -33,7 +33,7 @@ def main():
         try:
             audio_response = ximalaya.get_audio_info_page(audio_id)
         except crawler.CrawlerException as e:
-            log.error(f"解析歌曲下载地址失败，原因：{e.message}")
+            log.error(e.http_error("歌曲"))
             break
         if audio_response["is_delete"]:
             log.step("歌曲不存在，跳过")

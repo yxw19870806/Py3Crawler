@@ -50,7 +50,7 @@ def main():
         try:
             account_index_response = get_account_index_page(account)
         except crawler.CrawlerException as e:
-            output.print_msg(account + f"解析信息失败，原因：{e.message}")
+            output.print_msg(e.http_error(f"账号{account}首页"))
             continue
         file.write_file(f"{account}\t{account_index_response['account_info']}\t{account_index_response['external_url']}", result_file_path)
 

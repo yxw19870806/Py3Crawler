@@ -38,7 +38,7 @@ def main():
             try:
                 playlist_pagination_response = kuwo.get_one_page_playlist(playlist_id, page_count)
             except crawler.CrawlerException as e:
-                log.error(f"解析视频下载地址失败，原因：{e.message}")
+                log.error(e.http_error(f"第{page_count}页歌单"))
                 return
 
             audio_info_list += playlist_pagination_response["audio_info_list"]

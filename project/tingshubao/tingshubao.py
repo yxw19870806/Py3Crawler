@@ -152,7 +152,7 @@ class Download(crawler.DownloadThread):
         try:
             audio_play_response = get_audio_info_page(audio_info["audio_play_url"])
         except crawler.CrawlerException as e:
-            self.error(f"音频{audio_info['audio_id']}解析失败，原因：{e.message}")
+            self.error(e.http_error(f"音频{audio_info['audio_id']}"))
             raise
 
         audio_url = audio_play_response["audio_url"]

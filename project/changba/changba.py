@@ -201,7 +201,7 @@ class Download(crawler.DownloadThread):
             try:
                 audit_pagination_response = get_one_page_audio(user_id, page_count)
             except crawler.CrawlerException as e:
-                self.error(f"第{page_count}页歌曲解析失败，原因：{e.message}")
+                self.error(e.http_error(f"第{page_count}页歌曲"))
                 raise
 
             self.trace(f"第{page_count}页解析的全部歌曲：{audit_pagination_response['audio_info_list']}")
@@ -239,7 +239,7 @@ class Download(crawler.DownloadThread):
         try:
             audio_play_response = get_audio_play_page(audio_info["audio_key"])
         except crawler.CrawlerException as e:
-            self.error(f"歌曲{audio_info['audio_key']}《{audio_info['audio_title']}》解析失败，原因：{e.message}")
+            self.error(e.http_error(f"歌曲{audio_info['audio_key']}《{audio_info['audio_title']}》"))
             raise
 
         if audio_play_response["is_delete"]:
@@ -266,7 +266,7 @@ class Download(crawler.DownloadThread):
             try:
                 account_index_response = get_account_index_page(self.account_id)
             except crawler.CrawlerException as e:
-                self.error(f"主页解析失败，原因：{e.message}")
+                self.error(e.http_error("主页"))
                 raise
 
             # 获取所有可下载歌曲

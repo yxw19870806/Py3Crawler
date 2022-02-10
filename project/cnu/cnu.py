@@ -80,7 +80,7 @@ class CNU(crawler.Crawler):
                 try:
                     album_response = get_album_page(album_id)
                 except crawler.CrawlerException as e:
-                    log.error(f"作品{album_id}解析失败，原因：{e.message}")
+                    log.error(e.http_error(f"作品{album_id}"))
                     raise
 
                 if album_response["is_delete"]:

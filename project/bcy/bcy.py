@@ -198,7 +198,7 @@ class Download(crawler.DownloadThread):
             try:
                 album_pagination_response = get_one_page_album(self.account_id, page_since_id)
             except crawler.CrawlerException as e:
-                self.error(f"since {page_since_id}后一页作品解析失败，原因：{e.message}")
+                self.error(e.http_error(f"since: {page_since_id}后一页作品"))
                 raise
 
             self.trace(f"since {page_since_id}后一页解析的全部作品：{album_pagination_response['album_id_list']}")
@@ -228,7 +228,7 @@ class Download(crawler.DownloadThread):
         try:
             album_response = get_album_page(album_id)
         except crawler.CrawlerException as e:
-            self.error(f"作品{album_id}解析失败，原因：{e.message}")
+            self.error(e.http_error(f"作品{album_id}"))
             raise
 
         # 图片
@@ -281,7 +281,7 @@ class Download(crawler.DownloadThread):
         try:
             video_response = get_album_page_by_selenium(album_id)
         except crawler.CrawlerException as e:
-            self.error(f"作品{album_id}的视频解析失败，原因：{e.message}")
+            self.error(e.http_error(f"作品{album_id}"))
             raise
 
         self.step(f"作品{album_id}开始下载视频 {video_response['video_url']}")
