@@ -11,17 +11,13 @@ import math
 import os
 import random
 import time
-from selenium.webdriver.common.by import By
 from common import *
-from common import browser
 
 COOKIE_INFO = {}
 MAX_DAILY_VIP_DOWNLOAD_COUNT = 550
 DAILY_VIP_DOWNLOAD_COUNT_CACHE_FILE = ''
 DAILY_VIP_DOWNLOAD_COUNT = {}
 EACH_PAGE_AUDIO_COUNT = 30  # 每次请求获取的视频数量
-CACHE_FILE_PATH = os.path.join(os.path.dirname(__file__), "cache")
-TEMPLATE_HTML_PATH = os.path.join(os.path.dirname(__file__), "template", "template.html")
 
 
 # 判断是否已登录
@@ -196,19 +192,6 @@ def get_audio_info_page(audio_id):
     DAILY_VIP_DOWNLOAD_COUNT[day] += 1
     file.write_file(tool.json_encode(DAILY_VIP_DOWNLOAD_COUNT), DAILY_VIP_DOWNLOAD_COUNT_CACHE_FILE, file.WRITE_FILE_TYPE_REPLACE)
 
-    # # 读取模板并替换相关参数
-    # template_html = file.read_file(TEMPLATE_HTML_PATH)
-    # template_html = template_html.replace("%%URL%%", decrypt_url)
-    # cache_html_path = os.path.join(CACHE_FILE_PATH, f"{audio_id}.html")
-    # file.write_file(template_html, cache_html_path, file.WRITE_FILE_TYPE_REPLACE)
-    # # 使用喜马拉雅的加密JS方法解密url地址
-    # with browser.Chrome("file:///" + os.path.realpath(cache_html_path)) as chrome:
-    #     audio_url = chrome.find_element(by=By.ID, value="result").get_attribute('value')
-    # # 删除临时模板文件
-    # path.delete_dir_or_file(cache_html_path)
-    # if not audio_url:
-    #     raise crawler.CrawlerException(f"url{decrypt_url}解密失败")
-
     # 使用喜马拉雅的加密JS方法解密url地址
     js_code = file.read_file(os.path.join("template", "aes.js")) + "\n" + file.read_file(os.path.join("template", "mode-ecb.js")) + "\n"
     js_code += """
@@ -238,7 +221,7 @@ class XiMaLaYa(crawler.Crawler):
     def __init__(self, sys_config=None, **kwargs):
         if sys_config is None:
             sys_config = {}
-        global COOKIE_INFO, DAILY_VIP_DOWNLOAD_COUNT, DAILY_VIP_DOWNLOAD_COUNT_CACHE_FILE, CACHE_FILE_PATH, IS_LOGIN
+        global COOKIE_INFO, DAILY_VIP_DOWNLOAD_COUNT, DAILY_VIP_DOWNLOAD_COUNT_CACHE_FILE, IS_LOGIN
         # 设置APP目录
         crawler.PROJECT_APP_PATH = os.path.abspath(os.path.dirname(__file__))
 
@@ -258,9 +241,6 @@ class XiMaLaYa(crawler.Crawler):
         DAILY_VIP_DOWNLOAD_COUNT = tool.json_decode(file.read_file(DAILY_VIP_DOWNLOAD_COUNT_CACHE_FILE))
         if not isinstance(DAILY_VIP_DOWNLOAD_COUNT, dict):
             DAILY_VIP_DOWNLOAD_COUNT = {}
-
-        # 临时文件目录
-        CACHE_FILE_PATH = self.cache_data_path
 
         # 检测登录状态
         if check_login():
