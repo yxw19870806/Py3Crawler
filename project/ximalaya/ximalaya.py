@@ -193,7 +193,8 @@ def get_audio_info_page(audio_id):
     file.write_file(tool.json_encode(DAILY_VIP_DOWNLOAD_COUNT), DAILY_VIP_DOWNLOAD_COUNT_CACHE_FILE, file.WRITE_FILE_TYPE_REPLACE)
 
     # 使用喜马拉雅的加密JS方法解密url地址
-    js_code = file.read_file(os.path.join("template", "aes.js")) + "\n" + file.read_file(os.path.join("template", "mode-ecb.js")) + "\n"
+    js_code = file.read_file(os.path.join(crawler.PROJECT_APP_PATH, "js", "aes.js"))
+    js_code += file.read_file(os.path.join(crawler.PROJECT_APP_PATH, "js", "mode-ecb.js"))
     js_code += """
     function encrypt_url(encrypt_url) {
         return CryptoJS.AES.decrypt(

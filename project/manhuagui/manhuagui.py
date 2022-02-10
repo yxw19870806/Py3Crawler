@@ -86,7 +86,7 @@ def get_chapter_page(comic_id, chapter_id):
         raise crawler.CrawlerException("页面截取脚本代码失败\n" + chapter_response_content)
 
     # 使用网站的加密JS方法解密图片地址
-    js_code = file.read_file(os.path.join("template", "lz-string.js"))
+    js_code = file.read_file(os.path.join(crawler.PROJECT_APP_PATH, "js", "lz-string.js"))
     js_code += """
     var photoList = [];
     var SMH = {
