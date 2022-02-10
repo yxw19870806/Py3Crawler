@@ -248,7 +248,7 @@ class Download(crawler.DownloadThread):
 
         self.step(f"开始下载歌曲{audio_info['audio_key']}《{audio_info['audio_title']}》 {audio_play_response['audio_url']}")
 
-        file_path = os.path.join(self.main_thread.audio_download_path, self.display_name, f"%010d - {path.filter_text(audio_info['audio_title'])}.{net.get_file_type(audio_play_response['audio_url'])}" % audio_info["audio_id"])
+        file_path = os.path.join(self.main_thread.audio_download_path, self.display_name, f"%010d - {path.filter_text(audio_info['audio_title'])}.{net.get_file_extension(audio_play_response['audio_url'])}" % audio_info["audio_id"])
         save_file_return = net.download(audio_play_response["audio_url"], file_path)
         if save_file_return["status"] == 1:
             self.total_audio_count += 1  # 计数累加

@@ -229,7 +229,7 @@ class Download(crawler.DownloadThread):
             photo_url = get_photo_url(photo_url)
             self.step(f"日志《{blog_info['blog_title']}》 开始下载第{photo_index}张图片 {photo_url}")
 
-            file_path = os.path.join(photo_path, f"%02d.{net.get_file_type(photo_url, 'jpg')}" % photo_index)
+            file_path = os.path.join(photo_path, f"%02d.{net.get_file_extension(photo_url, 'jpg')}" % photo_index)
             save_file_return = net.download(photo_url, file_path)
             if save_file_return["status"] == 1:
                 if weibo.check_photo_invalid(file_path):

@@ -41,7 +41,7 @@ def main():
             log.step("歌曲不存在，跳过")
             continue
         # 选择下载目录
-        file_type = net.get_file_type(audio_response["audio_url"])
+        file_extension = net.get_file_extension(audio_response["audio_url"])
         options = {
             "initialdir": fiveSing_class.audio_download_path,
             "initialfile": f"%08d - {path.filter_text(audio_response['audio_title'])}.{file_type}" % int(audio_id),

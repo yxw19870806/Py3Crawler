@@ -215,7 +215,7 @@ class Download(crawler.DownloadThread):
             self.main_thread_check()  # 检测主线程运行状态
             self.step(f"漫画{chapter_info['chapter_id']} {chapter_info['group_name']}《{chapter_info['chapter_name']}》开始下载第{photo_index}张图片 {photo_url}")
 
-            photo_file_path = os.path.join(chapter_path, f"%03d.{net.get_file_type(photo_url)}" % photo_index)
+            photo_file_path = os.path.join(chapter_path, f"%03d.{net.get_file_extension(photo_url)}" % photo_index)
             save_file_return = net.download(photo_url, photo_file_path, header_list={"Referer": f"https://www.manhuagui.com/comic/{self.comic_id}/{chapter_info['chapter_id']}.html"}, is_auto_proxy=False)
             if save_file_return["status"] == 1:
                 self.total_photo_count += 1  # 计数累加

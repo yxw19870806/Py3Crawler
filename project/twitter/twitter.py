@@ -220,8 +220,8 @@ def get_video_play_page(tweet_id):
         file_url = crawler.get_json_value(video_play_response.json_data, "track", "vmapUrl", default_value="", type_check=str)
         if not file_url:
             raise
-    file_type = net.get_file_type(file_url)
-    if file_type == "m3u8":  # https://api.twitter.com/1.1/videos/tweet/config/996368816174084097.json
+    file_extension = net.get_file_extension(file_url)
+    if file_extension == "m3u8":  # https://api.twitter.com/1.1/videos/tweet/config/996368816174084097.json
         file_url_protocol, file_url_path = urllib.parse.splittype(file_url)
         file_url_host = urllib.parse.splithost(file_url_path)[0]
         m3u8_file_response = net.request(file_url, method="GET")
@@ -246,7 +246,7 @@ def get_video_play_page(tweet_id):
         result["video_url"] = []
         for ts_file_path in ts_url_find:
             result["video_url"].append(f"{file_url_protocol}://{file_url_host}{ts_file_path}")
-    elif file_type == "vmap":
+    elif file_extension == "vmap":
         vmap_file_response = net.request(file_url, method="GET")
         if vmap_file_response.status != net.HTTP_RETURN_CODE_SUCCEED:
             raise crawler.CrawlerException(f"vmap文件 {file_url} 访问失败，{crawler.request_failre(vmap_file_response.status)}")
@@ -419,7 +419,7 @@ class Download(crawler.DownloadThread):
             self.main_thread_check()  # 检测主线程运行状态
             self.step(f"开始下载推特{media_info['blog_id']}的第{photo_index}张图片 {photo_url}")
 
-            photo_file_path = os.path.join(self.main_thread.photo_download_path, self.account_name, f"%019d_%02d.{net.get_file_type(photo_url)}" % (media_info["blog_id"], photo_index))
+            photo_file_path = os.path.join(self.main_thread.photo_download_path, self.account_name, f"%019d_%02d.{net.get_file_extension(photo_url)}" % (media_info["blog_id"], photo_index))
             for retry_count in range(0, 5):
                 save_file_return = net.download(photo_url, photo_file_path)
                 if save_file_return["status"] == 1:
@@ -443,9 +443,9 @@ class Download(crawler.DownloadThread):
             self.step(f"开始下载推特{media_info['blog_id']}的第{video_index}个视频 {video_url}")
 
             if len(media_info["video_url_list"]) > 1:
-                video_file_path = os.path.join(self.main_thread.video_download_path, self.account_name, f"%019d_%02d.{net.get_file_type(video_url)}" % (media_info["blog_id"], video_index))
+                video_file_path = os.path.join(self.main_thread.video_download_path, self.account_name, f"%019d_%02d.{net.get_file_extension(video_url)}" % (media_info["blog_id"], video_index))
             else:
-                video_file_path = os.path.join(self.main_thread.video_download_path, self.account_name, f"%019d.{net.get_file_type(video_url)}" % media_info["blog_id"])
+                video_file_path = os.path.join(self.main_thread.video_download_path, self.account_name, f"%019d.{net.get_file_extension(video_url)}" % media_info["blog_id"])
             save_file_return = net.download(video_url, video_file_path)
             if save_file_return["status"] == 1:
                 self.temp_path_list.append(video_file_path)  # 设置临时目录

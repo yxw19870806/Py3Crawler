@@ -176,7 +176,7 @@ class Favorite(crawler.Crawler):
                 for photo_url in blog_info["photo_url_list"]:
                     log.step(f"微博{blog_info['blog_id']}开始下载第{photo_count}张图片 {photo_url}")
 
-                    file_path = os.path.join(photo_path, f"{photo_count}.{net.get_file_type(photo_url)}")
+                    file_path = os.path.join(photo_path, f"{photo_count}.{net.get_file_extension(photo_url)}")
                     save_file_return = net.download(photo_url, file_path)
                     if save_file_return["status"] == 1:
                         if weibo.check_photo_invalid(file_path):

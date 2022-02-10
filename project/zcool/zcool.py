@@ -222,7 +222,7 @@ class Download(crawler.DownloadThread):
             photo_url = get_photo_url(photo_url)
             self.step(f"开始下载作品{album_info['album_id']}《{album_info['album_title']}》的第{photo_index}张图片 {photo_url}")
 
-            file_path = os.path.join(album_path, f"%02d.{net.get_file_type(photo_url)}" % photo_index)
+            file_path = os.path.join(album_path, f"%02d.{net.get_file_extension(photo_url)}" % photo_index)
             save_file_return = net.download(photo_url, file_path)
             if save_file_return["status"] == 1:
                 self.total_photo_count += 1  # 计数累加
