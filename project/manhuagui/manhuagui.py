@@ -6,6 +6,7 @@ https://www.manhuagui.com/
 email: hikaru870806@hotmail.com
 如有问题或建议请联系
 """
+import execjs
 import lzstring
 import os
 import time
@@ -85,18 +86,45 @@ def get_chapter_page(comic_id, chapter_id):
     if chapter_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(chapter_response.status))
     chapter_response_content = chapter_response.data.decode(errors="ignore")
-    script_code = tool.find_sub_string(chapter_response_content, 'window["\\x65\\x76\\x61\\x6c"]', "</script>", 1)
+    script_code = tool.find_sub_string(chapter_response_content, 'window["\\x65\\x76\\x61\\x6c"]', "</script>")
     if not script_code:
         raise crawler.CrawlerException("页面截取脚本代码失败\n" + chapter_response_content)
-    template_html = file.read_file(TEMPLATE_HTML_PATH)
-    template_html = template_html.replace("%%SCRIPT_CODE%%", script_code)
-    cache_html_path = os.path.realpath(os.path.join(CACHE_FILE_PATH, f"{comic_id}.html"))
-    file.write_file(template_html, cache_html_path, file.WRITE_FILE_TYPE_REPLACE)
-    with browser.Chrome("file:///" + cache_html_path) as chrome:
-        result_photo_list = chrome.find_element(by=By.ID, value="result").text
-    # 删除临时模板文件
-    path.delete_dir_or_file(cache_html_path)
-    photo_list = result_photo_list.split("\n")
+
+    # template_html = file.read_file(TEMPLATE_HTML_PATH)
+    # template_html = template_html.replace("%%SCRIPT_CODE%%", script_code)
+    # cache_html_path = os.path.realpath(os.path.join(CACHE_FILE_PATH, f"{comic_id}.html"))
+    # file.write_file(template_html, cache_html_path, file.WRITE_FILE_TYPE_REPLACE)
+    # with browser.Chrome("file:///" + cache_html_path) as chrome:
+    #     result_photo_list = chrome.find_element(by=By.ID, value="result").text
+    # # 删除临时模板文件
+    # path.delete_dir_or_file(cache_html_path)
+    # photo_list = result_photo_list.split("\n")
+    # for photo_url in photo_list:
+    #     result["photo_url_list"].append("https://i.hamreus.com" + photo_url)
+    js_code = file.read_file(os.path.join("template", "lz-string.js"))
+    js_code += """
+    var photoList = [];
+    var SMH = {
+        'imgData': function (e) {
+            for(var i=0; i< e.files.length; i++) {
+                photoList.push(e.path + e.files[i]);
+            }
+            return SMH;
+        },
+        'preInit': function (e) {}
+    }
+    function getPhotoLists() {
+        return photoList;
+    }    
+    """
+    js_code += "eval" + script_code
+
+    try:
+        photo_list = execjs.compile(js_code).call("getPhotoLists")
+    except execjs._exceptions.ProgramError:
+        raise crawler.CrawlerException("脚本代码解密失败\n" + js_code)
+    if len(photo_list) == 0:
+        raise crawler.CrawlerException("脚本代码执行无效\n" + js_code)
     for photo_url in photo_list:
         result["photo_url_list"].append("https://i.hamreus.com" + photo_url)
     return result
