@@ -44,7 +44,7 @@ def main():
     try:
         badges_detail_url_list = steam.get_self_uncompleted_account_badges(steam_class.account_id)
     except crawler.CrawlerException as e:
-        output.print_msg(f"个人徽章首页解析失败，原因：{e.message}")
+        output.print_msg(e.http_error("个人徽章首页"))
         raise
     for badges_detail_url in badges_detail_url_list:
         game_id = badges_detail_url.split("/")[-2]
@@ -56,7 +56,7 @@ def main():
         try:
             wanted_card_list = steam.get_self_account_badge_card(badges_detail_url)
         except crawler.CrawlerException as e:
-            output.print_msg(f"徽章{badges_detail_url}解析失败，原因：{e.message}")
+            output.print_msg(e.http_error(f"徽章{badges_detail_url}"))
             continue
         if len(wanted_card_list) > 0:
             if game_id in deleted_app_list:
@@ -66,7 +66,7 @@ def main():
             try:
                 market_card_list = steam.get_market_game_trade_card_price(game_id)
             except crawler.CrawlerException as e:
-                output.print_msg(f"游戏id {game_id}的市场解析失败，原因：{e.message}")
+                output.print_msg(e.http_error(f"游戏{game_id}的市场"))
                 continue
             card_hash_name_dict = {}
             for card_hash_name in market_card_list:

@@ -19,7 +19,7 @@ def main():
     try:
         owned_game_list = steam.get_account_owned_app_list(steam_class.account_id)
     except crawler.CrawlerException as e:
-        output.print_msg(f"个人游戏主页解析失败，原因：{e.message}")
+        output.print_msg(e.http_error("个人游戏主页"))
         raise
 
     # 已检测过的游戏列表
@@ -46,7 +46,7 @@ def main():
         try:
             game_data = steam.get_game_store_index(game_id)
         except crawler.CrawlerException as e:
-            output.print_msg(f"游戏 {game_id} 解析失败，原因：{e.message}")
+            output.print_msg(e.http_error(f"游戏 {game_id}"))
             raise
 
         # 已删除
