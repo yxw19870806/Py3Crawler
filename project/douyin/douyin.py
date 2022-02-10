@@ -15,7 +15,7 @@ from selenium.webdriver.common.by import By
 
 EACH_PAGE_VIDEO_COUNT = 21
 CACHE_FILE_PATH = os.path.join(os.path.dirname(__file__), "cache")
-TEMPLATE_HTML_PATH = os.path.join(os.path.dirname(__file__), "template.html")
+TEMPLATE_HTML_PATH = os.path.join(os.path.dirname(__file__), "html/template.html")
 USER_AGENT = net._random_user_agent()
 
 
