@@ -383,7 +383,7 @@ class Download(crawler.DownloadThread):
     def crawl_photo(self, photo_info):
         self.step(f"开始下载图片{photo_info['photo_id']} {photo_info['photo_url']}")
 
-        photo_file_path = os.path.join(self.main_thread.photo_download_path, self.display_name, f"%16d.{net.get_file_type(photo_info['photo_url'], 'jpg')}" % photo_info["photo_id"])
+        photo_file_path = os.path.join(self.main_thread.photo_download_path, self.display_name, f"%16d.{net.get_file_extension(photo_info['photo_url'], 'jpg')}" % photo_info["photo_id"])
         save_file_return = net.download(photo_info["photo_url"], photo_file_path)
         if save_file_return["status"] == 1:
             if check_photo_invalid(photo_file_path):

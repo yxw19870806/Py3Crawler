@@ -91,7 +91,7 @@ def main():
                     if len(video_part_info["video_url_list"]) > 1:
                         video_name += f" ({video_split_index})"
                     video_name = path.filter_text(video_name)
-                    video_name = f"{video_name}.{net.get_file_type(video_part_url)}"
+                    video_name = f"{video_name}.{net.get_file_extension(video_part_url)}"
                     file_path = os.path.join(root_dir, video_name)
 
                     # 开始下载

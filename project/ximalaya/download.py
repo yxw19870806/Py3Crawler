@@ -39,7 +39,7 @@ def main():
             log.step("歌曲不存在，跳过")
             continue
         # 选择下载目录
-        file_type = net.get_file_type(audio_response["audio_url"])
+        file_extension = net.get_file_extension(audio_response["audio_url"])
         options = {
             "initialdir": ximalaya_class.audio_download_path,
             "initialfile": f"{audio_id} - {path.filter_text(audio_response['audio_title'])}.{file_type}",

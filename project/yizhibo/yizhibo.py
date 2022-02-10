@@ -209,7 +209,7 @@ class Download(crawler.DownloadThread):
         photo_index = int(self.single_save_data[3]) + 1
         self.step(f"开始下载第{photo_index}张图片 {photo_info['photo_url']}")
 
-        photo_file_path = os.path.join(self.main_thread.photo_download_path, self.display_name, f"%04d.{net.get_file_type(photo_info['photo_url'])}" % photo_index)
+        photo_file_path = os.path.join(self.main_thread.photo_download_path, self.display_name, f"%04d.{net.get_file_extension(photo_info['photo_url'])}" % photo_index)
         save_file_return = net.download(photo_info["photo_url"], photo_file_path)
         if save_file_return["status"] == 1:
             self.total_photo_count += 1  # 计数累加

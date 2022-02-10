@@ -210,7 +210,7 @@ class Download(crawler.DownloadThread):
             photo_url = get_photo_url(photo_url)
             self.step(f"开始下载日志{blog_id}的第{photo_index}张图片 {photo_url}")
 
-            file_path = os.path.join(self.main_thread.photo_download_path, self.account_name, f"%09d_%02d.{net.get_file_type(photo_url)}" % (blog_id, photo_index))
+            file_path = os.path.join(self.main_thread.photo_download_path, self.account_name, f"%09d_%02d.{net.get_file_extension(photo_url)}" % (blog_id, photo_index))
             save_file_return = net.download(photo_url, file_path)
             if save_file_return["status"] == 1:
                 if check_photo_invalid(save_file_return["file_path"]):

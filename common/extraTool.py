@@ -85,8 +85,8 @@ def sort_file(source_path: str, destination_path: str, start_count: int, file_na
         # 倒叙排列
         for file_name in file_list:
             start_count += 1
-            file_type = os.path.splitext(file_name)[1]  # 包括 .扩展名
-            new_file_name = str(("%0" + str(file_name_length) + "d") % start_count) + file_type
+            file_extension = os.path.splitext(file_name)[1]  # 包括 .扩展名
+            new_file_name = str(("%0" + str(file_name_length) + "d") % start_count) + file_extension
             path.copy_file(os.path.join(source_path, file_name), os.path.join(destination_path, new_file_name))
         # 删除临时文件夹
         path.delete_dir_or_file(source_path)

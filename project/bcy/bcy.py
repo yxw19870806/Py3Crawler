@@ -256,10 +256,10 @@ class Download(crawler.DownloadThread):
             # 禁用指定分辨率
             self.step(f"作品{album_id}开始下载第{photo_index}张图片 {photo_url}")
 
-            file_type = net.get_file_type(photo_url, "jpg")
-            if file_type == 'image':
-                file_type = "jpg"
-            file_path = os.path.join(album_path, f"%03d.{file_type}" % photo_index)
+            file_extension = net.get_file_extension(photo_url, "jpg")
+            if file_extension == 'image':
+                file_extension = "jpg"
+            file_path = os.path.join(album_path, f"%03d.{file_extension}" % photo_index)
             for retry_count in range(0, 10):
                 save_file_return = net.download(photo_url, file_path)
                 if save_file_return["status"] == 1:
