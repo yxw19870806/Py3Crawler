@@ -26,7 +26,7 @@ def get_bbs_forum_url_list(index_url):
 def get_one_forum_page_thread_url_list(forum_url):
     forum_response = net.request(forum_url, method="GET")
     if forum_response.status == net.HTTP_RETURN_CODE_SUCCEED:
-        forum_page = tool.find_sub_string(forum_response.data.decode(errors="ignore"), '<div id="threadlist"', '<div id="filter_special_menu"', 1)
+        forum_page = tool.find_sub_string(forum_response.data.decode(errors="ignore"), '<div id="threadlist"', '<div id="filter_special_menu"', tool.SUB_STRING_MODE_ONLY_START)
         thread_find = re.findall('<a href="(thread-\d*-1-1.\w*)" onclick="atarget\(this\)" class="s xst">([\S|\s]*?)</a>', forum_page)
         host = forum_url[0: forum_url.rfind("/") + 1]
         thread_url_list = {}
