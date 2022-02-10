@@ -6,6 +6,7 @@ https://www.ximalaya.com/
 email: hikaru870806@hotmail.com
 如有问题或建议请联系
 """
+import execjs
 import math
 import os
 import random
@@ -191,23 +192,44 @@ def get_audio_info_page(audio_id):
             raise crawler.CrawlerException("达到vip每日限制")
         raise
 
-    # 读取模板并替换相关参数
-    template_html = file.read_file(TEMPLATE_HTML_PATH)
-    template_html = template_html.replace("%%URL%%", decrypt_url)
-    cache_html_path = os.path.join(CACHE_FILE_PATH, f"{audio_id}.html")
-    file.write_file(template_html, cache_html_path, file.WRITE_FILE_TYPE_REPLACE)
-    # 使用喜马拉雅的加密JS方法解密url地址
-    with browser.Chrome("file:///" + os.path.realpath(cache_html_path)) as chrome:
-        audio_url = chrome.find_element(by=By.ID, value="result").get_attribute('value')
-    # 删除临时模板文件
-    path.delete_dir_or_file(cache_html_path)
-    if not audio_url:
-        raise crawler.CrawlerException(f"url{decrypt_url}解密失败")
-    result["audio_url"] = audio_url
-
     # 保存每日vip下载计数
     DAILY_VIP_DOWNLOAD_COUNT[day] += 1
     file.write_file(tool.json_encode(DAILY_VIP_DOWNLOAD_COUNT), DAILY_VIP_DOWNLOAD_COUNT_CACHE_FILE, file.WRITE_FILE_TYPE_REPLACE)
+
+    # # 读取模板并替换相关参数
+    # template_html = file.read_file(TEMPLATE_HTML_PATH)
+    # template_html = template_html.replace("%%URL%%", decrypt_url)
+    # cache_html_path = os.path.join(CACHE_FILE_PATH, f"{audio_id}.html")
+    # file.write_file(template_html, cache_html_path, file.WRITE_FILE_TYPE_REPLACE)
+    # # 使用喜马拉雅的加密JS方法解密url地址
+    # with browser.Chrome("file:///" + os.path.realpath(cache_html_path)) as chrome:
+    #     audio_url = chrome.find_element(by=By.ID, value="result").get_attribute('value')
+    # # 删除临时模板文件
+    # path.delete_dir_or_file(cache_html_path)
+    # if not audio_url:
+    #     raise crawler.CrawlerException(f"url{decrypt_url}解密失败")
+
+    # 使用喜马拉雅的加密JS方法解密url地址
+    js_code = file.read_file(os.path.join("template", "aes.js")) + "\n" + file.read_file(os.path.join("template", "mode-ecb.js")) + "\n"
+    js_code += """
+    function encrypt_url(encrypt_url) {
+        return CryptoJS.AES.decrypt(
+            {
+                ciphertext: CryptoJS.enc.Base64.parse(encrypt_url)
+            },
+            CryptoJS.enc.Hex.parse("aaad3e4fd540b0f79dca95606e72bf93"),
+            {
+                mode: CryptoJS.mode.ECB,
+                padding: CryptoJS.pad.Pkcs7
+            }
+        ).toString(CryptoJS.enc.Utf8);
+    }
+    """
+    try:
+        audio_url = execjs.compile(js_code).call("encrypt_url", decrypt_url)
+    except execjs._exceptions.ProgramError:
+        raise crawler.CrawlerException(f"url{decrypt_url}解密失败")
+    result["audio_url"] = audio_url
 
     return result
 
