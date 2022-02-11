@@ -151,12 +151,22 @@ class SinaBlog(crawler.Crawler):
 class Download(crawler.DownloadThread):
     def __init__(self, single_save_data, main_thread):
         crawler.DownloadThread.__init__(self, single_save_data, main_thread)
-        self.account_id = self.single_save_data[0]
+        self.index_key = self.single_save_data[0]  # account id
         if len(self.single_save_data) > 2 and self.single_save_data[2]:
             self.display_name = self.single_save_data[2]
         else:
-            self.display_name = self.account_id
+            self.display_name = self.single_save_data[0]
         self.step("开始")
+
+    def _run(self):
+        # 获取所有可下载日志
+        blog_info_list = self.get_crawl_list()
+        self.step(f"需要下载的全部日志解析完毕，共{len(blog_info_list)}个")
+
+        # 从最早的日志开始下载
+        while len(blog_info_list) > 0:
+            self.crawl_blog(blog_info_list.pop())
+            self.main_thread_check()  # 检测主线程运行状态
 
     # 获取所有可下载日志
     def get_crawl_list(self):
@@ -170,7 +180,7 @@ class Download(crawler.DownloadThread):
             self.step(f"开始解析第{page_count}页日志")
 
             try:
-                blog_pagination_response = get_one_page_blog(self.account_id, page_count)
+                blog_pagination_response = get_one_page_blog(self.index_key, page_count)
             except crawler.CrawlerException as e:
                 self.error(e.http_error(f"第{page_count}页日志"))
                 raise
@@ -247,28 +257,6 @@ class Download(crawler.DownloadThread):
         # 日志内图片全部下载完毕
         self.temp_path_list = []  # 临时目录设置清除
         self.single_save_data[1] = str(blog_info["blog_time"])  # 设置存档记录
-
-    def run(self):
-        try:
-            # 获取所有可下载日志
-            blog_info_list = self.get_crawl_list()
-            self.step(f"需要下载的全部日志解析完毕，共{len(blog_info_list)}个")
-
-            # 从最早的日志开始下载
-            while len(blog_info_list) > 0:
-                self.crawl_blog(blog_info_list.pop())
-                self.main_thread_check()  # 检测主线程运行状态
-        except (SystemExit, KeyboardInterrupt) as e:
-            if isinstance(e, SystemExit) and e.code == 1:
-                self.error("异常退出")
-            else:
-                self.step("提前退出")
-        except Exception as e:
-            self.error("未知异常")
-            self.error(str(e) + "\n" + traceback.format_exc(), False)
-
-        self.main_thread.save_data.pop(self.account_id)
-        self.done()
 
 
 if __name__ == "__main__":

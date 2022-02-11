@@ -280,12 +280,37 @@ class Weibo(crawler.Crawler):
 class Download(crawler.DownloadThread):
     def __init__(self, single_save_data, main_thread):
         crawler.DownloadThread.__init__(self, single_save_data, main_thread)
-        self.account_id = self.single_save_data[0]
+        self.index_key = self.single_save_data[0]  # account id
         if len(self.single_save_data) >= 5 and self.single_save_data[4]:
             self.display_name = self.single_save_data[4]
         else:
             self.display_name = self.single_save_data[0]
         self.step("开始")
+
+    def _run(self):
+        # 图片下载
+        if self.main_thread.is_download_photo:
+            # 获取所有可下载图片
+            photo_info_list = self.get_crawl_photo_list()
+            self.step(f"需要下载的全部图片解析完毕，共{len(photo_info_list)}张")
+
+            # 从最早的图片开始下载
+            while len(photo_info_list) > 0:
+                if not self.crawl_photo(photo_info_list.pop()):
+                    break
+                self.main_thread_check()  # 检测主线程运行状态
+
+        # 视频下载
+        if self.main_thread.is_download_video:
+            # 获取所有可下载视频
+            video_play_url_list = self.get_crawl_video_list()
+            self.step(f"需要下载的全部视频片解析完毕，共{len(video_play_url_list)}个")
+
+            # 从最早的图片开始下载
+            while len(video_play_url_list) > 0:
+                if not self.crawl_video(video_play_url_list.pop()):
+                    break
+                self.main_thread_check()  # 检测主线程运行状态
 
     # 获取所有可下载图片
     def get_crawl_photo_list(self):
@@ -300,7 +325,7 @@ class Download(crawler.DownloadThread):
 
             # 获取指定一页图片的信息
             try:
-                photo_pagination_response = get_one_page_photo(self.account_id, page_count)
+                photo_pagination_response = get_one_page_photo(self.index_key, page_count)
             except crawler.CrawlerException as e:
                 self.error(e.http_error(f"第{page_count}页图片"))
                 raise
@@ -334,7 +359,7 @@ class Download(crawler.DownloadThread):
     def get_crawl_video_list(self):
         # 获取账号首页
         try:
-            account_index_response = get_account_index_page(self.account_id)
+            account_index_response = get_account_index_page(self.index_key)
         except crawler.CrawlerException as e:
             self.error(e.http_error("首页"))
             raise
@@ -349,7 +374,7 @@ class Download(crawler.DownloadThread):
 
             # 获取指定时间点后的一页视频信息
             try:
-                video_pagination_response = get_one_page_video(self.account_id, account_index_response["account_page_id"], since_id)
+                video_pagination_response = get_one_page_video(self.index_key, account_index_response["account_page_id"], since_id)
             except crawler.CrawlerException as e:
                 self.error(e.http_error(f"since_id：{since_id}后一页视频"))
                 raise
@@ -437,43 +462,6 @@ class Download(crawler.DownloadThread):
         self.single_save_data[2] = str(video_index)  # 设置存档记录
         self.single_save_data[3] = video_play_url  # 设置存档记录
         return True
-
-    def run(self):
-        try:
-            # 图片下载
-            if self.main_thread.is_download_photo:
-                # 获取所有可下载图片
-                photo_info_list = self.get_crawl_photo_list()
-                self.step(f"需要下载的全部图片解析完毕，共{len(photo_info_list)}张")
-
-                # 从最早的图片开始下载
-                while len(photo_info_list) > 0:
-                    if not self.crawl_photo(photo_info_list.pop()):
-                        break
-                    self.main_thread_check()  # 检测主线程运行状态
-
-            # 视频下载
-            if self.main_thread.is_download_video:
-                # 获取所有可下载视频
-                video_play_url_list = self.get_crawl_video_list()
-                self.step(f"需要下载的全部视频片解析完毕，共{len(video_play_url_list)}个")
-
-                # 从最早的图片开始下载
-                while len(video_play_url_list) > 0:
-                    if not self.crawl_video(video_play_url_list.pop()):
-                        break
-                    self.main_thread_check()  # 检测主线程运行状态
-        except (SystemExit, KeyboardInterrupt) as e:
-            if isinstance(e, SystemExit) and e.code == 1:
-                self.error("异常退出")
-            else:
-                self.step("提前退出")
-        except Exception as e:
-            self.error("未知异常")
-            self.error(str(e) + "\n" + traceback.format_exc(), False)
-
-        self.main_thread.save_data.pop(self.account_id)
-        self.done()
 
 
 if __name__ == "__main__":

@@ -394,12 +394,49 @@ class BiliBili(crawler.Crawler):
 class Download(crawler.DownloadThread):
     def __init__(self, single_save_data, main_thread):
         crawler.DownloadThread.__init__(self, single_save_data, main_thread)
-        self.account_id = self.single_save_data[0]
+        self.index_key = self.single_save_data[0]  # account id
         if len(self.single_save_data) >= 5 and self.single_save_data[4]:
             self.display_name = self.single_save_data[4]
         else:
             self.display_name = self.single_save_data[0]
         self.step("开始")
+
+    def _run(self):
+        # 视频下载
+        if self.main_thread.is_download_video:
+            # 获取所有可下载视频
+            video_info_list = self.get_crawl_video_list()
+            self.step(f"需要下载的全部视频解析完毕，共{len(video_info_list)}个")
+
+            # 从最早的视频开始下载
+            while len(video_info_list) > 0:
+                if not self.crawl_video(video_info_list.pop()):
+                    break
+                self.main_thread_check()  # 检测主线程运行状态
+
+        # 音频下载
+        if self.main_thread.is_download_audio:
+            # 获取所有可下载音频
+            audio_info_list = self.get_crawl_audio_list()
+            self.step(f"需要下载的全部音频解析完毕，共{len(audio_info_list)}个")
+
+            # 从最早的相簿开始下载
+            while len(audio_info_list) > 0:
+                if not self.crawl_audio(audio_info_list.pop()):
+                    break
+                self.main_thread_check()  # 检测主线程运行状态
+
+        # 图片下载
+        if self.main_thread.is_download_photo:
+            # 获取所有可下载相簿
+            album_id_list = self.get_crawl_photo_list()
+            self.step(f"需要下载的全部相簿解析完毕，共{len(album_id_list)}个")
+
+            # 从最早的相簿开始下载
+            while len(album_id_list) > 0:
+                if not self.crawl_photo(album_id_list.pop()):
+                    break
+                self.main_thread_check()  # 检测主线程运行状态
 
     # 获取所有可下载视频
     def get_crawl_video_list(self):
@@ -413,7 +450,7 @@ class Download(crawler.DownloadThread):
 
             # 获取一页相簿
             try:
-                album_pagination_response = get_one_page_video(self.account_id, page_count)
+                album_pagination_response = get_one_page_video(self.index_key, page_count)
             except crawler.CrawlerException as e:
                 self.error(e.http_error(f"第{page_count}页视频"))
                 raise
@@ -457,7 +494,7 @@ class Download(crawler.DownloadThread):
 
             # 获取一页相簿
             try:
-                album_pagination_response = get_one_page_audio(self.account_id, page_count)
+                album_pagination_response = get_one_page_audio(self.index_key, page_count)
             except crawler.CrawlerException as e:
                 self.error(e.http_error(f"第{page_count}页音频"))
                 raise
@@ -501,7 +538,7 @@ class Download(crawler.DownloadThread):
 
             # 获取一页相簿
             try:
-                album_pagination_response = get_one_page_album(self.account_id, page_count)
+                album_pagination_response = get_one_page_album(self.index_key, page_count)
             except crawler.CrawlerException as e:
                 self.error(e.http_error(f"第{page_count}页相簿"))
                 raise
@@ -650,55 +687,6 @@ class Download(crawler.DownloadThread):
         self.temp_path_list = []  # 临时目录设置清除
         self.single_save_data[3] = str(album_id)  # 设置存档记录
         return True
-
-    def run(self):
-        try:
-            # 视频下载
-            if self.main_thread.is_download_video:
-                # 获取所有可下载视频
-                video_info_list = self.get_crawl_video_list()
-                self.step(f"需要下载的全部视频解析完毕，共{len(video_info_list)}个")
-
-                # 从最早的视频开始下载
-                while len(video_info_list) > 0:
-                    if not self.crawl_video(video_info_list.pop()):
-                        break
-                    self.main_thread_check()  # 检测主线程运行状态
-
-            # 音频下载
-            if self.main_thread.is_download_audio:
-                # 获取所有可下载音频
-                audio_info_list = self.get_crawl_audio_list()
-                self.step(f"需要下载的全部音频解析完毕，共{len(audio_info_list)}个")
-
-                # 从最早的相簿开始下载
-                while len(audio_info_list) > 0:
-                    if not self.crawl_audio(audio_info_list.pop()):
-                        break
-                    self.main_thread_check()  # 检测主线程运行状态
-
-            # 图片下载
-            if self.main_thread.is_download_photo:
-                # 获取所有可下载相簿
-                album_id_list = self.get_crawl_photo_list()
-                self.step(f"需要下载的全部相簿解析完毕，共{len(album_id_list)}个")
-
-                # 从最早的相簿开始下载
-                while len(album_id_list) > 0:
-                    if not self.crawl_photo(album_id_list.pop()):
-                        break
-                    self.main_thread_check()  # 检测主线程运行状态
-        except (SystemExit, KeyboardInterrupt) as e:
-            if isinstance(e, SystemExit) and e.code == 1:
-                self.error("异常退出")
-            else:
-                self.step("提前退出")
-        except Exception as e:
-            self.error("未知异常")
-            self.error(str(e) + "\n" + traceback.format_exc(), False)
-
-        self.main_thread.save_data.pop(self.account_id)
-        self.done()
 
 
 if __name__ == "__main__":

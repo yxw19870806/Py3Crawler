@@ -218,9 +218,18 @@ class Download(crawler.DownloadThread):
 
     def __init__(self, single_save_data, main_thread):
         crawler.DownloadThread.__init__(self, single_save_data, main_thread)
-        self.account_id = self.single_save_data[0]
-        self.display_name = self.account_id
+        self.index_key = self.display_name = self.single_save_data[0]  # account id
         self.step("开始")
+
+    def _run(self):
+        # 获取所有可下载视频
+        video_info_list = self.get_crawl_list()
+        self.step(f"需要下载的全部视频解析完毕，共{len(video_info_list)}个")
+
+        # 从最早的视频开始下载
+        while len(video_info_list) > 0:
+            self.crawl_video(video_info_list.pop())
+            self.main_thread_check()  # 检测主线程运行状态
 
     # 获取所有可下载视频
     def get_crawl_list(self):
@@ -233,7 +242,7 @@ class Download(crawler.DownloadThread):
             self.step(f"开始解析第{page_count}页视频")
 
             try:
-                blog_pagination_response = get_one_page_video(self.account_id, page_count)
+                blog_pagination_response = get_one_page_video(self.index_key, page_count)
             except crawler.CrawlerException as e:
                 self.error(e.http_error(f"第{page_count}页视频"))
                 raise
@@ -269,7 +278,7 @@ class Download(crawler.DownloadThread):
 
         self.step(f"开始下载视频{video_info['video_id']} 《{video_info['video_title']}》 {video_response['video_url']}")
 
-        video_file_path = os.path.join(self.main_thread.video_download_path, self.account_id, f"{video_info['video_id']} - {path.filter_text(video_info['video_title'])}.mp4")
+        video_file_path = os.path.join(self.main_thread.video_download_path, self.index_key, f"{video_info['video_id']} - {path.filter_text(video_info['video_title'])}.mp4")
         save_file_return = net.download(video_response["video_url"], video_file_path, head_check=True)
         if save_file_return["status"] == 1:
             self.total_video_count += 1  # 计数累加
@@ -280,28 +289,6 @@ class Download(crawler.DownloadThread):
 
         # 视频全部下载完毕
         self.single_save_data[1] = str(video_info["video_time"])  # 设置存档记录
-
-    def run(self):
-        try:
-            # 获取所有可下载视频
-            video_info_list = self.get_crawl_list()
-            self.step(f"需要下载的全部视频解析完毕，共{len(video_info_list)}个")
-
-            # 从最早的视频开始下载
-            while len(video_info_list) > 0:
-                self.crawl_video(video_info_list.pop())
-                self.main_thread_check()  # 检测主线程运行状态
-        except (SystemExit, KeyboardInterrupt) as e:
-            if isinstance(e, SystemExit) and e.code == 1:
-                self.error("异常退出")
-            else:
-                self.step("提前退出")
-        except Exception as e:
-            self.error("未知异常")
-            self.error(str(e) + "\n" + traceback.format_exc(), False)
-
-        self.main_thread.save_data.pop(self.account_id)
-        self.done()
 
 
 if __name__ == "__main__":
