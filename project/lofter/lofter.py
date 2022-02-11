@@ -139,9 +139,18 @@ class Lofter(crawler.Crawler):
 class Download(crawler.DownloadThread):
     def __init__(self, single_save_data, main_thread):
         crawler.DownloadThread.__init__(self, single_save_data, main_thread)
-        self.account_name = self.single_save_data[0]
-        self.display_name = self.account_name
+        self.index_key = self.display_name = self.single_save_data[0]  # account name
         self.step("开始")
+
+    def _run(self):
+        # 获取所有可下载日志
+        blog_url_list = self.get_crawl_list()
+        self.step(f"需要下载的全部日志解析完毕，共{len(blog_url_list)}个")
+
+        # 从最早的日志开始下载
+        while len(blog_url_list) > 0:
+            self.crawl_blog(blog_url_list.pop())
+            self.main_thread_check()  # 检测主线程运行状态
 
     # 获取所有可下载日志
     def get_crawl_list(self):
@@ -155,7 +164,7 @@ class Download(crawler.DownloadThread):
             self.step(f"开始解析第{page_count}页日志")
 
             try:
-                blog_pagination_response = get_one_page_blog(self.account_name, page_count)
+                blog_pagination_response = get_one_page_blog(self.index_key, page_count)
             except crawler.CrawlerException as e:
                 self.error(e.http_error(f"第{page_count}页日志"))
                 raise
@@ -210,7 +219,7 @@ class Download(crawler.DownloadThread):
             photo_url = get_photo_url(photo_url)
             self.step(f"开始下载日志{blog_id}的第{photo_index}张图片 {photo_url}")
 
-            file_path = os.path.join(self.main_thread.photo_download_path, self.account_name, f"%09d_%02d.{net.get_file_extension(photo_url)}" % (blog_id, photo_index))
+            file_path = os.path.join(self.main_thread.photo_download_path, self.index_key, f"%09d_%02d.{net.get_file_extension(photo_url)}" % (blog_id, photo_index))
             save_file_return = net.download(photo_url, file_path)
             if save_file_return["status"] == 1:
                 if check_photo_invalid(save_file_return["file_path"]):
@@ -228,28 +237,6 @@ class Download(crawler.DownloadThread):
         # 日志内图片全部下载完毕
         self.temp_path_list = []  # 临时目录设置清除
         self.single_save_data[1] = str(blog_id)  # 设置存档记录
-
-    def run(self):
-        try:
-            # 获取所有可下载日志
-            blog_url_list = self.get_crawl_list()
-            self.step(f"需要下载的全部日志解析完毕，共{len(blog_url_list)}个")
-
-            # 从最早的日志开始下载
-            while len(blog_url_list) > 0:
-                self.crawl_blog(blog_url_list.pop())
-                self.main_thread_check()  # 检测主线程运行状态
-        except (SystemExit, KeyboardInterrupt) as e:
-            if isinstance(e, SystemExit) and e.code == 1:
-                self.error("异常退出")
-            else:
-                self.step("提前退出")
-        except Exception as e:
-            self.error("未知异常")
-            self.error(str(e) + "\n" + traceback.format_exc(), False)
-
-        self.main_thread.save_data.pop(self.account_name)
-        self.done()
 
 
 if __name__ == "__main__":

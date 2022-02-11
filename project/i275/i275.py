@@ -111,7 +111,7 @@ class I275(crawler.Crawler):
 class Download(crawler.DownloadThread):
     def __init__(self, single_save_data, main_thread):
         crawler.DownloadThread.__init__(self, single_save_data, main_thread)
-        self.album_id = self.single_save_data[0]
+        self.index_key = self.single_save_data[0]  # album id
         if len(self.single_save_data) >= 3 and self.single_save_data[2]:
             self.display_name = self.single_save_data[2]
         else:
@@ -119,12 +119,22 @@ class Download(crawler.DownloadThread):
         self.total_audio_count = 0
         self.step("开始")
 
+    def _run(self):
+        # 获取所有可下载音频
+        audio_info_list = self.get_crawl_list()
+        self.step(f"需要下载的全部音频解析完毕，共{len(audio_info_list)}个")
+
+        # 从最早的媒体开始下载
+        while len(audio_info_list) > 0:
+            self.crawl_audio(audio_info_list.pop())
+            self.main_thread_check()  # 检测主线程运行状态
+
     # 获取所有可下载音频
     def get_crawl_list(self):
         audio_info_list = []
         # 获取一页音频
         try:
-            audit_pagination_response = get_album_index_page(self.album_id)
+            audit_pagination_response = get_album_index_page(self.index_key)
         except crawler.CrawlerException as e:
             self.error(e.http_error("首页"))
             raise
@@ -148,7 +158,7 @@ class Download(crawler.DownloadThread):
 
         # 获取音频播放页
         try:
-            audio_play_response = get_audio_info_page(self.album_id, audio_info["audio_id"])
+            audio_play_response = get_audio_info_page(self.index_key, audio_info["audio_id"])
         except crawler.CrawlerException as e:
             self.error(e.http_error(f"音频{audio_info['audio_id']}"))
             raise
@@ -167,28 +177,6 @@ class Download(crawler.DownloadThread):
 
         # 音频下载完毕
         self.single_save_data[1] = str(audio_info["audio_id"])  # 设置存档记录
-
-    def run(self):
-        try:
-            # 获取所有可下载音频
-            audio_info_list = self.get_crawl_list()
-            self.step(f"需要下载的全部音频解析完毕，共{len(audio_info_list)}个")
-
-            # 从最早的媒体开始下载
-            while len(audio_info_list) > 0:
-                self.crawl_audio(audio_info_list.pop())
-                self.main_thread_check()  # 检测主线程运行状态
-        except (SystemExit, KeyboardInterrupt) as e:
-            if isinstance(e, SystemExit) and e.code == 1:
-                self.error("异常退出")
-            else:
-                self.step("提前退出")
-        except Exception as e:
-            self.error("未知异常")
-            self.error(str(e) + "\n" + traceback.format_exc(), False)
-
-        self.main_thread.save_data.pop(self.album_id)
-        self.done()
 
 
 if __name__ == "__main__":

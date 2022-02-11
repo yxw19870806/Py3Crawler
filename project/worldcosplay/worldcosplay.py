@@ -112,12 +112,22 @@ class WorldCosplay(crawler.Crawler):
 class Download(crawler.DownloadThread):
     def __init__(self, single_save_data, main_thread):
         crawler.DownloadThread.__init__(self, single_save_data, main_thread)
-        self.account_id = self.single_save_data[0]
+        self.index_key = self.single_save_data[0]  # account id
         if len(self.single_save_data) >= 3:
             self.display_name = self.single_save_data[2]
         else:
             self.display_name = self.single_save_data[0]
         self.step("开始")
+
+    def _run(self):
+        # 获取所有可下载图片
+        photo_info_list = self.get_crawl_list()
+        self.step(f"需要下载的全部图片解析完毕，共{len(photo_info_list)}个")
+
+        # 从最早的图片开始下载
+        while len(photo_info_list) > 0:
+            self.crawl_photo(photo_info_list.pop())
+            self.main_thread_check()  # 检测主线程运行状态
 
     # 获取所有可下载图片
     def get_crawl_list(self):
@@ -131,7 +141,7 @@ class Download(crawler.DownloadThread):
 
             # 获取一页图片
             try:
-                photo_pagination_response = get_one_page_photo(self.account_id, page_count)
+                photo_pagination_response = get_one_page_photo(self.index_key, page_count)
             except crawler.CrawlerException as e:
                 self.error(e.http_error(f"第{page_count}页图片"))
                 raise
@@ -178,28 +188,6 @@ class Download(crawler.DownloadThread):
 
         # 图片内图片下全部载完毕
         self.single_save_data[1] = str(photo_info["photo_id"])  # 设置存档记录
-
-    def run(self):
-        try:
-            # 获取所有可下载图片
-            photo_info_list = self.get_crawl_list()
-            self.step(f"需要下载的全部图片解析完毕，共{len(photo_info_list)}个")
-
-            # 从最早的图片开始下载
-            while len(photo_info_list) > 0:
-                self.crawl_photo(photo_info_list.pop())
-                self.main_thread_check()  # 检测主线程运行状态
-        except (SystemExit, KeyboardInterrupt) as e:
-            if isinstance(e, SystemExit) and e.code == 1:
-                self.error("异常退出")
-            else:
-                self.step("提前退出")
-        except Exception as e:
-            self.error("未知异常")
-            self.error(str(e) + "\n" + traceback.format_exc(), False)
-
-        self.main_thread.save_data.pop(self.account_id)
-        self.done()
 
 
 if __name__ == "__main__":

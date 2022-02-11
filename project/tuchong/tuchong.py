@@ -126,9 +126,24 @@ class TuChong(crawler.Crawler):
 class Download(crawler.DownloadThread):
     def __init__(self, single_save_data, main_thread):
         crawler.DownloadThread.__init__(self, single_save_data, main_thread)
-        self.account_name = self.single_save_data[0]
-        self.display_name = self.account_name
+        self.index_key = self.display_name = self.single_save_data[0]  # account name
         self.step("开始")
+
+    def _run(self):
+        try:
+            account_index_response = get_account_index_page(self.index_key)
+        except crawler.CrawlerException as e:
+            self.error(e.http_error("主页"))
+            raise
+
+            # 获取所有可下载相册
+        album_info_list = self.get_crawl_list(account_index_response["account_id"])
+        self.step(f"需要下载的全部相册解析完毕，共{len(album_info_list)}个")
+
+        # 从最早的相册开始下载
+        while len(album_info_list) > 0:
+            self.crawl_album(album_info_list.pop())
+            self.main_thread_check()  # 检测主线程运行状态
 
     # 获取所有可下载相册
     def get_crawl_list(self, account_id):
@@ -174,9 +189,9 @@ class Download(crawler.DownloadThread):
         # 过滤标题中不支持的字符
         album_title = path.filter_text(album_info["album_title"])
         if album_title:
-            post_path = os.path.join(self.main_thread.photo_download_path, self.account_name, f"%08d {album_title}" % album_info["album_id"])
+            post_path = os.path.join(self.main_thread.photo_download_path, self.index_key, f"%08d {album_title}" % album_info["album_id"])
         else:
-            post_path = os.path.join(self.main_thread.photo_download_path, self.account_name, "%08d" % album_info["album_id"])
+            post_path = os.path.join(self.main_thread.photo_download_path, self.index_key, "%08d" % album_info["album_id"])
         self.temp_path_list.append(post_path)
         for photo_url in album_info["photo_url_list"]:
             self.main_thread_check()  # 检测主线程运行状态
@@ -195,34 +210,6 @@ class Download(crawler.DownloadThread):
         # 相册内图片全部下载完毕
         self.temp_path_list = []  # 临时目录设置清除
         self.single_save_data[1] = str(album_info["album_id"])  # 设置存档记录
-
-    def run(self):
-        try:
-            try:
-                account_index_response = get_account_index_page(self.account_name)
-            except crawler.CrawlerException as e:
-                self.error(e.http_error("主页"))
-                raise
-
-            # 获取所有可下载相册
-            album_info_list = self.get_crawl_list(account_index_response["account_id"])
-            self.step(f"需要下载的全部相册解析完毕，共{len(album_info_list)}个")
-
-            # 从最早的相册开始下载
-            while len(album_info_list) > 0:
-                self.crawl_album(album_info_list.pop())
-                self.main_thread_check()  # 检测主线程运行状态
-        except (SystemExit, KeyboardInterrupt) as e:
-            if isinstance(e, SystemExit) and e.code == 1:
-                self.error("异常退出")
-            else:
-                self.step("提前退出")
-        except Exception as e:
-            self.error("未知异常")
-            self.error(str(e) + "\n" + traceback.format_exc(), False)
-
-        self.main_thread.save_data.pop(self.account_name)
-        self.done()
 
 
 if __name__ == "__main__":
