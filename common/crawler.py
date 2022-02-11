@@ -13,6 +13,7 @@ import re
 import sys
 import threading
 import time
+import traceback
 import warnings
 from typing import Union
 
@@ -337,6 +338,7 @@ class DownloadThread(threading.Thread):
     main_thread = None
     thread_lock = None
     display_name = None
+    index_key = ''
 
     def __init__(self, single_save_data: list, main_thread: Crawler):
         """
@@ -362,6 +364,25 @@ class DownloadThread(threading.Thread):
         self.total_audio_count = 0
         self.total_content_count = 0
         self.temp_path_list = []
+
+    def run(self):
+        try:
+            self._run()
+        except (SystemExit, KeyboardInterrupt) as e:
+            if isinstance(e, SystemExit) and e.code == 1:
+                self.error("异常退出")
+            else:
+                self.step("提前退出")
+        except Exception as e:
+            self.error("未知异常")
+            self.error(str(e) + "\n" + traceback.format_exc(), False)
+
+        if self.index_key:
+            self.main_thread.save_data.pop(self.index_key)
+        self.done()
+
+    def _run(self):
+        pass
 
     def main_thread_check(self):
         """
