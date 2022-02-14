@@ -377,44 +377,11 @@ class DownloadThread(threading.Thread):
             self.error("未知异常")
             self.error(str(e) + "\n" + traceback.format_exc(), False)
 
+        # 从住线程中移除主键对应的信息
         if self.index_key:
             self.main_thread.save_data.pop(self.index_key)
-        self.done()
 
-    def _run(self):
-        pass
-
-    def main_thread_check(self):
-        """
-        检测主线程是否已经结束（外部中断）
-        """
-        if not self.main_thread.is_running():
-            self.notify_main_thread()
-            tool.process_exit(tool.PROCESS_EXIT_CODE_NORMAL)
-
-    def notify_main_thread(self):
-        """
-        线程下完完成后唤醒主线程，开启新的线程（必须在线程完成后手动调用，否则会卡死主线程）
-        """
-        if isinstance(self.main_thread, Crawler):
-            self.main_thread.thread_semaphore.release()
-
-    def check_download_failure_exit(self, is_process_exit=True):
-        """
-        当下载失败，检测是否要退出线程
-        """
-        if self.main_thread.is_thread_exit_after_download_failure:
-            if is_process_exit:
-                tool.process_exit(tool.PROCESS_EXIT_CODE_ERROR)
-            else:
-                return True
-        return False
-
-    def done(self):
-        """
-        线程完成
-        """
-        # 保存最后的信息
+        # 写入存档
         if self.single_save_data:
             with self.thread_lock:
                 file.write_file("\t".join(self.single_save_data), self.main_thread.temp_save_data_path, file.WRITE_FILE_TYPE_APPEND)
@@ -446,6 +413,35 @@ class DownloadThread(threading.Thread):
 
         # 唤醒主线程
         self.notify_main_thread()
+
+    def _run(self):
+        pass
+
+    def main_thread_check(self):
+        """
+        检测主线程是否已经结束（外部中断）
+        """
+        if not self.main_thread.is_running():
+            self.notify_main_thread()
+            tool.process_exit(tool.PROCESS_EXIT_CODE_NORMAL)
+
+    def notify_main_thread(self):
+        """
+        线程下完完成后唤醒主线程，开启新的线程（必须在线程完成后手动调用，否则会卡死主线程）
+        """
+        if isinstance(self.main_thread, Crawler):
+            self.main_thread.thread_semaphore.release()
+
+    def check_download_failure_exit(self, is_process_exit=True):
+        """
+        当下载失败，检测是否要退出线程
+        """
+        if self.main_thread.is_thread_exit_after_download_failure:
+            if is_process_exit:
+                tool.process_exit(tool.PROCESS_EXIT_CODE_ERROR)
+            else:
+                return True
+        return False
 
     def trace(self, message, include_display_name=True):
         """
