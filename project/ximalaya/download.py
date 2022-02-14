@@ -39,9 +39,9 @@ class XiMaLaYaDownload(ximalaya.XiMaLaYa):
 
     def download(self):
         audio_id = self.get_audio_id_from_console()
-        # 无效的视频地址
+        # 无效的音频地址
         if audio_id is None:
-            log.step("错误的歌曲地址，正确的地址格式如：https://www.ximalaya.com/xiangsheng/9723091/46106824")
+            log.step("错误的音频地址，正确的地址格式如：https://www.ximalaya.com/xiangsheng/9723091/46106824")
             return
 
         # 获取下载地址
