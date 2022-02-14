@@ -47,8 +47,8 @@ class BiliBiliDownload(bilibili.BiliBili):
             self.download()
 
     def download(self):
+        # 输入需要解析的视频
         video_id = self.get_video_id_from_console()
-        # 无效的视频地址
         if not tool.is_integer(video_id):
             log.step("错误的视频地址，正确的地址格式如：https://www.bilibili.com/video/av123456")
             return

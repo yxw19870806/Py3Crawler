@@ -50,9 +50,8 @@ class YoutubeDownload(youtube.Youtube):
             self.download()
 
     def download(self):
+        # 输入需要解析的视频
         video_id = self.get_video_id_from_console()
-        # 无效的视频地址
-        # 无效的视频地址
         if video_id is None:
             log.step("错误的视频地址，正确的地址格式如：https://www.youtube.com/watch?v=lkHlnWFnA0c 或 https://youtu.be/lkHlnWFnA0c")
             return
