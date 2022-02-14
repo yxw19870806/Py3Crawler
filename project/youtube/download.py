@@ -13,15 +13,20 @@ from common import *
 from project.youtube import youtube
 
 
-def main():
-    # 初始化
-    youtube_class = youtube.Youtube(extra_sys_config={crawler.SYS_NOT_CHECK_SAVE_DATA: True})
-    # GUI窗口
-    gui = tkinter.Tk()
-    gui.withdraw()
+class YoutubeDownload(youtube.Youtube):
+    def __init__(self, **kwargs):
+        extra_sys_config = {
+            crawler.SYS_NOT_CHECK_SAVE_DATA: True
+        }
+        youtube.Youtube.__init__(self, extra_sys_config=extra_sys_config, **kwargs)
 
-    while True:
-        video_url = input(crawler.get_time() + " 请输入youtube视频地址：")
+        # GUI窗口
+        self.gui = tkinter.Tk()
+        self.gui.withdraw()
+
+    @staticmethod
+    def get_video_id_from_console():
+        video_url = input("请输入youtube视频地址：")
         video_id = None
         # https://www.youtube.com/watch?v=lkHlnWFnA0c
         if video_url.lower().find("//www.youtube.com/") > 0:
@@ -38,29 +43,39 @@ def main():
             video_id = video_url.split("/")[-1].split("&")[0]
         elif re.match("[a-zA-Z0-9_]+$", video_url) is not None:
             video_id = video_url
+        return video_id
+
+    def main(self):
+        while True:
+            self.download()
+
+    def download(self):
+        video_id = self.get_video_id_from_console()
+        # 无效的视频地址
         # 无效的视频地址
         if video_id is None:
             log.step("错误的视频地址，正确的地址格式如：https://www.youtube.com/watch?v=lkHlnWFnA0c 或 https://youtu.be/lkHlnWFnA0c")
-            continue
+            return
+
         # 访问视频播放页
         try:
             video_response = youtube.get_video_page(video_id)
         except crawler.CrawlerException as e:
             log.error(e.http_error("视频"))
-            break
+            return
         if video_response["skip_reason"]:
             log.error(f"视频{video_id} {video_response['skip_reason']}")
-            continue
-        # 选择下载目录
+            return
+
         options = {
-            "initialdir": youtube_class.video_download_path,
+            "initialdir": self.video_download_path,
             "initialfile": f"{video_id} - {path.filter_text(video_response['video_title'])}.mp4",
             "filetypes": [("mp4", ".mp4")],
-            "parent": gui,
+            "parent": self.gui,
         }
         file_path = tkinter.filedialog.asksaveasfilename(**options)
         if not file_path:
-            continue
+            return
         # 开始下载
         log.step(f"\n视频标题：{video_response['video_title']}\n视频地址：{video_response['video_url']}\n下载路径：{file_path}")
         save_file_return = net.download(video_response["video_url"], file_path, head_check=True)
@@ -71,4 +86,4 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    YoutubeDownload().main()
