@@ -12,18 +12,21 @@ from common import *
 from project.niconico import niconico
 
 
-def main():
-    # 初始化
-    nicoNico_class = niconico.NicoNico(extra_sys_config={crawler.SYS_NOT_CHECK_SAVE_DATA: True})
-    if not niconico.check_login():
-        log.error("没有检测到登录信息")
-        niconico.COOKIE_INFO = {}
-    # GUI窗口
-    gui = tkinter.Tk()
-    gui.withdraw()
+class NicoNicoDownload(niconico.NicoNico):
+    def __init__(self, **kwargs):
+        extra_sys_config = {
+            crawler.SYS_NOT_CHECK_SAVE_DATA: True
+        }
+        niconico.NicoNico.__init__(self, extra_sys_config=extra_sys_config, **kwargs)
 
-    while True:
-        video_url = input(crawler.get_time() + " 请输入Nico Nico视频地址：").lower()
+        # GUI窗口
+        self.gui = tkinter.Tk()
+        self.gui.withdraw()
+
+    @staticmethod
+    def get_video_id_from_console():
+        video_url = input("请输入Nico Nico视频地址：").lower()
+        video_id = None
         # http://www.nicovideo.jp/watch/sm20429274?ref=search_key_video&ss_pos=3&ss_id=361e7a4b-278e-40c1-acbb-a0c55c84005d
         if video_url.find("//www.nicovideo.jp/watch/sm") > 0:
             video_id = video_url.split("/")[-1].split("?")[0].replace("sm", "")
@@ -31,28 +34,41 @@ def main():
             video_id = video_url
         elif video_url[:2] == "sm" and tool.is_integer(video_url[2:]):
             video_id = video_url[2:]
-        else:
+        return video_id
+
+    def main(self):
+        while True:
+            self.download()
+
+    def download(self):
+        # 输入需要解析的视频
+        video_id = self.get_video_id_from_console()
+        if not tool.is_integer(video_id):
             log.step("错误的视频地址，正确的地址格式如：http://www.nicovideo.jp/watch/sm20429274")
-            continue
-        # 访问视频播放页
+            return
+
+        # 获取下载地址
         try:
             video_response = niconico.get_video_info(video_id)
         except crawler.CrawlerException as e:
             log.error(e.http_error("视频"))
-            break
+            return
         if video_response["is_delete"]:
             log.step("视频不存在，跳过")
-            continue
+            return
+
         # 选择下载目录
+        log.step("请选择下载目录")
         options = {
-            "initialdir": nicoNico_class.video_download_path,
+            "initialdir": self.video_download_path,
             "initialfile": f"%08d - {path.filter_text(video_response['video_title'])}.mp4" % int(video_id),
             "filetypes": [("mp4", ".mp4")],
-            "parent": gui,
+            "parent": self.gui,
         }
         file_path = tkinter.filedialog.asksaveasfilename(**options)
         if not file_path:
-            continue
+            return
+
         # 开始下载
         log.step(f"\n视频标题：{video_response['video_title']}\n视频地址：{video_response['video_url']}\n下载路径：{file_path}")
         cookies_list = niconico.COOKIE_INFO
@@ -66,4 +82,4 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    NicoNicoDownload().main()
