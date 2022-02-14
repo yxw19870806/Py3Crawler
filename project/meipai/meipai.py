@@ -9,7 +9,6 @@ email: hikaru870806@hotmail.com
 import base64
 import os
 import time
-import traceback
 from functools import reduce
 from pyquery import PyQuery as pq
 from common import *

@@ -10,7 +10,6 @@ import os
 import re
 import threading
 import time
-import traceback
 import urllib.parse
 import xml.etree.ElementTree as ElementTree
 from common import *

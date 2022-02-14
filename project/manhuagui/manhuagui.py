@@ -10,7 +10,6 @@ import execjs
 import lzstring
 import os
 import time
-import traceback
 from pyquery import PyQuery as pq
 from common import *
 

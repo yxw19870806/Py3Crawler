@@ -8,7 +8,6 @@ email: hikaru870806@hotmail.com
 """
 import os
 import time
-import traceback
 from common import *
 
 EACH_PAGE_PHOTO_COUNT = 16  # 每次请求获取的图片数量
