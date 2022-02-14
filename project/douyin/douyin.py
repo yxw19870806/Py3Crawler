@@ -115,26 +115,10 @@ class DouYin(crawler.Crawler):
         # 临时文件目录
         CACHE_FILE_PATH = self.cache_data_path
 
-    def _main(self):
-        # 循环下载每个id
-        thread_list = []
-        for account_id in sorted(self.save_data.keys()):
-            # 提前结束
-            if not self.is_running():
-                break
+        # 下载线程
+        self.download_thread = Download
 
-            # 开始下载
-            thread = Download(self.save_data[account_id], self)
-            thread.start()
-            thread_list.append(thread)
-
-            time.sleep(1)
-
-        # 等待子线程全部完成
-        while len(thread_list) > 0:
-            thread_list.pop().join()
-
-    def _done(self):
+    def done(self):
         # 删除临时缓存目录
         path.delete_dir_or_file(CACHE_FILE_PATH)
 

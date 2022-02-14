@@ -132,24 +132,8 @@ class Nogizaka46Diary(crawler.Crawler):
         # account_id  last_blog_id
         self.save_data = crawler.read_save_data(self.save_data_path, 0, ["", "0"])
 
-    def _main(self):
-        # 循环下载每个id
-        thread_list = []
-        for account_id in sorted(self.save_data.keys()):
-            # 提前结束
-            if not self.is_running():
-                break
-
-            # 开始下载
-            thread = Download(self.save_data[account_id], self)
-            thread.start()
-            thread_list.append(thread)
-
-            time.sleep(1)
-
-        # 等待子线程全部完成
-        while len(thread_list) > 0:
-            thread_list.pop().join()
+        # 下载线程
+        self.download_thread = Download
 
 
 class Download(crawler.DownloadThread):

@@ -111,24 +111,8 @@ class BiliBiliComic(crawler.Crawler):
                 elif input_str in ["c", "continue"]:
                     break
 
-    def _main(self):
-        # 循环下载每个id
-        thread_list = []
-        for comic_id in sorted(self.save_data.keys()):
-            # 提前结束
-            if not self.is_running():
-                break
-
-            # 开始下载
-            thread = Download(self.save_data[comic_id], self)
-            thread.start()
-            thread_list.append(thread)
-
-            time.sleep(1)
-
-        # 等待子线程全部完成
-        while len(thread_list) > 0:
-            thread_list.pop().join()
+        # 下载线程
+        self.download_thread = Download
 
 
 class Download(crawler.DownloadThread):
