@@ -26,7 +26,7 @@ class ChangBaDownload(changba.ChangBa):
 
     @staticmethod
     def get_audio_key_from_console():
-        audio_url = input(crawler.get_time() + " 请输入唱吧歌曲地址：")
+        audio_url = input("请输入唱吧歌曲地址：")
         audio_key = None
         # https://changba.com/s/LBdSlkRwmqApasSCCVp5VA
         if audio_url.lower().find("//changba.com/s/") > 0:
