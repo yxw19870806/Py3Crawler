@@ -40,6 +40,7 @@ class ChangBaDownload(changba.ChangBa):
             self.download()
 
     def download(self):
+        # 输入需要解析的歌曲
         audio_key = self.get_audio_key_from_console()
         if audio_key is None:
             log.step("错误的歌曲地址，正确的地址格式如：https://changba.com/s/LBdSlkRwmqApasSCCVp5VA")

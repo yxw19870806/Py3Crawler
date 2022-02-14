@@ -38,8 +38,8 @@ class XiMaLaYaDownload(ximalaya.XiMaLaYa):
             self.download()
 
     def download(self):
+        # 输入需要解析的音频
         audio_id = self.get_audio_id_from_console()
-        # 无效的音频地址
         if audio_id is None:
             log.step("错误的音频地址，正确的地址格式如：https://www.ximalaya.com/xiangsheng/9723091/46106824")
             return
