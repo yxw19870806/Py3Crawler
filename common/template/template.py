@@ -9,7 +9,6 @@ import json
 import os
 import re
 import time
-import traceback
 from pyquery import PyQuery as pq
 from common import *
 
@@ -107,6 +106,18 @@ class Download(crawler.DownloadThread):
         self.display_name = self.single_save_data[0]
         self.step("开始")
 
+    def _run(self):
+        # 获取所有可下载日志
+        blog_id_list = self.get_crawl_list()
+        self.step(f"需要下载的全部日志解析完毕，共{len(blog_id_list)}个")
+
+        # 从最早的日志开始下载
+        while len(blog_id_list) > 0:
+            blog_id = blog_id_list.pop()
+            self.step(f"开始解析日志{blog_id}")
+            self.crawl_blog(blog_id)
+            self.main_thread_check()  # 检测主线程运行状态
+
     # 获取所有可下载日志
     def get_crawl_list(self):
         page_count = 1
@@ -157,7 +168,7 @@ class Download(crawler.DownloadThread):
                 self.step(f"开始下载第{photo_index}张图片 {photo_url}")
 
                 file_extension = net.get_file_extension(photo_url)
-                photo_file_path = os.path.join(self.main_thread.photo_download_path, self.account_id, f"%04d.{file_type}" % photo_index)
+                photo_file_path = os.path.join(self.main_thread.photo_download_path, self.account_id, f"%04d.{file_extension}" % photo_index)
                 save_file_return = net.download(photo_url, photo_file_path)
                 if save_file_return["status"] == 1:
                     # 设置临时目录
@@ -176,7 +187,7 @@ class Download(crawler.DownloadThread):
                 self.step(f"开始下载第{video_index}个视频 {video_url}")
 
                 file_extension = net.get_file_extension(video_url)
-                video_file_path = os.path.join(self.main_thread.video_download_path, self.account_id, f"%04d.{file_type}" % video_index)
+                video_file_path = os.path.join(self.main_thread.video_download_path, self.account_id, f"%04d.{file_extension}" % video_index)
                 save_file_return = net.download(video_url, video_file_path)
                 if save_file_return["status"] == 1:
                     # 设置临时目录
@@ -195,7 +206,7 @@ class Download(crawler.DownloadThread):
                 self.step(f"开始下载第{audio_index}个音频 {audio_url}")
 
                 file_extension = net.get_file_extension(audio_url)
-                audio_file_path = os.path.join(self.main_thread.audio_download_path, self.account_id, f"%04d.{file_type}" % audio_index)
+                audio_file_path = os.path.join(self.main_thread.audio_download_path, self.account_id, f"%04d.{file_extension}" % audio_index)
                 save_file_return = net.download(audio_url, audio_file_path)
                 if save_file_return["status"] == 1:
                     # 设置临时目录
@@ -214,30 +225,6 @@ class Download(crawler.DownloadThread):
         self.single_save_data[2] = str(video_index - 1)  # 设置存档记录
         self.single_save_data[3] = str(audio_index - 1)  # 设置存档记录
         self.single_save_data[4] = ""  # 设置存档记录
-
-    def run(self):
-        try:
-            # 获取所有可下载日志
-            blog_id_list = self.get_crawl_list()
-            self.step(f"需要下载的全部日志解析完毕，共{len(blog_id_list)}个")
-
-            # 从最早的日志开始下载
-            while len(blog_id_list) > 0:
-                blog_id = blog_id_list.pop()
-                self.step(f"开始解析日志{blog_id}")
-                self.crawl_blog(blog_id)
-                self.main_thread_check()  # 检测主线程运行状态
-        except (SystemExit, KeyboardInterrupt) as e:
-            if isinstance(e, SystemExit) and e.code == 1:
-                self.error("异常退出")
-            else:
-                self.step("提前退出")
-        except Exception as e:
-            self.error("未知异常")
-            self.error(str(e) + "\n" + traceback.format_exc(), False)
-
-        self.main_thread.save_data.pop(self.account_id)
-        self.done()
 
 
 if __name__ == "__main__":
