@@ -57,7 +57,7 @@ class YoutubeDownload(youtube.Youtube):
             log.step("错误的视频地址，正确的地址格式如：https://www.youtube.com/watch?v=lkHlnWFnA0c 或 https://youtu.be/lkHlnWFnA0c")
             return
 
-        # 访问视频播放页
+        # 获取下载地址
         try:
             video_response = youtube.get_video_page(video_id)
         except crawler.CrawlerException as e:
@@ -67,6 +67,8 @@ class YoutubeDownload(youtube.Youtube):
             log.error(f"视频{video_id} {video_response['skip_reason']}")
             return
 
+        # 选择下载目录
+        log.step("请选择下载目录")
         options = {
             "initialdir": self.video_download_path,
             "initialfile": f"{video_id} - {path.filter_text(video_response['video_title'])}.mp4",
@@ -76,6 +78,7 @@ class YoutubeDownload(youtube.Youtube):
         file_path = tkinter.filedialog.asksaveasfilename(**options)
         if not file_path:
             return
+
         # 开始下载
         log.step(f"\n视频标题：{video_response['video_title']}\n视频地址：{video_response['video_url']}\n下载路径：{file_path}")
         save_file_return = net.download(video_response["video_url"], file_path, head_check=True)
