@@ -77,5 +77,5 @@ class KuWo(crawler.Crawler):
         }
         crawler.Crawler.__init__(self, sys_config, **kwargs)
 
-    def main(self):
+    def _main(self):
         pass

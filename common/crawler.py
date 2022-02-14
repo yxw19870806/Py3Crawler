@@ -282,6 +282,30 @@ class Crawler(object):
 
         output.print_msg("初始化完成")
 
+    def main(self):
+        try:
+            self._main()
+        except KeyboardInterrupt:
+            self.stop_process()
+
+        # 未完成的数据保存
+        self.write_remaining_save_data()
+
+        # 重新排序保存存档文件
+        self.rewrite_save_file()
+
+        # 其他结束操作
+        self._done()
+
+        # 结束日志
+        self.end_message()
+
+    def _main(self):
+        pass
+
+    def _done(self):
+        pass
+
     def pause_process(self):
         net.pause_request()
 

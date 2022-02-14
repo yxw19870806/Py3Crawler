@@ -86,35 +86,24 @@ class Keyakizaka46Diary(crawler.Crawler):
         # account_id  last_blog_id
         self.save_data = crawler.read_save_data(self.save_data_path, 0, ["", "0"])
 
-    def main(self):
-        try:
-            # 循环下载每个id
-            thread_list = []
-            for account_id in sorted(self.save_data.keys()):
-                # 提前结束
-                if not self.is_running():
-                    break
+    def _main(self):
+        # 循环下载每个id
+        thread_list = []
+        for account_id in sorted(self.save_data.keys()):
+            # 提前结束
+            if not self.is_running():
+                break
 
-                # 开始下载
-                thread = Download(self.save_data[account_id], self)
-                thread.start()
-                thread_list.append(thread)
+            # 开始下载
+            thread = Download(self.save_data[account_id], self)
+            thread.start()
+            thread_list.append(thread)
 
-                time.sleep(1)
+            time.sleep(1)
 
-            # 等待子线程全部完成
-            while len(thread_list) > 0:
-                thread_list.pop().join()
-        except KeyboardInterrupt:
-            self.stop_process()
-
-        # 未完成的数据保存
-        self.write_remaining_save_data()
-
-        # 重新排序保存存档文件
-        self.rewrite_save_file()
-
-        self.end_message()
+        # 等待子线程全部完成
+        while len(thread_list) > 0:
+            thread_list.pop().join()
 
 
 class Download(crawler.DownloadThread):

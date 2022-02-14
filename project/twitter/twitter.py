@@ -313,35 +313,24 @@ class Twitter(crawler.Crawler):
             log.error(e.http_error("生成authorization"))
             tool.process_exit()
 
-    def main(self):
-        try:
-            # 循环下载每个id
-            thread_list = []
-            for account_name in sorted(self.save_data.keys()):
-                # 提前结束
-                if not self.is_running():
-                    break
+    def _main(self):
+        # 循环下载每个id
+        thread_list = []
+        for account_name in sorted(self.save_data.keys()):
+            # 提前结束
+            if not self.is_running():
+                break
 
-                # 开始下载
-                thread = Download(self.save_data[account_name], self)
-                thread.start()
-                thread_list.append(thread)
+            # 开始下载
+            thread = Download(self.save_data[account_name], self)
+            thread.start()
+            thread_list.append(thread)
 
-                time.sleep(1)
+            time.sleep(1)
 
-            # 等待子线程全部完成
-            while len(thread_list) > 0:
-                thread_list.pop().join()
-        except KeyboardInterrupt:
-            self.stop_process()
-
-        # 未完成的数据保存
-        self.write_remaining_save_data()
-
-        # 重新排序保存存档文件
-        self.rewrite_save_file()
-
-        self.end_message()
+        # 等待子线程全部完成
+        while len(thread_list) > 0:
+            thread_list.pop().join()
 
 
 class Download(crawler.DownloadThread):
