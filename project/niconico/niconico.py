@@ -220,24 +220,8 @@ class NicoNico(crawler.Crawler):
             log.error("没有检测到账号登录状态，退出程序！")
             tool.process_exit()
 
-    def _main(self):
-        # 循环下载每个id
-        thread_list = []
-        for list_id in sorted(self.save_data.keys()):
-            # 提前结束
-            if not self.is_running():
-                break
-
-            # 开始下载
-            thread = Download(self.save_data[list_id], self)
-            thread.start()
-            thread_list.append(thread)
-
-            time.sleep(1)
-
-        # 等待子线程全部完成
-        while len(thread_list) > 0:
-            thread_list.pop().join()
+        # 下载线程
+        self.download_thread = Download
 
 
 class Download(crawler.DownloadThread):

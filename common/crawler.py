@@ -68,6 +68,7 @@ class Crawler(object):
     print_function = None
     thread_event = None
     process_status = True  # 主进程是否在运行
+    download_thread = None  # 下载子线程
 
     # 程序全局变量的设置
     def __init__(self, sys_config, **kwargs):
@@ -295,15 +296,35 @@ class Crawler(object):
         self.rewrite_save_file()
 
         # 其他结束操作
-        self._done()
+        self.done()
 
         # 结束日志
         self.end_message()
 
     def _main(self):
-        pass
+        if self.download_thread is not None:
+            # 循环下载每个id
+            thread_list = []
+            for index_key in sorted(self.save_data.keys()):
+                # 提前结束
+                if not self.is_running():
+                    break
 
-    def _done(self):
+                # 开始下载
+                thread = self.download_thread(self.save_data[index_key], self)
+                thread.start()
+                thread_list.append(thread)
+
+                time.sleep(1)
+
+            # 等待子线程全部完成
+            while len(thread_list) > 0:
+                thread_list.pop().join()
+
+    def done(self):
+        """
+        其他结束操作
+        """
         pass
 
     def pause_process(self):
