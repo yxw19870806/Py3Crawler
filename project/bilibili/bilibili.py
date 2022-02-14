@@ -9,7 +9,6 @@ email: hikaru870806@hotmail.com
 import math
 import os
 import time
-import traceback
 from common import *
 
 COOKIE_INFO = {}

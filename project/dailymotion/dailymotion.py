@@ -10,7 +10,6 @@ import json
 import os
 import random
 import time
-import traceback
 from common import *
 
 AUTHORIZATION = ""

@@ -9,7 +9,6 @@ email: hikaru870806@hotmail.com
 import os
 import re
 import time
-import traceback
 from common import *
 
 USER_AGENT = net._random_user_agent()

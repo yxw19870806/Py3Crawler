@@ -8,7 +8,6 @@ email: hikaru870806@hotmail.com
 """
 import os
 import time
-import traceback
 from common import *
 from common import browser
 from selenium.webdriver.common.by import By
