@@ -153,6 +153,7 @@ class Crawler(object):
 
         # 存档
         self.save_data_path = analysis_config(config, "SAVE_DATA_PATH", "\\\\info/save.data", CONFIG_ANALYSIS_MODE_PATH)
+        self.temp_save_data_path = ""
         if not sys_not_check_save_data:
             if not os.path.exists(self.save_data_path):
                 # 存档文件不存在
@@ -352,7 +353,7 @@ class Crawler(object):
         """
         将剩余未处理的存档数据写入临时存档文件
         """
-        if len(self.save_data) > 0:
+        if len(self.save_data) > 0 and self.temp_save_data_path:
             file.write_file(tool.list_to_string(list(self.save_data.values())), self.temp_save_data_path)
 
     def rewrite_save_file(self):
@@ -360,10 +361,11 @@ class Crawler(object):
         将临时存档文件按照主键排序后写入原始存档文件
         只支持一行一条记录，每条记录格式相同的存档文件
         """
-        save_data = read_save_data(self.temp_save_data_path, 0, [])
-        temp_list = [save_data[key] for key in sorted(save_data.keys())]
-        file.write_file(tool.list_to_string(temp_list), self.save_data_path, file.WRITE_FILE_TYPE_REPLACE)
-        path.delete_dir_or_file(self.temp_save_data_path)
+        if self.temp_save_data_path:
+            save_data = read_save_data(self.temp_save_data_path, 0, [])
+            temp_list = [save_data[key] for key in sorted(save_data.keys())]
+            file.write_file(tool.list_to_string(temp_list), self.save_data_path, file.WRITE_FILE_TYPE_REPLACE)
+            path.delete_dir_or_file(self.temp_save_data_path)
 
     def end_message(self):
         message = f"全部下载完毕，耗时{self.get_run_time()}秒"
