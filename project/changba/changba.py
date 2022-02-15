@@ -10,7 +10,6 @@ import base64
 import os
 import re
 import time
-import traceback
 from common import *
 
 
@@ -143,35 +142,8 @@ class ChangBa(crawler.Crawler):
         # account_id  last_audio_id
         self.save_data = crawler.read_save_data(self.save_data_path, 0, ["", "0"])
 
-    def main(self):
-        try:
-            # 循环下载每个id
-            thread_list = []
-            for account_id in sorted(self.save_data.keys()):
-                # 提前结束
-                if not self.is_running():
-                    break
-
-                # 开始下载
-                thread = Download(self.save_data[account_id], self)
-                thread.start()
-                thread_list.append(thread)
-
-                time.sleep(1)
-
-            # 等待子线程全部完成
-            while len(thread_list) > 0:
-                thread_list.pop().join()
-        except KeyboardInterrupt:
-            self.stop_process()
-
-        # 未完成的数据保存
-        self.write_remaining_save_data()
-
-        # 重新排序保存存档文件
-        self.rewrite_save_file()
-
-        self.end_message()
+        # 下载线程
+        self.download_thread = Download
 
 
 class Download(crawler.DownloadThread):
@@ -179,12 +151,29 @@ class Download(crawler.DownloadThread):
 
     def __init__(self, single_save_data, main_thread):
         crawler.DownloadThread.__init__(self, single_save_data, main_thread)
-        self.account_id = self.single_save_data[0]
+        self.index_key = self.single_save_data[0]  # account id
         if len(self.single_save_data) >= 3 and self.single_save_data[2]:
             self.display_name = self.single_save_data[2]
         else:
             self.display_name = self.single_save_data[0]
         self.step("开始")
+
+    def _run(self):
+        # 查找账号user id
+        try:
+            account_index_response = get_account_index_page(self.index_key)
+        except crawler.CrawlerException as e:
+            self.error(e.http_error("主页"))
+            raise
+
+        # 获取所有可下载歌曲
+        audio_info_list = self.get_crawl_list(account_index_response["user_id"])
+        self.step(f"需要下载的全部歌曲解析完毕，共{len(audio_info_list)}首")
+
+        # 从最早的歌曲开始下载
+        while len(audio_info_list) > 0:
+            self.crawl_audio(audio_info_list.pop())
+            self.main_thread_check()  # 检测主线程运行状态
 
     # 获取所有可下载歌曲
     def get_crawl_list(self, user_id):
@@ -259,35 +248,6 @@ class Download(crawler.DownloadThread):
 
         # 歌曲下载完毕
         self.single_save_data[1] = str(audio_info["audio_id"])  # 设置存档
-
-    def run(self):
-        try:
-            # 查找账号user id
-            try:
-                account_index_response = get_account_index_page(self.account_id)
-            except crawler.CrawlerException as e:
-                self.error(e.http_error("主页"))
-                raise
-
-            # 获取所有可下载歌曲
-            audio_info_list = self.get_crawl_list(account_index_response["user_id"])
-            self.step(f"需要下载的全部歌曲解析完毕，共{len(audio_info_list)}首")
-
-            # 从最早的歌曲开始下载
-            while len(audio_info_list) > 0:
-                self.crawl_audio(audio_info_list.pop())
-                self.main_thread_check()  # 检测主线程运行状态
-        except (SystemExit, KeyboardInterrupt) as e:
-            if isinstance(e, SystemExit) and e.code == 1:
-                self.error("异常退出")
-            else:
-                self.step("提前退出")
-        except Exception as e:
-            self.error("未知异常")
-            self.error(str(e) + "\n" + traceback.format_exc(), False)
-
-        self.main_thread.save_data.pop(self.account_id)
-        self.done()
 
 
 if __name__ == "__main__":

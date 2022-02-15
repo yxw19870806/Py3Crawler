@@ -255,6 +255,3 @@ class XiMaLaYa(crawler.Crawler):
                 elif input_str in ["c", "continue"]:
                     COOKIE_INFO = {}
                     break
-
-    def main(self):
-        pass

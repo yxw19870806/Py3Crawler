@@ -9,7 +9,6 @@ email: hikaru870806@hotmail.com
 import os
 import re
 import time
-import traceback
 import urllib.parse
 from common import *
 
@@ -422,35 +421,8 @@ class Youtube(crawler.Crawler):
                 elif input_str in ["c", "continue"]:
                     break
 
-    def main(self):
-        try:
-            # 循环下载每个id
-            thread_list = []
-            for account_id in sorted(self.save_data.keys()):
-                # 提前结束
-                if not self.is_running():
-                    break
-
-                # 开始下载
-                thread = Download(self.save_data[account_id], self)
-                thread.start()
-                thread_list.append(thread)
-
-                time.sleep(1)
-
-            # 等待子线程全部完成
-            while len(thread_list) > 0:
-                thread_list.pop().join()
-        except KeyboardInterrupt:
-            self.stop_process()
-
-        # 未完成的数据保存
-        self.write_remaining_save_data()
-
-        # 重新排序保存存档文件
-        self.rewrite_save_file()
-
-        self.end_message()
+        # 下载线程
+        self.download_thread = Download
 
 
 class Download(crawler.DownloadThread):
@@ -458,12 +430,24 @@ class Download(crawler.DownloadThread):
 
     def __init__(self, single_save_data, main_thread):
         crawler.DownloadThread.__init__(self, single_save_data, main_thread)
-        self.account_id = self.single_save_data[0]
+        self.index_key = self.single_save_data[0]  # account id
         if len(self.single_save_data) >= 4 and self.single_save_data[3]:
             self.display_name = self.single_save_data[3]
         else:
             self.display_name = self.single_save_data[0]
         self.step("开始")
+
+    def _run(self):
+        # 获取所有可下载视频
+        video_id_list = self.get_crawl_list()
+        self.step(f"需要下载的全部视频解析完毕，共{len(video_id_list)}个")
+        if not self.is_find:
+            self.step("存档所在视频已删除，需要在下载时进行过滤")
+
+        # 从最早的视频开始下载
+        while len(video_id_list) > 0:
+            self.crawl_video(video_id_list.pop(), len(video_id_list) == 0)
+            self.main_thread_check()  # 检测主线程运行状态
 
     # 获取所有可下载视频
     def get_crawl_list(self):
@@ -480,7 +464,7 @@ class Download(crawler.DownloadThread):
 
             # 获取一页视频
             try:
-                video_pagination_response = get_one_page_video(self.account_id, token)
+                video_pagination_response = get_one_page_video(self.index_key, token)
             except crawler.CrawlerException as e:
                 self.error(e.http_error(f"token：{token}后一页视频"))
                 raise
@@ -554,30 +538,6 @@ class Download(crawler.DownloadThread):
         # 媒体内图片和视频全部下载完毕
         self.single_save_data[1] = video_id  # 设置存档记录
         self.single_save_data[2] = str(video_response["video_time"])  # 设置存档记录
-
-    def run(self):
-        try:
-            # 获取所有可下载视频
-            video_id_list = self.get_crawl_list()
-            self.step(f"需要下载的全部视频解析完毕，共{len(video_id_list)}个")
-            if not self.is_find:
-                self.step("存档所在视频已删除，需要在下载时进行过滤")
-
-            # 从最早的视频开始下载
-            while len(video_id_list) > 0:
-                self.crawl_video(video_id_list.pop(), len(video_id_list) == 0)
-                self.main_thread_check()  # 检测主线程运行状态
-        except (SystemExit, KeyboardInterrupt) as e:
-            if isinstance(e, SystemExit) and e.code == 1:
-                self.error("异常退出")
-            else:
-                self.step("提前退出")
-        except Exception as e:
-            self.error("未知异常")
-            self.error(str(e) + "\n" + traceback.format_exc(), False)
-
-        self.main_thread.save_data.pop(self.account_id)
-        self.done()
 
 
 if __name__ == "__main__":

@@ -9,7 +9,6 @@ email: hikaru870806@hotmail.com
 import os
 import re
 import time
-import traceback
 from PIL import Image
 from pyquery import PyQuery as pq
 from common import *
@@ -231,47 +230,36 @@ class Ameblo(crawler.Crawler):
                 elif input_str in ["c", "continue"]:
                     break
 
-    def main(self):
-        try:
-            # 循环下载每个id
-            thread_list = []
-            for account_id in sorted(self.save_data.keys()):
-                # 提前结束
-                if not self.is_running():
-                    break
-
-                # 开始下载
-                thread = Download(self.save_data[account_id], self)
-                thread.start()
-                thread_list.append(thread)
-
-                time.sleep(1)
-
-            # 等待子线程全部完成
-            while len(thread_list) > 0:
-                thread_list.pop().join()
-        except KeyboardInterrupt:
-            self.stop_process()
-
-        # 未完成的数据保存
-        self.write_remaining_save_data()
-
-        # 重新排序保存存档文件
-        self.rewrite_save_file()
-
-        self.end_message()
+        # 下载线程
+        self.download_thread = Download
 
 
 class Download(crawler.DownloadThread):
     def __init__(self, single_save_data, main_thread):
         crawler.DownloadThread.__init__(self, single_save_data, main_thread)
         self.duplicate_list = {}
-        self.account_id = self.single_save_data[0]
+        self.index_key = self.single_save_data[0]  # account id
         if len(self.single_save_data) >= 3 and self.single_save_data[2]:
             self.display_name = self.single_save_data[2]
         else:
             self.display_name = self.single_save_data[0]
         self.step("开始")
+
+    def _run(self):
+        # 查询当前任务大致需要从多少页开始爬取
+        start_page_count = self.get_offset_page_count()
+
+        while start_page_count >= 1:
+            # 获取所有可下载日志
+            blog_id_list = self.get_crawl_list(start_page_count)
+            self.step(f"需要下载的全部日志解析完毕，共{len(blog_id_list)}个")
+
+            # 从最早的日志开始下载
+            while len(blog_id_list) > 0:
+                self.crawl_blog(blog_id_list.pop())
+                self.main_thread_check()  # 检测主线程运行状态
+
+            start_page_count -= EACH_LOOP_MAX_PAGE_COUNT
 
     # 获取偏移量，避免一次查询过多页数
     def get_offset_page_count(self):
@@ -282,7 +270,7 @@ class Download(crawler.DownloadThread):
             # 获取下一个检查节点页数的日志
             start_page_count += EACH_LOOP_MAX_PAGE_COUNT
             try:
-                blog_pagination_response = get_one_page_blog(self.account_id, start_page_count)
+                blog_pagination_response = get_one_page_blog(self.index_key, start_page_count)
             except crawler.CrawlerException as e:
                 self.error(e.http_error(f"第{start_page_count}页日志"))
                 raise
@@ -311,7 +299,7 @@ class Download(crawler.DownloadThread):
 
             # 获取一页日志
             try:
-                blog_pagination_response = get_one_page_blog(self.account_id, page_count)
+                blog_pagination_response = get_one_page_blog(self.index_key, page_count)
             except crawler.CrawlerException as e:
                 self.error(e.http_error(f"第{page_count}页日志"))
                 raise
@@ -344,7 +332,7 @@ class Download(crawler.DownloadThread):
 
         # 获取日志
         try:
-            blog_response = get_blog_page(self.account_id, blog_id)
+            blog_response = get_blog_page(self.index_key, blog_id)
         except crawler.CrawlerException as e:
             self.error(e.http_error(f"日志{blog_id}"))
             raise
@@ -369,7 +357,7 @@ class Download(crawler.DownloadThread):
                 self.duplicate_list[photo_url] = 1
             self.step(f"开始下载日志{blog_id}的第{photo_index}张图片 {photo_url}")
 
-            file_path = os.path.join(self.main_thread.photo_download_path, self.account_id, f"%011d_%02d.{net.get_file_extension(photo_url, 'jpg')}" % (blog_id, photo_index))
+            file_path = os.path.join(self.main_thread.photo_download_path, self.index_key, f"%011d_%02d.{net.get_file_extension(photo_url, 'jpg')}" % (blog_id, photo_index))
             save_file_return = net.download(photo_url, file_path)
             if save_file_return["status"] == 1:
                 if check_photo_invalid(file_path):
@@ -388,34 +376,6 @@ class Download(crawler.DownloadThread):
         # 日志内图片全部下载完毕
         self.temp_path_list = []  # 临时目录设置清除
         self.single_save_data[1] = str(blog_id)  # 设置存档记录
-
-    def run(self):
-        try:
-            # 查询当前任务大致需要从多少页开始爬取
-            start_page_count = self.get_offset_page_count()
-
-            while start_page_count >= 1:
-                # 获取所有可下载日志
-                blog_id_list = self.get_crawl_list(start_page_count)
-                self.step(f"需要下载的全部日志解析完毕，共{len(blog_id_list)}个")
-
-                # 从最早的日志开始下载
-                while len(blog_id_list) > 0:
-                    self.crawl_blog(blog_id_list.pop())
-                    self.main_thread_check()  # 检测主线程运行状态
-
-                start_page_count -= EACH_LOOP_MAX_PAGE_COUNT
-        except (SystemExit, KeyboardInterrupt) as e:
-            if isinstance(e, SystemExit) and e.code == 1:
-                self.error("异常退出")
-            else:
-                self.step("提前退出")
-        except Exception as e:
-            self.error("未知异常")
-            self.error(str(e) + "\n" + traceback.format_exc(), False)
-
-        self.main_thread.save_data.pop(self.account_id)
-        self.done()
 
 
 if __name__ == "__main__":

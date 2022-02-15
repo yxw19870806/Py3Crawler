@@ -9,7 +9,6 @@ email: hikaru870806@hotmail.com
 import os
 import re
 import time
-import traceback
 import urllib.parse
 from pyquery import PyQuery as pq
 from common import *
@@ -421,35 +420,8 @@ class Tumblr(crawler.Crawler):
                     IS_LOGIN = False
                     break
 
-    def main(self):
-        try:
-            # 循环下载每个id
-            thread_list = []
-            for account_id in sorted(self.save_data.keys()):
-                # 提前结束
-                if not self.is_running():
-                    break
-
-                # 开始下载
-                thread = Download(self.save_data[account_id], self)
-                thread.start()
-                thread_list.append(thread)
-
-                time.sleep(1)
-
-            # 等待子线程全部完成
-            while len(thread_list) > 0:
-                thread_list.pop().join()
-        except KeyboardInterrupt:
-            self.stop_process()
-
-        # 未完成的数据保存
-        self.write_remaining_save_data()
-
-        # 重新排序保存存档文件
-        self.rewrite_save_file()
-
-        self.end_message()
+        # 下载线程
+        self.download_thread = Download
 
 
 class Download(crawler.DownloadThread):
@@ -458,9 +430,35 @@ class Download(crawler.DownloadThread):
 
     def __init__(self, single_save_data, main_thread):
         crawler.DownloadThread.__init__(self, single_save_data, main_thread)
-        self.account_id = self.single_save_data[0]
-        self.display_name = self.account_id
+        self.index_key = self.display_name = self.single_save_data[0]  # account id
         self.step("开始")
+
+    def _run(self):
+        try:
+            self.is_https, self.is_private = get_index_setting(self.index_key)
+        except crawler.CrawlerException as e:
+            self.error(e.http_error("账号设置"))
+            raise
+
+            # 未登录&开启safe mode直接退出
+        if not IS_LOGIN and self.is_private:
+            self.error("账号只限登录账号访问，跳过")
+            tool.process_exit()
+
+            # 查询当前任务大致需要从多少页开始爬取
+        start_page_count = self.get_offset_page_count()
+
+        while start_page_count >= 1:
+            # 获取所有可下载日志
+            post_info_list = self.get_crawl_list(start_page_count)
+            self.step(f"需要下载的全部日志解析完毕，共{len(post_info_list)}个")
+
+            # 从最早的日志开始下载
+            while len(post_info_list) > 0:
+                self.crawl_post(post_info_list.pop())
+                self.main_thread_check()  # 检测主线程运行状态
+
+            start_page_count -= EACH_LOOP_MAX_PAGE_COUNT
 
     # 获取偏移量，避免一次查询过多页数
     def get_offset_page_count(self):
@@ -470,9 +468,9 @@ class Download(crawler.DownloadThread):
             start_page_count += EACH_LOOP_MAX_PAGE_COUNT
             try:
                 if self.is_private:
-                    post_pagination_response = get_one_page_private_blog(self.account_id, start_page_count)
+                    post_pagination_response = get_one_page_private_blog(self.index_key, start_page_count)
                 else:
-                    post_pagination_response = get_one_page_post(self.account_id, start_page_count, self.is_https)
+                    post_pagination_response = get_one_page_post(self.index_key, start_page_count, self.is_https)
             except crawler.CrawlerException as e:
                 self.error(e.http_error(f"第{start_page_count}页日志"))
                 raise
@@ -503,9 +501,9 @@ class Download(crawler.DownloadThread):
             # 获取一页的日志地址
             try:
                 if self.is_private:
-                    post_pagination_response = get_one_page_private_blog(self.account_id, page_count)
+                    post_pagination_response = get_one_page_private_blog(self.index_key, page_count)
                 else:
-                    post_pagination_response = get_one_page_post(self.account_id, page_count, self.is_https)
+                    post_pagination_response = get_one_page_post(self.index_key, page_count, self.is_https)
             except crawler.CrawlerException as e:
                 self.error(e.http_error(f"第{page_count}页日志"))
                 raise
@@ -568,7 +566,7 @@ class Download(crawler.DownloadThread):
         while self.main_thread.is_download_video and has_video:
             if video_url is None:
                 try:
-                    video_play_response = get_video_play_page(self.account_id, post_info["post_id"], self.is_https)
+                    video_play_response = get_video_play_page(self.index_key, post_info["post_id"], self.is_https)
                 except crawler.CrawlerException as e:
                     self.error(e.http_error(f"日志 {post_url}"))
                     raise
@@ -586,7 +584,7 @@ class Download(crawler.DownloadThread):
 
             self.step(f"日志 {post_info['post_id']} 开始下载视频 {video_url}")
 
-            video_file_path = os.path.join(self.main_thread.video_download_path, self.account_id, "%012d.mp4" % post_info["post_id"])
+            video_file_path = os.path.join(self.main_thread.video_download_path, self.index_key, "%012d.mp4" % post_info["post_id"])
             save_file_return = net.download(video_url, video_file_path)
             if save_file_return["status"] == 1:
                 # 设置临时目录
@@ -620,7 +618,7 @@ class Download(crawler.DownloadThread):
                 self.main_thread_check()  # 检测主线程运行状态
                 self.step(f"日志 {post_info['post_id']} 开始下载第{photo_index}张图片 {photo_url}")
 
-                photo_file_path = os.path.join(self.main_thread.photo_download_path, self.account_id, f"%012d_%02d.{net.get_file_extension(photo_url)}" % (post_info["post_id"], photo_index))
+                photo_file_path = os.path.join(self.main_thread.photo_download_path, self.index_key, f"%012d_%02d.{net.get_file_extension(photo_url)}" % (post_info["post_id"], photo_index))
                 save_file_return = net.download(photo_url, photo_file_path)
                 if save_file_return["status"] == 1:
                     self.temp_path_list.append(photo_file_path)  # 设置临时目录
@@ -640,45 +638,6 @@ class Download(crawler.DownloadThread):
         # 日志内图片和视频全部下载完毕
         self.temp_path_list = []  # 临时目录设置清除
         self.single_save_data[1] = str(post_info["post_id"])  # 设置存档记录
-
-    def run(self):
-        try:
-            try:
-                self.is_https, self.is_private = get_index_setting(self.account_id)
-            except crawler.CrawlerException as e:
-                self.error(e.http_error("账号设置"))
-                raise
-
-            # 未登录&开启safe mode直接退出
-            if not IS_LOGIN and self.is_private:
-                self.error("账号只限登录账号访问，跳过")
-                tool.process_exit()
-
-            # 查询当前任务大致需要从多少页开始爬取
-            start_page_count = self.get_offset_page_count()
-
-            while start_page_count >= 1:
-                # 获取所有可下载日志
-                post_info_list = self.get_crawl_list(start_page_count)
-                self.step(f"需要下载的全部日志解析完毕，共{len(post_info_list)}个")
-
-                # 从最早的日志开始下载
-                while len(post_info_list) > 0:
-                    self.crawl_post(post_info_list.pop())
-                    self.main_thread_check()  # 检测主线程运行状态
-
-                start_page_count -= EACH_LOOP_MAX_PAGE_COUNT
-        except (SystemExit, KeyboardInterrupt) as e:
-            if isinstance(e, SystemExit) and e.code == 1:
-                self.error("异常退出")
-            else:
-                self.step("提前退出")
-        except Exception as e:
-            self.error("未知异常")
-            self.error(str(e) + "\n" + traceback.format_exc(), False)
-
-        self.main_thread.save_data.pop(self.account_id)
-        self.done()
 
 
 if __name__ == "__main__":

@@ -10,7 +10,6 @@ import os
 import re
 import threading
 import time
-import traceback
 import urllib.parse
 import xml.etree.ElementTree as ElementTree
 from common import *
@@ -314,43 +313,38 @@ class Twitter(crawler.Crawler):
             log.error(e.http_error("生成authorization"))
             tool.process_exit()
 
-    def main(self):
-        try:
-            # 循环下载每个id
-            thread_list = []
-            for account_name in sorted(self.save_data.keys()):
-                # 提前结束
-                if not self.is_running():
-                    break
-
-                # 开始下载
-                thread = Download(self.save_data[account_name], self)
-                thread.start()
-                thread_list.append(thread)
-
-                time.sleep(1)
-
-            # 等待子线程全部完成
-            while len(thread_list) > 0:
-                thread_list.pop().join()
-        except KeyboardInterrupt:
-            self.stop_process()
-
-        # 未完成的数据保存
-        self.write_remaining_save_data()
-
-        # 重新排序保存存档文件
-        self.rewrite_save_file()
-
-        self.end_message()
+        # 下载线程
+        self.download_thread = Download
 
 
 class Download(crawler.DownloadThread):
     def __init__(self, single_save_data, main_thread):
         crawler.DownloadThread.__init__(self, single_save_data, main_thread)
-        self.account_name = self.single_save_data[0]
-        self.display_name = self.account_name
+        self.index_key = self.display_name = self.single_save_data[0]  # account name
         self.step("开始")
+
+    def _run(self):
+        try:
+            account_index_response = get_account_index_page(self.index_key)
+        except crawler.CrawlerException as e:
+            self.error(e.http_error("首页"))
+            raise
+
+        if self.single_save_data[1] == "":
+            self.single_save_data[1] = account_index_response["account_id"]
+        else:
+            if self.single_save_data[1] != account_index_response["account_id"]:
+                self.error("account id 不符合，原账号已改名")
+                tool.process_exit()
+
+        # 获取所有可下载推特
+        media_info_list = self.get_crawl_list()
+        self.step(f"需要下载的全部推特解析完毕，共{len(media_info_list)}个")
+
+        # 从最早的推特开始下载
+        while len(media_info_list) > 0:
+            self.crawl_media(media_info_list.pop())
+            self.main_thread_check()  # 检测主线程运行状态
 
     # 获取所有可下载推特
     def get_crawl_list(self):
@@ -364,7 +358,7 @@ class Download(crawler.DownloadThread):
 
             # 获取指定时间点后的一页图片信息
             try:
-                media_pagination_response = get_one_page_media(self.account_name, self.single_save_data[1], cursor)
+                media_pagination_response = get_one_page_media(self.index_key, self.single_save_data[1], cursor)
             except crawler.CrawlerException as e:
                 self.error(e.http_error(f"cursor：{cursor}后一页推特"))
                 raise
@@ -419,7 +413,7 @@ class Download(crawler.DownloadThread):
             self.main_thread_check()  # 检测主线程运行状态
             self.step(f"开始下载推特{media_info['blog_id']}的第{photo_index}张图片 {photo_url}")
 
-            photo_file_path = os.path.join(self.main_thread.photo_download_path, self.account_name, f"%019d_%02d.{net.get_file_extension(photo_url)}" % (media_info["blog_id"], photo_index))
+            photo_file_path = os.path.join(self.main_thread.photo_download_path, self.index_key, f"%019d_%02d.{net.get_file_extension(photo_url)}" % (media_info["blog_id"], photo_index))
             for retry_count in range(0, 5):
                 save_file_return = net.download(photo_url, photo_file_path)
                 if save_file_return["status"] == 1:
@@ -443,9 +437,9 @@ class Download(crawler.DownloadThread):
             self.step(f"开始下载推特{media_info['blog_id']}的第{video_index}个视频 {video_url}")
 
             if len(media_info["video_url_list"]) > 1:
-                video_file_path = os.path.join(self.main_thread.video_download_path, self.account_name, f"%019d_%02d.{net.get_file_extension(video_url)}" % (media_info["blog_id"], video_index))
+                video_file_path = os.path.join(self.main_thread.video_download_path, self.index_key, f"%019d_%02d.{net.get_file_extension(video_url)}" % (media_info["blog_id"], video_index))
             else:
-                video_file_path = os.path.join(self.main_thread.video_download_path, self.account_name, f"%019d.{net.get_file_extension(video_url)}" % media_info["blog_id"])
+                video_file_path = os.path.join(self.main_thread.video_download_path, self.index_key, f"%019d.{net.get_file_extension(video_url)}" % media_info["blog_id"])
             save_file_return = net.download(video_url, video_file_path)
             if save_file_return["status"] == 1:
                 self.temp_path_list.append(video_file_path)  # 设置临时目录
@@ -455,41 +449,6 @@ class Download(crawler.DownloadThread):
                 self.error(f"推特{media_info['blog_id']}的第{video_index}个视频 {video_url} 下载失败，原因：{crawler.download_failre(save_file_return['code'])}")
                 self.check_download_failure_exit()
             video_index += 1
-
-    def run(self):
-        try:
-            try:
-                account_index_response = get_account_index_page(self.account_name)
-            except crawler.CrawlerException as e:
-                self.error(e.http_error("首页"))
-                raise
-
-            if self.single_save_data[1] == "":
-                self.single_save_data[1] = account_index_response["account_id"]
-            else:
-                if self.single_save_data[1] != account_index_response["account_id"]:
-                    self.error("account id 不符合，原账号已改名")
-                    tool.process_exit()
-
-            # 获取所有可下载推特
-            media_info_list = self.get_crawl_list()
-            self.step(f"需要下载的全部推特解析完毕，共{len(media_info_list)}个")
-
-            # 从最早的推特开始下载
-            while len(media_info_list) > 0:
-                self.crawl_media(media_info_list.pop())
-                self.main_thread_check()  # 检测主线程运行状态
-        except (SystemExit, KeyboardInterrupt) as e:
-            if isinstance(e, SystemExit) and e.code == 1:
-                self.error("异常退出")
-            else:
-                self.step("提前退出")
-        except Exception as e:
-            self.error("未知异常")
-            self.error(str(e) + "\n" + traceback.format_exc(), False)
-
-        self.main_thread.save_data.pop(self.account_name)
-        self.done()
 
 
 if __name__ == "__main__":

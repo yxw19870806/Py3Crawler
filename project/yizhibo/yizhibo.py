@@ -9,7 +9,6 @@ email: hikaru870806@hotmail.com
 import os
 import re
 import time
-import traceback
 from pyquery import PyQuery as pq
 from common import *
 
@@ -131,46 +130,44 @@ class YiZhiBo(crawler.Crawler):
         # account_id  video_count  last_video_time  photo_count  last_photo_time(account_name)
         self.save_data = crawler.read_save_data(self.save_data_path, 0, ["", "0", "0", "0", "0"])
 
-    def main(self):
-        try:
-            # 循环下载每个id
-            thread_list = []
-            for account_id in sorted(self.save_data.keys()):
-                # 提前结束
-                if not self.is_running():
-                    break
-
-                # 开始下载
-                thread = Download(self.save_data[account_id], self)
-                thread.start()
-                thread_list.append(thread)
-
-                time.sleep(1)
-
-            # 等待子线程全部完成
-            while len(thread_list) > 0:
-                thread_list.pop().join()
-        except KeyboardInterrupt:
-            self.stop_process()
-
-        # 未完成的数据保存
-        self.write_remaining_save_data()
-
-        # 重新排序保存存档文件
-        self.rewrite_save_file()
-
-        self.end_message()
+        # 下载线程
+        self.download_thread = Download
 
 
 class Download(crawler.DownloadThread):
     def __init__(self, single_save_data, main_thread):
         crawler.DownloadThread.__init__(self, single_save_data, main_thread)
-        self.account_id = self.single_save_data[0]
+        self.account_id = self.single_save_data[0]  # account id
         if len(self.single_save_data) >= 6 and self.single_save_data[5]:
             self.display_name = self.single_save_data[5]
         else:
             self.display_name = self.single_save_data[0]
         self.step("开始")
+
+    def _run(self):
+        # 图片下载
+        if self.main_thread.is_download_photo:
+            # 获取所有可下载图片
+            photo_info_list = self.get_crawl_photo_list()
+            self.step(f"需要下载的全部图片解析完毕，共{len(photo_info_list)}张")
+
+            # 从最早的图片开始下载
+            while len(photo_info_list) > 0:
+                if not self.crawl_photo(photo_info_list.pop()):
+                    break
+                self.main_thread_check()  # 检测主线程运行状态
+
+        # 视频下载
+        if self.main_thread.is_download_video:
+            # 获取所有可下载视频
+            video_info_list = self.get_crawl_video_list()
+            self.step(f"需要下载的全部视频解析完毕，共{len(video_info_list)}个")
+
+            # 从最早的视频开始下载
+            while len(video_info_list) > 0:
+                if not self.crawl_video(video_info_list.pop()):
+                    break
+                self.main_thread_check()  # 检测主线程运行状态
 
     # 获取所有可下载图片
     def get_crawl_photo_list(self):
@@ -276,43 +273,6 @@ class Download(crawler.DownloadThread):
         self.single_save_data[1] = str(video_index)  # 设置存档记录
         self.single_save_data[2] = str(video_info["video_time"])  # 设置存档记录
         return True
-
-    def run(self):
-        try:
-            # 图片下载
-            if self.main_thread.is_download_photo:
-                # 获取所有可下载图片
-                photo_info_list = self.get_crawl_photo_list()
-                self.step(f"需要下载的全部图片解析完毕，共{len(photo_info_list)}张")
-
-                # 从最早的图片开始下载
-                while len(photo_info_list) > 0:
-                    if not self.crawl_photo(photo_info_list.pop()):
-                        break
-                    self.main_thread_check()  # 检测主线程运行状态
-
-            # 视频下载
-            if self.main_thread.is_download_video:
-                # 获取所有可下载视频
-                video_info_list = self.get_crawl_video_list()
-                self.step(f"需要下载的全部视频解析完毕，共{len(video_info_list)}个")
-
-                # 从最早的视频开始下载
-                while len(video_info_list) > 0:
-                    if not self.crawl_video(video_info_list.pop()):
-                        break
-                    self.main_thread_check()  # 检测主线程运行状态
-        except (SystemExit, KeyboardInterrupt) as e:
-            if isinstance(e, SystemExit) and e.code == 1:
-                self.error("异常退出")
-            else:
-                self.step("提前退出")
-        except Exception as e:
-            self.error("未知异常")
-            self.error(str(e) + "\n" + traceback.format_exc(), False)
-
-        self.main_thread.save_data.pop(self.account_id)
-        self.done()
 
 
 if __name__ == "__main__":

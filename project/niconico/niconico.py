@@ -9,7 +9,6 @@ email: hikaru870806@hotmail.com
 import html
 import os
 import time
-import traceback
 from pyquery import PyQuery as pq
 from common import *
 
@@ -221,52 +220,35 @@ class NicoNico(crawler.Crawler):
             log.error("没有检测到账号登录状态，退出程序！")
             tool.process_exit()
 
-    def main(self):
-        try:
-            # 循环下载每个id
-            thread_list = []
-            for list_id in sorted(self.save_data.keys()):
-                # 提前结束
-                if not self.is_running():
-                    break
-
-                # 开始下载
-                thread = Download(self.save_data[list_id], self)
-                thread.start()
-                thread_list.append(thread)
-
-                time.sleep(1)
-
-            # 等待子线程全部完成
-            while len(thread_list) > 0:
-                thread_list.pop().join()
-        except KeyboardInterrupt:
-            self.stop_process()
-
-        # 未完成的数据保存
-        self.write_remaining_save_data()
-
-        # 重新排序保存存档文件
-        self.rewrite_save_file()
-
-        self.end_message()
+        # 下载线程
+        self.download_thread = Download
 
 
 class Download(crawler.DownloadThread):
     def __init__(self, single_save_data, main_thread):
         crawler.DownloadThread.__init__(self, single_save_data, main_thread)
-        self.list_id = self.single_save_data[0]
+        self.index_key = self.single_save_data[0]  # list id
         if len(self.single_save_data) >= 3 and self.single_save_data[2]:
             self.display_name = self.single_save_data[2]
         else:
             self.display_name = self.single_save_data[0]
         self.step("开始")
 
+    def _run(self):
+        # 获取所有可下载视频
+        video_info_list = self.get_crawl_list()
+        self.step(f"需要下载的全部视频解析完毕，共{len(video_info_list)}个")
+
+        # 从最早的视频开始下载
+        while len(video_info_list) > 0:
+            self.crawl_video(video_info_list.pop())
+            self.main_thread_check()  # 检测主线程运行状态
+
     # 获取所有可下载图片
     def get_crawl_list(self):
         # 获取视频信息列表
         try:
-            mylist_index_response = get_mylist_index(self.list_id)
+            mylist_index_response = get_mylist_index(self.index_key)
         except crawler.CrawlerException as e:
             self.error(e.http_error("视频列表"))
             raise
@@ -319,28 +301,6 @@ class Download(crawler.DownloadThread):
 
         # 视频下载完毕
         self.single_save_data[1] = str(video_info["video_id"])  # 设置存档记录
-
-    def run(self):
-        try:
-            # 获取所有可下载视频
-            video_info_list = self.get_crawl_list()
-            self.step(f"需要下载的全部视频解析完毕，共{len(video_info_list)}个")
-
-            # 从最早的视频开始下载
-            while len(video_info_list) > 0:
-                self.crawl_video(video_info_list.pop())
-                self.main_thread_check()  # 检测主线程运行状态
-        except (SystemExit, KeyboardInterrupt) as e:
-            if isinstance(e, SystemExit) and e.code == 1:
-                self.error("异常退出")
-            else:
-                self.step("提前退出")
-        except Exception as e:
-            self.error("未知异常")
-            self.error(str(e) + "\n" + traceback.format_exc(), False)
-
-        self.main_thread.save_data.pop(self.list_id)
-        self.done()
 
 
 if __name__ == "__main__":

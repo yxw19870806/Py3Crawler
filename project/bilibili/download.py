@@ -47,22 +47,21 @@ class BiliBiliDownload(bilibili.BiliBili):
             self.download()
 
     def download(self):
+        # 输入需要解析的视频
         video_id = self.get_video_id_from_console()
-        # 无效的视频地址
         if not tool.is_integer(video_id):
             log.step("错误的视频地址，正确的地址格式如：https://www.bilibili.com/video/av123456")
             return
 
-        # 访问视频播放页
+        # 获取下载地址
         try:
             video_response = bilibili.get_video_page(video_id)
         except crawler.CrawlerException as e:
-            log.error(e.http_error("视频下载地址"))
+            log.error(e.http_error("视频"))
             return
         if video_response["is_private"]:
             log.step("视频需要登录才能访问，跳过")
             return
-
         if len(video_response["video_part_info_list"]) > 1:
             log.step(f"视频共获取{len(video_response['video_part_info_list'])}个分段")
 
@@ -83,8 +82,8 @@ class BiliBiliDownload(bilibili.BiliBili):
                     video_title += "_" + str(part_index)
             video_name = f"%010d {path.filter_text(video_title)}.{net.get_file_extension(video_part_info['video_url_list'][0])}" % int(video_id)
 
-            log.step("请选择下载目录")
             # 选择下载目录
+            log.step("请选择下载目录")
             options = {
                 "initialdir": self.video_download_path,
                 "initialfile": video_name,
@@ -95,8 +94,8 @@ class BiliBiliDownload(bilibili.BiliBili):
             if not file_path:
                 continue
 
-            log.step(f"\n视频标题：{video_title}\n视频地址：{video_part_info['video_url_list']}\n下载路径：{file_path}")
             # 开始下载
+            log.step(f"\n视频标题：{video_title}\n视频地址：{video_part_info['video_url_list']}\n下载路径：{file_path}")
             video_index = 1
             for video_url in video_part_info["video_url_list"]:
                 if len(video_part_info["video_url_list"]) > 1:

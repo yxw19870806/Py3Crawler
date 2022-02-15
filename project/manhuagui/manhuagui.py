@@ -10,7 +10,6 @@ import execjs
 import lzstring
 import os
 import time
-import traceback
 from pyquery import PyQuery as pq
 from common import *
 
@@ -131,46 +130,28 @@ class ManHuaGui(crawler.Crawler):
         # comic_name  last_chapter_id
         self.save_data = crawler.read_save_data(self.save_data_path, 0, ["", "0"])
 
-    def main(self):
-        try:
-            # 循环下载每个id
-            thread_list = []
-            for comic_id in sorted(self.save_data.keys()):
-                # 提前结束
-                if not self.is_running():
-                    break
-
-                # 开始下载
-                thread = Download(self.save_data[comic_id], self)
-                thread.start()
-                thread_list.append(thread)
-
-                time.sleep(1)
-
-            # 等待子线程全部完成
-            while len(thread_list) > 0:
-                thread_list.pop().join()
-        except KeyboardInterrupt:
-            self.stop_process()
-
-        # 未完成的数据保存
-        self.write_remaining_save_data()
-
-        # 重新排序保存存档文件
-        self.rewrite_save_file()
-
-        self.end_message()
+        # 下载线程
+        self.download_thread = Download
 
 
 class Download(crawler.DownloadThread):
     def __init__(self, single_save_data, main_thread):
         crawler.DownloadThread.__init__(self, single_save_data, main_thread)
-        self.comic_id = self.single_save_data[0]
+        self.index_key = self.single_save_data[0]  # comic id
         if len(self.single_save_data) >= 3 and self.single_save_data[2]:
             self.display_name = self.single_save_data[2]
         else:
-            self.display_name = self.comic_id
+            self.display_name = self.single_save_data[0]
         self.step("开始")
+
+    def _run(self):
+        # 获取所有可下载章节
+        chapter_info_list = self.get_crawl_list()
+        self.step(f"需要下载的全部漫画解析完毕，共{len(chapter_info_list)}个")
+        # 从最早的章节开始下载
+        while len(chapter_info_list) > 0:
+            self.crawl_comic(chapter_info_list.pop())
+            self.main_thread_check()  # 检测主线程运行状态
 
     # 获取所有可下载章节
     def get_crawl_list(self):
@@ -179,7 +160,7 @@ class Download(crawler.DownloadThread):
         # 获取漫画首页
         self.step("开始解析漫画首页")
         try:
-            blog_pagination_response = get_comic_index_page(self.comic_id)
+            blog_pagination_response = get_comic_index_page(self.index_key)
         except crawler.CrawlerException as e:
             self.error(e.http_error("漫画首页"))
             raise
@@ -201,7 +182,7 @@ class Download(crawler.DownloadThread):
 
         # 获取指定漫画章节
         try:
-            chapter_response = get_chapter_page(self.comic_id, chapter_info["chapter_id"])
+            chapter_response = get_chapter_page(self.index_key, chapter_info["chapter_id"])
         except crawler.CrawlerException as e:
             self.error(e.http_error(f"漫画{chapter_info['chapter_id']} {chapter_info['group_name']}《{chapter_info['chapter_name']}》"))
             raise
@@ -216,7 +197,7 @@ class Download(crawler.DownloadThread):
             self.step(f"漫画{chapter_info['chapter_id']} {chapter_info['group_name']}《{chapter_info['chapter_name']}》开始下载第{photo_index}张图片 {photo_url}")
 
             photo_file_path = os.path.join(chapter_path, f"%03d.{net.get_file_extension(photo_url)}" % photo_index)
-            save_file_return = net.download(photo_url, photo_file_path, header_list={"Referer": f"https://www.manhuagui.com/comic/{self.comic_id}/{chapter_info['chapter_id']}.html"}, is_auto_proxy=False)
+            save_file_return = net.download(photo_url, photo_file_path, header_list={"Referer": f"https://www.manhuagui.com/comic/{self.index_key}/{chapter_info['chapter_id']}.html"}, is_auto_proxy=False)
             if save_file_return["status"] == 1:
                 self.total_photo_count += 1  # 计数累加
                 self.step(f"漫画{chapter_info['chapter_id']} {chapter_info['group_name']}《{chapter_info['chapter_name']}》第{photo_index}张图片下载成功")
@@ -228,27 +209,6 @@ class Download(crawler.DownloadThread):
         # 媒体内图片全部下载完毕
         self.temp_path_list = []  # 临时目录设置清除
         self.single_save_data[1] = str(chapter_info["chapter_id"])  # 设置存档记录
-
-    def run(self):
-        try:
-            # 获取所有可下载章节
-            chapter_info_list = self.get_crawl_list()
-            self.step(f"需要下载的全部漫画解析完毕，共{len(chapter_info_list)}个")
-            # 从最早的章节开始下载
-            while len(chapter_info_list) > 0:
-                self.crawl_comic(chapter_info_list.pop())
-                self.main_thread_check()  # 检测主线程运行状态
-        except (SystemExit, KeyboardInterrupt) as e:
-            if isinstance(e, SystemExit) and e.code == 1:
-                self.error("异常退出")
-            else:
-                self.step("提前退出")
-        except Exception as e:
-            self.error("未知异常")
-            self.error(str(e) + "\n" + traceback.format_exc(), False)
-
-        self.main_thread.save_data.pop(self.comic_id)
-        self.done()
 
 
 if __name__ == "__main__":

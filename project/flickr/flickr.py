@@ -8,7 +8,6 @@ email: hikaru870806@hotmail.com
 """
 import os
 import time
-import traceback
 from pyquery import PyQuery as pq
 from common import *
 
@@ -222,35 +221,8 @@ class Flickr(crawler.Crawler):
                 COOKIE_INFO = {}
                 break
 
-    def main(self):
-        try:
-            # 循环下载每个id
-            thread_list = []
-            for account_id in sorted(self.save_data.keys()):
-                # 提前结束
-                if not self.is_running():
-                    break
-
-                # 开始下载
-                thread = Download(self.save_data[account_id], self)
-                thread.start()
-                thread_list.append(thread)
-
-                time.sleep(1)
-
-            # 等待子线程全部完成
-            while len(thread_list) > 0:
-                thread_list.pop().join()
-        except KeyboardInterrupt:
-            self.stop_process()
-
-        # 未完成的数据保存
-        self.write_remaining_save_data()
-
-        # 重新排序保存存档文件
-        self.rewrite_save_file()
-
-        self.end_message()
+        # 下载线程
+        self.download_thread = Download
 
 
 class Download(crawler.DownloadThread):
@@ -258,9 +230,34 @@ class Download(crawler.DownloadThread):
 
     def __init__(self, single_save_data, main_thread):
         crawler.DownloadThread.__init__(self, single_save_data, main_thread)
-        self.account_name = self.single_save_data[0]
-        self.display_name = self.account_name
+        self.index_key = self.display_name = self.single_save_data[0]  # account name
         self.step("开始")
+
+    def _run(self):
+        # 获取相册首页页面
+        try:
+            account_index_response = get_account_index_page(self.index_key)
+        except crawler.CrawlerException as e:
+            self.error(e.http_error("相册首页"))
+            raise
+
+        # 获取所有可下载图片
+        photo_info_list = self.get_crawl_list(account_index_response["user_id"], account_index_response["site_key"], account_index_response["csrf"])
+        self.step(f"需要下载的全部图片解析完毕，共{len(photo_info_list)}张")
+
+        # 从最早的图片开始下载
+        deal_photo_info_list = []
+        while len(photo_info_list) > 0:
+            photo_info = photo_info_list.pop()
+            # 下一张图片的上传时间一致，合并下载
+            deal_photo_info_list.append(photo_info)
+            if len(photo_info_list) > 0 and photo_info_list[-1]["photo_time"] == photo_info["photo_time"]:
+                continue
+
+            # 下载同一上传时间的所有图片
+            self.crawl_photo(deal_photo_info_list)
+            deal_photo_info_list = []  # 累加图片地址清除
+            self.main_thread_check()  # 检测主线程运行状态
 
     # 获取所有可下载图片
     def get_crawl_list(self, user_id, site_key, csrf):
@@ -305,7 +302,7 @@ class Download(crawler.DownloadThread):
         for photo_info in photo_info_list:
             self.main_thread_check()  # 检测主线程运行状态
             self.step(f"开始下载图片{photo_info['photo_id']} {photo_info['photo_url']}")
-            file_path = os.path.join(self.main_thread.photo_download_path, self.account_name, f"%011d.{net.get_file_extension(photo_info['photo_url'])}" % photo_info["photo_id"])
+            file_path = os.path.join(self.main_thread.photo_download_path, self.index_key, f"%011d.{net.get_file_extension(photo_info['photo_url'])}" % photo_info["photo_id"])
             save_file_return = net.download(photo_info["photo_url"], file_path)
             if save_file_return["status"] == 1:
                 self.temp_path_list.append(file_path)  # 设置临时目录
@@ -318,44 +315,6 @@ class Download(crawler.DownloadThread):
         # 图片下载完毕
         self.temp_path_list = []  # 临时目录设置清除
         self.single_save_data[1] = str(photo_info_list[0]["photo_time"])  # 设置存档记
-
-    def run(self):
-        try:
-            # 获取相册首页页面
-            try:
-                account_index_response = get_account_index_page(self.account_name)
-            except crawler.CrawlerException as e:
-                self.error(e.http_error("相册首页"))
-                raise
-
-            # 获取所有可下载图片
-            photo_info_list = self.get_crawl_list(account_index_response["user_id"], account_index_response["site_key"], account_index_response["csrf"])
-            self.step(f"需要下载的全部图片解析完毕，共{len(photo_info_list)}张")
-
-            # 从最早的图片开始下载
-            deal_photo_info_list = []
-            while len(photo_info_list) > 0:
-                photo_info = photo_info_list.pop()
-                # 下一张图片的上传时间一致，合并下载
-                deal_photo_info_list.append(photo_info)
-                if len(photo_info_list) > 0 and photo_info_list[-1]["photo_time"] == photo_info["photo_time"]:
-                    continue
-
-                # 下载同一上传时间的所有图片
-                self.crawl_photo(deal_photo_info_list)
-                deal_photo_info_list = []  # 累加图片地址清除
-                self.main_thread_check()  # 检测主线程运行状态
-        except (SystemExit, KeyboardInterrupt) as e:
-            if isinstance(e, SystemExit) and e.code == 1:
-                self.error("异常退出")
-            else:
-                self.step("提前退出")
-        except Exception as e:
-            self.error("未知异常")
-            self.error(str(e) + "\n" + traceback.format_exc(), False)
-
-        self.main_thread.save_data.pop(self.account_name)
-        self.done()
 
 
 if __name__ == "__main__":
