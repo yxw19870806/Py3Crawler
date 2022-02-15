@@ -43,8 +43,8 @@ DEFAULT_NET_CONFIG = {
     "DOWNLOAD_RETRY_COUNT": 10,  # 下载文件自动重试次数
     "DOWNLOAD_LIMIT_SIZE": 1.5 * SIZE_GB,  # 下载文件超过多少字节跳过不下载
     "DOWNLOAD_MULTI_THREAD_MIN_SIZE": 50 * SIZE_MB,  # 下载文件超过多少字节后开始使用多线程下载
-    "DOWNLOAD_MULTI_THREAD_MIN_BLOCK_SIZE": 10 * SIZE_MB,  # 多线程下载中单个线程下载的字节数下限（线程总数下限=文件大小/单个线程下载的字节数下限）
-    "DOWNLOAD_MULTI_THREAD_MAX_BLOCK_SIZE": 100 * SIZE_MB,  # 多线程下载中单个线程下载的字节数上限（线程总数上限=文件大小/单个线程下载的字节数上限）
+    "DOWNLOAD_MULTI_THREAD_BLOCK_SIZE": 10 * SIZE_MB,  # 多线程下载中单个线程下载的字节数
+    "DOWNLOAD_MULTI_THREAD_MAX_COUNT": 10,  # 多线程下载时总线程数上限
     "TOO_MANY_REQUESTS_WAIT_TIME": 30,  # http code 429(Too Many requests)时的等待时间
     "SERVICE_INTERNAL_ERROR_WAIT_TIME": 30,  # http code 50X（服务器内部错误）时的等待时间
     "HTTP_REQUEST_RETRY_WAIT_TIME": 5,  # 请求失败后重新请求的间隔时间
@@ -79,6 +79,8 @@ HTTP_RETURN_CODE_TOO_MANY_REDIRECTS = -5  # 重定向次数过多
 HTTP_RETURN_CODE_SUCCEED = 200
 # 下载文件时是否覆盖已存在的同名文件
 DOWNLOAD_REPLACE_IF_EXIST = False
+# 多线程下载的总线程限制
+multi_download_thread_semaphore = threading.Semaphore(NET_CONFIG["DOWNLOAD_MULTI_THREAD_MAX_COUNT"])
 
 
 class ErrorResponse(object):
@@ -485,9 +487,6 @@ def download(file_url, file_path, need_content_type=False, head_check=False, rep
                         EXIT_FLAG = True
                     raise
         else:  # 多线程下载
-            # 单线程下载文件大小（100MB）
-            multi_thread_block_size = int(math.ceil(content_length / 10 / SIZE_MB)) * SIZE_MB
-            multi_thread_block_size = min(NET_CONFIG["DOWNLOAD_MULTI_THREAD_MIN_BLOCK_SIZE"], max(NET_CONFIG["DOWNLOAD_MULTI_THREAD_MAX_BLOCK_SIZE"], multi_thread_block_size))
             # 创建文件
             with open(file_path, "w"):
                 is_create_file = True
@@ -498,7 +497,7 @@ def download(file_url, file_path, need_content_type=False, head_check=False, rep
                 end_pos = -1
                 while end_pos < content_length - 1:
                     start_pos = end_pos + 1
-                    end_pos = min(content_length - 1, start_pos + multi_thread_block_size - 1)
+                    end_pos = min(content_length - 1, start_pos + NET_CONFIG["DOWNLOAD_MULTI_THREAD_BLOCK_SIZE"] - 1)
                     # 创建一个副本
                     fd_handle = os.fdopen(os.dup(file_no), "rb+", -1)
                     thread = MultiThreadDownload(file_url, start_pos, end_pos, fd_handle, error_flag)
@@ -611,6 +610,7 @@ class MultiThreadDownload(threading.Thread):
         self.end_pos = end_pos
         self.fd_handle = fd_handle
         self.error_flag = error_flag
+        multi_download_thread_semaphore.acquire()
 
     def run(self):
         headers_list = {"Range": f"bytes={self.start_pos}-{self.end_pos}"}
@@ -627,5 +627,9 @@ class MultiThreadDownload(threading.Thread):
                     self.fd_handle.seek(self.start_pos)
                     self.fd_handle.write(response.data)
                     self.fd_handle.close()
-                    return
-        self.error_flag.append(self)
+                    break
+        else:
+            self.error_flag.append(self)
+
+        # 唤醒主线程
+        multi_download_thread_semaphore.release()
