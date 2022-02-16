@@ -139,12 +139,12 @@ class Download(crawler.DownloadThread):
         self.step(f"开始下载音频{audio_info['audio_id']}《{audio_info['audio_title']}》 {audio_url}")
 
         file_path = os.path.join(self.main_thread.audio_download_path, self.display_name, f"%07d - {path.filter_text(audio_info['audio_title'])}.{net.get_file_extension(audio_url)}" % (audio_info["audio_id"]))
-        save_file_return = net.download(audio_url, file_path)
-        if save_file_return["status"] == 1:
+        download_return = net.Download(audio_url, file_path)
+        if download_return.status == net.Download.DOWNLOAD_SUCCEED:
             self.total_audio_count += 1  # 计数累加
             self.step(f"音频{audio_info['audio_id']}《{audio_info['audio_title']}》下载成功")
         else:
-            self.error(f"音频{audio_info['audio_id']}《{audio_info['audio_title']}》 {audio_url} 下载失败，原因：{crawler.download_failre(save_file_return['code'])}")
+            self.error(f"音频{audio_info['audio_id']}《{audio_info['audio_title']}》 {audio_url} 下载失败，原因：{crawler.download_failre(download_return.code)}")
             self.check_download_failure_exit()
 
         # 音频下载完毕

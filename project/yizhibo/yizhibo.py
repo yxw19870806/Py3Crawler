@@ -207,12 +207,12 @@ class Download(crawler.DownloadThread):
         self.step(f"开始下载第{photo_index}张图片 {photo_info['photo_url']}")
 
         photo_file_path = os.path.join(self.main_thread.photo_download_path, self.display_name, f"%04d.{net.get_file_extension(photo_info['photo_url'])}" % photo_index)
-        save_file_return = net.download(photo_info["photo_url"], photo_file_path)
-        if save_file_return["status"] == 1:
+        download_return = net.Download(photo_info["photo_url"], photo_file_path)
+        if download_return.status == net.Download.DOWNLOAD_SUCCEED:
             self.total_photo_count += 1  # 计数累加
             self.step(f"第{photo_index}张图片下载成功")
         else:
-            self.error(f"第{photo_index}张图片 {photo_info['photo_url']} 下载失败，原因：{crawler.download_failre(save_file_return['code'])}")
+            self.error(f"第{photo_index}张图片 {photo_info['photo_url']} 下载失败，原因：{crawler.download_failre(download_return.code)}")
             if self.check_download_failure_exit(False):
                 return False
 

@@ -183,12 +183,12 @@ class Download(crawler.DownloadThread):
         self.step(f"开始下载{audio_type_name}歌曲{audio_info['audio_id']}《{audio_info['audio_title']}》 {audio_info_response['audio_url']}")
 
         file_path = os.path.join(self.main_thread.audio_download_path, self.display_name, audio_type_name, f"%08d - {path.filter_text(audio_info['audio_title'])}.{net.get_file_extension(audio_info_response['audio_url'])}" % audio_info["audio_id"])
-        save_file_return = net.download(audio_info_response["audio_url"], file_path)
-        if save_file_return["status"] == 1:
+        download_return = net.Download(audio_info_response["audio_url"], file_path)
+        if download_return.status == net.Download.DOWNLOAD_SUCCEED:
             self.total_audio_count += 1  # 计数累加
             self.step(f"{audio_type_name}歌曲{audio_info['audio_id']}《{audio_info['audio_title']}》下载成功")
         else:
-            self.error(f"{audio_type_name}歌曲{audio_info['audio_id']}《{audio_info['audio_title']}》 {audio_info_response['audio_url']} 下载失败，原因：{crawler.download_failre(save_file_return['code'])}")
+            self.error(f"{audio_type_name}歌曲{audio_info['audio_id']}《{audio_info['audio_title']}》 {audio_info_response['audio_url']} 下载失败，原因：{crawler.download_failre(download_return.code)}")
             self.check_download_failure_exit()
 
         # 歌曲下载完毕

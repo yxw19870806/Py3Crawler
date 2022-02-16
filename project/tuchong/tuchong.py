@@ -170,12 +170,12 @@ class Download(crawler.DownloadThread):
             self.step(f"相册{album_info['album_id']}《{album_info['album_title']}》开始下载第{photo_index}张图片 {photo_url}")
 
             file_path = os.path.join(post_path, f"{photo_index}.jpg")
-            save_file_return = net.download(photo_url, file_path)
-            if save_file_return["status"] == 1:
+            download_return = net.Download(photo_url, file_path)
+            if download_return.status == net.Download.DOWNLOAD_SUCCEED:
                 self.total_photo_count += 1  # 计数累加
                 self.step(f"相册{album_info['album_id']}《{album_info['album_title']}》第{photo_index}张图片下载成功")
             else:
-                self.error(f"相册{album_info['album_id']}《{album_info['album_title']}》第{photo_index}张图片 {photo_url} 下载失败，原因：{crawler.download_failre(save_file_return['code'])}")
+                self.error(f"相册{album_info['album_id']}《{album_info['album_title']}》第{photo_index}张图片 {photo_url} 下载失败，原因：{crawler.download_failre(download_return.code)}")
                 self.check_download_failure_exit()
             photo_index += 1
 

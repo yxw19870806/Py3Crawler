@@ -566,8 +566,7 @@ def download_from_list(file_url_list, file_path, header_list=None, cookies_list=
         # 下载
         with open(file_path, "wb") as file_handle:
             for file_url in file_url_list:
-                response = request(file_url, header_list=header_list, cookies_list=cookies_list, connection_timeout=NET_CONFIG["DOWNLOAD_CONNECTION_TIMEOUT"],
-                                   read_timeout=NET_CONFIG["DOWNLOAD_READ_TIMEOUT"])
+                response = request(file_url, header_list=header_list, cookies_list=cookies_list, connection_timeout=NET_CONFIG["DOWNLOAD_CONNECTION_TIMEOUT"], read_timeout=NET_CONFIG["DOWNLOAD_READ_TIMEOUT"])
                 if response.status == HTTP_RETURN_CODE_SUCCEED:
                     file_handle.write(response.data)
                 # 超过重试次数，直接退出

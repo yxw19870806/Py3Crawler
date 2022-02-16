@@ -150,12 +150,12 @@ class Download(crawler.DownloadThread):
 
         photo_url = get_photo_url(photo_info["photo_url"])
         file_path = os.path.join(self.main_thread.photo_download_path, self.display_name, f"%08d.{net.get_file_extension(photo_url)}" % photo_info["photo_id"])
-        save_file_return = net.download(photo_url, file_path)
-        if save_file_return["status"] == 1:
+        download_return = net.Download(photo_url, file_path)
+        if download_return.status == net.Download.DOWNLOAD_SUCCEED:
             self.total_photo_count += 1  # 计数累加
             self.step(f"图片{photo_info['photo_id']}下载成功")
         else:
-            self.error(f"图片{photo_info['photo_id']} {photo_info['photo_url']}，下载失败，原因：{crawler.download_failre(save_file_return['code'])}")
+            self.error(f"图片{photo_info['photo_id']} {photo_info['photo_url']}，下载失败，原因：{crawler.download_failre(download_return.code)}")
             self.check_download_failure_exit()
 
         # 图片内图片下全部载完毕

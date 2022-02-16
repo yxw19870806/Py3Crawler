@@ -96,11 +96,11 @@ def main():
 
                     # 开始下载
                     log.step(f"\n视频标题：{video_play_response['video_title']}\n视频地址：{video_part_url}\n下载路径：{file_path}")
-                    save_file_return = net.download(video_part_url, file_path, header_list={"Referer": f"https://www.bilibili.com/video/av{video_info['video_id']}"})
-                    if save_file_return["status"] == 1:
+                    download_return = net.Download(video_part_url, file_path, auto_multipart_download=True, header_list={"Referer": f"https://www.bilibili.com/video/av{video_info['video_id']}"})
+                    if download_return.status == net.Download.DOWNLOAD_SUCCEED:
                         log.step(f"视频{video_info['video_id']}《{video_info['video_title']}》第{video_index}个视频下载成功")
                     else:
-                        log.error(f"视频{video_info['video_id']}《{video_info['video_title']}》第{video_index}个视频 {video_part_url}，下载失败，原因：{crawler.download_failre(save_file_return['code'])}")
+                        log.error(f"视频{video_info['video_id']}《{video_info['video_title']}》第{video_index}个视频 {video_part_url}，下载失败，原因：{crawler.download_failre(download_return.code)}")
                     video_split_index += 1
                     video_index += 1
 

@@ -243,17 +243,17 @@ class Download(crawler.DownloadThread):
                 file_extension = "jpg"
             file_path = os.path.join(album_path, f"%03d.{file_extension}" % photo_index)
             for retry_count in range(0, 10):
-                save_file_return = net.download(photo_url, file_path)
-                if save_file_return["status"] == 1:
+                download_return = net.Download(photo_url, file_path)
+                if download_return.status == net.Download.DOWNLOAD_SUCCEED:
                     self.total_photo_count += 1  # 计数累加
                     self.step(f"作品{album_id}第{photo_index}张图片下载成功")
                 else:
                     # 560报错，重新下载
-                    if save_file_return["code"] == 404 and retry_count < 4:
+                    if download_return.code == 404 and retry_count < 4:
                         log.step(f"图片 {photo_url} 访问异常，重试")
                         time.sleep(5)
                         continue
-                    self.error(f"作品{album_id}第{photo_index}张图片 {photo_url}，下载失败，原因：{crawler.download_failre(save_file_return['code'])}")
+                    self.error(f"作品{album_id}第{photo_index}张图片 {photo_url}，下载失败，原因：{crawler.download_failre(download_return.code)}")
                     self.check_download_failure_exit()
                 break
             photo_index += 1
@@ -269,12 +269,12 @@ class Download(crawler.DownloadThread):
         self.step(f"作品{album_id}开始下载视频 {video_response['video_url']}")
 
         file_path = os.path.join(self.main_thread.photo_download_path, self.display_name, f"{album_id}.{video_response['video_type']}")
-        save_file_return = net.download(video_response["video_url"], file_path)
-        if save_file_return["status"] == 1:
+        download_return = net.Download(video_response["video_url"], file_path)
+        if download_return.status == net.Download.DOWNLOAD_SUCCEED:
             self.total_video_count += 1  # 计数累加
             self.step(f"作品{album_id}视频下载成功")
         else:
-            self.error(f"作品{album_id}视频 {video_response['video_url']}，下载失败，原因：{crawler.download_failre(save_file_return['code'])}")
+            self.error(f"作品{album_id}视频 {video_response['video_url']}，下载失败，原因：{crawler.download_failre(download_return.code)}")
             self.check_download_failure_exit()
 
 

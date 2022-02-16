@@ -107,17 +107,17 @@ class BiliBiliDownload(bilibili.BiliBili):
                 else:
                     file_real_path = file_path
 
-                save_file_return = net.download(video_url, file_real_path, header_list={"Referer": f"https://www.bilibili.com/video/av{video_id}"})
-                if save_file_return["status"] == 1:
+                download_return = net.Download(video_url, file_real_path, auto_multipart_download=True, header_list={"Referer": f"https://www.bilibili.com/video/av{video_id}"})
+                if download_return.status == net.Download.DOWNLOAD_SUCCEED:
                     if len(video_part_info["video_url_list"]) == 1:
                         log.step(f"视频《{video_title}》下载成功")
                     else:
                         log.step(f"视频《{video_title}》第{video_index}段下载成功")
                 else:
                     if len(video_part_info["video_url_list"]) == 1:
-                        log.step(f"视频《{video_title}》下载失败，原因：{crawler.download_failre(save_file_return['code'])}")
+                        log.step(f"视频《{video_title}》下载失败，原因：{crawler.download_failre(download_return.code)}")
                     else:
-                        log.step(f"视频《{video_title}》第{video_index}段下载失败，原因：{crawler.download_failre(save_file_return['code'])}")
+                        log.step(f"视频《{video_title}》第{video_index}段下载失败，原因：{crawler.download_failre(download_return.code)}")
                 video_index += 1
 
 

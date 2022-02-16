@@ -415,17 +415,17 @@ class Download(crawler.DownloadThread):
 
             photo_file_path = os.path.join(self.main_thread.photo_download_path, self.index_key, f"%019d_%02d.{net.get_file_extension(photo_url)}" % (media_info["blog_id"], photo_index))
             for retry_count in range(0, 5):
-                save_file_return = net.download(photo_url, photo_file_path)
-                if save_file_return["status"] == 1:
+                download_return = net.Download(photo_url, photo_file_path)
+                if download_return.status == net.Download.DOWNLOAD_SUCCEED:
                     self.temp_path_list.append(photo_file_path)  # 设置临时目录
                     self.total_photo_count += 1  # 计数累加
                     self.step(f"推特{media_info['blog_id']}的第{photo_index}张图片下载成功")
                 else:
                     # 502报错，重新下载
-                    if save_file_return["code"] == 502:
+                    if download_return.code == 502:
                         self.error(f"推特{media_info['blog_id']}的第{photo_index}张图片 {photo_url} 下载失败，重试")
                         continue
-                    self.error(f"推特{media_info['blog_id']}的第{photo_index}张图片 {photo_url} 下载失败，原因：{crawler.download_failre(save_file_return['code'])}")
+                    self.error(f"推特{media_info['blog_id']}的第{photo_index}张图片 {photo_url} 下载失败，原因：{crawler.download_failre(download_return.code)}")
                     self.check_download_failure_exit()
                 break
             photo_index += 1
@@ -440,13 +440,13 @@ class Download(crawler.DownloadThread):
                 video_file_path = os.path.join(self.main_thread.video_download_path, self.index_key, f"%019d_%02d.{net.get_file_extension(video_url)}" % (media_info["blog_id"], video_index))
             else:
                 video_file_path = os.path.join(self.main_thread.video_download_path, self.index_key, f"%019d.{net.get_file_extension(video_url)}" % media_info["blog_id"])
-            save_file_return = net.download(video_url, video_file_path)
-            if save_file_return["status"] == 1:
+            download_return = net.Download(video_url, video_file_path, auto_multipart_download=True)
+            if download_return.status == net.Download.DOWNLOAD_SUCCEED:
                 self.temp_path_list.append(video_file_path)  # 设置临时目录
                 self.total_video_count += 1  # 计数累加
                 self.step(f"推特{media_info['blog_id']}的第{video_index}个视频下载成功")
             else:
-                self.error(f"推特{media_info['blog_id']}的第{video_index}个视频 {video_url} 下载失败，原因：{crawler.download_failre(save_file_return['code'])}")
+                self.error(f"推特{media_info['blog_id']}的第{video_index}个视频 {video_url} 下载失败，原因：{crawler.download_failre(download_return.code)}")
                 self.check_download_failure_exit()
             video_index += 1
 

@@ -210,8 +210,8 @@ class Download(crawler.DownloadThread):
             self.step(f"开始下载日志{blog_info['blog_id']}的第{photo_index}张图片 {photo_url}")
 
             file_path = os.path.join(self.main_thread.photo_download_path, self.display_name, f"%06d_%02d.{net.get_file_extension(photo_url, 'jpg')}" % (blog_info["blog_id"], photo_index))
-            save_file_return = net.download(photo_url, file_path, cookies_list=big_photo_response["cookies"])
-            if save_file_return["status"] == 1:
+            download_return = net.Download(photo_url, file_path, cookies_list=big_photo_response["cookies"])
+            if download_return.status == net.Download.DOWNLOAD_SUCCEED:
                 if check_photo_invalid(file_path):
                     path.delete_dir_or_file(file_path)
                     self.step(f"日志{blog_info['blog_id']}的第{photo_index}张图片 {photo_url} 不符合规则，删除")
@@ -221,7 +221,7 @@ class Download(crawler.DownloadThread):
                     self.total_photo_count += 1  # 计数累加
                     self.step(f"日志{blog_info['blog_id']}的第{photo_index}张图片下载成功")
             else:
-                self.error(f"日志{blog_info['blog_id']}的第{photo_index}张图片 {photo_url} 下载失败，原因：{crawler.download_failre(save_file_return['code'])}")
+                self.error(f"日志{blog_info['blog_id']}的第{photo_index}张图片 {photo_url} 下载失败，原因：{crawler.download_failre(download_return.code)}")
                 self.check_download_failure_exit()
             photo_index += 1
 

@@ -110,9 +110,9 @@ class CNU(crawler.Crawler):
                 # 等待所有线程下载完毕
                 for thread in thread_list:
                     thread.join()
-                    save_file_return = thread.get_result()
-                    if self.is_running() and save_file_return["status"] != 1:
-                        log.error(f"作品{album_id}《{album_response['album_title']}》 {album_response['album_url']} 第{thread.photo_index}张图片 {thread.photo_url} 下载失败，原因：{crawler.download_failre(save_file_return['code'])}")
+                    download_return = thread.get_result()
+                    if self.is_running() and download_return.status == net.Download.DOWNLOAD_FAILED:
+                        log.error(f"作品{album_id}《{album_response['album_title']}》 {album_response['album_url']} 第{thread.photo_index}张图片 {thread.photo_url} 下载失败，原因：{crawler.download_failre(download_return.code)}")
                 if self.is_running():
                     log.step(f"作品{album_id}《{album_response['album_title']}》全部图片下载完毕")
                 else:
@@ -149,7 +149,7 @@ class Download(crawler.DownloadThread):
         self.result = None
 
     def run(self):
-        self.result = net.download(self.photo_url, self.file_path)
+        self.result = net.Download(self.photo_url, self.file_path)
         self.notify_main_thread()
 
     def get_result(self):
