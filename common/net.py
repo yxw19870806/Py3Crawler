@@ -400,20 +400,20 @@ def _random_ip_address():
     return f"{random.randint(1, 254)}.{random.randint(0, 255)}.{random.randint(0, 255)}.{random.randint(0, 255)}"
 
 
-def download(file_url, file_path, need_content_type=False, head_check=False, replace_if_exist=None, **kwargs):
+def download(file_url, file_path, recheck_file_extension=False, head_check=False, replace_if_exist: Optional[bool]=None, **kwargs):
     """
     现在远程文件到本地
 
     :Args:
     - file_url - the remote resource URL which you want to save
     - file_path - the local file path which you want to save remote resource
-    - need_content_type - is auto rename file according to "Content-Type" in response headers
+    - recheck_file_extension - is auto rename file according to "Content-Type" in response headers
     - head_check -"HEAD" method request to check response status and file size before download file
 
     :Returns:
         - status - 0 download failure, 1 download successful
         - code - failure reason
-        - file_path - finally local file path(when need_content_type is True, will rename it)
+        - file_path - finally local file path(when recheck_file_extension is True, will rename it)
     """
     if not isinstance(replace_if_exist, bool):
         replace_if_exist = DOWNLOAD_REPLACE_IF_EXIST
@@ -458,7 +458,7 @@ def download(file_url, file_path, need_content_type=False, head_check=False, rep
                 is_multi_thread = True
 
         # response中的Content-Type作为文件后缀名
-        if need_content_type:
+        if recheck_file_extension:
             content_type = response.getheader("Content-Type")
             if content_type is not None and content_type != "octet-stream":
                 global MIME_DICTIONARY
