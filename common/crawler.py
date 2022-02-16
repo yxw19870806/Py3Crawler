@@ -776,17 +776,17 @@ def download_failre(return_code: int) -> str:
         return "源文件已被删除"
     elif return_code == 403:
         return "源文件没有权限下载"
-    elif return_code == -1:
+    elif return_code == net.Download.CODE_URL_INVALID:
         return "源文件地址格式不正确"
-    elif return_code == -2:
+    elif return_code == net.Download.CODE_RETRY_MAX_COUNT:
         return "源文件多次获取失败，可能无法访问"
-    elif return_code == -3:
+    elif return_code == net.Download.CODE_FILE_SIZE_INVALID:
         return "源文件多次下载后和原始文件大小不一致，可能网络环境较差"
     elif return_code == -4:
         return "源文件太大，跳过"
     elif return_code == -5:
         return "重定向次数过多"
-    elif return_code == -11:
+    elif return_code == net.Download.CODE_FILE_CREATE_FAILED:
         return "文件所在保存目录创建失败"
     elif return_code > 0:
         return f"未知错误，http code {return_code}"
