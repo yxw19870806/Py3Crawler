@@ -40,11 +40,9 @@ DEFAULT_NET_CONFIG = {
     "DOWNLOAD_CONNECTION_TIMEOUT": 10,  # 下载文件连接超时的秒数
     "DOWNLOAD_READ_TIMEOUT": 60,  # 下载文件读取超时的秒数
     "DOWNLOAD_RETRY_COUNT": 10,  # 下载文件自动重试次数
-    "DOWNLOAD_LIMIT_SIZE": 1.5 * SIZE_GB,  # 下载文件超过多少字节跳过不下载
-    "DOWNLOAD_MULTI_THREAD_MIN_SIZE": 50 * SIZE_MB,  # 下载文件超过多少字节后开始使用多线程下载
-    "DOWNLOAD_MULTI_THREAD_BLOCK_SIZE": 10 * SIZE_MB,  # 多线程下载中单个线程下载的字节数
-    "DOWNLOAD_MULTI_THREAD_MAX_COUNT": 10,  # 多线程下载时总线程数上限
-    "TOO_MANY_REQUESTS_WAIT_TIME": 30,  # http code 429(Too Many requests)时的等待时间
+    "DOWNLOAD_MULTIPART_MIN_SIZE": 50 * SIZE_MB,  # 下载文件超过多少字节后开始使用分段下载
+    "DOWNLOAD_MULTIPART_BLOCK_SIZE": 10 * SIZE_MB,  # 分段下载中单次获取的字节数
+    "TOO_MANY_REQUESTS_WAIT_TIME": 60,  # http code 429(Too Many requests)时的等待时间
     "SERVICE_INTERNAL_ERROR_WAIT_TIME": 30,  # http code 50X（服务器内部错误）时的等待时间
     "HTTP_REQUEST_RETRY_WAIT_TIME": 5,  # 请求失败后重新请求的间隔时间
     "GLOBAL_QUERY_PER_MINUTER": 1000,  # 全局每分钟请求限制
@@ -587,7 +585,7 @@ class Download:
             if content_length is not None:
                 self.content_length = int(content_length)
                 # 文件比较大，使用分段下载
-                if self.auto_multipart_download and self.content_length > NET_CONFIG["DOWNLOAD_MULTI_THREAD_MIN_SIZE"]:
+                if self.auto_multipart_download and self.content_length > NET_CONFIG["DOWNLOAD_MULTIPART_MIN_SIZE"]:
                     self.is_multipart_download = True
 
     def rename_file_extension(self, response):
@@ -650,7 +648,7 @@ class Download:
             end_pos = -1
             while end_pos < self.content_length - 1:
                 start_pos = end_pos + 1
-                end_pos = min(self.content_length - 1, start_pos + NET_CONFIG["DOWNLOAD_MULTI_THREAD_BLOCK_SIZE"] - 1)
+                end_pos = min(self.content_length - 1, start_pos + NET_CONFIG["DOWNLOAD_MULTIPART_BLOCK_SIZE"] - 1)
                 multipart_kwargs = self.kwargs.copy()
 
                 # 分段的header信息
