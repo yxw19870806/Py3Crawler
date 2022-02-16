@@ -382,13 +382,13 @@ class Download(crawler.DownloadThread):
                 self.step(f"开始下载第{photo_index}张图片 {photo_url}")
 
                 photo_file_path = os.path.join(self.main_thread.photo_download_path, self.index_key, f"%04d.{net.get_file_extension(photo_url)}" % photo_index)
-                save_file_return = net.download(photo_url, photo_file_path)
-                if save_file_return["status"] == 1:
+                download_return = net.Download(photo_url, photo_file_path)
+                if download_return.status == net.Download.DOWNLOAD_SUCCEED:
                     self.temp_path_list.append(photo_file_path)  # 设置临时目录
                     self.total_photo_count += 1  # 计数累加
                     self.step(f"第{photo_index}张图片下载成功")
                 else:
-                    self.error(f"第{photo_index}张图片 {photo_url} 下载失败，原因：{crawler.download_failre(save_file_return['code'])}")
+                    self.error(f"第{photo_index}张图片 {photo_url} 下载失败，原因：{crawler.download_failre(download_return.code)}")
                     self.check_download_failure_exit()
                 photo_index += 1
 
@@ -412,13 +412,13 @@ class Download(crawler.DownloadThread):
                 self.step(f"开始下载第{video_index}个视频 {video_url}")
 
                 video_file_path = os.path.join(self.main_thread.video_download_path, self.index_key, f"%04d.{net.get_file_extension(video_url)}" % video_index)
-                save_file_return = net.download(video_url, video_file_path)
-                if save_file_return["status"] == 1:
+                download_return = net.Download(video_url, video_file_path, auto_multipart_download=True)
+                if download_return.status == net.Download.DOWNLOAD_SUCCEED:
                     self.temp_path_list.append(video_file_path)  # 设置临时目录
                     self.total_video_count += 1  # 计数累加
                     self.step(f"第{video_index}个视频下载成功")
                 else:
-                    self.error(f"第{video_index}个视频 {video_url} 下载失败，原因：{crawler.download_failre(save_file_return['code'])}")
+                    self.error(f"第{video_index}个视频 {video_url} 下载失败，原因：{crawler.download_failre(download_return.code)}")
                     self.check_download_failure_exit()
                 video_index += 1
 

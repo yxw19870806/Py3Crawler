@@ -291,12 +291,12 @@ class Download(crawler.DownloadThread):
         cookies_list = COOKIE_INFO
         if video_info_response["extra_cookie"]:
             cookies_list.update(video_info_response["extra_cookie"])
-        save_file_return = net.download(video_info_response["video_url"], video_file_path, cookies_list=cookies_list)
-        if save_file_return["status"] == 1:
+        download_return = net.Download(video_info_response["video_url"], video_file_path, cookies_list=cookies_list)
+        if download_return.status == net.Download.DOWNLOAD_SUCCEED:
             self.total_video_count += 1  # 计数累加
             self.step(f"视频{video_info['video_id']} 《{video_info['video_title']}》下载成功")
         else:
-            self.error(f"视频{video_info['video_id']} 《{video_info['video_title']}》 {video_info_response['video_url']} 下载失败，原因：{crawler.download_failre(save_file_return['code'])}")
+            self.error(f"视频{video_info['video_id']} 《{video_info['video_title']}》 {video_info_response['video_url']} 下载失败，原因：{crawler.download_failre(download_return.code)}")
             self.check_download_failure_exit()
 
         # 视频下载完毕

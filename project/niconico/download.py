@@ -74,11 +74,11 @@ class NicoNicoDownload(niconico.NicoNico):
         cookies_list = niconico.COOKIE_INFO
         if video_response["extra_cookie"]:
             cookies_list.update(video_response["extra_cookie"])
-        save_file_return = net.download(video_response["video_url"], file_path, head_check=True, cookies_list=cookies_list)
-        if save_file_return["status"] == 1:
+        download_return = net.Download(video_response["video_url"], file_path, auto_multipart_download=True, cookies_list=cookies_list)
+        if download_return.status == net.Download.DOWNLOAD_SUCCEED:
             log.step(f"视频《{video_response['video_title']}》下载成功")
         else:
-            log.error(f"视频《{video_response['video_title']}》下载失败，原因：{crawler.download_failre(save_file_return['code'])}")
+            log.error(f"视频《{video_response['video_title']}》下载失败，原因：{crawler.download_failre(download_return.code)}")
 
 
 if __name__ == "__main__":

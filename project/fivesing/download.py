@@ -71,11 +71,11 @@ class FiveSingDownload(fivesing.FiveSing):
 
         # 开始下载
         log.step(f"\n歌曲标题：{audio_response['audio_title']}\n歌曲地址：{audio_response['audio_url']}\n下载路径：{file_path}")
-        save_file_return = net.download(audio_response["audio_url"], file_path, head_check=True)
-        if save_file_return["status"] == 1:
+        download_return = net.Download(audio_response["audio_url"], file_path)
+        if download_return.status == net.Download.DOWNLOAD_SUCCEED:
             log.step(f"歌曲《{audio_response['audio_title']}》下载成功")
         else:
-            log.error(f"歌曲《{audio_response['audio_title']}》下载失败，原因：{crawler.download_failre(save_file_return['code'])}")
+            log.error(f"歌曲《{audio_response['audio_title']}》下载失败，原因：{crawler.download_failre(download_return.code)}")
 
 
 if __name__ == "__main__":

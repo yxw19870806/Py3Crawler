@@ -68,11 +68,11 @@ class MeiPaiDownload(meipai.MeiPai):
 
         # 开始下载
         log.step(f"\n视频地址：{video_response['video_url']}\n下载路径：{file_path}")
-        save_file_return = net.download(video_response["video_url"], file_path, head_check=True)
-        if save_file_return["status"] == 1:
+        download_return = net.Download(video_response["video_url"], file_path, auto_multipart_download=True)
+        if download_return.status == net.Download.DOWNLOAD_SUCCEED:
             log.step("视频下载成功")
         else:
-            log.error(f"视频下载失败，原因：{crawler.download_failre(save_file_return['code'])}")
+            log.error(f"视频下载失败，原因：{crawler.download_failre(download_return.code)}")
 
 
 if __name__ == "__main__":

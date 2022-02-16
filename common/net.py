@@ -400,20 +400,20 @@ def _random_ip_address():
     return f"{random.randint(1, 254)}.{random.randint(0, 255)}.{random.randint(0, 255)}.{random.randint(0, 255)}"
 
 
-def download(file_url, file_path, need_content_type=False, head_check=False, replace_if_exist=None, **kwargs):
+def download(file_url, file_path, recheck_file_extension=False, head_check=False, replace_if_exist: Optional[bool] = None, **kwargs):
     """
     现在远程文件到本地
 
     :Args:
     - file_url - the remote resource URL which you want to save
     - file_path - the local file path which you want to save remote resource
-    - need_content_type - is auto rename file according to "Content-Type" in response headers
+    - recheck_file_extension - is auto rename file according to "Content-Type" in response headers
     - head_check -"HEAD" method request to check response status and file size before download file
 
     :Returns:
         - status - 0 download failure, 1 download successful
         - code - failure reason
-        - file_path - finally local file path(when need_content_type is True, will rename it)
+        - file_path - finally local file path(when recheck_file_extension is True, will rename it)
     """
     if not isinstance(replace_if_exist, bool):
         replace_if_exist = DOWNLOAD_REPLACE_IF_EXIST
@@ -458,7 +458,7 @@ def download(file_url, file_path, need_content_type=False, head_check=False, rep
                 is_multi_thread = True
 
         # response中的Content-Type作为文件后缀名
-        if need_content_type:
+        if recheck_file_extension:
             content_type = response.getheader("Content-Type")
             if content_type is not None and content_type != "octet-stream":
                 global MIME_DICTIONARY
@@ -633,3 +633,226 @@ class MultiThreadDownload(threading.Thread):
 
         # 唤醒主线程
         multi_download_thread_semaphore.release()
+
+
+class Download:
+    DOWNLOAD_SUCCEED = 1
+    DOWNLOAD_FAILED = 0
+
+    CODE_URL_INVALID = -1
+    CODE_RETRY_MAX_COUNT = -2
+    CODE_FILE_SIZE_INVALID = -3
+    CODE_FILE_CREATE_FAILED = -11
+
+    def __init__(self, file_url, file_path, recheck_file_extension: bool = False, auto_multipart_download: bool = False, replace_if_exist: Optional[bool] = None, **kwargs):
+        """
+        下载远程文件到本地
+
+        :Args:
+        - file_url - the remote resource URL which you want to save
+        - file_path - the local file path which you want to save remote resource
+        - recheck_file_extension - is auto rename file according to "Content-Type" in response headers
+        - auto_multipart_download -"HEAD" method request to check response status and file size before download file
+
+        :Returns:
+            - status - 0 download failure, 1 download successful
+            - code - failure reason
+            - file_path - finally local file path(when recheck_file_extension is True, will rename it)
+        """
+        self.file_url = file_url
+        self.file_path = file_path
+        self.recheck_file_extension = recheck_file_extension
+        self.auto_multipart_download = auto_multipart_download
+        self.replace_if_exist = replace_if_exist
+        self.kwargs = kwargs
+
+        # 返回长度
+        self.content_length = 0
+        # 是否开启分段下载
+        self.is_multipart_download = False
+        # 结果
+        self.status = self.DOWNLOAD_FAILED
+        self.code = 0
+
+        self.start_download()
+
+    def start_download(self):
+        """
+        主体下载逻辑
+        """
+        # 默认读取配置
+        if not isinstance(self.replace_if_exist, bool):
+            self.replace_if_exist = DOWNLOAD_REPLACE_IF_EXIST
+
+        # 同名文件已经存在，直接返回
+        if not self.replace_if_exist and os.path.exists(self.file_path) and os.path.getsize(self.file_path) > 0:
+            output.print_msg(f"文件{self.file_path}（{self.file_url}）已存在，跳过")
+            self.status = self.DOWNLOAD_SUCCEED
+            return
+
+        # 判断保存目录是否存在
+        if not path.create_dir(os.path.dirname(self.file_path)):
+            self.code = self.CODE_FILE_CREATE_FAILED
+            return
+
+        # 是否需要分段下载
+        self.check_auto_multipart_download()
+
+        # 下载
+        for retry_count in range(0, NET_CONFIG["DOWNLOAD_RETRY_COUNT"]):
+            if not self.is_multipart_download:
+                # 单线程下载
+                if not self.single_download():
+                    continue
+            else:
+                # 分段下载
+                if not self.multipart_download():
+                    continue
+
+            # 如果没有返回文件的长度，直接下载成功
+            if self.content_length == 0:
+                self.status = self.DOWNLOAD_SUCCEED
+                return
+
+            # 判断文件下载后的大小和response中的Content-Length是否一致
+            file_size = os.path.getsize(self.file_path)
+            if self.content_length == file_size:
+                self.status = self.DOWNLOAD_SUCCEED
+                return
+            else:
+                self.code = self.CODE_FILE_SIZE_INVALID
+                output.print_msg(f"本地文件{self.file_path}：{self.content_length}和网络文件{self.file_url}：{file_size}不一致")
+                time.sleep(NET_CONFIG["HTTP_REQUEST_RETRY_WAIT_TIME"])
+
+        self.status = self.DOWNLOAD_FAILED
+        # 删除可能出现的临时文件
+        path.delete_dir_or_file(self.file_path)
+
+    def check_auto_multipart_download(self):
+        """
+        是否需要分段下载
+        """
+        # 先获取头信息
+        if self.auto_multipart_download:
+            head_response = request(self.file_url, method="HEAD", is_check_qps=False, **self.kwargs)
+            # 其他返回状态，退出
+            if head_response.status != HTTP_RETURN_CODE_SUCCEED:
+                # URL格式不正确
+                if head_response.status == HTTP_RETURN_CODE_URL_INVALID:
+                    self.code = self.CODE_URL_INVALID
+                # 域名无法解析
+                elif head_response.status == HTTP_RETURN_CODE_DOMAIN_NOT_RESOLVED:
+                    self.code = self.CODE_RETRY_MAX_COUNT
+                # 重定向次数过多
+                elif head_response.status == HTTP_RETURN_CODE_TOO_MANY_REDIRECTS:
+                    self.code = self.CODE_RETRY_MAX_COUNT
+                # 超过重试次数
+                elif head_response.status == HTTP_RETURN_CODE_RETRY:
+                    self.code = self.CODE_RETRY_MAX_COUNT
+                # 其他http code
+                else:
+                    self.code = head_response.status
+                return
+
+            # 检测文件后缀名是否正确
+            self.rename_file_extension(head_response)
+
+            # 根据文件大小判断是否需要分段下载
+            content_length = head_response.getheader("Content-Length")
+            if content_length is not None:
+                self.content_length = int(content_length)
+                # 文件比较大，使用分段下载
+                if self.auto_multipart_download and self.content_length > NET_CONFIG["DOWNLOAD_MULTI_THREAD_MIN_SIZE"]:
+                    self.is_multipart_download = True
+
+    def rename_file_extension(self, response):
+        """
+        检测文件后缀名是否正确
+        """
+        if self.recheck_file_extension:
+            # response中的Content-Type作为文件后缀名
+            content_type = response.getheader("Content-Type")
+            if content_type is not None:
+                # 重置状态，避免反复修改
+                self.recheck_file_extension = False
+
+                if content_type != "octet-stream":
+                    global MIME_DICTIONARY
+                    if MIME_DICTIONARY is None:
+                        MIME_DICTIONARY = tool.json_decode(file.read_file(os.path.join(os.path.dirname(__file__), "mime.json")), {})
+                    if content_type in MIME_DICTIONARY:
+                        new_file_extension = MIME_DICTIONARY[content_type]
+                    else:
+                        new_file_extension = content_type.split("/")[-1]
+                    self.file_path = os.path.splitext(self.file_path)[0] + "." + new_file_extension
+
+    def single_download(self):
+        """
+        单线程下载
+        """
+        file_response = request(self.file_url, method="GET", connection_timeout=NET_CONFIG["DOWNLOAD_CONNECTION_TIMEOUT"], read_timeout=NET_CONFIG["DOWNLOAD_READ_TIMEOUT"], **self.kwargs)
+        if file_response.status != HTTP_RETURN_CODE_SUCCEED:
+            return False
+
+        if self.content_length == 0:
+            content_length = file_response.getheader("Content-Length")
+            if content_length is not None:
+                self.content_length = int(content_length)
+
+        # 检测文件后缀名是否正确
+        self.rename_file_extension(file_response)
+
+        # 下载
+        with open(self.file_path, "wb") as file_handle:
+            try:
+                file_handle.write(file_response.data)
+            except OSError as ose:
+                if str(ose).find("No space left on device") != -1:
+                    global EXIT_FLAG
+                    EXIT_FLAG = True
+                raise
+        return True
+
+    def multipart_download(self):
+        """
+        分段下载
+        """
+        # 先创建文件（同时删除之前下载失败，可能生成的临时文件）
+        with open(self.file_path, "w"):
+            pass
+        with open(self.file_path, "rb+") as file_handle:
+            file_no = file_handle.fileno()
+            end_pos = -1
+            while end_pos < self.content_length - 1:
+                start_pos = end_pos + 1
+                end_pos = min(self.content_length - 1, start_pos + NET_CONFIG["DOWNLOAD_MULTI_THREAD_BLOCK_SIZE"] - 1)
+                multipart_kwargs = self.kwargs.copy()
+
+                # 分段的header信息
+                if "headers_list" in multipart_kwargs:
+                    headers_list = multipart_kwargs["headers_list"]
+                    del multipart_kwargs["headers_list"]
+                else:
+                    headers_list = {}
+                headers_list["Range"] = f"bytes={start_pos}-{end_pos}"
+
+                # 创建一个副本
+                fd_handle = os.fdopen(os.dup(file_no), "rb+", -1)
+
+                for multipart_retry_count in range(0, NET_CONFIG["DOWNLOAD_RETRY_COUNT"]):
+                    multipart_response = request(self.file_url, method="GET", header_list=headers_list, connection_timeout=NET_CONFIG["DOWNLOAD_CONNECTION_TIMEOUT"],
+                                                 read_timeout=NET_CONFIG["DOWNLOAD_READ_TIMEOUT"], **self.kwargs)
+                    if multipart_response.status == 206:
+                        # 下载的文件和请求的文件大小不一致
+                        if len(multipart_response.data) != (end_pos - start_pos + 1):
+                            output.print_msg(f"网络文件{self.file_url}：range {start_pos} - {end_pos}实际下载大小 {len(multipart_response.data)} 不一致")
+                            time.sleep(NET_CONFIG["HTTP_REQUEST_RETRY_WAIT_TIME"])
+                        else:
+                            # 写入本地文件后退出
+                            fd_handle.seek(start_pos)
+                            fd_handle.write(multipart_response.data)
+                            fd_handle.close()
+                            break
+                else:
+                    return False
+        return True
