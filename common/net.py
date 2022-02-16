@@ -395,43 +395,48 @@ def _random_ip_address():
     return f"{random.randint(1, 254)}.{random.randint(0, 255)}.{random.randint(0, 255)}.{random.randint(0, 255)}"
 
 
-def download_from_list(file_url_list, file_path, header_list=None, cookies_list=None):
+def download_from_list(file_url_list, file_path, replace_if_exist=False, **kwargs):
     """
     Visit web and save to local(multiple remote resource, single local file)
 
     :Args:
     - file_url_list - the list of remote resource URL which you want to save
     - file_path - the local file path which you want to save remote resource
-    - header_list - customize header dictionary
-    - cookies_list - customize cookies dictionary, will replaced header_list["Cookie"]
+    - replace_if_exist - not download if file is existed
 
     :Returns:
         - status - 0 download failure, 1 download successful
         - code - failure reason
     """
-    # 判断保存目录是否存在
-    if not path.create_dir(os.path.dirname(file_path)):
-        return False
-    for retry_count in range(0, NET_CONFIG["DOWNLOAD_RETRY_COUNT"]):
+    # 同名文件已经存在，直接返回
+    if not replace_if_exist and os.path.exists(file_path) and os.path.getsize(file_path) > 0:
+        return True
+
+    index = 1
+    part_file_path_list = []
+    is_succeed = False
+    for file_url in file_url_list:
+        # 临时文件路径
+        part_file_path = f"{file_path}.part{index}"
+        if os.path.exists(os.path.realpath(part_file_path)):
+            break
+        part_file_path_list.append(part_file_path)
         # 下载
+        part_download_return = Download(file_url, part_file_path, replace_if_exist=replace_if_exist, **kwargs)
+        if part_download_return.status == Download.DOWNLOAD_FAILED:
+            break
+        index += 1
+    else:
         with open(file_path, "wb") as file_handle:
-            for file_url in file_url_list:
-                response = request(file_url, header_list=header_list, cookies_list=cookies_list, connection_timeout=NET_CONFIG["DOWNLOAD_CONNECTION_TIMEOUT"], read_timeout=NET_CONFIG["DOWNLOAD_READ_TIMEOUT"])
-                if response.status == HTTP_RETURN_CODE_SUCCEED:
-                    file_handle.write(response.data)
-                # 超过重试次数，直接退出
-                elif response.status == HTTP_RETURN_CODE_RETRY:
-                    file_handle.close()
-                    path.delete_dir_or_file(file_path)
-                    return {"status": 0, "code": -2}
-                # 其他http code，退出
-                else:
-                    file_handle.close()
-                    path.delete_dir_or_file(file_path)
-                    return {"status": 0, "code": response.status}
-        return {"status": 1, "code": 0}
-    # path.delete_dir_or_file(file_path)
-    return {"status": 0, "code": -2}
+            for part_file_path in part_file_path_list:
+                with open(part_file_path, "rb") as part_file_handle:
+                    file_handle.write(part_file_handle.read())
+        is_succeed = True
+    # 删除临时文件
+    for part_file_path in part_file_path_list:
+        path.delete_dir_or_file(part_file_path)
+
+    return is_succeed
 
 
 def pause_request():
@@ -469,7 +474,8 @@ class Download:
         - file_url - the remote resource URL which you want to save
         - file_path - the local file path which you want to save remote resource
         - recheck_file_extension - is auto rename file according to "Content-Type" in response headers
-        - auto_multipart_download -"HEAD" method request to check response status and file size before download file
+        - auto_multipart_download - "HEAD" method request to check response status and file size before download file
+        - replace_if_exist - not download if file is existed
 
         :Returns:
             - status - 0 download failure, 1 download successful
