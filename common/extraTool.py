@@ -10,8 +10,14 @@ import threading
 import time
 import zipfile
 from typing import Optional
-
 from common import file, net, output, path, tool
+
+NET_CONFIG = {
+    "DOWNLOAD_LIMIT_SIZE": 1.5 * net.SIZE_GB,  # 下载文件超过多少字节跳过不下载
+    "DOWNLOAD_MULTI_THREAD_MIN_SIZE": 50 * net.SIZE_MB,  # 下载文件超过多少字节后开始使用多线程下载
+    "DOWNLOAD_MULTI_THREAD_MAX_COUNT": 10,  # 多线程下载时总线程数上限
+    "DOWNLOAD_MULTI_THREAD_BLOCK_SIZE": 10 * net.SIZE_MB,  # 多线程下载中单个线程下载的字节数
+}
 
 
 def zip_dir(source_dir: str, zip_file_path: str, need_source_dir=True) -> bool:
@@ -98,7 +104,7 @@ def sort_file(source_path: str, destination_path: str, start_count: int, file_na
 
 
 # 多线程下载的总线程限制
-multi_download_thread_semaphore = threading.Semaphore(net.NET_CONFIG["DOWNLOAD_MULTI_THREAD_MAX_COUNT"])
+multi_download_thread_semaphore = threading.Semaphore(NET_CONFIG["DOWNLOAD_MULTI_THREAD_MAX_COUNT"])
 
 
 def download(file_url, file_path, recheck_file_extension=False, head_check=False, replace_if_exist: Optional[bool] = None, **kwargs):
@@ -152,21 +158,20 @@ def download(file_url, file_path, recheck_file_extension=False, head_check=False
         if content_length is not None:
             content_length = int(content_length)
             # 超过限制
-            if content_length > net.NET_CONFIG["DOWNLOAD_LIMIT_SIZE"]:
+            if content_length > NET_CONFIG["DOWNLOAD_LIMIT_SIZE"]:
                 return {"status": 0, "code": -4}
             # 文件比较大，使用多线程下载（必须是head_check=True的情况下，否则整个文件内容都已经返回了）
-            elif head_check and content_length > net.NET_CONFIG["DOWNLOAD_MULTI_THREAD_MIN_SIZE"]:
+            elif head_check and content_length > NET_CONFIG["DOWNLOAD_MULTI_THREAD_MIN_SIZE"]:
                 is_multi_thread = True
 
         # response中的Content-Type作为文件后缀名
         if recheck_file_extension:
             content_type = response.getheader("Content-Type")
             if content_type is not None and content_type != "octet-stream":
-                global MIME_DICTIONARY
-                if MIME_DICTIONARY is None:
-                    MIME_DICTIONARY = tool.json_decode(file.read_file(os.path.join(os.path.dirname(__file__), "mime.json")), {})
-                if content_type in MIME_DICTIONARY:
-                    new_file_extension = MIME_DICTIONARY[content_type]
+                if net.MIME_DICTIONARY is None:
+                    net.MIME_DICTIONARY = tool.json_decode(file.read_file(os.path.join(os.path.dirname(__file__), "mime.json")), {})
+                if content_type in net.MIME_DICTIONARY:
+                    new_file_extension = net.MIME_DICTIONARY[content_type]
                 else:
                     new_file_extension = content_type.split("/")[-1]
                 file_path = os.path.splitext(file_path)[0] + "." + new_file_extension
@@ -184,8 +189,7 @@ def download(file_url, file_path, recheck_file_extension=False, head_check=False
                     file_handle.write(response.data)
                 except OSError as ose:
                     if str(ose).find("No space left on device") != -1:
-                        global EXIT_FLAG
-                        EXIT_FLAG = True
+                        net.EXIT_FLAG = True
                     raise
         else:  # 多线程下载
             # 创建文件
@@ -198,7 +202,7 @@ def download(file_url, file_path, recheck_file_extension=False, head_check=False
                 end_pos = -1
                 while end_pos < content_length - 1:
                     start_pos = end_pos + 1
-                    end_pos = min(content_length - 1, start_pos + net.NET_CONFIG["DOWNLOAD_MULTI_THREAD_BLOCK_SIZE"] - 1)
+                    end_pos = min(content_length - 1, start_pos + NET_CONFIG["DOWNLOAD_MULTI_THREAD_BLOCK_SIZE"] - 1)
                     # 创建一个副本
                     fd_handle = os.fdopen(os.dup(file_no), "rb+", -1)
                     thread = MultiThreadDownload(file_url, start_pos, end_pos, fd_handle, error_flag)
@@ -259,7 +263,7 @@ class MultiThreadDownload(threading.Thread):
     def run(self):
         headers_list = {"Range": f"bytes={self.start_pos}-{self.end_pos}"}
         range_size = self.end_pos - self.start_pos + 1
-        for retry_count in range(0, net.NET_CONFIG["DOWNLOAD_RETRY_COUNT"]):
+        for retry_count in range(0, NET_CONFIG["DOWNLOAD_RETRY_COUNT"]):
             response = net.request(self.file_url, method="GET", header_list=headers_list)
             if response.status == 206:
                 # 下载的文件和请求的文件大小不一致
