@@ -177,8 +177,8 @@ class Favorite(crawler.Crawler):
                     log.step(f"微博{blog_info['blog_id']}开始下载第{photo_count}张图片 {photo_url}")
 
                     file_path = os.path.join(photo_path, f"{photo_count}.{net.get_file_extension(photo_url)}")
-                    save_file_return = net.download(photo_url, file_path)
-                    if save_file_return["status"] == 1:
+                    download_return = net.Download(photo_url, file_path)
+                    if download_return.status == net.Download.DOWNLOAD_SUCCEED:
                         if weibo.check_photo_invalid(file_path):
                             path.delete_dir_or_file(file_path)
                             log.error(f"微博{blog_info['blog_id']}的第{photo_count}张图片 {photo_url} 资源已被删除，跳过")
@@ -187,7 +187,7 @@ class Favorite(crawler.Crawler):
                             photo_count += 1
                             self.total_photo_count += 1
                     else:
-                        log.error(f"微博{blog_info['blog_id']}的第{photo_count}张图片 {photo_url} 下载失败，原因：{crawler.download_failre(save_file_return['code'])}")
+                        log.error(f"微博{blog_info['blog_id']}的第{photo_count}张图片 {photo_url} 下载失败，原因：{crawler.download_failre(download_return.code)}")
 
             if favorite_pagination_response["is_over"]:
                 is_over = True

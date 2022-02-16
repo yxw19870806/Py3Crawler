@@ -585,23 +585,23 @@ class Download(crawler.DownloadThread):
             self.step(f"日志 {post_info['post_id']} 开始下载视频 {video_url}")
 
             video_file_path = os.path.join(self.main_thread.video_download_path, self.index_key, "%012d.mp4" % post_info["post_id"])
-            save_file_return = net.download(video_url, video_file_path)
-            if save_file_return["status"] == 1:
+            download_return = net.Download(video_url, video_file_path, auto_multipart_download=True)
+            if download_return.status == net.Download.DOWNLOAD_SUCCEED:
                 # 设置临时目录
                 self.temp_path_list.append(video_file_path)
                 self.step(f"日志 {post_info['post_id']} 视频下载成功")
             else:
-                if save_file_return["code"] == 403 and video_url.find("_r1_720") != -1:
+                if download_return.code == 403 and video_url.find("_r1_720") != -1:
                     video_url = video_url.replace("_r1_720", "_r1")
-                    save_file_return = net.download(video_url, video_file_path)
-                    if save_file_return["status"] == 1:
+                    download_return = net.Download(video_url, video_file_path, auto_multipart_download=True)
+                    if download_return.status == net.Download.DOWNLOAD_SUCCEED:
                         self.temp_path_list.append(video_file_path)  # 设置临时目录
                         self.total_video_count += 1  # 计数累加
                         self.step(f"日志 {post_info['post_id']} 视频下载成功")
                         break
-                error_message = f"日志 {post_url} 视频 {video_url} 下载失败，原因：{crawler.download_failre(save_file_return['code'])}"
+                error_message = f"日志 {post_url} 视频 {video_url} 下载失败，原因：{crawler.download_failre(download_return.code)}"
                 # 403、404错误作为step log输出
-                if IS_STEP_ERROR_403_AND_404 and save_file_return["code"] in [403, 404]:
+                if IS_STEP_ERROR_403_AND_404 and download_return.code in [403, 404]:
                     self.step(error_message)
                 else:
                     self.error(error_message)
@@ -619,15 +619,15 @@ class Download(crawler.DownloadThread):
                 self.step(f"日志 {post_info['post_id']} 开始下载第{photo_index}张图片 {photo_url}")
 
                 photo_file_path = os.path.join(self.main_thread.photo_download_path, self.index_key, f"%012d_%02d.{net.get_file_extension(photo_url)}" % (post_info["post_id"], photo_index))
-                save_file_return = net.download(photo_url, photo_file_path)
-                if save_file_return["status"] == 1:
+                download_return = net.Download(photo_url, photo_file_path)
+                if download_return.status == net.Download.DOWNLOAD_SUCCEED:
                     self.temp_path_list.append(photo_file_path)  # 设置临时目录
                     self.total_photo_count += 1  # 计数累加
                     self.step(f"日志 {post_info['post_id']} 第{photo_index}张图片下载成功")
                 else:
-                    error_message = f"日志 {post_url} 第{photo_index}张图片 {photo_url} 下载失败，原因：{crawler.download_failre(save_file_return['code'])}"
+                    error_message = f"日志 {post_url} 第{photo_index}张图片 {photo_url} 下载失败，原因：{crawler.download_failre(download_return.code)}"
                     # 403、404错误作为step log输出
-                    if IS_STEP_ERROR_403_AND_404 and save_file_return["code"] in [403, 404]:
+                    if IS_STEP_ERROR_403_AND_404 and download_return.code in [403, 404]:
                         self.step(error_message)
                         continue
                     else:
