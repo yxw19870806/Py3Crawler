@@ -170,52 +170,46 @@ class IvSeek(crawler.Crawler):
         }
         crawler.Crawler.__init__(self, sys_config, **kwargs)
 
-    def main(self):
-        save_id = 1
+    def _main(self):
+        self.save_id = 1
         save_info_list = file.read_file(self.save_data_path, file.READ_FILE_TYPE_LINE)
         if len(save_info_list) > 0:
-            save_id = int(save_info_list[-1].split("\t")[0]) + 1
+            self.save_id = int(save_info_list[-1].split("\t")[0]) + 1
 
+        # 获取首页
         try:
-            # 获取首页
+            index_response = get_index_page()
+        except crawler.CrawlerException as e:
+            log.error(e.http_error("首页"))
+            raise
+        
+        log.step(f"最新视频id：{index_response['max_archive_id']}")
+
+        for archive_id in range(self.save_id, index_response["max_archive_id"]):
+            if not self.is_running():
+                tool.process_exit(tool.PROCESS_EXIT_CODE_NORMAL)
+            log.step(f"开始解析视频{archive_id}")
+
+            # 获取一页图片
             try:
-                index_response = get_index_page()
+                archive_response = get_archive_page(archive_id)
             except crawler.CrawlerException as e:
-                log.error(e.http_error("首页"))
+                log.error(e.http_error(f"视频{archive_id}"))
                 raise
 
-            log.step(f"最新视频id：{index_response['max_archive_id']}")
+            if archive_response["is_delete"]:
+                continue
 
-            for archive_id in range(save_id, index_response["max_archive_id"]):
-                if not self.is_running():
-                    tool.process_exit(tool.PROCESS_EXIT_CODE_NORMAL)
-                log.step(f"开始解析视频{archive_id}")
+            for video_info in archive_response["video_info_list"]:
+                log.step(f"视频{archive_id}《{archive_response['video_title']}》: {video_info['video_url']}")
+                file.write_file(f"{archive_id}\t{archive_response['video_title']}\t{video_info['video_url']}\t{video_info['account_id']}\t", self.save_data_path)
 
-                # 获取一页图片
-                try:
-                    archive_response = get_archive_page(archive_id)
-                except crawler.CrawlerException as e:
-                    log.error(e.http_error(f"视频{archive_id}"))
-                    raise
+            # 提前结束
+            if not self.is_running():
+                break
 
-                if archive_response["is_delete"]:
-                    continue
-
-                for video_info in archive_response["video_info_list"]:
-                    log.step(f"视频{archive_id}《{archive_response['video_title']}》: {video_info['video_url']}")
-                    file.write_file(f"{archive_id}\t{archive_response['video_title']}\t{video_info['video_url']}\t{video_info['account_id']}\t", self.save_data_path)
-
-                # 提前结束
-                if not self.is_running():
-                    break
-        except (SystemExit, KeyboardInterrupt) as e:
-            if isinstance(e, SystemExit) and e.code == 1:
-                log.error("异常退出")
-            else:
-                log.step("提前退出")
-        except Exception as e:
-            log.error("未知异常")
-            log.error(str(e) + "\n" + traceback.format_exc())
+    def rewrite_save_file(self):
+        pass
 
 
 if __name__ == "__main__":
