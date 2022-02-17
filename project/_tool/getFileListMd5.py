@@ -53,6 +53,8 @@ class GetFileListMd5(crawler.Crawler):
         self.record_list = {}
         self.check_count = 0
 
+        self.file_root_path = os.path.abspath("D:\\")
+
     # 获取目录所有文件md5值
     def get_file_md5_from_dir(self, dir_path):
         log.step("开始检测目录：" + dir_path)
@@ -122,34 +124,26 @@ class GetFileListMd5(crawler.Crawler):
             print(f"rewrite last {len(new_result)} record")
             file.write_file("\n".join(new_result), self.temp_save_data_path, file.WRITE_FILE_TYPE_APPEND)
 
-    def main(self, file_path):
-        try:
-            # 读取记录
-            record_string_list = file.read_file(self.save_data_path, file.READ_FILE_TYPE_LINE)
-            for record in record_string_list:
-                temp = record.split("\t")
-                self.record_list[os.path.basename(temp[0])] = temp[1]
-            log.step(f"历史检测记录加载完毕，共计文件{len(self.record_list)}个")
+    def _main(self):
+        # 读取记录
+        record_string_list = file.read_file(self.save_data_path, file.READ_FILE_TYPE_LINE)
+        for record in record_string_list:
+            temp = record.split("\t")
+            self.record_list[os.path.basename(temp[0])] = temp[1]
+        log.step(f"历史检测记录加载完毕，共计文件{len(self.record_list)}个")
 
-            # 循环获取目录文件md5值
-            self.get_file_md5_from_dir(file_path)
+        # 循环获取目录文件md5值
+        self.get_file_md5_from_dir(self.file_root_path)
 
-            # 删除重复文件
-            self.check_record_data()
+        # 删除重复文件
+        self.check_record_data()
 
-            # 重新记录
-            self.rewrite_recode_file()
-        except (SystemExit, KeyboardInterrupt) as e:
-            if isinstance(e, SystemExit) and e.code == 1:
-                log.error("异常退出")
-            else:
-                log.step("提前退出")
-        except Exception as e:
-            log.error("未知异常")
-            log.error(str(e) + "\n" + traceback.format_exc())
+        # 重新记录
+        self.rewrite_recode_file()
+
+    def end_message(self):
         log.step(f"全部文件检测完毕，耗时{self.get_run_time()}秒，共计文件{self.check_count}个")
 
 
 if __name__ == "__main__":
-    file_root_path = os.path.abspath("D:\\")
-    GetFileListMd5().main(file_root_path)
+    GetFileListMd5().main()

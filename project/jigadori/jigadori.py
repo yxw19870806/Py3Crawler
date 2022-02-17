@@ -176,7 +176,7 @@ class Jigadori(crawler.Crawler):
         self.temp_path_list = []  # 临时目录设置清除
         self.last_tweet_id = photo_info["tweet_id"]  # 设置存档记录
 
-    def main(self):
+    def _main(self):
         # 解析存档文件，获取上一次的tweet id
         if os.path.exists(self.save_data_path):
             file_save_info = file.read_file(self.save_data_path)
@@ -185,38 +185,29 @@ class Jigadori(crawler.Crawler):
                 tool.process_exit()
             self.last_tweet_id = int(file_save_info)
 
-        try:
-            # 查询当前任务大致需要从多少页开始爬取
-            start_page_count = self.get_offset_page_count()
+        # 查询当前任务大致需要从多少页开始爬取
+        start_page_count = self.get_offset_page_count()
 
-            while start_page_count >= 1:
-                photo_info_list = self.get_crawl_list(start_page_count)
-                log.step(f"需要下载的全部图片解析完毕，共{len(photo_info_list)}个")
+        while start_page_count >= 1:
+            photo_info_list = self.get_crawl_list(start_page_count)
+            log.step(f"需要下载的全部图片解析完毕，共{len(photo_info_list)}个")
 
-                # 从最早的图片开始下载
-                while len(photo_info_list) > 0:
-                    self.crawl_photo(photo_info_list.pop())
-                    if not self.is_running():
-                        tool.process_exit(tool.PROCESS_EXIT_CODE_NORMAL)
+            # 从最早的图片开始下载
+            while len(photo_info_list) > 0:
+                self.crawl_photo(photo_info_list.pop())
+                if not self.is_running():
+                    tool.process_exit(tool.PROCESS_EXIT_CODE_NORMAL)
 
-                start_page_count -= EACH_LOOP_MAX_PAGE_COUNT
-        except (SystemExit, KeyboardInterrupt) as e:
-            if isinstance(e, SystemExit) and e.code == 1:
-                log.error("异常退出")
-            else:
-                log.step("提前退出")
-            # 如果临时目录变量不为空，表示某个日志正在下载中，需要把下载了部分的内容给清理掉
-            if len(self.temp_path_list) > 0:
-                for temp_path in self.temp_path_list:
-                    path.delete_dir_or_file(temp_path)
-        except Exception as e:
-            log.error("未知异常")
-            log.error(str(e) + "\n" + traceback.format_exc())
+            start_page_count -= EACH_LOOP_MAX_PAGE_COUNT
 
-        # 保存新的存档文件
+    def done(self):
+        if self.temp_path_list:
+            for temp_path in self.temp_path_list:
+                path.delete_dir_or_file(temp_path)
+
+    def rewrite_save_file(self):
+        # 重新保存存档文件
         file.write_file(str(self.last_tweet_id), self.save_data_path, file.WRITE_FILE_TYPE_REPLACE)
-
-        self.end_message()
 
 
 if __name__ == "__main__":

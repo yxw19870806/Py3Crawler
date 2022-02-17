@@ -287,8 +287,17 @@ class Crawler(object):
     def main(self):
         try:
             self._main()
-        except KeyboardInterrupt:
-            self.stop_process()
+        except (KeyboardInterrupt, SystemExit) as e:
+            if issubclass(self.download_thread, DownloadThread):
+                self.stop_process()
+            else:
+                if isinstance(e, SystemExit) and e.code == tool.PROCESS_EXIT_CODE_ERROR:
+                    log.step("异常退出")
+                else:
+                    log.step("提前退出")
+        except Exception as e:
+            log.error("未知异常")
+            log.error(str(e) + "\n" + traceback.format_exc())
 
         # 未完成的数据保存
         self.write_remaining_save_data()
@@ -303,7 +312,7 @@ class Crawler(object):
         self.end_message()
 
     def _main(self):
-        if self.download_thread is not None:
+        if issubclass(self.download_thread, DownloadThread):
             # 循环下载每个id
             thread_list = []
             for index_key in sorted(self.save_data.keys()):
@@ -336,9 +345,9 @@ class Crawler(object):
 
     def stop_process(self):
         output.print_msg("stop process")
-        net.resume_request()
         self.process_status = False
         net.EXIT_FLAG = True
+        net.resume_request()
 
     def get_run_time(self):
         """
@@ -415,8 +424,10 @@ class DownloadThread(threading.Thread):
     def run(self):
         try:
             self._run()
-        except (SystemExit, KeyboardInterrupt) as e:
-            if isinstance(e, SystemExit) and e.code == 1:
+        except KeyboardInterrupt:
+            self.step("提前退出")
+        except SystemExit as e:
+            if e.code == tool.PROCESS_EXIT_CODE_ERROR:
                 self.error("异常退出")
             else:
                 self.step("提前退出")
