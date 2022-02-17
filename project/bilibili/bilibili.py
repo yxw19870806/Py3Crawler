@@ -8,7 +8,6 @@ email: hikaru870806@hotmail.com
 """
 import math
 import os
-import time
 from common import *
 
 COOKIE_INFO = {}
