@@ -8,7 +8,6 @@ email: hikaru870806@hotmail.com
 """
 import os
 import re
-import time
 from common import *
 
 
