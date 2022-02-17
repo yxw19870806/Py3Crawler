@@ -415,7 +415,11 @@ class DownloadThread(threading.Thread):
     def run(self):
         try:
             self._run()
-        except (SystemExit, KeyboardInterrupt) as e:
+        except CrawlerException:
+            self.error("异常退出")
+        except KeyboardInterrupt:
+            self.step("提前退出")
+        except SystemExit as e:
             if isinstance(e, SystemExit) and e.code == 1:
                 self.error("异常退出")
             else:
