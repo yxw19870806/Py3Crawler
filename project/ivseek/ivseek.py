@@ -187,7 +187,7 @@ class IvSeek(crawler.Crawler):
 
         for archive_id in range(self.save_id, index_response["max_archive_id"]):
             if not self.is_running():
-                tool.process_exit(tool.PROCESS_EXIT_CODE_NORMAL)
+                break
             log.step(f"开始解析视频{archive_id}")
 
             # 获取一页图片
@@ -203,10 +203,6 @@ class IvSeek(crawler.Crawler):
             for video_info in archive_response["video_info_list"]:
                 log.step(f"视频{archive_id}《{archive_response['video_title']}》: {video_info['video_url']}")
                 file.write_file(f"{archive_id}\t{archive_response['video_title']}\t{video_info['video_url']}\t{video_info['account_id']}\t", self.save_data_path)
-
-            # 提前结束
-            if not self.is_running():
-                break
 
     def rewrite_save_file(self):
         pass
