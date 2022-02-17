@@ -303,7 +303,7 @@ class Crawler(object):
         self.end_message()
 
     def _main(self):
-        if self.download_thread is not None:
+        if issubclass(self.download_thread, DownloadThread):
             # 循环下载每个id
             thread_list = []
             for index_key in sorted(self.save_data.keys()):
@@ -336,9 +336,9 @@ class Crawler(object):
 
     def stop_process(self):
         output.print_msg("stop process")
-        net.resume_request()
         self.process_status = False
         net.EXIT_FLAG = True
+        net.resume_request()
 
     def get_run_time(self):
         """
