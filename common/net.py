@@ -658,19 +658,18 @@ class Download:
                 multipart_kwargs = self.kwargs.copy()
 
                 # 分段的header信息
-                if "headers_list" in multipart_kwargs:
-                    headers_list = multipart_kwargs["headers_list"]
-                    del multipart_kwargs["headers_list"]
+                if "header_list" in multipart_kwargs:
+                    header_list = multipart_kwargs["header_list"]
+                    del multipart_kwargs["header_list"]
                 else:
-                    headers_list = {}
-                headers_list["Range"] = f"bytes={start_pos}-{end_pos}"
+                    header_list = {}
+                header_list["Range"] = f"bytes={start_pos}-{end_pos}"
 
                 # 创建一个副本
                 fd_handle = os.fdopen(os.dup(file_no), "rb+", -1)
 
                 for multipart_retry_count in range(0, NET_CONFIG["DOWNLOAD_RETRY_COUNT"]):
-                    multipart_response = request(self.file_url, method="GET", header_list=headers_list, connection_timeout=NET_CONFIG["DOWNLOAD_CONNECTION_TIMEOUT"],
-                                                 read_timeout=NET_CONFIG["DOWNLOAD_READ_TIMEOUT"], **self.kwargs)
+                    multipart_response = request(self.file_url, method="GET", header_list=header_list, connection_timeout=NET_CONFIG["DOWNLOAD_CONNECTION_TIMEOUT"], read_timeout=NET_CONFIG["DOWNLOAD_READ_TIMEOUT"], **multipart_kwargs)
                     if multipart_response.status == 206:
                         # 下载的文件和请求的文件大小不一致
                         if len(multipart_response.data) != (end_pos - start_pos + 1):
