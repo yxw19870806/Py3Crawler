@@ -12,6 +12,7 @@ import random
 import re
 import string
 import sys
+import time
 from typing import Optional, Union, List
 
 # if sys.stdout.encoding != "UTF-8":
@@ -180,6 +181,17 @@ def generate_random_string(string_length: int, char_lib_type: int = 7) -> str:
     return "".join(result)
 
 
+def string_md5(source_string: str) -> str:
+    """
+    字符串md5
+    """
+    if not isinstance(source_string, str):
+        return ''
+    md5_class = hashlib.md5()
+    md5_class.update(source_string.encode())
+    return md5_class.hexdigest()
+
+
 def process_exit(exit_code: int = PROCESS_EXIT_CODE_ERROR):
     """
     结束进程
@@ -202,12 +214,8 @@ def shutdown(delay_time: int = 30):
         os.system("halt")
 
 
-def string_md5(source_string: str) -> str:
+def get_time(string_format: str = "%m-%d %H:%M:%S", timestamp: Union[float, int] = time.time()) -> str:
     """
-    字符串md5
+    获取当前时间
     """
-    if not isinstance(source_string, str):
-        return ''
-    md5_class = hashlib.md5()
-    md5_class.update(source_string.encode())
-    return md5_class.hexdigest()
+    return time.strftime(string_format, time.localtime(timestamp))

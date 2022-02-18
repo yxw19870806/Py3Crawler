@@ -414,7 +414,7 @@ class Youtube(crawler.Crawler):
             IS_LOGIN = True
         else:
             while True:
-                input_str = input(crawler.get_time() + " 没有检测到账号登录状态，可能无法解析受限制的视频，继续程序(C)ontinue？或者退出程序(E)xit？:")
+                input_str = input(tool.get_time() + " 没有检测到账号登录状态，可能无法解析受限制的视频，继续程序(C)ontinue？或者退出程序(E)xit？:")
                 input_str = input_str.lower()
                 if input_str in ["e", "exit"]:
                     tool.process_exit()
