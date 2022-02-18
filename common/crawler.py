@@ -450,7 +450,7 @@ class DownloadThread(threading.Thread):
             self.main_thread.save_data.pop(self.index_key)
 
         # 写入存档
-        if self.single_save_data:
+        if self.single_save_data and self.main_thread.temp_save_data_path:
             with self.thread_lock:
                 file.write_file("\t".join(self.single_save_data), self.main_thread.temp_save_data_path, file.WRITE_FILE_TYPE_APPEND)
 
