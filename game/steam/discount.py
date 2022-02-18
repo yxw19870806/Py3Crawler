@@ -31,9 +31,9 @@ def load_discount_list(cache_file_path):
     discount_game_list = []
     if not os.path.exists(cache_file_path):
         return discount_game_list
-    cache_time = crawler.get_time("%Y-%m-%d %H:%M", os.path.getmtime(cache_file_path))
+    cache_time = tool.get_time("%Y-%m-%d %H:%M", os.path.getmtime(cache_file_path))
     while True:
-        input_str = input(f"{crawler.get_time()} 缓存文件时间：{cache_time}，是否使用？使用缓存数据(Y)es，删除缓存数据并重新获取(N)o，退出程序(E)xit：")
+        input_str = input(f"{tool.get_time()} 缓存文件时间：{cache_time}，是否使用？使用缓存数据(Y)es，删除缓存数据并重新获取(N)o，退出程序(E)xit：")
         input_str = input_str.lower()
         if input_str in ["y", "yes"]:
             break

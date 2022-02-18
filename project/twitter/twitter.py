@@ -302,7 +302,7 @@ class Twitter(crawler.Crawler):
         try:
             if not check_login():
                 while True:
-                    input_str = input(crawler.get_time() + " 没有检测到账号登录状态，是否继续(C)ontinue？或者退出程序(E)xit？:")
+                    input_str = input(tool.get_time() + " 没有检测到账号登录状态，是否继续(C)ontinue？或者退出程序(E)xit？:")
                     input_str = input_str.lower()
                     if input_str in ["c", "yes"]:
                         break

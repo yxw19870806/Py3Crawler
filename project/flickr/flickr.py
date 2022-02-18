@@ -212,7 +212,7 @@ class Flickr(crawler.Crawler):
         else:
             console_string = "没有检测到账号登录状态"
         while console_string:
-            input_str = input(f"{crawler.get_time()} {console_string}，可能无法解析受限制的图片，继续程序(C)ontinue？或者退出程序(E)xit？:")
+            input_str = input(f"{tool.get_time()} {console_string}，可能无法解析受限制的图片，继续程序(C)ontinue？或者退出程序(E)xit？:")
             input_str = input_str.lower()
             if input_str in ["e", "exit"]:
                 tool.process_exit()
