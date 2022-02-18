@@ -428,6 +428,8 @@ class DownloadThread(threading.Thread):
         self.total_audio_count = 0
         self.total_content_count = 0
         self.temp_path_list = []
+        if single_save_data:
+            self.step("开始")
 
     def run(self):
         try:

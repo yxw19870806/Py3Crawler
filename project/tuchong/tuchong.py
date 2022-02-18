@@ -96,9 +96,8 @@ class TuChong(crawler.Crawler):
 
 class Download(crawler.DownloadThread):
     def __init__(self, single_save_data, main_thread):
+        self.index_key = self.display_name = single_save_data[0]  # account name
         crawler.DownloadThread.__init__(self, single_save_data, main_thread)
-        self.index_key = self.display_name = self.single_save_data[0]  # account name
-        self.step("开始")
 
     def _run(self):
         try:
