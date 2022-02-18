@@ -364,13 +364,12 @@ class BiliBili(crawler.Crawler):
 
 class Download(crawler.DownloadThread):
     def __init__(self, single_save_data, main_thread):
-        crawler.DownloadThread.__init__(self, single_save_data, main_thread)
-        self.index_key = self.single_save_data[0]  # account id
-        if len(self.single_save_data) >= 5 and self.single_save_data[4]:
-            self.display_name = self.single_save_data[4]
+        self.index_key = single_save_data[0]  # account id
+        if len(single_save_data) >= 5 and single_save_data[4]:
+            self.display_name = single_save_data[4]
         else:
-            self.display_name = self.single_save_data[0]
-        self.step("开始")
+            self.display_name = single_save_data[0]
+        crawler.DownloadThread.__init__(self, single_save_data, main_thread)
 
     def _run(self):
         # 视频下载
