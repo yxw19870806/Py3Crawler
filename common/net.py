@@ -464,6 +464,7 @@ class Download:
     CODE_URL_INVALID = -1
     CODE_RETRY_MAX_COUNT = -2
     CODE_FILE_SIZE_INVALID = -3
+    CODE_PROCESS_EXIT = -10
     CODE_FILE_CREATE_FAILED = -11
 
     def __init__(self, file_url, file_path, recheck_file_extension: bool = False, auto_multipart_download: bool = False, replace_if_exist: Optional[bool] = None, **kwargs):
@@ -488,12 +489,6 @@ class Download:
         self.auto_multipart_download = auto_multipart_download
         self.replace_if_exist = replace_if_exist
         self.kwargs = kwargs
-        if "recheck_file_extension" in kwargs:
-            output.print_msg("recheck_file_extension")
-        if "head_check" in kwargs:
-            output.print_msg("head_check")
-        if "need_content_type" in kwargs:
-            output.print_msg("need_content_type")
 
         # 返回长度
         self.content_length = 0
@@ -529,6 +524,10 @@ class Download:
 
         # 下载
         for retry_count in range(0, NET_CONFIG["DOWNLOAD_RETRY_COUNT"]):
+            if EXIT_FLAG:
+                self.code = self.CODE_PROCESS_EXIT
+                break
+
             if not self.is_multipart_download:
                 # 单线程下载
                 if not self.single_download():
@@ -541,19 +540,20 @@ class Download:
             # 如果没有返回文件的长度，直接下载成功
             if self.content_length == 0:
                 self.status = self.DOWNLOAD_SUCCEED
+                self.code = 0
                 return
 
             # 判断文件下载后的大小和response中的Content-Length是否一致
             file_size = os.path.getsize(self.file_path)
             if self.content_length == file_size:
                 self.status = self.DOWNLOAD_SUCCEED
+                self.code = 0
                 return
             else:
                 self.code = self.CODE_FILE_SIZE_INVALID
                 output.print_msg(f"本地文件{self.file_path}：{self.content_length}和网络文件{self.file_url}：{file_size}不一致")
                 time.sleep(NET_CONFIG["HTTP_REQUEST_RETRY_WAIT_TIME"])
 
-        self.status = self.DOWNLOAD_FAILED
         # 删除可能出现的临时文件
         path.delete_dir_or_file(self.file_path)
 
@@ -619,8 +619,12 @@ class Download:
         """
         单线程下载
         """
-        file_response = request(self.file_url, method="GET", connection_timeout=NET_CONFIG["DOWNLOAD_CONNECTION_TIMEOUT"], read_timeout=NET_CONFIG["DOWNLOAD_READ_TIMEOUT"], **self.kwargs)
+        try:
+            file_response = request(self.file_url, method="GET", connection_timeout=NET_CONFIG["DOWNLOAD_CONNECTION_TIMEOUT"], read_timeout=NET_CONFIG["DOWNLOAD_READ_TIMEOUT"], **self.kwargs)
+        except SystemExit:
+            return False
         if file_response.status != HTTP_RETURN_CODE_SUCCEED:
+            self.code = self.CODE_RETRY_MAX_COUNT
             return False
 
         if self.content_length == 0:
@@ -669,7 +673,10 @@ class Download:
                 fd_handle = os.fdopen(os.dup(file_no), "rb+", -1)
 
                 for multipart_retry_count in range(0, NET_CONFIG["DOWNLOAD_RETRY_COUNT"]):
-                    multipart_response = request(self.file_url, method="GET", header_list=header_list, connection_timeout=NET_CONFIG["DOWNLOAD_CONNECTION_TIMEOUT"], read_timeout=NET_CONFIG["DOWNLOAD_READ_TIMEOUT"], **multipart_kwargs)
+                    try:
+                        multipart_response = request(self.file_url, method="GET", header_list=header_list, connection_timeout=NET_CONFIG["DOWNLOAD_CONNECTION_TIMEOUT"], read_timeout=NET_CONFIG["DOWNLOAD_READ_TIMEOUT"], **multipart_kwargs)
+                    except SystemExit:
+                        return False
                     if multipart_response.status == 206:
                         # 下载的文件和请求的文件大小不一致
                         if len(multipart_response.data) != (end_pos - start_pos + 1):
@@ -682,5 +689,6 @@ class Download:
                             fd_handle.close()
                             break
                 else:
+                    self.code = self.CODE_RETRY_MAX_COUNT
                     return False
         return True

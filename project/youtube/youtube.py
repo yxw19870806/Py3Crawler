@@ -414,7 +414,7 @@ class Youtube(crawler.Crawler):
             IS_LOGIN = True
         else:
             while True:
-                input_str = input(crawler.get_time() + " 没有检测到账号登录状态，可能无法解析受限制的视频，继续程序(C)ontinue？或者退出程序(E)xit？:")
+                input_str = input(tool.get_time() + " 没有检测到账号登录状态，可能无法解析受限制的视频，继续程序(C)ontinue？或者退出程序(E)xit？:")
                 input_str = input_str.lower()
                 if input_str in ["e", "exit"]:
                     tool.process_exit()
@@ -429,13 +429,12 @@ class Download(crawler.DownloadThread):
     is_find = False
 
     def __init__(self, single_save_data, main_thread):
-        crawler.DownloadThread.__init__(self, single_save_data, main_thread)
-        self.index_key = self.single_save_data[0]  # account id
-        if len(self.single_save_data) >= 4 and self.single_save_data[3]:
-            self.display_name = self.single_save_data[3]
+        self.index_key = single_save_data[0]  # account id
+        if len(single_save_data) >= 4 and single_save_data[3]:
+            self.display_name = single_save_data[3]
         else:
-            self.display_name = self.single_save_data[0]
-        self.step("开始")
+            self.display_name = single_save_data[0]
+        crawler.DownloadThread.__init__(self, single_save_data, main_thread)
 
     def _run(self):
         # 获取所有可下载视频
