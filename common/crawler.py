@@ -160,7 +160,7 @@ class Crawler(object):
                 output.print_msg(f"存档文件{self.save_data_path}不存在！")
                 tool.process_exit()
                 return
-            temp_file_name = get_time("%m-%d_%H_%M_") + os.path.basename(self.save_data_path)
+            temp_file_name = tool.get_time("%m-%d_%H_%M_") + os.path.basename(self.save_data_path)
             self.temp_save_data_path = os.path.join(os.path.dirname(self.save_data_path), temp_file_name)
             if os.path.exists(self.temp_save_data_path):
                 # 临时文件已存在
@@ -667,13 +667,6 @@ def rewrite_save_file(temp_save_data_path: str, save_data_path: str):
     temp_list = [account_list[key] for key in sorted(account_list.keys())]
     file.write_file(tool.list_to_string(temp_list), save_data_path, file.WRITE_FILE_TYPE_REPLACE)
     path.delete_dir_or_file(temp_save_data_path)
-
-
-def get_time(string_format: str = "%m-%d %H:%M:%S", timestamp: Union[float, int] = time.time()) -> str:
-    """
-    获取当前时间
-    """
-    return time.strftime(string_format, time.localtime(timestamp))
 
 
 def get_json_value(json_data, *args, **kwargs):
