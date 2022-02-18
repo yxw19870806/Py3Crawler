@@ -793,10 +793,8 @@ def download_failre(return_code: int) -> str:
         return "源文件多次获取失败，可能无法访问"
     elif return_code == net.Download.CODE_FILE_SIZE_INVALID:
         return "源文件多次下载后和原始文件大小不一致，可能网络环境较差"
-    elif return_code == -4:
-        return "源文件太大，跳过"
-    elif return_code == -5:
-        return "重定向次数过多"
+    elif return_code == net.Download.CODE_PROCESS_EXIT:
+        return "程序中途退出"
     elif return_code == net.Download.CODE_FILE_CREATE_FAILED:
         return "文件所在保存目录创建失败"
     elif return_code > 0:

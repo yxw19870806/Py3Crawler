@@ -464,6 +464,7 @@ class Download:
     CODE_URL_INVALID = -1
     CODE_RETRY_MAX_COUNT = -2
     CODE_FILE_SIZE_INVALID = -3
+    CODE_PROCESS_EXIT = -10
     CODE_FILE_CREATE_FAILED = -11
 
     def __init__(self, file_url, file_path, recheck_file_extension: bool = False, auto_multipart_download: bool = False, replace_if_exist: Optional[bool] = None, **kwargs):
@@ -529,6 +530,10 @@ class Download:
 
         # 下载
         for retry_count in range(0, NET_CONFIG["DOWNLOAD_RETRY_COUNT"]):
+            if EXIT_FLAG:
+                self.code = self.CODE_PROCESS_EXIT
+                break
+
             if not self.is_multipart_download:
                 # 单线程下载
                 if not self.single_download():
@@ -619,7 +624,10 @@ class Download:
         """
         单线程下载
         """
-        file_response = request(self.file_url, method="GET", connection_timeout=NET_CONFIG["DOWNLOAD_CONNECTION_TIMEOUT"], read_timeout=NET_CONFIG["DOWNLOAD_READ_TIMEOUT"], **self.kwargs)
+        try:
+            file_response = request(self.file_url, method="GET", connection_timeout=NET_CONFIG["DOWNLOAD_CONNECTION_TIMEOUT"], read_timeout=NET_CONFIG["DOWNLOAD_READ_TIMEOUT"], **self.kwargs)
+        except SystemExit:
+            return False
         if file_response.status != HTTP_RETURN_CODE_SUCCEED:
             return False
 
@@ -669,7 +677,10 @@ class Download:
                 fd_handle = os.fdopen(os.dup(file_no), "rb+", -1)
 
                 for multipart_retry_count in range(0, NET_CONFIG["DOWNLOAD_RETRY_COUNT"]):
-                    multipart_response = request(self.file_url, method="GET", header_list=header_list, connection_timeout=NET_CONFIG["DOWNLOAD_CONNECTION_TIMEOUT"], read_timeout=NET_CONFIG["DOWNLOAD_READ_TIMEOUT"], **multipart_kwargs)
+                    try:
+                        multipart_response = request(self.file_url, method="GET", header_list=header_list, connection_timeout=NET_CONFIG["DOWNLOAD_CONNECTION_TIMEOUT"], read_timeout=NET_CONFIG["DOWNLOAD_READ_TIMEOUT"], **multipart_kwargs)
+                    except SystemExit:
+                        return False
                     if multipart_response.status == 206:
                         # 下载的文件和请求的文件大小不一致
                         if len(multipart_response.data) != (end_pos - start_pos + 1):
