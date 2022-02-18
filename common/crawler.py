@@ -286,6 +286,8 @@ class Crawler(object):
 
     def main(self):
         try:
+            self.init()
+
             self._main()
         except (KeyboardInterrupt, SystemExit) as e:
             if issubclass(self.download_thread, DownloadThread):
@@ -330,6 +332,12 @@ class Crawler(object):
             # 等待子线程全部完成
             while len(thread_list) > 0:
                 thread_list.pop().join()
+
+    def init(self):
+        """
+        其他初始化的方法
+        """
+        pass
 
     def done(self):
         """
