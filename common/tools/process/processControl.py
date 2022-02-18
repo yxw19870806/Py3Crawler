@@ -11,7 +11,7 @@ from common import crawler, portListenerEvent
 
 class ProcessControl():
     def __init__(self):
-        config = crawler._get_config()
+        config = crawler.read_config(crawler.PROJECT_CONFIG_PATH)
         server_port = crawler.analysis_config(config, "LISTENER_PORT", 0, crawler.CONFIG_ANALYSIS_MODE_INTEGER)
         self.conn = Client((portListenerEvent.SERVER_IP, server_port))
 
