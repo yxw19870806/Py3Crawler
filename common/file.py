@@ -37,6 +37,11 @@ def read_file(file_path: str, read_type: int = READ_FILE_TYPE_FULL) -> Union[str
         READ_FILE_TYPE_FULL     type of string
         READ_FILE_TYPE_LINE     type of list
     """
+    if not file_path:
+        if read_type == 1:
+            return ""
+        else:
+            return []
     file_path = os.path.abspath(file_path)
     if not os.path.exists(file_path):
         if read_type == 1:
@@ -79,6 +84,8 @@ def write_file(msg: str, file_path: str, append_type: int = WRITE_FILE_TYPE_APPE
         READ_FILE_TYPE_FULL     type of string
         READ_FILE_TYPE_LINE     type of list
     """
+    if not file_path:
+        return False
     file_path = os.path.abspath(file_path)
     if not path.create_dir(os.path.dirname(file_path)):
         return False
@@ -96,6 +103,8 @@ def get_file_md5(file_path: str) -> Optional[str]:
     """
     获取指定文件的MD5值
     """
+    if not file_path:
+        return None
     file_path = os.path.abspath(file_path)
     if not os.path.exists(file_path):
         return None
