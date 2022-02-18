@@ -101,13 +101,12 @@ class Download(crawler.DownloadThread):
     audio_type_name_dict = {AUDIO_TYPE_YC: "原唱", AUDIO_TYPE_FC: "翻唱"}  # 显示名字
 
     def __init__(self, single_save_data, main_thread):
-        crawler.DownloadThread.__init__(self, single_save_data, main_thread)
-        self.index_key = self.single_save_data[0]  # account id
-        if len(self.single_save_data) >= 4 and self.single_save_data[3]:
-            self.display_name = self.single_save_data[3]
+        self.index_key = single_save_data[0]  # account id
+        if len(single_save_data) >= 4 and single_save_data[3]:
+            self.display_name = single_save_data[3]
         else:
-            self.display_name = self.single_save_data[0]
-        self.step("开始")
+            self.display_name = single_save_data[0]
+        crawler.DownloadThread.__init__(self, single_save_data, main_thread)
 
     def _run(self):
         for audio_type in list(self.audio_type_to_index_dict.keys()):

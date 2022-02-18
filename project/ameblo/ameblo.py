@@ -222,7 +222,7 @@ class Ameblo(crawler.Crawler):
         # 检测登录状态
         if not check_login():
             while True:
-                input_str = input(crawler.get_time() + " 没有检测到账号登录状态，可能无法解析只对会员开放的日志，继续程序(C)ontinue？或者退出程序(E)xit？:")
+                input_str = input(tool.get_time() + " 没有检测到账号登录状态，可能无法解析只对会员开放的日志，继续程序(C)ontinue？或者退出程序(E)xit？:")
                 input_str = input_str.lower()
                 if input_str in ["e", "exit"]:
                     tool.process_exit()
@@ -235,14 +235,13 @@ class Ameblo(crawler.Crawler):
 
 class Download(crawler.DownloadThread):
     def __init__(self, single_save_data, main_thread):
+        self.index_key = single_save_data[0]  # account id
+        if len(single_save_data) >= 3 and single_save_data[2]:
+            self.display_name = single_save_data[2]
+        else:
+            self.display_name = single_save_data[0]
         crawler.DownloadThread.__init__(self, single_save_data, main_thread)
         self.duplicate_list = {}
-        self.index_key = self.single_save_data[0]  # account id
-        if len(self.single_save_data) >= 3 and self.single_save_data[2]:
-            self.display_name = self.single_save_data[2]
-        else:
-            self.display_name = self.single_save_data[0]
-        self.step("开始")
 
     def _run(self):
         # 查询当前任务大致需要从多少页开始爬取

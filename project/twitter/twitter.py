@@ -302,7 +302,7 @@ class Twitter(crawler.Crawler):
         try:
             if not check_login():
                 while True:
-                    input_str = input(crawler.get_time() + " 没有检测到账号登录状态，是否继续(C)ontinue？或者退出程序(E)xit？:")
+                    input_str = input(tool.get_time() + " 没有检测到账号登录状态，是否继续(C)ontinue？或者退出程序(E)xit？:")
                     input_str = input_str.lower()
                     if input_str in ["c", "yes"]:
                         break
@@ -318,9 +318,8 @@ class Twitter(crawler.Crawler):
 
 class Download(crawler.DownloadThread):
     def __init__(self, single_save_data, main_thread):
+        self.index_key = self.display_name = single_save_data[0]  # account name
         crawler.DownloadThread.__init__(self, single_save_data, main_thread)
-        self.index_key = self.display_name = self.single_save_data[0]  # account name
-        self.step("开始")
 
     def _run(self):
         try:
