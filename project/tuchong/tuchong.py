@@ -96,9 +96,8 @@ class TuChong(crawler.Crawler):
 
 class Download(crawler.DownloadThread):
     def __init__(self, single_save_data, main_thread):
+        self.index_key = self.display_name = single_save_data[0]  # account name
         crawler.DownloadThread.__init__(self, single_save_data, main_thread)
-        self.index_key = self.display_name = self.single_save_data[0]  # account name
-        self.step("开始")
 
     def _run(self):
         try:
@@ -118,7 +117,7 @@ class Download(crawler.DownloadThread):
 
     # 获取所有可下载相册
     def get_crawl_list(self, account_id):
-        post_time = crawler.get_time('%Y-%m-%d %H:%M:%S')
+        post_time = tool.get_time('%Y-%m-%d %H:%M:%S')
         album_info_list = []
         is_over = False
         # 获取全部还未下载过需要解析的相册

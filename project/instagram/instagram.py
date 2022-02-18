@@ -58,10 +58,10 @@ def check_login():
 def login_from_console():
     # 从命令行中输入账号密码
     while True:
-        email = input(crawler.get_time() + " 请输入邮箱: ")
-        password = input(crawler.get_time() + " 请输入密码: ")
+        email = input(tool.get_time() + " 请输入邮箱: ")
+        password = input(tool.get_time() + " 请输入密码: ")
         while True:
-            input_str = input(crawler.get_time() + " 是否使用这些信息(Y)es或重新输入(N)o: ")
+            input_str = input(tool.get_time() + " 是否使用这些信息(Y)es或重新输入(N)o: ")
             input_str = input_str.lower()
             if input_str in ["y", "yes"]:
                 if _do_login(email, password):
@@ -265,7 +265,7 @@ class Instagram(crawler.Crawler):
         # 检测登录状态
         if not check_login():
             while True:
-                input_str = input(crawler.get_time() + " 没有检测到账号登录状态，手动输入账号密码登录继续(C)ontinue？或者退出程序(E)xit？:")
+                input_str = input(tool.get_time() + " 没有检测到账号登录状态，手动输入账号密码登录继续(C)ontinue？或者退出程序(E)xit？:")
                 input_str = input_str.lower()
                 if input_str in ["c", "yes"]:
                     if login_from_console():
@@ -281,9 +281,8 @@ class Instagram(crawler.Crawler):
 
 class Download(crawler.DownloadThread):
     def __init__(self, single_save_data, main_thread):
+        self.index_key = self.display_name = single_save_data[0]  # account name
         crawler.DownloadThread.__init__(self, single_save_data, main_thread)
-        self.index_key = self.display_name = self.single_save_data[0]  # account name
-        self.step("开始")
 
     def _run(self):
         # 获取首页

@@ -160,7 +160,7 @@ class Crawler(object):
                 output.print_msg(f"存档文件{self.save_data_path}不存在！")
                 tool.process_exit()
                 return
-            temp_file_name = get_time("%m-%d_%H_%M_") + os.path.basename(self.save_data_path)
+            temp_file_name = tool.get_time("%m-%d_%H_%M_") + os.path.basename(self.save_data_path)
             self.temp_save_data_path = os.path.join(os.path.dirname(self.save_data_path), temp_file_name)
             if os.path.exists(self.temp_save_data_path):
                 # 临时文件已存在
@@ -286,6 +286,8 @@ class Crawler(object):
 
     def main(self):
         try:
+            self.init()
+
             self._main()
         except (KeyboardInterrupt, SystemExit) as e:
             if issubclass(self.download_thread, DownloadThread):
@@ -330,6 +332,12 @@ class Crawler(object):
             # 等待子线程全部完成
             while len(thread_list) > 0:
                 thread_list.pop().join()
+
+    def init(self):
+        """
+        其他初始化的方法
+        """
+        pass
 
     def done(self):
         """
@@ -420,6 +428,8 @@ class DownloadThread(threading.Thread):
         self.total_audio_count = 0
         self.total_content_count = 0
         self.temp_path_list = []
+        if single_save_data:
+            self.step("开始")
 
     def run(self):
         try:
@@ -440,7 +450,7 @@ class DownloadThread(threading.Thread):
             self.main_thread.save_data.pop(self.index_key)
 
         # 写入存档
-        if self.single_save_data:
+        if self.single_save_data and self.main_thread.temp_save_data_path:
             with self.thread_lock:
                 file.write_file("\t".join(self.single_save_data), self.main_thread.temp_save_data_path, file.WRITE_FILE_TYPE_APPEND)
 
@@ -667,13 +677,6 @@ def rewrite_save_file(temp_save_data_path: str, save_data_path: str):
     temp_list = [account_list[key] for key in sorted(account_list.keys())]
     file.write_file(tool.list_to_string(temp_list), save_data_path, file.WRITE_FILE_TYPE_REPLACE)
     path.delete_dir_or_file(temp_save_data_path)
-
-
-def get_time(string_format: str = "%m-%d %H:%M:%S", timestamp: Union[float, int] = time.time()) -> str:
-    """
-    获取当前时间
-    """
-    return time.strftime(string_format, time.localtime(timestamp))
 
 
 def get_json_value(json_data, *args, **kwargs):
