@@ -37,8 +37,11 @@ class NicoNicoDownload(niconico.NicoNico):
         return video_id
 
     def main(self):
-        while True:
-            self.download()
+        try:
+            while True:
+                self.download()
+        except KeyboardInterrupt:
+            return
 
     def download(self):
         # 输入需要解析的视频
