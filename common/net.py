@@ -488,12 +488,6 @@ class Download:
         self.auto_multipart_download = auto_multipart_download
         self.replace_if_exist = replace_if_exist
         self.kwargs = kwargs
-        if "recheck_file_extension" in kwargs:
-            output.print_msg("recheck_file_extension")
-        if "head_check" in kwargs:
-            output.print_msg("head_check")
-        if "need_content_type" in kwargs:
-            output.print_msg("need_content_type")
 
         # 返回长度
         self.content_length = 0
