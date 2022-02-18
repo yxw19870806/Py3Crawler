@@ -261,10 +261,10 @@ class MultiThreadDownload(threading.Thread):
         multi_download_thread_semaphore.acquire()
 
     def run(self):
-        headers_list = {"Range": f"bytes={self.start_pos}-{self.end_pos}"}
+        header_list = {"Range": f"bytes={self.start_pos}-{self.end_pos}"}
         range_size = self.end_pos - self.start_pos + 1
         for retry_count in range(0, NET_CONFIG["DOWNLOAD_RETRY_COUNT"]):
-            response = net.request(self.file_url, method="GET", header_list=headers_list)
+            response = net.request(self.file_url, method="GET", header_list=header_list)
             if response.status == 206:
                 # 下载的文件和请求的文件大小不一致
                 if len(response.data) != range_size:
