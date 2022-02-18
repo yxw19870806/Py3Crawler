@@ -36,8 +36,11 @@ class ChangBaDownload(changba.ChangBa):
         return audio_key
 
     def main(self):
-        while True:
-            self.download()
+        try:
+            while True:
+                self.download()
+        except KeyboardInterrupt:
+            return
 
     def download(self):
         # 输入需要解析的歌曲
