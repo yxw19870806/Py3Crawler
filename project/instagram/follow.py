@@ -65,29 +65,31 @@ def follow_account(account_name, account_id):
         tool.process_exit()
 
 
-def main():
-    # 初始化类
-    instagram_class = instagram.Instagram()
+class InstagramFollow(instagram.Instagram):
+    def __init__(self, **kwargs):
+        instagram.Instagram.__init__(self, **kwargs)
 
-    count = 0
-    for account_name in sorted(instagram_class.save_data.keys()):
-        try:
-            account_index_response = get_account_index_page(account_name)
-        except crawler.CrawlerException as e:
-            log.error(e.http_error(f"账号{account_name}首页"))
-            continue
+    def main(self):
+        # 初始化类
+        count = 0
+        for account_name in sorted(self.save_data.keys()):
+            try:
+                account_index_response = get_account_index_page(account_name)
+            except crawler.CrawlerException as e:
+                log.error(e.http_error(f"账号{account_name}首页"))
+                continue
 
-        if account_index_response["is_follow"]:
-            output.print_msg(f"{account_name}已经关注，跳过")
-        elif account_index_response["is_private"] and not IS_FOLLOW_PRIVATE_ACCOUNT:
-            output.print_msg(f"{account_name}是私密账号，跳过")
-        else:
-            if follow_account(account_name, account_index_response["account_id"]):
-                count += 1
-            time.sleep(0.1)
+            if account_index_response["is_follow"]:
+                output.print_msg(f"{account_name}已经关注，跳过")
+            elif account_index_response["is_private"] and not IS_FOLLOW_PRIVATE_ACCOUNT:
+                output.print_msg(f"{account_name}是私密账号，跳过")
+            else:
+                if follow_account(account_name, account_index_response["account_id"]):
+                    count += 1
+                time.sleep(0.1)
 
-    output.print_msg(f"关注完成，成功关注了{count}个账号")
+        output.print_msg(f"关注完成，成功关注了{count}个账号")
 
 
 if __name__ == "__main__":
-    main()
+    InstagramFollow().main()
