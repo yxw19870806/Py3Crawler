@@ -16,7 +16,7 @@ MIN_CARD_PRICE = 0  # 最低卡牌价格
 MAX_CARD_PRICE = 0.5  # 最高卡牌价格
 MAX_TOTAL_PRICE = 1.5  # 所有卡牌总价
 IS_TOTAL_CARD = False  # 是不是一个game id下的所有卡牌都要符合条件
-EXTRA_CONFIG_FILE_PATH = os.path.join("lib", "badges.ini")
+EXTRA_CONFIG_FILE_PATH = os.path.join(os.path.dirname(__file__), "lib", "badges.ini")
 
 
 # 获取当前account正在收集的徽章进度
