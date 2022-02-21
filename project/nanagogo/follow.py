@@ -11,8 +11,6 @@ from common import *
 from common import quicky
 from project.nanagogo import nanagogo
 
-COOKIE_INFO = {}
-
 
 # 关注指定账号
 def follow_account(account_id):
@@ -23,7 +21,7 @@ def follow_account(account_id):
     header_list = {
         "X-7gogo-WebAuth": "yTRBxlzKsGnYfln9VQCx9ZQTZFERgoELVRh82k_lwDy=",
     }
-    follow_response = net.request(follow_api_url, method="POST", fields=post_data, header_list=header_list, cookies_list=COOKIE_INFO, json_decode=True)
+    follow_response = net.request(follow_api_url, method="POST", fields=post_data, header_list=header_list, cookies_list=nanagogo.COOKIE_INFO, json_decode=True)
     if follow_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         output.print_msg(f"关注{account_id}失败，请求返回结果：{crawler.request_failre(follow_response.status)}，退出程序！")
         tool.process_exit()
@@ -37,29 +35,19 @@ def follow_account(account_id):
     return False
 
 
-def main():
-    # 获取cookies
-    all_cookie_from_browser = quicky.quickly_get_all_cookies_from_browser()
-    if "api.7gogo.jp" in all_cookie_from_browser and ".7gogo.jp" in all_cookie_from_browser:
-        for cookie_key in all_cookie_from_browser["api.7gogo.jp"]:
-            COOKIE_INFO[cookie_key] = all_cookie_from_browser["api.7gogo.jp"][cookie_key]
-        for cookie_key in all_cookie_from_browser[".7gogo.jp"]:
-            COOKIE_INFO[cookie_key] = all_cookie_from_browser[".7gogo.jp"][cookie_key]
-    else:
-        output.print_msg("没有检测到登录信息")
-        tool.process_exit()
+class NanaGoGoFollow(nanagogo.NanaGoGo):
+    def __init__(self, **kwargs):
+        nanagogo.NanaGoGo.__init__(self, **kwargs)
 
-    # 初始化类
-    nanaGoGo_class = nanagogo.NanaGoGo()
+    def main(self):
+        count = 0
+        for account_id in self.save_data:
+            if follow_account(account_id):
+                count += 1
+            time.sleep(0.1)
 
-    count = 0
-    for account_id in nanaGoGo_class.save_data:
-        if follow_account(account_id):
-            count += 1
-        time.sleep(0.1)
-
-    output.print_msg(f"关注完成，成功关注了{count}个账号")
+        output.print_msg(f"关注完成，成功关注了{count}个账号")
 
 
 if __name__ == "__main__":
-    main()
+    NanaGoGoFollow().main()
