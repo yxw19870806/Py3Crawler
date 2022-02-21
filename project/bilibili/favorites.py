@@ -13,14 +13,19 @@ from common import *
 from project.bilibili import bilibili
 
 
-def main():
-    # 初始化
-    bilibili_class = bilibili.BiliBili(extra_sys_config={crawler.SYS_NOT_CHECK_SAVE_DATA: True})
-    # GUI窗口
-    gui = tkinter.Tk()
-    gui.withdraw()
+class BiliBiliFavorites(bilibili.BiliBili):
+    def __init__(self, **kwargs):
+        extra_sys_config = {
+            crawler.SYS_NOT_CHECK_SAVE_DATA: True
+        }
+        bilibili.BiliBili.__init__(self, extra_sys_config=extra_sys_config, **kwargs)
 
-    while True:
+        # GUI窗口
+        self.gui = tkinter.Tk()
+        self.gui.withdraw()
+
+    @staticmethod
+    def get_favorites_id_from_console():
         video_url = input("请输入bilibili收藏夹播放地址：").lower()
         favorites_id = None
         if video_url.find("//www.bilibili.com/medialist/play/ml") > 0:
@@ -29,27 +34,40 @@ def main():
             favorites_id = video_url
         elif video_url[:2] == "ml" and tool.is_integer(video_url[2:]):
             favorites_id = video_url[2:]
-        # 无效的视频地址
+        return favorites_id
+
+    def main(self):
+        try:
+            while True:
+                self.download()
+        except KeyboardInterrupt:
+            return
+
+    def download(self):
+        # 输入需要解析的视频
+        favorites_id = self.get_favorites_id_from_console()
         if not tool.is_integer(favorites_id):
             log.step("错误的收藏夹播放地址，正确的地址格式如：https://www.bilibili.com/medialist/play/ml1234567890")
-            continue
+            return
+
         # 访问视频播放页
         try:
             favorites_response = bilibili.get_favorites_list(favorites_id)
         except crawler.CrawlerException as e:
             log.error(e.http_error("收藏列表"))
-            continue
+            return
 
         # 选择下载目录
         log.step("请选择下载目录")
         options = {
-            "initialdir": bilibili_class.video_download_path,
-            "parent": gui,
+            "initialdir": self.video_download_path,
+            "parent": self.gui,
         }
         root_dir = tkinter.filedialog.askdirectory(**options)
         if not root_dir:
-            continue
+            return
 
+        # 已下载列表
         exist_list = []
         for file_path in path.get_dir_files_name(root_dir):
             if file_path.find(" ") > 0:
@@ -64,6 +82,7 @@ def main():
             if video_info["video_id"] in exist_list:
                 continue
 
+            # 获取下载地址
             try:
                 video_play_response = bilibili.get_video_page(video_info["video_id"])
             except crawler.CrawlerException as e:
@@ -108,4 +127,4 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    BiliBiliFavorites().main()
