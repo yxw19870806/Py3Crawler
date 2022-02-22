@@ -47,17 +47,18 @@ def follow_account(account_id):
     return False
 
 
-def main():
-    # 初始化类
-    weibo_class = weibo.Weibo()
+class WeiboFollow(weibo.Weibo):
+    def __init__(self, **kwargs):
+        weibo.Weibo.__init__(self, **kwargs)
 
-    # 读取存档文件
-    for account_id in sorted(weibo_class.save_data.keys()):
-        while not follow_account(account_id):
-            pass
+    def main(self):
+        # 读取存档文件
+        for account_id in sorted(self.save_data.keys()):
+            while not follow_account(account_id):
+                pass
 
-    output.print_msg("关注完成")
+        output.print_msg("关注完成")
 
 
 if __name__ == "__main__":
-    main()
+    WeiboFollow().main()
