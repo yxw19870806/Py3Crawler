@@ -670,25 +670,23 @@ class Download:
                 header_list["Range"] = f"bytes={start_pos}-{end_pos}"
 
                 # 创建一个副本
-                fd_handle = os.fdopen(os.dup(file_no), "rb+", -1)
-
-                for multipart_retry_count in range(0, NET_CONFIG["DOWNLOAD_RETRY_COUNT"]):
-                    try:
-                        multipart_response = request(self.file_url, method="GET", header_list=header_list, connection_timeout=NET_CONFIG["DOWNLOAD_CONNECTION_TIMEOUT"], read_timeout=NET_CONFIG["DOWNLOAD_READ_TIMEOUT"], **multipart_kwargs)
-                    except SystemExit:
+                with os.fdopen(os.dup(file_no), "rb+", -1) as fd_handle:
+                    for multipart_retry_count in range(0, NET_CONFIG["DOWNLOAD_RETRY_COUNT"]):
+                        try:
+                            multipart_response = request(self.file_url, method="GET", header_list=header_list, connection_timeout=NET_CONFIG["DOWNLOAD_CONNECTION_TIMEOUT"], read_timeout=NET_CONFIG["DOWNLOAD_READ_TIMEOUT"], **multipart_kwargs)
+                        except SystemExit:
+                            return False
+                        if multipart_response.status == 206:
+                            # 下载的文件和请求的文件大小不一致
+                            if len(multipart_response.data) != (end_pos - start_pos + 1):
+                                output.print_msg(f"网络文件{self.file_url}：range {start_pos} - {end_pos}实际下载大小 {len(multipart_response.data)} 不一致")
+                                time.sleep(NET_CONFIG["HTTP_REQUEST_RETRY_WAIT_TIME"])
+                            else:
+                                # 写入本地文件后退出
+                                fd_handle.seek(start_pos)
+                                fd_handle.write(multipart_response.data)
+                                break
+                    else:
+                        self.code = self.CODE_RETRY_MAX_COUNT
                         return False
-                    if multipart_response.status == 206:
-                        # 下载的文件和请求的文件大小不一致
-                        if len(multipart_response.data) != (end_pos - start_pos + 1):
-                            output.print_msg(f"网络文件{self.file_url}：range {start_pos} - {end_pos}实际下载大小 {len(multipart_response.data)} 不一致")
-                            time.sleep(NET_CONFIG["HTTP_REQUEST_RETRY_WAIT_TIME"])
-                        else:
-                            # 写入本地文件后退出
-                            fd_handle.seek(start_pos)
-                            fd_handle.write(multipart_response.data)
-                            fd_handle.close()
-                            break
-                else:
-                    self.code = self.CODE_RETRY_MAX_COUNT
-                    return False
         return True
