@@ -76,16 +76,19 @@ def get_audio_info_page(audio_id):
 
 
 class KuWo(crawler.Crawler):
-    def __init__(self, **kwargs):
+    def __init__(self, sys_config=None, **kwargs):
+        if sys_config is None:
+            sys_config = {}
         # 设置APP目录
         crawler.PROJECT_APP_PATH = os.path.abspath(os.path.dirname(__file__))
 
         # 初始化参数
-        sys_config = {
-            crawler.SYS_DOWNLOAD_AUDIO: True,
+        default_sys_config = {
             crawler.SYS_NOT_CHECK_SAVE_DATA: True,
+            crawler.SYS_DOWNLOAD_AUDIO: True,
         }
+        default_sys_config.update(sys_config)
         crawler.Crawler.__init__(self, sys_config, **kwargs)
 
-    def _main(self):
+    def main(self):
         pass
