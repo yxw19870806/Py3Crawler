@@ -6,6 +6,7 @@ http://www.kuwo.cn/
 email: hikaru870806@hotmail.com
 如有问题或建议请联系
 """
+import math
 import os
 from common import *
 
@@ -31,7 +32,7 @@ def get_one_page_playlist(playlist_id, page_count):
     }
     if playlist_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(playlist_pagination_response.status))
-    for audio_info in crawler.get_json_value(playlist_pagination_response.json_data, "data", "musicList"):
+    for audio_info in crawler.get_json_value(playlist_pagination_response.json_data, "data", "musicList", type_check=list):
         result_audio_info = {
             "audio_id": None,  # 音频id
             "audio_title": None,  # 音频标题
@@ -43,6 +44,9 @@ def get_one_page_playlist(playlist_id, page_count):
         # 获取音频标题
         result_audio_info["audio_title"] = crawler.get_json_value(audio_info, "name")
         result["audio_info_list"].append(result_audio_info)
+    # 判断是不是最后一页
+    total_audio_count = crawler.get_json_value(playlist_pagination_response.json_data, "data", "total", type_check=int)
+    result["is_over"] = page_count >= math.ceil(total_audio_count / EACH_PAGE_AUDIO_COUNT)
     return result
 
 
