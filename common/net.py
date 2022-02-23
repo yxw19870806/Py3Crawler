@@ -563,7 +563,7 @@ class Download:
         """
         # 先获取头信息
         if self.auto_multipart_download:
-            head_response = request(self.file_url, method="HEAD", is_check_qps=False, **self.kwargs)
+            head_response = request(self.file_url, method="HEAD", is_check_qps=False, **self.kwargs.copy())
             # 其他返回状态，退出
             if head_response.status != HTTP_RETURN_CODE_SUCCEED:
                 # URL格式不正确
@@ -620,7 +620,7 @@ class Download:
         单线程下载
         """
         try:
-            file_response = request(self.file_url, method="GET", connection_timeout=NET_CONFIG["DOWNLOAD_CONNECTION_TIMEOUT"], read_timeout=NET_CONFIG["DOWNLOAD_READ_TIMEOUT"], **self.kwargs)
+            file_response = request(self.file_url, method="GET", connection_timeout=NET_CONFIG["DOWNLOAD_CONNECTION_TIMEOUT"], read_timeout=NET_CONFIG["DOWNLOAD_READ_TIMEOUT"], **self.kwargs.copy())
         except SystemExit:
             return False
         if file_response.status != HTTP_RETURN_CODE_SUCCEED:
