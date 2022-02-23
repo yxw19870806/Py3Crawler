@@ -65,7 +65,13 @@ def get_audio_info_page(audio_id):
     if audio_info_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(audio_info_response.status))
     # 获取音频地址
-    result["audio_url"] = crawler.get_json_value(audio_info_response.json_data, "data", "url")
+    try:
+        result["audio_url"] = crawler.get_json_value(audio_info_response.json_data, "data", "url")
+    except crawler.CrawlerException:
+        if crawler.get_json_value(audio_info_response.json_data, "code", type_check=int, default_value=0) == -1:
+            if error_message := crawler.get_json_value(audio_info_response.json_data, "msg", type_check=str, default_value=""):
+                raise crawler.CrawlerException(error_message)
+        raise
     return result
 
 
