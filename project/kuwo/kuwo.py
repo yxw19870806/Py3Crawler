@@ -6,6 +6,7 @@ http://www.kuwo.cn/
 email: hikaru870806@hotmail.com
 如有问题或建议请联系
 """
+import math
 import os
 from common import *
 
@@ -31,7 +32,7 @@ def get_one_page_playlist(playlist_id, page_count):
     }
     if playlist_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(playlist_pagination_response.status))
-    for audio_info in crawler.get_json_value(playlist_pagination_response.json_data, "data", "musicList"):
+    for audio_info in crawler.get_json_value(playlist_pagination_response.json_data, "data", "musicList", type_check=list):
         result_audio_info = {
             "audio_id": None,  # 音频id
             "audio_title": None,  # 音频标题
@@ -43,6 +44,9 @@ def get_one_page_playlist(playlist_id, page_count):
         # 获取音频标题
         result_audio_info["audio_title"] = crawler.get_json_value(audio_info, "name")
         result["audio_info_list"].append(result_audio_info)
+    # 判断是不是最后一页
+    total_audio_count = crawler.get_json_value(playlist_pagination_response.json_data, "data", "total", type_check=int)
+    result["is_over"] = page_count >= math.ceil(total_audio_count / EACH_PAGE_AUDIO_COUNT)
     return result
 
 
@@ -61,21 +65,30 @@ def get_audio_info_page(audio_id):
     if audio_info_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(audio_info_response.status))
     # 获取音频地址
-    result["audio_url"] = crawler.get_json_value(audio_info_response.json_data, "data", "url")
+    try:
+        result["audio_url"] = crawler.get_json_value(audio_info_response.json_data, "data", "url")
+    except crawler.CrawlerException:
+        if crawler.get_json_value(audio_info_response.json_data, "code", type_check=int, default_value=0) == -1:
+            if error_message := crawler.get_json_value(audio_info_response.json_data, "msg", type_check=str, default_value=""):
+                raise crawler.CrawlerException(error_message)
+        raise
     return result
 
 
 class KuWo(crawler.Crawler):
-    def __init__(self, **kwargs):
+    def __init__(self, sys_config=None, **kwargs):
+        if sys_config is None:
+            sys_config = {}
         # 设置APP目录
         crawler.PROJECT_APP_PATH = os.path.abspath(os.path.dirname(__file__))
 
         # 初始化参数
-        sys_config = {
-            crawler.SYS_DOWNLOAD_AUDIO: True,
+        default_sys_config = {
             crawler.SYS_NOT_CHECK_SAVE_DATA: True,
+            crawler.SYS_DOWNLOAD_AUDIO: True,
         }
+        default_sys_config.update(sys_config)
         crawler.Crawler.__init__(self, sys_config, **kwargs)
 
-    def _main(self):
+    def main(self):
         pass
