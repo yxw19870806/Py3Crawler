@@ -136,7 +136,7 @@ class YiZhiBo(crawler.Crawler):
 
 class Download(crawler.DownloadThread):
     def __init__(self, single_save_data, main_thread):
-        self.account_id = single_save_data[0]  # account id
+        self.index_key = single_save_data[0]  # account id
         if len(single_save_data) >= 6 and single_save_data[5]:
             self.display_name = single_save_data[5]
         else:
@@ -172,7 +172,7 @@ class Download(crawler.DownloadThread):
     def get_crawl_photo_list(self):
         # 获取全部图片地址列表
         try:
-            photo_index_response = get_photo_index_page(self.account_id)
+            photo_index_response = get_photo_index_page(self.index_key)
         except crawler.CrawlerException as e:
             self.error(e.http_error("图片首页"))
             return []
@@ -225,7 +225,7 @@ class Download(crawler.DownloadThread):
         video_info_list = []
         # 获取全部视频ID列表
         try:
-            video_pagination_response = get_video_index_page(self.account_id)
+            video_pagination_response = get_video_index_page(self.index_key)
         except crawler.CrawlerException as e:
             self.error(e.http_error("视频首页"))
             return []
