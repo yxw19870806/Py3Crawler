@@ -28,7 +28,7 @@ def get_one_page_blog(account_id, page_count):
         raise crawler.CrawlerException("账号不存在")
     elif blog_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(blog_pagination_response.status))
-    blog_pagination_response_content = blog_pagination_response.data
+    blog_pagination_response_content = blog_pagination_response.data.decode(errors="ignore")
     blog_body_selector = pq(blog_pagination_response_content).find("div#sheet div.entrybody")
     blog_bottom_selector = pq(blog_pagination_response_content).find("div#sheet div.entrybottom")
     if blog_body_selector.length == 0 or blog_bottom_selector.length == 0:
