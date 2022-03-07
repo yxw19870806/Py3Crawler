@@ -279,7 +279,7 @@ def get_video_page(video_id):
                 raise crawler.CrawlerException("返回的视频分辨率不是最高的\n" + video_info_response.json_data)
         # 获取视频地址
         for video_info in video_info_list:
-            result_video_info["video_url_list"].append(crawler.get_json_value(video_info, "url", type_check=str))
+            result_video_info["video_url_list"].append(crawler.get_json_value(video_info, "backup_url", 0, type_check=str))
         # 获取视频分P标题
         result_video_info["video_part_title"] = crawler.get_json_value(video_part_info, "part", type_check=str)
         result["video_part_info_list"].append(result_video_info)
