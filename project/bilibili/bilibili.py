@@ -235,18 +235,24 @@ def get_video_page(video_id):
         raise crawler.CrawlerException("页面截取视频信息失败\n" + video_play_response_content)
     try:
         video_part_info_list = crawler.get_json_value(script_json, "videoData", "pages", type_check=list)
+        # 获取视频标题
+        result["video_title"] = crawler.get_json_value(script_json, "videoData", "title", type_check=str).strip()
     except crawler.CrawlerException:
-        if not IS_LOGIN:
-            result["is_private"] = True
-            return result
+        # https://www.bilibili.com/video/av256978
+        if crawler.get_json_value(script_json, "error", "message", type_check=str, default_value="") == "访问权限不足":
+            if not IS_LOGIN:
+                result["is_private"] = True
+                return result
+            else:
+                raise
         else:
-            crawler.get_json_value(script_json, "mediaInfo", "id", type_check=int)
+            # 特殊live回放
+            # https://www.bilibili.com/festival/VSF2022live?bvid=BV1VF411E7zu
+            video_info = crawler.get_json_value(script_json, "videoInfo", type_check=dict)
+            video_info["part"] = ""
+            video_part_info_list = [video_info]
             # 获取视频标题
-            result["video_title"] = crawler.get_json_value(script_json, "h1Title", type_check=str).strip()
-            return result
-        # raise
-    # 获取视频标题
-    result["video_title"] = crawler.get_json_value(script_json, "videoData", "title", type_check=str).strip()
+            result["video_title"] = crawler.get_json_value(script_json, "videoInfo", "title", type_check=str).strip()
     # 分P https://www.bilibili.com/video/av33131459
     for video_part_info in video_part_info_list:
         result_video_info = {
@@ -258,7 +264,7 @@ def get_video_page(video_id):
         query_data = {
             "avid": video_id,
             "cid": crawler.get_json_value(video_part_info, "cid", type_check=int),
-            "qn": "116",  # 上限 高清 1080P+: 112, 高清 1080P: 80, 高清 720P: 64, 清晰 480P: 32, 流畅 360P: 16
+            "qn": "116",  # 上限 高清 1080P+: 116, 高清 1080P: 80, 高清 720P: 64, 清晰 480P: 32, 流畅 360P: 16
             "otype": "json",
         }
         video_info_response = net.request(video_info_url, method="GET", fields=query_data, cookies_list=COOKIE_INFO, header_list={"Referer": f"https://www.bilibili.com/video/av{video_id}"}, json_decode=True)
