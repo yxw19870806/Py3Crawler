@@ -395,7 +395,7 @@ def get_account_badges(account_id):
 # 获取指定账号的全部游戏id列表
 def get_account_owned_app_list(user_id, is_played=False):
     game_index_url = f"https://steamcommunity.com/profiles/{user_id}/games/?tab=all"
-    game_index_response = net.request(game_index_url, method="GET")
+    game_index_response = net.request(game_index_url, method="GET", read_timeout=120)
     if game_index_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(game_index_response.status))
     game_index_response_content = game_index_response.data.decode(errors="ignore")
