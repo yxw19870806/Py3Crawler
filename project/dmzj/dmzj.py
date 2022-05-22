@@ -148,7 +148,7 @@ class Download(crawler.DownloadThread):
 
         # 图片下载
         photo_index = 1
-        chapter_path = os.path.join(self.main_thread.photo_download_path, self.display_name, comic_info["version_name"], f"%06d {path.filter_text(comic_info['chapter_name'])}" % comic_info["page_id"])
+        chapter_path = os.path.join(self.main_thread.photo_download_path, self.display_name, comic_info["version_name"], "%06d %s" % (comic_info["page_id"], path.filter_text(comic_info['chapter_name'])))
         # 设置临时目录
         self.temp_path_list.append(chapter_path)
         for photo_url in chapter_response["photo_url_list"]:
