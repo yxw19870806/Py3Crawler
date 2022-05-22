@@ -572,7 +572,7 @@ class Download(crawler.DownloadThread):
                 self.main_thread_check()  # 检测主线程运行状态
                 self.step(f"视频{video_info['video_id']}《{video_info['video_title']}》开始下载第{video_index}个视频 {video_part_url}")
 
-                video_name = f"%010d {video_info['video_title']}" % video_info["video_id"]
+                video_name = "%010d %s" % (video_info["video_id"], video_info['video_title'])
                 if len(video_play_response["video_part_info_list"]) > 1:
                     if video_part_info["video_part_title"]:
                         video_name += "_" + video_part_info["video_part_title"]
