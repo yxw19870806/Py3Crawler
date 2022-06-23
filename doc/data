@@ -233,11 +233,8 @@ http://www.tornadoweb.cn
 26. Markdown
 https://zh.wikipedia.org/zh/Markdown
 
-29. Pyinstaller
-pip install pyinstaller
-pyinstaller -p PATH_TO_YOUR_PROJECT_ROOT_PATH -F xxxx.py
-
-30 .py -> .exe
+29 .py -> .exe
 pip install pyinstaller
 cd PROJECT_ROOT_PATH
-C:\Python3\Scripts\pyinstaller.exe -F project\PROJECT_NAME\PYTHON_NAME.py
+#C:\Python3\Scripts\pyinstaller.exe -F project\PROJECT_NAME\PYTHON_NAME.py
+C:\Python3\Scripts\pyinstaller.exe -p PROJECT_ROOT_PATH -F project\PROJECT_NAME\PYTHON_NAME.py
