@@ -5,7 +5,7 @@ clicker heroes窗口处理类
 email: hikaru870806@hotmail.com
 如有问题或建议请联系
 """
-from common import windowsApplication
+from common import windows_application
 
 # 窗口标题
 WINDOW_TITLE = "Clicker Heroes"
@@ -36,6 +36,6 @@ DEFAULT_WINDOWS_SIZE = (1152, 678)
 DEFAULT_CLIENT_SIZE = (1136, 640)
 
 
-class ClickerHeroes(windowsApplication.WindowsApplication):
+class ClickerHeroes(windows_application.WindowsApplication):
     def __init__(self):
-        windowsApplication.WindowsApplication.__init__(self, WINDOW_TITLE, DEFAULT_WINDOWS_SIZE)
+        windows_application.WindowsApplication.__init__(self, WINDOW_TITLE, DEFAULT_WINDOWS_SIZE)

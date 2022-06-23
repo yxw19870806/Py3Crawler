@@ -26,14 +26,14 @@ PROJECT_APP_PATH = os.getcwd()
 # webdriver文件路径
 CHROME_WEBDRIVER_PATH = os.path.abspath(os.path.join(PROJECT_ROOT_PATH, "common/chromedriver.exe"))
 try:
-    from . import browser, file, log, net, output, path, portListenerEvent, tool
+    from . import browser, file, log, net, output, path, port_listener_event, tool
 except ImportError:
-    from common import browser, file, log, net, output, path, portListenerEvent, tool
+    from common import browser, file, log, net, output, path, port_listener_event, tool
 if platform.system() == "Windows":
     try:
-        from . import keyboardEvent
+        from . import keyboard_event
     except ImportError:
-        from common import keyboardEvent
+        from common import keyboard_event
 
 # 程序是否支持下载图片功能
 SYS_DOWNLOAD_PHOTO = "download_photo"
@@ -248,11 +248,11 @@ class Crawler(object):
         if analysis_config(config, "IS_PORT_LISTENER_EVENT", False, CONFIG_ANALYSIS_MODE_BOOLEAN):
             listener_port = analysis_config(config, "LISTENER_PORT", 12345, CONFIG_ANALYSIS_MODE_INTEGER)
             listener_event_bind = {
-                str(portListenerEvent.PROCESS_STATUS_PAUSE): net.pause_request,  # 暂停进程
-                str(portListenerEvent.PROCESS_STATUS_RUN): net.resume_request,  # 继续进程
-                str(portListenerEvent.PROCESS_STATUS_STOP): self.stop_process  # 结束进程（取消当前的线程，完成任务）
+                str(port_listener_event.PROCESS_STATUS_PAUSE): net.pause_request,  # 暂停进程
+                str(port_listener_event.PROCESS_STATUS_RUN): net.resume_request,  # 继续进程
+                str(port_listener_event.PROCESS_STATUS_STOP): self.stop_process  # 结束进程（取消当前的线程，完成任务）
             }
-            process_control_thread = portListenerEvent.PortListenerEvent(port=listener_port, event_list=listener_event_bind)
+            process_control_thread = port_listener_event.PortListenerEvent(port=listener_port, event_list=listener_event_bind)
             process_control_thread.setDaemon(True)
             process_control_thread.start()
 
@@ -273,7 +273,7 @@ class Crawler(object):
                 keyboard_event_bind[stop_process_key] = self.stop_process
 
             if keyboard_event_bind:
-                keyboard_control_thread = keyboardEvent.KeyboardEvent(keyboard_event_bind)
+                keyboard_control_thread = keyboard_event.KeyboardEvent(keyboard_event_bind)
                 keyboard_control_thread.setDaemon(True)
                 keyboard_control_thread.start()
 
