@@ -15,9 +15,9 @@ import win32gui
 from typing import Tuple
 
 try:
-    from . import keyboardEvent
+    from . import keyboard_event
 except ImportError:
-    from common import keyboardEvent
+    from common import keyboard_event
 
 CLICK_TYPE_LEFT_BUTTON = "left"
 CLICK_TYPE_RIGHT_BUTTON = "right"
@@ -34,7 +34,7 @@ class WindowsApplication:
         if default_windows_size:
             self.set_window_size(default_windows_size[0], default_windows_size[1])
         keyboard_event_bind = {"Prior": self.pause_process, "Next": self.resume_process}
-        keyboard_control_thread = keyboardEvent.KeyboardEvent(keyboard_event_bind)
+        keyboard_control_thread = keyboard_event.KeyboardEvent(keyboard_event_bind)
         keyboard_control_thread.setDaemon(True)
         keyboard_control_thread.start()
 
