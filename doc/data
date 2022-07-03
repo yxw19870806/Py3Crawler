@@ -235,6 +235,4 @@ https://zh.wikipedia.org/zh/Markdown
 
 29 .py -> .exe
 pip install pyinstaller
-cd PROJECT_ROOT_PATH
-#C:\Python3\Scripts\pyinstaller.exe -F project\PROJECT_NAME\PYTHON_NAME.py
-C:\Python3\Scripts\pyinstaller.exe -p PROJECT_ROOT_PATH -F project\PROJECT_NAME\PYTHON_NAME.py
+pyinstaller.exe -p %PROJECT_ROOT_PATH% -F PROJECT_PATH\PYTHON_NAME.py
