@@ -50,7 +50,7 @@ def check_login():
         index_url = "https://www.instagram.com/"
         index_response = net.request(index_url, method="GET", cookies_list=COOKIE_INFO)
         if index_response.status == net.HTTP_RETURN_CODE_SUCCEED:
-            return index_response.data.decode(errors="ignore").find('"viewer":{') >= 0
+            return index_response.data.decode(errors="ignore").find('"viewerId":"') >= 0
     return False
 
 
@@ -117,12 +117,15 @@ def get_account_index_page(account_name):
 def get_one_page_media(account_id, cursor):
     api_url = "https://www.instagram.com/graphql/query/"
     query_data = {
-        "query_id": QUERY_ID,
-        "id": account_id,
-        "first": EACH_PAGE_PHOTO_COUNT,
+        "query_hash": "69cba40317214236af40e7efa697781d",
+        "variables": tool.json_encode(
+            {
+                "id": account_id,
+                "first": EACH_PAGE_PHOTO_COUNT,
+                "after": cursor
+            }
+        )
     }
-    if cursor:
-        query_data["after"] = cursor
     media_pagination_response = net.request(api_url, method="GET", fields=query_data, cookies_list=COOKIE_INFO, json_decode=True)
     result = {
         "media_info_list": [],  # 全部媒体信息
