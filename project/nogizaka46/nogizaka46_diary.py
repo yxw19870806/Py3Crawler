@@ -7,21 +7,20 @@ email: hikaru870806@hotmail.com
 如有问题或建议请联系
 """
 import os
-import re
 from PIL import Image
 from pyquery import PyQuery as pq
 from common import *
 
 
 # 获取成员指定页数的一页日志信息
-# account_id -> asuka.saito
+# account_id -> 264
 def get_one_page_blog(account_id, page_count):
-    # https://blog.nogizaka46.com/asuka.saito
-    blog_pagination_url = f"https://blog.nogizaka46.com/{account_id}/"
-    query_data = {"p": page_count}
+    # https://www.nogizaka46.com/s/n46/diary/MEMBER/list?ima=4653&page=0&ct=264&cd=MEMBER
+    blog_pagination_url = f"https://www.nogizaka46.com/s/n46/diary/MEMBER/list"
+    query_data = {"ct": account_id, "page": page_count - 1}
     blog_pagination_response = net.request(blog_pagination_url, method="GET", fields=query_data)
     result = {
-        "blog_info_list": [],  # 全部图片信息
+        "blog_id_list": [],  # 全部日志id
         "is_over": False,  # 是否最后一页日志
     }
     if blog_pagination_response.status == 404:
@@ -29,75 +28,90 @@ def get_one_page_blog(account_id, page_count):
     elif blog_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(blog_pagination_response.status))
     blog_pagination_response_content = blog_pagination_response.data.decode(errors="ignore")
-    blog_body_selector = pq(blog_pagination_response_content).find("div#sheet div.entrybody")
-    blog_bottom_selector = pq(blog_pagination_response_content).find("div#sheet div.entrybottom")
-    if blog_body_selector.length == 0 or blog_bottom_selector.length == 0:
-        raise crawler.CrawlerException("页面截取正文失败\n" + blog_pagination_response_content)
-    if blog_body_selector.length != blog_bottom_selector.length:
-        raise crawler.CrawlerException("页面截取正文数量不匹配\n" + blog_pagination_response_content)
-    for blog_body_index in range(0, blog_body_selector.length):
-        result_photo_info = {
-            "big_2_small_photo_list": {},  # 全部含有大图的图片
-            "blog_id": None,  # 日志id
-            "photo_url_list": [],  # 全部图片地址
-        }
-        blog_body_html = blog_body_selector.eq(blog_body_index).html()
-        # 获取日志id
-        blog_url = blog_bottom_selector.eq(blog_body_index).find("a").eq(0).attr("href")
-        if blog_url is None:
-            raise crawler.CrawlerException("日志内容截取日志地址失败\n" + blog_bottom_selector.eq(blog_body_index).html())
-        blog_id = blog_url.split("/")[-1].split(".")[0]
+    blog_info_select_list = pq(blog_pagination_response_content).find(".bl--card.js-pos")
+    if blog_info_select_list.length == 0:
+        raise crawler.CrawlerException("页面截取日志列表失败\n" + blog_pagination_response_content)
+    for blog_info_index in range(0, blog_info_select_list.length):
+        blog_info_select = blog_info_select_list.eq(blog_info_index)
+        blog_url_path = blog_info_select.attr("href")
+        blog_id = tool.find_sub_string(blog_url_path, "/s/n46/diary/detail/", "?ima=")
         if not tool.is_integer(blog_id):
-            raise crawler.CrawlerException("日志内容截取日志id失败\n" + blog_bottom_selector.eq(blog_body_index).html())
-        result_photo_info["blog_id"] = int(blog_id)
-        # 获取图片地址列表
-        result_photo_info["photo_url_list"] = re.findall('src="(http[^"]*)"', blog_body_html)
-        # 获取全部大图对应的小图
-        big_photo_list_find = re.findall(r'<a href="([^"]*)"><img[\S|\s]*? src="([^"]*)"', blog_body_html)
-        big_2_small_photo_lust = {}
-        for big_photo_url, small_photo_url in big_photo_list_find:
-            big_2_small_photo_lust[small_photo_url] = big_photo_url
-        result_photo_info["big_2_small_photo_lust"] = big_2_small_photo_lust
-        result["blog_info_list"].append(result_photo_info)
+            raise crawler.CrawlerException("日志预览截取日志id失败\n" + blog_info_select.html())
+        result["blog_id_list"].append(int(blog_id))
+
     # 判断是不是最后一页
-    paginate_selector = pq(blog_pagination_response_content).find("div#sheet div.paginate")
-    if paginate_selector.length > 0:
-        paginate_url = paginate_selector.eq(0).find("a:last").attr("href")
-        if paginate_url is None:
-            raise crawler.CrawlerException("页面截取分页信息失败\n" + paginate_selector.html())
-        max_page_count = paginate_url.split("?p=")[-1]
+    paginate_selector = pq(blog_pagination_response_content).find(".bl--pg .tolast a")
+    if paginate_selector.length == 1:
+        last_page_url = paginate_selector.attr("href")
+        if last_page_url is None:
+            raise crawler.CrawlerException("页面截取最后一页按钮失败\n" + paginate_selector.html())
+        max_page_count = tool.find_sub_string(last_page_url, "page=", "&")
         if not tool.is_integer(max_page_count):
-            raise crawler.CrawlerException("分页信息解析失败\n" + blog_bottom_selector.html())
+            raise crawler.CrawlerException("页面截取最后一页失败\n" + paginate_selector.html())
         result["is_over"] = page_count >= int(max_page_count)
     else:
-        result["is_over"] = True
+        if pq(blog_pagination_response_content).find(".bl--pg").length == 1:
+            result["is_over"] = True
+        else:
+            raise crawler.CrawlerException("页面截取分页信息失败\n" + blog_pagination_response_content)
     return result
 
 
-# 检查图片是否存在对应的大图，以及判断大图是否仍然有效，如果存在可下载的大图则返回大图地址，否则返回原图片地址
-def check_big_photo(photo_url, big_2_small_list):
+def get_blog_page(blog_id):
+    blog_url = f"https://www.nogizaka46.com/s/n46/diary/detail/{blog_id}"
+    blog_response = net.request(blog_url, method="GET")
+    result = {
+        "photo_info_list": [],  # 全部图片地址
+    }
+    if blog_response.status != net.HTTP_RETURN_CODE_SUCCEED:
+        raise crawler.CrawlerException(crawler.request_failre(blog_response.status))
+    blog_response_content = blog_response.data.decode(errors="ignore")
+    blog_html_selector = pq(blog_response_content).find(".bd--edit")
+    if blog_html_selector.length != 1:
+        raise crawler.CrawlerException("页面截取正文失败\n" + blog_response_content)
+    # 获取图片地址
+    photo_list_selector = blog_html_selector.find("img")
+    for photo_index in range(0, photo_list_selector.length):
+        result_photo_info = {
+            "real_photo_url": None,
+            "photo_url": None,
+        }
+        # 图片动作
+        photo_selector = photo_list_selector.eq(photo_index)
+        photo_url = photo_selector.attr("src")
+        if not (photo_url.find("https://") == 0 or photo_url.find("https://") == 0):
+            photo_url = f"https://www.nogizaka46.com/{photo_url}"
+        result_photo_info["photo_url"] = photo_url
+        # 判断是否是预览地址
+        photo_parent_selector = photo_selector.parent()
+        if photo_parent_selector.is_("a") and photo_parent_selector.attr("href"):
+            result_photo_info["real_photo_url"] = photo_parent_selector.attr("href")
+        result["photo_info_list"].append(result_photo_info)
+    return result
+
+
+# 检查旧版本的实际大图是否可以访问
+def check_preview_photo(photo_url, real_photo_url):
     result = {
         "cookies": None,  # 页面返回的cookies
-        "photo_url": None,  # 大图地址
+        "photo_url": photo_url,  # 大图地址
         "is_over": False,  # 是否已经没有有效的大图了
     }
-    if photo_url in big_2_small_list:
-        if big_2_small_list[photo_url].find("//dcimg.awalker.jp") > 0:
-            big_photo_response = net.request(big_2_small_list[photo_url], method="GET")
-            if big_photo_response.status == net.HTTP_RETURN_CODE_SUCCEED:
-                # 检测是不是已经过期删除
-                temp_photo_url = tool.find_sub_string(big_photo_response.data, '<img src="', '"')
-                if temp_photo_url != "/img/expired.gif":
-                    if temp_photo_url.find("://") >= 0:
-                        result["photo_url"] = temp_photo_url
-                    else:
-                        result["photo_url"] = "http://dcimg.awalker.jp" + temp_photo_url
+    # 没有预览地址，直接返回图片原始地址
+    if real_photo_url is not None:
+        real_photo_response = net.request(real_photo_url, method="GET")
+        if real_photo_response.status == net.HTTP_RETURN_CODE_SUCCEED:
+            # 检测是不是已经过期删除
+            temp_photo_url = tool.find_sub_string(real_photo_response.data, '<img src="', '"')
+            if temp_photo_url != "/img/expired.gif":
+                if temp_photo_url.find("://") >= 0:
+                    result["photo_url"] = temp_photo_url
                 else:
-                    result["is_over"] = True
-                # 获取cookies
-                result["cookies"] = net.get_cookies_from_response_header(big_photo_response.headers)
-        else:
-            result["photo_url"] = big_2_small_list[photo_url]
+                    result["photo_url"] = "http://dcimg.awalker.jp" + temp_photo_url
+            else:
+                result["is_over"] = True
+            # 获取cookies
+            result["cookies"] = net.get_cookies_from_response_header(real_photo_response.headers)
     return result
 
 
@@ -146,18 +160,18 @@ class Download(crawler.DownloadThread):
 
     def _run(self):
         # 获取所有可下载日志
-        blog_info_list = self.get_crawl_list()
-        self.step(f"需要下载的全部日志解析完毕，共{len(blog_info_list)}个")
+        blog_id_list = self.get_crawl_list()
+        self.step(f"需要下载的全部日志解析完毕，共{len(blog_id_list)}个")
 
         # 从最早的日志开始下载
-        while len(blog_info_list) > 0:
-            self.crawl_blog(blog_info_list.pop())
+        while len(blog_id_list) > 0:
+            self.crawl_blog(blog_id_list.pop())
             self.main_thread_check()  # 检测主线程运行状态
 
     # 获取所有可下载日志
     def get_crawl_list(self):
         page_count = 1
-        blog_info_list = []
+        blog_id_list = []
         is_over = False
         # 获取全部还未下载过需要解析的日志
         while not is_over:
@@ -171,14 +185,14 @@ class Download(crawler.DownloadThread):
                 self.error(e.http_error(f"第{page_count}页日志"))
                 raise
 
-            self.trace(f"第{page_count}页解析的全部日志：{blog_pagination_response['blog_info_list']}")
-            self.step(f"第{page_count}页解析获取{len(blog_pagination_response['blog_info_list'])}个日志")
+            self.trace(f"第{page_count}页解析的全部日志：{blog_pagination_response['blog_id_list']}")
+            self.step(f"第{page_count}页解析获取{len(blog_pagination_response['blog_id_list'])}个日志")
 
             # 寻找这一页符合条件的日志
-            for blog_info in blog_pagination_response["blog_info_list"]:
+            for blog_id in blog_pagination_response["blog_id_list"]:
                 # 检查是否达到存档记录
-                if blog_info["blog_id"] > int(self.single_save_data[1]):
-                    blog_info_list.append(blog_info)
+                if blog_id > int(self.single_save_data[1]):
+                    blog_id_list.append(blog_id)
                 else:
                     is_over = True
                     break
@@ -188,44 +202,51 @@ class Download(crawler.DownloadThread):
                     is_over = True
                 else:
                     page_count += 1
-
-        return blog_info_list
+        return blog_id_list
 
     # 解析单个日志
-    def crawl_blog(self, blog_info):
-        self.step(f"开始解析日志{blog_info['blog_id']}")
+    def crawl_blog(self, blog_id):
+        self.step(f"开始解析日志{blog_id}")
+        # 获取指定日志
+        try:
+            blog_response = get_blog_page(blog_id)
+        except crawler.CrawlerException as e:
+            self.error(e.http_error(f"日志{blog_id}"))
+            raise
 
-        self.trace(f"日志{blog_info['blog_id']}解析的全部图片：{blog_info['photo_url_list']}")
-        self.step(f"日志{blog_info['blog_id']}解析获取{len(blog_info['photo_url_list'])}张图片")
+        self.trace(f"日志{blog_id}解析的全部图片：{blog_response['photo_info_list']}")
+        self.step(f"日志{blog_id}解析获取{len(blog_response['photo_info_list'])}张图片")
 
         photo_index = 1
-        for photo_url in blog_info["photo_url_list"]:
+        for photo_info in blog_response["photo_info_list"]:
             self.main_thread_check()  # 检测主线程运行状态
             # 检查是否存在大图可以下载
-            big_photo_response = check_big_photo(photo_url, blog_info["big_2_small_photo_lust"])
-            if big_photo_response["photo_url"] is not None:
-                photo_url = big_photo_response["photo_url"]
-            self.step(f"开始下载日志{blog_info['blog_id']}的第{photo_index}张图片 {photo_url}")
+            preview_photo_response = check_preview_photo(photo_info["photo_url"], photo_info["real_photo_url"])
+            if preview_photo_response["cookies"] is not None:
+                photo_url = preview_photo_response["photo_url"]
+            else:
+                photo_url = photo_info["photo_url"]
+            self.step(f"开始下载日志{blog_id}的第{photo_index}张图片 {photo_url}")
 
-            file_path = os.path.join(self.main_thread.photo_download_path, self.display_name, f"%06d_%02d.{net.get_file_extension(photo_url, 'jpg')}" % (blog_info["blog_id"], photo_index))
-            download_return = net.Download(photo_url, file_path, cookies_list=big_photo_response["cookies"])
+            file_path = os.path.join(self.main_thread.photo_download_path, self.display_name, f"%06d_%02d.{net.get_file_extension(photo_url, 'jpg')}" % (blog_id, photo_index))
+            download_return = net.Download(photo_url, file_path, cookies_list=preview_photo_response["cookies"])
             if download_return.status == net.Download.DOWNLOAD_SUCCEED:
                 if check_photo_invalid(file_path):
                     path.delete_dir_or_file(file_path)
-                    self.step(f"日志{blog_info['blog_id']}的第{photo_index}张图片 {photo_url} 不符合规则，删除")
+                    self.step(f"日志{blog_id}的第{photo_index}张图片 {photo_url} 不符合规则，删除")
                     continue
                 else:
                     self.temp_path_list.append(file_path)  # 设置临时目录
                     self.total_photo_count += 1  # 计数累加
-                    self.step(f"日志{blog_info['blog_id']}的第{photo_index}张图片下载成功")
+                    self.step(f"日志{blog_id}的第{photo_index}张图片下载成功")
             else:
-                self.error(f"日志{blog_info['blog_id']}的第{photo_index}张图片 {photo_url} 下载失败，原因：{crawler.download_failre(download_return.code)}")
+                self.error(f"日志{blog_id}的第{photo_index}张图片 {photo_url} 下载失败，原因：{crawler.download_failre(download_return.code)}")
                 self.check_download_failure_exit()
             photo_index += 1
 
         # 日志内图片全部下载完毕
         self.temp_path_list = []  # 临时目录设置清除
-        self.single_save_data[1] = str(blog_info["blog_id"])  # 设置存档记录
+        self.single_save_data[1] = str(blog_id)  # 设置存档记录
 
 
 if __name__ == "__main__":
