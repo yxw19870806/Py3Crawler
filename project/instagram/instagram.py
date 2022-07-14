@@ -191,22 +191,37 @@ def get_media_page(page_id):
     if len(media_item_list) != 1:
         raise crawler.CrawlerException("items字段长度不为1")
     for media_item in media_item_list:
-        for carousel_media in crawler.get_json_value(media_item, "carousel_media", type_check=list):
-            media_type = crawler.get_json_value(carousel_media, "media_type", type_check=int)
-            # 图片
-            if media_type == 1:
-                photo_url = ""
-                max_resolution = 0
-                for photo_info in crawler.get_json_value(carousel_media, "image_versions2", "candidates", type_check=list):
-                    resolution = crawler.get_json_value(photo_info, "width", type_check=int) * crawler.get_json_value(photo_info, "height", type_check=int)
-                    if resolution > max_resolution:
-                        photo_url = crawler.get_json_value(photo_info, "url", type_check=str)
-                        max_resolution = resolution
-                if not photo_url:
-                    raise crawler.CrawlerException("获取图片地址失败\n" + str(carousel_media))
-                result["photo_url_list"].append(photo_url)
-            else:
-                raise crawler.CrawlerException(f"媒体类型{media_type}不支持")
+        media_type = crawler.get_json_value(media_item, "media_type", type_check=int)
+        if media_type == 2: # 视频
+            video_url = ""
+            max_resolution = 0
+            for video_version in crawler.get_json_value(media_item, "video_versions", type_check=list):
+                resolution = crawler.get_json_value(video_version, "width", type_check=int) * crawler.get_json_value(video_version, "height", type_check=int)
+                if resolution > max_resolution:
+                    video_url = crawler.get_json_value(video_version, "url", type_check=str)
+                    max_resolution = resolution
+            if not video_url:
+                raise crawler.CrawlerException("获取视频地址失败\n" + str(media_item))
+            result["video_url_list"].append(video_url)
+        elif media_type == 8: # 组图
+            for carousel_media in crawler.get_json_value(media_item, "carousel_media", type_check=list):
+                sub_media_type = crawler.get_json_value(carousel_media, "media_type", type_check=int)
+                # 图片
+                if sub_media_type ==1 :
+                    photo_url = ""
+                    max_resolution = 0
+                    for photo_info in crawler.get_json_value(carousel_media, "image_versions2", "candidates", type_check=list):
+                        resolution = crawler.get_json_value(photo_info, "width", type_check=int) * crawler.get_json_value(photo_info, "height", type_check=int)
+                        if resolution > max_resolution:
+                            photo_url = crawler.get_json_value(photo_info, "url", type_check=str)
+                            max_resolution = resolution
+                    if not photo_url:
+                        raise crawler.CrawlerException("获取图片地址失败\n" + str(carousel_media))
+                    result["photo_url_list"].append(photo_url)
+                else:
+                    raise crawler.CrawlerException(f"子媒体类型{media_type}不支持\n" + str(media_response.json_data))
+        else:
+            raise crawler.CrawlerException(f"媒体类型{media_type}不支持")
     return result
 
 
