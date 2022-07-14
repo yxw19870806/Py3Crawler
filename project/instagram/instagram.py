@@ -175,47 +175,38 @@ def get_one_page_media(account_id, cursor):
 
 # 获取媒体详细页
 def get_media_page(page_id):
-    media_url = f"https://www.instagram.com/p/{page_id}"
-    media_response = net.request(media_url, method="GET", cookies_list=COOKIE_INFO)
+    media_url = f"https://i.instagram.com/api/v1/media/{page_id}/info/"
+    header_list = {
+        "X-CSRFToken": COOKIE_INFO["csrftoken"],
+        "X-IG-App-ID": "936619743392459",
+    }
+    media_response = net.request(media_url, method="GET", cookies_list=COOKIE_INFO, header_list=header_list, json_decode=True)
     result = {
         "photo_url_list": [],  # 全部图片地址
         "video_url_list": [],  # 全部视频地址
     }
     if media_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(media_response.status))
-    media_response_content = media_response.data.decode(errors="ignore")
-    script_json_html = tool.find_sub_string(media_response_content, f"window.__additionalDataLoaded('/p/{page_id}/',", ");</script>")
-    if script_json_html:
-        script_json = tool.json_decode(script_json_html)
-        if script_json is None:
-            raise crawler.CrawlerException("媒体信息加载失败\n" + script_json_html)
-        media_info = crawler.get_json_value(script_json, "graphql", "shortcode_media", type_check=dict)
-    else:
-        script_json_html = tool.find_sub_string(media_response_content, "window._sharedData = ", ";</script>")
-        if not script_json_html:
-            crawler.CrawlerException("页面截取媒体信息失败\n" + media_response_content)
-        script_json = tool.json_decode(script_json_html)
-        if script_json is None:
-            raise crawler.CrawlerException("媒体信息加载失败\n" + script_json_html)
-        media_info = crawler.get_json_value(script_json, "entry_data", "PostPage", 0, "graphql", "shortcode_media", type_check=dict)
-    media_type = crawler.get_json_value(media_info, "__typename", type_check=str)
-    # 多张图片/视频
-    if media_type == "GraphSidecar":
-        edge_info_list = crawler.get_json_value(media_info, "edge_sidecar_to_children", "edges", type_check=list)
-        if len(edge_info_list) < 2:
-            raise crawler.CrawlerException(f"媒体信息：{script_json}中'edges'长度不正确")
-        for edge_info in edge_info_list:
-            # 获取图片地址
-            result["photo_url_list"].append(crawler.get_json_value(edge_info, "node", "display_url", type_check=str))
-            # 获取视频地址
-            if crawler.get_json_value(edge_info, "node", "__typename", type_check=str) == "GraphVideo":
-                result["video_url_list"].append(crawler.get_json_value(edge_info, "node", "video_url", type_check=str))
-    # 视频
-    elif media_type == "GraphVideo":
-        # 获取视频地址
-        result["video_url_list"].append(crawler.get_json_value(media_info, "video_url", type_check=str))
-    else:
-        raise crawler.CrawlerException(f"媒体信息：{script_json}中'__typename'取值范围不正确")
+    media_item_list = crawler.get_json_value(media_response.json_data, "items", type_check=list)
+    if len(media_item_list) != 1:
+        raise crawler.CrawlerException("items字段长度不为1")
+    for media_item in media_item_list:
+        for carousel_media in crawler.get_json_value(media_item, "carousel_media", type_check=list):
+            media_type = crawler.get_json_value(carousel_media, "media_type", type_check=int)
+            # 图片
+            if media_type == 1:
+                photo_url = ""
+                max_resolution = 0
+                for photo_info in crawler.get_json_value(carousel_media, "image_versions2", "candidates", type_check=list):
+                    resolution = crawler.get_json_value(photo_info, "width", type_check=int) * crawler.get_json_value(photo_info, "height", type_check=int)
+                    if resolution > max_resolution:
+                        photo_url = crawler.get_json_value(photo_info, "url", type_check=str)
+                        max_resolution = resolution
+                if not photo_url:
+                    raise crawler.CrawlerException("获取图片地址失败\n" + str(carousel_media))
+                result["photo_url_list"].append(photo_url)
+            else:
+                raise crawler.CrawlerException(f"媒体类型{media_type}不支持")
     return result
 
 
@@ -356,80 +347,59 @@ class Download(crawler.DownloadThread):
     def crawl_media(self, media_info):
         self.step(f"开始解析媒体{media_info['page_id']}/{media_info['page_code']}")
 
-        media_response = None
+        # 获取媒体详细页
+        try:
+            media_response = get_media_page(media_info["page_id"])
+        except crawler.CrawlerException as e:
+            self.error(e.http_error(f"媒体{media_info['page_id']}"))
+            raise
+
         # 图片下载
-        photo_index = int(self.single_save_data[2]) + 1
+        photo_index = 1
         if self.main_thread.is_download_photo:
-            # 多张图片
-            if media_info["is_group"]:
-                # 增加请求计数
-                add_request_count(self.thread_lock)
+            self.trace(f"媒体{media_info['page_id']}/{media_info['page_code']}解析的全部图片：{media_response['photo_url_list']}")
+            self.step(f"媒体{media_info['page_id']}/{media_info['page_code']}解析获取{len(media_response['photo_url_list'])}张图片")
 
-                # 获取媒体详细页
-                try:
-                    media_response = get_media_page(media_info["page_id"])
-                except crawler.CrawlerException as e:
-                    self.error(e.http_error(f"媒体{media_info['page_id']}"))
-                    raise
-                photo_url_list = media_response["photo_url_list"]
-            # 单张图片 或者 视频的预览图片
-            else:
-                photo_url_list = [media_info["photo_url"]]
-
-            self.trace(f"媒体{media_info['page_id']}/{media_info['page_code']}解析的全部图片：{photo_url_list}")
-            self.step(f"媒体{media_info['page_id']}/{media_info['page_code']}解析获取{len(photo_url_list)}张图片")
-
-            for photo_url in photo_url_list:
+            for photo_url in media_response["photo_url_list"]:
                 self.main_thread_check()  # 检测主线程运行状态
                 # 去除特效，获取原始路径
-                self.step(f"开始下载第{photo_index}张图片 {photo_url}")
+                self.step(f"开始下载媒体{media_info['page_id']}/{media_info['page_code']}的第{photo_index}张图片 {photo_url}")
 
-                photo_file_path = os.path.join(self.main_thread.photo_download_path, self.index_key, f"%04d.{net.get_file_extension(photo_url)}" % photo_index)
+                photo_file_path = os.path.join(self.main_thread.photo_download_path, self.index_key, f"%019d_%02d.{net.get_file_extension(photo_url)}" % (media_info['page_id'], photo_index))
                 download_return = net.Download(photo_url, photo_file_path)
                 if download_return.status == net.Download.DOWNLOAD_SUCCEED:
                     self.temp_path_list.append(photo_file_path)  # 设置临时目录
-                    self.total_photo_count += 1  # 计数累加
-                    self.step(f"第{photo_index}张图片下载成功")
+                    self.step(f"媒体{media_info['page_id']}/{media_info['page_code']}的第{photo_index}张图片下载成功")
                 else:
-                    self.error(f"第{photo_index}张图片 {photo_url} 下载失败，原因：{crawler.download_failre(download_return.code)}")
+                    self.error(f"媒体{media_info['page_id']}/{media_info['page_code']}的第{photo_index}张图片 {photo_url} 下载失败，原因：{crawler.download_failre(download_return.code)}")
                     self.check_download_failure_exit()
                 photo_index += 1
 
         # 视频下载
-        video_index = int(self.single_save_data[3]) + 1
-        if self.main_thread.is_download_video and (media_info["is_group"] or media_info["is_video"]):
-            # 如果图片那里没有获取过媒体页面，需要重新获取一下
-            if media_response is None:
-                # 获取媒体详细页
-                try:
-                    media_response = get_media_page(media_info["page_id"])
-                except crawler.CrawlerException as e:
-                    self.error(e.http_error(f"媒体{media_info['page_id']}"))
-                    raise
-
+        video_index = 1
+        if self.main_thread.is_download_video:
             self.trace(f"媒体{media_info['page_id']}/{media_info['page_code']}解析的全部视频：{media_response['video_url_list']}")
             self.step(f"媒体{media_info['page_id']}/{media_info['page_code']}解析获取{len(media_response['video_url_list'])}个视频")
 
             for video_url in media_response["video_url_list"]:
                 self.main_thread_check()  # 检测主线程运行状态
-                self.step(f"开始下载第{video_index}个视频 {video_url}")
+                self.step(f"开始下载媒体{media_info['page_id']}/{media_info['page_code']}的第{video_index}个视频 {video_url}")
 
-                video_file_path = os.path.join(self.main_thread.video_download_path, self.index_key, f"%04d.{net.get_file_extension(video_url)}" % video_index)
+                video_file_path = os.path.join(self.main_thread.video_download_path, self.index_key, f"%019d_%02d.{net.get_file_extension(video_url)}" % (media_info['page_id'], video_index))
                 download_return = net.Download(video_url, video_file_path, auto_multipart_download=True)
                 if download_return.status == net.Download.DOWNLOAD_SUCCEED:
                     self.temp_path_list.append(video_file_path)  # 设置临时目录
-                    self.total_video_count += 1  # 计数累加
-                    self.step(f"第{video_index}个视频下载成功")
+                    self.step(f"媒体{media_info['page_id']}/{media_info['page_code']}的第{video_index}个视频下载成功")
                 else:
-                    self.error(f"第{video_index}个视频 {video_url} 下载失败，原因：{crawler.download_failre(download_return.code)}")
+                    self.error(f"媒体{media_info['page_id']}/{media_info['page_code']}的第{video_index}个视频 {video_url} 下载失败，原因：{crawler.download_failre(download_return.code)}")
                     self.check_download_failure_exit()
                 video_index += 1
 
         # 媒体内图片和视频全部下载完毕
         self.temp_path_list = []  # 临时目录设置清除
-        self.single_save_data[2] = str(photo_index - 1)  # 设置存档记录
-        self.single_save_data[3] = str(video_index - 1)  # 设置存档记录
-        self.single_save_data[4] = str(media_info["media_time"])
+        self.total_photo_count += photo_index - 1  # 计数累加
+        self.total_video_count += video_index - 1  # 计数累加
+        self.single_save_data[2] = str(media_info['page_id'])  # 设置存档记录
 
 
 if __name__ == "__main__":
