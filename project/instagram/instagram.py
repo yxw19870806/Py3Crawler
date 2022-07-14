@@ -90,11 +90,15 @@ def _do_login(email, password):
 
 # 根据账号名字获得账号id（字母账号->数字账号)
 def get_account_index_page(account_name):
-    account_index_url = f"https://www.instagram.com/{account_name}/"
+    account_index_url = f"https://i.instagram.com/api/v1/users/web_profile_info/"
     query_data = {
-        "hl": "en"
+        "username": account_name
     }
-    account_index_response = net.request(account_index_url, method="GET", fields=query_data, cookies_list=COOKIE_INFO)
+    header_list = {
+        "X-CSRFToken": COOKIE_INFO["csrftoken"],
+        "X-IG-App-ID": "936619743392459",
+    }
+    account_index_response = net.request(account_index_url, method="GET", fields=query_data, cookies_list=COOKIE_INFO, header_list=header_list, json_decode=True)
     result = {
         "account_id": None,  # account id
     }
@@ -102,13 +106,7 @@ def get_account_index_page(account_name):
         raise crawler.CrawlerException("账号不存在")
     elif account_index_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(account_index_response.status))
-    account_index_response_content = account_index_response.data.decode(errors="ignore")
-    account_id = tool.find_sub_string(account_index_response_content, '"profilePage_', '"')
-    if not tool.is_integer(account_id):
-        if account_index_response_content.find("The link you followed may be broken, or the page may have been removed.") > 0:
-            raise crawler.CrawlerException("账号不存在")
-        raise crawler.CrawlerException("页面截取账号id失败\n" + account_index_response_content)
-    result["account_id"] = account_id
+    result["account_id"] = crawler.get_json_value(account_index_response.json_data, "data", "user", "id", type_check=int)
     return result
 
 
