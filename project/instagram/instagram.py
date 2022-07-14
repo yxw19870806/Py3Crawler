@@ -294,9 +294,9 @@ class Download(crawler.DownloadThread):
             raise
 
         if self.single_save_data[1] == "":
-            self.single_save_data[1] = account_index_response["account_id"]
+            self.single_save_data[1] = str(account_index_response["account_id"])
         else:
-            if self.single_save_data[1] != account_index_response["account_id"]:
+            if self.single_save_data[1] != str(account_index_response["account_id"]):
                 self.error("account id 不符合，原账号已改名")
                 tool.process_exit()
 
