@@ -218,7 +218,6 @@ class Download(crawler.DownloadThread):
                     self.error(f"第{photo_index}张图片 {photo_url} 资源已被删除，跳过")
                     continue
                 else:
-                    self.total_photo_count += photo_index - 1  # 计数累加
                     self.step(f"日志《{blog_info['blog_title']}》 第{photo_index}张图片下载成功")
             else:
                 self.error(f"日志《{blog_info['blog_title']}》 第{photo_index}张图片 {photo_url} 下载失败，原因：{crawler.download_failre(download_return.code)}")
@@ -227,6 +226,7 @@ class Download(crawler.DownloadThread):
 
         # 日志内图片全部下载完毕
         self.temp_path_list = []  # 临时目录设置清除
+        self.total_photo_count += photo_index - 1  # 计数累加
         self.single_save_data[1] = str(blog_info["blog_time"])  # 设置存档记录
 
 
