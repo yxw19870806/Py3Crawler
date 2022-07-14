@@ -147,6 +147,7 @@ def get_one_page_media(account_id, cursor):
             "is_group": False,  # 是不是图片/视频组
             "is_video": False,  # 是不是视频
             "page_id": None,  # 媒体详情界面id
+            "page_code": None,  # 媒体详情界面code
             "time": None,  # 媒体上传时间
         }
         media_type = crawler.get_json_value(media_info, "node", "__typename", type_check=str)
@@ -162,7 +163,9 @@ def get_one_page_media(account_id, cursor):
         # 获取图片上传时间
         result_media_info["media_time"] = crawler.get_json_value(media_info, "node", "taken_at_timestamp", type_check=int)
         # 获取媒体详情界面id
-        result_media_info["page_id"] = media_info["node"]["shortcode"]
+        result_media_info["page_id"] = crawler.get_json_value(media_info, "node", "id", type_check=int)
+        # 获取媒体详情界面code
+        result_media_info["page_code"] = crawler.get_json_value(media_info, "node", "shortcode", type_check=str)
         result["media_info_list"].append(result_media_info)
     # 获取下一页的指针
     if crawler.get_json_value(response_media, "page_info", "has_next_page", type_check=bool):
@@ -351,7 +354,7 @@ class Download(crawler.DownloadThread):
 
     # 解析单个媒体
     def crawl_media(self, media_info):
-        self.step(f"开始解析媒体{media_info['page_id']}")
+        self.step(f"开始解析媒体{media_info['page_id']}/{media_info['page_code']}")
 
         media_response = None
         # 图片下载
@@ -373,8 +376,8 @@ class Download(crawler.DownloadThread):
             else:
                 photo_url_list = [media_info["photo_url"]]
 
-            self.trace(f"媒体{media_info['page_id']}解析的全部图片：{photo_url_list}")
-            self.step(f"媒体{media_info['page_id']}解析获取{len(photo_url_list)}张图片")
+            self.trace(f"媒体{media_info['page_id']}/{media_info['page_code']}解析的全部图片：{photo_url_list}")
+            self.step(f"媒体{media_info['page_id']}/{media_info['page_code']}解析获取{len(photo_url_list)}张图片")
 
             for photo_url in photo_url_list:
                 self.main_thread_check()  # 检测主线程运行状态
@@ -404,8 +407,8 @@ class Download(crawler.DownloadThread):
                     self.error(e.http_error(f"媒体{media_info['page_id']}"))
                     raise
 
-            self.trace(f"媒体{media_info['page_id']}解析的全部视频：{media_response['video_url_list']}")
-            self.step(f"媒体{media_info['page_id']}解析获取{len(media_response['video_url_list'])}个视频")
+            self.trace(f"媒体{media_info['page_id']}/{media_info['page_code']}解析的全部视频：{media_response['video_url_list']}")
+            self.step(f"媒体{media_info['page_id']}/{media_info['page_code']}解析获取{len(media_response['video_url_list'])}个视频")
 
             for video_url in media_response["video_url_list"]:
                 self.main_thread_check()  # 检测主线程运行状态
