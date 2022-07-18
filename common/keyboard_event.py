@@ -14,6 +14,7 @@ except ModuleNotFoundError:
     try:
         import pyHook
     except ModuleNotFoundError:
+        pyHook = None
         pass
 try:
     from . import output
@@ -106,6 +107,9 @@ class KeyboardEvent(threading.Thread):
         return 1
 
     def run(self):
+        if pyHook is None:
+            return
+
         try:
             hook_manager = pyHook.HookManager()
         except NameError:
