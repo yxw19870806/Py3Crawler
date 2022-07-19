@@ -143,7 +143,7 @@ def get_one_page_short_video(account_id, nex_offset):
     if api_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(api_response.status))
     if crawler.get_json_value(api_response.json_data, "msg", type_check=str) != "success":
-        raise crawler.CrawlerException("返回信息'msg'字段取值不正确\n" + api_response.json_data)
+        raise crawler.CrawlerException("返回信息'msg'字段取值不正确\n" + str(api_response.json_data))
     # 获取下一页指针
     result["next_page_offset"] = crawler.get_json_value(api_response.json_data, "data", "next_offset", type_check=str)
     for video_info in crawler.get_json_value(api_response.json_data, "data", "items", type_check=list):
@@ -204,7 +204,7 @@ def get_one_page_audio(account_id, page_count):
     if audio_info_list is None:
         return result
     elif not isinstance(audio_info_list, list):
-        raise crawler.CrawlerException("'data'字段类型不正确\n" + api_response.json_data)
+        raise crawler.CrawlerException("'data'字段类型不正确\n" + str(api_response.json_data))
     for audio_info in audio_info_list:
         result_audio_info = {
             "audio_id": None,  # 音频id
@@ -282,7 +282,7 @@ def get_video_page(video_id):
             raise
         if IS_LOGIN:
             if max(crawler.get_json_value(video_info_response.json_data, "data", "accept_quality", type_check=list)) != crawler.get_json_value(video_info_response.json_data, "data", "quality", type_check=int):
-                raise crawler.CrawlerException("返回的视频分辨率不是最高的\n" + video_info_response.json_data)
+                raise crawler.CrawlerException("返回的视频分辨率不是最高的\n" + str(video_info_response.json_data))
         # 获取视频地址
         for video_info in video_info_list:
             result_video_info["video_url_list"].append(crawler.get_json_value(video_info, "backup_url", 0, type_check=str))

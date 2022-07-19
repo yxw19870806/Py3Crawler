@@ -20,20 +20,21 @@ def get_account_index_page(account_name):
         "external_url": "",  # 外部链接地址
     }
     if account_index_response.status == net.HTTP_RETURN_CODE_SUCCEED:
+        account_index_response_content = account_index_response.data.decode(errors="ignore")
         # 获取账号信息
-        if account_index_response.data.decode(errors="ignore").find('"biography": null,') >= 0:
+        if account_index_response_content.find('"biography": null,') >= 0:
             result["account_info"] = ""
         else:
-            account_info = tool.find_sub_string(account_index_response.data, '"biography": "', '"')
+            account_info = tool.find_sub_string(account_index_response_content, '"biography": "', '"')
             if not account_info:
-                raise crawler.CrawlerException("页面截取账号信息失败\n" + account_index_response.data)
+                raise crawler.CrawlerException("页面截取账号信息失败\n" + account_index_response_content)
             account_info = account_info.replace(r"\n", "").replace("'", chr(1))
             result["account_info"] = eval(f"u'{account_info}'").replace(chr(1), "'")
         # 获取外部链接地址
-        if account_index_response.data.decode(errors="ignore").find('"external_url": null,') >= 0:
+        if account_index_response_content.find('"external_url": null,') >= 0:
             result["external_url"] = ""
         else:
-            result["external_url"] = tool.find_sub_string(account_index_response.data, '"external_url": "', '"')
+            result["external_url"] = tool.find_sub_string(account_index_response_content, '"external_url": "', '"')
     elif account_index_response.status == 404:
         raise crawler.CrawlerException("账号不存在")
     else:

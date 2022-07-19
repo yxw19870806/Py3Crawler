@@ -140,7 +140,7 @@ def get_one_page_media(account_id, cursor):
             else:  # 没有发布任何帖子
                 return result
         else:
-            raise crawler.CrawlerException("'edges'字段长度不正确\n" + media_pagination_response.json_data)
+            raise crawler.CrawlerException("'edges'字段长度不正确\n" + str(media_pagination_response.json_data))
     for media_info in media_info_list:
         result_media_info = {
             "photo_url": None,  # 图片地址

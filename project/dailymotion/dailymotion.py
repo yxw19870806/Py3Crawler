@@ -118,7 +118,7 @@ def get_video_page(video_id):
             if crawler.get_json_value(video_info, "type", type_check=str) == "video/mp4":
                 resolution_to_url[video_resolution] = crawler.get_json_value(video_info, "url", type_check=str)
     if len(resolution_to_url) == 0:
-        raise crawler.CrawlerException("匹配不同分辨率视频源失败\n" + video_info_response.json_data)
+        raise crawler.CrawlerException("匹配不同分辨率视频源失败\n" + str(video_info_response.json_data))
     # 优先使用配置中的分辨率
     if FIRST_CHOICE_RESOLUTION in resolution_to_url:
         result["video_url"] = resolution_to_url[FIRST_CHOICE_RESOLUTION]
