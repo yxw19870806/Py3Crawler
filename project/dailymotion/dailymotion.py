@@ -9,6 +9,7 @@ email: hikaru870806@hotmail.com
 import json
 import os
 import random
+import re
 import time
 from common import *
 
@@ -24,20 +25,17 @@ def init_session():
     if index_page_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException("首页，" + crawler.request_failre(index_page_response.status))
     index_page_response_content = index_page_response.data.decode(errors="ignore")
-    script_json_html = tool.find_sub_string(index_page_response_content, "var __PLAYER_CONFIG__ = ", ";</script>\n")
-    if not script_json_html:
-        raise crawler.CrawlerException("页面信息截取失败\n" + index_page_response_content)
-    script_json = tool.json_decode(script_json_html)
-    if script_json is None:
-        raise crawler.CrawlerException("页面信息加载失败\n" + index_page_response_content)
+    client_id_and_secret_find = re.findall('var r="([\w]{20,})",o="([\w]{40,})"', index_page_response_content)
+    if len(client_id_and_secret_find) != 1 or len(client_id_and_secret_find[0]) != 2:
+        raise crawler.CrawlerException("页面截取client_id和client_secret失败\n%s" % index_page_response_content)
     post_data = {
-        "client_id": crawler.get_json_value(script_json, "context", "api", "client_id", type_check=str),
-        "client_secret": crawler.get_json_value(script_json, "context", "api", "client_secret", type_check=str),
+        "client_id": client_id_and_secret_find[0][0],
+        "client_secret": client_id_and_secret_find[0][1],
         "grant_type": "client_credentials",
         "visitor_id": tool.generate_random_string(32, 6),
         "traffic_segment": random.randint(100000, 999999)
     }
-    oauth_response = net.request(crawler.get_json_value(script_json, "context", "api", "auth_url", type_check=str), method="POST", fields=post_data, json_decode=True)
+    oauth_response = net.request("https://graphql.api.dailymotion.com/oauth/token", method="POST", fields=post_data, json_decode=True)
     if oauth_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(f"获取token页，{crawler.request_failre(oauth_response.status)}\n" + str(post_data))
     AUTHORIZATION = crawler.get_json_value(oauth_response.json_data, "access_token", type_check=str)
