@@ -12,6 +12,7 @@ from common import *
 
 
 # 获取指定页数的全部音频信息
+# album_id => 1642
 def get_album_index_page(album_id):
     album_pagination_url = f"https://www.i275.com/book/{album_id}.html"
     album_pagination_response = net.request(album_pagination_url, method="GET")
@@ -21,7 +22,7 @@ def get_album_index_page(album_id):
     if album_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(album_pagination_response.status))
     album_pagination_response_content = album_pagination_response.data.decode(errors="ignore")
-    audio_info_selector_list = pq(album_pagination_response_content).find("ul.playul li")
+    audio_info_selector_list = pq(album_pagination_response_content).find("ul.play-list li")
     if audio_info_selector_list.length == 0:
         raise crawler.CrawlerException("页面截取音频列表失败\n" + album_pagination_response_content)
     # 获取音频信息
@@ -45,13 +46,17 @@ def get_album_index_page(album_id):
 
 
 # 获取指定id的音频播放页
+# album_id => 1642
 # audio_id -> 16558983
 def get_audio_info_page(album_id, audio_id):
     result = {
         "audio_url": "",  # 音频地址
     }
     audio_info_url = f"https://www.i275.com/pc/index/getchapterurl/bookId/{album_id}/chapterId/{audio_id}.html"
-    audio_info_response = net.request(audio_info_url, method="GET", json_decode=True)
+    header_list = {
+        "Referer": f"https://www.i275.com/play/{album_id}/{audio_id}.html",
+    }
+    audio_info_response = net.request(audio_info_url, method="GET", header_list=header_list, json_decode=True)
     if audio_info_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(audio_info_response.status))
     audio_src = crawler.get_json_value(audio_info_response.json_data, "src", type_check=str)
