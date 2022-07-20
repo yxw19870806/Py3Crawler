@@ -1,7 +1,7 @@
 # -*- coding:UTF-8  -*-
 """
 nico nico视频列表（My List）视频爬虫
-http://www.nicovideo.jp/
+https://www.nicovideo.jp/
 @author: hikaru
 email: hikaru870806@hotmail.com
 如有问题或建议请联系
@@ -19,10 +19,10 @@ COOKIE_INFO = {}
 def check_login():
     if not COOKIE_INFO:
         return False
-    index_url = "http://www.nicovideo.jp/"
-    index_response = net.request(index_url, method="GET", cookies_list=COOKIE_INFO)
+    index_url = "https://www.nicovideo.jp/my"
+    index_response = net.request(index_url, method="GET", cookies_list=COOKIE_INFO, is_auto_redirect=False)
     if index_response.status == net.HTTP_RETURN_CODE_SUCCEED:
-        return pq(index_response.data.decode(errors="ignore")).find('#siteHeaderUserNickNameContainer').length > 0
+        return True
     return False
 
 
