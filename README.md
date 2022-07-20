@@ -69,20 +69,19 @@ Visual Studio Installer安装完毕后，勾选"桌面应用和移动应用"标�
 * [日向坂46公式Blog](https://www.hinatazaka46.com/s/official/diary/member) （有效性检测日期：2022/07/19）
 * [Instagram](https://www.instagram.com/)
 * [欅坂46公式Blog](https://www.keyakizaka46.com/s/k46o/diary/member) （有效性检测日期：2022/07/20）
-* [Lofter](https://www.lofter.com/)
-* [漫画柜漫画](https://www.manhuagui.com/)
-* [美拍](https://www.meipai.com/)
-* [755](https://7gogo.jp/)
-* [ニコニコ动画](https://www.nicovideo.jp/)
-* [新浪博客](http://blog.sina.com.cn/)
+* [Lofter](https://www.lofter.com/) （有效性检测日期：2022/07/20）
+* [漫画柜漫画](https://www.manhuagui.com/) （有效性检测日期：2022/07/20）
+* [美拍](https://www.meipai.com/) （有效性检测日期：2022/07/20）
+* [755](https://7gogo.jp/) （有效性检测日期：2022/07/20）
+* [乃木坂46公式Blog](https://www.nogizaka46.com/s/n46/diary/MEMBER/list) （有效性检测日期：2022/07/20）
 * [TikTok](https://www.tiktok.com/)
-* [听书宝](http://m.tingshubao.com/)
-* [图虫](https://tuchong.com/)
+* [听书宝](http://m.tingshubao.com/) （有效性检测日期：2022/07/20）
+* [图虫](https://tuchong.com/) （有效性检测日期：2022/07/20）
 * [Tumblr](https://www.tumblr.com/)
 * [Twitter](https://twitter.com/)
 * [微博](https://weibo.com/)
 * [World Cosplay](https://worldcosplay.net/)
-* [喜马拉雅FM](http://www.ximalaya.com/)
+* [喜马拉雅FM](https://www.ximalaya.com/) （有效性检测日期：2022/07/20）
 * [一直播](https://www.yizhibo.com/)
 * [Youtube](https://www.youtube.com/)
 
