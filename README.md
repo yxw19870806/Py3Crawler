@@ -68,6 +68,7 @@ Visual Studio Installer安装完毕后，勾选"桌面应用和移动应用"标�
 * [Flickr](https://www.flickr.com/) （有效性检测日期：2022/07/19）
 * [日向坂46公式Blog](https://www.hinatazaka46.com/s/official/diary/member) （有效性检测日期：2022/07/19）
 * [Instagram](https://www.instagram.com/)
+* [欅坂46公式Blog](https://www.keyakizaka46.com/s/k46o/diary/member) （有效性检测日期：2022/07/20）
 * [Lofter](https://www.lofter.com/)
 * [漫画柜漫画](https://www.manhuagui.com/)
 * [美拍](https://www.meipai.com/)
