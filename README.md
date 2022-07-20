@@ -58,16 +58,15 @@ Visual Studio Installer安装完毕后，勾选"桌面应用和移动应用"标�
 
 # Support website / App
 
-* [Ameblo](https://ameblo.jp/)
-* [半次元](https://bcy.net/)
-* [哔哩哔哩](https://www.bilibili.com/)
-* [哔哩哔哩漫画](https://manga.bilibili.com/)
-* [唱吧](https://changba.com/)
-* [Dailymotion](https://www.dailymotion.com/)
-* [动漫之家漫画](https://www.dmzj.com/)
-* [抖音](https://www.douyin.com/)
-* [5sing](https://5sing.kugou.com/index.html)
-* [Flickr](https://www.flickr.com/)
+* [Ameblo](https://ameblo.jp/) （有效性检测日期：2022/07/19）
+* [半次元](https://bcy.net/) （有效性检测日期：2022/07/19）
+* [哔哩哔哩](https://www.bilibili.com/) （有效性检测日期：2022/07/19）
+* [哔哩哔哩漫画](https://manga.bilibili.com/) （有效性检测日期：2022/07/19）
+* [Dailymotion](https://www.dailymotion.com/) （有效性检测日期：2022/07/19）
+* [动漫之家漫画](https://www.dmzj.com/) （有效性检测日期：2022/07/19）
+* [5sing](https://5sing.kugou.com/index.html) （有效性检测日期：2022/07/19）
+* [Flickr](https://www.flickr.com/) （有效性检测日期：2022/07/19）
+* [日向坂46公式Blog](https://www.hinatazaka46.com/s/official/diary/member) （有效性检测日期：2022/07/19）
 * [Instagram](https://www.instagram.com/)
 * [Lofter](https://www.lofter.com/)
 * [漫画柜漫画](https://www.manhuagui.com/)
