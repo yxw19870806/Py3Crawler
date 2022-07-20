@@ -1,7 +1,7 @@
 # -*- coding:UTF-8  -*-
 """
 起点网小说爬虫
-https://manhua.dmzj.com/
+https://book.qidian.com/
 @author: hikaru
 email: hikaru870806@hotmail.com
 如有问题或建议请联系
