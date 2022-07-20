@@ -87,7 +87,6 @@ class Download(crawler.DownloadThread):
         # 从最早的日志开始下载
         while len(blog_id_list) > 0:
             blog_id = blog_id_list.pop()
-            self.step(f"开始解析日志{blog_id}")
             self.crawl_blog(blog_id)
             self.main_thread_check()  # 检测主线程运行状态
 
@@ -124,6 +123,8 @@ class Download(crawler.DownloadThread):
 
     # 解析单个日志
     def crawl_blog(self, blog_id):
+        self.step(f"开始解析日志{blog_id}")
+
         # todo 日志解析规则
         # 获取指定日志
         try:

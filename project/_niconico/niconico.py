@@ -1,7 +1,7 @@
 # -*- coding:UTF-8  -*-
 """
 nico nico视频列表（My List）视频爬虫
-http://www.nicovideo.jp/
+https://www.nicovideo.jp/
 @author: hikaru
 email: hikaru870806@hotmail.com
 如有问题或建议请联系
@@ -13,16 +13,17 @@ from pyquery import PyQuery as pq
 from common import *
 
 COOKIE_INFO = {}
+EACH_PAGE_VIDEO_COUNT = 100
 
 
 # 检测登录状态
 def check_login():
     if not COOKIE_INFO:
         return False
-    index_url = "http://www.nicovideo.jp/"
-    index_response = net.request(index_url, method="GET", cookies_list=COOKIE_INFO)
+    index_url = "https://www.nicovideo.jp/my"
+    index_response = net.request(index_url, method="GET", cookies_list=COOKIE_INFO, is_auto_redirect=False)
     if index_response.status == net.HTTP_RETURN_CODE_SUCCEED:
-        return pq(index_response.data.decode(errors="ignore")).find('#siteHeaderUserNickNameContainer').length > 0
+        return True
     return False
 
 
@@ -113,40 +114,43 @@ def get_one_page_account_video(account_id, page_count):
 
 # 获取视频列表全部视频信息
 # list_id => 15614906
-def get_mylist_index(list_id):
+def get_one_page_mylist_video(list_id, page_count):
     # http://www.nicovideo.jp/mylist/15614906
-    mylist_index_url = f"http://www.nicovideo.jp/mylist/{list_id}"
-    mylist_index_response = net.request(mylist_index_url, method="GET")
+    api_url = f"https://nvapi.nicovideo.jp/v2/mylists/{list_id}"
+    post_data = {
+        "pageSize": EACH_PAGE_VIDEO_COUNT,
+        "page": page_count,
+    }
+    header_list = {
+        "X-Frontend-Id": "6",
+        "X-Frontend-Version": "0",
+        "X-Niconico-Language": "ja-jp",
+    }
+    mylist_pagination_response = net.request(api_url, method="GET", fields=post_data, cookies_list=COOKIE_INFO, header_list=header_list, json_decode=True)
     result = {
         "video_info_list": [],  # 全部视频信息
     }
-    if mylist_index_response.status == 404:
+    if mylist_pagination_response.status == 404:
         raise crawler.CrawlerException("视频列表不存在")
-    elif mylist_index_response.status == 403:
+    elif mylist_pagination_response.status == 403:
         raise crawler.CrawlerException("视频列表未公开")
-    elif mylist_index_response.status != net.HTTP_RETURN_CODE_SUCCEED:
-        raise crawler.CrawlerException(crawler.request_failre(mylist_index_response.status))
-    mylist_index_response_content = mylist_index_response.data.decode(errors="ignore")
-    all_video_info = tool.find_sub_string(mylist_index_response_content, f"Mylist.preload({list_id},", ");").strip()
-    if not all_video_info:
-        raise crawler.CrawlerException("截取视频列表失败\n" + mylist_index_response_content)
-    all_video_info = tool.json_decode(all_video_info)
-    if all_video_info is None:
-        raise crawler.CrawlerException("视频列表加载失败\n" + mylist_index_response_content)
-    # 倒序排列，时间越晚的越前面
-    all_video_info.reverse()
-    for video_info in all_video_info:
+    elif mylist_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
+        raise crawler.CrawlerException(crawler.request_failre(mylist_pagination_response.status))
+
+    for video_info in crawler.get_json_value(mylist_pagination_response.json_data, "data", "mylist", "items", type_check=list):
         result_video_info = {
             "video_id": None,  # 视频id
             "video_title": "",  # 视频标题
         }
+        # 判断类型
+        crawler.get_json_value(video_info, "video", "type", type_check=str, value_check="essential")
         # 获取视频id
-        video_id = crawler.get_json_value(video_info, "item_data", "video_id", type_check=str).replace("sm", "")
+        video_id = crawler.get_json_value(video_info, "video", "id", type_check=str).replace("sm", "")
         if not tool.is_integer(video_id):
-            raise crawler.CrawlerException(f"视频信息{video_info}中'video_id'字段类型不正确")
+            raise crawler.CrawlerException(f"视频信息{video_info}中'watchId'字段类型不正确")
         result_video_info["video_id"] = int(video_id)
         # 获取视频辩题
-        result_video_info["video_title"] = crawler.get_json_value(video_info, "item_data", "title", type_check=str)
+        result_video_info["video_title"] = crawler.get_json_value(video_info, "video", "title", type_check=str)
         result["video_info_list"].append(result_video_info)
     return result
 
@@ -245,24 +249,37 @@ class Download(crawler.DownloadThread):
 
     # 获取所有可下载图片
     def get_crawl_list(self):
-        # 获取视频信息列表
-        try:
-            mylist_index_response = get_mylist_index(self.index_key)
-        except crawler.CrawlerException as e:
-            self.error(e.http_error("视频列表"))
-            raise
-
-        self.trace(f"解析的全部视频：{mylist_index_response['video_info_list']}")
-        self.step(f"解析获取{len(mylist_index_response['video_info_list'])}个视频")
-
+        page_count = 1
         video_info_list = []
-        # 寻找这一页符合条件的视频
-        for video_info in mylist_index_response["video_info_list"]:
-            # 检查是否达到存档记录
-            if video_info["video_id"] > int(self.single_save_data[1]):
-                video_info_list.append(video_info)
-            else:
-                break
+        is_over = False
+        # 获取全部还未下载过需要解析的视频
+        while not is_over:
+            self.main_thread_check()  # 检测主线程运行状态
+            self.step(f"开始解析第{page_count}页视频")
+
+            # 获取一页视频
+            try:
+                mylist_pagination_response = get_one_page_mylist_video(self.index_key, page_count)
+            except crawler.CrawlerException as e:
+                self.error(e.http_error(f"第{page_count}页视频"))
+                raise
+
+            self.trace(f"第{page_count}页解析的全部视频：{mylist_pagination_response['video_info_list']}")
+            self.step(f"第{page_count}页解析获取{len(mylist_pagination_response['video_info_list'])}个视频")
+
+            # 寻找这一页符合条件的视频
+            for video_info in mylist_pagination_response["video_info_list"]:
+                # 检查是否达到存档记录
+                if video_info["video_id"] > int(self.single_save_data[1]):
+                    video_info_list.append(video_info)
+                else:
+                    break
+
+            if not is_over:
+                if mylist_pagination_response["is_over"]:
+                    is_over = True
+                else:
+                    page_count += 1
 
         return video_info_list
 

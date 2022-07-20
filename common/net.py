@@ -359,7 +359,7 @@ def _qps(url):
     return False
 
 
-def _random_user_agent():
+def _random_user_agent(browser_type=None):
     """
     随机获取一个user agent
         Common firefox user agent   "Mozilla/5.0 (Windows NT 6.1; WOW64; rv:46.0) Gecko/20100101 Firefox/46.0"
@@ -376,7 +376,8 @@ def _random_user_agent():
     # https://zh.wikipedia.org/zh-cn/Google_Chrome
     chrome_version_list = ["94.0.4606.54", "94.0.4606.61", "94.0.4606.71", "94.0.4606.81", "95.0.4638.54", "95.0.4638.69", "96.0.4664.45", "96.0.4664.93", "96.0.4664.110", "97.0.4692.71"]
     # browser_type = random.choice(["IE", "firefox", "chrome", "Edge"])
-    browser_type = random.choice(["firefox", "chrome"])
+    if browser_type is None:
+        browser_type = random.choice(["firefox", "chrome"])
     if browser_type == "firefox":
         firefox_version = random.randint(firefox_version_max - 10, firefox_version_max)
         os_type = random.choice(list(windows_version_dict.values()))

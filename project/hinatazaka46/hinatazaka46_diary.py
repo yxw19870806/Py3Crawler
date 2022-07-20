@@ -63,10 +63,11 @@ def get_one_page_blog(account_id, page_count):
                 continue
             result_blog_info["photo_url_list"].append(photo_url)
         result["blog_info_list"].append(result_blog_info)
-    last_pagination_html = pq(blog_pagination_response_content).find(".p-pager--count li:last").text()
-    if not last_pagination_html:
-        raise crawler.CrawlerException("页面截取下一页按钮失败\n" + blog_pagination_response_content)
-    result["is_over"] = last_pagination_html != ">"
+    last_pagination_html = pq(blog_pagination_response_content).find(".p-pager--count .c-pager__item--next")
+    if last_pagination_html.length != 1:
+        if pq(blog_pagination_response_content).find(".p-pager--count").length != 1:
+            raise crawler.CrawlerException("页面截取最后页按钮失败\n" + blog_pagination_response_content)
+        result["is_over"] = True
     return result
 
 

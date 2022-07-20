@@ -10,18 +10,23 @@ import os
 from pyquery import PyQuery as pq
 from common import *
 
+USER_AGENT = net._random_user_agent("chrome")
+
 
 # 获取有声书首页
 def get_album_index_page(album_id):
     album_index_url = f"http://m.tingshubao.com/book/{album_id}.html"
-    album_index_response = net.request(album_index_url, method="GET")
+    header_list = {
+        "User-Agent": USER_AGENT,
+    }
+    album_index_response = net.request(album_index_url, method="GET", header_list=header_list)
     result = {
         "audio_info_list": [],  # 全部音频信息
     }
     if album_index_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(album_index_response.status))
     album_index_response_content = album_index_response.data.decode(errors="ignore")
-    audio_list_selector = pq(album_index_response_content).find(".play-list ul li")
+    audio_list_selector = pq(album_index_response_content).find(".play-list li")
     for audio_index in range(audio_list_selector.length, 0, -1):
         result_audio_info = {
             "audio_id": None,  # 音频id
@@ -45,7 +50,10 @@ def get_audio_info_page(audio_play_url):
     result = {
         "audio_url": "",  # 音频下载地址
     }
-    audio_play_response = net.request(audio_play_url, method="GET")
+    header_list = {
+        "User-Agent": USER_AGENT,
+    }
+    audio_play_response = net.request(audio_play_url, method="GET", header_list=header_list)
     if audio_play_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(audio_play_response.status))
     audio_play_response_content = audio_play_response.data.decode(errors="ignore")
@@ -55,7 +63,7 @@ def get_audio_info_page(audio_play_url):
     for temp in encrypt_string.split("*")[1:]:
         temp = chr(int(temp) & 0xffff)
         temp_list.append(temp)
-    audio_detail_url = "https://www.gushiciju.com/player/key.php?url="
+    audio_detail_url = "http://43.129.176.64/player/key.php"
     query_data = {
         "url": "".join(temp_list).split("&")[0]
     }

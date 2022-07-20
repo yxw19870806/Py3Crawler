@@ -81,7 +81,7 @@ def get_album_page(album_id):
         raise crawler.CrawlerException(f"未知的作品类型：{album_type}")
     # 获取全部图片
     for photo_info in crawler.get_json_value(script_json, "detail", "post_data", "multi", type_check=list):
-        result["photo_url_list"].append(urllib.parse.unquote(crawler.get_json_value(photo_info, "original_path", type_check=str)))
+        result["photo_url_list"].append(crawler.get_json_value(photo_info, "original", type_check=str))
     if not is_skip and len(result["photo_url_list"]) == 0:
         raise crawler.CrawlerException("页面匹配图片地址失败\n" + album_response_content)
     return result

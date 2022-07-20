@@ -1,7 +1,7 @@
 # -*- coding:UTF-8  -*-
 """
 指定美拍视频下载
-http://www.meipai.com/
+https://www.meipai.com/
 @author: hikaru
 email: hikaru870806@hotmail.com
 如有问题或建议请联系
@@ -27,7 +27,7 @@ class MeiPaiDownload(meipai.MeiPai):
     def get_video_id_from_console():
         video_url = input("请输入美拍视频地址：").lower()
         video_id = None
-        # http://www.meipai.com/media/209045867
+        # https://www.meipai.com/media/209045867
         if video_url.find("//www.meipai.com/media/") > 0:
             video_id = video_url.split("/")[-1].split("?")[0]
         elif tool.is_integer(video_url):
@@ -45,7 +45,7 @@ class MeiPaiDownload(meipai.MeiPai):
         # 输入需要解析的视频
         video_id = self.get_video_id_from_console()
         if not tool.is_integer(video_id):
-            log.step("错误的视频地址，正确的地址格式如：http://www.meipai.com/media/209045867")
+            log.step("错误的视频地址，正确的地址格式如：https://www.meipai.com/media/209045867")
             return
 
         # 获取下载地址

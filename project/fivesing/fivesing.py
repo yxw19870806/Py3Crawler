@@ -53,7 +53,7 @@ def get_audio_play_page(audio_id, song_type):
     if audio_info_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(audio_info_response.status))
     if crawler.get_json_value(audio_info_response.json_data, "success", type_check=bool) is False:
-        if crawler.get_json_value(audio_info_response.json_data, "message", type_check=str) in ["该歌曲已下架", "歌曲不存在"]:
+        if crawler.get_json_value(audio_info_response.json_data, "message", type_check=str) in ["该歌曲已下架", "歌曲不存在", "歌曲不存在或状态不正常"]:
             result["is_delete"] = True
             return result
     response_data = crawler.get_json_value(audio_info_response.json_data, "data", type_check=dict)
@@ -65,10 +65,10 @@ def get_audio_play_page(audio_id, song_type):
     elif crawler.check_sub_key(("hqurl",), response_data) and response_data["hqurl"]:
         result["audio_url"] = response_data["hqurl"]
     else:
-        raise crawler.CrawlerException("歌曲信息'squrl'、'lqurl'、'hqurl'字段都不存在\n" + audio_info_response.json_data)
+        raise crawler.CrawlerException("歌曲信息'squrl'、'lqurl'、'hqurl'字段都不存在\n" + str(audio_info_response.json_data))
     # 获取歌曲标题
     if not crawler.check_sub_key(("songName",), audio_info_response.json_data["data"]):
-        raise crawler.CrawlerException("歌曲信息'songName'字段不存在\n" + audio_info_response.json_data)
+        raise crawler.CrawlerException("歌曲信息'songName'字段不存在\n" + str(audio_info_response.json_data))
     result["audio_title"] = audio_info_response.json_data["data"]["songName"]
     return result
 
@@ -178,8 +178,11 @@ class Download(crawler.DownloadThread):
             self.error(e.http_error(f"{audio_type_name}歌曲{audio_info['audio_id']}《{audio_info['audio_title']}》"))
             raise
 
-        self.step(f"开始下载{audio_type_name}歌曲{audio_info['audio_id']}《{audio_info['audio_title']}》 {audio_info_response['audio_url']}")
+        if audio_info_response["is_delete"]:
+            self.error(f"{audio_type_name}歌曲{audio_info['audio_id']}《{audio_info['audio_title']}》 已删除")
+            return
 
+        self.step(f"开始下载{audio_type_name}歌曲{audio_info['audio_id']}《{audio_info['audio_title']}》 {audio_info_response['audio_url']}")
         file_path = os.path.join(self.main_thread.audio_download_path, self.display_name, audio_type_name, f"%08d - {path.filter_text(audio_info['audio_title'])}.{net.get_file_extension(audio_info_response['audio_url'])}" % audio_info["audio_id"])
         download_return = net.Download(audio_info_response["audio_url"], file_path)
         if download_return.status == net.Download.DOWNLOAD_SUCCEED:

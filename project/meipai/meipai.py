@@ -1,7 +1,7 @@
 # -*- coding:UTF-8  -*-
 """
 美拍视频爬虫
-http://www.meipai.com/
+https://www.meipai.com/
 @author: hikaru
 email: hikaru870806@hotmail.com
 如有问题或建议请联系
@@ -17,8 +17,8 @@ EACH_PAGE_VIDEO_COUNT = 20  # 每次请求获取的视频数量
 
 # 获取指定页数的全部视频
 def get_one_page_video(account_id, page_count):
-    # http://www.meipai.com/users/user_timeline?uid=22744352&page=1&count=20&single_column=1
-    video_pagination_url = "http://www.meipai.com/users/user_timeline"
+    # https://www.meipai.com/users/user_timeline?uid=22744352&page=1&count=20&single_column=1
+    video_pagination_url = "https://www.meipai.com/users/user_timeline"
     query_data = {
         "uid": account_id,
         "page": page_count,
@@ -42,10 +42,10 @@ def get_one_page_video(account_id, page_count):
         # 获取视频id
         result_video_info["video_id"] = crawler.get_json_value(media_info, "id", type_check=int)
         # 获取视频下载地址
-        decrypt_video_url = crawler.get_json_value(media_info, "video", type_check=str)
-        video_url = decrypt_video_url(decrypt_video_url)
+        encrypted_video_url = crawler.get_json_value(media_info, "video", type_check=str)
+        video_url = decrypt_video_url(encrypted_video_url)
         if video_url is None:
-            raise crawler.CrawlerException(f"加密视频地址 {decrypt_video_url} 解密失败")
+            raise crawler.CrawlerException(f"加密视频地址 {encrypted_video_url} 解密失败")
         result_video_info["video_url"] = video_url
         result["video_info_list"].append(result_video_info)
     return result
@@ -53,7 +53,7 @@ def get_one_page_video(account_id, page_count):
 
 # 获取指定视频播放页
 def get_video_play_page(video_id):
-    video_play_url = f"http://www.meipai.com/media/{video_id}"
+    video_play_url = f"https://www.meipai.com/media/{video_id}"
     video_play_response = net.request(video_play_url, method="GET")
     result = {
         "is_delete": False,  # 是否已删除

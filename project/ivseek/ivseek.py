@@ -12,7 +12,7 @@ import time
 import traceback
 from pyquery import PyQuery as pq
 from common import *
-from project.niconico import niconico
+from project._niconico import niconico
 
 DONE_SING = "~"
 

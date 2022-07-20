@@ -9,6 +9,7 @@ email: hikaru870806@hotmail.com
 import json
 import os
 import random
+import re
 import time
 from common import *
 
@@ -24,20 +25,17 @@ def init_session():
     if index_page_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException("首页，" + crawler.request_failre(index_page_response.status))
     index_page_response_content = index_page_response.data.decode(errors="ignore")
-    script_json_html = tool.find_sub_string(index_page_response_content, "var __PLAYER_CONFIG__ = ", ";</script>\n")
-    if not script_json_html:
-        raise crawler.CrawlerException("页面信息截取失败\n" + index_page_response_content)
-    script_json = tool.json_decode(script_json_html)
-    if script_json is None:
-        raise crawler.CrawlerException("页面信息加载失败\n" + index_page_response_content)
+    client_id_and_secret_find = re.findall('var r="([\w]{20,})",o="([\w]{40,})"', index_page_response_content)
+    if len(client_id_and_secret_find) != 1 or len(client_id_and_secret_find[0]) != 2:
+        raise crawler.CrawlerException("页面截取client_id和client_secret失败\n" + index_page_response_content)
     post_data = {
-        "client_id": crawler.get_json_value(script_json, "context", "api", "client_id", type_check=str),
-        "client_secret": crawler.get_json_value(script_json, "context", "api", "client_secret", type_check=str),
+        "client_id": client_id_and_secret_find[0][0],
+        "client_secret": client_id_and_secret_find[0][1],
         "grant_type": "client_credentials",
         "visitor_id": tool.generate_random_string(32, 6),
         "traffic_segment": random.randint(100000, 999999)
     }
-    oauth_response = net.request(crawler.get_json_value(script_json, "context", "api", "auth_url", type_check=str), method="POST", fields=post_data, json_decode=True)
+    oauth_response = net.request("https://graphql.api.dailymotion.com/oauth/token", method="POST", fields=post_data, json_decode=True)
     if oauth_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(f"获取token页，{crawler.request_failre(oauth_response.status)}\n" + str(post_data))
     AUTHORIZATION = crawler.get_json_value(oauth_response.json_data, "access_token", type_check=str)
@@ -109,31 +107,25 @@ def get_video_page(video_id):
     # 获取视频标题
     result["video_title"] = crawler.get_json_value(video_info_response.json_data, "title", type_check=str)
     # 查找最高分辨率的视频源地址
-    resolution_to_url = {}  # 各个分辨率下的视频地址
-    for video_resolution, video_info_list in crawler.get_json_value(video_info_response.json_data, "qualities", type_check=dict).items():
-        if not tool.is_integer(video_resolution):
+    m3u8_file_url = crawler.get_json_value(video_info_response.json_data, "qualities", "auto", 0, "url", type_check=str)
+    m3u8_file_response = net.request(m3u8_file_url, method="GET")
+    m3u8_file_response_content = m3u8_file_response.data.decode(errors="ignore")
+    max_resolution = 0
+    video_url = ""
+    for line in m3u8_file_response_content.split("\n"):
+        if line[:len("#EXT-X-STREAM-INF:")] != "#EXT-X-STREAM-INF:":
             continue
-        video_resolution = int(video_resolution)
-        if video_resolution not in [144, 240, 380, 480, 720, 1080]:
-            log.notice(f"未知视频分辨率：{video_resolution}")
-        for video_info in video_info_list:
-            if crawler.get_json_value(video_info, "type", type_check=str) == "video/mp4":
-                resolution_to_url[video_resolution] = crawler.get_json_value(video_info, "url", type_check=str)
-    if len(resolution_to_url) == 0:
-        raise crawler.CrawlerException("匹配不同分辨率视频源失败\n" + video_info_response.json_data)
-    # 优先使用配置中的分辨率
-    if FIRST_CHOICE_RESOLUTION in resolution_to_url:
-        result["video_url"] = resolution_to_url[FIRST_CHOICE_RESOLUTION]
-    # 如果没有这个分辨率的视频
-    else:
-        # 大于配置中分辨率的所有视频中分辨率最小的那个
-        for resolution in sorted(resolution_to_url.keys()):
-            if resolution > FIRST_CHOICE_RESOLUTION:
-                result["video_url"] = resolution_to_url[resolution]
-                break
-        # 如果还是没有，则所有视频中分辨率最大的那个
-        if result["video_url"] is None:
-            result["video_url"] = resolution_to_url[max(resolution_to_url)]
+        resolution_find = re.findall("RESOLUTION=(\d*)x(\d*)", line)
+        if len(resolution_find) != 1 or len(resolution_find[0]) != 2:
+            raise crawler.CrawlerException("视频信息截取分辨率失败\n" + line)
+        resolution = int(resolution_find[0][0]) * int(resolution_find[0][1])
+        if resolution > max_resolution:
+            video_url = tool.find_sub_string(line, 'PROGRESSIVE-URI="', '"')
+            if not video_url:
+                raise crawler.CrawlerException("视频信息截取视频地址失败\n" + line)
+    if not video_url:
+        raise crawler.CrawlerException("视频信息截取最大分辨率视频地址失败\n" + m3u8_file_response_content)
+    result["video_url"] = video_url
     return result
 
 
@@ -248,7 +240,7 @@ class Download(crawler.DownloadThread):
         self.step(f"开始下载视频{video_info['video_id']} 《{video_info['video_title']}》 {video_response['video_url']}")
 
         video_file_path = os.path.join(self.main_thread.video_download_path, self.index_key, f"{video_info['video_id']} - {path.filter_text(video_info['video_title'])}.mp4")
-        download_return = net.Download(video_response["video_url"], video_file_path, auto_multipart_download=True)
+        download_return = net.Download(video_response["video_url"], video_file_path, auto_multipart_download=True, is_url_encode=False)
         if download_return.status == net.Download.DOWNLOAD_SUCCEED:
             self.total_video_count += 1  # 计数累加
             self.step(f"视频{video_info['video_id']} 《{video_info['video_title']}》下载成功")
