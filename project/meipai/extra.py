@@ -1,6 +1,6 @@
 # -*- coding:UTF-8  -*-
 """
-http://www.meipai.com/
+https://www.meipai.com/
 @author: hikaru
 email: hikaru870806@hotmail.com
 如有问题或建议请联系
@@ -15,7 +15,7 @@ def get_follow_list(account_id):
     page_count = 1
     follow_list = {}
     while page_count <= max_page_count:
-        follow_pagination_url = f"http://www.meipai.com/user/{account_id}/friends"
+        follow_pagination_url = f"https://www.meipai.com/user/{account_id}/friends"
         query_data = {"p": page_count}
         follow_pagination_response = net.request(follow_pagination_url, method="GET", fields=query_data)
         if follow_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
