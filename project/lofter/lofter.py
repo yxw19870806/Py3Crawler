@@ -1,7 +1,7 @@
 # -*- coding:UTF-8  -*-
 """
 lofter图片爬虫
-http://www.lofter.com/
+https://www.lofter.com/
 @author: hikaru
 email: hikaru870806@hotmail.com
 如有问题或建议请联系
@@ -15,7 +15,7 @@ COOKIE_INFO = {}
 
 
 def init_session():
-    index_url = "http://www.lofter.com"
+    index_url = "https://www.lofter.com"
     header_list = {
         "User-Agent": USER_AGENT,
     }
@@ -26,8 +26,8 @@ def init_session():
 
 # 获取指定页数的全部日志
 def get_one_page_blog(account_name, page_count):
-    # http://moexia.lofter.com/?page=1
-    blog_pagination_url = f"http://{account_name}.lofter.com/"
+    # https://moexia.lofter.com/?page=1
+    blog_pagination_url = f"https://{account_name}.lofter.com/"
     query_data = {"page": page_count}
     header_list = {
         "User-Agent": USER_AGENT,
@@ -44,7 +44,7 @@ def get_one_page_blog(account_name, page_count):
     elif blog_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(blog_pagination_response.status))
     # 获取全部日志地址
-    blog_url_list = re.findall('"(http://' + account_name + '.lofter.com/post/[^"]*)"', blog_pagination_response.data.decode(errors="ignore"))
+    blog_url_list = re.findall('"(http[s]?://' + account_name + '.lofter.com/post/[^"]*)"', blog_pagination_response.data.decode(errors="ignore"))
     # 去重排序
     result["blog_url_list"] = sorted(list(set(blog_url_list)), reverse=True)
     return result
@@ -80,7 +80,7 @@ def get_photo_url(photo_url):
 
 # 检测图片是不是已被屏蔽
 def check_photo_invalid(file_path):
-    # http://imglf.nosdn.127.net/img/WWpvYmlBb3BlNCt0clU3WUNVb2U5UmhjMW56ZEh1TVFuc1BMVTI4aUR4OG0rNUdIK2xTbzNRPT0.jpg
+    # https://imglf.nosdn.127.net/img/WWpvYmlBb3BlNCt0clU3WUNVb2U5UmhjMW56ZEh1TVFuc1BMVTI4aUR4OG0rNUdIK2xTbzNRPT0.jpg
     if os.path.getsize(file_path) == 31841 and file.get_file_md5(file_path) == "e4e09c4989d0f4db68610195b97688bf":
         return True
     return False
