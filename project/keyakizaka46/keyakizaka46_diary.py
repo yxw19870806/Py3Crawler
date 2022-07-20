@@ -1,7 +1,7 @@
 # -*- coding:UTF-8  -*-
 """
 欅坂46公式Blog图片爬虫
-https://www.keyakizaka46.com/mob/news/diarShw.php?cd=member
+https://www.keyakizaka46.com/s/k46o/diary/member
 @author: hikaru
 email: hikaru870806@hotmail.com
 如有问题或建议请联系
