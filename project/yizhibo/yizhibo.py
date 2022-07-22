@@ -15,7 +15,7 @@ from common import *
 
 # 获取全部图片地址列表
 def get_photo_index_page(account_id):
-    # https://www.yizhibo.com/member/personel/user_photos?memberid=6066534
+    # https://www.yizhibo.com/member/personel/user_photos?memberid=334262811
     photo_index_url = "https://www.yizhibo.com/member/personel/user_photos"
     query_data = {"memberid": account_id}
     photo_index_response = net.request(photo_index_url, method="GET", fields=query_data)
@@ -61,7 +61,7 @@ def get_photo_header(photo_url):
 
 # 获取全部视频ID列表
 def get_video_index_page(account_id):
-    # https://www.yizhibo.com/member/personel/user_videos?memberid=6066534
+    # https://www.yizhibo.com/member/personel/user_videos?memberid=334262811
     video_pagination_url = "https://www.yizhibo.com/member/personel/user_videos"
     query_data = {"memberid": account_id}
     video_pagination_response = net.request(video_pagination_url, method="GET", fields=query_data)
@@ -84,30 +84,33 @@ def get_video_index_page(account_id):
 
 
 # 根据video id获取指定视频的详细信息（上传时间、视频列表的下载地址等）
-# video_id -> qxonW5XeZru03nUB
+# video_id -> bVFjTEK9nYTEqQ6p
 def get_video_info_page(video_id):
-    # https://api.xiaoka.tv/live/web/get_play_live?scid=xX9-TLVx0xTiSZ69
-    video_info_url = "https://api.xiaoka.tv/live/web/get_play_live"
-    query_data = {"scid": video_id}
-    video_info_response = net.request(video_info_url, method="GET", fields=query_data, json_decode=True)
+    # https://www.yizhibo.com/l/bVFjTEK9nYTEqQ6p.html
+    video_info_url = f"https://www.yizhibo.com/l/{video_id}.html"
+    video_info_response = net.request(video_info_url, method="GET")
     result = {
-        "video_time": False,  # 视频上传时间
+        "video_time": 0,  # 视频上传时间
         "video_url_list": [],  # 全部视频分集地址
     }
     if video_info_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(video_info_response.status))
+    video_info_response_content = video_info_response.data.decode(errors="ignore")
     # 获取视频上传时间
-    result["video_time"] = crawler.get_json_value(video_info_response.json_data, "data", "createtime", type_check=int)
+    video_time = tool.find_sub_string(video_info_response_content, "starttime:", ",")
+    if not tool.is_integer(video_time):
+        raise crawler.CrawlerException("页面截取直播开始时间失败\n" + video_info_response_content)
+    result["video_time"] = int(video_time)
     # 获取视频地址所在文件地址
-    video_file_url = crawler.get_json_value(video_info_response.json_data, "data", "linkurl", type_check=str)
+    video_file_url = tool.find_sub_string(video_info_response_content, 'play_url:"', '",')
     video_file_response = net.request(video_file_url, method="GET")
     if video_file_response.status != net.HTTP_RETURN_CODE_SUCCEED:
-        raise crawler.CrawlerException(crawler.request_failre(video_info_response.status))
+        raise crawler.CrawlerException(f"m3u8文件 {video_file_url}，" + crawler.request_failre(video_file_response.status))
     video_file_response_content = video_file_response.data.decode(errors="ignore")
     ts_id_list = re.findall(r"([\S]*.ts)", video_file_response_content)
     if len(ts_id_list) == 0:
         raise crawler.CrawlerException("分集文件匹配视频地址失败\n" + video_file_response_content)
-    # http://alcdn.hls.xiaoka.tv/20161122/6b6/c5f/xX9-TLVx0xTiSZ69/
+    # http://playbackyzbold.live.weibo.com/2021101/f0b/f97/bVFjTEK9nYTEqQ6p/index.m3u8
     prefix_url = video_file_url[:video_file_url.rfind("/") + 1]
     for ts_id in ts_id_list:
         result["video_url_list"].append(prefix_url + ts_id)
