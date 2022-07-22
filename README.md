@@ -78,11 +78,11 @@ Visual Studio Installer安装完毕后，勾选"桌面应用和移动应用"标�
 * [听书宝](http://m.tingshubao.com/) （有效性检测日期：2022/07/20）
 * [图虫](https://tuchong.com/) （有效性检测日期：2022/07/20）
 * [Tumblr](https://www.tumblr.com/)
-* [Twitter](https://twitter.com/)
+* [Twitter](https://twitter.com/) （有效性检测日期：2022/07/20）
 * [微博](https://weibo.com/)
 * [World Cosplay](https://worldcosplay.net/)
 * [喜马拉雅FM](https://www.ximalaya.com/) （有效性检测日期：2022/07/20）
-* [一直播](https://www.yizhibo.com/)
+* [一直播](https://www.yizhibo.com/) （有效性检测日期：2022/07/20）
 * [Youtube](https://www.youtube.com/)
 
 # Code Structure
