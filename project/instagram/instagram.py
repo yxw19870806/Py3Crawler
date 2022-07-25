@@ -238,7 +238,6 @@ def get_media_page(page_id):
                         height = crawler.get_json_value(photo_info, "height", type_check=int)
                         if original_width == width and original_height == height:
                             photo_url = crawler.get_json_value(photo_info, "url", type_check=str)
-                            print(photo_url)
                             break
                         else:
                             resolution = crawler.get_json_value(photo_info, "width", type_check=int) * crawler.get_json_value(photo_info, "height", type_check=int)
