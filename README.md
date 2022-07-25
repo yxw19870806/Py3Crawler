@@ -67,7 +67,7 @@ Visual Studio Installer安装完毕后，勾选"桌面应用和移动应用"标�
 * [5sing](https://5sing.kugou.com/index.html) （有效性检测日期：2022/07/19）
 * [Flickr](https://www.flickr.com/) （有效性检测日期：2022/07/19）
 * [日向坂46公式Blog](https://www.hinatazaka46.com/s/official/diary/member) （有效性检测日期：2022/07/19）
-* [Instagram](https://www.instagram.com/)
+* [Instagram](https://www.instagram.com/) （有效性检测日期：2022/07/25）
 * [欅坂46公式Blog](https://www.keyakizaka46.com/s/k46o/diary/member) （有效性检测日期：2022/07/20）
 * [Lofter](https://www.lofter.com/) （有效性检测日期：2022/07/20）
 * [漫画柜漫画](https://www.manhuagui.com/) （有效性检测日期：2022/07/20）
@@ -80,7 +80,7 @@ Visual Studio Installer安装完毕后，勾选"桌面应用和移动应用"标�
 * [Tumblr](https://www.tumblr.com/)
 * [Twitter](https://twitter.com/) （有效性检测日期：2022/07/20）
 * [微博](https://weibo.com/)
-* [World Cosplay](https://worldcosplay.net/)
+* [World Cosplay](https://worldcosplay.net/) （有效性检测日期：2022/07/25）
 * [喜马拉雅FM](https://www.ximalaya.com/) （有效性检测日期：2022/07/20）
 * [一直播](https://www.yizhibo.com/) （有效性检测日期：2022/07/20）
 * [Youtube](https://www.youtube.com/)
