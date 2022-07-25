@@ -248,11 +248,18 @@ def get_video_page(video_id):
         else:
             # 特殊live回放
             # https://www.bilibili.com/festival/VSF2022live?bvid=BV1VF411E7zu
-            video_info = crawler.get_json_value(script_json, "videoInfo", type_check=dict)
-            video_info["part"] = ""
-            video_part_info_list = [video_info]
-            # 获取视频标题
-            result["video_title"] = crawler.get_json_value(script_json, "videoInfo", "title", type_check=str).strip()
+            try:
+                video_info = crawler.get_json_value(script_json, "videoInfo", type_check=dict)
+                video_info["part"] = ""
+                video_part_info_list = [video_info]
+                # 获取视频标题
+                result["video_title"] = crawler.get_json_value(script_json, "videoInfo", "title", type_check=str).strip()
+            except crawler.CrawlerException:
+                # 剧集
+                # https://www.bilibili.com/video/av256978
+                video_part_info_list = crawler.get_json_value(script_json, "mediaInfo", "episodes", type_check=list)
+                # 获取视频标题
+                result["video_title"] = crawler.get_json_value(script_json, "h1Title", type_check=str).strip()
     # 分P https://www.bilibili.com/video/av33131459
     for video_part_info in video_part_info_list:
         result_video_info = {
