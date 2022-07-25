@@ -192,7 +192,18 @@ def get_media_page(page_id):
         raise crawler.CrawlerException("items字段长度不为1")
     for media_item in media_item_list:
         media_type = crawler.get_json_value(media_item, "media_type", type_check=int)
-        if media_type == 2:  # 视频
+        if media_type == 1:
+            photo_url = ""
+            max_resolution = 0
+            for photo_info in crawler.get_json_value(media_item, "image_versions2", "candidates", type_check=list):
+                resolution = crawler.get_json_value(photo_info, "width", type_check=int) * crawler.get_json_value(photo_info, "height", type_check=int)
+                if resolution > max_resolution:
+                    photo_url = crawler.get_json_value(photo_info, "url", type_check=str)
+                    max_resolution = resolution
+            if not photo_url:
+                raise crawler.CrawlerException(f"媒体信息{media_item}获取图片地址失败")
+            result["photo_url_list"].append(photo_url)
+        elif media_type == 2:  # 视频
             video_url = ""
             max_resolution = 0
             for video_version in crawler.get_json_value(media_item, "video_versions", type_check=list):
@@ -201,7 +212,7 @@ def get_media_page(page_id):
                     video_url = crawler.get_json_value(video_version, "url", type_check=str)
                     max_resolution = resolution
             if not video_url:
-                raise crawler.CrawlerException("获取视频地址失败\n" + str(media_item))
+                raise crawler.CrawlerException(f"媒体信息{media_item}获取视频地址失败")
             result["video_url_list"].append(video_url)
         elif media_type == 8:  # 组图
             for carousel_media in crawler.get_json_value(media_item, "carousel_media", type_check=list):
@@ -216,10 +227,10 @@ def get_media_page(page_id):
                             photo_url = crawler.get_json_value(photo_info, "url", type_check=str)
                             max_resolution = resolution
                     if not photo_url:
-                        raise crawler.CrawlerException("获取图片地址失败\n" + str(carousel_media))
+                        raise crawler.CrawlerException(f"子媒体信息{carousel_media}获取图片地址失败")
                     result["photo_url_list"].append(photo_url)
                 else:
-                    raise crawler.CrawlerException(f"子媒体类型{media_type}不支持\n" + str(media_response.json_data))
+                    raise crawler.CrawlerException(f"子媒体信息{carousel_media}获取的媒体类型{media_type}不支持")
         else:
             raise crawler.CrawlerException(f"媒体类型{media_type}不支持")
     return result
@@ -266,8 +277,8 @@ class Instagram(crawler.Crawler):
         SESSION_DATA_PATH = self.session_data_path
 
         # 解析存档文件
-        # account_name  account_id  photo_count  video_count  last_created_time
-        self.save_data = crawler.read_save_data(self.save_data_path, 0, ["", "", "0", "0", "0"])
+        # account_name  account_id  last_page_id
+        self.save_data = crawler.read_save_data(self.save_data_path, 0, ["", "", "0"])
 
         # 生成session信息
         init_session()
@@ -343,7 +354,7 @@ class Download(crawler.DownloadThread):
             # 寻找这一页符合条件的媒体
             for media_info in media_pagination_response["media_info_list"]:
                 # 检查是否达到存档记录
-                if media_info["media_time"] > int(self.single_save_data[4]):
+                if media_info["page_id"] > int(self.single_save_data[2]):
                     media_info_list.append(media_info)
                 else:
                     is_over = True
