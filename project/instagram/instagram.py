@@ -17,7 +17,7 @@ EACH_PAGE_PHOTO_COUNT = 12  # 每次请求获取的媒体数量
 QUERY_ID = "17859156310193001"
 COOKIE_INFO = {"csrftoken": "", "mid": "", "sessionid": ""}
 REQUEST_LIMIT_DURATION = 10  # 请求统计的分钟数量
-REQUEST_LIMIT_COUNT = 300  # 一定时间范围内的请求次数限制
+REQUEST_LIMIT_COUNT = 180  # 一定时间范围内的请求次数限制（API限制应该是200次/10分钟）
 REQUEST_MINTER_COUNT = {}  # 每分钟的请求次数
 SESSION_DATA_PATH = ''
 
@@ -366,6 +366,7 @@ class Download(crawler.DownloadThread):
                 else:
                     # 设置下一页指针
                     cursor = media_pagination_response["next_page_cursor"]
+                    time.sleep(5)
 
         return media_info_list
 
