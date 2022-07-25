@@ -192,14 +192,23 @@ def get_media_page(page_id):
         raise crawler.CrawlerException("items字段长度不为1")
     for media_item in media_item_list:
         media_type = crawler.get_json_value(media_item, "media_type", type_check=int)
+        # https://i.instagram.com/api/v1/media/2887939807062643658/info/
         if media_type == 1:
+            original_height = crawler.get_json_value(media_item, "original_height", type_check=int)
+            original_width = crawler.get_json_value(media_item, "original_width", type_check=int)
             photo_url = ""
             max_resolution = 0
             for photo_info in crawler.get_json_value(media_item, "image_versions2", "candidates", type_check=list):
-                resolution = crawler.get_json_value(photo_info, "width", type_check=int) * crawler.get_json_value(photo_info, "height", type_check=int)
-                if resolution > max_resolution:
+                width = crawler.get_json_value(photo_info, "width", type_check=int)
+                height = crawler.get_json_value(photo_info, "height", type_check=int)
+                if original_width == width and original_height == height:
                     photo_url = crawler.get_json_value(photo_info, "url", type_check=str)
-                    max_resolution = resolution
+                    break
+                else:
+                    resolution = width * height
+                    if resolution > max_resolution:
+                        photo_url = crawler.get_json_value(photo_info, "url", type_check=str)
+                        max_resolution = resolution
             if not photo_url:
                 raise crawler.CrawlerException(f"媒体信息{media_item}获取图片地址失败")
             result["photo_url_list"].append(photo_url)
@@ -218,14 +227,24 @@ def get_media_page(page_id):
             for carousel_media in crawler.get_json_value(media_item, "carousel_media", type_check=list):
                 sub_media_type = crawler.get_json_value(carousel_media, "media_type", type_check=int)
                 # 图片
+                # https://i.instagram.com/api/v1/media/2885474284266640152/info/
                 if sub_media_type == 1:
+                    original_height = crawler.get_json_value(carousel_media, "original_height", type_check=int)
+                    original_width = crawler.get_json_value(carousel_media, "original_width", type_check=int)
                     photo_url = ""
                     max_resolution = 0
                     for photo_info in crawler.get_json_value(carousel_media, "image_versions2", "candidates", type_check=list):
-                        resolution = crawler.get_json_value(photo_info, "width", type_check=int) * crawler.get_json_value(photo_info, "height", type_check=int)
-                        if resolution > max_resolution:
+                        width = crawler.get_json_value(photo_info, "width", type_check=int)
+                        height = crawler.get_json_value(photo_info, "height", type_check=int)
+                        if original_width == width and original_height == height:
                             photo_url = crawler.get_json_value(photo_info, "url", type_check=str)
-                            max_resolution = resolution
+                            print(photo_url)
+                            break
+                        else:
+                            resolution = crawler.get_json_value(photo_info, "width", type_check=int) * crawler.get_json_value(photo_info, "height", type_check=int)
+                            if resolution > max_resolution:
+                                photo_url = crawler.get_json_value(photo_info, "url", type_check=str)
+                                max_resolution = resolution
                     if not photo_url:
                         raise crawler.CrawlerException(f"子媒体信息{carousel_media}获取图片地址失败")
                     result["photo_url_list"].append(photo_url)
