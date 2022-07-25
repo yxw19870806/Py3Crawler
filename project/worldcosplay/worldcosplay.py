@@ -38,17 +38,9 @@ def get_one_page_photo(account_id, page_count):
             "photo_url": None,  # 图片地址
         }
         # 获取图片id
-        result_photo_info["photo_id"] = crawler.get_json_value(photo_info, "photo", "id", type_check=int)
+        result_photo_info["photo_id"] = crawler.get_json_value(photo_info, "id", type_check=int)
         # 获取图片地址
-        for key_name in ["sq300_url", "sq150_url"]:
-            photo_url = crawler.get_json_value(photo_info, "photo", key_name, default_value="", type_check=str)
-            if photo_url:
-                if photo_url.find("-350x600.") == -1:
-                    raise crawler.CrawlerException(f"图片信息{photo_info}中截取图片地址失败")
-                result_photo_info["photo_url"] = photo_url
-                break
-        else:
-            raise crawler.CrawlerException(f"图片信息{photo_info}中匹配图片地址失败")
+        result_photo_info["photo_url"] = crawler.get_json_value(photo_info, "img_url", type_check=str)
         result["photo_info_list"].append(result_photo_info)
     # 判断是不是最后一页
     if crawler.get_json_value(photo_pagination_response.json_data, "pager", "next_page") is None:
