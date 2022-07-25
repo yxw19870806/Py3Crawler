@@ -266,8 +266,8 @@ class Instagram(crawler.Crawler):
         SESSION_DATA_PATH = self.session_data_path
 
         # 解析存档文件
-        # account_name  account_id  photo_count  video_count  last_created_time
-        self.save_data = crawler.read_save_data(self.save_data_path, 0, ["", "", "0", "0", "0"])
+        # account_name  account_id  last_page_id
+        self.save_data = crawler.read_save_data(self.save_data_path, 0, ["", "", "0"])
 
         # 生成session信息
         init_session()
@@ -343,7 +343,7 @@ class Download(crawler.DownloadThread):
             # 寻找这一页符合条件的媒体
             for media_info in media_pagination_response["media_info_list"]:
                 # 检查是否达到存档记录
-                if media_info["media_time"] > int(self.single_save_data[4]):
+                if media_info["page_id"] > int(self.single_save_data[2]):
                     media_info_list.append(media_info)
                 else:
                     is_over = True
