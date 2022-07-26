@@ -24,7 +24,8 @@ def check_login():
     index_url = "https://weibo.com/"
     index_response = net.request(index_url, method="GET", cookies_list=COOKIE_INFO)
     if index_response.status == net.HTTP_RETURN_CODE_SUCCEED:
-        return index_response.data.decode(errors="ignore").find('"uid":') >= 0
+        index_response_content = index_response.data.decode(errors="ignore")
+        return index_response_content.find("$CONFIG[\'uid\']=\'") >= 0 or index_response_content.find('"uid":') >= 0
     return False
 
 
@@ -108,16 +109,31 @@ def get_one_page_video(account_id, since_id):
         }
         # 获取视频id
         result_video_info_list["video_id"] = crawler.get_json_value(video_info, "id", type_check=int)
-        # 获取视频标题
-        result_video_info_list["video_title"] = crawler.get_json_value(video_info, "page_info", "media_info", "video_title", type_check=str, default_value="")
+        page_type = crawler.get_json_value(video_info, "page_info", "type", type_check=int)
+        if page_type == 11 or page_type == 5:
+            # 获取视频标题
+            result_video_info_list["video_title"] = crawler.get_json_value(video_info, "page_info", "media_info", "video_title", type_check=str, default_value="")
+            video_detail_info_list = crawler.get_json_value(video_info, "page_info", "media_info", "playback_list", type_check=list)
+        elif page_type == 31:
+            # 获取视频标题
+            result_video_info_list["video_title"] = crawler.get_json_value(video_info, "page_info", "page_desc", type_check=str)
+            video_detail_info_list = crawler.get_json_value(video_info, "page_info", "slide_cover", "playback_list", type_check=list)
+        else:
+            raise crawler.CrawlerException(f"未知信息类型{page_type}")
         # 获取视频地址
         max_resolution = 0
         video_url = ""
-        for single_video_info in crawler.get_json_value(video_info, "page_info", "media_info", "playback_list", type_check=list):
-            resolution = crawler.get_json_value(single_video_info, "play_info", "width", type_check=int) * crawler.get_json_value(single_video_info, "play_info", "height", type_check=int)
-            if resolution > max_resolution:
-                video_url = crawler.get_json_value(single_video_info, "play_info", "url", type_check=str)
-                max_resolution = resolution
+        for single_video_info in video_detail_info_list:
+            video_type = crawler.get_json_value(single_video_info, "play_info", "type", type_check=int)
+            if video_type == 1:
+                resolution = crawler.get_json_value(single_video_info, "play_info", "width", type_check=int) * crawler.get_json_value(single_video_info, "play_info", "height", type_check=int)
+                if resolution > max_resolution:
+                    video_url = crawler.get_json_value(single_video_info, "play_info", "url", type_check=str)
+                    max_resolution = resolution
+            elif video_type == 3:  # 图片
+                continue
+            else:
+                raise crawler.CrawlerException(f"未知视频类型{video_type}")
         if not video_url:
             raise crawler.CrawlerException(f"媒体信息{video_info}获取最大分辨率视频地址失败")
         result_video_info_list["video_url"] = video_url
@@ -163,8 +179,8 @@ class Weibo(crawler.Crawler):
 class Download(crawler.DownloadThread):
     def __init__(self, single_save_data, main_thread):
         self.index_key = single_save_data[0]  # account id
-        if len(single_save_data) >= 5 and single_save_data[4]:
-            self.display_name = single_save_data[4]
+        if len(single_save_data) >= 4 and single_save_data[3]:
+            self.display_name = single_save_data[3]
         else:
             self.display_name = single_save_data[0]
         crawler.DownloadThread.__init__(self, single_save_data, main_thread)
@@ -308,7 +324,7 @@ class Download(crawler.DownloadThread):
 
         video_file_path = os.path.join(self.main_thread.video_download_path, self.display_name, f"{video_info['video_id']}.mp4")
         header_list = {
-            "Host": "f.video.weibocdn.com",
+            "Host": "f.us.sinaimg.cn",
         }
         download_return = net.Download(video_info["video_url"], video_file_path, header_list=header_list, auto_multipart_download=True)
         if download_return.status == net.Download.DOWNLOAD_SUCCEED:
@@ -320,7 +336,7 @@ class Download(crawler.DownloadThread):
                 return False
 
         # 视频下载完毕
-        self.single_save_data[2] = str(video_index)  # 设置存档记录
+        self.single_save_data[2] = str(video_info['video_id'])  # 设置存档记录
         return True
 
 
