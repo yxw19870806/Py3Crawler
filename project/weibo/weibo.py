@@ -163,8 +163,8 @@ class Weibo(crawler.Crawler):
 class Download(crawler.DownloadThread):
     def __init__(self, single_save_data, main_thread):
         self.index_key = single_save_data[0]  # account id
-        if len(single_save_data) >= 5 and single_save_data[4]:
-            self.display_name = single_save_data[4]
+        if len(single_save_data) >= 4 and single_save_data[3]:
+            self.display_name = single_save_data[3]
         else:
             self.display_name = single_save_data[0]
         crawler.DownloadThread.__init__(self, single_save_data, main_thread)
@@ -320,7 +320,7 @@ class Download(crawler.DownloadThread):
                 return False
 
         # 视频下载完毕
-        self.single_save_data[2] = str(video_index)  # 设置存档记录
+        self.single_save_data[2] = str(video_info['video_id'])  # 设置存档记录
         return True
 
 
