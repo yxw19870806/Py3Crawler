@@ -109,16 +109,31 @@ def get_one_page_video(account_id, since_id):
         }
         # 获取视频id
         result_video_info_list["video_id"] = crawler.get_json_value(video_info, "id", type_check=int)
-        # 获取视频标题
-        result_video_info_list["video_title"] = crawler.get_json_value(video_info, "page_info", "media_info", "video_title", type_check=str, default_value="")
+        page_type = crawler.get_json_value(video_info, "page_info", "type", type_check=int)
+        if page_type == 11 or page_type == 5:
+            # 获取视频标题
+            result_video_info_list["video_title"] = crawler.get_json_value(video_info, "page_info", "media_info", "video_title", type_check=str, default_value="")
+            video_detail_info_list = crawler.get_json_value(video_info, "page_info", "media_info", "playback_list", type_check=list)
+        elif page_type == 31:
+            # 获取视频标题
+            result_video_info_list["video_title"] = crawler.get_json_value(video_info, "page_info", "page_desc", type_check=str)
+            video_detail_info_list = crawler.get_json_value(video_info, "page_info", "slide_cover", "playback_list", type_check=list)
+        else:
+            raise crawler.CrawlerException(f"未知信息类型{page_type}")
         # 获取视频地址
         max_resolution = 0
         video_url = ""
-        for single_video_info in crawler.get_json_value(video_info, "page_info", "media_info", "playback_list", type_check=list):
-            resolution = crawler.get_json_value(single_video_info, "play_info", "width", type_check=int) * crawler.get_json_value(single_video_info, "play_info", "height", type_check=int)
-            if resolution > max_resolution:
-                video_url = crawler.get_json_value(single_video_info, "play_info", "url", type_check=str)
-                max_resolution = resolution
+        for single_video_info in video_detail_info_list:
+            video_type = crawler.get_json_value(single_video_info, "play_info", "type", type_check=int)
+            if video_type == 1:
+                resolution = crawler.get_json_value(single_video_info, "play_info", "width", type_check=int) * crawler.get_json_value(single_video_info, "play_info", "height", type_check=int)
+                if resolution > max_resolution:
+                    video_url = crawler.get_json_value(single_video_info, "play_info", "url", type_check=str)
+                    max_resolution = resolution
+            elif video_type == 3:  # 图片
+                continue
+            else:
+                raise crawler.CrawlerException(f"未知视频类型{video_type}")
         if not video_url:
             raise crawler.CrawlerException(f"媒体信息{video_info}获取最大分辨率视频地址失败")
         result_video_info_list["video_url"] = video_url
