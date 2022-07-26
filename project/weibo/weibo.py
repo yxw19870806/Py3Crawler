@@ -98,7 +98,10 @@ def get_one_page_video(account_id, since_id):
         "video_info_list": [],  # 全部视频地址
     }
     video_pagination_response = net.request(video_pagination_url, method="GET", fields=query_data, cookies_list=COOKIE_INFO, json_decode=True)
-    if video_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
+    if video_pagination_response.status == 400:
+        time.sleep(5)
+        return get_one_page_video(account_id, since_id)
+    elif video_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(video_pagination_response.status))
     # 获取视频id
     for video_info in crawler.get_json_value(video_pagination_response.json_data, "data", "list", type_check=list):
