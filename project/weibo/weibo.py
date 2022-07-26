@@ -309,7 +309,7 @@ class Download(crawler.DownloadThread):
 
         video_file_path = os.path.join(self.main_thread.video_download_path, self.display_name, f"{video_info['video_id']}.mp4")
         header_list = {
-            "Host": "f.video.weibocdn.com",
+            "Host": "f.us.sinaimg.cn",
         }
         download_return = net.Download(video_info["video_url"], video_file_path, header_list=header_list, auto_multipart_download=True)
         if download_return.status == net.Download.DOWNLOAD_SUCCEED:
