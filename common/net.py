@@ -357,7 +357,11 @@ def request(url, method="GET", fields=None, binary_data=None, header_list=None, 
             # import traceback
             # output.print_msg(message)
             # output.print_msg(traceback.format_exc())
-            output.print_msg(url + " 访问超时，重试中")
+            if "Range" in header_list:
+                range_string = "range: " + header_list["Range"].replace("bytes=", "")
+                output.print_msg(url + f"[{range_string}] 访问超时，重试中")
+            else:
+                output.print_msg(url + " 访问超时，重试中")
             time.sleep(NET_CONFIG["HTTP_REQUEST_RETRY_WAIT_TIME"])
 
         retry_count += 1
