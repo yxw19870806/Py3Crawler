@@ -354,7 +354,7 @@ class Download(crawler.DownloadThread):
             self.step(f"视频{video_info['video_id']}《{video_info['video_title']}》下载成功")
         else:
             self.error(f"视频{video_info['video_id']}《{video_info['video_title']}》（{video_info['video_url']}) 下载失败，原因：{crawler.download_failre(download_return.code)}")
-            if self.check_download_failure_exit(False):
+            if download_return.code != 404 and self.check_download_failure_exit(False):
                 return False
 
         # 视频下载完毕

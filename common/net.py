@@ -662,8 +662,23 @@ class Download:
             file_response = request(self.file_url, method="GET", connection_timeout=NET_CONFIG["DOWNLOAD_CONNECTION_TIMEOUT"], read_timeout=NET_CONFIG["DOWNLOAD_READ_TIMEOUT"], **self.kwargs.copy())
         except SystemExit:
             return False
+
         if file_response.status != HTTP_RETURN_CODE_SUCCEED:
-            self.code = self.CODE_RETRY_MAX_COUNT
+            # URL格式不正确
+            if file_response.status == HTTP_RETURN_CODE_URL_INVALID:
+                self.code = self.CODE_URL_INVALID
+            # 域名无法解析
+            elif file_response.status == HTTP_RETURN_CODE_DOMAIN_NOT_RESOLVED:
+                self.code = self.CODE_RETRY_MAX_COUNT
+            # 重定向次数过多
+            elif file_response.status == HTTP_RETURN_CODE_TOO_MANY_REDIRECTS:
+                self.code = self.CODE_RETRY_MAX_COUNT
+            # 超过重试次数
+            elif file_response.status == HTTP_RETURN_CODE_RETRY:
+                self.code = self.CODE_RETRY_MAX_COUNT
+            # 其他http code
+            else:
+                self.code = file_response.status
             return False
 
         if self.content_length == 0:
