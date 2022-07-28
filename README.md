@@ -58,31 +58,31 @@ Visual Studio Installer安装完毕后，勾选"桌面应用和移动应用"标�
 
 # Support website / App
 
-* [Ameblo](https://ameblo.jp/) （有效性检测日期：2022/07/19）
-* [半次元](https://bcy.net/) （有效性检测日期：2022/07/19）
-* [哔哩哔哩](https://www.bilibili.com/) （有效性检测日期：2022/07/19）
-* [哔哩哔哩漫画](https://manga.bilibili.com/) （有效性检测日期：2022/07/19）
-* [Dailymotion](https://www.dailymotion.com/) （有效性检测日期：2022/07/19）
-* [动漫之家漫画](https://www.dmzj.com/) （有效性检测日期：2022/07/19）
-* [5sing](https://5sing.kugou.com/index.html) （有效性检测日期：2022/07/19）
-* [Flickr](https://www.flickr.com/) （有效性检测日期：2022/07/19）
-* [日向坂46公式Blog](https://www.hinatazaka46.com/s/official/diary/member) （有效性检测日期：2022/07/19）
-* [Instagram](https://www.instagram.com/) （有效性检测日期：2022/07/25）
-* [欅坂46公式Blog](https://www.keyakizaka46.com/s/k46o/diary/member) （有效性检测日期：2022/07/20）
-* [Lofter](https://www.lofter.com/) （有效性检测日期：2022/07/20）
-* [漫画柜漫画](https://www.manhuagui.com/) （有效性检测日期：2022/07/20）
-* [美拍](https://www.meipai.com/) （有效性检测日期：2022/07/20）
-* [755](https://7gogo.jp/) （有效性检测日期：2022/07/20）
-* [乃木坂46公式Blog](https://www.nogizaka46.com/s/n46/diary/MEMBER/list) （有效性检测日期：2022/07/20）
+* [Ameblo](https://ameblo.jp/) （最后更新日期：2022/07/19）
+* [半次元](https://bcy.net/) （最后更新日期：2022/07/19）
+* [哔哩哔哩](https://www.bilibili.com/) （最后更新日期：2022/07/19）
+* [哔哩哔哩漫画](https://manga.bilibili.com/) （最后更新日期：2022/07/19）
+* [Dailymotion](https://www.dailymotion.com/) （最后更新日期：2022/07/19）
+* [动漫之家漫画](https://www.dmzj.com/) （最后更新日期：2022/07/19）
+* [5sing](https://5sing.kugou.com/index.html) （最后更新日期：2022/07/19）
+* [Flickr](https://www.flickr.com/) （最后更新日期：2022/07/19）
+* [日向坂46公式Blog](https://www.hinatazaka46.com/s/official/diary/member) （最后更新日期：2022/07/19）
+* [Instagram](https://www.instagram.com/) （最后更新日期：2022/07/25）
+* [欅坂46公式Blog](https://www.keyakizaka46.com/s/k46o/diary/member) （最后更新日期：2022/07/20）
+* [Lofter](https://www.lofter.com/) （最后更新日期：2022/07/20）
+* [漫画柜漫画](https://www.manhuagui.com/) （最后更新日期：2022/07/20）
+* [美拍](https://www.meipai.com/) （最后更新日期：2022/07/20）
+* [755](https://7gogo.jp/) （最后更新日期：2022/07/20）
+* [乃木坂46公式Blog](https://www.nogizaka46.com/s/n46/diary/MEMBER/list) （最后更新日期：2022/07/20）
 * [TikTok](https://www.tiktok.com/)
-* [听书宝](http://m.tingshubao.com/) （有效性检测日期：2022/07/20）
-* [图虫](https://tuchong.com/) （有效性检测日期：2022/07/20）
-* [Tumblr](https://www.tumblr.com/)
-* [Twitter](https://twitter.com/) （有效性检测日期：2022/07/20）
-* [微博](https://weibo.com/)
-* [World Cosplay](https://worldcosplay.net/) （有效性检测日期：2022/07/25）
-* [喜马拉雅FM](https://www.ximalaya.com/) （有效性检测日期：2022/07/20）
-* [一直播](https://www.yizhibo.com/) （有效性检测日期：2022/07/20）
+* [听书宝](http://m.tingshubao.com/) （最后更新日期：2022/07/20）
+* [图虫](https://tuchong.com/) （最后更新日期：2022/07/20）
+* [Tumblr](https://www.tumblr.com/) （最后更新日期：2022/07/25）
+* [Twitter](https://twitter.com/) （最后更新日期：2022/07/20）
+* [微博](https://weibo.com/) （最后更新日期：2022/07/25）
+* [World Cosplay](https://worldcosplay.net/) （最后更新日期：2022/07/25）
+* [喜马拉雅FM](https://www.ximalaya.com/) （最后更新日期：2022/07/20）
+* [一直播](https://www.yizhibo.com/) （最后更新日期：2022/07/20）
 * [Youtube](https://www.youtube.com/)
 
 # Code Structure
