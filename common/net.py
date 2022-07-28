@@ -315,9 +315,7 @@ def request(url, method="GET", fields=None, binary_data=None, header_list=None, 
                                 charset = "GBK"
                             try:
                                 response.json_data = json.loads(response.data.decode(charset))
-                            except LookupError:
-                                pass
-                            except AttributeError:
+                            except Exception:
                                 pass
                             else:
                                 is_error = False
