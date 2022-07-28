@@ -32,6 +32,37 @@ SIZE_KB = 2 ** 10  # 1KB = 多少字节
 SIZE_MB = 2 ** 20  # 1MB = 多少字节
 SIZE_GB = 2 ** 30  # 1GB = 多少字节
 
+
+def convert_to_bytes(value, default_value: int) -> int:
+    """
+    将字符串转换为字节数
+
+    :Args:
+    - value - 待转换的字符串，例如 1 KB，2 MB，3 GB等
+    """
+    value = value.strip()
+    size = default_value
+    if tool.is_integer(value):
+        size = int(value)
+    else:
+        search_result = re.findall("^(\d+) *([a-zA-z]*)$", value)
+        if len(search_result) == 1:
+            unit = search_result[0][1]
+            if unit == "" or unit == "B":
+                size = int(search_result[0][0])
+            elif unit == "KB":
+                size = int(search_result[0][0]) * (2 ** 10)
+            elif unit == "MB":
+                size = int(search_result[0][0]) * (2 ** 20)
+            elif unit == "GB":
+                size = int(search_result[0][0]) * (2 ** 30)
+            else:
+                output.print_msg(f"无效的字节单位'{unit}'，只支持B、KB、MB、GB")
+        else:
+            output.print_msg(f"无效的字节数设置'{value}'")
+    return size
+
+
 # 读取网络相关配置
 DEFAULT_NET_CONFIG = {
     "HTTP_CONNECTION_TIMEOUT": 10,  # 网络访问连接超时的秒数
@@ -52,6 +83,9 @@ NET_CONFIG = tool.json_decode(file.read_file(os.path.join(os.path.dirname(__file
 for config_key in DEFAULT_NET_CONFIG:
     if config_key not in NET_CONFIG:
         NET_CONFIG[config_key] = DEFAULT_NET_CONFIG[config_key]
+for key in NET_CONFIG:
+    if key in ["DOWNLOAD_MULTIPART_MIN_SIZE", "DOWNLOAD_MULTIPART_BLOCK_SIZE"]:
+        NET_CONFIG[key] = convert_to_bytes(NET_CONFIG[key], DEFAULT_NET_CONFIG[key])
 
 # qps队列
 QPS = {}
@@ -323,7 +357,11 @@ def request(url, method="GET", fields=None, binary_data=None, header_list=None, 
             # import traceback
             # output.print_msg(message)
             # output.print_msg(traceback.format_exc())
-            output.print_msg(url + " 访问超时，重试中")
+            if "Range" in header_list:
+                range_string = "range: " + header_list["Range"].replace("bytes=", "")
+                output.print_msg(url + f"[{range_string}] 访问超时，重试中")
+            else:
+                output.print_msg(url + " 访问超时，重试中")
             time.sleep(NET_CONFIG["HTTP_REQUEST_RETRY_WAIT_TIME"])
 
         retry_count += 1

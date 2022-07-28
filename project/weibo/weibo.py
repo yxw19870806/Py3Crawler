@@ -7,11 +7,9 @@ email: hikaru870806@hotmail.com
 如有问题或建议请联系
 """
 import os
-import re
 import time
 import urllib.parse
 from common import *
-from project.meipai import meipai
 
 EACH_PAGE_PHOTO_COUNT = 20  # 每次请求获取的图片数量
 COOKIE_INFO = {}
@@ -86,7 +84,7 @@ def get_one_page_photo(account_id, page_count):
 
 
 # 获取一页的视频信息
-def get_one_page_video(account_id, since_id):
+def get_one_page_video(account_id, since_id, retry_count=0):
     # https://weibo.com/ajax/profile/getWaterFallContent?uid=5948281315&cursor=0
     video_pagination_url = "https://weibo.com/ajax/profile/getWaterFallContent"
     query_data = {
@@ -98,21 +96,26 @@ def get_one_page_video(account_id, since_id):
         "video_info_list": [],  # 全部视频地址
     }
     video_pagination_response = net.request(video_pagination_url, method="GET", fields=query_data, cookies_list=COOKIE_INFO, json_decode=True)
-    if video_pagination_response.status == 400:
+    if video_pagination_response.status == 400 and retry_count < 5:
         time.sleep(5)
-        return get_one_page_video(account_id, since_id)
+        return get_one_page_video(account_id, since_id, retry_count + 1)
     elif video_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(video_pagination_response.status))
     # 获取视频id
     for video_info in crawler.get_json_value(video_pagination_response.json_data, "data", "list", type_check=list):
         result_video_info_list = {
-            "video_id": "",  # 视频id
+            "video_id": None,  # 视频id
             "video_title": "",  # 视频标题
             "video_url": "",  # 视频地址
         }
         # 获取视频id
         result_video_info_list["video_id"] = crawler.get_json_value(video_info, "id", type_check=int)
-        page_type = crawler.get_json_value(video_info, "page_info", "type", type_check=int)
+        try:
+            page_type = crawler.get_json_value(video_info, "page_info", "type", type_check=int)
+        except crawler.CrawlerException:
+            if crawler.get_json_value(video_info, "text", type_check=str).find("根据博主设置，此内容无法访问") >= 0:
+                continue
+            raise
         if page_type == 11 or page_type == 5:
             # 获取视频标题
             result_video_info_list["video_title"] = crawler.get_json_value(video_info, "page_info", "media_info", "video_title", type_check=str, default_value="")
@@ -321,20 +324,20 @@ class Download(crawler.DownloadThread):
 
     # 解析单个视频
     def crawl_video(self, video_info):
-        self.step(f"开始解析视频{video_info['video_id']}")
+        self.step(f"开始解析视频{video_info['video_id']}《{video_info['video_title']}》")
 
-        self.step(f"开始下载视频{video_info['video_id']} {video_info['video_url']}")
+        self.step(f"开始下载视频{video_info['video_id']}《{video_info['video_title']}》 {video_info['video_url']}")
 
         video_file_path = os.path.join(self.main_thread.video_download_path, self.display_name, f"{video_info['video_id']}.mp4")
         header_list = {
-            "Host": "f.us.sinaimg.cn",
+            "Host": urllib.parse.urlparse(video_info["video_url"])[1],
         }
         download_return = net.Download(video_info["video_url"], video_file_path, header_list=header_list, auto_multipart_download=True)
         if download_return.status == net.Download.DOWNLOAD_SUCCEED:
             self.total_video_count += 1  # 计数累加
-            self.step(f"视频{video_info['video_id']}下载成功")
+            self.step(f"视频{video_info['video_id']}《{video_info['video_title']}》下载成功")
         else:
-            self.error(f"视频{video_info['video_id']}（{video_info['video_url']}) 下载失败，原因：{crawler.download_failre(download_return.code)}")
+            self.error(f"视频{video_info['video_id']}《{video_info['video_title']}》（{video_info['video_url']}) 下载失败，原因：{crawler.download_failre(download_return.code)}")
             if self.check_download_failure_exit(False):
                 return False
 
