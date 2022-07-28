@@ -96,10 +96,15 @@ def get_one_page_video(account_id, since_id, retry_count=0):
         "video_info_list": [],  # 全部视频地址
     }
     video_pagination_response = net.request(video_pagination_url, method="GET", fields=query_data, cookies_list=COOKIE_INFO, json_decode=True)
-    if video_pagination_response.status == 400 and retry_count < 5:
-        time.sleep(5)
-        return get_one_page_video(account_id, since_id, retry_count + 1)
-    elif video_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
+    if video_pagination_response.status == 400:
+        if retry_count < 5:
+            time.sleep(5)
+            return get_one_page_video(account_id, since_id, retry_count + 1)
+        else:
+            if since_id == 0:
+                result["next_page_since_id"] = -1
+                return result
+    if video_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(video_pagination_response.status))
     # 获取视频id
     for video_info in crawler.get_json_value(video_pagination_response.json_data, "data", "list", type_check=list):
@@ -119,7 +124,14 @@ def get_one_page_video(account_id, since_id, retry_count=0):
         if page_type == 11 or page_type == 5:
             # 获取视频标题
             result_video_info_list["video_title"] = crawler.get_json_value(video_info, "page_info", "media_info", "video_title", type_check=str, default_value="")
-            video_detail_info_list = crawler.get_json_value(video_info, "page_info", "media_info", "playback_list", type_check=list)
+            try:
+                video_detail_info_list = crawler.get_json_value(video_info, "page_info", "media_info", "playback_list", type_check=list)
+            except crawler.CrawlerException:
+                video_url = crawler.get_json_value(video_info, "page_info", "media_info", "stream_url_hd", type_check=str)
+                if not video_url:
+                    raise
+                result_video_info_list["video_url"] = video_url
+                continue
         elif page_type == 31:
             # 获取视频标题
             result_video_info_list["video_title"] = crawler.get_json_value(video_info, "page_info", "page_desc", type_check=str)
@@ -328,7 +340,11 @@ class Download(crawler.DownloadThread):
 
         self.step(f"开始下载视频{video_info['video_id']}《{video_info['video_title']}》 {video_info['video_url']}")
 
-        video_file_path = os.path.join(self.main_thread.video_download_path, self.display_name, f"{video_info['video_id']}.mp4")
+        video_title = path.filter_text(video_info["video_title"])
+        if video_title:
+            video_file_path = os.path.join(self.main_thread.video_download_path, self.display_name, f"{video_info['video_id']} %s.mp4" % video_title)
+        else:
+            video_file_path = os.path.join(self.main_thread.video_download_path, self.display_name, f"{video_info['video_id']}.mp4")
         header_list = {
             "Host": urllib.parse.urlparse(video_info["video_url"])[1],
         }
