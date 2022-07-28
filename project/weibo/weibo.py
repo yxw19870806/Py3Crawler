@@ -97,8 +97,20 @@ def get_one_page_video(account_id, since_id, retry_count=0):
     }
     video_pagination_response = net.request(video_pagination_url, method="GET", fields=query_data, cookies_list=COOKIE_INFO, json_decode=True)
     if video_pagination_response.status == 400:
-        if retry_count < 5:
-            time.sleep(5)
+        # 第一次失败，判断账号是否存在
+        if retry_count == 1 and since_id == 0:
+            account_info_url = f"https://weibo.com/ajax/profile/info"
+            query_data = {
+                "uid": account_id
+            }
+            header_list = {
+                "Accept": "application/json, text/plain, */*",
+            }
+            account_info_response = net.request(account_info_url, method="GET", fields=query_data, cookies_list=COOKIE_INFO, header_list=header_list, json_decode=True)
+            if account_info_response.status == net.HTTP_RETURN_CODE_SUCCEED and crawler.get_json_value(account_info_response.json_data, "msg", type_check=str, value_check="该用户不存在(20003)"):
+                raise crawler.CrawlerException("账号不存在")
+        if retry_count < 3:
+            time.sleep(1)
             return get_one_page_video(account_id, since_id, retry_count + 1)
         else:
             if since_id == 0:
