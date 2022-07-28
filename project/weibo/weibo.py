@@ -121,7 +121,7 @@ def get_one_page_video(account_id, since_id, retry_count=0):
             if crawler.get_json_value(video_info, "text", type_check=str).find("根据博主设置，此内容无法访问") >= 0:
                 continue
             raise
-        if page_type == 11 or page_type == 5:
+        if page_type in [2, 5, 11]:
             # 获取视频标题
             result_video_info_list["video_title"] = crawler.get_json_value(video_info, "page_info", "media_info", "video_title", type_check=str, default_value="")
             try:
