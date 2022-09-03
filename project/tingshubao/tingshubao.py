@@ -25,21 +25,26 @@ def get_album_index_page(album_id):
     }
     if album_index_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(album_index_response.status))
-    album_index_response_content = album_index_response.data.decode(errors="ignore")
+    album_index_response_content = album_index_response.data.decode("GBK", errors="ignore")
     audio_list_selector = pq(album_index_response_content).find(".play-list li")
     for audio_index in range(audio_list_selector.length, 0, -1):
         result_audio_info = {
             "audio_id": None,  # 音频id
+            "audio_title": None,  # 音频id
             "audio_play_url": "",  # 音频播放地址
         }
         audio_info_selector = audio_list_selector.eq(audio_index - 1)
-        audio_id = audio_info_selector.find("a").attr("title")
-        if tool.is_integer(audio_id):
-            result_audio_info["audio_id"] = int(audio_id)
+        # 获取音频标题
+        result_audio_info["audio_title"] = audio_info_selector.find("a").attr("title")
+        # 获取音频播放地址
         audio_play_url = audio_info_selector.find("a").attr("href")
         if audio_play_url[0] == "/":
             audio_play_url = "http://m.tingshubao.com" + audio_play_url
         result_audio_info["audio_play_url"] = audio_play_url
+        audio_id = audio_play_url.split("/")[-1].replace(".html", "").split("-")[-1]
+        if not tool.is_integer(audio_id):
+            raise crawler.CrawlerException(f"音频播放地址 {audio_play_url} 截取音频id失败")
+        result_audio_info["audio_id"] = int(audio_id) + 1 # 页面是从0开始的
         result["audio_info_list"].append(result_audio_info)
     return result
 
@@ -63,14 +68,18 @@ def get_audio_info_page(audio_play_url):
     for temp in encrypt_string.split("*")[1:]:
         temp = chr(int(temp) & 0xffff)
         temp_list.append(temp)
-    audio_detail_url = "http://43.129.176.64/player/key.php"
-    query_data = {
-        "url": "".join(temp_list).split("&")[0]
-    }
-    audio_detail_response = net.request(audio_detail_url, method="GET", fields=query_data, json_decode=True)
-    if audio_detail_response.status != net.HTTP_RETURN_CODE_SUCCEED:
-        raise crawler.CrawlerException(crawler.request_failre(audio_detail_response.status))
-    result["audio_url"] = crawler.get_json_value(audio_detail_response.json_data, "url", type_check=str)
+    audio_url = "".join(temp_list).split("&")[0]
+    if audio_url[:7] == "http://":
+        result["audio_url"] = audio_url
+    else:
+        audio_detail_url = "http://43.129.176.64/player/key.php"
+        query_data = {
+            "url": "".join(temp_list).split("&")[0]
+        }
+        audio_detail_response = net.request(audio_detail_url, method="GET", fields=query_data, json_decode=True)
+        if audio_detail_response.status != net.HTTP_RETURN_CODE_SUCCEED:
+            raise crawler.CrawlerException(crawler.request_failre(audio_detail_response.status))
+        result["audio_url"] = crawler.get_json_value(audio_detail_response.json_data, "url", type_check=str)
     return result
 
 
