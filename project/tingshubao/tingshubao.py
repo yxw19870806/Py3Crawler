@@ -59,7 +59,9 @@ def get_audio_info_page(audio_play_url):
         "User-Agent": USER_AGENT,
     }
     audio_play_response = net.request(audio_play_url, method="GET", header_list=header_list)
-    if audio_play_response.status != net.HTTP_RETURN_CODE_SUCCEED:
+    if audio_play_response.status == net.HTTP_RETURN_CODE_TOO_MANY_REDIRECTS:
+        return get_audio_info_page(audio_play_url)
+    elif audio_play_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(audio_play_response.status))
     audio_play_response_content = audio_play_response.data.decode(errors="ignore")
     # 解析来自 http://m.tingshubao.com/player/main.js的FonHen_JieMa()方法
@@ -154,14 +156,19 @@ class Download(crawler.DownloadThread):
         audio_url = audio_play_response["audio_url"]
         self.step(f"开始下载音频{audio_info['audio_id']} {audio_url}")
 
-        file_path = os.path.join(self.main_thread.audio_download_path, self.display_name, f"%04d %s.{net.get_file_extension(audio_url)}" % (audio_info["audio_id"], audio_info["audio_title"]))
-        download_return = net.Download(audio_url, file_path)
-        if download_return.status == net.Download.DOWNLOAD_SUCCEED:
-            self.total_audio_count += 1  # 计数累加
-            self.step(f"音频{audio_info['audio_id']}下载成功")
-        else:
-            self.error(f"音频{audio_info['audio_id']} {audio_url} 下载失败，原因：{crawler.download_failre(download_return.code)}")
-            self.check_download_failure_exit()
+        for retry_count in range(0, 5):
+            file_path = os.path.join(self.main_thread.audio_download_path, self.display_name, f"%04d %s.{net.get_file_extension(audio_url)}" % (audio_info["audio_id"], audio_info["audio_title"]))
+            download_return = net.Download(audio_url, file_path)
+            if download_return.status == net.Download.DOWNLOAD_SUCCEED:
+                self.total_audio_count += 1  # 计数累加
+                self.step(f"音频{audio_info['audio_id']}下载成功")
+                break
+            else:
+                if download_return.code != net.HTTP_RETURN_CODE_TOO_MANY_REDIRECTS or retry_count >= 4:
+                    self.error(f"音频{audio_info['audio_id']} {audio_url} 下载失败，原因：{crawler.download_failre(download_return.code)}")
+                    self.check_download_failure_exit()
+                else:
+                    self.step(f"音频{audio_info['audio_id']} {audio_url} 下载失败，重试")
 
         # 音频下载完毕
         self.single_save_data[1] = str(audio_info["audio_id"])  # 设置存档记录
