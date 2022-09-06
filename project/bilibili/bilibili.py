@@ -26,7 +26,7 @@ def av_id_2_bv_id(av_id):
         av_id = av_id[2:]
     av_id = (av_id ^ xor) + add
     result = list('BV1  4 1 7  ')
-    for i in range(0, 6):
+    for i in range(6):
         result[id_index[i]] = string_table[math.floor(av_id / 58 ** i) % 58]
     return "".join(result)
 
@@ -34,7 +34,7 @@ def av_id_2_bv_id(av_id):
 # bv id转av id
 def bv_id_2_av_id(bv_id):
     result = 0
-    for i in range(0, 6):
+    for i in range(6):
         result += string_table.find(bv_id[id_index[i]]) * 58 ** i
     return result - add ^ xor
 

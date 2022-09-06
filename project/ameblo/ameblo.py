@@ -50,7 +50,7 @@ def get_one_page_blog(account_name, page_count):
         # goto-risako
         blog_list_selector = pq(blog_pagination_response_content).find('#main li a.skin-titleLink')
         if blog_list_selector.length > 0:
-            for blog_url_index in range(0, blog_list_selector.length):
+            for blog_url_index in range(blog_list_selector.length):
                 blog_url = blog_list_selector.eq(blog_url_index).attr("href")
                 blog_id = tool.find_sub_string(blog_url, "entry-", ".html")
                 if not tool.is_integer(blog_id):
@@ -82,7 +82,7 @@ def get_one_page_blog(account_name, page_count):
     elif pq(blog_pagination_response_content).find("div.page").length > 0:
         pagination_selector = pq(blog_pagination_response_content).find("div.page").eq(0).find("a")
         find_page_count_list = []
-        for pagination_index in range(0, pagination_selector.length):
+        for pagination_index in range(pagination_selector.length):
             temp_page_count = tool.find_sub_string(pagination_selector.eq(pagination_index).attr("href"), "/page-", ".html")
             if tool.is_integer(temp_page_count):
                 find_page_count_list.append(int(temp_page_count))
@@ -119,7 +119,7 @@ def get_blog_page(account_name, blog_id):
         raise crawler.CrawlerException("页面截取正文失败\n" + blog_response_content)
     # 获取图片地址
     photo_list_selector = article_html_selector.find("img")
-    for photo_index in range(0, photo_list_selector.length):
+    for photo_index in range(photo_list_selector.length):
         photo_selector = photo_list_selector.eq(photo_index)
         if photo_selector.has_class("accessLog"):
             continue

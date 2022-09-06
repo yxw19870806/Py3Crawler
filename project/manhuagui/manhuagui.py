@@ -38,7 +38,7 @@ def get_comic_index_page(comic_id):
     group_chapter_list_selector = chapter_info_selector.find(".chapter-list")
     if group_name_selector.length != group_chapter_list_selector.length:
         raise crawler.CrawlerException("页面截取章节数量异常\n" + index_response_content)
-    for group_index in range(0, group_name_selector.length):
+    for group_index in range(group_name_selector.length):
         # 　获取分组名字
         group_name = group_name_selector.eq(group_index).text().strip()
         if not group_name:
@@ -46,7 +46,7 @@ def get_comic_index_page(comic_id):
         chapter_list_selector = group_chapter_list_selector.eq(group_index).find("li")
         if chapter_list_selector.length == 0:
             raise crawler.CrawlerException("章节信息截取章节内容失败\n" + group_chapter_list_selector.eq(group_index).html())
-        for page_index in range(0, chapter_list_selector.length):
+        for page_index in range(chapter_list_selector.length):
             result_comic_info = {
                 "chapter_id": None,  # 章节id
                 "chapter_name": None,  # 章节名

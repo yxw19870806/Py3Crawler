@@ -275,7 +275,7 @@ def add_request_count(thread_lock):
             REQUEST_MINTER_COUNT[hour_minuter] = 0
         REQUEST_MINTER_COUNT[hour_minuter] += 1
         total_request_count = 0
-        for i in range(0, REQUEST_LIMIT_DURATION):
+        for i in range(REQUEST_LIMIT_DURATION):
             if (hour_minuter - i) in REQUEST_MINTER_COUNT:
                 total_request_count += REQUEST_MINTER_COUNT[hour_minuter - i]
         if total_request_count > REQUEST_LIMIT_COUNT:
