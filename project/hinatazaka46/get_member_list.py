@@ -22,7 +22,7 @@ def get_account_from_index():
     member_info_list_selector = pq(index_response_content).find('.p-blog-face__group .p-blog-face__list')
     if member_info_list_selector.length == 0:
         raise crawler.CrawlerException("页面截取账号信息列表失败\n" + index_response_content)
-    for member_index in range(0, member_info_list_selector.length):
+    for member_index in range(member_info_list_selector.length):
         member_info_selector = member_info_list_selector.eq(member_index)
         # 获取账号id
         blog_url_path = member_info_selector.attr("href")

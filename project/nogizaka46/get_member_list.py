@@ -23,7 +23,7 @@ def get_account_from_index():
     if member_selector_list.length == 0:
         raise crawler.CrawlerException("页面截取成员类别失败\n" + index_response_content)
     account_list = {}
-    for member_index in range(0, member_selector_list.length):
+    for member_index in range(member_selector_list.length):
         member_selector = member_selector_list.eq(member_index)
         # 成员id
         member_index_url_path = member_selector.attr("href")

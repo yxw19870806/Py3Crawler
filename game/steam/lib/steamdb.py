@@ -61,7 +61,7 @@ def get_game_store_index(game_id):
         history_response_content = history_api_response.data.decode(errors="ignore")
         if not result["develop_name"]:
             history_info_selector_list = pq(history_response_content).find(".app-history i:contains('developer')")
-            for history_index in range(0, history_info_selector_list.length):
+            for history_index in range(history_info_selector_list.length):
                 history_info_selector = history_info_selector_list.eq(history_index)
                 history_type = history_info_selector.closest("li").text()
                 if history_type:
@@ -74,7 +74,7 @@ def get_game_store_index(game_id):
                             break
         if not result["publisher_name"]:
             history_info_selector_list = pq(history_response_content).find(".app-history i:contains('publisher')")
-            for history_index in range(0, history_info_selector_list.length):
+            for history_index in range(history_info_selector_list.length):
                 history_info_selector = history_info_selector_list.eq(history_index)
                 history_type = history_info_selector.closest("li").text()
                 if history_type:

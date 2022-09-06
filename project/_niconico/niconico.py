@@ -50,7 +50,7 @@ def get_account_mylist(account_id):
         else:
             raise crawler.CrawlerException(f"未知视频列表状态: {message}")
     mylist_list_selector = pq(account_mylist_response_content).find(".articleBody .outer")
-    for mylist_index in range(0, mylist_list_selector.length):
+    for mylist_index in range(mylist_list_selector.length):
         mylist_selector = mylist_list_selector.eq(mylist_index)
         mylist_url = mylist_selector.find(".section h4 a").attr("href")
         if mylist_url is None:

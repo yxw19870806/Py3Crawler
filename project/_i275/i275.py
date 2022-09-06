@@ -26,7 +26,7 @@ def get_album_index_page(album_id):
     if audio_info_selector_list.length == 0:
         raise crawler.CrawlerException("页面截取音频列表失败\n" + album_pagination_response_content)
     # 获取音频信息
-    for audio_info_index in range(0, audio_info_selector_list.length):
+    for audio_info_index in range(audio_info_selector_list.length):
         result_audio_info = {
             "audio_id": None,  # 音频id
             "audio_title": "",  # 音频标题

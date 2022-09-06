@@ -176,7 +176,7 @@ def generate_random_string(string_length: int, char_lib_type: int = 7) -> str:
     if not char_pool:
         return ""
     result = []
-    for random_count in range(0, string_length):
+    for random_count in range(string_length):
         result.append(random.choice(char_pool))
     return "".join(result)
 

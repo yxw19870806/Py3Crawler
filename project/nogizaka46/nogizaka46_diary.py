@@ -31,7 +31,7 @@ def get_one_page_blog(account_id, page_count):
     blog_info_select_list = pq(blog_pagination_response_content).find(".bl--card.js-pos")
     if blog_info_select_list.length == 0:
         raise crawler.CrawlerException("页面截取日志列表失败\n" + blog_pagination_response_content)
-    for blog_info_index in range(0, blog_info_select_list.length):
+    for blog_info_index in range(blog_info_select_list.length):
         blog_info_select = blog_info_select_list.eq(blog_info_index)
         blog_url_path = blog_info_select.attr("href")
         blog_id = tool.find_sub_string(blog_url_path, "/s/n46/diary/detail/", "?ima=")
@@ -71,7 +71,7 @@ def get_blog_page(blog_id):
         raise crawler.CrawlerException("页面截取正文失败\n" + blog_response_content)
     # 获取图片地址
     photo_list_selector = blog_html_selector.find("img")
-    for photo_index in range(0, photo_list_selector.length):
+    for photo_index in range(photo_list_selector.length):
         result_photo_info = {
             "real_photo_url": None,
             "photo_url": None,

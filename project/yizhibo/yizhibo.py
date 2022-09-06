@@ -30,7 +30,7 @@ def get_photo_index_page(account_id):
     # 获取全部图片地址
     if pq(photo_index_response_content).find(".index_all_list p").html() != "还没有照片哦":
         video_list_selector = pq(photo_index_response_content).find("img.index_img_main")
-        for video_index in range(0, video_list_selector.length):
+        for video_index in range(video_list_selector.length):
             photo_url = video_list_selector.eq(video_index).attr("src")
             result["photo_url_list"].append(photo_url.split("@")[0])
         if len(result["photo_url_list"]) == 0:
@@ -76,7 +76,7 @@ def get_video_index_page(account_id):
         raise crawler.CrawlerException("账号不存在")
     if pq(video_pagination_response_content).find(".index_all_list p").html() != "还没有直播哦":
         video_list_selector = pq(video_pagination_response_content).find("div.scid")
-        for video_index in range(0, video_list_selector.length):
+        for video_index in range(video_list_selector.length):
             result["video_id_list"].append(video_list_selector.eq(video_index).html())
         if len(result["video_id_list"]) == 0:
             raise crawler.CrawlerException("页面匹配视频id失败\n" + video_pagination_response_content)

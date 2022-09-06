@@ -35,7 +35,7 @@ def get_one_page_album(account_name, page_count):
         raise crawler.CrawlerException(crawler.request_failre(album_pagination_response.status))
     album_pagination_response_content = album_pagination_response.data.decode(errors="ignore")
     album_list_selector = pq(album_pagination_response_content).find(".work-list-box .card-box")
-    for album_index in range(0, album_list_selector.length):
+    for album_index in range(album_list_selector.length):
         result_album_info = {
             "album_id": None,  # 作品id
             "album_title": None,  # 作品标题
@@ -88,7 +88,7 @@ def get_album_page(album_id):
     photo_list_selector = pq(album_response_content).find(".work-show-box .reveal-work-wrap img")
     if photo_list_selector.length == 0:
         raise crawler.CrawlerException("页面截取图片列表失败\n" + album_response_content)
-    for photo_index in range(0, photo_list_selector.length):
+    for photo_index in range(photo_list_selector.length):
         result["photo_url_list"].append(photo_list_selector.eq(photo_index).attr("src"))
     return result
 

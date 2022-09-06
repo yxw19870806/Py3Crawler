@@ -560,7 +560,7 @@ class Download:
         self.check_auto_multipart_download()
 
         # 下载
-        for retry_count in range(0, NET_CONFIG["DOWNLOAD_RETRY_COUNT"]):
+        for retry_count in range(NET_CONFIG["DOWNLOAD_RETRY_COUNT"]):
             if EXIT_FLAG:
                 self.code = self.CODE_PROCESS_EXIT
                 break
@@ -723,7 +723,7 @@ class Download:
 
                 # 创建一个副本
                 with os.fdopen(os.dup(file_no), "rb+", -1) as fd_handle:
-                    for multipart_retry_count in range(0, NET_CONFIG["DOWNLOAD_RETRY_COUNT"]):
+                    for multipart_retry_count in range(NET_CONFIG["DOWNLOAD_RETRY_COUNT"]):
                         try:
                             multipart_response = request(self.file_url, method="GET", header_list=header_list, connection_timeout=NET_CONFIG["DOWNLOAD_CONNECTION_TIMEOUT"], read_timeout=NET_CONFIG["DOWNLOAD_READ_TIMEOUT"], **multipart_kwargs)
                         except SystemExit:

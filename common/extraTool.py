@@ -133,7 +133,7 @@ def download(file_url, file_path, recheck_file_extension=False, head_check=False
     is_create_file = False
     is_multi_thread = False
     return_code = {"status": 0, "code": -3}
-    for retry_count in range(0, net.NET_CONFIG["DOWNLOAD_RETRY_COUNT"]):
+    for retry_count in range(net.NET_CONFIG["DOWNLOAD_RETRY_COUNT"]):
         if head_check and retry_count == 0:
             request_method = "HEAD"
         else:
@@ -263,7 +263,7 @@ class MultiThreadDownload(threading.Thread):
     def run(self):
         header_list = {"Range": f"bytes={self.start_pos}-{self.end_pos}"}
         range_size = self.end_pos - self.start_pos + 1
-        for retry_count in range(0, NET_CONFIG["DOWNLOAD_RETRY_COUNT"]):
+        for retry_count in range(NET_CONFIG["DOWNLOAD_RETRY_COUNT"]):
             response = net.request(self.file_url, method="GET", header_list=header_list)
             if response.status == 206:
                 # 下载的文件和请求的文件大小不一致

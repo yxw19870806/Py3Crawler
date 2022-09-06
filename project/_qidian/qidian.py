@@ -26,7 +26,7 @@ def get_book_index(book_id):
     chapter_info_list_selector = pq(index_response_content).find(".catalog-content-wrap .cf li")
     if chapter_info_list_selector.length == 0:
         raise crawler.CrawlerException("页面截取章节列表失败\n" + index_response_content)
-    for chapter_index in range(0, chapter_info_list_selector.length):
+    for chapter_index in range(chapter_info_list_selector.length):
         result_chapter_info = {
             "chapter_url": None,  # 章节地址
             "chapter_id": None,  # 章节id
