@@ -10,7 +10,7 @@ import os
 import tkinter
 from tkinter import filedialog
 from common import *
-from project._kuwo import kuwo
+from suspend.kuwo import kuwo
 
 
 class KuWoPlaylist(kuwo.KuWo):
