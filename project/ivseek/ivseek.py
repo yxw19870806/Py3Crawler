@@ -9,10 +9,9 @@ email: hikaru870806@hotmail.com
 import os
 import re
 import time
-import traceback
 from pyquery import PyQuery as pq
 from common import *
-from project._niconico import niconico
+from suspend.niconico import niconico
 
 DONE_SING = "~"
 
