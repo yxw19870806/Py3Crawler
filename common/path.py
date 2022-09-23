@@ -67,7 +67,7 @@ def delete_dir_or_file(dir_path: str) -> bool:
         shutil.rmtree(dir_path, True)
         return True
     else:
-        for retry_count in range(0, 5):
+        for retry_count in range(5):
             try:
                 os.remove(dir_path)
             except PermissionError as e:

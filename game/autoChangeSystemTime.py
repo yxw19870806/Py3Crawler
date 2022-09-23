@@ -18,7 +18,7 @@ def set_system_time(year, month, day, hour, minute, second):
 if __name__ == "__main__":
     now = win32api.GetSystemTime()
     process_time = 0
-    for i in range(0, 1):
+    for i in range(1):
         set_system_time(2005, 1, 1, 0, 0, 0)
         time.sleep(0.2)
         set_system_time(2035, 1, 1, 0, 0, 0)

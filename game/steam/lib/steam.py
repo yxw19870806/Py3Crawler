@@ -37,7 +37,7 @@ def get_discount_game_list():
         discount_game_pagination_response_content = discount_game_pagination_response.data.decode(errors="ignore")
         search_result_selector = pq(discount_game_pagination_response_content).find("#search_result_container")
         game_list_selector = search_result_selector.find("#search_resultsRows a")
-        for game_index in range(0, game_list_selector.length):
+        for game_index in range(game_list_selector.length):
             game_selector = game_list_selector.eq(game_index)
             # game app id
             app_id = game_selector.attr("data-ds-appid")
@@ -143,7 +143,7 @@ def get_game_store_index(game_id):
     # 所有DLC
     dlc_list_selection = pq(game_index_response_content).find(".game_area_dlc_section a.game_area_dlc_row")
     if dlc_list_selection.length > 0:
-        for index in range(0, dlc_list_selection.length):
+        for index in range(dlc_list_selection.length):
             result["dlc_list"].append(dlc_list_selection.eq(index).attr("data-ds-appid"))
     # 是否已拥有
     result["owned"] = pq(game_index_response_content).find(".already_in_library").length == 1
@@ -169,7 +169,7 @@ def get_self_uncompleted_account_badges(account_id):
         badges_pagination_response_content = badges_pagination_response.data.decode(errors="ignore")
         # 徽章div
         badges_selector = pq(badges_pagination_response_content).find(".maincontent .badges_sheet .badge_row")
-        for index in range(0, badges_selector.length):
+        for index in range(badges_selector.length):
             badge_selector = badges_selector.eq(index)
             # 闪亮徽章，跳过
             if badge_selector.find(".badge_title").html().find("- 闪亮徽章") >= 0:
@@ -241,7 +241,7 @@ def get_self_account_badge_card(badge_detail_url):
     wanted_count = MAX_BADGE_LEVEL - badge_level
     # 集换式卡牌div
     cards_selector = page_selector.find(".maincontent .badge_detail_tasks .badge_card_set_card")
-    for card_index in range(0, cards_selector.length):
+    for card_index in range(cards_selector.length):
         card_selector = cards_selector.eq(card_index)
         owned_count_selector = card_selector.find(".badge_card_set_text .badge_card_set_text_qty")
         card_name = card_selector.find(".badge_card_set_text").eq(0).remove(".badge_card_set_text_qty").text()
@@ -360,7 +360,7 @@ def get_account_badges(account_id):
             # 如果是隐私账号，会302到主页的，这里只判断页面文字就不判断状态了
             if pq(badges_pagination_response_content).find("div.profile_private_info").length == 1:
                 raise crawler.CrawlerException("账号隐私设置中未公开游戏详情")
-        for badge_index in range(0, badge_list_selector.length):
+        for badge_index in range(badge_list_selector.length):
             badge_selector = badge_list_selector.eq(badge_index)
             # 获取game id
             badge_detail_url = badge_selector.find('a.badge_row_overlay').attr("href")

@@ -412,7 +412,7 @@ class Download(crawler.DownloadThread):
             self.step(f"开始下载推特{media_info['blog_id']}的第{photo_index}张图片 {photo_url}")
 
             photo_file_path = os.path.join(self.main_thread.photo_download_path, self.index_key, f"%019d_%02d.{net.get_file_extension(photo_url)}" % (media_info["blog_id"], photo_index))
-            for retry_count in range(0, 5):
+            for retry_count in range(5):
                 download_return = net.Download(photo_url, photo_file_path)
                 if download_return.status == net.Download.DOWNLOAD_SUCCEED:
                     self.temp_path_list.append(photo_file_path)  # 设置临时目录

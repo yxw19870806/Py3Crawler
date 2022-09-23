@@ -44,7 +44,7 @@ def get_one_page_favorite(page_count):
     if children_selector.length == 1:
         raise crawler.CrawlerException("没有收藏了")
     # 解析日志id和图片地址
-    for i in range(0, children_selector.length - 1):
+    for i in range(children_selector.length - 1):
         feed_selector = children_selector.eq(i)
         # 已被删除的微博
         if not feed_selector.has_class("WB_feed_type"):

@@ -241,7 +241,7 @@ class Download(crawler.DownloadThread):
             if file_extension == 'image':
                 file_extension = "jpg"
             file_path = os.path.join(album_path, f"%03d.{file_extension}" % photo_index)
-            for retry_count in range(0, 10):
+            for retry_count in range(10):
                 download_return = net.Download(photo_url, file_path)
                 if download_return.status == net.Download.DOWNLOAD_SUCCEED:
                     self.total_photo_count += 1  # 计数累加

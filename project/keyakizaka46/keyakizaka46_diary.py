@@ -37,7 +37,7 @@ def get_one_page_blog(account_id, page_count):
     blog_list_selector = pq(blog_pagination_response_content).find(".box-main article")
     if blog_list_selector.length == 0:
         raise crawler.CrawlerException("页面截取日志列表失败\n" + blog_pagination_response_content)
-    for blog_index in range(0, blog_list_selector.length):
+    for blog_index in range(blog_list_selector.length):
         result_blog_info = {
             "blog_id": None,  # 日志id
             "photo_url_list": [],  # 全部图片地址
@@ -53,7 +53,7 @@ def get_one_page_blog(account_id, page_count):
         result_blog_info["blog_id"] = int(blog_id)
         # 获取图片地址
         photo_list_selector = pq(blog_selector).find("img")
-        for photo_index in range(0, photo_list_selector.length):
+        for photo_index in range(photo_list_selector.length):
             photo_selector = photo_list_selector.eq(photo_index)
             # 跳过表情
             if photo_selector.has_class("emoji"):
