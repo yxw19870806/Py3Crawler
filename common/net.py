@@ -40,7 +40,7 @@ def convert_to_bytes(value, default_value: int) -> int:
     :Args:
     - value - 待转换的字符串，例如 1 KB，2 MB，3 GB等
     """
-    value = value.strip()
+    value = str(value).strip()
     size = default_value
     if tool.is_integer(value):
         size = int(value)
@@ -71,8 +71,8 @@ DEFAULT_NET_CONFIG = {
     "DOWNLOAD_CONNECTION_TIMEOUT": 10,  # 下载文件连接超时的秒数
     "DOWNLOAD_READ_TIMEOUT": 60,  # 下载文件读取超时的秒数
     "DOWNLOAD_RETRY_COUNT": 10,  # 下载文件自动重试次数
-    "DOWNLOAD_MULTIPART_MIN_SIZE": 50 * SIZE_MB,  # 下载文件超过多少字节后开始使用分段下载
-    "DOWNLOAD_MULTIPART_BLOCK_SIZE": 10 * SIZE_MB,  # 分段下载中单次获取的字节数
+    "DOWNLOAD_MULTIPART_MIN_SIZE": "10 MB",  # 下载文件超过多少字节后开始使用分段下载
+    "DOWNLOAD_MULTIPART_BLOCK_SIZE": "1 MB",  # 分段下载中单次获取的字节数
     "TOO_MANY_REQUESTS_WAIT_TIME": 60,  # http code 429(Too Many requests)时的等待时间
     "SERVICE_INTERNAL_ERROR_WAIT_TIME": 30,  # http code 50X（服务器内部错误）时的等待时间
     "HTTP_REQUEST_RETRY_WAIT_TIME": 5,  # 请求失败后重新请求的间隔时间
