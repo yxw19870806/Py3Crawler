@@ -32,7 +32,7 @@ def main():
                 try:
                     steamdb_info = steamdb.get_game_store_index(game_info["game_id"])
                 except crawler.CrawlerException as e:
-                    output.print_msg(e.http_error("游戏%s" % game_info['game_id']))
+                    output.print_msg(e.http_error("游戏%s" % game_info["game_id"]))
                 else:
                     deleted_app_list.append(str(game_info["game_id"]))
                     output.print_msg("\t".join(list(map(str, [game_info["game_id"], game_info["game_name"], steamdb_info["develop_name"]]))), False)

@@ -40,12 +40,12 @@ if __name__ == "__main__":
 
     for equip_info in equip_info_list:
         result = [
-            equip_info['name'],
-            equip_info['level']
+            equip_info["name"],
+            equip_info["level"]
         ]
         for attribute in attribute_list:
-            if attribute in equip_info['attribute']:
-                result.append(equip_info['attribute'][attribute])
+            if attribute in equip_info["attribute"]:
+                result.append(equip_info["attribute"][attribute])
             else:
                 result.append("")
         print("\t".join(result))
