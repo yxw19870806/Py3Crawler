@@ -157,14 +157,14 @@ class Crawler(object):
         if not sys_not_check_save_data:
             if not os.path.exists(self.save_data_path):
                 # 存档文件不存在
-                output.print_msg(f"存档文件{self.save_data_path}不存在！")
+                output.print_msg("存档文件%s不存在！" % self.save_data_path)
                 tool.process_exit()
                 return
             temp_file_name = tool.get_time("%m-%d_%H_%M_") + os.path.basename(self.save_data_path)
             self.temp_save_data_path = os.path.join(os.path.dirname(self.save_data_path), temp_file_name)
             if os.path.exists(self.temp_save_data_path):
                 # 临时文件已存在
-                output.print_msg(f"存档临时文件{self.temp_save_data_path}已存在！")
+                output.print_msg("存档临时文件%s已存在！" % self.temp_save_data_path)
                 tool.process_exit()
                 return
 
@@ -548,7 +548,7 @@ class CrawlerException(SystemExit):
         return self.exception_message
 
     def http_error(self, target: str):
-        return f"{target}解析失败，原因：{self.message}"
+        return "%s解析失败，原因：%s" % (target, self.message)
 
 
 def read_config(config_path) -> dict:
@@ -642,7 +642,7 @@ def read_save_data(save_data_path: str, key_index: int = 0, default_value_list: 
         single_save_list = single_save_data.split("\t")
 
         if check_duplicate_index and single_save_list[key_index] in result_list:
-            output.print_msg(f"存档中存在重复行{single_save_list[key_index]}")
+            output.print_msg("存档中存在重复行%s" % single_save_list[key_index])
             tool.process_exit()
 
         # 去除前后空格
@@ -701,16 +701,16 @@ def get_json_value(json_data, *args, **kwargs):
     for arg in args:
         if isinstance(arg, str):
             if not isinstance(json_data, dict):
-                exception_string = f"'{last_arg}'字段不是字典\n{original_data}"
+                exception_string = "'%s'字段不是字典\n%s" % (last_arg, original_data)
             elif arg not in json_data:
-                exception_string = f"'{arg}'字段不存在\n{original_data}"
+                exception_string = "'%s'字段不存在\n%s" % (arg, original_data)
         elif isinstance(arg, int):
             if not isinstance(json_data, list):
-                exception_string = f"'{last_arg}'字段不是列表\n{original_data}"
+                exception_string = "'%s'字段不是列表\n%s" % (last_arg, original_data)
             elif len(json_data) <= arg:
-                exception_string = f"'{last_arg}'字段长度不正确\n{original_data}"
+                exception_string = "'%s'字段长度不正确\n%s" % (last_arg, original_data)
         else:
-            exception_string = f"arg: {arg}类型不正确"
+            exception_string = "arg: %s类型不正确" % arg
         if exception_string:
             break
         last_arg = arg
@@ -735,9 +735,9 @@ def get_json_value(json_data, *args, **kwargs):
         elif kwargs["type_check"] in [dict, list, bool]:  # 标准数据类型
             type_error = not isinstance(json_data, kwargs["type_check"])
         else:
-            exception_string = f"type_check: {kwargs['type_check']}类型不正确"
+            exception_string = "type_check: %s类型不正确" % kwargs['type_check']
         if type_error:
-            exception_string = f"'{last_arg}'字段类型不正确\n{original_data}"
+            exception_string = "'%s'字段类型不正确\n%s" % (last_arg, original_data)
     # 检测结果数值
     if not exception_string and "value_check" in kwargs:
         value_error = False
@@ -748,7 +748,7 @@ def get_json_value(json_data, *args, **kwargs):
             if not (json_data == kwargs["value_check"]):
                 value_error = True
         if value_error:
-            exception_string = f"'{last_arg}'字段取值不正确\n{original_data}"
+            exception_string = "'%s'字段取值不正确\n%s" % (last_arg, original_data)
     if exception_string:
         if "default_value" in kwargs:
             return kwargs["default_value"]

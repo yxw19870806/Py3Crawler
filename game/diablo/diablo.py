@@ -54,7 +54,7 @@ for item_path, item_position in list(item_list.items()):
         if item_position == "傳奇宝石":
             item_index_url = base_host + "/tw/base/legendarygem/"
         else:
-            item_index_url = base_host + f"/tw/item/{item_path}/legendary.html#page={page_count}"
+            item_index_url = base_host + "/tw/item/%s/legendary.html#page=%s" % (item_path, page_count)
         item_index_response = net.request(item_index_url, method="GET")
         if item_index_response.status == net.HTTP_RETURN_CODE_SUCCEED:
             item_index_page = tool.find_sub_string(item_index_response.data.decode("GBK", errors="ignore"), '<div class="cizhui-c-m', '<div class="data-options', tool.SUB_STRING_MODE_ONLY_START)
@@ -79,7 +79,7 @@ for item_path, item_position in list(item_list.items()):
                         special_attribute = special_attribute.replace("'", "’")
                     item_introduction = tool.find_sub_string(item_detail, '<div class="item-flavor d3-color-orange serif">', "</div>").strip()
                     item_introduction = item_introduction.replace("'", "’")
-                    output.print_msg(f"{item_position} {item_name} {special_attribute} {item_introduction}")
+                    output.print_msg("%s %s %s %s" % (item_position, item_name, special_attribute, item_introduction))
                     item_attribute_list[item_path].append([item_name, special_attribute, item_introduction])
                 else:
                     output.print_msg("error get" + item_url)
@@ -98,6 +98,6 @@ for item_path, item_position in list(item_list.items()):
 
 path.create_dir("data")
 for item_path in item_attribute_list:
-    with open(f"data\{item_list[item_path]}.txt", "w", encoding="UTF-8") as file_handle:
+    with open("data\%s.txt" % item_list[item_path], "w", encoding="UTF-8") as file_handle:
         for item in item_attribute_list[item_path]:
             file_handle.write("\t".join(item) + "\n")

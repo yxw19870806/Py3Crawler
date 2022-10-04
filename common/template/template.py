@@ -108,7 +108,7 @@ class Download(crawler.DownloadThread):
                 self.error(e.http_error(f"第{page_count}页日志"))
                 raise
 
-            self.trace(f"第{page_count}页解析的全部日志：{blog_pagination_response['blog_id_list']}")
+            self.trace(f"第{page_count}页解析的全部日志：%s" % blog_pagination_response['blog_id_list'])
 
             # 寻找这一页符合条件的媒体
             for blog_id in blog_pagination_response["blog_id_list"]:
@@ -123,14 +123,14 @@ class Download(crawler.DownloadThread):
 
     # 解析单个日志
     def crawl_blog(self, blog_id):
-        self.step(f"开始解析日志{blog_id}")
+        self.step("开始解析日志%s" % blog_id)
 
         # todo 日志解析规则
         # 获取指定日志
         try:
             blog_response = get_blog_page(self.index_key, blog_id)
         except crawler.CrawlerException as e:
-            self.error(e.http_error(f"日志{blog_id}"))
+            self.error(e.http_error("日志%s" % blog_id))
             raise
 
         # todo 图片下载逻辑
@@ -139,7 +139,7 @@ class Download(crawler.DownloadThread):
         if self.main_thread.is_download_photo:
             for photo_url in blog_response["photo_url_list"]:
                 self.main_thread_check()  # 检测主线程运行状态
-                self.step(f"开始下载第{photo_index}张图片 {photo_url}")
+                self.step(f"开始下载第{photo_index}张图片 %s" % photo_url)
 
                 file_extension = net.get_file_extension(photo_url)
                 photo_file_path = os.path.join(self.main_thread.photo_download_path, self.index_key, f"%04d.{file_extension}" % photo_index)
@@ -150,7 +150,7 @@ class Download(crawler.DownloadThread):
                     self.step(f"第{photo_index}张图片下载成功")
                     photo_index += 1
                 else:
-                    self.error(f"第{photo_index}张图片 {photo_url} 下载失败，原因：{crawler.download_failre(download_return.code)}")
+                    self.error(f"第{photo_index}张图片 %s 下载失败，原因：%s" % (photo_url, crawler.download_failre(download_return.code)))
 
         # todo 视频下载逻辑
         # 视频下载
@@ -158,7 +158,7 @@ class Download(crawler.DownloadThread):
         if self.main_thread.is_download_video:
             for video_url in blog_response["video_url_list"]:
                 self.main_thread_check()  # 检测主线程运行状态
-                self.step(f"开始下载第{video_index}个视频 {video_url}")
+                self.step(f"开始下载第{video_index}个视频 %s" % video_url)
 
                 file_extension = net.get_file_extension(video_url)
                 video_file_path = os.path.join(self.main_thread.video_download_path, self.index_key, f"%04d.{file_extension}" % video_index)
@@ -169,7 +169,7 @@ class Download(crawler.DownloadThread):
                     self.step(f"第{video_index}个视频下载成功")
                     video_index += 1
                 else:
-                    self.error(f"第{video_index}个视频 {video_url} 下载失败，原因：{crawler.download_failre(download_return.code)}")
+                    self.error(f"第{video_index}个视频 %s 下载失败，原因：%s" % (video_url, crawler.download_failre(download_return.code)))
 
         # todo 音频下载逻辑
         # 音频下载
@@ -177,7 +177,7 @@ class Download(crawler.DownloadThread):
         if self.main_thread.is_download_audio:
             for audio_url in blog_response["audio_url_list"]:
                 self.main_thread_check()  # 检测主线程运行状态
-                self.step(f"开始下载第{audio_index}个音频 {audio_url}")
+                self.step(f"开始下载第{audio_index}个音频 %s" % audio_url)
 
                 file_extension = net.get_file_extension(audio_url)
                 audio_file_path = os.path.join(self.main_thread.audio_download_path, self.index_key, f"%04d.{file_extension}" % audio_index)
@@ -188,7 +188,7 @@ class Download(crawler.DownloadThread):
                     self.step(f"第{audio_index}个音频下载成功")
                     audio_index += 1
                 else:
-                    self.error(f"第{audio_index}个音频 {audio_url} 下载失败，原因：{crawler.download_failre(download_return.code)}")
+                    self.error(f"第{audio_index}个音频 %s 下载失败，原因：%s" % (audio_url, crawler.download_failre(download_return.code)))
 
         # 日志内图片、视频和音频全部下载完毕
         self.temp_path_list = []  # 临时目录设置清除

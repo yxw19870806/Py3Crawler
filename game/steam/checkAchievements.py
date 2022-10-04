@@ -13,7 +13,7 @@ def main():
     steam_class = steam.Steam(need_login=False)
     owned_game_list = steam.get_account_owned_app_list(steam_class.account_id)
     for game_id in owned_game_list:
-        output.print_msg(f"开始解析游戏 {game_id}")
+        output.print_msg("开始解析游戏 %s" % game_id)
         astats.get_game_invalid_achievements(game_id)
 
 

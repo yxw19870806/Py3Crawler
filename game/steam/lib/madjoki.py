@@ -18,7 +18,7 @@ def get_banned_game_list():
     is_over = False
     page_count = 1
     while not is_over:
-        output.print_msg(f"开始解析第{page_count}页删除游戏")
+        output.print_msg("开始解析第%s页删除游戏" % page_count)
         api_url = "https://ren.madjoki.com/SteamApps/Query"
         query_data = {
             "page": page_count,
@@ -29,7 +29,7 @@ def get_banned_game_list():
         }
         api_response = net.request(api_url, method="GET", fields=query_data, is_random_ip=False, json_decode=True)
         if api_response.status != net.HTTP_RETURN_CODE_SUCCEED:
-            raise crawler.CrawlerException(f"第{page_count}页，{crawler.request_failre(api_response.status)}")
+            raise crawler.CrawlerException("第%s页，%s" % (page_count, crawler.request_failre(api_response.status)))
         # 获取游戏名字
         for game_info in crawler.get_json_value(api_response.json_data, "Items", type_check=list):
             result_game_info = {
