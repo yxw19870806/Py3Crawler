@@ -303,7 +303,7 @@ class Download(crawler.DownloadThread):
 
         self.step("视频%s 《%s》 %s 开始下载" % (video_info["video_id"], video_info["video_title"], video_info_response["video_url"]))
 
-        video_file_path = os.path.join(self.main_thread.video_download_path, self.display_name, "%08d - %s.mp4" % (video_info["video_id"], path.filter_text(video_info['video_title'])))
+        video_file_path = os.path.join(self.main_thread.video_download_path, self.display_name, "%08d - %s.mp4" % (video_info["video_id"], path.filter_text(video_info["video_title"])))
         cookies_list = COOKIE_INFO
         if video_info_response["extra_cookie"]:
             cookies_list.update(video_info_response["extra_cookie"])

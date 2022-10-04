@@ -83,7 +83,7 @@ class KuWoPlaylist(kuwo.KuWo):
 
             # 获取下载地址
             try:
-                audio_info_response = kuwo.get_audio_info_page(audio_info['audio_id'])
+                audio_info_response = kuwo.get_audio_info_page(audio_info["audio_id"])
             except crawler.CrawlerException as e:
                 log.error(e.http_error("歌曲%s《%s》" % (audio_info["audio_id"], audio_info["audio_title"])))
                 continue
