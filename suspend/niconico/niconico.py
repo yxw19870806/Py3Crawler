@@ -29,7 +29,7 @@ def check_login():
 
 # 获取指定账号下的所有视频列表
 def get_account_mylist(account_id):
-    account_mylist_url = f"https://www.nicovideo.jp/user/{account_id}/mylist"
+    account_mylist_url = "https://www.nicovideo.jp/user/%s/mylist" % account_id
     account_mylist_response = net.request(account_mylist_url, method="GET", is_auto_retry=False)
     result = {
         "list_id_list": [],  # 全部视频列表id
@@ -48,7 +48,7 @@ def get_account_mylist(account_id):
         elif message == "公開マイリストはありません":
             return result
         else:
-            raise crawler.CrawlerException(f"未知视频列表状态: {message}")
+            raise crawler.CrawlerException("未知视频列表状态: %s" % message)
     mylist_list_selector = pq(account_mylist_response_content).find(".articleBody .outer")
     for mylist_index in range(mylist_list_selector.length):
         mylist_selector = mylist_list_selector.eq(mylist_index)
@@ -64,7 +64,7 @@ def get_account_mylist(account_id):
 
 # 获取指定账号下的一页投稿视频
 def get_one_page_account_video(account_id, page_count):
-    video_index_url = f"https://www.nicovideo.jp/user/{account_id}/video"
+    video_index_url = "https://www.nicovideo.jp/user/%s/video" % account_id
     query_data = {"page": page_count}
     video_index_response = net.request(video_index_url, method="GET", fields=query_data)
     result = {
@@ -83,7 +83,7 @@ def get_one_page_account_video(account_id, page_count):
             result["is_private"] = True
             return result
         else:
-            raise crawler.CrawlerException(f"未知视频列表状态: {message}")
+            raise crawler.CrawlerException("未知视频列表状态: %s" % message)
     video_list_selector = pq(video_index_response_content).find(".articleBody .outer")
     # 第一个是排序选择框，跳过
     for video_index in range(1, video_list_selector.length):
@@ -116,7 +116,7 @@ def get_one_page_account_video(account_id, page_count):
 # list_id => 15614906
 def get_one_page_mylist_video(list_id, page_count):
     # http://www.nicovideo.jp/mylist/15614906
-    api_url = f"https://nvapi.nicovideo.jp/v2/mylists/{list_id}"
+    api_url = "https://nvapi.nicovideo.jp/v2/mylists/%s" % list_id
     post_data = {
         "pageSize": EACH_PAGE_VIDEO_COUNT,
         "page": page_count,
@@ -147,7 +147,7 @@ def get_one_page_mylist_video(list_id, page_count):
         # 获取视频id
         video_id = crawler.get_json_value(video_info, "video", "id", type_check=str).replace("sm", "")
         if not tool.is_integer(video_id):
-            raise crawler.CrawlerException(f"视频信息{video_info}中'watchId'字段类型不正确")
+            raise crawler.CrawlerException("视频信息%s中'watchId'字段类型不正确" % video_info)
         result_video_info["video_id"] = int(video_id)
         # 获取视频辩题
         result_video_info["video_title"] = crawler.get_json_value(video_info, "video", "title", type_check=str)
@@ -157,7 +157,7 @@ def get_one_page_mylist_video(list_id, page_count):
 
 # 根据视频id，获取视频的下载地址
 def get_video_info(video_id):
-    video_play_url = f"http://www.nicovideo.jp/watch/sm{video_id}"
+    video_play_url = "http://www.nicovideo.jp/watch/sm%s" % video_id
     video_play_response = net.request(video_play_url, method="GET", cookies_list=COOKIE_INFO)
     result = {
         "extra_cookie": {},  # 额外的cookie
@@ -167,7 +167,7 @@ def get_video_info(video_id):
         "video_url": None,  # 视频地址
     }
     if video_play_response.status == 403:
-        log.step(f"视频{video_id}访问异常，重试")
+        log.step("视频%s访问异常，重试" % video_id)
         time.sleep(30)
         return get_video_info(video_id)
     elif video_play_response.status == 404:
@@ -240,7 +240,7 @@ class Download(crawler.DownloadThread):
     def _run(self):
         # 获取所有可下载视频
         video_info_list = self.get_crawl_list()
-        self.step(f"需要下载的全部视频解析完毕，共{len(video_info_list)}个")
+        self.step("需要下载的全部视频解析完毕，共%s个" % len(video_info_list))
 
         # 从最早的视频开始下载
         while len(video_info_list) > 0:
@@ -255,17 +255,17 @@ class Download(crawler.DownloadThread):
         # 获取全部还未下载过需要解析的视频
         while not is_over:
             self.main_thread_check()  # 检测主线程运行状态
-            self.step(f"开始解析第{page_count}页视频")
+            self.step("开始解析第%s页视频" % page_count)
 
             # 获取一页视频
             try:
                 mylist_pagination_response = get_one_page_mylist_video(self.index_key, page_count)
             except crawler.CrawlerException as e:
-                self.error(e.http_error(f"第{page_count}页视频"))
+                self.error(e.http_error("第%s页视频" % page_count))
                 raise
 
-            self.trace(f"第{page_count}页解析的全部视频：{mylist_pagination_response['video_info_list']}")
-            self.step(f"第{page_count}页解析获取{len(mylist_pagination_response['video_info_list'])}个视频")
+            self.trace("第%s页解析的全部视频：%s" % (page_count, mylist_pagination_response["video_info_list"]))
+            self.step("第%s页解析获取%s个视频" % (page_count, len(mylist_pagination_response["video_info_list"])))
 
             # 寻找这一页符合条件的视频
             for video_info in mylist_pagination_response["video_info_list"]:
@@ -285,34 +285,34 @@ class Download(crawler.DownloadThread):
 
     # 解析单个视频
     def crawl_video(self, video_info):
-        self.step(f"开始解析视频 {video_info['video_id']} 《{video_info['video_title']}》")
+        self.step("开始解析视频 %s 《%s》" % (video_info["video_id"], video_info["video_title"]))
 
         try:
             video_info_response = get_video_info(video_info["video_id"])
         except crawler.CrawlerException as e:
-            self.error(e.http_error(f"视频{video_info['video_id']} 《{video_info['video_title']}》"))
+            self.error(e.http_error("视频%s 《%s》" % (video_info["video_id"], video_info["video_title"])))
             raise
 
         if video_info_response["is_delete"]:
-            self.error(f"视频{video_info['video_id']} 《{video_info['video_title']}》已删除，跳过")
+            self.error("视频%s 《%s》已删除，跳过" % (video_info["video_id"], video_info["video_title"]))
             return
 
         if video_info_response["is_private"]:
-            self.error(f"视频{video_info['video_id']} 《{video_info['video_title']}》未公开，跳过")
+            self.error("视频%s 《%s》未公开，跳过" % (video_info["video_id"], video_info["video_title"]))
             return
 
-        self.step(f"视频{video_info['video_id']} 《{video_info['video_title']}》 {video_info_response['video_url']} 开始下载")
+        self.step("视频%s 《%s》 %s 开始下载" % (video_info["video_id"], video_info["video_title"], video_info_response["video_url"]))
 
-        video_file_path = os.path.join(self.main_thread.video_download_path, self.display_name, f"%08d - {path.filter_text(video_info['video_title'])}.mp4" % video_info["video_id"])
+        video_file_path = os.path.join(self.main_thread.video_download_path, self.display_name, "%08d - %s.mp4" % (video_info["video_id"], path.filter_text(video_info['video_title'])))
         cookies_list = COOKIE_INFO
         if video_info_response["extra_cookie"]:
             cookies_list.update(video_info_response["extra_cookie"])
         download_return = net.Download(video_info_response["video_url"], video_file_path, cookies_list=cookies_list)
         if download_return.status == net.Download.DOWNLOAD_SUCCEED:
             self.total_video_count += 1  # 计数累加
-            self.step(f"视频{video_info['video_id']} 《{video_info['video_title']}》下载成功")
+            self.step("视频%s 《%s》下载成功" % (video_info["video_id"], video_info["video_title"]))
         else:
-            self.error(f"视频{video_info['video_id']} 《{video_info['video_title']}》 {video_info_response['video_url']} 下载失败，原因：{crawler.download_failre(download_return.code)}")
+            self.error("视频%s 《%s》 %s 下载失败，原因：%s" % (video_info["video_id"], video_info["video_title"], video_info_response["video_url"], crawler.download_failre(download_return.code)))
             self.check_download_failure_exit()
 
         # 视频下载完毕
