@@ -57,9 +57,9 @@ def convert_to_bytes(value, default_value: int) -> int:
             elif unit == "GB":
                 size = int(search_result[0][0]) * (2 ** 30)
             else:
-                output.print_msg(f"无效的字节单位'{unit}'，只支持B、KB、MB、GB")
+                output.print_msg("无效的字节单位'%s'，只支持B、KB、MB、GB" % unit)
         else:
-            output.print_msg(f"无效的字节数设置'{value}'")
+            output.print_msg("无效的字节数设置'%s'" % value)
     return size
 
 
@@ -454,7 +454,7 @@ def download_from_list(file_url_list, file_path, replace_if_exist=False, **kwarg
     is_succeed = False
     for file_url in file_url_list:
         # 临时文件路径
-        part_file_path = f"{file_path}.part{index}"
+        part_file_path = f"%s.part{index}" % file_path
         if os.path.exists(os.path.realpath(part_file_path)):
             break
         part_file_path_list.append(part_file_path)
@@ -547,7 +547,7 @@ class Download:
 
         # 同名文件已经存在，直接返回
         if not self.replace_if_exist and os.path.exists(self.file_path) and os.path.getsize(self.file_path) > 0:
-            output.print_msg(f"文件{self.file_path}（{self.file_url}）已存在，跳过")
+            output.print_msg("文件%s（%s）已存在，跳过" % (self.file_path, self.file_url))
             self.status = self.DOWNLOAD_SUCCEED
             return
 
@@ -588,7 +588,7 @@ class Download:
                 return
             else:
                 self.code = self.CODE_FILE_SIZE_INVALID
-                output.print_msg(f"本地文件{self.file_path}：{self.content_length}和网络文件{self.file_url}：{file_size}不一致")
+                output.print_msg(f"本地文件%s：{self.content_length}和网络文件%s：{file_size}不一致" % (self.file_path, self.file_url))
                 time.sleep(NET_CONFIG["HTTP_REQUEST_RETRY_WAIT_TIME"])
 
         # 删除可能出现的临时文件
@@ -731,7 +731,7 @@ class Download:
                         if multipart_response.status == 206:
                             # 下载的文件和请求的文件大小不一致
                             if len(multipart_response.data) != (end_pos - start_pos + 1):
-                                output.print_msg(f"网络文件{self.file_url}：range {start_pos} - {end_pos}实际下载大小 {len(multipart_response.data)} 不一致")
+                                output.print_msg(f"网络文件%s：range {start_pos} - {end_pos}实际下载大小 {len(multipart_response.data)} 不一致" % (self.file_url))
                                 time.sleep(NET_CONFIG["HTTP_REQUEST_RETRY_WAIT_TIME"])
                             else:
                                 # 写入本地文件后退出
