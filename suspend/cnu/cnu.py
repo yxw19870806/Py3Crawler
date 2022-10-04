@@ -13,7 +13,7 @@ from common import *
 
 # 获取作品页面
 def get_album_page(album_id):
-    album_url = f"http://www.cnu.cc/works/{album_id}"
+    album_url = "http://www.cnu.cc/works/%s" % album_id
     album_response = net.request(album_url, method="GET")
     result = {
         "album_title": "",  # 作品标题
@@ -74,34 +74,34 @@ class CNU(crawler.Crawler):
         while True:
             if not self.is_running():
                 tool.process_exit(tool.PROCESS_EXIT_CODE_NORMAL)
-            log.step(f"开始解析第{self.album_id}页作品")
+            log.step("开始解析第%s页作品" % self.album_id)
 
             # 获取作品
             try:
                 album_response = get_album_page(self.album_id)
             except crawler.CrawlerException as e:
-                log.error(e.http_error(f"作品{self.album_id}"))
+                log.error(e.http_error("作品%s" % self.album_id))
                 raise
 
             if album_response["is_delete"]:
-                log.step(f"作品{self.album_id}已被删除，跳过")
+                log.step("作品%s已被删除，跳过" % self.album_id)
                 self.album_id += 1
                 continue
 
-            log.trace(f"作品{self.album_id}解析的全部图片：{album_response['photo_url_list']}")
-            log.step(f"作品{self.album_id}解析获取{len(album_response['photo_url_list'])}张图片")
+            log.trace("作品%s解析的全部图片：%s" % (self.album_id, album_response["photo_url_list"]))
+            log.step("作品%s解析获取%s张图片" % (self.album_id, len(album_response["photo_url_list"])))
 
             photo_index = 1
             # 过滤标题中不支持的字符
-            self.temp_path = album_path = os.path.join(self.photo_download_path, f"%06d {path.filter_text(album_response['album_title'])}" % album_id)
+            self.temp_path = album_path = os.path.join(self.photo_download_path, "%06d %s" % (self.album_id, path.filter_text(album_response["album_title"])))
             thread_list = []
             for photo_url in album_response["photo_url_list"]:
                 if not self.is_running():
                     tool.process_exit(tool.PROCESS_EXIT_CODE_NORMAL)
-                log.step(f"作品{self.album_id}《{album_response['album_title']}》开始下载第{photo_index}张图片 {photo_url}")
+                log.step("作品%s《%s》开始下载第%s张图片 %s" % (self.album_id, album_response["album_title"], photo_index, photo_url))
 
                 # 开始下载
-                file_path = os.path.join(album_path, f"%03d.{net.get_file_extension(photo_url)}" % photo_index)
+                file_path = os.path.join(album_path, "%03d.%s" % (photo_index, net.get_file_extension(photo_url)))
                 thread = Download(self, file_path, photo_url, photo_index)
                 thread.start()
                 thread_list.append(thread)
@@ -112,9 +112,9 @@ class CNU(crawler.Crawler):
                 thread.join()
                 download_return = thread.get_result()
                 if self.is_running() and download_return.status == net.Download.DOWNLOAD_FAILED:
-                    log.error(f"作品{self.album_id}《{album_response['album_title']}》 {album_response['album_url']} 第{thread.photo_index}张图片 {thread.photo_url} 下载失败，原因：{crawler.download_failre(download_return.code)}")
+                    log.error("作品%s《%s》 %s 第%s张图片 %s 下载失败，原因：%s" % (self.album_id, album_response["album_title"], album_response["album_url"], thread.photo_index, thread.photo_url, crawler.download_failre(download_return.code)))
             if self.is_running():
-                log.step(f"作品{self.album_id}《{album_response['album_title']}》全部图片下载完毕")
+                log.step("作品%s《%s》全部图片下载完毕" % (self.album_id, album_response["album_title"]))
             else:
                 tool.process_exit(tool.PROCESS_EXIT_CODE_NORMAL)
 
