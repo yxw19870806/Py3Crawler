@@ -43,7 +43,7 @@ def check_safe_search():
 
 # 获取账号相册首页
 def get_account_index_page(account_name):
-    account_index_url = f"https://www.flickr.com/photos/{account_name}"
+    account_index_url = "https://www.flickr.com/photos/%s" % account_name
     account_index_response = net.request(account_index_url, method="GET", cookies_list=COOKIE_INFO)
     result = {
         "site_key": None,  # site key
@@ -79,7 +79,7 @@ def get_account_index_page(account_name):
     if IS_LOGIN and "cookie_session" not in COOKIE_INFO:
         set_cookies = net.get_cookies_from_response_header(account_index_response.headers)
         if not crawler.check_sub_key(("cookie_session",), set_cookies):
-            raise crawler.CrawlerException(f"请求返回cookie：{account_index_response.headers}匹配cookie_session失败")
+            raise crawler.CrawlerException("请求返回cookie：%s匹配cookie_session失败" % account_index_response.headers)
         COOKIE_INFO.update({"cookie_session": set_cookies["cookie_session"]})
     return result
 
@@ -164,16 +164,16 @@ def get_one_page_photo(user_id, page_count, api_key, csrf, request_id):
                     max_resolution = resolution
                     max_resolution_photo_type = photo_type
         if not max_resolution_photo_type:
-            raise crawler.CrawlerException(f"图片信息：{photo_info}匹配最高分辨率的图片尺寸失败")
+            raise crawler.CrawlerException("图片信息：%s匹配最高分辨率的图片尺寸失败" % photo_info)
         if crawler.check_sub_key(("url_" + max_resolution_photo_type + "_cdn",), photo_info):
             result_photo_info["photo_url"] = photo_info["url_" + max_resolution_photo_type + "_cdn"]
         elif crawler.check_sub_key(("url_" + max_resolution_photo_type,), photo_info):
             result_photo_info["photo_url"] = photo_info["url_" + max_resolution_photo_type]
         else:
-            raise crawler.CrawlerException(f"图片信息：{photo_info}中'url_{max_resolution_photo_type}_cdn'或者'url_{max_resolution_photo_type}_cdn'字段不存在")
+            raise crawler.CrawlerException("图片信息：%s中'url_%s_cdn'或者'url_%s_cdn'字段不存在" % (photo_info, max_resolution_photo_type, max_resolution_photo_type))
         result["photo_info_list"].append(result_photo_info)
     if len(result["photo_info_list"]) == 0:
-        raise crawler.CrawlerException(f"返回信息：{photo_pagination_response.json_data}获取图片信息失败")
+        raise crawler.CrawlerException("返回信息：%s获取图片信息失败" % photo_pagination_response.json_data)
     # 判断是不是最后一页
     if page_count >= int(photo_pagination_response.json_data["photos"]["pages"]):
         result["is_over"] = True
@@ -241,7 +241,7 @@ class Download(crawler.DownloadThread):
 
         # 获取所有可下载图片
         photo_info_list = self.get_crawl_list(account_index_response["user_id"], account_index_response["site_key"], account_index_response["csrf"])
-        self.step(f"需要下载的全部图片解析完毕，共{len(photo_info_list)}张")
+        self.step("需要下载的全部图片解析完毕，共%s张" % len(photo_info_list))
 
         # 从最早的图片开始下载
         deal_photo_info_list = []
@@ -265,17 +265,17 @@ class Download(crawler.DownloadThread):
         # 获取全部还未下载过需要解析的图片
         while not is_over:
             self.main_thread_check()  # 检测主线程运行状态
-            self.step(f"开始解析第{page_count}页图片")
+            self.step("开始解析第%s页图片" % page_count)
 
             # 获取一页图片
             try:
                 photo_pagination_response = get_one_page_photo(user_id, page_count, site_key, csrf, self.request_id)
             except crawler.CrawlerException as e:
-                self.error(e.http_error(f"第{page_count}页图片"))
+                self.error(e.http_error("第%s页图片" % page_count))
                 raise
 
-            self.trace(f"第{page_count}页解析的全部图片：{photo_pagination_response['photo_info_list']}")
-            self.step(f"第{page_count}页解析获取{len(photo_pagination_response['photo_info_list'])}张图片")
+            self.trace("第%s页解析的全部图片：%s" % (page_count, photo_pagination_response["photo_info_list"]))
+            self.step("第%s页解析获取%s张图片" % (page_count, len(photo_pagination_response["photo_info_list"])))
 
             # 寻找这一页符合条件的图片
             for photo_info in photo_pagination_response["photo_info_list"]:
@@ -299,15 +299,15 @@ class Download(crawler.DownloadThread):
     def crawl_photo(self, photo_info_list):
         for photo_info in photo_info_list:
             self.main_thread_check()  # 检测主线程运行状态
-            self.step(f"开始下载图片{photo_info['photo_id']} {photo_info['photo_url']}")
-            file_path = os.path.join(self.main_thread.photo_download_path, self.index_key, f"%011d.{net.get_file_extension(photo_info['photo_url'])}" % photo_info["photo_id"])
+            self.step("开始下载图片%s %s" % (photo_info["photo_id"], photo_info["photo_url"]))
+            file_path = os.path.join(self.main_thread.photo_download_path, self.index_key, "%011d.%s" % (photo_info["photo_id"], net.get_file_extension(photo_info["photo_url"])))
             download_return = net.Download(photo_info["photo_url"], file_path)
             if download_return.status == net.Download.DOWNLOAD_SUCCEED:
                 self.temp_path_list.append(file_path)  # 设置临时目录
                 self.total_photo_count += 1  # 计数累加
-                self.step(f"图片{photo_info['photo_id']}下载成功")
+                self.step("图片%s下载成功" % photo_info["photo_id"])
             else:
-                self.error(f"图片{photo_info['photo_id']} {photo_info['photo_url']} 下载失败，原因：{crawler.download_failre(download_return.code)}")
+                self.error("图片%s %s 下载失败，原因：%s" % (photo_info["photo_id"], photo_info["photo_url"], crawler.download_failre(download_return.code)))
                 self.check_download_failure_exit()
 
         # 图片下载完毕

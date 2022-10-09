@@ -16,7 +16,7 @@ from common import *
 # 获取指定一页的图集
 def get_comic_index_page(comic_id):
     # https://www.manhuagui.com/comic/21175/
-    index_url = f"https://www.manhuagui.com/comic/{comic_id}/"
+    index_url = "https://www.manhuagui.com/comic/%s/" % comic_id
     index_response = net.request(index_url, method="GET")
     result = {
         "chapter_info_list": [],  # 漫画列表信息
@@ -55,14 +55,14 @@ def get_comic_index_page(comic_id):
             chapter_selector = chapter_list_selector.eq(page_index)
             # 获取章节ID
             page_url = chapter_selector.find("a").attr("href")
-            chapter_id = tool.find_sub_string(page_url, f"/comic/{comic_id}/", ".html")
+            chapter_id = tool.find_sub_string(page_url, "/comic/%s/" % comic_id, ".html")
             if not tool.is_integer(chapter_id):
-                raise crawler.CrawlerException(f"页面地址 {page_url} 截取页面id失败")
+                raise crawler.CrawlerException("页面地址 %s 截取页面id失败" % page_url)
             result_comic_info["chapter_id"] = int(chapter_id)
             # 获取章节名称
             chapter_name = chapter_selector.find("a").attr("title")
             if not chapter_name:
-                raise crawler.CrawlerException(f"页面地址 {page_url} 截取章节名失败")
+                raise crawler.CrawlerException("页面地址 %s 截取章节名失败" % page_url)
             result_comic_info["chapter_name"] = chapter_name.strip()
             result["chapter_info_list"].append(result_comic_info)
     return result
@@ -71,7 +71,7 @@ def get_comic_index_page(comic_id):
 # 获取漫画指定章节
 def get_chapter_page(comic_id, chapter_id):
     # https://www.manhuagui.com/comic/7580/562894.html
-    chapter_url = f"https://www.manhuagui.com/comic/{comic_id}/{chapter_id}.html"
+    chapter_url = "https://www.manhuagui.com/comic/%s/%s.html" % (comic_id, chapter_id)
     chapter_response = net.request(chapter_url, method="GET")
     result = {
         "photo_url_list": [],  # 全部漫画图片地址
@@ -144,7 +144,7 @@ class Download(crawler.DownloadThread):
     def _run(self):
         # 获取所有可下载章节
         chapter_info_list = self.get_crawl_list()
-        self.step(f"需要下载的全部漫画解析完毕，共{len(chapter_info_list)}个")
+        self.step("需要下载的全部漫画解析完毕，共%s个" % len(chapter_info_list))
         # 从最早的章节开始下载
         while len(chapter_info_list) > 0:
             self.crawl_comic(chapter_info_list.pop())
@@ -162,8 +162,8 @@ class Download(crawler.DownloadThread):
             self.error(e.http_error("漫画首页"))
             raise
 
-        self.trace(f"漫画首页解析的全部章节：{blog_pagination_response['chapter_info_list']}")
-        self.step(f"漫画首页解析获取{len(blog_pagination_response['chapter_info_list'])}个章节")
+        self.trace("漫画首页解析的全部章节：%s" % blog_pagination_response["chapter_info_list"])
+        self.step("漫画首页解析获取%s个章节" % len(blog_pagination_response["chapter_info_list"]))
 
         # 寻找符合条件的章节
         for chapter_info in blog_pagination_response["chapter_info_list"]:
@@ -175,31 +175,31 @@ class Download(crawler.DownloadThread):
 
     # 解析单章节漫画
     def crawl_comic(self, chapter_info):
-        self.step(f"开始解析漫画{chapter_info['chapter_id']} {chapter_info['group_name']}《{chapter_info['chapter_name']}》")
+        self.step("开始解析漫画%s %s《%s》" % (chapter_info["chapter_id"], chapter_info["group_name"], chapter_info["chapter_name"]))
 
         # 获取指定漫画章节
         try:
             chapter_response = get_chapter_page(self.index_key, chapter_info["chapter_id"])
         except crawler.CrawlerException as e:
-            self.error(e.http_error(f"漫画{chapter_info['chapter_id']} {chapter_info['group_name']}《{chapter_info['chapter_name']}》"))
+            self.error(e.http_error("漫画%s %s《%s》" % (chapter_info["chapter_id"], chapter_info["group_name"], chapter_info["chapter_name"])))
             raise
 
         # 图片下载
         photo_index = 1
-        chapter_path = os.path.join(self.main_thread.photo_download_path, self.display_name, chapter_info["group_name"], f"%06d {path.filter_text(chapter_info['chapter_name'])}" % chapter_info["chapter_id"])
+        chapter_path = os.path.join(self.main_thread.photo_download_path, self.display_name, chapter_info["group_name"], "%06d %s" % (chapter_info["chapter_id"], path.filter_text(chapter_info["chapter_name"])))
         # 设置临时目录
         self.temp_path_list.append(chapter_path)
         for photo_url in chapter_response["photo_url_list"]:
             self.main_thread_check()  # 检测主线程运行状态
-            self.step(f"漫画{chapter_info['chapter_id']} {chapter_info['group_name']}《{chapter_info['chapter_name']}》开始下载第{photo_index}张图片 {photo_url}")
+            self.step("漫画%s %s《%s》开始下载第%s张图片 %s" % (chapter_info["chapter_id"], chapter_info["group_name"], chapter_info["chapter_name"], photo_index, photo_url))
 
-            photo_file_path = os.path.join(chapter_path, f"%03d.{net.get_file_extension(photo_url)}" % photo_index)
-            download_return = net.Download(photo_url, photo_file_path, header_list={"Referer": f"https://www.manhuagui.com/comic/{self.index_key}/{chapter_info['chapter_id']}.html"}, is_auto_proxy=False)
+            photo_file_path = os.path.join(chapter_path, "%03d.%s" % (photo_index, net.get_file_extension(photo_url)))
+            download_return = net.Download(photo_url, photo_file_path, header_list={"Referer": "https://www.manhuagui.com/comic/%s/%s.html" % (self.index_key, chapter_info["chapter_id"])}, is_auto_proxy=False)
             if download_return.status == net.Download.DOWNLOAD_SUCCEED:
                 self.total_photo_count += 1  # 计数累加
-                self.step(f"漫画{chapter_info['chapter_id']} {chapter_info['group_name']}《{chapter_info['chapter_name']}》第{photo_index}张图片下载成功")
+                self.step("漫画%s %s《%s》第%s张图片下载成功" % (chapter_info["chapter_id"], chapter_info["group_name"], chapter_info["chapter_name"], photo_index))
             else:
-                self.error(f"漫画{chapter_info['chapter_id']} {chapter_info['group_name']}《{chapter_info['chapter_name']}》第{photo_index}张图片 {photo_url} 下载失败，原因：{crawler.download_failre(download_return.code)}")
+                self.error("漫画%s %s《%s》第%s张图片 %s 下载失败，原因：%s" % (chapter_info["chapter_id"], chapter_info["group_name"], chapter_info["chapter_name"], photo_index, photo_url, crawler.download_failre(download_return.code)))
                 self.check_download_failure_exit()
             photo_index += 1
 

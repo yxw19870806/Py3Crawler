@@ -64,42 +64,42 @@ class KuWoPlaylist(kuwo.KuWo):
         page_count = 1
         audio_info_list = []
         while not is_over:
-            log.step(f"开始解析第{page_count}页歌曲")
+            log.step("开始解析第%s页歌曲" % page_count)
             try:
                 playlist_pagination_response = kuwo.get_one_page_playlist(playlist_id, page_count)
             except crawler.CrawlerException as e:
-                log.error(e.http_error(f"第{page_count}页歌单"))
+                log.error(e.http_error("第%s页歌单" % page_count))
                 return
 
             audio_info_list += playlist_pagination_response["audio_info_list"]
             is_over = playlist_pagination_response["is_over"]
             page_count += 1
-        log.step(f"用户总共解析获得{len(audio_info_list)}首歌曲")
+        log.step("用户总共解析获得%s首歌曲" % len(audio_info_list))
 
         # 循环待下载列表
         while len(audio_info_list) > 0:
             audio_info = audio_info_list.pop()
-            log.step(f"开始解析歌曲{audio_info['audio_id']}《{audio_info['audio_title']}》，剩余{len(audio_info_list)}首歌曲")
+            log.step("开始解析歌曲%s《%s》，剩余%s首歌曲" % (audio_info["audio_id"], audio_info["audio_title"], len(audio_info_list)))
 
             # 获取下载地址
             try:
-                audio_info_response = kuwo.get_audio_info_page(audio_info['audio_id'])
+                audio_info_response = kuwo.get_audio_info_page(audio_info["audio_id"])
             except crawler.CrawlerException as e:
-                log.error(e.http_error(f"歌曲{audio_info['audio_id']}《{audio_info['audio_title']}》"))
+                log.error(e.http_error("歌曲%s《%s》" % (audio_info["audio_id"], audio_info["audio_title"])))
                 continue
 
-            file_path = os.path.join(dir_path, f"{audio_info['audio_id']} - {path.filter_text(audio_info['audio_title'])}.{net.get_file_extension(audio_info_response['audio_url'])}")
+            file_path = os.path.join(dir_path, "%s - %s.%s" % (audio_info["audio_id"], path.filter_text(audio_info["audio_title"]), net.get_file_extension(audio_info_response["audio_url"])))
             if os.path.exists(file_path):
                 continue
 
             # 开始下载
-            log.step(f"\n歌曲名：{audio_info['audio_title']}\n歌曲地址：{audio_info_response['audio_url']}\n下载路径：{file_path}")
+            log.step("\n歌曲名：%s\n歌曲地址：%s\n下载路径：%s" % (audio_info["audio_title"], audio_info_response["audio_url"], file_path))
             download_return = net.Download(audio_info_response["audio_url"], file_path, auto_multipart_download=True)
             if download_return.status == net.Download.DOWNLOAD_SUCCEED:
                 # 设置临时目录
-                log.step(f"歌曲《{audio_info['audio_title']}》下载成功")
+                log.step("歌曲《%s》下载成功" % audio_info["audio_title"])
             else:
-                log.step(f"歌曲《{audio_info['audio_3287577437title']}》下载失败，原因：{crawler.download_failre(download_return.code)}")
+                log.step("歌曲《%s》下载失败，原因：%s" % (audio_info["audio_title"], crawler.download_failre(download_return.code)))
 
         log.step("歌单歌曲全部下载完毕")
 

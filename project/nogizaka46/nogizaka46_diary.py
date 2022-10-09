@@ -16,7 +16,7 @@ from common import *
 # account_id -> 264
 def get_one_page_blog(account_id, page_count):
     # https://www.nogizaka46.com/s/n46/diary/MEMBER/list?ima=4653&page=0&ct=264&cd=MEMBER
-    blog_pagination_url = f"https://www.nogizaka46.com/s/n46/diary/MEMBER/list"
+    blog_pagination_url = "https://www.nogizaka46.com/s/n46/diary/MEMBER/list"
     query_data = {"ct": account_id, "page": page_count - 1}
     blog_pagination_response = net.request(blog_pagination_url, method="GET", fields=query_data)
     result = {
@@ -58,7 +58,7 @@ def get_one_page_blog(account_id, page_count):
 
 
 def get_blog_page(blog_id):
-    blog_url = f"https://www.nogizaka46.com/s/n46/diary/detail/{blog_id}"
+    blog_url = "https://www.nogizaka46.com/s/n46/diary/detail/%s" % blog_id
     blog_response = net.request(blog_url, method="GET")
     result = {
         "photo_info_list": [],  # 全部图片地址
@@ -80,7 +80,7 @@ def get_blog_page(blog_id):
         photo_selector = photo_list_selector.eq(photo_index)
         photo_url = photo_selector.attr("src")
         if not (photo_url.find("https://") == 0 or photo_url.find("https://") == 0):
-            photo_url = f"https://www.nogizaka46.com/{photo_url}"
+            photo_url = "https://www.nogizaka46.com/%s" % photo_url
         result_photo_info["photo_url"] = photo_url
         # 判断是否是预览地址
         photo_parent_selector = photo_selector.parent()
@@ -161,7 +161,7 @@ class Download(crawler.DownloadThread):
     def _run(self):
         # 获取所有可下载日志
         blog_id_list = self.get_crawl_list()
-        self.step(f"需要下载的全部日志解析完毕，共{len(blog_id_list)}个")
+        self.step("需要下载的全部日志解析完毕，共%s个" % len(blog_id_list))
 
         # 从最早的日志开始下载
         while len(blog_id_list) > 0:
@@ -176,17 +176,17 @@ class Download(crawler.DownloadThread):
         # 获取全部还未下载过需要解析的日志
         while not is_over:
             self.main_thread_check()  # 检测主线程运行状态
-            self.step(f"开始解析第{page_count}页日志")
+            self.step("开始解析第%s页日志" % page_count)
 
             # 获取一页图片
             try:
                 blog_pagination_response = get_one_page_blog(self.index_key, page_count)
             except crawler.CrawlerException as e:
-                self.error(e.http_error(f"第{page_count}页日志"))
+                self.error(e.http_error("第%s页日志" % page_count))
                 raise
 
-            self.trace(f"第{page_count}页解析的全部日志：{blog_pagination_response['blog_id_list']}")
-            self.step(f"第{page_count}页解析获取{len(blog_pagination_response['blog_id_list'])}个日志")
+            self.trace("第%s页解析的全部日志：%s" % (page_count, blog_pagination_response["blog_id_list"]))
+            self.step("第%s页解析获取%s个日志" % (page_count, len(blog_pagination_response["blog_id_list"])))
 
             # 寻找这一页符合条件的日志
             for blog_id in blog_pagination_response["blog_id_list"]:
@@ -206,16 +206,16 @@ class Download(crawler.DownloadThread):
 
     # 解析单个日志
     def crawl_blog(self, blog_id):
-        self.step(f"开始解析日志{blog_id}")
+        self.step("开始解析日志%s" % blog_id)
         # 获取指定日志
         try:
             blog_response = get_blog_page(blog_id)
         except crawler.CrawlerException as e:
-            self.error(e.http_error(f"日志{blog_id}"))
+            self.error(e.http_error("日志%s" % blog_id))
             raise
 
-        self.trace(f"日志{blog_id}解析的全部图片：{blog_response['photo_info_list']}")
-        self.step(f"日志{blog_id}解析获取{len(blog_response['photo_info_list'])}张图片")
+        self.trace("日志%s解析的全部图片：%s" % (blog_id, blog_response["photo_info_list"]))
+        self.step("日志%s解析获取%s张图片" % (blog_id, len(blog_response["photo_info_list"])))
 
         photo_index = 1
         for photo_info in blog_response["photo_info_list"]:
@@ -226,21 +226,21 @@ class Download(crawler.DownloadThread):
                 photo_url = preview_photo_response["photo_url"]
             else:
                 photo_url = photo_info["photo_url"]
-            self.step(f"开始下载日志{blog_id}的第{photo_index}张图片 {photo_url}")
+            self.step("开始下载日志%s的第%s张图片 %s" % (blog_id, photo_index, photo_url))
 
-            file_path = os.path.join(self.main_thread.photo_download_path, self.display_name, f"%06d_%02d.{net.get_file_extension(photo_url, 'jpg')}" % (blog_id, photo_index))
+            file_path = os.path.join(self.main_thread.photo_download_path, self.display_name, "%06d_%02d.%s" % (blog_id, photo_index, net.get_file_extension(photo_url, "jpg")))
             download_return = net.Download(photo_url, file_path, cookies_list=preview_photo_response["cookies"])
             if download_return.status == net.Download.DOWNLOAD_SUCCEED:
                 if check_photo_invalid(file_path):
                     path.delete_dir_or_file(file_path)
-                    self.step(f"日志{blog_id}的第{photo_index}张图片 {photo_url} 不符合规则，删除")
+                    self.step("日志%s的第%s张图片 %s 不符合规则，删除" % (blog_id, photo_index, photo_url))
                     continue
                 else:
                     self.temp_path_list.append(file_path)  # 设置临时目录
                     self.total_photo_count += 1  # 计数累加
-                    self.step(f"日志{blog_id}的第{photo_index}张图片下载成功")
+                    self.step("日志%s的第%s张图片下载成功"% (blog_id, photo_index))
             else:
-                self.error(f"日志{blog_id}的第{photo_index}张图片 {photo_url} 下载失败，原因：{crawler.download_failre(download_return.code)}")
+                self.error("日志%s的第%s张图片 %s 下载失败，原因：%s" % (blog_id, photo_index, photo_url, crawler.download_failre(download_return.code)))
                 self.check_download_failure_exit()
             photo_index += 1
 

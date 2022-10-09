@@ -142,52 +142,52 @@ class Favorite(crawler.Crawler):
         while not is_over:
             if not self.is_running():
                 tool.process_exit(tool.PROCESS_EXIT_CODE_NORMAL)
-            log.step(f"开始解析第{page_count}页收藏")
+            log.step("开始解析第%s页收藏" % page_count)
 
             try:
                 favorite_pagination_response = get_one_page_favorite(page_count)
             except crawler.CrawlerException as e:
-                log.error(e.http_error(f"第{page_count}页收藏"))
+                log.error(e.http_error("第%s页收藏" % page_count))
                 raise
 
-            log.trace(f"第{page_count}页解析的已删除微博：{favorite_pagination_response['delete_blog_id_list']}")
-            log.step(f"第{page_count}页解析获取{len(favorite_pagination_response['delete_blog_id_list'])}个已删除微博")
+            log.trace("第%s页解析的已删除微博：%s" % (page_count, favorite_pagination_response["delete_blog_id_list"]))
+            log.step("第%s页解析获取%s个已删除微博" % (page_count, len(favorite_pagination_response["delete_blog_id_list"])))
 
             for blog_id in favorite_pagination_response["delete_blog_id_list"]:
-                log.step(f"开始删除微博{blog_id}")
+                log.step("开始删除微博%s" % blog_id)
                 try:
                     delete_favorite(blog_id)
                 except crawler.CrawlerException as e:
-                    log.error(e.http_error(f"微博{blog_id}"))
+                    log.error(e.http_error("微博%s" % blog_id))
                     raise
-                log.step(f"删除微博{blog_id}成功")
+                log.step("删除微博%s成功" % blog_id)
 
-            log.trace(f"第{page_count}页解析的全部微博：{favorite_pagination_response['blog_info_list']}")
-            log.step(f"第{page_count}页解析获取{len(favorite_pagination_response['blog_info_list'])}个微博")
+            log.trace("第%s页解析的全部微博：%s" % (page_count, favorite_pagination_response["blog_info_list"]))
+            log.step("第%s页解析获取%s个微博" % (page_count, len(favorite_pagination_response["blog_info_list"])))
 
             for blog_info in favorite_pagination_response["blog_info_list"]:
-                log.step(f"开始解析微博{blog_info['blog_id']}")
+                log.step("开始解析微博%s" % blog_info["blog_id"])
 
-                log.trace(f"微博{blog_info['blog_id']}解析的全部图片：{blog_info['photo_url_list']}")
-                log.step(f"微博{blog_info['blog_id']}解析获取{len(blog_info['photo_url_list'])}张图片")
+                log.trace("微博%s解析的全部图片：%s" % (blog_info["blog_id"], blog_info["photo_url_list"]))
+                log.step("微博%s解析获取%s张图片" % (blog_info["blog_id"], len(blog_info["photo_url_list"])))
 
                 photo_count = 1
                 photo_path = os.path.join(self.photo_download_path, blog_info["blog_id"])
                 for photo_url in blog_info["photo_url_list"]:
-                    log.step(f"微博{blog_info['blog_id']}开始下载第{photo_count}张图片 {photo_url}")
+                    log.step("微博%s开始下载第%s张图片 %s" % (blog_info["blog_id"], photo_count, photo_url))
 
-                    file_path = os.path.join(photo_path, f"{photo_count}.{net.get_file_extension(photo_url)}")
+                    file_path = os.path.join(photo_path, "%s.%s" % (photo_count, net.get_file_extension(photo_url)))
                     download_return = net.Download(photo_url, file_path)
                     if download_return.status == net.Download.DOWNLOAD_SUCCEED:
                         if weibo.check_photo_invalid(file_path):
                             path.delete_dir_or_file(file_path)
-                            log.error(f"微博{blog_info['blog_id']}的第{photo_count}张图片 {photo_url} 资源已被删除，跳过")
+                            log.error("微博%s的第%s张图片 %s 资源已被删除，跳过" % (blog_info["blog_id"], photo_count, photo_url))
                         else:
-                            log.step(f"微博{blog_info['blog_id']}的第{photo_count}张图片下载成功")
+                            log.step("微博%s的第%s张图片下载成功" % (blog_info["blog_id"], photo_count))
                             photo_count += 1
                             self.total_photo_count += 1
                     else:
-                        log.error(f"微博{blog_info['blog_id']}的第{photo_count}张图片 {photo_url} 下载失败，原因：{crawler.download_failre(download_return.code)}")
+                        log.error("微博%s的第%s张图片 %s 下载失败，原因：%s" % (blog_info["blog_id"], photo_count, photo_url, crawler.download_failre(download_return.code)))
 
             if favorite_pagination_response["is_over"]:
                 is_over = True

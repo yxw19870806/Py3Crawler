@@ -15,7 +15,7 @@ def get_game_invalid_achievements(game_id):
     query_data = {"AppID": game_id}
     game_index_response = net.request(game_index_url, method="GET", fields=query_data)
     if game_index_response.status != net.HTTP_RETURN_CODE_SUCCEED:
-        output.print_msg(f"游戏 {game_id} 访问失败")
+        output.print_msg("游戏 %s 访问失败" % game_id)
         tool.process_exit()
     # game id 不存在
     if game_index_response.data.decode(errors="ignore").find("This game cannot be found in the database.") >= 0:
@@ -28,6 +28,6 @@ def get_game_invalid_achievements(game_id):
     if not tool.is_integer(achievement_text):
         invalid_achievement_text = tool.find_sub_string(achievement_text, '<font color="#FF0000">', "</font>")
         if invalid_achievement_text:
-            output.print_msg(f"游戏 {game_id} 存在无效成就：{invalid_achievement_text}")
+            output.print_msg("游戏 %s 存在无效成就：%s" % (game_id, invalid_achievement_text))
         else:
-            output.print_msg(f"游戏 {game_id}, 存在未知成就文字：{invalid_achievement_text}")
+            output.print_msg("游戏 %s, 存在未知成就文字：%s" % (game_id, invalid_achievement_text))

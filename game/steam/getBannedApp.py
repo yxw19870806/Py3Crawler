@@ -23,7 +23,7 @@ def main():
     except crawler.CrawlerException as e:
         output.print_msg(e.http_error("已下线游戏列表"))
     else:
-        output.print_msg(f"总共获取{len(banned_game_list)}个已删除游戏")
+        output.print_msg("总共获取%s个已删除游戏" % len(banned_game_list))
 
         for game_info in banned_game_list:
             if str(game_info["game_id"]) not in deleted_app_list:
@@ -32,7 +32,7 @@ def main():
                 try:
                     steamdb_info = steamdb.get_game_store_index(game_info["game_id"])
                 except crawler.CrawlerException as e:
-                    output.print_msg(e.http_error(f"游戏{game_info['game_id']}"))
+                    output.print_msg(e.http_error("游戏%s" % game_info["game_id"]))
                 else:
                     deleted_app_list.append(str(game_info["game_id"]))
                     output.print_msg("\t".join(list(map(str, [game_info["game_id"], game_info["game_name"], steamdb_info["develop_name"]]))), False)

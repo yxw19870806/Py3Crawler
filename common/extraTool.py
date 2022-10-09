@@ -125,7 +125,7 @@ def download(file_url, file_path, recheck_file_extension=False, head_check=False
     if not isinstance(replace_if_exist, bool):
         replace_if_exist = net.DOWNLOAD_REPLACE_IF_EXIST
     if not replace_if_exist and os.path.exists(file_path) and os.path.getsize(file_path) > 0:
-        output.print_msg(f"文件{file_path}（{file_url}）已存在，跳过")
+        output.print_msg("文件%s（%s）已存在，跳过" % (file_path, file_url))
         return {"status": 1, "code": 0, "file_path": file_path}
     # 判断保存目录是否存在
     if not path.create_dir(os.path.dirname(file_path)):
@@ -215,7 +215,7 @@ def download(file_url, file_path, recheck_file_extension=False, head_check=False
             if len(error_flag) > 0:
                 continue
             if not _check_multi_thread_download_file(file_path):
-                output.print_msg(f"网络文件{file_url}多线程下载后发现无效字节")
+                output.print_msg("网络文件%s多线程下载后发现无效字节" % file_url)
                 continue
         if content_length is None:
             return {"status": 1, "code": 0, "file_path": file_path}
@@ -224,7 +224,7 @@ def download(file_url, file_path, recheck_file_extension=False, head_check=False
         if content_length == file_size:
             return {"status": 1, "code": 0, "file_path": file_path}
         else:
-            output.print_msg(f"本地文件{file_path}：{content_length}和网络文件{file_url}：{file_size}不一致")
+            output.print_msg(f"本地文件%s：{content_length}和网络文件%s：{file_size}不一致" % (file_path, file_url))
             time.sleep(net.NET_CONFIG["HTTP_REQUEST_RETRY_WAIT_TIME"])
     if is_create_file:
         path.delete_dir_or_file(file_path)
@@ -268,7 +268,7 @@ class MultiThreadDownload(threading.Thread):
             if response.status == 206:
                 # 下载的文件和请求的文件大小不一致
                 if len(response.data) != range_size:
-                    output.print_msg(f"网络文件{self.file_url}：range {self.start_pos} - {self.end_pos}实际下载大小 {len(response.data)} 不一致")
+                    output.print_msg(f"网络文件%s：range {self.start_pos} - {self.end_pos}实际下载大小 {len(response.data)} 不一致" % self.file_url)
                     time.sleep(net.NET_CONFIG["HTTP_REQUEST_RETRY_WAIT_TIME"])
                 else:
                     # 写入本地文件后退出

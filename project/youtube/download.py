@@ -66,14 +66,14 @@ class YoutubeDownload(youtube.Youtube):
             log.error(e.http_error("视频"))
             return
         if video_response["skip_reason"]:
-            log.error(f"视频{video_id} {video_response['skip_reason']}")
+            log.error("视频%s %s" % (video_id, video_response["skip_reason"]))
             return
 
         # 选择下载目录
         log.step("请选择下载目录")
         options = {
             "initialdir": self.video_download_path,
-            "initialfile": f"{video_id} - {path.filter_text(video_response['video_title'])}.mp4",
+            "initialfile": "%s - %s.mp4" % (video_id, path.filter_text(video_response["video_title"])),
             "filetypes": [("mp4", ".mp4")],
             "parent": self.gui,
         }
@@ -82,12 +82,12 @@ class YoutubeDownload(youtube.Youtube):
             return
 
         # 开始下载
-        log.step(f"\n视频标题：{video_response['video_title']}\n视频地址：{video_response['video_url']}\n下载路径：{file_path}")
+        log.step("\n视频标题：%s\n视频地址：%s\n下载路径：%s" % (video_response["video_title"], video_response["video_url"], file_path))
         download_return = net.Download(video_response["video_url"], file_path, auto_multipart_download=True)
         if download_return.status == net.Download.DOWNLOAD_SUCCEED:
-            log.step(f"视频《{video_response['video_title']}》下载成功")
+            log.step("视频《%s》下载成功" % video_response["video_title"])
         else:
-            log.error(f"视频《{video_response['video_title']}》下载失败，原因：{crawler.download_failre(download_return.code)}")
+            log.error("视频《%s》下载失败，原因：%s" % (video_response["video_title"], crawler.download_failre(download_return.code)))
 
 
 if __name__ == "__main__":

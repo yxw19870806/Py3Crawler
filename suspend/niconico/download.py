@@ -64,7 +64,7 @@ class NicoNicoDownload(niconico.NicoNico):
         log.step("请选择下载目录")
         options = {
             "initialdir": self.video_download_path,
-            "initialfile": f"%08d - {path.filter_text(video_response['video_title'])}.mp4" % int(video_id),
+            "initialfile": "%08d - %s.mp4" % (int(video_id), path.filter_text(video_response["video_title"])),
             "filetypes": [("mp4", ".mp4")],
             "parent": self.gui,
         }
@@ -73,15 +73,15 @@ class NicoNicoDownload(niconico.NicoNico):
             return
 
         # 开始下载
-        log.step(f"\n视频标题：{video_response['video_title']}\n视频地址：{video_response['video_url']}\n下载路径：{file_path}")
+        log.step("\n视频标题：%s\n视频地址：%s\n下载路径：%s" % (video_response["video_title"], video_response["video_url"], file_path))
         cookies_list = niconico.COOKIE_INFO
         if video_response["extra_cookie"]:
             cookies_list.update(video_response["extra_cookie"])
         download_return = net.Download(video_response["video_url"], file_path, auto_multipart_download=True, cookies_list=cookies_list)
         if download_return.status == net.Download.DOWNLOAD_SUCCEED:
-            log.step(f"视频《{video_response['video_title']}》下载成功")
+            log.step("视频《%s》下载成功" % video_response["video_title"])
         else:
-            log.error(f"视频《{video_response['video_title']}》下载失败，原因：{crawler.download_failre(download_return.code)}")
+            log.error("视频《%s》下载失败，原因：%s" % (video_response["video_title"], crawler.download_failre(download_return.code)))
 
 
 if __name__ == "__main__":
