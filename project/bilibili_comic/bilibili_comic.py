@@ -75,7 +75,7 @@ def get_chapter_page(ep_id):
     if api_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException("图片token获取，" + crawler.request_failre(api_response.status))
     for token_info in crawler.get_json_value(token_api_response.json_data, "data", type_check=list):
-        result["photo_url_list"].append(f"{crawler.get_json_value(token_info, 'url', type_check=str)}?token={crawler.get_json_value(token_info, 'token', type_check=str)}")
+        result["photo_url_list"].append("%s?token=%s" % (crawler.get_json_value(token_info, "url", type_check=str), crawler.get_json_value(token_info, "token", type_check=str)))
     return result
 
 
@@ -126,7 +126,7 @@ class Download(crawler.DownloadThread):
     def _rum(self):
         # 获取所有可下载章节
         comic_info_list = self.get_crawl_list()
-        self.step(f"需要下载的全部漫画解析完毕，共{len(comic_info_list)}个")
+        self.step("需要下载的全部漫画解析完毕，共%s个" % len(comic_info_list))
 
         # 从最早的章节开始下载
         while len(comic_info_list) > 0:
@@ -145,8 +145,8 @@ class Download(crawler.DownloadThread):
             self.error(e.http_error("漫画首页"))
             raise
 
-        self.trace(f"漫画首页解析的全部漫画：{blog_pagination_response['comic_info_list']}")
-        self.step(f"漫画首页解析获取{len(blog_pagination_response['comic_info_list'])}个漫画")
+        self.trace("漫画首页解析的全部漫画：%s" % blog_pagination_response["comic_info_list"])
+        self.step("漫画首页解析获取%s个漫画" % len(blog_pagination_response["comic_info_list"]))
 
         # 寻找符合条件的章节
         for ep_id in sorted(list(blog_pagination_response["comic_info_list"].keys()), reverse=True):
@@ -160,31 +160,31 @@ class Download(crawler.DownloadThread):
         return comic_info_list
 
     def crawl_comic(self, comic_info):
-        self.step(f"开始解析漫画{comic_info['ep_id']} 《{comic_info['ep_name']}》")
+        self.step("开始解析漫画%s 《%s》" % (comic_info["ep_id"], comic_info["ep_name"]))
 
         # 获取指定漫画章节
         try:
             chapter_response = get_chapter_page(comic_info["ep_id"])
         except crawler.CrawlerException as e:
-            self.error(e.http_error(f"漫画{comic_info['ep_id']} 《{comic_info['ep_name']}》"))
+            self.error(e.http_error("漫画%s 《%s》" % (comic_info["ep_id"], comic_info["ep_name"])))
             raise
 
         # 图片下载
         photo_index = 1
-        chapter_path = os.path.join(self.main_thread.photo_download_path, self.display_name, f"%06d {path.filter_text(comic_info['ep_name'])}" % comic_info["ep_id"])
+        chapter_path = os.path.join(self.main_thread.photo_download_path, self.display_name, "%06d %s" % (comic_info["ep_id"], path.filter_text(comic_info["ep_name"])))
         # 设置临时目录
         self.temp_path_list.append(chapter_path)
         for photo_url in chapter_response["photo_url_list"]:
             self.main_thread_check()  # 检测主线程运行状态
-            self.step(f"漫画{comic_info['ep_id']} 《{comic_info['ep_name']}》开始下载第{photo_index}张图片 {photo_url}")
+            self.step("漫画%s 《%s》开始下载第%s张图片 %s" % (comic_info["ep_id"], comic_info["ep_name"], photo_index, photo_url))
 
-            photo_file_path = os.path.join(chapter_path, f"%03d.{net.get_file_extension(photo_url)}" % photo_index)
+            photo_file_path = os.path.join(chapter_path, "%03d.%s" % (photo_index, net.get_file_extension(photo_url)))
             download_return = net.Download(photo_url, photo_file_path, header_list={"Referer": "https://m.dmzj.com/"})
             if download_return.status == net.Download.DOWNLOAD_SUCCEED:
                 self.total_photo_count += 1  # 计数累加
-                self.step(f"漫画{comic_info['ep_id']} 《{comic_info['ep_name']}》第{photo_index}张图片下载成功")
+                self.step("漫画%s 《%s》第%s张图片下载成功"  % (comic_info["ep_id"], comic_info["ep_name"], photo_index))
             else:
-                self.error(f"漫画{comic_info['ep_id']} 《{comic_info['ep_name']}》第{photo_index}张图片 {photo_url} 下载失败，原因：{crawler.download_failre(download_return.code)}")
+                self.error("漫画%s 《%s》第%s张图片 %s 下载失败，原因：%s" % (comic_info["ep_id"], comic_info["ep_name"], photo_index, photo_url, crawler.download_failre(download_return.code)))
                 self.check_download_failure_exit()
             photo_index += 1
 

@@ -15,7 +15,7 @@ from common import *
 
 COOKIE_INFO = {}
 MAX_DAILY_VIP_DOWNLOAD_COUNT = 550
-DAILY_VIP_DOWNLOAD_COUNT_CACHE_FILE = ''
+DAILY_VIP_DOWNLOAD_COUNT_CACHE_FILE = ""
 DAILY_VIP_DOWNLOAD_COUNT = {}
 EACH_PAGE_AUDIO_COUNT = 30  # 每次请求获取的视频数量
 
@@ -51,7 +51,7 @@ def get_one_page_album(album_id, page_count):
         audio_info_list = crawler.get_json_value(album_pagination_response.json_data, "data", "tracks", type_check=list)
     except crawler.CrawlerException:
         error_message = crawler.get_json_value(album_pagination_response.json_data, "msg", type_check=str, default_value="")
-        if error_message == f"该专辑[id:{album_id}]已被删除~" or error_message == f"该专辑[id:{album_id}]已下架~":
+        if error_message == "该专辑[id:%s]已被删除~" % album_id or error_message == "该专辑[id:%s]已下架~" % album_id:
             raise crawler.CrawlerException("专辑已被删除")
         else:
             raise
@@ -86,7 +86,7 @@ def get_one_page_audio(account_id, page_count):
     now = int(time.time() * 1000)
     # 加密方法解析来自 https://s1.xmcdn.com/yx/ximalaya-web-static/last/dist/scripts/b20b549ee.js
     header_list = {
-        "xm-sign": f"{tool.string_md5('himalaya-' + str(now))}({random.randint(1, 100)}){now}({random.randint(1, 100)}){now + random.randint(1, 100 * 60)}"
+        "xm-sign": "%s(%s)%s(%s)%s" % (tool.string_md5("himalaya-" + str(now)), random.randint(1, 100), now, random.randint(1, 100), now + random.randint(1, 100 * 60))
     }
     audit_pagination_response = net.request(audio_pagination_url, method="GET", fields=query_data, header_list=header_list, json_decode=True)
     result = {
@@ -136,7 +136,7 @@ def get_audio_info_page(audio_id):
         result["is_delete"] = True
         return result
     else:
-        raise crawler.CrawlerException(f"音频简易信息{audio_simple_info_response.json_data}中'ret'返回值不正确")
+        raise crawler.CrawlerException("音频简易信息%s中'ret'返回值不正确" % audio_simple_info_response.json_data)
     # 获取音频标题
     result["audio_title"] = crawler.get_json_value(audio_simple_info_response.json_data, "data", "trackInfo", "title", type_check=str)
     # 判断是否是视频
@@ -169,7 +169,7 @@ def get_audio_info_page(audio_id):
         raise crawler.CrawlerException("当日免费下载次数已达到限制")
 
     # 需要购买或者vip才能解锁的音频
-    vip_audio_info_url = f"https://mobile.ximalaya.com/mobile-playpage/track/v3/baseInfo/{int(time.time() * 1000)}"
+    vip_audio_info_url = "https://mobile.ximalaya.com/mobile-playpage/track/v3/baseInfo/%s" % int(time.time() * 1000)
     query_data = {
         "device": "web",
         "trackId": audio_id,
@@ -212,7 +212,7 @@ def get_audio_info_page(audio_id):
     try:
         audio_url = execjs.compile(js_code).call("encrypt_url", decrypt_url)
     except execjs._exceptions.ProgramError:
-        raise crawler.CrawlerException(f"url{decrypt_url}解密失败")
+        raise crawler.CrawlerException("url%s解密失败" % decrypt_url)
     result["audio_url"] = audio_url
 
     return result

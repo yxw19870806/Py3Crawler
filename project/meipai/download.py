@@ -70,12 +70,12 @@ class MeiPaiDownload(meipai.MeiPai):
             return
 
         # 开始下载
-        log.step(f"\n视频地址：{video_response['video_url']}\n下载路径：{file_path}")
+        log.step("\n视频地址：%s\n下载路径：%s" % (video_response["video_url"], file_path))
         download_return = net.Download(video_response["video_url"], file_path, auto_multipart_download=True)
         if download_return.status == net.Download.DOWNLOAD_SUCCEED:
             log.step("视频下载成功")
         else:
-            log.error(f"视频下载失败，原因：{crawler.download_failre(download_return.code)}")
+            log.error("视频下载失败，原因：%s" % crawler.download_failre(download_return.code))
 
 
 if __name__ == "__main__":

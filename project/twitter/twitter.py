@@ -43,7 +43,7 @@ def check_login():
         raise crawler.CrawlerException("初始化JS文件，" + crawler.request_failre(init_js_response.status))
     init_js_response_content = init_js_response.data.decode(errors="ignore")
     # 截取authorization
-    authorization_string = tool.find_sub_string(init_js_response_content, '="AAAAAAAAAA', '"', )
+    authorization_string = tool.find_sub_string(init_js_response_content, '="AAAAAAAAAA', '"')
     if not authorization_string:
         raise crawler.CrawlerException("初始化JS中截取authorization失败\n" + init_js_response_content)
     AUTHORIZATION = "AAAAAAAAAA" + authorization_string
@@ -57,13 +57,13 @@ def check_login():
 
 # 根据账号名字获得账号id（字母账号->数字账号)
 def get_account_index_page(account_name):
-    account_index_url = f"https://api.twitter.com/graphql/{QUERY_ID}/UserByScreenName"
+    account_index_url = "https://api.twitter.com/graphql/%s/UserByScreenName" % QUERY_ID
     query_data = {
         "variables": '{"screen_name":"%s","withSafetyModeUserFields":true,"withSuperFollowsUserFields":true}' % account_name
     }
     header_list = {
-        "referer": f"https://twitter.com/{account_name}",
-        "authorization": f"Bearer {AUTHORIZATION}",
+        "referer": "https://twitter.com/%s" % account_name,
+        "authorization": "Bearer %s" % AUTHORIZATION,
     }
     if "ct0" in COOKIE_INFO:
         header_list["x-csrf-token"] = COOKIE_INFO["ct0"]
@@ -88,7 +88,7 @@ def get_account_index_page(account_name):
 
 # 获取一页的推特信息
 def get_one_page_media(account_name, account_id, cursor):
-    media_pagination_url = f"https://twitter.com/i/api/2/timeline/media/{account_id}.json"
+    media_pagination_url = "https://twitter.com/i/api/2/timeline/media/%s.json" % account_id
     query_data = {
         "include_profile_interstitial_type": "1",
         "include_blocking": "1",
@@ -117,8 +117,8 @@ def get_one_page_media(account_name, account_id, cursor):
     if cursor:
         query_data["cursor"] = cursor
     header_list = {
-        "referer": f"https://twitter.com/{account_name}",
-        "authorization": f"Bearer {AUTHORIZATION}",
+        "referer": "https://twitter.com/%s" % account_name,
+        "authorization": "Bearer %s" % AUTHORIZATION,
     }
     if "ct0" in COOKIE_INFO:
         header_list["x-csrf-token"] = COOKIE_INFO["ct0"]
@@ -152,7 +152,7 @@ def get_one_page_media(account_name, account_id, cursor):
             # 获取视频地址
             elif media_type == "video":
                 max_bit_rate = 0
-                video_url = ''
+                video_url = ""
                 for video_info in crawler.get_json_value(media_info, "video_info", "variants", type_check=list):
                     bit_rate = crawler.get_json_value(video_info, "bitrate", type_check=int, default_value=0)
                     if bit_rate == 0 and "application/x-mpegURL" == crawler.get_json_value(video_info, "content_type", type_check=str):
@@ -161,12 +161,12 @@ def get_one_page_media(account_name, account_id, cursor):
                         max_bit_rate = bit_rate
                         video_url = crawler.get_json_value(video_info, "url", type_check=str)
                 if not video_url:
-                    raise crawler.CrawlerException(f"媒体信息{media_info}中获取视频地址失败")
+                    raise crawler.CrawlerException("媒体信息%s中获取视频地址失败" % media_info)
                 result_media_info["video_url_list"].append(video_url)
             # animated gif
             elif media_type == "animated_gif":
                 max_bit_rate = -1
-                video_url = ''
+                video_url = ""
                 for video_info in crawler.get_json_value(media_info, "video_info", "variants", type_check=list):
                     bit_rate = crawler.get_json_value(video_info, "bitrate", type_check=int, default_value=0)
                     if bit_rate == 0 and "application/x-mpegURL" == crawler.get_json_value(video_info, "content_type", type_check=str):
@@ -175,17 +175,17 @@ def get_one_page_media(account_name, account_id, cursor):
                         max_bit_rate = bit_rate
                         video_url = crawler.get_json_value(video_info, "url", type_check=str)
                 if not video_url:
-                    raise crawler.CrawlerException(f"媒体信息{media_info}中获取视频地址失败")
+                    raise crawler.CrawlerException("媒体信息%s中获取视频地址失败" % media_info)
                 result_media_info["video_url_list"].append(video_url)
             else:
-                raise crawler.CrawlerException(f"未知media类型：{media_info}")
+                raise crawler.CrawlerException("未知media类型：%s" % media_info)
         result["media_info_list"].append(result_media_info)
     # 判断是不是还有下一页
     for page_info in crawler.get_json_value(media_pagination_response.json_data, "timeline", "instructions", 0, "addEntries", "entries", type_check=list):
         if crawler.get_json_value(page_info, "content", "operation", "cursor", "cursorType", type_check=str, default_value="") == "Bottom":
             result["next_page_cursor"] = crawler.get_json_value(page_info, "content", "operation", "cursor", "value", type_check=str)
     if result["next_page_cursor"] is None:
-        raise crawler.CrawlerException(f"返回信息{media_pagination_response.json_data}中获取下一页cursor获取失败")
+        raise crawler.CrawlerException("返回信息%s中获取下一页cursor获取失败" % media_pagination_response.json_data)
     else:
         # 和当前cursor一致表示到底了
         if cursor == result["next_page_cursor"]:
@@ -197,9 +197,9 @@ def get_one_page_media(account_name, account_id, cursor):
 def get_video_play_page(tweet_id):
     thread_event.wait()
     thread_event.clear()
-    video_play_url = f"https://api.twitter.com/1.1/videos/tweet/config/{tweet_id}.json"
+    video_play_url = "https://api.twitter.com/1.1/videos/tweet/config/%s.json" % tweet_id
     header_list = {
-        "authorization": f"Bearer {AUTHORIZATION}",
+        "authorization": "Bearer %s" % AUTHORIZATION,
         "x-csrf-token": COOKIE_INFO["ct0"],
     }
     if IS_LOGIN:
@@ -227,31 +227,31 @@ def get_video_play_page(tweet_id):
         if m3u8_file_response.status in [403, 404]:
             return result
         elif m3u8_file_response.status != net.HTTP_RETURN_CODE_SUCCEED:
-            raise crawler.CrawlerException(f"m3u8文件 {file_url} 访问失败，{crawler.request_failre(m3u8_file_response.status)}")
+            raise crawler.CrawlerException("m3u8文件 %s 访问失败，%s" % (file_url, crawler.request_failre(m3u8_file_response.status)))
         m3u8_file_response_content = m3u8_file_response.data.decode(errors="ignore")
         include_m3u8_file_list = re.findall("(/[\S]*.m3u8)", m3u8_file_response_content)
         if len(include_m3u8_file_list) > 0:
             # 生成最高分辨率视频所在的m3u8文件地址
-            file_url = f"{file_url_protocol}://{file_url_host}{include_m3u8_file_list[-1]}"
+            file_url = "%s://%s%s" % (file_url_protocol, file_url_host, include_m3u8_file_list[-1])
             m3u8_file_response = net.request(file_url, method="GET")
             if m3u8_file_response.status != net.HTTP_RETURN_CODE_SUCCEED:
-                raise crawler.CrawlerException(f"最高分辨率m3u8文件 {file_url} 访问失败，{crawler.request_failre(m3u8_file_response.status)}")
+                raise crawler.CrawlerException("最高分辨率m3u8文件 %s 访问失败，%s" % (file_url, crawler.request_failre(m3u8_file_response.status)))
             m3u8_file_response_content = m3u8_file_response.data.decode(errors="ignore")
         # 包含分P视频文件名的m3u8文件
         ts_url_find = re.findall("(/[\S]*.ts)", m3u8_file_response_content)
         if len(ts_url_find) == 0:
-            raise crawler.CrawlerException(f"m3u8文件{file_url}截取视频地址失败\n" + m3u8_file_response_content)
+            raise crawler.CrawlerException("m3u8文件%s截取视频地址失败\n%s" % (file_url, m3u8_file_response_content))
         result["video_url"] = []
         for ts_file_path in ts_url_find:
-            result["video_url"].append(f"{file_url_protocol}://{file_url_host}{ts_file_path}")
+            result["video_url"].append("%s://%s%s" % (file_url_protocol, file_url_host, ts_file_path))
     elif file_extension == "vmap":
         vmap_file_response = net.request(file_url, method="GET")
         if vmap_file_response.status != net.HTTP_RETURN_CODE_SUCCEED:
-            raise crawler.CrawlerException(f"vmap文件 {file_url} 访问失败，{crawler.request_failre(vmap_file_response.status)}")
+            raise crawler.CrawlerException("vmap文件 %s 访问失败，%s" % (file_url, crawler.request_failre(vmap_file_response.status)))
         vmap_file_response_content = vmap_file_response.data.decode(errors="ignore")
         tw_namespace = tool.find_sub_string(vmap_file_response_content, 'xmlns:tw="', '"')
         if not tw_namespace:
-            raise crawler.CrawlerException(f"vmap文件 {file_url} 截取xmlns:tw命名空间失败\n" + vmap_file_response_content)
+            raise crawler.CrawlerException("vmap文件 %s 截取xmlns:tw命名空间失败\n%s" % (file_url, vmap_file_response_content))
         media_file_elements = ElementTree.fromstring(vmap_file_response_content.strip()).iter("{%s}videoVariant" % tw_namespace)
         # 获取最高bit rate的视频地址
         bit_rate_to_url = {}
@@ -265,7 +265,7 @@ def get_video_play_page(tweet_id):
                 raise crawler.CrawlerException("视频节点解析url失败\n" + vmap_file_response_content)
             bit_rate_to_url[int(bit_rate)] = urllib.parse.unquote(url)
         if len(bit_rate_to_url) == 0:
-            raise crawler.CrawlerException(f"vmap文件 {file_url} 解析全部视频文件失败\n" + vmap_file_response_content)
+            raise crawler.CrawlerException("vmap文件 %s 解析全部视频文件失败\n%s" % (file_url, vmap_file_response_content))
         result["video_url"] = bit_rate_to_url[max(bit_rate_to_url)]
     # 直接是视频地址
     else:  # https://api.twitter.com/1.1/videos/tweet/config/996368816174084097.json
@@ -337,7 +337,7 @@ class Download(crawler.DownloadThread):
 
         # 获取所有可下载推特
         media_info_list = self.get_crawl_list()
-        self.step(f"需要下载的全部推特解析完毕，共{len(media_info_list)}个")
+        self.step("需要下载的全部推特解析完毕，共%s个" % len(media_info_list))
 
         # 从最早的推特开始下载
         while len(media_info_list) > 0:
@@ -352,20 +352,20 @@ class Download(crawler.DownloadThread):
         # 获取全部还未下载过需要解析的推特
         while not is_over:
             self.main_thread_check()  # 检测主线程运行状态
-            self.step(f"开始解析cursor：{cursor}页推特")
+            self.step("开始解析cursor：%s页推特" % cursor)
 
             # 获取指定时间点后的一页图片信息
             try:
                 media_pagination_response = get_one_page_media(self.index_key, self.single_save_data[1], cursor)
             except crawler.CrawlerException as e:
-                self.error(e.http_error(f"cursor：{cursor}后一页推特"))
+                self.error(e.http_error("cursor：%s后一页推特" % cursor))
                 raise
 
             if media_pagination_response["is_over"]:
                 break
 
-            self.trace(f"cursor：{cursor}页解析的全部推特：{media_pagination_response['media_info_list']}")
-            self.step(f"cursor：{cursor}页解析获取{len(media_pagination_response['media_info_list'])}个推特")
+            self.trace("cursor：%s页解析的全部推特：%s" % (cursor, media_pagination_response["media_info_list"]))
+            self.step("cursor：%s页解析获取%s个推特" % (cursor, len(media_pagination_response["media_info_list"])))
 
             # 寻找这一页符合条件的推特
             for media_info in media_pagination_response["media_info_list"]:
@@ -388,10 +388,10 @@ class Download(crawler.DownloadThread):
 
     # 解析单个推特
     def crawl_media(self, media_info):
-        self.step(f"开始解析推特{media_info['blog_id']}")
+        self.step("开始解析推特%s" % media_info["blog_id"])
 
-        self.trace(f"推特{media_info['blog_id']}解析的全部图片：{media_info['photo_url_list']}，全部视频：{media_info['video_url_list']}")
-        self.step(f"推特{media_info['blog_id']}解析获取{len(media_info['photo_url_list'])}张图片和{len(media_info['video_url_list'])}个视频")
+        self.trace("推特%s解析的全部图片：%s，全部视频：%s" % (media_info["blog_id"], media_info["photo_url_list"], media_info["video_url_list"]))
+        self.step("推特%s解析获取%s张图片和%s个视频" % (media_info["blog_id"], len(media_info["photo_url_list"]), len(media_info["video_url_list"])))
 
         # 图片下载
         if self.main_thread.is_download_photo:
@@ -409,21 +409,21 @@ class Download(crawler.DownloadThread):
         photo_index = 1
         for photo_url in media_info["photo_url_list"]:
             self.main_thread_check()  # 检测主线程运行状态
-            self.step(f"开始下载推特{media_info['blog_id']}的第{photo_index}张图片 {photo_url}")
+            self.step("开始下载推特%s的第%s张图片 %s" % (media_info["blog_id"], photo_index, photo_url))
 
-            photo_file_path = os.path.join(self.main_thread.photo_download_path, self.index_key, f"%019d_%02d.{net.get_file_extension(photo_url)}" % (media_info["blog_id"], photo_index))
+            photo_file_path = os.path.join(self.main_thread.photo_download_path, self.index_key, "%019d_%02d.%s" % (media_info["blog_id"], photo_index, net.get_file_extension(photo_url)))
             for retry_count in range(5):
                 download_return = net.Download(photo_url, photo_file_path)
                 if download_return.status == net.Download.DOWNLOAD_SUCCEED:
                     self.temp_path_list.append(photo_file_path)  # 设置临时目录
                     self.total_photo_count += 1  # 计数累加
-                    self.step(f"推特{media_info['blog_id']}的第{photo_index}张图片下载成功")
+                    self.step("推特%s的第%s张图片下载成功" % (media_info["blog_id"], photo_index))
                 else:
                     # 502报错，重新下载
                     if download_return.code == 502:
-                        self.error(f"推特{media_info['blog_id']}的第{photo_index}张图片 {photo_url} 下载失败，重试")
+                        self.error("推特%s的第%s张图片 %s 下载失败，重试" % (media_info["blog_id"], photo_index, photo_url))
                         continue
-                    self.error(f"推特{media_info['blog_id']}的第{photo_index}张图片 {photo_url} 下载失败，原因：{crawler.download_failre(download_return.code)}")
+                    self.error("推特%s的第%s张图片 %s 下载失败，原因：%s" % (media_info["blog_id"], photo_index, photo_url, crawler.download_failre(download_return.code)))
                     self.check_download_failure_exit()
                 break
             photo_index += 1
@@ -432,19 +432,19 @@ class Download(crawler.DownloadThread):
         video_index = 1
         for video_url in media_info["video_url_list"]:
             self.main_thread_check()  # 检测主线程运行状态
-            self.step(f"开始下载推特{media_info['blog_id']}的第{video_index}个视频 {video_url}")
+            self.step("开始下载推特%s的第%s个视频 %s" % (media_info["blog_id"], video_index, video_url))
 
             if len(media_info["video_url_list"]) > 1:
-                video_file_path = os.path.join(self.main_thread.video_download_path, self.index_key, f"%019d_%02d.{net.get_file_extension(video_url)}" % (media_info["blog_id"], video_index))
+                video_file_path = os.path.join(self.main_thread.video_download_path, self.index_key, "%019d_%02d.%s" % (media_info["blog_id"], video_index, net.get_file_extension(video_url)))
             else:
-                video_file_path = os.path.join(self.main_thread.video_download_path, self.index_key, f"%019d.{net.get_file_extension(video_url)}" % media_info["blog_id"])
+                video_file_path = os.path.join(self.main_thread.video_download_path, self.index_key, "%019d.%s" % (media_info["blog_id"], net.get_file_extension(video_url)))
             download_return = net.Download(video_url, video_file_path, auto_multipart_download=True)
             if download_return.status == net.Download.DOWNLOAD_SUCCEED:
                 self.temp_path_list.append(video_file_path)  # 设置临时目录
                 self.total_video_count += 1  # 计数累加
-                self.step(f"推特{media_info['blog_id']}的第{video_index}个视频下载成功")
+                self.step("推特%s的第%s个视频下载成功" % (media_info["blog_id"], video_index))
             else:
-                self.error(f"推特{media_info['blog_id']}的第{video_index}个视频 {video_url} 下载失败，原因：{crawler.download_failre(download_return.code)}")
+                self.error("推特%s的第%s个视频 %s 下载失败，原因：%s" % (media_info["blog_id"], video_index, video_url, crawler.download_failre(download_return.code)))
                 self.check_download_failure_exit()
             video_index += 1
 
