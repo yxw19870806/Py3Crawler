@@ -16,9 +16,9 @@ from common import *
 def get_one_page_album(account_name, page_count):
     # https://www.zcool.com.cn/u/17050872?myCate=0&sort=8&p=2
     if tool.is_integer(account_name):
-        album_pagination_url = f"https://www.zcool.com.cn/u/{account_name}"
+        album_pagination_url = "https://www.zcool.com.cn/u/%s" % account_name
     else:
-        album_pagination_url = f"https://{account_name}.zcool.com.cn/"
+        album_pagination_url = "https://%s.zcool.com.cn/" % account_name
     query_data = {
         "myCate": "0",
         "sort": "8",  # 按时间倒叙
@@ -64,11 +64,11 @@ def get_one_page_album(account_name, page_count):
             raise crawler.CrawlerException("作品信息截取作品日期信息失败\n" + album_selector.html())
         album_time_string = tool.find_sub_string(album_time_text, "创建时间：")
         if not album_time_string:
-            raise crawler.CrawlerException(f"作品日期信息{album_time_text}截取作品发布日期失败")
+            raise crawler.CrawlerException("作品日期信息%s截取作品发布日期失败" % album_time_text)
         try:
             album_time = time.strptime(album_time_string, "%Y-%m-%d %H:%M:%S")
         except ValueError:
-            raise crawler.CrawlerException(f"作品发布日期{album_time_string}的格式不正确")
+            raise crawler.CrawlerException("作品发布日期%s的格式不正确" % album_time_string)
         result_album_info["album_time"] = int(time.mktime(album_time))
         result["album_info_list"].append(result_album_info)
     result["is_over"] = album_list_selector.length == 0
@@ -77,7 +77,7 @@ def get_one_page_album(account_name, page_count):
 
 # 获取作品
 def get_album_page(album_id):
-    album_url = f"https://www.zcool.com.cn/work/{album_id}.html"
+    album_url = "https://www.zcool.com.cn/work/%s.html" % album_id
     album_response = net.request(album_url, method="GET")
     result = {
         "photo_url_list": [],  # 全部图片地址
@@ -132,7 +132,7 @@ class Download(crawler.DownloadThread):
     def _run(self):
         # 获取所有可下载作品
         album_info_list = self.get_crawl_list()
-        self.step(f"需要下载的全部作品解析完毕，共{len(album_info_list)}个")
+        self.step("需要下载的全部作品解析完毕，共%s个" % len(album_info_list))
 
         # 从最早的作品开始下载
         while len(album_info_list) > 0:
@@ -148,16 +148,16 @@ class Download(crawler.DownloadThread):
         # 获取全部还未下载过需要解析的作品
         while not is_over:
             self.main_thread_check()  # 检测主线程运行状态
-            self.step(f"开始解析第{page_count}页作品")
+            self.step("开始解析第%s页作品" % page_count)
 
             try:
                 album_pagination_response = get_one_page_album(self.index_key, page_count)
             except crawler.CrawlerException as e:
-                self.error(e.http_error(f"第{page_count}页作品"))
+                self.error(e.http_error("第%s页作品" % page_count))
                 raise
 
-            self.trace(f"第{page_count}页解析的全部作品：{album_pagination_response['album_info_list']}")
-            self.step(f"第{page_count}页解析获取{len(album_pagination_response['album_info_list'])}个作品")
+            self.trace("第%s页解析的全部作品：%s" % (page_count, album_pagination_response["album_info_list"]))
+            self.step("第%s页解析获取%s个作品" % (page_count, len(album_pagination_response["album_info_list"])))
 
             # 寻找这一页符合条件的作品
             for album_info in album_pagination_response["album_info_list"]:
@@ -183,33 +183,33 @@ class Download(crawler.DownloadThread):
 
     # 解析单个作品
     def crawl_album(self, album_info):
-        self.step(f"开始解析作品 {album_info['album_id']}")
+        self.step("开始解析作品 %s" % album_info["album_id"])
 
         # 获取作品
         try:
             album_response = get_album_page(album_info["album_id"])
         except crawler.CrawlerException as e:
-            self.error(e.http_error(f"作品{album_info['album_id']}《{album_info['album_title']}》"))
+            self.error(e.http_error("作品%s《%s》" % (album_info["album_id"], album_info["album_title"])))
             raise
 
-        self.trace(f"作品{album_info['album_id']}解析的全部图片：{album_response['photo_url_list']}")
-        self.step(f"作品{album_info['album_id']}解析获取{len(album_response['photo_url_list'])}张图片")
+        self.trace("作品%s解析的全部图片：%s" % (album_info["album_id"], album_response["photo_url_list"]))
+        self.step("作品%s解析获取%s张图片" % (album_info["album_id"], len(album_response["photo_url_list"])))
 
         photo_index = 1
-        album_path = os.path.join(self.main_thread.photo_download_path, self.index_key, f"{album_info['album_id']} {path.filter_text(album_info['album_title'])}")
+        album_path = os.path.join(self.main_thread.photo_download_path, self.index_key, "%s %s" % (album_info["album_id"], path.filter_text(album_info["album_title"])))
         self.temp_path_list.append(album_path)
         for photo_url in album_response["photo_url_list"]:
             self.main_thread_check()  # 检测主线程运行状态
             photo_url = get_photo_url(photo_url)
-            self.step(f"开始下载作品{album_info['album_id']}《{album_info['album_title']}》的第{photo_index}张图片 {photo_url}")
+            self.step("开始下载作品%s《%s》的第%s张图片 %s" % (album_info["album_id"], album_info["album_title"], photo_index, photo_url))
 
-            file_path = os.path.join(album_path, f"%02d.{net.get_file_extension(photo_url)}" % photo_index)
+            file_path = os.path.join(album_path, "%02d.%s" % (photo_index, net.get_file_extension(photo_url)))
             download_return = net.Download(photo_url, file_path)
             if download_return.status == net.Download.DOWNLOAD_SUCCEED:
                 self.total_photo_count += 1  # 计数累加
-                self.step(f"作品{album_info['album_id']}《{album_info['album_title']}》的第{photo_index}张图片下载成功")
+                self.step("作品%s《%s》的第%s张图片下载成功" % (album_info["album_id"], album_info["album_title"], photo_index))
             else:
-                self.error(f"作品{album_info['album_id']}《{album_info['album_title']}》的第{photo_index}张图片 {photo_url} 下载失败，原因：{crawler.download_failre(download_return.code)}")
+                self.error("作品%s《%s》的第%s张图片 %s 下载失败，原因：%s" % (album_info["album_id"], album_info["album_title"], photo_index, photo_url, crawler.download_failre(download_return.code)))
                 self.check_download_failure_exit()
             photo_index += 1
 
