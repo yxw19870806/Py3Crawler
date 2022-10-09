@@ -49,7 +49,7 @@ def get_one_page_blog(account_id, page_count):
             raise crawler.CrawlerException("日志信息截取日志地址失败\n" + blog_selector.html())
         blog_id = blog_url.split("/")[-1].split("?")[0]
         if not tool.is_integer(blog_id):
-            raise crawler.CrawlerException(f"日志地址 {blog_url} 截取日志id失败")
+            raise crawler.CrawlerException("日志地址 %s 截取日志id失败" % blog_url)
         result_blog_info["blog_id"] = int(blog_id)
         # 获取图片地址
         photo_list_selector = pq(blog_selector).find("img")
@@ -102,7 +102,7 @@ class Download(crawler.DownloadThread):
     def _run(self):
         # 获取所有可下载日志
         blog_info_list = self.get_crawl_list()
-        self.step(f"需要下载的全部日志解析完毕，共{len(blog_info_list)}个")
+        self.step("需要下载的全部日志解析完毕，共%s个" % len(blog_info_list))
 
         # 从最早的日志开始下载
         while len(blog_info_list) > 0:
@@ -117,17 +117,17 @@ class Download(crawler.DownloadThread):
         # 获取全部还未下载过需要解析的日志
         while not is_over:
             self.main_thread_check()  # 检测主线程运行状态
-            self.step(f"开始解析第{page_count}页日志")
+            self.step("开始解析第%s页日志" % page_count)
 
             # 获取一页博客信息
             try:
                 blog_pagination_response = get_one_page_blog(self.index_key, page_count)
             except crawler.CrawlerException as e:
-                self.error(e.http_error(f"第{page_count}页日志"))
+                self.error(e.http_error("第%s页日志" % page_count))
                 raise
 
-            self.trace(f"第{page_count}页解析的全部日志：{blog_pagination_response['blog_info_list']}")
-            self.step(f"第{page_count}页解析获取{len(blog_pagination_response['blog_info_list'])}个日志")
+            self.trace("第%s页解析的全部日志：%s" % (page_count, blog_pagination_response["blog_info_list"]))
+            self.step("第%s页解析获取%s个日志" % (page_count, len(blog_pagination_response["blog_info_list"])))
 
             # 寻找这一页符合条件的日志
             for blog_info in blog_pagination_response["blog_info_list"]:
@@ -148,24 +148,24 @@ class Download(crawler.DownloadThread):
 
     # 解析单个日志
     def crawl_blog(self, blog_info):
-        self.step(f"开始解析日志{blog_info['blog_id']}")
+        self.step("开始解析日志%s" % blog_info["blog_id"])
 
-        self.trace(f"日志{blog_info['blog_id']}解析的全部图片：{blog_info['photo_url_list']}")
-        self.step(f"日志{blog_info['blog_id']}解析获取{len(blog_info['photo_url_list'])}张图片")
+        self.trace("日志%s解析的全部图片：%s" % (blog_info["blog_id"], blog_info["photo_url_list"]))
+        self.step("日志%s解析获取%s张图片" % (blog_info["blog_id"], len(blog_info["photo_url_list"])))
 
         photo_index = 1
         for photo_url in blog_info["photo_url_list"]:
             self.main_thread_check()  # 检测主线程运行状态
-            self.step(f"开始下载日志{blog_info['blog_id']}的第{photo_index}张图片 {photo_url}")
+            self.step("开始下载日志%s的第%s张图片 %s" % (blog_info["blog_id"], photo_index, photo_url))
 
-            file_path = os.path.join(self.main_thread.photo_download_path, self.display_name, f"%05d_%02d.{net.get_file_extension(photo_url)}" % (blog_info["blog_id"], photo_index))
+            file_path = os.path.join(self.main_thread.photo_download_path, self.display_name, "%05d_%02d.%s" % (blog_info["blog_id"], photo_index, net.get_file_extension(photo_url)))
             download_return = net.Download(photo_url, file_path)
             if download_return.status == net.Download.DOWNLOAD_SUCCEED:
                 self.temp_path_list.append(file_path)  # 设置临时目录
                 self.total_photo_count += 1  # 计数累加
-                self.step(f"日志{blog_info['blog_id']}的第{photo_index}张图片下载成功")
+                self.step("日志%s的第%s张图片下载成功" % (blog_info["blog_id"], photo_index))
             else:
-                self.error(f"日志{blog_info['blog_id']}的第{photo_index}张图片 {photo_url} 下载失败，原因：{crawler.download_failre(download_return.code)}")
+                self.error("日志%s的第%s张图片 %s 下载失败，原因：%s" % (blog_info["blog_id"], photo_index, photo_url, crawler.download_failre(download_return.code)))
                 self.check_download_failure_exit()
             photo_index += 1
 

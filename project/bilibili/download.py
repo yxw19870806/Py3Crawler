@@ -66,13 +66,13 @@ class BiliBiliDownload(bilibili.BiliBili):
             log.step("视频需要登录才能访问，跳过")
             return
         if len(video_response["video_part_info_list"]) > 1:
-            log.step(f"视频共获取{len(video_response['video_part_info_list'])}个分段")
+            log.step("视频共获取%s个分段" % len(video_response["video_part_info_list"]))
 
         part_index = 1
         for video_part_info in video_response["video_part_info_list"]:
             if len(video_part_info["video_url_list"]) == 0:
                 if len(video_response["video_part_info_list"]) > 1:
-                    log.step(f"视频第{part_index}个分段已删除")
+                    log.step("视频第%s个分段已删除" % part_index)
                 else:
                     log.step("视频已删除")
                 return
@@ -83,7 +83,7 @@ class BiliBiliDownload(bilibili.BiliBili):
                     video_title += "_" + video_part_info["video_part_title"]
                 else:
                     video_title += "_" + str(part_index)
-            video_name = f"%010d {path.filter_text(video_title)}.{net.get_file_extension(video_part_info['video_url_list'][0])}" % int(video_id)
+            video_name = "%010d %s.%s" % (int(video_id), path.filter_text(video_title), net.get_file_extension(video_part_info["video_url_list"][0]))
 
             # 选择下载目录
             log.step("请选择下载目录")
@@ -98,29 +98,29 @@ class BiliBiliDownload(bilibili.BiliBili):
                 continue
 
             # 开始下载
-            log.step(f"\n视频标题：{video_title}\n视频地址：{video_part_info['video_url_list']}\n下载路径：{file_path}")
+            log.step("\n视频标题：%s\n视频地址：%s\n下载路径：%s" % (video_title, video_part_info["video_url_list"], file_path))
             video_index = 1
             for video_url in video_part_info["video_url_list"]:
                 if len(video_part_info["video_url_list"]) > 1:
                     temp_list = os.path.basename(file_path).split(".")
                     file_extension = temp_list[-1]
                     file_name = ".".join(temp_list[:-1])
-                    file_name += f" ({video_index})"
-                    file_real_path = os.path.abspath(os.path.join(os.path.dirname(file_path), f"{file_name}.{file_extension}"))
+                    file_name += " (%s)" % video_index
+                    file_real_path = os.path.abspath(os.path.join(os.path.dirname(file_path), "%s.%s") % (file_name, file_extension))
                 else:
                     file_real_path = file_path
 
-                download_return = net.Download(video_url, file_real_path, auto_multipart_download=True, header_list={"Referer": f"https://www.bilibili.com/video/av{video_id}"})
+                download_return = net.Download(video_url, file_real_path, auto_multipart_download=True, header_list={"Referer": "https://www.bilibili.com/video/av%s" % video_id})
                 if download_return.status == net.Download.DOWNLOAD_SUCCEED:
                     if len(video_part_info["video_url_list"]) == 1:
-                        log.step(f"视频《{video_title}》下载成功")
+                        log.step("视频《%s》下载成功" % video_title)
                     else:
-                        log.step(f"视频《{video_title}》第{video_index}段下载成功")
+                        log.step("视频《%s》第%s段下载成功" % (video_title, video_index))
                 else:
                     if len(video_part_info["video_url_list"]) == 1:
-                        log.step(f"视频《{video_title}》下载失败，原因：{crawler.download_failre(download_return.code)}")
+                        log.step("视频《%s》下载失败，原因：%s" % (video_title, crawler.download_failre(download_return.code)))
                     else:
-                        log.step(f"视频《{video_title}》第{video_index}段下载失败，原因：{crawler.download_failre(download_return.code)}")
+                        log.step("视频《%s》第%s段下载失败，原因：%s" % (video_title, video_index, crawler.download_failre(download_return.code)))
                 video_index += 1
 
 

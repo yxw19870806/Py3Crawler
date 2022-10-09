@@ -28,11 +28,11 @@ def get_account_from_index():
         # 获取账号id
         account_id = tool.find_sub_string(member_info, "&ct=", '">')
         if not account_id:
-            raise crawler.CrawlerException(f"账号信息{member_info}中截取账号id失败")
+            raise crawler.CrawlerException("账号信息%s中截取账号id失败" % member_info)
         # 获取成员名字
         account_name = tool.find_sub_string(member_info, '<p class="name">', "</p>").strip().replace(" ", "")
         if not account_name:
-            raise crawler.CrawlerException(f"账号信息{member_info}中截取成员名字失败")
+            raise crawler.CrawlerException("账号信息%s中截取成员名字失败" % member_info)
         account_list[account_id] = account_name
     return account_list
 

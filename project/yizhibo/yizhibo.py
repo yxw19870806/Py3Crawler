@@ -50,11 +50,11 @@ def get_photo_header(photo_url):
         raise crawler.CrawlerException(crawler.request_failre(photo_head_response.status))
     last_modified = photo_head_response.headers.get("Last-Modified")
     if last_modified is None:
-        raise crawler.CrawlerException(f"图片header{photo_head_response.headers}中'Last-Modified'字段不存在")
+        raise crawler.CrawlerException("图片header%s中'Last-Modified'字段不存在" % photo_head_response.headers)
     try:
         last_modified_time = time.strptime(last_modified, "%a, %d %b %Y %H:%M:%S %Z")
     except ValueError:
-        raise crawler.CrawlerException(f"图片上传时间{last_modified}的格式不正确")
+        raise crawler.CrawlerException("图片上传时间%s的格式不正确" % last_modified)
     result["photo_time"] = int(time.mktime(last_modified_time)) - time.timezone
     return result
 
@@ -87,7 +87,7 @@ def get_video_index_page(account_id):
 # video_id -> bVFjTEK9nYTEqQ6p
 def get_video_info_page(video_id):
     # https://www.yizhibo.com/l/bVFjTEK9nYTEqQ6p.html
-    video_info_url = f"https://www.yizhibo.com/l/{video_id}.html"
+    video_info_url = "https://www.yizhibo.com/l/%s.html" % video_id
     video_info_response = net.request(video_info_url, method="GET")
     result = {
         "video_time": 0,  # 视频上传时间
@@ -105,7 +105,7 @@ def get_video_info_page(video_id):
     video_file_url = tool.find_sub_string(video_info_response_content, 'play_url:"', '",')
     video_file_response = net.request(video_file_url, method="GET")
     if video_file_response.status != net.HTTP_RETURN_CODE_SUCCEED:
-        raise crawler.CrawlerException(f"m3u8文件 {video_file_url}，" + crawler.request_failre(video_file_response.status))
+        raise crawler.CrawlerException("m3u8文件 %s，%s" % (video_file_url, crawler.request_failre(video_file_response.status)))
     video_file_response_content = video_file_response.data.decode(errors="ignore")
     ts_id_list = re.findall(r"([\S]*.ts)", video_file_response_content)
     if len(ts_id_list) == 0:
@@ -151,7 +151,7 @@ class Download(crawler.DownloadThread):
         if self.main_thread.is_download_photo:
             # 获取所有可下载图片
             photo_info_list = self.get_crawl_photo_list()
-            self.step(f"需要下载的全部图片解析完毕，共{len(photo_info_list)}张")
+            self.step("需要下载的全部图片解析完毕，共%s张" % len(photo_info_list))
 
             # 从最早的图片开始下载
             while len(photo_info_list) > 0:
@@ -163,7 +163,7 @@ class Download(crawler.DownloadThread):
         if self.main_thread.is_download_video:
             # 获取所有可下载视频
             video_info_list = self.get_crawl_video_list()
-            self.step(f"需要下载的全部视频解析完毕，共{len(video_info_list)}个")
+            self.step("需要下载的全部视频解析完毕，共%s个" % len(video_info_list))
 
             # 从最早的视频开始下载
             while len(video_info_list) > 0:
@@ -180,19 +180,19 @@ class Download(crawler.DownloadThread):
             self.error(e.http_error("图片首页"))
             return []
 
-        self.trace(f"解析的全部图片：{photo_index_response['photo_url_list']}")
-        self.step(f"解析获取{len(photo_index_response['photo_url_list'])}张图片")
+        self.trace("解析的全部图片：%s" % photo_index_response["photo_url_list"])
+        self.step("解析获取%s张图片" % len(photo_index_response["photo_url_list"]))
 
         # 寻找这一页符合条件的图片
         photo_info_list = []
         for photo_url in photo_index_response["photo_url_list"]:
             self.main_thread_check()  # 检测主线程运行状态
-            self.step(f"开始解析图片{photo_url}")
+            self.step("开始解析图片%s" % photo_url)
 
             try:
                 photo_head_response = get_photo_header(photo_url)
             except crawler.CrawlerException as e:
-                self.error(e.http_error(f"图片{photo_url}"))
+                self.error(e.http_error("图片%s" % photo_url))
                 return []
 
             # 检查是否达到存档记录
@@ -206,15 +206,15 @@ class Download(crawler.DownloadThread):
     # 解析单张图片
     def crawl_photo(self, photo_info):
         photo_index = int(self.single_save_data[3]) + 1
-        self.step(f"开始下载第{photo_index}张图片 {photo_info['photo_url']}")
+        self.step("开始下载第%s张图片 %s" % (photo_index, photo_info["photo_url"]))
 
-        photo_file_path = os.path.join(self.main_thread.photo_download_path, self.display_name, f"%04d.{net.get_file_extension(photo_info['photo_url'])}" % photo_index)
+        photo_file_path = os.path.join(self.main_thread.photo_download_path, self.display_name, "%04d.%s" % (photo_index, net.get_file_extension(photo_info["photo_url"])))
         download_return = net.Download(photo_info["photo_url"], photo_file_path)
         if download_return.status == net.Download.DOWNLOAD_SUCCEED:
             self.total_photo_count += 1  # 计数累加
-            self.step(f"第{photo_index}张图片下载成功")
+            self.step("第%s张图片下载成功" % photo_index)
         else:
-            self.error(f"第{photo_index}张图片 {photo_info['photo_url']} 下载失败，原因：{crawler.download_failre(download_return.code)}")
+            self.error("第%s张图片 %s 下载失败，原因：%s" % (photo_index, photo_info["photo_url"], crawler.download_failre(download_return.code)))
             if self.check_download_failure_exit(False):
                 return False
 
@@ -233,19 +233,19 @@ class Download(crawler.DownloadThread):
             self.error(e.http_error("视频首页"))
             return []
 
-        self.trace(f"解析的全部视频：{video_pagination_response['video_id_list']}")
-        self.step(f"解析获取{len(video_pagination_response['video_id_list'])}个视频")
+        self.trace("解析的全部视频：%s" % video_pagination_response["video_id_list"])
+        self.step("解析获取%s个视频" % len(video_pagination_response["video_id_list"]))
 
         # 寻找这一页符合条件的视频
         for video_id in video_pagination_response["video_id_list"]:
             self.main_thread_check()  # 检测主线程运行状态
-            self.step(f"开始解析视频{video_id}")
+            self.step("开始解析视频%s" % video_id)
 
             # 获取视频的时间和下载地址
             try:
                 video_info_response = get_video_info_page(video_id)
             except crawler.CrawlerException as e:
-                self.error(e.http_error(f"视频{video_id}"))
+                self.error(e.http_error("视频%s" % video_id))
                 return []
 
             # 检查是否达到存档记录
@@ -259,15 +259,15 @@ class Download(crawler.DownloadThread):
     # 解析单个视频
     def crawl_video(self, video_info):
         video_index = int(self.single_save_data[1]) + 1
-        self.step(f"开始下载第{video_index}个视频 {video_info['video_url_list']}")
+        self.step("开始下载第%s个视频 %s" % (video_index, video_info["video_url_list"]))
 
         video_file_path = os.path.join(self.main_thread.video_download_path, self.display_name, "%04d.ts" % video_index)
         download_return = net.download_from_list(video_info["video_url_list"], video_file_path)
         if download_return:
             self.total_video_count += 1  # 计数累加
-            self.step(f"第{video_index}个视频下载成功")
+            self.step("第%s个视频下载成功" % video_index)
         else:
-            self.error(f"第{video_index}个视频 {video_info['video_url_list']} 下载失败")
+            self.error("第%s个视频 %s 下载失败" % (video_index, video_info["video_url_list"]))
             if self.check_download_failure_exit(False):
                 return False
 

@@ -34,7 +34,7 @@ def check_login():
 
 # 获取首页，判断是否支持https以及是否启用safe-mode和"Show this blog on the web"
 def get_index_setting(account_id):
-    index_url = f"https://{account_id}.tumblr.com/"
+    index_url = "https://%s.tumblr.com/" % account_id
     index_response = net.request(index_url, method="GET", is_auto_redirect=False)
     is_https = True
     is_private = False
@@ -46,9 +46,9 @@ def get_index_setting(account_id):
         # raise crawler.CrawlerException("此账号已重定向第三方网站")
     elif index_response.status == 302:
         redirect_url = index_response.getheader("Location")
-        if redirect_url.find(f"http://{account_id}.tumblr.com/") == 0:
+        if redirect_url.find("http://%s.tumblr.com/" % account_id) == 0:
             is_https = False
-            index_url = f"http://{account_id}.tumblr.com/"
+            index_url = "http://%s.tumblr.com/" % account_id
             index_response = net.request(index_url, method="GET", is_auto_redirect=False)
             if index_response.status == net.HTTP_RETURN_CODE_SUCCEED:
                 return is_https, is_private
@@ -60,7 +60,7 @@ def get_index_setting(account_id):
             if tool.find_sub_string(redirect_url, "?https://www.tumblr.com/safe-mode?url=").find("http://") == 0:
                 is_https = False
         # "Show this blog on the web" disabled
-        elif redirect_url.find(f"//www.tumblr.com/login_required/{account_id}") > 0:
+        elif redirect_url.find("//www.tumblr.com/login_required/%s" % account_id) > 0:
             is_private = True
             index_response = net.request(redirect_url, method="GET", cookies_list=COOKIE_INFO)
             if index_response.status == 404:
@@ -79,21 +79,21 @@ def get_one_page_post(account_id, page_count, is_https):
     else:
         protocol_type = "http"
     if page_count == 1:
-        post_pagination_url = f"{protocol_type}://{account_id}.tumblr.com/"
+        post_pagination_url = "%s://%s.tumblr.com/" % (protocol_type, account_id)
     else:
-        post_pagination_url = f"{protocol_type}://{account_id}.tumblr.com/page/{page_count}"
+        post_pagination_url = "%s://%s.tumblr.com/page/%s" % (protocol_type, account_id, page_count)
     post_pagination_response = net.request(post_pagination_url, method="GET")
     result = {
         "is_over": False,  # 是否最后一页日志
         "post_info_list": [],  # 全部日志信息
     }
     if post_pagination_response.status == 404:
-        log.step(f"{account_id} 第{page_count}页日志异常，重试")
+        log.step("%s 第%s页日志异常，重试" % (account_id, page_count))
         time.sleep(5)
         return get_one_page_post(account_id, page_count, is_https)
     # elif post_pagination_response.status in [503, 504, net.HTTP_RETURN_CODE_RETRY] and page_count > 1:
     #     # 服务器错误，跳过这页
-    #     log.error(f"{account_id} 第{page_count}页日志无法访问，跳过")
+    #     log.error("%s 第%s页日志无法访问，跳过" % (account_id, page_count))
     #     return result
     elif post_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(post_pagination_response.status))
@@ -116,7 +116,7 @@ def get_one_page_post(account_id, page_count, is_https):
         # 获取日志id
         post_id = tool.find_sub_string(result_post_info["post_url"], "/post/").split("/")[0]
         if not tool.is_integer(post_id):
-            crawler.CrawlerException(f"日志地址{result_post_info['post_url']}截取日志id失败")
+            crawler.CrawlerException("日志地址%s截取日志id失败" % result_post_info["post_url"])
         result_post_info["post_id"] = int(post_id)
         result["post_info_list"].append(result_post_info)
     return result
@@ -137,7 +137,7 @@ def get_one_page_private_blog(account_id, page_count):
     }
     header_list = {
         "Host": "www.tumblr.com",
-        "Referer": f"https://www.tumblr.com/dashboard/blog/{account_id}/",
+        "Referer": "https://www.tumblr.com/dashboard/blog/%s/" % account_id,
         "User-Agent": USER_AGENT,
         "X-Requested-With": "XMLHttpRequest",
     }
@@ -147,13 +147,13 @@ def get_one_page_private_blog(account_id, page_count):
         "post_info_list": [],  # 全部日志信息
     }
     if post_pagination_response.status == 404:
-        log.step(f"{account_id} 第{page_count}页日志异常，重试")
+        log.step("%s 第%s页日志异常，重试" % (account_id, page_count))
         time.sleep(5)
         return get_one_page_private_blog(account_id, page_count)
     elif post_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(post_pagination_response.status))
     if crawler.get_json_value(post_pagination_response.json_data, "meta", "status", type_check=int) != 200:
-        raise crawler.CrawlerException(f"返回信息{post_pagination_response.json_data}中'status'字段取值不正确")
+        raise crawler.CrawlerException("返回信息%s中'status'字段取值不正确" % post_pagination_response.json_data)
     post_info_list = crawler.get_json_value(post_pagination_response.json_data, "response", "posts", type_check=list)
     for post_info in post_info_list:
         result_post_info = {
@@ -168,7 +168,7 @@ def get_one_page_private_blog(account_id, page_count):
         # 获取日志id
         post_id = tool.find_sub_string(result_post_info["post_url"], "/post/").split("/")[0]
         if not tool.is_integer(post_id):
-            crawler.CrawlerException(f"日志地址 {result_post_info['post_url']} 截取日志id失败")
+            crawler.CrawlerException("日志地址 %s 截取日志id失败" % result_post_info["post_url"])
         result_post_info["post_id"] = int(post_id)
         # 视频
         if crawler.get_json_value(post_info, "type", type_check=str) == "video":
@@ -227,9 +227,9 @@ def get_post_page(post_url, post_id):
             result["photo_url_list"].append(photo_url)
         post_selector = pq(post_response_content).find("article")
         if post_selector.length > 1:
-            post_selector = pq(post_response_content).find(f"article[data-post-id='{post_id}']")
+            post_selector = pq(post_response_content).find("article[data-post-id='%s']" % post_id)
             if post_selector.length == 0:
-                post_selector = pq(post_response_content).find(f"article[id='{post_id}']")
+                post_selector = pq(post_response_content).find("article[id='%s']" % post_id)
         if post_selector.length <= 1:
             if post_selector.length == 0:
                 video_selector = pq(post_response_content).find("source")
@@ -238,7 +238,7 @@ def get_post_page(post_url, post_id):
             if video_selector.length == 1:
                 result["video_url"] = video_selector.attr("src")
             elif video_selector.length > 1:
-                log.notice(f"{post_url}存在多个source标签")
+                log.notice("%s存在多个source标签" % post_url)
     elif not og_type:
         script_json_html = tool.find_sub_string(post_page_head, '<script type="application/ld+json">', "</script>").strip()
         if not script_json_html:
@@ -255,7 +255,7 @@ def get_post_page(post_url, post_id):
         elif isinstance(image_info, str):
             result["photo_url_list"].append(image_info)
         else:
-            raise crawler.CrawlerException(f"页面脚本{script_json}中'image'字段类型错误")
+            raise crawler.CrawlerException("页面脚本%s中'image'字段类型错误" % script_json)
     else:
         # 获取全部图片地址
         photo_url_list = re.findall(r'"(http[s]?://\d*[.]?media.tumblr.com/[^"]*)"', post_page_head)
@@ -345,7 +345,7 @@ def get_video_play_page(account_id, post_id, is_https):
         protocol_type = "https"
     else:
         protocol_type = "http"
-    video_play_url = f"{protocol_type}://www.tumblr.com/video/{account_id}/{post_id}/0"
+    video_play_url = "%s://www.tumblr.com/video/%s/%s/0" % (protocol_type, account_id, post_id)
     video_play_response = net.request(video_play_url, method="GET", is_auto_redirect=False)
     result = {
         "is_password": False,  # 是否加密
@@ -359,7 +359,7 @@ def get_video_play_page(account_id, post_id, is_https):
         result["is_password"] = True
         return result
     elif video_play_response.status == 404:
-        log.step(f"日志{post_id}视频信息页访问异常，重试")
+        log.step("日志%s视频信息页访问异常，重试" % post_id)
         time.sleep(30)
         return get_video_play_page(account_id, post_id, is_https)
     elif video_play_response.status != net.HTTP_RETURN_CODE_SUCCEED:
@@ -450,7 +450,7 @@ class Download(crawler.DownloadThread):
         while start_page_count >= 1:
             # 获取所有可下载日志
             post_info_list = self.get_crawl_list(start_page_count)
-            self.step(f"需要下载的全部日志解析完毕，共{len(post_info_list)}个")
+            self.step("需要下载的全部日志解析完毕，共%s个" % len(post_info_list))
 
             # 从最早的日志开始下载
             while len(post_info_list) > 0:
@@ -471,7 +471,7 @@ class Download(crawler.DownloadThread):
                 else:
                     post_pagination_response = get_one_page_post(self.index_key, start_page_count, self.is_https)
             except crawler.CrawlerException as e:
-                self.error(e.http_error(f"第{start_page_count}页日志"))
+                self.error(e.http_error("第%s页日志" % start_page_count))
                 raise
 
             # 这页没有任何内容，返回上一个检查节点
@@ -484,7 +484,7 @@ class Download(crawler.DownloadThread):
                 start_page_count -= EACH_LOOP_MAX_PAGE_COUNT
                 break
 
-            self.step(f"前{start_page_count}页日志全部符合条件，跳过{EACH_LOOP_MAX_PAGE_COUNT}页后继续查询")
+            self.step("前%s页日志全部符合条件，跳过%s页后继续查询" % (start_page_count, EACH_LOOP_MAX_PAGE_COUNT))
         return start_page_count
 
     # 获取所有可下载日志
@@ -495,7 +495,7 @@ class Download(crawler.DownloadThread):
         # 获取全部还未下载过需要解析的日志
         while not is_over:
             self.main_thread_check()  # 检测主线程运行状态
-            self.step(f"开始解析第{page_count}页日志")
+            self.step("开始解析第%s页日志" % page_count)
 
             # 获取一页的日志地址
             try:
@@ -504,14 +504,14 @@ class Download(crawler.DownloadThread):
                 else:
                     post_pagination_response = get_one_page_post(self.index_key, page_count, self.is_https)
             except crawler.CrawlerException as e:
-                self.error(e.http_error(f"第{page_count}页日志"))
+                self.error(e.http_error("第%s页日志" % page_count))
                 raise
 
             if not self.is_private and post_pagination_response["is_over"]:
                 break
 
-            self.trace(f"第{page_count}页解析的全部日志：{post_pagination_response['post_info_list']}")
-            self.step(f"第{page_count}页解析获取{len(post_pagination_response['post_info_list'])}个日志")
+            self.trace("第%s页解析的全部日志：%s" % (page_count, post_pagination_response["post_info_list"]))
+            self.step("第%s页解析获取%s个日志" % (page_count, len(post_pagination_response["post_info_list"])))
 
             # 寻找这一页符合条件的日志
             for post_info in post_pagination_response["post_info_list"]:
@@ -536,7 +536,7 @@ class Download(crawler.DownloadThread):
 
     # 解析单个日志
     def crawl_post(self, post_info):
-        self.step(f"开始解析日志 {post_info['post_id']}")
+        self.step("开始解析日志 %s" % post_info["post_id"])
 
         post_url = post_info["post_url"][:post_info["post_url"].find(str(post_info["post_id"])) + len(str(post_info["post_id"]))]
 
@@ -549,14 +549,14 @@ class Download(crawler.DownloadThread):
             try:
                 post_response = get_post_page(post_info["post_url"], post_info["post_id"])
             except crawler.CrawlerException as e:
-                self.error(e.http_error(f"日志 {post_url}"))
+                self.error(e.http_error("日志 %s" % post_url))
                 raise
             if post_response["is_delete"]:
                 if post_info["post_url"].find("/hey-this-post-may-contain-adult-content-so-weve") > 0 or \
                         post_info["post_url"].find(urllib.parse.quote("/この投稿には成人向けコンテンツか含まれている可能性があるため非公開となりました-もっと知る")) > 0:
-                    self.step(f"日志 {post_info['post_url']} 已被删除，跳过")
+                    self.step("日志 %s 已被删除，跳过" % post_info["post_url"])
                 else:
-                    self.error(f"日志 {post_info['post_url']} 已被删除，跳过")
+                    self.error("日志 %s 已被删除，跳过" % post_info["post_url"])
             has_video = post_response["has_video"]
             photo_url_list = post_response["photo_url_list"]
             video_url = post_response["video_url"]
@@ -567,28 +567,28 @@ class Download(crawler.DownloadThread):
                 try:
                     video_play_response = get_video_play_page(self.index_key, post_info["post_id"], self.is_https)
                 except crawler.CrawlerException as e:
-                    self.error(e.http_error(f"日志 {post_url}"))
+                    self.error(e.http_error("日志 %s" % post_url))
                     raise
 
                 if video_play_response["is_password"]:
-                    self.error(f"日志 {post_url} 视频需要密码，跳过")
+                    self.error("日志 %s 视频需要密码，跳过" % post_url)
                     break
 
                 video_url = video_play_response["video_url"]
 
             # 第三方视频，跳过
             if video_url is None:
-                self.error(f"日志 {post_url} 存在第三方视频，跳过")
+                self.error("日志 %s 存在第三方视频，跳过" % post_url)
                 break
 
-            self.step(f"日志 {post_info['post_id']} 开始下载视频 {video_url}")
+            self.step("日志 %s 开始下载视频 %s" % (post_info["post_id"], video_url))
 
             video_file_path = os.path.join(self.main_thread.video_download_path, self.index_key, "%012d.mp4" % post_info["post_id"])
             download_return = net.Download(video_url, video_file_path, auto_multipart_download=True)
             if download_return.status == net.Download.DOWNLOAD_SUCCEED:
                 # 设置临时目录
                 self.temp_path_list.append(video_file_path)
-                self.step(f"日志 {post_info['post_id']} 视频下载成功")
+                self.step("日志 %s 视频下载成功" % post_info["post_id"])
             else:
                 if download_return.code == 403 and video_url.find("_r1_720") != -1:
                     video_url = video_url.replace("_r1_720", "_r1")
@@ -596,9 +596,9 @@ class Download(crawler.DownloadThread):
                     if download_return.status == net.Download.DOWNLOAD_SUCCEED:
                         self.temp_path_list.append(video_file_path)  # 设置临时目录
                         self.total_video_count += 1  # 计数累加
-                        self.step(f"日志 {post_info['post_id']} 视频下载成功")
+                        self.step("日志 %s 视频下载成功" % post_info["post_id"])
                         break
-                error_message = f"日志 {post_url} 视频 {video_url} 下载失败，原因：{crawler.download_failre(download_return.code)}"
+                error_message = "日志 %s 视频 %s 下载失败，原因：%s" % (post_url, video_url, crawler.download_failre(download_return.code))
                 # 403、404错误作为step log输出
                 if IS_STEP_ERROR_403_AND_404 and download_return.code in [403, 404]:
                     self.step(error_message)
@@ -609,22 +609,22 @@ class Download(crawler.DownloadThread):
 
         # 图片下载
         if self.main_thread.is_download_photo and len(photo_url_list) > 0:
-            self.trace(f"日志 {post_info['post_id']} 解析的全部图片：{photo_url_list}")
-            self.step(f"日志 {post_info['post_id']} 解析获取{len(photo_url_list)}个图片")
+            self.trace("日志 %s 解析的全部图片：%s" % (post_info["post_id"], photo_url_list))
+            self.step("日志 %s 解析获取%s张图片" % (post_info["post_id"], len(photo_url_list)))
 
             photo_index = 1
             for photo_url in photo_url_list:
                 self.main_thread_check()  # 检测主线程运行状态
-                self.step(f"日志 {post_info['post_id']} 开始下载第{photo_index}张图片 {photo_url}")
+                self.step("日志 %s 开始下载第%s张图片 %s" % (post_info["post_id"], photo_index, photo_url))
 
-                photo_file_path = os.path.join(self.main_thread.photo_download_path, self.index_key, f"%012d_%02d.{net.get_file_extension(photo_url)}" % (post_info["post_id"], photo_index))
+                photo_file_path = os.path.join(self.main_thread.photo_download_path, self.index_key, "%012d_%02d.%s" % (post_info["post_id"], photo_index, net.get_file_extension(photo_url)))
                 download_return = net.Download(photo_url, photo_file_path)
                 if download_return.status == net.Download.DOWNLOAD_SUCCEED:
                     self.temp_path_list.append(photo_file_path)  # 设置临时目录
                     self.total_photo_count += 1  # 计数累加
-                    self.step(f"日志 {post_info['post_id']} 第{photo_index}张图片下载成功")
+                    self.step("日志 %s 第%s张图片下载成功" % (post_info["post_id"], photo_index))
                 else:
-                    error_message = f"日志 {post_url} 第{photo_index}张图片 {photo_url} 下载失败，原因：{crawler.download_failre(download_return.code)}"
+                    error_message = "日志 %s 第%s张图片 %s 下载失败，原因：%s" % (post_url, photo_index, photo_url, crawler.download_failre(download_return.code))
                     # 403、404错误作为step log输出
                     if IS_STEP_ERROR_403_AND_404 and download_return.code in [403, 404]:
                         self.step(error_message)
