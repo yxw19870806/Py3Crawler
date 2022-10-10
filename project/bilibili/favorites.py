@@ -26,7 +26,7 @@ class BiliBiliFavorites(bilibili.BiliBili):
 
     @staticmethod
     def get_favorites_id_from_console():
-        video_url = input("请输入bilibili收藏夹播放地址：").lower()
+        video_url = input(tool.get_time() + " 请输入bilibili收藏夹播放地址：").lower()
         favorites_id = None
         if video_url.find("//www.bilibili.com/medialist/play/ml") > 0:
             favorites_id = tool.find_sub_string(video_url, "//www.bilibili.com/medialist/play/ml").split("?")[0].split("/")[0]

@@ -25,7 +25,7 @@ class FiveSingDownload(fivesing.FiveSing):
 
     @staticmethod
     def get_audio_id_from_console():
-        audio_url = input("请输入5sing歌曲地址：").lower()
+        audio_url = input(tool.get_time() + " 请输入5sing歌曲地址：").lower()
         audio_type = None
         audio_id = None
         # http://5sing.kugou.com/fc/15887314.html

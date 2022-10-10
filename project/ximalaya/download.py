@@ -25,7 +25,7 @@ class XiMaLaYaDownload(ximalaya.XiMaLaYa):
 
     @staticmethod
     def get_audio_id_from_console():
-        audio_url = input("请输入喜马拉雅歌曲地址：").lower()
+        audio_url = input(tool.get_time() + " 请输入喜马拉雅歌曲地址：").lower()
         audio_id = None
         if audio_url.find("//www.ximalaya.com/") > 0:
             temp_list = audio_url.split("/")
