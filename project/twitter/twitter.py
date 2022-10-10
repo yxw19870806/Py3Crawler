@@ -206,7 +206,7 @@ def get_video_play_page(tweet_id):
         header_list["x-twitter-auth-type"] = "OAuth2Session"
     video_play_response = net.request(video_play_url, method="GET", cookies_list=COOKIE_INFO, header_list=header_list, json_decode=True)
     result = {
-        "video_url": None,  # 视频地址
+        "video_url": "",  # 视频地址
     }
     thread_event.set()
     if video_play_response.status != net.HTTP_RETURN_CODE_SUCCEED:

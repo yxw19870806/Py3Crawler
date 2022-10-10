@@ -31,7 +31,7 @@ def get_one_page_blog(account_id, page_count):
         raise crawler.CrawlerException(crawler.request_failre(blog_pagination_response.status))
     blog_pagination_response_content = blog_pagination_response.data.decode(errors="ignore")
     account_info_html = pq(blog_pagination_response_content).find(".p-blog-member__head .c-blog-member__name").html()
-    if account_info_html is None or not account_info_html.strip():
+    if not account_info_html or not account_info_html.strip():
         raise crawler.CrawlerException("账号不存在")
     # 日志正文部分
     blog_list_selector = pq(blog_pagination_response_content).find(".p-blog-group .p-blog-article")
@@ -39,7 +39,7 @@ def get_one_page_blog(account_id, page_count):
         raise crawler.CrawlerException("页面截取日志列表失败\n" + blog_pagination_response_content)
     for blog_index in range(blog_list_selector.length):
         result_blog_info = {
-            "blog_id": None,  # 日志id
+            "blog_id": 0,  # 日志id
             "photo_url_list": [],  # 全部图片地址
         }
         blog_selector = blog_list_selector.eq(blog_index)

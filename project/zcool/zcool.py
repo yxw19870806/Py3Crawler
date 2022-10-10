@@ -37,9 +37,9 @@ def get_one_page_album(account_name, page_count):
     album_list_selector = pq(album_pagination_response_content).find(".work-list-box .card-box")
     for album_index in range(album_list_selector.length):
         result_album_info = {
-            "album_id": None,  # 作品id
-            "album_title": None,  # 作品标题
-            "album_time": None,  # 作品创建时间
+            "album_id": "",  # 作品id
+            "album_title": "",  # 作品标题
+            "album_time": "",  # 作品创建时间
         }
         album_selector = album_list_selector.eq(album_index)
         # 获取作品id

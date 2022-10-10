@@ -88,13 +88,13 @@ def get_one_page_account_video(account_id, page_count):
     # 第一个是排序选择框，跳过
     for video_index in range(1, video_list_selector.length):
         result_video_info = {
-            "video_id": None,  # 视频id
+            "video_id": 0,  # 视频id
             "video_title": "",  # 视频标题
         }
         video_selector = video_list_selector.eq(video_index)
         # 获取视频id
         video_url = video_selector.find(".section h5 a").attr("href")
-        if video_url is None:
+        if not video_url:
             raise crawler.CrawlerException("视频信息截取视频地址失败\n" + video_selector.html())
         video_id = tool.find_sub_string(video_url, "watch/sm", "?")
         if not tool.is_integer(video_id):
@@ -139,7 +139,7 @@ def get_one_page_mylist_video(list_id, page_count):
 
     for video_info in crawler.get_json_value(mylist_pagination_response.json_data, "data", "mylist", "items", type_check=list):
         result_video_info = {
-            "video_id": None,  # 视频id
+            "video_id": 0,  # 视频id
             "video_title": "",  # 视频标题
         }
         # 判断类型
@@ -164,7 +164,7 @@ def get_video_info(video_id):
         "is_delete": False,  # 是否已删除
         "is_private": False,  # 是否未公开
         "video_title": "",  # 视频标题
-        "video_url": None,  # 视频地址
+        "video_url": "",  # 视频地址
     }
     if video_play_response.status == 403:
         log.step("视频%s访问异常，重试" % video_id)

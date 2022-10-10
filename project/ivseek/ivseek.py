@@ -37,7 +37,7 @@ def get_index_page():
     index_url = "http://www.ivseek.com/"
     index_response = net.request(index_url, method="GET")
     result = {
-        "max_archive_id": None,  # 最新图集id
+        "max_archive_id": 0,  # 最新图集id
     }
     if index_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(index_response.status))
@@ -72,7 +72,7 @@ def get_archive_page(archive_id):
     for video_url in video_url_find:
         result_video_info = {
             "account_id": "",  # 视频发布账号
-            "video_url": None,  # 视频信息
+            "video_url": "",  # 视频信息
         }
         # 'http://embed.share-videos.se/auto/embed/40537536?uid=6050'
         if video_url.find("//embed.share-videos.se/") >= 0:
@@ -120,9 +120,9 @@ def get_archive_page(archive_id):
                 raise crawler.CrawlerException("视频播放页 %s，%s" % (result_video_info["video_url"], crawler.request_failre(video_play_response.status)))
             video_play_response_content = video_play_response.data.decode(errors="ignore")
             script_json = tool.json_decode(pq(video_play_response_content).find("#js-initial-watch-data").attr("data-api-data"))
-            if script_json is None or not crawler.check_sub_key(("owner",), script_json):
+            if not script_json or not crawler.check_sub_key(("owner",), script_json):
                 raise crawler.CrawlerException("视频播放页 %s 截取视频信息失败，%s" % (result_video_info["video_url"], crawler.request_failre(video_play_response.status)))
-            if script_json["owner"] is not None:
+            if script_json["owner"]:
                 if crawler.check_sub_key(("id",), script_json["owner"]):
                     result_video_info["account_id"] = script_json["owner"]["id"]
                 else:

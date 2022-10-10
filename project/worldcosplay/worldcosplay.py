@@ -34,8 +34,8 @@ def get_one_page_photo(account_id, page_count):
     # 获取图片信息
     for photo_info in crawler.get_json_value(photo_pagination_response.json_data, "list", type_check=list):
         result_photo_info = {
-            "photo_id": None,  # 图片id
-            "photo_url": None,  # 图片地址
+            "photo_id": 0,  # 图片id
+            "photo_url": "",  # 图片地址
         }
         # 获取图片id
         result_photo_info["photo_id"] = crawler.get_json_value(photo_info, "id", type_check=int)

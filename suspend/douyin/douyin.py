@@ -72,7 +72,7 @@ def get_one_page_video(account_id, cursor_id, dytk, signature):
     video_pagination_response = net.request(api_url, method="GET", fields=query_data, header_list=header_list, json_decode=True)
     result = {
         "is_over": False,  # 是否最后一页视频
-        "next_page_cursor_id": None,  # 下一页视频指针
+        "next_page_cursor_id": 0,  # 下一页视频指针
         "video_info_list": [],  # 全部视频信息
     }
     if video_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
@@ -85,8 +85,8 @@ def get_one_page_video(account_id, cursor_id, dytk, signature):
     # 获取全部视频id
     for video_info in crawler.get_json_value(video_pagination_response.json_data, "aweme_list", type_check=list):
         result_video_info = {
-            "video_id": None,  # 视频id
-            "video_url": None,  # 视频地址
+            "video_id": 0,  # 视频id
+            "video_url": "",  # 视频地址
         }
         # 获取视频id
         result_video_info["video_id"] = crawler.get_json_value(video_info, "aweme_id", type_check=int)

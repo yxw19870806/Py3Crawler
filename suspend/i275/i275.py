@@ -28,7 +28,7 @@ def get_album_index_page(album_id):
     # 获取音频信息
     for audio_info_index in range(audio_info_selector_list.length):
         result_audio_info = {
-            "audio_id": None,  # 音频id
+            "audio_id": 0,  # 音频id
             "audio_title": "",  # 音频标题
         }
         audio_info_selector = audio_info_selector_list.eq(audio_info_index)

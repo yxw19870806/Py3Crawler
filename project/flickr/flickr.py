@@ -46,9 +46,9 @@ def get_account_index_page(account_name):
     account_index_url = "https://www.flickr.com/photos/%s" % account_name
     account_index_response = net.request(account_index_url, method="GET", cookies_list=COOKIE_INFO)
     result = {
-        "site_key": None,  # site key
-        "user_id": None,  # user id
-        "csrf": None,  # csrf
+        "site_key": "",  # site key
+        "user_id": "",  # user id
+        "csrf": "",  # csrf
     }
     if account_index_response.status == 404:
         raise crawler.CrawlerException("账号不存在")
@@ -145,9 +145,9 @@ def get_one_page_photo(user_id, page_count, api_key, csrf, request_id):
     # 获取图片信息
     for photo_info in crawler.get_json_value(photo_pagination_response.json_data, "photos", "photo", type_check=list):
         result_photo_info = {
-            "photo_id": None,  # 图片id
-            "photo_time": None,  # 图片上传时间
-            "photo_url": None,  # 图片地址
+            "photo_id": 0,  # 图片id
+            "photo_time": "",  # 图片上传时间
+            "photo_url": "",  # 图片地址
         }
         # 获取图片id
         result_photo_info["photo_id"] = crawler.get_json_value(photo_info, "id", type_check=int)

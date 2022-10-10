@@ -108,8 +108,8 @@ def get_one_page_post(account_id, page_count, is_https):
     # 单条日志
     for post_info in crawler.get_json_value(script_json, "itemListElement", type_check=list):
         result_post_info = {
-            "post_id": None,  # 日志id
-            "post_url": None,  # 日志地址
+            "post_id": 0,  # 日志id
+            "post_url": "",  # 日志地址
         }
         # 获取日志地址
         result_post_info["post_url"] = net.url_encode(crawler.get_json_value(post_info, "url", type_check=str))
@@ -159,9 +159,9 @@ def get_one_page_private_blog(account_id, page_count):
         result_post_info = {
             "has_video": False,  # 是不是包含视频
             "photo_url_list": [],  # 全部图片地址
-            "post_id": None,  # 日志id
-            "post_url": None,  # 日志地址
-            "video_url": None,  # 视频地址
+            "post_id": 0,  # 日志id
+            "post_url": "",  # 日志地址
+            "video_url": "",  # 视频地址
         }
         # 获取日志地址
         result_post_info["post_url"] = net.url_encode(crawler.get_json_value(post_info, "post_url", type_check=str))
@@ -205,7 +205,7 @@ def get_post_page(post_url, post_id):
         "has_video": False,  # 是不是包含视频
         "is_delete": False,  # 是否已删除
         "photo_url_list": [],  # 全部图片地址
-        "video_url": None,  # 视频地址
+        "video_url": "",  # 视频地址
     }
     if post_response.status == 404:
         result["is_delete"] = True
@@ -349,7 +349,7 @@ def get_video_play_page(account_id, post_id, is_https):
     video_play_response = net.request(video_play_url, method="GET", is_auto_redirect=False)
     result = {
         "is_password": False,  # 是否加密
-        "video_url": None,  # 视频地址
+        "video_url": "",  # 视频地址
     }
     if video_play_response.status == 301:
         video_play_url = video_play_response.getheader("Location")

@@ -48,8 +48,8 @@ def get_comic_index_page(comic_id):
             raise crawler.CrawlerException("章节信息截取章节内容失败\n" + group_chapter_list_selector.eq(group_index).html())
         for page_index in range(chapter_list_selector.length):
             result_comic_info = {
-                "chapter_id": None,  # 章节id
-                "chapter_name": None,  # 章节名
+                "chapter_id": 0,  # 章节id
+                "chapter_name": "",  # 章节名
                 "group_name": group_name,  # 漫画分组名字
             }
             chapter_selector = chapter_list_selector.eq(page_index)

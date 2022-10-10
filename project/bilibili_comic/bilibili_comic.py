@@ -35,7 +35,7 @@ def get_comic_index_page(comic_id):
         raise crawler.CrawlerException(crawler.request_failre(api_response.status))
     for ep_info in crawler.get_json_value(api_response.json_data, "data", "ep_list", type_check=list):
         result_comic_info = {
-            "ep_id": None,  # 章节id
+            "ep_id": 0,  # 章节id
             "ep_name": "",  # 章节名字
         }
         # 获取页面id

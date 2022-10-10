@@ -34,13 +34,11 @@ def get_one_page_playlist(playlist_id, page_count):
         raise crawler.CrawlerException(crawler.request_failre(playlist_pagination_response.status))
     for audio_info in crawler.get_json_value(playlist_pagination_response.json_data, "data", "musicList", type_check=list):
         result_audio_info = {
-            "audio_id": None,  # 音频id
-            "audio_title": None,  # 音频标题
+            "audio_id": 0,  # 音频id
+            "audio_title": "",  # 音频标题
         }
         # 获取音频id
-        result_audio_info["audio_id"] = crawler.get_json_value(audio_info, "rid")
-        if not tool.is_integer(result_audio_info["audio_id"]):
-            raise crawler.CrawlerException("获音频id失败\n" + audio_info)
+        result_audio_info["audio_id"] = crawler.get_json_value(audio_info, "rid", type_check=int)
         # 获取音频标题
         result_audio_info["audio_title"] = crawler.get_json_value(audio_info, "name")
         result["audio_info_list"].append(result_audio_info)
@@ -60,13 +58,13 @@ def get_audio_info_page(audio_id):
     }
     audio_info_response = net.request(audio_info_url, method="GET", fields=query_data, cookies_list={"kw_token": CSRF_TOKEN}, header_list={"csrf": CSRF_TOKEN}, json_decode=True)
     result = {
-        "audio_url": None,  # 音频地址
+        "audio_url": "",  # 音频地址
     }
     if audio_info_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(audio_info_response.status))
     # 获取音频地址
     try:
-        result["audio_url"] = crawler.get_json_value(audio_info_response.json_data, "data", "url")
+        result["audio_url"] = crawler.get_json_value(audio_info_response.json_data, "data", "url", type_check=str)
     except crawler.CrawlerException:
         if crawler.get_json_value(audio_info_response.json_data, "code", type_check=int, default_value=0) == -1:
             if error_message := crawler.get_json_value(audio_info_response.json_data, "msg", type_check=str, default_value=""):

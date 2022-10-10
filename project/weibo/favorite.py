@@ -45,23 +45,23 @@ def get_one_page_favorite(page_count):
         raise crawler.CrawlerException("没有收藏了")
     # 解析日志id和图片地址
     for i in range(children_selector.length - 1):
+        result_blog_info = {
+            "blog_id": 0,  # 日志id（mid）
+            "photo_url_list": [],  # 所有图片地址
+        }
         feed_selector = children_selector.eq(i)
         # 已被删除的微博
         if not feed_selector.has_class("WB_feed_type"):
-            if feed_selector.attr("mid") is not None:
+            if feed_selector.attr("mid"):
                 result["delete_blog_id_list"].append(feed_selector.attr("mid"))
             elif feed_selector.find(".WB_empty").length == 1:
                 result["delete_blog_id_list"].append(feed_selector.find(".WB_empty").attr("mid"))
             continue
-        result_blog_info = {
-            "blog_id": None,  # 日志id（mid）
-            "photo_url_list": [],  # 所有图片地址
-        }
         # 解析日志id
         blog_id = feed_selector.attr("mid")
         if not tool.is_integer(blog_id):
             raise crawler.CrawlerException("收藏信息解析微博id失败\n" + feed_selector.html())
-        result_blog_info["blog_id"] = blog_id
+        result_blog_info["blog_id"] = int(blog_id)
         # WB_text       微博文本
         # WB_media_wrap 微博媒体（图片）
         # .WB_feed_expand .WB_expand     转发的微博，下面同样包含WB_text、WB_media_wrap这些结构

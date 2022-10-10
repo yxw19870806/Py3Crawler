@@ -42,14 +42,14 @@ def get_photo_index_page(account_id):
 def get_photo_header(photo_url):
     photo_head_response = net.request(photo_url, method="HEAD")
     result = {
-        "photo_time": None,  # 图片上传时间
+        "photo_time": 0,  # 图片上传时间
     }
     if photo_head_response.status == 404:
         return result
     elif photo_head_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(photo_head_response.status))
     last_modified = photo_head_response.headers.get("Last-Modified")
-    if last_modified is None:
+    if not last_modified:
         raise crawler.CrawlerException("图片header%s中'Last-Modified'字段不存在" % photo_head_response.headers)
     try:
         last_modified_time = time.strptime(last_modified, "%a, %d %b %Y %H:%M:%S %Z")

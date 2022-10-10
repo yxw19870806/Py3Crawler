@@ -28,10 +28,10 @@ def get_book_index(book_id):
         raise crawler.CrawlerException("页面截取章节列表失败\n" + index_response_content)
     for chapter_index in range(chapter_info_list_selector.length):
         result_chapter_info = {
-            "chapter_url": None,  # 章节地址
-            "chapter_id": None,  # 章节id
-            "chapter_time": None,  # 章节发布时间
-            "chapter_time_string": None,  # 章节发布时间
+            "chapter_url": "",  # 章节地址
+            "chapter_id": "",  # 章节id
+            "chapter_time": "",  # 章节发布时间
+            "chapter_time_string": "",  # 章节发布时间
             "chapter_title": "",  # 章节标题
         }
         chapter_info_selector = chapter_info_list_selector.eq(chapter_index)
@@ -39,16 +39,16 @@ def get_book_index(book_id):
         result_chapter_info["chapter_url"] = chapter_info_selector.find("a").attr("href")
         if result_chapter_info["chapter_url"][:2] == "//":
             result_chapter_info["chapter_url"] = "https:" + result_chapter_info["chapter_url"]
-        result_chapter_info["chapter_id"] = result_chapter_info["chapter_url"].rstrip("/").split("/")[-1]
+        chapter_id = result_chapter_info["chapter_url"].rstrip("/").split("/")[-1]
         if result_chapter_info["chapter_url"].find("//read.qidian.com") >= 0:
             pass
         elif result_chapter_info["chapter_url"].find("//vipreader.qidian.com/") >= 0:
-            if not tool.is_integer(result_chapter_info["chapter_id"]):
+            if not tool.is_integer(chapter_id):
                 raise crawler.CrawlerException("章节地址 %s 截取章节id失败" % result_chapter_info["chapter_url"])
         else:
             raise crawler.CrawlerException("未知的章节域名: %s" % result_chapter_info["chapter_url"])
         # 获取章节id
-        result_chapter_info["chapter_id"] = result_chapter_info["chapter_id"]
+        result_chapter_info["chapter_id"] = chapter_id
         # 获取章节标题
         result_chapter_info["chapter_title"] = chapter_info_selector.find("a").html()
         # 获取章节发布时间
@@ -104,7 +104,7 @@ class QiDian(crawler.Crawler):
 
         # 解析存档文件
         # book_id  chapter_id
-        self.save_data = crawler.read_save_data(self.save_data_path, 0, ["", "0"])
+        self.save_data = crawler.read_save_data(self.save_data_path, 0, ["", ""])
 
         # 下载线程
         self.download_thread = Download

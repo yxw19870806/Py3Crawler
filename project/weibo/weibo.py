@@ -67,9 +67,9 @@ def get_one_page_photo(account_id, page_count):
         raise crawler.CrawlerException(crawler.request_failre(photo_pagination_response.status))
     for photo_info in crawler.get_json_value(photo_pagination_response.json_data, "data", "photo_list", type_check=list):
         result_photo_info = {
-            "photo_id": None,  # 图片上传时间
-            "photo_time": None,  # 图片上传时间
-            "photo_url": None,  # 图片地址
+            "photo_id": 0,  # 图片id
+            "photo_time": "",  # 图片上传时间
+            "photo_url": "",  # 图片地址
         }
         # 获取图片上传时间
         result_photo_info["photo_time"] = crawler.get_json_value(photo_info, "timestamp", type_check=int)
@@ -92,7 +92,7 @@ def get_one_page_video(account_id, since_id, retry_count=0):
         "cursor": since_id,
     }
     result = {
-        "next_page_since_id": None,  # 下一页视频指针
+        "next_page_since_id": 0,  # 下一页视频指针
         "video_info_list": [],  # 全部视频地址
     }
     video_pagination_response = net.request(video_pagination_url, method="GET", fields=query_data, cookies_list=COOKIE_INFO, json_decode=True)
@@ -121,7 +121,7 @@ def get_one_page_video(account_id, since_id, retry_count=0):
     # 获取视频id
     for video_info in crawler.get_json_value(video_pagination_response.json_data, "data", "list", type_check=list):
         result_video_info_list = {
-            "video_id": None,  # 视频id
+            "video_id": 0,  # 视频id
             "video_title": "",  # 视频标题
             "video_url": "",  # 视频地址
         }
