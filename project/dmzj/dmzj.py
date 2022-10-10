@@ -33,8 +33,8 @@ def get_comic_index_page(comic_name):
         # 获取版本下各个章节
         for comic_info in crawler.get_json_value(chapter_info, "data", type_check=list):
             result_comic_info = {
-                "comic_id": None,  # 漫画id
-                "page_id": None,  # 页面id
+                "comic_id": 0,  # 漫画id
+                "page_id": 0,  # 页面id
                 "chapter_name": "",  # 漫画章节名字
                 "version_name": version_name,  # 漫画版本名字
             }

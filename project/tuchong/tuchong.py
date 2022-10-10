@@ -20,7 +20,7 @@ def get_account_index_page(account_name):
         account_index_url = "https://%s.tuchong.com" % account_name
     account_index_response = net.request(account_index_url, method="GET", is_auto_redirect=False)
     result = {
-        "account_id": None,  # 账号id（字母账号->数字账号)
+        "account_id": 0,  # 账号id（字母账号->数字账号)
     }
     if account_index_response.status == 302 and account_index_response.getheader("Location").find("https://tuchong.com/") == 0 and account_index_response.getheader("Location")[-5:] == "/work":
         account_index_url += "/work"
@@ -35,7 +35,7 @@ def get_account_index_page(account_name):
         raise crawler.CrawlerException("页面截取site id失败\n" + account_index_response_content)
     if not tool.is_integer(account_id):
         raise crawler.CrawlerException("site id类型不正确\n" + account_index_response_content)
-    result["account_id"] = account_id
+    result["account_id"] = int(account_id)
     return result
 
 
@@ -57,8 +57,8 @@ def get_one_page_album(account_id, post_time):
         raise crawler.CrawlerException("返回信息%s中'result'字段取值不正确" % album_pagination_response.json_data)
     for album_info in crawler.get_json_value(album_pagination_response.json_data, "posts", type_check=list):
         result_photo_info = {
-            "album_id": None,  # 相册id
-            "album_time": None,  # 相册创建时间
+            "album_id": 0,  # 相册id
+            "album_time": "",  # 相册创建时间
             "album_title": "",  # 相册标题
             "photo_url_list": [],  # 全部图片地址
         }

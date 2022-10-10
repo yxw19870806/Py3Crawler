@@ -68,8 +68,8 @@ def get_one_page_video(account_id, page_count):
     # 获取所有视频
     for video_info in crawler.get_json_value(api_response.json_data, "data", "channel", "channel_videos_all_videos", "edges", type_check=list):
         result_video_info = {
-            "video_id": None,  # 视频id
-            "video_time": None,  # 视频上传时间
+            "video_id": "",  # 视频id
+            "video_time": "",  # 视频上传时间
             "video_title": "",  # 视频标题
         }
         # 获取视频id
@@ -97,7 +97,7 @@ def get_video_page(video_id):
     result = {
         "is_delete": False,  # 是否已删除
         "video_title": "",  # 视频标题
-        "video_url": None,  # 视频地址
+        "video_url": "",  # 视频地址
     }
     if video_info_response.status == 404:
         result["is_delete"] = True

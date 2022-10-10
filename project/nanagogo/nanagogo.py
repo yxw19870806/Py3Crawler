@@ -41,7 +41,7 @@ def get_one_page_blog(account_name, target_id):
         raise crawler.CrawlerException(crawler.request_failre(blog_pagination_response.status))
     for blog_info in crawler.get_json_value(blog_pagination_response.json_data, "data", type_check=list):
         result_blog_info = {
-            "blog_id": None,  # 日志id
+            "blog_id": 0,  # 日志id
             "photo_url_list": [],  # 全部图片地址
             "video_url_list": [],  # 全部视频地址
         }

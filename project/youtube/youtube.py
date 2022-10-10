@@ -34,9 +34,9 @@ def check_login():
 def get_one_page_video(account_id, token):
     # token = "4qmFsgJAEhhVQ2xNXzZHRU9razY2STFfWWJTUFFqSWcaJEVnWjJhV1JsYjNNZ0FEZ0JZQUZxQUhvQk1yZ0JBQSUzRCUzRA%3D%3D"
     result = {
-        "channel_name": None,  # 账号名字
+        "channel_name": "",  # 账号名字
         "video_id_list": [],  # 全部视频id
-        "next_page_token": None,  # 下一页token
+        "next_page_token": "",  # 下一页token
     }
     if token == "":
         # todo 更好的分辨方法
@@ -121,9 +121,9 @@ def get_video_page(video_id):
         video_play_response = net.request(video_play_url, method="GET", fields=query_data, header_list={"accept-language": "en"})
     result = {
         "skip_reason": "",  # 跳过原因
-        "video_time": None,  # 视频上传时间
+        "video_time": "",  # 视频上传时间
         "video_title": "",  # 视频标题
-        "video_url": None,  # 视频地址
+        "video_url": "",  # 视频地址
     }
     if video_play_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(video_play_response.status))

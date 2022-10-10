@@ -36,8 +36,8 @@ def get_one_page_video(account_id, page_count):
         if crawler.check_sub_key(("lives",), media_info):
             continue
         result_video_info = {
-            "video_id": None,  # 视频id
-            "video_url": None,  # 视频地址
+            "video_id": 0,  # 视频id
+            "video_url": "",  # 视频地址
         }
         # 获取视频id
         result_video_info["video_id"] = crawler.get_json_value(media_info, "id", type_check=int)
@@ -57,7 +57,7 @@ def get_video_play_page(video_id):
     video_play_response = net.request(video_play_url, method="GET")
     result = {
         "is_delete": False,  # 是否已删除
-        "video_url": None,  # 视频地址
+        "video_url": "",  # 视频地址
     }
     if video_play_response.status == 404:
         result["is_delete"] = True

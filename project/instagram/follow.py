@@ -20,7 +20,7 @@ def get_account_index_page(account_name):
     result = {
         "is_follow": False,  # 是否已经关注
         "is_private": False,  # 是否私密账号
-        "account_id": None,  # 账号id
+        "account_id": 0,  # 账号id
     }
     if account_index_response.status == net.HTTP_RETURN_CODE_SUCCEED:
         account_index_response_content = account_index_response.data.decode(errors="ignore")
@@ -28,7 +28,7 @@ def get_account_index_page(account_name):
         account_id = tool.find_sub_string(account_index_response_content, '"profilePage_', '"')
         if not tool.is_integer(account_id):
             raise crawler.CrawlerException("页面截取账号id失败\n" + account_index_response_content)
-        result["account_id"] = account_id
+        result["account_id"] = int(account_id)
         # 判断是不是已经关注
         result["is_follow"] = tool.find_sub_string(account_index_response_content, '"followed_by_viewer": ', ",") == "true"
         # 判断是不是私密账号

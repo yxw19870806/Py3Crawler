@@ -100,7 +100,7 @@ def get_account_index_page(account_name):
     }
     account_index_response = net.request(account_index_url, method="GET", fields=query_data, cookies_list=COOKIE_INFO, header_list=header_list, json_decode=True)
     result = {
-        "account_id": None,  # account id
+        "account_id": 0,  # account id
     }
     if account_index_response.status == 404:
         raise crawler.CrawlerException("账号不存在")
@@ -127,7 +127,7 @@ def get_one_page_media(account_id, cursor):
     media_pagination_response = net.request(api_url, method="GET", fields=query_data, cookies_list=COOKIE_INFO, json_decode=True)
     result = {
         "media_info_list": [],  # 全部媒体信息
-        "next_page_cursor": None,  # 下一页媒体信息的指针
+        "next_page_cursor": "",  # 下一页媒体信息的指针
     }
     if media_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(media_pagination_response.status))
@@ -143,12 +143,12 @@ def get_one_page_media(account_id, cursor):
             raise crawler.CrawlerException("'edges'字段长度不正确\n" + str(media_pagination_response.json_data))
     for media_info in media_info_list:
         result_media_info = {
-            "photo_url": None,  # 图片地址
+            "photo_url": "",  # 图片地址
             "is_group": False,  # 是不是图片/视频组
             "is_video": False,  # 是不是视频
-            "page_id": None,  # 媒体详情界面id
-            "page_code": None,  # 媒体详情界面code
-            "time": None,  # 媒体上传时间
+            "page_id": 0,  # 媒体详情界面id
+            "page_code": "",  # 媒体详情界面code
+            "time": "",  # 媒体上传时间
         }
         media_type = crawler.get_json_value(media_info, "node", "__typename", type_check=str)
         # GraphImage 单张图片、GraphSidecar 多张图片、GraphVideo 视频
@@ -391,7 +391,7 @@ class Download(crawler.DownloadThread):
                     break
 
             if not is_over:
-                if media_pagination_response["next_page_cursor"] is None:
+                if not media_pagination_response["next_page_cursor"]:
                     is_over = True
                 else:
                     # 设置下一页指针

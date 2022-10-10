@@ -47,7 +47,7 @@ def get_audio_play_page(audio_id, song_type):
     audio_info_response = net.request(audio_info_url, method="GET", fields=query_data, json_decode=True)
     result = {
         "audio_title": "",  # 歌曲标题
-        "audio_url": None,  # 歌曲地址
+        "audio_url": "",  # 歌曲地址
         "is_delete": False,  # 是否已删除
     }
     if audio_info_response.status != net.HTTP_RETURN_CODE_SUCCEED:

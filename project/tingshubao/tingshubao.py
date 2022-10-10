@@ -29,8 +29,8 @@ def get_album_index_page(album_id):
     audio_list_selector = pq(album_index_response_content).find(".play-list li")
     for audio_index in range(audio_list_selector.length, 0, -1):
         result_audio_info = {
-            "audio_id": None,  # 音频id
-            "audio_title": None,  # 音频id
+            "audio_id": 0,  # 音频id
+            "audio_title": "",  # 音频id
             "audio_play_url": "",  # 音频播放地址
         }
         audio_info_selector = audio_list_selector.eq(audio_index - 1)

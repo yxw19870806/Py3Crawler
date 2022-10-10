@@ -49,7 +49,7 @@ def get_album_page(album_id):
     album_response = net.request(album_url, method="GET")
     result = {
         "photo_url_list": [],  # 全部图片地址
-        "video_id": None,  # 视频id
+        "video_id": "",  # 视频id
     }
     if album_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(album_response.status))
@@ -90,8 +90,8 @@ def get_album_page(album_id):
 # 使用selenium获取指定id的作品
 def get_album_page_by_selenium(album_id):
     result = {
-        "video_url": None,  # 视频地址
-        "video_type": None,  # 视频类型
+        "video_url": "",  # 视频地址
+        "video_type": "",  # 视频类型
     }
     desired_capabilities = DesiredCapabilities.CHROME
     desired_capabilities["loggingPrefs"] = {"performance": "ALL"}  # 记录所有日志
@@ -217,7 +217,7 @@ class Download(crawler.DownloadThread):
             self.crawl_photo(album_id, album_response["photo_url_list"])
 
         # 视频
-        if self.main_thread.is_download_video and album_response["video_id"] is not None:
+        if self.main_thread.is_download_video and album_response["video_id"]:
             self.crawl_video(album_id)
 
         # 作品内图片下全部载完毕

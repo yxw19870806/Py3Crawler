@@ -57,7 +57,7 @@ def get_one_page_album(album_id, page_count):
             raise
     for audio_info in crawler.get_json_value(album_pagination_response.json_data, "data", "tracks", type_check=list):
         result_audio_info = {
-            "audio_id": None,  # 音频id
+            "audio_id": 0,  # 音频id
             "audio_title": "",  # 音频标题
         }
         # 获取音频id
@@ -98,7 +98,7 @@ def get_one_page_audio(account_id, page_count):
     # 获取音频信息
     for audio_info in crawler.get_json_value(audit_pagination_response.json_data, "data", "trackList", type_check=list):
         result_audio_info = {
-            "audio_id": None,  # 音频id
+            "audio_id": 0,  # 音频id
             "audio_title": "",  # 音频标题
         }
         # 获取音频id
@@ -119,7 +119,7 @@ def get_audio_info_page(audio_id):
     global COOKIE_INFO
     result = {
         "audio_title": "",  # 音频标题
-        "audio_url": None,  # 音频地址
+        "audio_url": "",  # 音频地址
         "is_delete": False,  # 是否已删除
         "is_video": False,  # 是否是视频
     }
