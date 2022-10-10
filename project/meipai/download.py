@@ -25,7 +25,7 @@ class MeiPaiDownload(meipai.MeiPai):
 
     @staticmethod
     def get_video_id_from_console():
-        video_url = input("请输入美拍视频地址：").lower()
+        video_url = input(tool.get_time() + " 请输入美拍视频地址：").lower()
         video_id = None
         # https://www.meipai.com/media/209045867
         if video_url.find("//www.meipai.com/media/") > 0:
