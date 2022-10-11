@@ -51,7 +51,7 @@ def get_discount_game_list():
                 app_id = []
                 if bundle_info:
                     # 包含的全部app_id
-                    app_id_find = re.findall('"m_rgIncludedAppIDs":\[([^\]]*)\]', bundle_info)
+                    app_id_find = re.findall(r'"m_rgIncludedAppIDs":\[([^\]]*)\]', bundle_info)
                     for temp_id_list in app_id_find:
                         temp_id_list = temp_id_list.split(",")
                         app_id += temp_id_list
@@ -100,7 +100,7 @@ def get_discount_game_list():
             if pq(discount_game_pagination_response_content).find("#error_box").length == 1:
                 continue
             break
-        page_count_find = re.findall("<a [\s|\S]*?>([\d]*)</a>", pagination_html)
+        page_count_find = re.findall(r"<a [\s|\S]*?>([\d]*)</a>", pagination_html)
         if len(page_count_find) > 0:
             total_page_count = max(list(map(int, page_count_find)))
             if page_count < total_page_count:
@@ -188,9 +188,9 @@ def get_self_uncompleted_account_badges(account_id):
                 badge_level_html = badge_selector.find(".badge_info_description div").eq(1).text()
                 if not badge_level_html:
                     continue
-                badge_level_find = re.findall("(\d*) 级,", badge_level_html)
+                badge_level_find = re.findall(r"(\d*) 级,", badge_level_html)
                 if len(badge_level_find) == 0:
-                    badge_level_find = re.findall("Level (\d*),", badge_level_html)
+                    badge_level_find = re.findall(r"Level (\d*),", badge_level_html)
                 if len(badge_level_find) == 1 and tool.is_integer(badge_level_find[0]):
                     if int(badge_level_find[0]) == 5:
                         continue
@@ -228,9 +228,9 @@ def get_self_account_badge_card(badge_detail_url):
         badge_level_html = badge_selector.find(".badge_info_description div").eq(1).text()
         if not badge_level_html:
             raise crawler.CrawlerException("页面截取徽章等级信息失败\n" + badge_detail_response_content)
-        badge_level_find = re.findall("(\d*) 级,", badge_level_html)
+        badge_level_find = re.findall(r"(\d*) 级,", badge_level_html)
         if len(badge_level_find) != 1:
-            badge_level_find = re.findall("Level (\d*),", badge_level_html)
+            badge_level_find = re.findall(r"Level (\d*),", badge_level_html)
         if len(badge_level_find) != 1:
             raise crawler.CrawlerException("徽章等级信息徽章等级失败\n" + badge_level_html)
         if not tool.is_integer(badge_level_find[0]):
@@ -378,7 +378,7 @@ def get_account_badges(account_id):
             badge_info_text = badge_selector.find('div.badge_content div.badge_info_description div').eq(1).html()
             if badge_info_text is None:
                 raise crawler.CrawlerException("页面截取徽章详情失败\n" + badge_selector.html())
-            badge_level_find = re.findall("Level (\d*),", badge_info_text)
+            badge_level_find = re.findall(r"Level (\d*),", badge_info_text)
             if len(badge_level_find) != 1:
                 raise crawler.CrawlerException("徽章详情%s中截取徽章等级失败" % badge_info_text)
             badge_level_list[game_id] = int(badge_level_find[0])

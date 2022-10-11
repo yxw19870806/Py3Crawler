@@ -365,7 +365,7 @@ def get_video_play_page(account_id, post_id, is_https):
     elif video_play_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(video_play_response.status))
     video_play_response_content = video_play_response.data.decode(errors="ignore")
-    video_url_find = re.findall('<source src="(http[s]?://' + account_id + '.tumblr.com/video_file/[^"]*)" type="[^"]*"', video_play_response_content)
+    video_url_find = re.findall(r'<source src="(http[s]?://%s.tumblr.com/video_file/[^"]*)" type="[^"]*"' % account_id, video_play_response_content)
     if len(video_url_find) == 1:
         if tool.is_integer(video_url_find[0].split("/")[-1]):
             result["video_url"] = "/".join(video_url_find[0].split("/")[:-1])

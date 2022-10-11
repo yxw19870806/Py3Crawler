@@ -58,7 +58,7 @@ for item_path, item_position in list(item_list.items()):
         item_index_response = net.request(item_index_url, method="GET")
         if item_index_response.status == net.HTTP_RETURN_CODE_SUCCEED:
             item_index_page = tool.find_sub_string(item_index_response.data.decode("GBK", errors="ignore"), '<div class="cizhui-c-m', '<div class="data-options', tool.SUB_STRING_MODE_ONLY_START)
-            item_info_list = re.findall('<tr class="[\s|\S]*?</tr>', item_index_page)
+            item_info_list = re.findall(r'<tr class="[\s|\S]*?</tr>', item_index_page)
             if len(item_info_list) == 0:
                 continue
             for item_info in item_info_list:
@@ -87,7 +87,7 @@ for item_path, item_position in list(item_list.items()):
             output.print_msg("error get" + item_index_url)
         pagination = tool.find_sub_string(item_index_response.data, '<ul class="ui-pagination">', "</ul>")
         if pagination:
-            pagination = re.findall('<a href="#page=([\d]*)">', pagination)
+            pagination = re.findall(r'<a href="#page=([\d]*)">', pagination)
             max_page = 1
             for page in pagination:
                 max_page = max(max_page, int(page))

@@ -25,7 +25,7 @@ def init_session():
     if index_page_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException("首页，" + crawler.request_failre(index_page_response.status))
     index_page_response_content = index_page_response.data.decode(errors="ignore")
-    client_id_and_secret_find = re.findall('var r="([\w]{20,})",o="([\w]{40,})"', index_page_response_content)
+    client_id_and_secret_find = re.findall(r'var r="([\w]{20,})",o="([\w]{40,})"', index_page_response_content)
     if len(client_id_and_secret_find) != 1 or len(client_id_and_secret_find[0]) != 2:
         raise crawler.CrawlerException("页面截取client_id和client_secret失败\n" + index_page_response_content)
     post_data = {
@@ -115,7 +115,7 @@ def get_video_page(video_id):
     for line in m3u8_file_response_content.split("\n"):
         if line[:len("#EXT-X-STREAM-INF:")] != "#EXT-X-STREAM-INF:":
             continue
-        resolution_find = re.findall("RESOLUTION=(\d*)x(\d*)", line)
+        resolution_find = re.findall(r"RESOLUTION=(\d*)x(\d*)", line)
         if len(resolution_find) != 1 or len(resolution_find[0]) != 2:
             raise crawler.CrawlerException("视频信息截取分辨率失败\n" + line)
         resolution = int(resolution_find[0][0]) * int(resolution_find[0][1])
