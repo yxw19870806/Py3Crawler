@@ -44,7 +44,7 @@ def get_album_index_page(album_id):
         audio_id = audio_play_url.split("/")[-1].replace(".html", "").split("-")[-1]
         if not tool.is_integer(audio_id):
             raise crawler.CrawlerException("音频播放地址 %s 截取音频id失败" % audio_play_url)
-        result_audio_info["audio_id"] = int(audio_id) + 1 # 页面是从0开始的
+        result_audio_info["audio_id"] = int(audio_id) + 1  # 页面是从0开始的
         result["audio_info_list"].append(result_audio_info)
     return result
 

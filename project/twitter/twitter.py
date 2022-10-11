@@ -25,7 +25,8 @@ thread_event.set()
 def check_login():
     global AUTHORIZATION, COOKIE_INFO, IS_LOGIN, QUERY_ID
     index_url = "https://twitter.com/home"
-    index_page_response = net.request(index_url, method="GET", cookies_list=COOKIE_INFO, header_list={"referer": "https://twitter.com"}, is_auto_redirect=False)
+    header_list = {"referer": "https://twitter.com"}
+    index_page_response = net.request(index_url, method="GET", cookies_list=COOKIE_INFO, header_list=header_list, is_auto_redirect=False)
     if index_page_response.status == 200:
         IS_LOGIN = True
     elif index_page_response.status == 302 and index_page_response.getheader("Location") == "/login?redirect_after_login=%2Fhome":
@@ -411,7 +412,8 @@ class Download(crawler.DownloadThread):
             self.main_thread_check()  # 检测主线程运行状态
             self.step("开始下载推特%s的第%s张图片 %s" % (media_info["blog_id"], photo_index, photo_url))
 
-            photo_file_path = os.path.join(self.main_thread.photo_download_path, self.index_key, "%019d_%02d.%s" % (media_info["blog_id"], photo_index, net.get_file_extension(photo_url)))
+            photo_file_name = "%019d_%02d.%s" % (media_info["blog_id"], photo_index, net.get_file_extension(photo_url))
+            photo_file_path = os.path.join(self.main_thread.photo_download_path, self.index_key, photo_file_name)
             for retry_count in range(5):
                 download_return = net.Download(photo_url, photo_file_path)
                 if download_return.status == net.Download.DOWNLOAD_SUCCEED:
@@ -435,9 +437,10 @@ class Download(crawler.DownloadThread):
             self.step("开始下载推特%s的第%s个视频 %s" % (media_info["blog_id"], video_index, video_url))
 
             if len(media_info["video_url_list"]) > 1:
-                video_file_path = os.path.join(self.main_thread.video_download_path, self.index_key, "%019d_%02d.%s" % (media_info["blog_id"], video_index, net.get_file_extension(video_url)))
+                video_file_name = "%019d_%02d.%s" % (media_info["blog_id"], video_index, net.get_file_extension(video_url))
             else:
-                video_file_path = os.path.join(self.main_thread.video_download_path, self.index_key, "%019d.%s" % (media_info["blog_id"], net.get_file_extension(video_url)))
+                video_file_name = "%019d.%s" % (media_info["blog_id"], net.get_file_extension(video_url))
+            video_file_path = os.path.join(self.main_thread.video_download_path, self.index_key, video_file_name)
             download_return = net.Download(video_url, video_file_path, auto_multipart_download=True)
             if download_return.status == net.Download.DOWNLOAD_SUCCEED:
                 self.temp_path_list.append(video_file_path)  # 设置临时目录

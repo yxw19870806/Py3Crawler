@@ -75,7 +75,8 @@ def get_one_page_video(account_id, page_count):
         # 获取视频id
         result_video_info["video_id"] = crawler.get_json_value(video_info, "node", "xid", type_check=str)
         # 获取视频上传时间
-        result_video_info["video_time"] = int(time.mktime(time.strptime(crawler.get_json_value(video_info, "node", "createdAt", type_check=str), "%Y-%m-%dT%H:%M:%S+00:00")))
+        video_time = crawler.get_json_value(video_info, "node", "createdAt", type_check=str)
+        result_video_info["video_time"] = int(time.mktime(time.strptime(video_time, "%Y-%m-%dT%H:%M:%S+00:00")))
         # 获取视频标题
         result_video_info["video_title"] = crawler.get_json_value(video_info, "node", "title", type_check=str)
         result["video_info_list"].append(result_video_info)
@@ -239,7 +240,8 @@ class Download(crawler.DownloadThread):
 
         self.step("开始下载视频%s 《%s》 %s" % (video_info["video_id"], video_info["video_title"], video_response["video_url"]))
 
-        video_file_path = os.path.join(self.main_thread.video_download_path, self.index_key, "%s - %s.mp4" % (video_info["video_id"], path.filter_text(video_info["video_title"])))
+        video_file_name = "%s - %s.mp4" % (video_info["video_id"], path.filter_text(video_info["video_title"]))
+        video_file_path = os.path.join(self.main_thread.video_download_path, self.index_key, video_file_name)
         download_return = net.Download(video_response["video_url"], video_file_path, auto_multipart_download=True, is_url_encode=False)
         if download_return.status == net.Download.DOWNLOAD_SUCCEED:
             self.total_video_count += 1  # 计数累加

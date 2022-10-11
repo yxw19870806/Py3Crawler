@@ -68,7 +68,8 @@ def get_one_page_album(account_id, post_time):
         result_photo_info["album_title"] = crawler.get_json_value(album_info, "title", type_check=str)
         # 获取图片地址
         for photo_info in crawler.get_json_value(album_info, "images", type_check=list):
-            result_photo_info["photo_url_list"].append("https://photo.tuchong.com/%s/f/%s.jpg" % (account_id, crawler.get_json_value(photo_info, "img_id", type_check=str)))
+            photo_id = crawler.get_json_value(photo_info, "img_id", type_check=str)
+            result_photo_info["photo_url_list"].append("https://photo.tuchong.com/%s/f/%s.jpg" % (account_id, photo_id))
         # 获取相册创建时间
         result_photo_info["album_time"] = crawler.get_json_value(album_info, "published_at", type_check=str)
         result["album_info_list"].append(result_photo_info)
@@ -133,7 +134,7 @@ class Download(crawler.DownloadThread):
                 raise
 
             self.trace("%s后一页解析的全部相册：%s" % (post_time, album_pagination_response["album_info_list"]))
-            self.step("%s后一页解析获取%s个相册"% (post_time, len(album_pagination_response["album_info_list"])))
+            self.step("%s后一页解析获取%s个相册" % (post_time, len(album_pagination_response["album_info_list"])))
 
             # 已经没有相册了
             if len(album_pagination_response["album_info_list"]) == 0:

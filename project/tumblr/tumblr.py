@@ -355,7 +355,8 @@ def get_video_play_page(account_id, post_id, is_https):
         video_play_url = video_play_response.getheader("Location")
         if video_play_url is not None:
             video_play_response = net.request(video_play_url, method="GET")
-    if video_play_response.status == 403 and video_play_response.data.decode(errors="ignore").find("You do not have permission to access this page.") >= 0:
+    video_play_response_content = video_play_response.data.decode(errors="ignore")
+    if video_play_response.status == 403 and video_play_response_content.find("You do not have permission to access this page.") >= 0:
         result["is_password"] = True
         return result
     elif video_play_response.status == 404:
@@ -364,7 +365,6 @@ def get_video_play_page(account_id, post_id, is_https):
         return get_video_play_page(account_id, post_id, is_https)
     elif video_play_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(video_play_response.status))
-    video_play_response_content = video_play_response.data.decode(errors="ignore")
     video_url_find = re.findall(r'<source src="(http[s]?://%s.tumblr.com/video_file/[^"]*)" type="[^"]*"' % account_id, video_play_response_content)
     if len(video_url_find) == 1:
         if tool.is_integer(video_url_find[0].split("/")[-1]):
@@ -617,7 +617,8 @@ class Download(crawler.DownloadThread):
                 self.main_thread_check()  # 检测主线程运行状态
                 self.step("日志 %s 开始下载第%s张图片 %s" % (post_info["post_id"], photo_index, photo_url))
 
-                photo_file_path = os.path.join(self.main_thread.photo_download_path, self.index_key, "%012d_%02d.%s" % (post_info["post_id"], photo_index, net.get_file_extension(photo_url)))
+                photo_file_name = "%012d_%02d.%s" % (post_info["post_id"], photo_index, net.get_file_extension(photo_url))
+                photo_file_path = os.path.join(self.main_thread.photo_download_path, self.index_key, photo_file_name)
                 download_return = net.Download(photo_url, photo_file_path)
                 if download_return.status == net.Download.DOWNLOAD_SUCCEED:
                     self.temp_path_list.append(photo_file_path)  # 设置临时目录

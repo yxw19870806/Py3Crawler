@@ -29,7 +29,9 @@ def get_member_from_talk(talk_id):
     if script_json is None:
         raise crawler.CrawlerException("talk信息加载失败\n" + script_json_html)
     for member_info in crawler.get_json_value(script_json, "page:talk:service:entity:talkMembers", "members", type_check=list):
-        account_list[crawler.get_json_value(member_info, "userId", type_check=str)] = crawler.get_json_value(member_info, "name", type_check=str).replace(" ", "")
+        account_id = crawler.get_json_value(member_info, "userId", type_check=str)
+        account_name = crawler.get_json_value(member_info, "name", type_check=str).replace(" ", "")
+        account_list[account_id] = account_name
     return account_list
 
 

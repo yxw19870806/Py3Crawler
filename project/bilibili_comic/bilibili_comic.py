@@ -171,7 +171,8 @@ class Download(crawler.DownloadThread):
 
         # 图片下载
         photo_index = 1
-        chapter_path = os.path.join(self.main_thread.photo_download_path, self.display_name, "%06d %s" % (comic_info["ep_id"], path.filter_text(comic_info["ep_name"])))
+        chapter_name = "%06d %s" % (comic_info["ep_id"], path.filter_text(comic_info["ep_name"]))
+        chapter_path = os.path.join(self.main_thread.photo_download_path, self.display_name, chapter_name)
         # 设置临时目录
         self.temp_path_list.append(chapter_path)
         for photo_url in chapter_response["photo_url_list"]:
@@ -182,7 +183,7 @@ class Download(crawler.DownloadThread):
             download_return = net.Download(photo_url, photo_file_path, header_list={"Referer": "https://m.dmzj.com/"})
             if download_return.status == net.Download.DOWNLOAD_SUCCEED:
                 self.total_photo_count += 1  # 计数累加
-                self.step("漫画%s 《%s》第%s张图片下载成功"  % (comic_info["ep_id"], comic_info["ep_name"], photo_index))
+                self.step("漫画%s 《%s》第%s张图片下载成功" % (comic_info["ep_id"], comic_info["ep_name"], photo_index))
             else:
                 self.error("漫画%s 《%s》第%s张图片 %s 下载失败，原因：%s" % (comic_info["ep_id"], comic_info["ep_name"], photo_index, photo_url, crawler.download_failre(download_return.code)))
                 self.check_download_failure_exit()
