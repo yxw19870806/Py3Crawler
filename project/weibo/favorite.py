@@ -72,7 +72,7 @@ def get_one_page_favorite(page_count):
             media_selector = feed_selector.find(".WB_feed_expand .WB_expand .WB_media_wrap")
         # 如果存在媒体
         if media_selector.length == 1:
-            thumb_photo_url_list = re.findall('<img src="([^"]*)"/>', media_selector.html())
+            thumb_photo_url_list = re.findall(r'<img src="([^"]*)"/>', media_selector.html())
             if len(thumb_photo_url_list) > 0:
                 photo_url_list = []
                 for photo_url in thumb_photo_url_list:

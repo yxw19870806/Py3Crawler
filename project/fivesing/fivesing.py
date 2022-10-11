@@ -27,7 +27,7 @@ def get_one_page_audio(account_id, page_type, page_count):
         raise crawler.CrawlerException("账号不存在")
     # 获取歌曲信息
     # 单首歌曲信息的格式：[歌曲id，歌曲标题]
-    audio_info_list = re.findall('<a href="http://5sing.kugou.com/' + page_type + '/([\d]*).html" [\s|\S]*? title="([^"]*)">', audio_pagination_response_content)
+    audio_info_list = re.findall(r'<a href="http://5sing.kugou.com/%s/([\d]*).html" [\s|\S]*? title="([^"]*)">' % page_type, audio_pagination_response_content)
     for audio_info in audio_info_list:
         result_audio_info = {
             "audio_id": int(audio_info[0]),
