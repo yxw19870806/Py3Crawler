@@ -176,7 +176,8 @@ class Download(crawler.DownloadThread):
             self.main_thread_check()  # 检测主线程运行状态
             self.step("开始下载日志%s的第%s张图片 %s" % (blog_info["blog_id"], photo_index, photo_url))
 
-            photo_file_path = os.path.join(self.main_thread.photo_download_path, self.index_key, "%05d_%02d.%s" % (blog_info["blog_id"], photo_index, net.get_file_extension(photo_url)))
+            photo_file_name = "%05d_%02d.%s" % (blog_info["blog_id"], photo_index, net.get_file_extension(photo_url))
+            photo_file_path = os.path.join(self.main_thread.photo_download_path, self.index_key, photo_file_name)
             download_return = net.Download(photo_url, photo_file_path)
             if download_return.status == net.Download.DOWNLOAD_SUCCEED:
                 self.temp_path_list.append(photo_file_path)  # 设置临时目录
@@ -196,7 +197,8 @@ class Download(crawler.DownloadThread):
             self.main_thread_check()  # 检测主线程运行状态
             self.step("开始下载日志%s的第%s个视频 %s" % (blog_info["blog_id"], video_index, video_url))
 
-            video_file_path = os.path.join(self.main_thread.video_download_path, self.index_key, "%05d_%02d.%s" % (blog_info["blog_id"], video_index, net.get_file_extension(video_url)))
+            video_file_name = "%05d_%02d.%s" % (blog_info["blog_id"], video_index, net.get_file_extension(video_url))
+            video_file_path = os.path.join(self.main_thread.video_download_path, self.index_key, video_file_name)
             download_return = net.Download(video_url, video_file_path)
             if download_return.status == net.Download.DOWNLOAD_SUCCEED:
                 self.temp_path_list.append(video_file_path)  # 设置临时目录

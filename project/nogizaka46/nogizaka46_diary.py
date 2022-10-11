@@ -228,7 +228,8 @@ class Download(crawler.DownloadThread):
                 photo_url = photo_info["photo_url"]
             self.step("开始下载日志%s的第%s张图片 %s" % (blog_id, photo_index, photo_url))
 
-            file_path = os.path.join(self.main_thread.photo_download_path, self.display_name, "%06d_%02d.%s" % (blog_id, photo_index, net.get_file_extension(photo_url, "jpg")))
+            file_name = "%06d_%02d.%s" % (blog_id, photo_index, net.get_file_extension(photo_url, "jpg"))
+            file_path = os.path.join(self.main_thread.photo_download_path, self.display_name, file_name)
             download_return = net.Download(photo_url, file_path, cookies_list=preview_photo_response["cookies"])
             if download_return.status == net.Download.DOWNLOAD_SUCCEED:
                 if check_photo_invalid(file_path):
@@ -238,7 +239,7 @@ class Download(crawler.DownloadThread):
                 else:
                     self.temp_path_list.append(file_path)  # 设置临时目录
                     self.total_photo_count += 1  # 计数累加
-                    self.step("日志%s的第%s张图片下载成功"% (blog_id, photo_index))
+                    self.step("日志%s的第%s张图片下载成功" % (blog_id, photo_index))
             else:
                 self.error("日志%s的第%s张图片 %s 下载失败，原因：%s" % (blog_id, photo_index, photo_url, crawler.download_failre(download_return.code)))
                 self.check_download_failure_exit()

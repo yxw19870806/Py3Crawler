@@ -300,7 +300,8 @@ class Download(crawler.DownloadThread):
         for photo_info in photo_info_list:
             self.main_thread_check()  # 检测主线程运行状态
             self.step("开始下载图片%s %s" % (photo_info["photo_id"], photo_info["photo_url"]))
-            file_path = os.path.join(self.main_thread.photo_download_path, self.index_key, "%011d.%s" % (photo_info["photo_id"], net.get_file_extension(photo_info["photo_url"])))
+            file_name = "%011d.%s" % (photo_info["photo_id"], net.get_file_extension(photo_info["photo_url"]))
+            file_path = os.path.join(self.main_thread.photo_download_path, self.index_key, file_name)
             download_return = net.Download(photo_info["photo_url"], file_path)
             if download_return.status == net.Download.DOWNLOAD_SUCCEED:
                 self.temp_path_list.append(file_path)  # 设置临时目录

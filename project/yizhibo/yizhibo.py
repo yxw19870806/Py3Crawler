@@ -208,7 +208,8 @@ class Download(crawler.DownloadThread):
         photo_index = int(self.single_save_data[3]) + 1
         self.step("开始下载第%s张图片 %s" % (photo_index, photo_info["photo_url"]))
 
-        photo_file_path = os.path.join(self.main_thread.photo_download_path, self.display_name, "%04d.%s" % (photo_index, net.get_file_extension(photo_info["photo_url"])))
+        photo_file_name = "%04d.%s" % (photo_index, net.get_file_extension(photo_info["photo_url"]))
+        photo_file_path = os.path.join(self.main_thread.photo_download_path, self.display_name, photo_file_name)
         download_return = net.Download(photo_info["photo_url"], photo_file_path)
         if download_return.status == net.Download.DOWNLOAD_SUCCEED:
             self.total_photo_count += 1  # 计数累加

@@ -18,6 +18,7 @@ MAX_DAILY_VIP_DOWNLOAD_COUNT = 550
 DAILY_VIP_DOWNLOAD_COUNT_CACHE_FILE = ""
 DAILY_VIP_DOWNLOAD_COUNT = {}
 EACH_PAGE_AUDIO_COUNT = 30  # 每次请求获取的视频数量
+IS_LOGIN = False
 
 
 # 判断是否已登录
@@ -55,7 +56,7 @@ def get_one_page_album(album_id, page_count):
             raise crawler.CrawlerException("专辑已被删除")
         else:
             raise
-    for audio_info in crawler.get_json_value(album_pagination_response.json_data, "data", "tracks", type_check=list):
+    for audio_info in audio_info_list:
         result_audio_info = {
             "audio_id": 0,  # 音频id
             "audio_title": "",  # 音频标题
@@ -156,7 +157,7 @@ def get_audio_info_page(audio_id):
     try:
         result["audio_url"] = crawler.get_json_value(audio_info_response.json_data, "data", "src", type_check=str)
         return result
-    except:
+    except crawler.CrawlerException:
         crawler.get_json_value(audio_info_response.json_data, "data", "hasBuy", type_check=bool)
 
     if not COOKIE_INFO:

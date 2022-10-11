@@ -45,7 +45,7 @@ def convert_to_bytes(value, default_value: int) -> int:
     if tool.is_integer(value):
         size = int(value)
     else:
-        search_result = re.findall("^(\d+) *([a-zA-z]*)$", value)
+        search_result = re.findall(r"^(\d+) *([a-zA-z]*)$", value)
         if len(search_result) == 1:
             unit = search_result[0][1]
             if unit == "" or unit == "B":

@@ -110,7 +110,8 @@ class BiliBiliDownload(bilibili.BiliBili):
                 else:
                     file_real_path = file_path
 
-                download_return = net.Download(video_url, file_real_path, auto_multipart_download=True, header_list={"Referer": "https://www.bilibili.com/video/av%s" % video_id})
+                header_list = {"Referer": "https://www.bilibili.com/video/av%s" % video_id}
+                download_return = net.Download(video_url, file_real_path, auto_multipart_download=True, header_list=header_list)
                 if download_return.status == net.Download.DOWNLOAD_SUCCEED:
                     if len(video_part_info["video_url_list"]) == 1:
                         log.step("视频《%s》下载成功" % video_title)

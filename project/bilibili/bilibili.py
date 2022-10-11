@@ -270,7 +270,8 @@ def get_video_page(video_id):
             "qn": "116",  # 上限 高清 1080P+: 116, 高清 1080P: 80, 高清 720P: 64, 清晰 480P: 32, 流畅 360P: 16
             "otype": "json",
         }
-        video_info_response = net.request(video_info_url, method="GET", fields=query_data, cookies_list=COOKIE_INFO, header_list={"Referer": "https://www.bilibili.com/video/av%s" % video_id}, json_decode=True)
+        header_list = {"Referer": "https://www.bilibili.com/video/av%s" % video_id}
+        video_info_response = net.request(video_info_url, method="GET", fields=query_data, cookies_list=COOKIE_INFO, header_list=header_list, json_decode=True)
         if video_info_response.status != net.HTTP_RETURN_CODE_SUCCEED:
             raise crawler.CrawlerException("视频信息，" + crawler.request_failre(video_info_response.status))
         try:
@@ -284,7 +285,9 @@ def get_video_page(video_id):
                 continue
             raise
         if IS_LOGIN:
-            if max(crawler.get_json_value(video_info_response.json_data, "data", "accept_quality", type_check=list)) != crawler.get_json_value(video_info_response.json_data, "data", "quality", type_check=int):
+            max_resolution = max(crawler.get_json_value(video_info_response.json_data, "data", "accept_quality", type_check=list))
+            current_resolution = crawler.get_json_value(video_info_response.json_data, "data", "quality", type_check=int)
+            if max_resolution != current_resolution:
                 raise crawler.CrawlerException("返回的视频分辨率不是最高的\n" + str(video_info_response.json_data))
         # 获取视频地址
         for video_info in video_info_list:
@@ -585,7 +588,8 @@ class Download(crawler.DownloadThread):
                     video_name += " (%s)" % video_split_index
                 video_name = "%s.%s" % (path.filter_text(video_name), net.get_file_extension(video_part_url))
                 file_path = os.path.join(self.main_thread.video_download_path, self.display_name, video_name)
-                download_return = net.Download(video_part_url, file_path, auto_multipart_download=True, header_list={"Referer": "https://www.bilibili.com/video/av%s" % video_info["video_id"]})
+                header_list = {"Referer": "https://www.bilibili.com/video/av%s" % video_info["video_id"]}
+                download_return = net.Download(video_part_url, file_path, auto_multipart_download=True, header_list=header_list)
                 if download_return.status == net.Download.DOWNLOAD_SUCCEED:
                     self.temp_path_list.append(file_path)  # 设置临时目录
                     self.total_video_count += 1  # 计数累加
@@ -616,7 +620,8 @@ class Download(crawler.DownloadThread):
 
         self.step("开始下载音频%s《%s》 %s" % (audio_info["audio_id"], audio_info["audio_title"], audio_info_response["audio_url"]))
 
-        file_path = os.path.join(self.main_thread.audio_download_path, self.display_name, "%06d %s.%s" % (audio_info["audio_id"], path.filter_text(audio_info["audio_title"]), net.get_file_extension(audio_info_response["audio_url"])))
+        file_name = "%06d %s.%s" % (audio_info["audio_id"], path.filter_text(audio_info["audio_title"]), net.get_file_extension(audio_info_response["audio_url"]))
+        file_path = os.path.join(self.main_thread.audio_download_path, self.display_name, file_name)
         download_return = net.Download(audio_info_response["audio_url"], file_path, header_list={"Referer": "https://www.bilibili.com/"})
         if download_return.status == net.Download.DOWNLOAD_SUCCEED:
             self.total_audio_count += 1  # 计数累加
@@ -649,7 +654,8 @@ class Download(crawler.DownloadThread):
             self.main_thread_check()  # 检测主线程运行状态
             self.step("相簿%s开始下载第%s张图片 %s" % (album_id, photo_index, photo_url))
 
-            file_path = os.path.join(self.main_thread.photo_download_path, self.display_name, "%09d_%02d.%s" % (album_id, photo_index, net.get_file_extension(photo_url)))
+            file_name = "%09d_%02d.%s" % (album_id, photo_index, net.get_file_extension(photo_url))
+            file_path = os.path.join(self.main_thread.photo_download_path, self.display_name, file_name)
             download_return = net.Download(photo_url, file_path)
             if download_return.status == net.Download.DOWNLOAD_SUCCEED:
                 self.temp_path_list.append(file_path)  # 设置临时目录
