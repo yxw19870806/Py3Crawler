@@ -171,7 +171,7 @@ def get_file_version(file_path: str):
     return "%d.%d.%d.%04d" % (win32api.HIWORD(ms), win32api.LOWORD(ms), win32api.HIWORD(ls), win32api.LOWORD(ls))
 
 
-def keyboard_event(keyboard):
+def send_keyboard_event(keyboard):
     """
     前台输入指定按键
     """
@@ -179,7 +179,7 @@ def keyboard_event(keyboard):
     win32api.keybd_event(keyboard, 0, win32con.KEYEVENTF_KEYUP, 0)
 
 
-def mouse_click(pos_x, pos_y, click_type: str = CLICK_TYPE_LEFT_BUTTON, click_time: int = 0):
+def send_mouse_click(pos_x, pos_y, click_type: str = CLICK_TYPE_LEFT_BUTTON, click_time: int = 0):
     """
     鼠标移动到指定坐标后点击左右键
     """
