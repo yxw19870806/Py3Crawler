@@ -28,14 +28,14 @@ def get_account_index_page(account_id):
     with browser.Chrome(account_index_url, desired_capabilities=desired_capabilities, add_argument=chrome_options_argument) as chrome:
         for log_info in chrome.get_log("performance"):
             log_message = tool.json_decode(crawler.get_json_value(log_info, "message", type_check=str))
-            if crawler.get_json_value(log_message, "message", "method", default_value="", type_check=str) == "Network.requestWillBeSent":
+            if crawler.get_json_value(log_message, "message", "method", type_check=str, default_value="") == "Network.requestWillBeSent":
                 video_info_url = crawler.get_json_value(log_message, "message", "params", "request", "url", default_value="", type_check=str)
                 if video_info_url.find("//www.tiktok.com/share/item/list?") > 0:
                     break
         else:
             raise crawler.CrawlerException("账号首页匹配视频信息地址失败")
     video_info_param = urllib.parse.parse_qs(urllib.parse.urlparse(video_info_url)[4])
-    result["signature"] = crawler.get_json_value(video_info_param, "_signature", 0, default_value="")
+    result["signature"] = crawler.get_json_value(video_info_param, "_signature", 0, type_check=str, default_value="")
     if not result["signature"]:
         raise crawler.CrawlerException("视频信息地址匹配视频加密串失败")
     return result

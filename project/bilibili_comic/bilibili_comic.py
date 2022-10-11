@@ -66,7 +66,7 @@ def get_chapter_page(ep_id):
         raise crawler.CrawlerException("需要购买")
     image_path_list = []
     for image_info in crawler.get_json_value(api_response.json_data, "data", "images", type_check=list):
-        image_path_list.append(crawler.get_json_value(image_info, "path"))
+        image_path_list.append(crawler.get_json_value(image_info, "path", type_check=str))
     token_api_url = "https://manga.bilibili.com/twirp/comic.v1.Comic/ImageToken?device=pc&platform=web"
     post_data = {
         "urls": tool.json_encode(image_path_list)

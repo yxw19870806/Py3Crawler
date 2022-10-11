@@ -40,7 +40,7 @@ def get_one_page_playlist(playlist_id, page_count):
         # 获取音频id
         result_audio_info["audio_id"] = crawler.get_json_value(audio_info, "rid", type_check=int)
         # 获取音频标题
-        result_audio_info["audio_title"] = crawler.get_json_value(audio_info, "name")
+        result_audio_info["audio_title"] = crawler.get_json_value(audio_info, "name", type_check=str)
         result["audio_info_list"].append(result_audio_info)
     # 判断是不是最后一页
     total_audio_count = crawler.get_json_value(playlist_pagination_response.json_data, "data", "total", type_check=int)

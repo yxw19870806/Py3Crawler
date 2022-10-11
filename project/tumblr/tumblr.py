@@ -177,7 +177,7 @@ def get_one_page_private_blog(account_id, page_count):
             max_width = 0
             video_url = None
             for video_info in crawler.get_json_value(post_info, "player", type_check=list):
-                video_html = crawler.get_json_value(video_info, "embed_code")
+                video_html = crawler.get_json_value(video_info, "embed_code", type_check=str)
                 if video_html is False:
                     continue
                 video_width = crawler.get_json_value(video_info, "width", type_check=int)
