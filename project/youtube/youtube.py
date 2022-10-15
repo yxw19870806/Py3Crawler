@@ -34,9 +34,9 @@ def check_login():
 def get_one_page_video(account_id, token):
     # token = "4qmFsgJAEhhVQ2xNXzZHRU9razY2STFfWWJTUFFqSWcaJEVnWjJhV1JsYjNNZ0FEZ0JZQUZxQUhvQk1yZ0JBQSUzRCUzRA%3D%3D"
     result = {
-        "channel_name": None,  # 账号名字
+        "channel_name": "",  # 账号名字
         "video_id_list": [],  # 全部视频id
-        "next_page_token": None,  # 下一页token
+        "next_page_token": "",  # 下一页token
     }
     if token == "":
         # todo 更好的分辨方法
@@ -121,9 +121,9 @@ def get_video_page(video_id):
         video_play_response = net.request(video_play_url, method="GET", fields=query_data, header_list={"accept-language": "en"})
     result = {
         "skip_reason": "",  # 跳过原因
-        "video_time": None,  # 视频上传时间
+        "video_time": "",  # 视频上传时间
         "video_title": "",  # 视频标题
-        "video_url": None,  # 视频地址
+        "video_url": "",  # 视频地址
     }
     if video_play_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(video_play_response.status))
@@ -525,7 +525,8 @@ class Download(crawler.DownloadThread):
         else:
             self.step("开始下载视频%s《%s》 %s" % (video_id, video_response["video_title"], video_response["video_url"]))
 
-            video_file_path = os.path.join(self.main_thread.video_download_path, self.display_name, "%s - %s.mp4" % (video_id, path.filter_text(video_response["video_title"])))
+            video_file_name = "%s - %s.mp4" % (video_id, path.filter_text(video_response["video_title"]))
+            video_file_path = os.path.join(self.main_thread.video_download_path, self.display_name, video_file_name)
             download_return = net.Download(video_response["video_url"], video_file_path, auto_multipart_download=True)
             if download_return.status == net.Download.DOWNLOAD_SUCCEED:
                 self.total_video_count += 1  # 计数累加

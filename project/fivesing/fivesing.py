@@ -27,7 +27,7 @@ def get_one_page_audio(account_id, page_type, page_count):
         raise crawler.CrawlerException("账号不存在")
     # 获取歌曲信息
     # 单首歌曲信息的格式：[歌曲id，歌曲标题]
-    audio_info_list = re.findall('<a href="http://5sing.kugou.com/' + page_type + '/([\d]*).html" [\s|\S]*? title="([^"]*)">', audio_pagination_response_content)
+    audio_info_list = re.findall(r'<a href="http://5sing.kugou.com/%s/([\d]*).html" [\s|\S]*? title="([^"]*)">' % page_type, audio_pagination_response_content)
     for audio_info in audio_info_list:
         result_audio_info = {
             "audio_id": int(audio_info[0]),
@@ -47,7 +47,7 @@ def get_audio_play_page(audio_id, song_type):
     audio_info_response = net.request(audio_info_url, method="GET", fields=query_data, json_decode=True)
     result = {
         "audio_title": "",  # 歌曲标题
-        "audio_url": None,  # 歌曲地址
+        "audio_url": "",  # 歌曲地址
         "is_delete": False,  # 是否已删除
     }
     if audio_info_response.status != net.HTTP_RETURN_CODE_SUCCEED:
@@ -183,7 +183,8 @@ class Download(crawler.DownloadThread):
             return
 
         self.step("开始下载%s歌曲%s《%s》 %s" % (audio_type_name, audio_info["audio_id"], audio_info["audio_title"], audio_info_response["audio_url"]))
-        file_path = os.path.join(self.main_thread.audio_download_path, self.display_name, audio_type_name, "%08d - %s.%s" % (audio_info["audio_id"], path.filter_text(audio_info["audio_title"]), net.get_file_extension(audio_info_response["audio_url"])))
+        file_name = "%08d - %s.%s" % (audio_info["audio_id"], path.filter_text(audio_info["audio_title"]), net.get_file_extension(audio_info_response["audio_url"]))
+        file_path = os.path.join(self.main_thread.audio_download_path, self.display_name, audio_type_name, file_name)
         download_return = net.Download(audio_info_response["audio_url"], file_path)
         if download_return.status == net.Download.DOWNLOAD_SUCCEED:
             self.total_audio_count += 1  # 计数累加

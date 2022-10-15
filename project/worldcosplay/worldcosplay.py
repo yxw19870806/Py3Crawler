@@ -34,8 +34,8 @@ def get_one_page_photo(account_id, page_count):
     # 获取图片信息
     for photo_info in crawler.get_json_value(photo_pagination_response.json_data, "list", type_check=list):
         result_photo_info = {
-            "photo_id": None,  # 图片id
-            "photo_url": None,  # 图片地址
+            "photo_id": 0,  # 图片id
+            "photo_url": "",  # 图片地址
         }
         # 获取图片id
         result_photo_info["photo_id"] = crawler.get_json_value(photo_info, "id", type_check=int)
@@ -139,7 +139,8 @@ class Download(crawler.DownloadThread):
         self.step("开始下载图片%s %s" % (photo_info["photo_id"], photo_info["photo_url"]))
 
         photo_url = get_photo_url(photo_info["photo_url"])
-        file_path = os.path.join(self.main_thread.photo_download_path, self.display_name, "%08d.%s" % (photo_info["photo_id"], net.get_file_extension(photo_url)))
+        file_name = "%08d.%s" % (photo_info["photo_id"], net.get_file_extension(photo_url))
+        file_path = os.path.join(self.main_thread.photo_download_path, self.display_name, file_name)
         download_return = net.Download(photo_url, file_path)
         if download_return.status == net.Download.DOWNLOAD_SUCCEED:
             self.total_photo_count += 1  # 计数累加

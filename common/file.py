@@ -20,7 +20,7 @@ READ_FILE_TYPE_LINE = 2  # 按行读取，返回list
 WRITE_FILE_TYPE_APPEND = 1  # 追加写入文件
 WRITE_FILE_TYPE_REPLACE = 2  # 覆盖写入文件
 
-BOM_SIGN = b'\xef\xbb\xbf'.decode()
+BOM_SIGN = b"\xef\xbb\xbf".decode()
 
 
 def read_file(file_path: str, read_type: int = READ_FILE_TYPE_FULL) -> Union[str, list]:

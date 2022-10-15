@@ -26,7 +26,7 @@ class BiliBiliFavorites(bilibili.BiliBili):
 
     @staticmethod
     def get_favorites_id_from_console():
-        video_url = input("请输入bilibili收藏夹播放地址：").lower()
+        video_url = input(tool.get_time() + " 请输入bilibili收藏夹播放地址：").lower()
         favorites_id = None
         if video_url.find("//www.bilibili.com/medialist/play/ml") > 0:
             favorites_id = tool.find_sub_string(video_url, "//www.bilibili.com/medialist/play/ml").split("?")[0].split("/")[0]
@@ -115,7 +115,8 @@ class BiliBiliFavorites(bilibili.BiliBili):
 
                     # 开始下载
                     log.step("\n视频标题：%s\n视频地址：%s\n下载路径：%s" % (video_play_response["video_title"], video_part_url, file_path))
-                    download_return = net.Download(video_part_url, file_path, auto_multipart_download=True, header_list={"Referer": "https://www.bilibili.com/video/av%s" % video_info["video_id"]})
+                    header_list = {"Referer": "https://www.bilibili.com/video/av%s" % video_info["video_id"]}
+                    download_return = net.Download(video_part_url, file_path, auto_multipart_download=True, header_list=header_list)
                     if download_return.status == net.Download.DOWNLOAD_SUCCEED:
                         log.step("视频%s《%s》第%s个视频下载成功" % (video_info["video_id"], video_info["video_title"], video_index))
                     else:

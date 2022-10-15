@@ -41,8 +41,9 @@ def init_session():
 # 检测图片是不是被微博自动删除的文件
 def check_photo_invalid(file_path):
     file_md5 = file.get_file_md5(file_path)
-    if file_md5 in ["14f2559305a6c96608c474f4ca47e6b0", "37b9e6dec174b68a545c852c63d4645a", "4cf24fe8401f7ab2eba2c6cb82dffb0e", "78b5b9e32f3b30b088fef0e6c5ed0901",
-                    "7bd88df2b5be33e1a79ac91e7d0376b5", "7e80fb31ec58b1ca2fb3548480e1b95e", "82af4714a8b2a5eea3b44726cfc9920d"]:
+    if file_md5 in ["14f2559305a6c96608c474f4ca47e6b0", "37b9e6dec174b68a545c852c63d4645a", "4cf24fe8401f7ab2eba2c6cb82dffb0e",
+                    "78b5b9e32f3b30b088fef0e6c5ed0901", "7bd88df2b5be33e1a79ac91e7d0376b5", "7e80fb31ec58b1ca2fb3548480e1b95e",
+                    "82af4714a8b2a5eea3b44726cfc9920d"]:
         return True
     return False
 
@@ -67,19 +68,22 @@ def get_one_page_photo(account_id, page_count):
         raise crawler.CrawlerException(crawler.request_failre(photo_pagination_response.status))
     for photo_info in crawler.get_json_value(photo_pagination_response.json_data, "data", "photo_list", type_check=list):
         result_photo_info = {
-            "photo_id": None,  # 图片上传时间
-            "photo_time": None,  # 图片上传时间
-            "photo_url": None,  # 图片地址
+            "photo_id": 0,  # 图片id
+            "photo_time": "",  # 图片上传时间
+            "photo_url": "",  # 图片地址
         }
         # 获取图片上传时间
         result_photo_info["photo_time"] = crawler.get_json_value(photo_info, "timestamp", type_check=int)
         # 获取图片id
         result_photo_info["photo_id"] = crawler.get_json_value(photo_info, "photo_id", type_check=int)
         # 获取图片地址
-        result_photo_info["photo_url"] = crawler.get_json_value(photo_info, "pic_host", type_check=str) + "/large/" + crawler.get_json_value(photo_info, "pic_name", type_check=str)
+        photo_host = crawler.get_json_value(photo_info, "pic_host", type_check=str)
+        photo_name = crawler.get_json_value(photo_info, "pic_name", type_check=str)
+        result_photo_info["photo_url"] = photo_host + "/large/" + photo_name
         result["photo_info_list"].append(result_photo_info)
     # 检测是不是还有下一页 总的图片数量 / 每页显示的图片数量 = 总的页数
-    result["is_over"] = len(result["photo_info_list"]) == 0 or page_count >= (crawler.get_json_value(photo_pagination_response.json_data, "data", "total", type_check=int) / EACH_PAGE_PHOTO_COUNT)
+    total_photo_count = crawler.get_json_value(photo_pagination_response.json_data, "data", "total", type_check=int)
+    result["is_over"] = len(result["photo_info_list"]) == 0 or page_count >= (total_photo_count / EACH_PAGE_PHOTO_COUNT)
     return result
 
 
@@ -92,7 +96,7 @@ def get_one_page_video(account_id, since_id, retry_count=0):
         "cursor": since_id,
     }
     result = {
-        "next_page_since_id": None,  # 下一页视频指针
+        "next_page_since_id": 0,  # 下一页视频指针
         "video_info_list": [],  # 全部视频地址
     }
     video_pagination_response = net.request(video_pagination_url, method="GET", fields=query_data, cookies_list=COOKIE_INFO, json_decode=True)
@@ -121,7 +125,7 @@ def get_one_page_video(account_id, since_id, retry_count=0):
     # 获取视频id
     for video_info in crawler.get_json_value(video_pagination_response.json_data, "data", "list", type_check=list):
         result_video_info_list = {
-            "video_id": None,  # 视频id
+            "video_id": 0,  # 视频id
             "video_title": "",  # 视频标题
             "video_url": "",  # 视频地址
         }
@@ -156,7 +160,9 @@ def get_one_page_video(account_id, since_id, retry_count=0):
         for single_video_info in video_detail_info_list:
             video_type = crawler.get_json_value(single_video_info, "play_info", "type", type_check=int)
             if video_type == 1:
-                resolution = crawler.get_json_value(single_video_info, "play_info", "width", type_check=int) * crawler.get_json_value(single_video_info, "play_info", "height", type_check=int)
+                video_width = crawler.get_json_value(single_video_info, "play_info", "width", type_check=int)
+                video_height = crawler.get_json_value(single_video_info, "play_info", "height", type_check=int)
+                resolution = video_width * video_height
                 if resolution > max_resolution:
                     video_url = crawler.get_json_value(single_video_info, "play_info", "url", type_check=str)
                     max_resolution = resolution
@@ -325,7 +331,8 @@ class Download(crawler.DownloadThread):
     def crawl_photo(self, photo_info):
         self.step("开始下载图片%s %s" % (photo_info["photo_id"], photo_info["photo_url"]))
 
-        photo_file_path = os.path.join(self.main_thread.photo_download_path, self.display_name, "%16d.%s" % (photo_info["photo_id"], net.get_file_extension(photo_info["photo_url"], "jpg")))
+        photo_file_name = "%16d.%s" % (photo_info["photo_id"], net.get_file_extension(photo_info["photo_url"], "jpg"))
+        photo_file_path = os.path.join(self.main_thread.photo_download_path, self.display_name, photo_file_name)
         download_return = net.Download(photo_info["photo_url"], photo_file_path)
         if download_return.status == net.Download.DOWNLOAD_SUCCEED:
             if check_photo_invalid(photo_file_path):
@@ -354,12 +361,11 @@ class Download(crawler.DownloadThread):
 
         video_title = path.filter_text(video_info["video_title"])
         if video_title:
-            video_file_path = os.path.join(self.main_thread.video_download_path, self.display_name, "%s %s.mp4" % (video_info["video_id"], video_title))
+            video_file_name = "%s %s.mp4" % (video_info["video_id"], video_title)
         else:
-            video_file_path = os.path.join(self.main_thread.video_download_path, self.display_name, "%s.mp4" % video_info["video_id"])
-        header_list = {
-            "Host": urllib.parse.urlparse(video_info["video_url"])[1],
-        }
+            video_file_name = "%s.mp4" % video_info["video_id"]
+        video_file_path = os.path.join(self.main_thread.video_download_path, self.display_name, video_file_name)
+        header_list = {"Host": urllib.parse.urlparse(video_info["video_url"])[1]}
         download_return = net.Download(video_info["video_url"], video_file_path, header_list=header_list, auto_multipart_download=True)
         if download_return.status == net.Download.DOWNLOAD_SUCCEED:
             self.total_video_count += 1  # 计数累加

@@ -33,8 +33,8 @@ def get_comic_index_page(comic_name):
         # 获取版本下各个章节
         for comic_info in crawler.get_json_value(chapter_info, "data", type_check=list):
             result_comic_info = {
-                "comic_id": None,  # 漫画id
-                "page_id": None,  # 页面id
+                "comic_id": 0,  # 漫画id
+                "page_id": 0,  # 页面id
                 "chapter_name": "",  # 漫画章节名字
                 "version_name": version_name,  # 漫画版本名字
             }
@@ -148,7 +148,8 @@ class Download(crawler.DownloadThread):
 
         # 图片下载
         photo_index = 1
-        chapter_path = os.path.join(self.main_thread.photo_download_path, self.display_name, comic_info["version_name"], "%06d %s" % (comic_info["page_id"], path.filter_text(comic_info["chapter_name"])))
+        chapter_name = "%06d %s" % (comic_info["page_id"], path.filter_text(comic_info["chapter_name"]))
+        chapter_path = os.path.join(self.main_thread.photo_download_path, self.display_name, comic_info["version_name"], chapter_name)
         # 设置临时目录
         self.temp_path_list.append(chapter_path)
         for photo_url in chapter_response["photo_url_list"]:

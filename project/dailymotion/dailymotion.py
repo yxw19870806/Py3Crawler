@@ -25,7 +25,7 @@ def init_session():
     if index_page_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException("首页，" + crawler.request_failre(index_page_response.status))
     index_page_response_content = index_page_response.data.decode(errors="ignore")
-    client_id_and_secret_find = re.findall('var r="([\w]{20,})",o="([\w]{40,})"', index_page_response_content)
+    client_id_and_secret_find = re.findall(r'var r="([\w]{20,})",o="([\w]{40,})"', index_page_response_content)
     if len(client_id_and_secret_find) != 1 or len(client_id_and_secret_find[0]) != 2:
         raise crawler.CrawlerException("页面截取client_id和client_secret失败\n" + index_page_response_content)
     post_data = {
@@ -68,14 +68,15 @@ def get_one_page_video(account_id, page_count):
     # 获取所有视频
     for video_info in crawler.get_json_value(api_response.json_data, "data", "channel", "channel_videos_all_videos", "edges", type_check=list):
         result_video_info = {
-            "video_id": None,  # 视频id
-            "video_time": None,  # 视频上传时间
+            "video_id": "",  # 视频id
+            "video_time": "",  # 视频上传时间
             "video_title": "",  # 视频标题
         }
         # 获取视频id
         result_video_info["video_id"] = crawler.get_json_value(video_info, "node", "xid", type_check=str)
         # 获取视频上传时间
-        result_video_info["video_time"] = int(time.mktime(time.strptime(crawler.get_json_value(video_info, "node", "createdAt", type_check=str), "%Y-%m-%dT%H:%M:%S+00:00")))
+        video_time = crawler.get_json_value(video_info, "node", "createdAt", type_check=str)
+        result_video_info["video_time"] = int(time.mktime(time.strptime(video_time, "%Y-%m-%dT%H:%M:%S+00:00")))
         # 获取视频标题
         result_video_info["video_title"] = crawler.get_json_value(video_info, "node", "title", type_check=str)
         result["video_info_list"].append(result_video_info)
@@ -97,7 +98,7 @@ def get_video_page(video_id):
     result = {
         "is_delete": False,  # 是否已删除
         "video_title": "",  # 视频标题
-        "video_url": None,  # 视频地址
+        "video_url": "",  # 视频地址
     }
     if video_info_response.status == 404:
         result["is_delete"] = True
@@ -115,7 +116,7 @@ def get_video_page(video_id):
     for line in m3u8_file_response_content.split("\n"):
         if line[:len("#EXT-X-STREAM-INF:")] != "#EXT-X-STREAM-INF:":
             continue
-        resolution_find = re.findall("RESOLUTION=(\d*)x(\d*)", line)
+        resolution_find = re.findall(r"RESOLUTION=(\d*)x(\d*)", line)
         if len(resolution_find) != 1 or len(resolution_find[0]) != 2:
             raise crawler.CrawlerException("视频信息截取分辨率失败\n" + line)
         resolution = int(resolution_find[0][0]) * int(resolution_find[0][1])
@@ -239,7 +240,8 @@ class Download(crawler.DownloadThread):
 
         self.step("开始下载视频%s 《%s》 %s" % (video_info["video_id"], video_info["video_title"], video_response["video_url"]))
 
-        video_file_path = os.path.join(self.main_thread.video_download_path, self.index_key, "%s - %s.mp4" % (video_info["video_id"], path.filter_text(video_info["video_title"])))
+        video_file_name = "%s - %s.mp4" % (video_info["video_id"], path.filter_text(video_info["video_title"]))
+        video_file_path = os.path.join(self.main_thread.video_download_path, self.index_key, video_file_name)
         download_return = net.Download(video_response["video_url"], video_file_path, auto_multipart_download=True, is_url_encode=False)
         if download_return.status == net.Download.DOWNLOAD_SUCCEED:
             self.total_video_count += 1  # 计数累加

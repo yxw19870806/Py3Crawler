@@ -42,14 +42,14 @@ def get_photo_index_page(account_id):
 def get_photo_header(photo_url):
     photo_head_response = net.request(photo_url, method="HEAD")
     result = {
-        "photo_time": None,  # 图片上传时间
+        "photo_time": 0,  # 图片上传时间
     }
     if photo_head_response.status == 404:
         return result
     elif photo_head_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(photo_head_response.status))
     last_modified = photo_head_response.headers.get("Last-Modified")
-    if last_modified is None:
+    if not last_modified:
         raise crawler.CrawlerException("图片header%s中'Last-Modified'字段不存在" % photo_head_response.headers)
     try:
         last_modified_time = time.strptime(last_modified, "%a, %d %b %Y %H:%M:%S %Z")
@@ -208,7 +208,8 @@ class Download(crawler.DownloadThread):
         photo_index = int(self.single_save_data[3]) + 1
         self.step("开始下载第%s张图片 %s" % (photo_index, photo_info["photo_url"]))
 
-        photo_file_path = os.path.join(self.main_thread.photo_download_path, self.display_name, "%04d.%s" % (photo_index, net.get_file_extension(photo_info["photo_url"])))
+        photo_file_name = "%04d.%s" % (photo_index, net.get_file_extension(photo_info["photo_url"]))
+        photo_file_path = os.path.join(self.main_thread.photo_download_path, self.display_name, photo_file_name)
         download_return = net.Download(photo_info["photo_url"], photo_file_path)
         if download_return.status == net.Download.DOWNLOAD_SUCCEED:
             self.total_photo_count += 1  # 计数累加

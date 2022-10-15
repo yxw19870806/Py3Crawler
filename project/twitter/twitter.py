@@ -25,7 +25,8 @@ thread_event.set()
 def check_login():
     global AUTHORIZATION, COOKIE_INFO, IS_LOGIN, QUERY_ID
     index_url = "https://twitter.com/home"
-    index_page_response = net.request(index_url, method="GET", cookies_list=COOKIE_INFO, header_list={"referer": "https://twitter.com"}, is_auto_redirect=False)
+    header_list = {"referer": "https://twitter.com"}
+    index_page_response = net.request(index_url, method="GET", cookies_list=COOKIE_INFO, header_list=header_list, is_auto_redirect=False)
     if index_page_response.status == 200:
         IS_LOGIN = True
     elif index_page_response.status == 302 and index_page_response.getheader("Location") == "/login?redirect_after_login=%2Fhome":
@@ -35,7 +36,7 @@ def check_login():
     index_page_response_content = index_page_response.data.decode(errors="ignore")
     # 更新cookies
     COOKIE_INFO.update(net.get_cookies_from_response_header(index_page_response.headers))
-    init_js_url_find = re.findall('href="(https://abs.twimg.com/responsive-web/client-web-legacy/main.[^\.]*.[\w]*.js)"', index_page_response_content)
+    init_js_url_find = re.findall(r'href="(https://abs.twimg.com/responsive-web/client-web-legacy/main.[^\.]*.[\w]*.js)"', index_page_response_content)
     if len(init_js_url_find) != 1:
         raise crawler.CrawlerException("初始化JS地址截取失败\n" + index_page_response_content)
     init_js_response = net.request(init_js_url_find[0], method="GET")
@@ -48,7 +49,7 @@ def check_login():
         raise crawler.CrawlerException("初始化JS中截取authorization失败\n" + init_js_response_content)
     AUTHORIZATION = "AAAAAAAAAA" + authorization_string
     # 截取query id
-    query_id_find = re.findall('queryId:"([\w-]*)",operationName:"UserByScreenName",operationType:"query"', init_js_response_content)
+    query_id_find = re.findall(r'queryId:"([\w-]*)",operationName:"UserByScreenName",operationType:"query"', init_js_response_content)
     if len(query_id_find) != 1:
         raise crawler.CrawlerException("初始化JS中截取queryId失败\n" + init_js_response_content)
     QUERY_ID = query_id_find[0]
@@ -206,7 +207,7 @@ def get_video_play_page(tweet_id):
         header_list["x-twitter-auth-type"] = "OAuth2Session"
     video_play_response = net.request(video_play_url, method="GET", cookies_list=COOKIE_INFO, header_list=header_list, json_decode=True)
     result = {
-        "video_url": None,  # 视频地址
+        "video_url": "",  # 视频地址
     }
     thread_event.set()
     if video_play_response.status != net.HTTP_RETURN_CODE_SUCCEED:
@@ -229,7 +230,7 @@ def get_video_play_page(tweet_id):
         elif m3u8_file_response.status != net.HTTP_RETURN_CODE_SUCCEED:
             raise crawler.CrawlerException("m3u8文件 %s 访问失败，%s" % (file_url, crawler.request_failre(m3u8_file_response.status)))
         m3u8_file_response_content = m3u8_file_response.data.decode(errors="ignore")
-        include_m3u8_file_list = re.findall("(/[\S]*.m3u8)", m3u8_file_response_content)
+        include_m3u8_file_list = re.findall(r"(/[\S]*.m3u8)", m3u8_file_response_content)
         if len(include_m3u8_file_list) > 0:
             # 生成最高分辨率视频所在的m3u8文件地址
             file_url = "%s://%s%s" % (file_url_protocol, file_url_host, include_m3u8_file_list[-1])
@@ -238,7 +239,7 @@ def get_video_play_page(tweet_id):
                 raise crawler.CrawlerException("最高分辨率m3u8文件 %s 访问失败，%s" % (file_url, crawler.request_failre(m3u8_file_response.status)))
             m3u8_file_response_content = m3u8_file_response.data.decode(errors="ignore")
         # 包含分P视频文件名的m3u8文件
-        ts_url_find = re.findall("(/[\S]*.ts)", m3u8_file_response_content)
+        ts_url_find = re.findall(r"(/[\S]*.ts)", m3u8_file_response_content)
         if len(ts_url_find) == 0:
             raise crawler.CrawlerException("m3u8文件%s截取视频地址失败\n%s" % (file_url, m3u8_file_response_content))
         result["video_url"] = []
@@ -411,7 +412,8 @@ class Download(crawler.DownloadThread):
             self.main_thread_check()  # 检测主线程运行状态
             self.step("开始下载推特%s的第%s张图片 %s" % (media_info["blog_id"], photo_index, photo_url))
 
-            photo_file_path = os.path.join(self.main_thread.photo_download_path, self.index_key, "%019d_%02d.%s" % (media_info["blog_id"], photo_index, net.get_file_extension(photo_url)))
+            photo_file_name = "%019d_%02d.%s" % (media_info["blog_id"], photo_index, net.get_file_extension(photo_url))
+            photo_file_path = os.path.join(self.main_thread.photo_download_path, self.index_key, photo_file_name)
             for retry_count in range(5):
                 download_return = net.Download(photo_url, photo_file_path)
                 if download_return.status == net.Download.DOWNLOAD_SUCCEED:
@@ -435,9 +437,10 @@ class Download(crawler.DownloadThread):
             self.step("开始下载推特%s的第%s个视频 %s" % (media_info["blog_id"], video_index, video_url))
 
             if len(media_info["video_url_list"]) > 1:
-                video_file_path = os.path.join(self.main_thread.video_download_path, self.index_key, "%019d_%02d.%s" % (media_info["blog_id"], video_index, net.get_file_extension(video_url)))
+                video_file_name = "%019d_%02d.%s" % (media_info["blog_id"], video_index, net.get_file_extension(video_url))
             else:
-                video_file_path = os.path.join(self.main_thread.video_download_path, self.index_key, "%019d.%s" % (media_info["blog_id"], net.get_file_extension(video_url)))
+                video_file_name = "%019d.%s" % (media_info["blog_id"], net.get_file_extension(video_url))
+            video_file_path = os.path.join(self.main_thread.video_download_path, self.index_key, video_file_name)
             download_return = net.Download(video_url, video_file_path, auto_multipart_download=True)
             if download_return.status == net.Download.DOWNLOAD_SUCCEED:
                 self.temp_path_list.append(video_file_path)  # 设置临时目录

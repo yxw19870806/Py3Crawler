@@ -66,7 +66,8 @@ def login_from_console():
             if input_str in ["y", "yes"]:
                 if _do_login(email, password):
                     if IS_LOCAL_SAVE_SESSION and SESSION_DATA_PATH:
-                        file.write_file(crypto.Crypto().encrypt(json.dumps({"email": email, "password": password})), SESSION_DATA_PATH, file.WRITE_FILE_TYPE_REPLACE)
+                        encrypt_string = crypto.Crypto().encrypt(json.dumps({"email": email, "password": password}))
+                        file.write_file(encrypt_string, SESSION_DATA_PATH, file.WRITE_FILE_TYPE_REPLACE)
                     return True
                 return False
             elif input_str in ["n", "no"]:
@@ -100,7 +101,7 @@ def get_account_index_page(account_name):
     }
     account_index_response = net.request(account_index_url, method="GET", fields=query_data, cookies_list=COOKIE_INFO, header_list=header_list, json_decode=True)
     result = {
-        "account_id": None,  # account id
+        "account_id": 0,  # account id
     }
     if account_index_response.status == 404:
         raise crawler.CrawlerException("账号不存在")
@@ -127,7 +128,7 @@ def get_one_page_media(account_id, cursor):
     media_pagination_response = net.request(api_url, method="GET", fields=query_data, cookies_list=COOKIE_INFO, json_decode=True)
     result = {
         "media_info_list": [],  # 全部媒体信息
-        "next_page_cursor": None,  # 下一页媒体信息的指针
+        "next_page_cursor": "",  # 下一页媒体信息的指针
     }
     if media_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(media_pagination_response.status))
@@ -143,12 +144,12 @@ def get_one_page_media(account_id, cursor):
             raise crawler.CrawlerException("'edges'字段长度不正确\n" + str(media_pagination_response.json_data))
     for media_info in media_info_list:
         result_media_info = {
-            "photo_url": None,  # 图片地址
+            "photo_url": "",  # 图片地址
             "is_group": False,  # 是不是图片/视频组
             "is_video": False,  # 是不是视频
-            "page_id": None,  # 媒体详情界面id
-            "page_code": None,  # 媒体详情界面code
-            "time": None,  # 媒体上传时间
+            "page_id": 0,  # 媒体详情界面id
+            "page_code": "",  # 媒体详情界面code
+            "time": "",  # 媒体上传时间
         }
         media_type = crawler.get_json_value(media_info, "node", "__typename", type_check=str)
         # GraphImage 单张图片、GraphSidecar 多张图片、GraphVideo 视频
@@ -217,7 +218,9 @@ def get_media_page(page_id):
             video_url = ""
             max_resolution = 0
             for video_version in crawler.get_json_value(media_item, "video_versions", type_check=list):
-                resolution = crawler.get_json_value(video_version, "width", type_check=int) * crawler.get_json_value(video_version, "height", type_check=int)
+                width = crawler.get_json_value(video_version, "width", type_check=int)
+                height = crawler.get_json_value(video_version, "height", type_check=int)
+                resolution = width * height
                 if resolution > max_resolution:
                     video_url = crawler.get_json_value(video_version, "url", type_check=str)
                     max_resolution = resolution
@@ -240,7 +243,9 @@ def get_media_page(page_id):
                             photo_url = crawler.get_json_value(photo_info, "url", type_check=str)
                             break
                         else:
-                            resolution = crawler.get_json_value(photo_info, "width", type_check=int) * crawler.get_json_value(photo_info, "height", type_check=int)
+                            width = crawler.get_json_value(photo_info, "width", type_check=int)
+                            height = crawler.get_json_value(photo_info, "height", type_check=int)
+                            resolution = width * height
                             if resolution > max_resolution:
                                 photo_url = crawler.get_json_value(photo_info, "url", type_check=str)
                                 max_resolution = resolution
@@ -252,7 +257,9 @@ def get_media_page(page_id):
                     video_url = ""
                     max_resolution = 0
                     for video_version in crawler.get_json_value(carousel_media, "video_versions", type_check=list):
-                        resolution = crawler.get_json_value(video_version, "width", type_check=int) * crawler.get_json_value(video_version, "height", type_check=int)
+                        width = crawler.get_json_value(video_version, "width", type_check=int)
+                        height = crawler.get_json_value(video_version, "height", type_check=int)
+                        resolution = width * height
                         if resolution > max_resolution:
                             video_url = crawler.get_json_value(video_version, "url", type_check=str)
                             max_resolution = resolution
@@ -391,7 +398,7 @@ class Download(crawler.DownloadThread):
                     break
 
             if not is_over:
-                if media_pagination_response["next_page_cursor"] is None:
+                if not media_pagination_response["next_page_cursor"]:
                     is_over = True
                 else:
                     # 设置下一页指针
@@ -422,7 +429,8 @@ class Download(crawler.DownloadThread):
                 # 去除特效，获取原始路径
                 self.step("开始下载媒体%s/%s的第%s张图片 %s" % (media_info["page_id"], media_info["page_code"], photo_index, photo_url))
 
-                photo_file_path = os.path.join(self.main_thread.photo_download_path, self.index_key, "%019d_%02d.%s" % (media_info["page_id"], photo_index, net.get_file_extension(photo_url)))
+                photo_file_name = "%019d_%02d.%s" % (media_info["page_id"], photo_index, net.get_file_extension(photo_url))
+                photo_file_path = os.path.join(self.main_thread.photo_download_path, self.index_key, photo_file_name)
                 download_return = net.Download(photo_url, photo_file_path)
                 if download_return.status == net.Download.DOWNLOAD_SUCCEED:
                     self.temp_path_list.append(photo_file_path)  # 设置临时目录
@@ -442,7 +450,8 @@ class Download(crawler.DownloadThread):
                 self.main_thread_check()  # 检测主线程运行状态
                 self.step("开始下载媒体%s/%s的第%s个视频 %s" % (media_info["page_id"], media_info["page_code"], video_index, video_url))
 
-                video_file_path = os.path.join(self.main_thread.video_download_path, self.index_key, "%019d_%02d.%s" % (media_info["page_id"], video_index, net.get_file_extension(video_url)))
+                video_file_name = "%019d_%02d.%s" % (media_info["page_id"], video_index, net.get_file_extension(video_url))
+                video_file_path = os.path.join(self.main_thread.video_download_path, self.index_key, video_file_name)
                 download_return = net.Download(video_url, video_file_path, auto_multipart_download=True)
                 if download_return.status == net.Download.DOWNLOAD_SUCCEED:
                     self.temp_path_list.append(video_file_path)  # 设置临时目录

@@ -78,7 +78,7 @@ def get_favorites_list(favorites_id):
                 raise
         for video_info in video_info_list:
             result_video_info = {
-                "video_id": None,  # 视频id
+                "video_id": 0,  # 视频id
                 "video_title": "",  # 视频标题
             }
             # bv id
@@ -113,7 +113,7 @@ def get_one_page_video(account_id, page_count):
         raise crawler.CrawlerException(crawler.request_failre(api_response.status))
     for video_info in crawler.get_json_value(api_response.json_data, "data", "list", "vlist", type_check=list):
         result_video_info = {
-            "video_id": None,  # 视频id
+            "video_id": 0,  # 视频id
             "video_title": "",  # 视频标题
             "video_time": "",  # 视频上传时间
         }
@@ -138,7 +138,7 @@ def get_one_page_short_video(account_id, nex_offset):
     api_response = net.request(api_url, method="GET", fields=query_data, json_decode=True)
     result = {
         "video_info_list": [],  # 全部视频信息
-        "next_page_offset": None,  # 下一页指针
+        "next_page_offset": "",  # 下一页指针
     }
     if api_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(api_response.status))
@@ -148,8 +148,8 @@ def get_one_page_short_video(account_id, nex_offset):
     result["next_page_offset"] = crawler.get_json_value(api_response.json_data, "data", "next_offset", type_check=str)
     for video_info in crawler.get_json_value(api_response.json_data, "data", "items", type_check=list):
         result_video_info = {
-            "video_id": None,  # 视频id
-            "video_url": None,  # 视频标题
+            "video_id": 0,  # 视频id
+            "video_url": "",  # 视频标题
         }
         # 获取视频id
         result_video_info["video_id"] = crawler.get_json_value(video_info, "id", type_check=int)
@@ -200,14 +200,10 @@ def get_one_page_audio(account_id, page_count):
     if api_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(api_response.status))
     # 没有任何音频
-    audio_info_list = crawler.get_json_value(api_response.json_data, "data", "data")
-    if audio_info_list is None:
-        return result
-    elif not isinstance(audio_info_list, list):
-        raise crawler.CrawlerException("'data'字段类型不正确\n" + str(api_response.json_data))
+    audio_info_list = crawler.get_json_value(api_response.json_data, "data", "data", type_check=list)
     for audio_info in audio_info_list:
         result_audio_info = {
-            "audio_id": None,  # 音频id
+            "audio_id": 0,  # 音频id
             "audio_title": "",  # 音频标题
         }
         # 获取音频id
@@ -274,7 +270,8 @@ def get_video_page(video_id):
             "qn": "116",  # 上限 高清 1080P+: 116, 高清 1080P: 80, 高清 720P: 64, 清晰 480P: 32, 流畅 360P: 16
             "otype": "json",
         }
-        video_info_response = net.request(video_info_url, method="GET", fields=query_data, cookies_list=COOKIE_INFO, header_list={"Referer": "https://www.bilibili.com/video/av%s" % video_id}, json_decode=True)
+        header_list = {"Referer": "https://www.bilibili.com/video/av%s" % video_id}
+        video_info_response = net.request(video_info_url, method="GET", fields=query_data, cookies_list=COOKIE_INFO, header_list=header_list, json_decode=True)
         if video_info_response.status != net.HTTP_RETURN_CODE_SUCCEED:
             raise crawler.CrawlerException("视频信息，" + crawler.request_failre(video_info_response.status))
         try:
@@ -288,7 +285,9 @@ def get_video_page(video_id):
                 continue
             raise
         if IS_LOGIN:
-            if max(crawler.get_json_value(video_info_response.json_data, "data", "accept_quality", type_check=list)) != crawler.get_json_value(video_info_response.json_data, "data", "quality", type_check=int):
+            max_resolution = max(crawler.get_json_value(video_info_response.json_data, "data", "accept_quality", type_check=list))
+            current_resolution = crawler.get_json_value(video_info_response.json_data, "data", "quality", type_check=int)
+            if max_resolution != current_resolution:
                 raise crawler.CrawlerException("返回的视频分辨率不是最高的\n" + str(video_info_response.json_data))
         # 获取视频地址
         for video_info in video_info_list:
@@ -326,7 +325,7 @@ def get_audio_info_page(audio_id):
     }
     api_response = net.request(api_url, method="GET", fields=query_data, json_decode=True)
     result = {
-        "audio_url": None,  # 音频地址
+        "audio_url": "",  # 音频地址
     }
     if api_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(api_response.status))
@@ -579,7 +578,7 @@ class Download(crawler.DownloadThread):
                 self.main_thread_check()  # 检测主线程运行状态
                 self.step("视频%s《%s》开始下载第%s个视频 %s" % (video_info["video_id"], video_info["video_title"], video_index, video_part_url))
 
-                video_name = "%010d %s" % (video_info[""], video_info["video_title"])
+                video_name = "%010d %s" % (video_info["video_id"], video_info["video_title"])
                 if len(video_play_response["video_part_info_list"]) > 1:
                     if video_part_info["video_part_title"]:
                         video_name += "_" + video_part_info["video_part_title"]
@@ -589,7 +588,8 @@ class Download(crawler.DownloadThread):
                     video_name += " (%s)" % video_split_index
                 video_name = "%s.%s" % (path.filter_text(video_name), net.get_file_extension(video_part_url))
                 file_path = os.path.join(self.main_thread.video_download_path, self.display_name, video_name)
-                download_return = net.Download(video_part_url, file_path, auto_multipart_download=True, header_list={"Referer": "https://www.bilibili.com/video/av%s" % video_info["video_id"]})
+                header_list = {"Referer": "https://www.bilibili.com/video/av%s" % video_info["video_id"]}
+                download_return = net.Download(video_part_url, file_path, auto_multipart_download=True, header_list=header_list)
                 if download_return.status == net.Download.DOWNLOAD_SUCCEED:
                     self.temp_path_list.append(file_path)  # 设置临时目录
                     self.total_video_count += 1  # 计数累加
@@ -620,7 +620,8 @@ class Download(crawler.DownloadThread):
 
         self.step("开始下载音频%s《%s》 %s" % (audio_info["audio_id"], audio_info["audio_title"], audio_info_response["audio_url"]))
 
-        file_path = os.path.join(self.main_thread.audio_download_path, self.display_name, "%06d %s.%s" % (audio_info["audio_id"], path.filter_text(audio_info["audio_title"]), net.get_file_extension(audio_info_response["audio_url"])))
+        file_name = "%06d %s.%s" % (audio_info["audio_id"], path.filter_text(audio_info["audio_title"]), net.get_file_extension(audio_info_response["audio_url"]))
+        file_path = os.path.join(self.main_thread.audio_download_path, self.display_name, file_name)
         download_return = net.Download(audio_info_response["audio_url"], file_path, header_list={"Referer": "https://www.bilibili.com/"})
         if download_return.status == net.Download.DOWNLOAD_SUCCEED:
             self.total_audio_count += 1  # 计数累加
@@ -653,7 +654,8 @@ class Download(crawler.DownloadThread):
             self.main_thread_check()  # 检测主线程运行状态
             self.step("相簿%s开始下载第%s张图片 %s" % (album_id, photo_index, photo_url))
 
-            file_path = os.path.join(self.main_thread.photo_download_path, self.display_name, "%09d_%02d.%s" % (album_id, photo_index, net.get_file_extension(photo_url)))
+            file_name = "%09d_%02d.%s" % (album_id, photo_index, net.get_file_extension(photo_url))
+            file_path = os.path.join(self.main_thread.photo_download_path, self.display_name, file_name)
             download_return = net.Download(photo_url, file_path)
             if download_return.status == net.Download.DOWNLOAD_SUCCEED:
                 self.temp_path_list.append(file_path)  # 设置临时目录

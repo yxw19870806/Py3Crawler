@@ -37,9 +37,9 @@ def get_one_page_album(account_name, page_count):
     album_list_selector = pq(album_pagination_response_content).find(".work-list-box .card-box")
     for album_index in range(album_list_selector.length):
         result_album_info = {
-            "album_id": None,  # 作品id
-            "album_title": None,  # 作品标题
-            "album_time": None,  # 作品创建时间
+            "album_id": "",  # 作品id
+            "album_title": "",  # 作品标题
+            "album_time": "",  # 作品创建时间
         }
         album_selector = album_list_selector.eq(album_index)
         # 获取作品id
@@ -196,7 +196,8 @@ class Download(crawler.DownloadThread):
         self.step("作品%s解析获取%s张图片" % (album_info["album_id"], len(album_response["photo_url_list"])))
 
         photo_index = 1
-        album_path = os.path.join(self.main_thread.photo_download_path, self.index_key, "%s %s" % (album_info["album_id"], path.filter_text(album_info["album_title"])))
+        album_name = "%s %s" % (album_info["album_id"], path.filter_text(album_info["album_title"]))
+        album_path = os.path.join(self.main_thread.photo_download_path, self.index_key, album_name)
         self.temp_path_list.append(album_path)
         for photo_url in album_response["photo_url_list"]:
             self.main_thread_check()  # 检测主线程运行状态

@@ -48,8 +48,8 @@ def get_comic_index_page(comic_id):
             raise crawler.CrawlerException("章节信息截取章节内容失败\n" + group_chapter_list_selector.eq(group_index).html())
         for page_index in range(chapter_list_selector.length):
             result_comic_info = {
-                "chapter_id": None,  # 章节id
-                "chapter_name": None,  # 章节名
+                "chapter_id": 0,  # 章节id
+                "chapter_name": "",  # 章节名
                 "group_name": group_name,  # 漫画分组名字
             }
             chapter_selector = chapter_list_selector.eq(page_index)
@@ -186,7 +186,8 @@ class Download(crawler.DownloadThread):
 
         # 图片下载
         photo_index = 1
-        chapter_path = os.path.join(self.main_thread.photo_download_path, self.display_name, chapter_info["group_name"], "%06d %s" % (chapter_info["chapter_id"], path.filter_text(chapter_info["chapter_name"])))
+        chapter_name = "%06d %s" % (chapter_info["chapter_id"], path.filter_text(chapter_info["chapter_name"]))
+        chapter_path = os.path.join(self.main_thread.photo_download_path, self.display_name, chapter_info["group_name"], chapter_name)
         # 设置临时目录
         self.temp_path_list.append(chapter_path)
         for photo_url in chapter_response["photo_url_list"]:
@@ -194,7 +195,8 @@ class Download(crawler.DownloadThread):
             self.step("漫画%s %s《%s》开始下载第%s张图片 %s" % (chapter_info["chapter_id"], chapter_info["group_name"], chapter_info["chapter_name"], photo_index, photo_url))
 
             photo_file_path = os.path.join(chapter_path, "%03d.%s" % (photo_index, net.get_file_extension(photo_url)))
-            download_return = net.Download(photo_url, photo_file_path, header_list={"Referer": "https://www.manhuagui.com/comic/%s/%s.html" % (self.index_key, chapter_info["chapter_id"])}, is_auto_proxy=False)
+            header_list = {"Referer": "https://www.manhuagui.com/comic/%s/%s.html" % (self.index_key, chapter_info["chapter_id"])}
+            download_return = net.Download(photo_url, photo_file_path, header_list=header_list, is_auto_proxy=False)
             if download_return.status == net.Download.DOWNLOAD_SUCCEED:
                 self.total_photo_count += 1  # 计数累加
                 self.step("漫画%s %s《%s》第%s张图片下载成功" % (chapter_info["chapter_id"], chapter_info["group_name"], chapter_info["chapter_name"], photo_index))

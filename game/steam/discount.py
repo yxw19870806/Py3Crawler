@@ -33,7 +33,7 @@ def load_discount_list(cache_file_path):
         return discount_game_list
     cache_time = tool.get_time("%Y-%m-%d %H:%M", os.path.getmtime(cache_file_path))
     while True:
-        input_str = input("%s 缓存文件时间：%s，是否使用？使用缓存数据(Y)es，删除缓存数据并重新获取(N)o，退出程序(E)xit：" % (tool.get_time(), cache_time))
+        input_str = input(tool.get_time() + " 缓存文件时间：%s，是否使用？使用缓存数据(Y)es，删除缓存数据并重新获取(N)o，退出程序(E)xit：" % cache_time)
         input_str = input_str.lower()
         if input_str in ["y", "yes"]:
             break

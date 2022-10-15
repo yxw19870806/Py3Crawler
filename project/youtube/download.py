@@ -26,7 +26,7 @@ class YoutubeDownload(youtube.Youtube):
 
     @staticmethod
     def get_video_id_from_console():
-        video_url = input("请输入youtube视频地址：")
+        video_url = input(tool.get_time() + " 请输入youtube视频地址：")
         video_id = None
         # https://www.youtube.com/watch?v=lkHlnWFnA0c
         if video_url.lower().find("//www.youtube.com/") > 0:

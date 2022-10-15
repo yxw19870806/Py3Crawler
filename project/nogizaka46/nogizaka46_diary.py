@@ -43,7 +43,7 @@ def get_one_page_blog(account_id, page_count):
     paginate_selector = pq(blog_pagination_response_content).find(".bl--pg .tolast a")
     if paginate_selector.length == 1:
         last_page_url = paginate_selector.attr("href")
-        if last_page_url is None:
+        if not last_page_url:
             raise crawler.CrawlerException("页面截取最后一页按钮失败\n" + paginate_selector.html())
         max_page_count = tool.find_sub_string(last_page_url, "page=", "&")
         if not tool.is_integer(max_page_count):
@@ -73,8 +73,8 @@ def get_blog_page(blog_id):
     photo_list_selector = blog_html_selector.find("img")
     for photo_index in range(photo_list_selector.length):
         result_photo_info = {
-            "real_photo_url": None,
-            "photo_url": None,
+            "real_photo_url": "",
+            "photo_url": "",
         }
         # 图片动作
         photo_selector = photo_list_selector.eq(photo_index)
@@ -93,12 +93,12 @@ def get_blog_page(blog_id):
 # 检查旧版本的实际大图是否可以访问
 def check_preview_photo(photo_url, real_photo_url):
     result = {
-        "cookies": None,  # 页面返回的cookies
+        "cookies": {},  # 页面返回的cookies
         "photo_url": photo_url,  # 大图地址
         "is_over": False,  # 是否已经没有有效的大图了
     }
     # 没有预览地址，直接返回图片原始地址
-    if real_photo_url is not None:
+    if real_photo_url:
         real_photo_response = net.request(real_photo_url, method="GET")
         if real_photo_response.status == net.HTTP_RETURN_CODE_SUCCEED:
             # 检测是不是已经过期删除
@@ -222,13 +222,14 @@ class Download(crawler.DownloadThread):
             self.main_thread_check()  # 检测主线程运行状态
             # 检查是否存在大图可以下载
             preview_photo_response = check_preview_photo(photo_info["photo_url"], photo_info["real_photo_url"])
-            if preview_photo_response["cookies"] is not None:
+            if preview_photo_response["cookies"]:
                 photo_url = preview_photo_response["photo_url"]
             else:
                 photo_url = photo_info["photo_url"]
             self.step("开始下载日志%s的第%s张图片 %s" % (blog_id, photo_index, photo_url))
 
-            file_path = os.path.join(self.main_thread.photo_download_path, self.display_name, "%06d_%02d.%s" % (blog_id, photo_index, net.get_file_extension(photo_url, "jpg")))
+            file_name = "%06d_%02d.%s" % (blog_id, photo_index, net.get_file_extension(photo_url, "jpg"))
+            file_path = os.path.join(self.main_thread.photo_download_path, self.display_name, file_name)
             download_return = net.Download(photo_url, file_path, cookies_list=preview_photo_response["cookies"])
             if download_return.status == net.Download.DOWNLOAD_SUCCEED:
                 if check_photo_invalid(file_path):
@@ -238,7 +239,7 @@ class Download(crawler.DownloadThread):
                 else:
                     self.temp_path_list.append(file_path)  # 设置临时目录
                     self.total_photo_count += 1  # 计数累加
-                    self.step("日志%s的第%s张图片下载成功"% (blog_id, photo_index))
+                    self.step("日志%s的第%s张图片下载成功" % (blog_id, photo_index))
             else:
                 self.error("日志%s的第%s张图片 %s 下载失败，原因：%s" % (blog_id, photo_index, photo_url, crawler.download_failre(download_return.code)))
                 self.check_download_failure_exit()

@@ -26,7 +26,7 @@ class KuWoPlaylist(kuwo.KuWo):
 
     @staticmethod
     def get_playlist_id_from_console():
-        playlist_url = input("请输入歌单地址：").lower()
+        playlist_url = input(tool.get_time() + " 请输入歌单地址：").lower()
         playlist_id = None
         if playlist_url.find("//www.kuwo.cn/playlist_detail/") > 0:
             playlist_id = playlist_url.split(playlist_url)[-1]

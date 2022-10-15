@@ -35,7 +35,7 @@ def get_comic_index_page(comic_id):
         raise crawler.CrawlerException(crawler.request_failre(api_response.status))
     for ep_info in crawler.get_json_value(api_response.json_data, "data", "ep_list", type_check=list):
         result_comic_info = {
-            "ep_id": None,  # 章节id
+            "ep_id": 0,  # 章节id
             "ep_name": "",  # 章节名字
         }
         # 获取页面id
@@ -66,7 +66,7 @@ def get_chapter_page(ep_id):
         raise crawler.CrawlerException("需要购买")
     image_path_list = []
     for image_info in crawler.get_json_value(api_response.json_data, "data", "images", type_check=list):
-        image_path_list.append(crawler.get_json_value(image_info, "path"))
+        image_path_list.append(crawler.get_json_value(image_info, "path", type_check=str))
     token_api_url = "https://manga.bilibili.com/twirp/comic.v1.Comic/ImageToken?device=pc&platform=web"
     post_data = {
         "urls": tool.json_encode(image_path_list)
@@ -171,7 +171,8 @@ class Download(crawler.DownloadThread):
 
         # 图片下载
         photo_index = 1
-        chapter_path = os.path.join(self.main_thread.photo_download_path, self.display_name, "%06d %s" % (comic_info["ep_id"], path.filter_text(comic_info["ep_name"])))
+        chapter_name = "%06d %s" % (comic_info["ep_id"], path.filter_text(comic_info["ep_name"]))
+        chapter_path = os.path.join(self.main_thread.photo_download_path, self.display_name, chapter_name)
         # 设置临时目录
         self.temp_path_list.append(chapter_path)
         for photo_url in chapter_response["photo_url_list"]:
@@ -182,7 +183,7 @@ class Download(crawler.DownloadThread):
             download_return = net.Download(photo_url, photo_file_path, header_list={"Referer": "https://m.dmzj.com/"})
             if download_return.status == net.Download.DOWNLOAD_SUCCEED:
                 self.total_photo_count += 1  # 计数累加
-                self.step("漫画%s 《%s》第%s张图片下载成功"  % (comic_info["ep_id"], comic_info["ep_name"], photo_index))
+                self.step("漫画%s 《%s》第%s张图片下载成功" % (comic_info["ep_id"], comic_info["ep_name"], photo_index))
             else:
                 self.error("漫画%s 《%s》第%s张图片 %s 下载失败，原因：%s" % (comic_info["ep_id"], comic_info["ep_name"], photo_index, photo_url, crawler.download_failre(download_return.code)))
                 self.check_download_failure_exit()

@@ -124,7 +124,7 @@ def get_blog_page(account_name, blog_id):
         if photo_selector.has_class("accessLog"):
             continue
         photo_url = photo_selector.attr("src")
-        if photo_url is None:
+        if not photo_url:
             continue
         # 用户上传的图片
         if photo_url.find("//stat.ameba.jp/user_images/") > 0:
@@ -303,7 +303,7 @@ class Download(crawler.DownloadThread):
                 raise
 
             self.trace("第%s页解析的全部日志：%s" % (page_count, blog_pagination_response["blog_id_list"]))
-            self.step("第%s页解析获取%s个日志"% (page_count, len(blog_pagination_response["blog_id_list"])))
+            self.step("第%s页解析获取%s个日志" % (page_count, len(blog_pagination_response["blog_id_list"])))
 
             for blog_id in blog_pagination_response["blog_id_list"]:
                 # 检查是否达到存档记录
@@ -355,7 +355,8 @@ class Download(crawler.DownloadThread):
                 self.duplicate_list[photo_url] = 1
             self.step("开始下载日志%s的第%s张图片 %s" % (blog_id, photo_index, photo_url))
 
-            file_path = os.path.join(self.main_thread.photo_download_path, self.index_key, "%011d_%02d.%s" % (blog_id, photo_index, net.get_file_extension(photo_url, "jpg")))
+            file_name = "%011d_%02d.%s" % (blog_id, photo_index, net.get_file_extension(photo_url, "jpg"))
+            file_path = os.path.join(self.main_thread.photo_download_path, self.index_key, file_name)
             download_return = net.Download(photo_url, file_path)
             if download_return.status == net.Download.DOWNLOAD_SUCCEED:
                 if check_photo_invalid(file_path):
