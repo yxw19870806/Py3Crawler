@@ -94,7 +94,7 @@ def is_integer(number) -> bool:
         return not re.compile('^[-+]?[0-9]+$').match(str(number)) is None
 
 
-def json_decode(json_string: str, default_value=None) -> Union[list, dict, string]:
+def json_decode(json_string: str, default_value=None) -> Union[list, dict, str]:
     """
     将json字符串解码为json对象
     """
