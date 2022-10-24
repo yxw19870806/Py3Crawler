@@ -696,6 +696,7 @@ def get_json_value(json_data, *args, **kwargs):
         original_data = kwargs["original_data"]
     else:
         original_data = json_data
+
     last_arg = ""
     exception_string = ""
     for arg in args:
@@ -715,29 +716,32 @@ def get_json_value(json_data, *args, **kwargs):
             break
         last_arg = arg
         json_data = json_data[arg]
+
     # 检测结果类型
     if not exception_string and "type_check" in kwargs:
         type_error = False
-        if kwargs["type_check"] is int:  # 整数（包含int和符合整型规则的字符串）
+        type_check = type(kwargs["type_check"])
+        if type_check is int:  # 整数（包含int和符合整型规则的字符串）
             if tool.is_integer(json_data):
                 json_data = int(json_data)
             else:
                 type_error = True
-        elif kwargs["type_check"] is float:  # 浮点数（包含float、int和符合浮点数规则的字符串）
+        elif type_check is float:  # 浮点数（包含float、int和符合浮点数规则的字符串）
             try:
                 json_data = float(json_data)
             except TypeError:
                 type_error = True
             except ValueError:
                 type_error = True
-        elif kwargs["type_check"] is str:  # 直接强制类型转化
+        elif type_check is str:  # 直接强制类型转化
             json_data = str(json_data)
-        elif kwargs["type_check"] in [dict, list, bool]:  # 标准数据类型
-            type_error = not isinstance(json_data, kwargs["type_check"])
+        elif type_check is dict or type_check is list or type_check is bool:  # 标准数据类型
+            type_error = not isinstance(json_data, type_check)
         else:
             exception_string = "type_check: %s类型不正确" % kwargs['type_check']
         if type_error:
             exception_string = "'%s'字段类型不正确\n%s" % (last_arg, original_data)
+
     # 检测结果数值
     if not exception_string and "value_check" in kwargs:
         value_error = False
@@ -749,6 +753,7 @@ def get_json_value(json_data, *args, **kwargs):
                 value_error = True
         if value_error:
             exception_string = "'%s'字段取值不正确\n%s" % (last_arg, original_data)
+
     if exception_string:
         if "default_value" in kwargs:
             return kwargs["default_value"]
