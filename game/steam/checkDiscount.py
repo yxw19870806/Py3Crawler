@@ -17,7 +17,7 @@ def main():
 
     # 所有打折游戏
     discount_game_file_path = os.path.abspath(os.path.join(steam_class.cache_data_path, "discount.txt"))
-    discount_game_list = tool.json_decode(file.read_file(discount_game_file_path), [])
+    discount_game_list: list = tool.json_decode(file.read_file(discount_game_file_path), [])
     game_id_list = []
     for game_info in discount_game_list:
         if game_info["type"] == "game":
