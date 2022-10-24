@@ -452,15 +452,12 @@ class Steam(crawler.Crawler):
 
         if need_login:
             # 检测是否登录
-            login_url = "https://store.steampowered.com/login/checkstoredlogin/?redirectURL="
+            login_url = "https://steamcommunity.com/actions/GetNotificationCounts"
             login_response = net.request(login_url, method="GET", cookies_list=self.cookie_value, is_auto_redirect=False)
-            if login_response.status != 302:
+            if login_response.status != net.HTTP_RETURN_CODE_SUCCEED:
                 output.print_msg("登录返回code%s不正确" % login_response.status)
                 tool.process_exit()
             set_cookies = net.get_cookies_from_response_header(login_response.headers)
-            if "steamLogin" not in set_cookies and "steamLoginSecure" not in set_cookies:
-                output.print_msg("登录返回cookies%s不正确" % set_cookies)
-                tool.process_exit()
             COOKIE_INFO.update(self.cookie_value)
             COOKIE_INFO.update(set_cookies)
             # 强制使用英文
