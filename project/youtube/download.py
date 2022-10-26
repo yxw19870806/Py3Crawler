@@ -77,13 +77,13 @@ class YoutubeDownload(youtube.Youtube):
             "filetypes": [("mp4", ".mp4")],
             "parent": self.gui,
         }
-        file_path = tkinter.filedialog.asksaveasfilename(**options)
-        if not file_path:
+        video_path = tkinter.filedialog.asksaveasfilename(**options)
+        if not video_path:
             return
 
         # 开始下载
-        log.step("\n视频标题：%s\n视频地址：%s\n下载路径：%s" % (video_response["video_title"], video_response["video_url"], file_path))
-        download_return = net.Download(video_response["video_url"], file_path, auto_multipart_download=True)
+        log.step("\n视频标题：%s\n视频地址：%s\n下载路径：%s" % (video_response["video_title"], video_response["video_url"], video_path))
+        download_return = net.Download(video_response["video_url"], video_path, auto_multipart_download=True)
         if download_return.status == net.Download.DOWNLOAD_SUCCEED:
             log.step("视频《%s》下载成功" % video_response["video_title"])
         else:
