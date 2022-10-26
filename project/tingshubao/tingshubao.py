@@ -128,10 +128,16 @@ class Download(crawler.DownloadThread):
     def get_crawl_list(self):
         audio_info_list = []
 
-        self.step("开始解析首页")
-        album_index_response = get_album_index_page(self.index_key)
-        self.trace("首页解析的全部音频：%s" % album_index_response["audio_info_list"])
-        self.step("首页解析获取%s首音频" % len(album_index_response["audio_info_list"]))
+        index_description = "首页"
+        self.start_parse(index_description)
+
+        try:
+            album_index_response = get_album_index_page(self.index_key)
+        except crawler.CrawlerException as e:
+            self.error(e.http_error(index_description))
+            raise
+
+        self.parse_result(index_description, album_index_response["audio_info_list"])
 
         for audio_info in album_index_response["audio_info_list"]:
             # 检查是否达到存档记录
@@ -144,31 +150,33 @@ class Download(crawler.DownloadThread):
 
     # 解析单首音频
     def crawl_audio(self, audio_info):
-        self.step("开始解析音频%s" % audio_info["audio_id"])
+        audio_description = "音频%s" % audio_info["audio_id"]
+        self.step("开始解析 %s" % audio_description)
 
         # 获取音频播放页
         try:
             audio_play_response = get_audio_info_page(audio_info["audio_play_url"])
         except crawler.CrawlerException as e:
-            self.error(e.http_error("音频%s" % audio_info["audio_id"]))
+            self.error(e.http_error(audio_description))
             raise
 
         audio_url = audio_play_response["audio_url"]
-        self.step("开始下载音频%s %s" % (audio_info["audio_id"], audio_url))
+        self.step("开始下载 %s %s" % (audio_description, audio_url))
 
         for retry_count in range(5):
-            file_path = os.path.join(self.main_thread.audio_download_path, self.display_name, "%04d %s.%s" % (audio_info["audio_id"], audio_info["audio_title"], net.get_file_extension(audio_url)))
-            download_return = net.Download(audio_url, file_path)
+            audio_name = "%04d %s.%s" % (audio_info["audio_id"], audio_info["audio_title"], net.get_file_extension(audio_url))
+            audio_path = os.path.join(self.main_thread.audio_download_path, self.display_name, audio_name)
+            download_return = net.Download(audio_url, audio_path)
             if download_return.status == net.Download.DOWNLOAD_SUCCEED:
                 self.total_audio_count += 1  # 计数累加
-                self.step("音频%s下载成功" % audio_info["audio_id"])
+                self.step("%s 下载成功" % audio_description)
                 break
             else:
                 if download_return.code != net.HTTP_RETURN_CODE_TOO_MANY_REDIRECTS or retry_count >= 4:
-                    self.error("音频%s %s 下载失败，原因：%s" % (audio_info["audio_id"], audio_url, crawler.download_failre(download_return.code)))
+                    self.error("%s %s 下载失败，原因：%s" % (audio_description, audio_url, crawler.download_failre(download_return.code)))
                     self.check_download_failure_exit()
                 else:
-                    self.step("音频%s %s 下载失败，重试" % (audio_info["audio_id"], audio_url))
+                    self.step("%s %s 下载失败，重试" % (audio_description, audio_url))
 
         # 音频下载完毕
         self.single_save_data[1] = str(audio_info["audio_id"])  # 设置存档记录

@@ -355,7 +355,7 @@ class Download(crawler.DownloadThread):
             else:
                 self.duplicate_list[photo_url] = 1
 
-            photo_description = "日志%s的第%s张图片" % (blog_id, photo_index)
+            photo_description = "日志%s第%s张图片" % (blog_id, photo_index)
             self.step("开始下载 %s %s" % (photo_description, photo_url))
 
             photo_name = "%011d_%02d.%s" % (blog_id, photo_index, net.get_file_extension(photo_url, "jpg"))
