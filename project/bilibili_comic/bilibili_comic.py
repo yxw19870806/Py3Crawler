@@ -75,7 +75,9 @@ def get_chapter_page(ep_id):
     if api_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException("图片token获取，" + crawler.request_failre(api_response.status))
     for token_info in crawler.get_json_value(token_api_response.json_data, "data", type_check=list):
-        result["photo_url_list"].append("%s?token=%s" % (crawler.get_json_value(token_info, "url", type_check=str), crawler.get_json_value(token_info, "token", type_check=str)))
+        url = crawler.get_json_value(token_info, "url", type_check=str)
+        token = crawler.get_json_value(token_info, "token", type_check=str)
+        result["photo_url_list"].append("%s?token=%s" % (url, token))
     return result
 
 
@@ -138,15 +140,16 @@ class Download(crawler.DownloadThread):
         comic_info_list = []
 
         # 获取漫画首页
-        self.step("开始解析漫画首页")
+        index_description = "漫画首页"
+        self.step("开始解析 %s" % index_description)
         try:
             blog_pagination_response = get_comic_index_page(self.index_key)
         except crawler.CrawlerException as e:
-            self.error(e.http_error("漫画首页"))
+            self.error(e.http_error(index_description))
             raise
 
-        self.trace("漫画首页解析的全部漫画：%s" % blog_pagination_response["comic_info_list"])
-        self.step("漫画首页解析获取%s个漫画" % len(blog_pagination_response["comic_info_list"]))
+        self.trace("%s 解析结果：%s" % (index_description, blog_pagination_response["comic_info_list"]))
+        self.step("%s 解析数量：%s" % (index_description, len(blog_pagination_response["comic_info_list"])))
 
         # 寻找符合条件的章节
         for ep_id in sorted(list(blog_pagination_response["comic_info_list"].keys()), reverse=True):
@@ -160,13 +163,14 @@ class Download(crawler.DownloadThread):
         return comic_info_list
 
     def crawl_comic(self, comic_info):
-        self.step("开始解析漫画%s 《%s》" % (comic_info["ep_id"], comic_info["ep_name"]))
+        comic_description = "漫画%s 《%s》" % (comic_info["ep_id"], comic_info["ep_name"])
+        self.step("开始解析 %s" % comic_description)
 
         # 获取指定漫画章节
         try:
             chapter_response = get_chapter_page(comic_info["ep_id"])
         except crawler.CrawlerException as e:
-            self.error(e.http_error("漫画%s 《%s》" % (comic_info["ep_id"], comic_info["ep_name"])))
+            self.error(e.http_error(comic_description))
             raise
 
         # 图片下载
@@ -177,15 +181,17 @@ class Download(crawler.DownloadThread):
         self.temp_path_list.append(chapter_path)
         for photo_url in chapter_response["photo_url_list"]:
             self.main_thread_check()  # 检测主线程运行状态
-            self.step("漫画%s 《%s》开始下载第%s张图片 %s" % (comic_info["ep_id"], comic_info["ep_name"], photo_index, photo_url))
 
-            photo_file_path = os.path.join(chapter_path, "%03d.%s" % (photo_index, net.get_file_extension(photo_url)))
-            download_return = net.Download(photo_url, photo_file_path, header_list={"Referer": "https://m.dmzj.com/"})
+            photo_description = "漫画%s 《%s》第%s张图片" % (comic_info["ep_id"], comic_info["ep_name"], photo_index)
+            self.step("开始下载 %s %s" % (photo_description, photo_url))
+
+            photo_path = os.path.join(chapter_path, "%03d.%s" % (photo_index, net.get_file_extension(photo_url)))
+            download_return = net.Download(photo_url, photo_path, header_list={"Referer": "https://m.dmzj.com/"})
             if download_return.status == net.Download.DOWNLOAD_SUCCEED:
                 self.total_photo_count += 1  # 计数累加
-                self.step("漫画%s 《%s》第%s张图片下载成功" % (comic_info["ep_id"], comic_info["ep_name"], photo_index))
+                self.step("%s 下载成功" % photo_description)
             else:
-                self.error("漫画%s 《%s》第%s张图片 %s 下载失败，原因：%s" % (comic_info["ep_id"], comic_info["ep_name"], photo_index, photo_url, crawler.download_failre(download_return.code)))
+                self.error("%s %s 下载失败，原因：%s" % (photo_description, photo_url, crawler.download_failre(download_return.code)))
                 self.check_download_failure_exit()
             photo_index += 1
 

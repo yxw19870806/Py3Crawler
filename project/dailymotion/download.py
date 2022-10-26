@@ -67,17 +67,18 @@ class DailyMotionDownload(dailymotion.DailyMotion):
             "filetypes": [("mp4", ".mp4")],
             "parent": self.gui,
         }
-        file_path = tkinter.filedialog.asksaveasfilename(**options)
-        if not file_path:
+        video_path = tkinter.filedialog.asksaveasfilename(**options)
+        if not video_path:
             return
 
         # 开始下载
-        log.step("\n视频标题：%s\n视频地址：%s\n下载路径：%s" % (video_response["video_title"], video_response["video_url"], file_path))
-        download_return = net.Download(video_response["video_url"], file_path, auto_multipart_download=True)
+        log.step("\n视频标题：%s\n视频地址：%s\n下载路径：%s" % (video_response["video_title"], video_response["video_url"], video_path))
+        download_return = net.Download(video_response["video_url"], video_path, auto_multipart_download=True)
+        video_description = "视频《%s》" % video_response["video_title"]
         if download_return.status == net.Download.DOWNLOAD_SUCCEED:
-            log.step("视频《%s》下载成功" % video_response["video_title"])
+            log.step("%s 下载成功" % video_description)
         else:
-            log.error("视频《%s》下载失败，原因：%s" % (video_response["video_title"], crawler.download_failre(download_return.code)))
+            log.error("%s 下载失败，原因：%s" % (video_description, crawler.download_failre(download_return.code)))
 
 
 if __name__ == "__main__":
