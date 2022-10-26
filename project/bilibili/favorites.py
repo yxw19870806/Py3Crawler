@@ -79,7 +79,7 @@ class BiliBiliFavorites(bilibili.BiliBili):
             video_info = favorites_response["video_info_list"].pop()
 
             video_description = "视频%s 《%s》" % (video_info["video_id"], video_info["video_title"])
-            log.step("开始解析 %s, 剩余%s个视频" % (video_description, len(favorites_response["video_info_list"])))
+            self.start_parse(video_description + ", 剩余%s个视频" % len(favorites_response["video_info_list"]))
 
             if video_info["video_id"] in exist_list:
                 continue

@@ -144,7 +144,7 @@ class Favorite(crawler.Crawler):
                 tool.process_exit(tool.PROCESS_EXIT_CODE_NORMAL)
 
             pagination_description = "第%s页收藏" % page_count
-            log.step("开始解析 %s" % pagination_description)
+            self.start_parse(pagination_description)
 
             try:
                 favorite_pagination_response = get_one_page_favorite(page_count)
@@ -152,8 +152,7 @@ class Favorite(crawler.Crawler):
                 log.error(e.http_error(pagination_description))
                 raise
 
-            log.trace("%s已删除微博 解析结果：%s" % (pagination_description, favorite_pagination_response["delete_blog_id_list"]))
-            log.step("%s已删除微博 解析数量：%s" % (pagination_description, len(favorite_pagination_response["delete_blog_id_list"])))
+            self.parse_result(pagination_description + "已删除微博", favorite_pagination_response["delete_blog_id_list"])
 
             for blog_id in favorite_pagination_response["delete_blog_id_list"]:
                 blog_description = "微博%s" % blog_id
@@ -165,16 +164,14 @@ class Favorite(crawler.Crawler):
                     raise
                 log.step("%s 删除成功" % blog_description)
 
-            log.trace("%s 解析结果：%s" % (pagination_description, favorite_pagination_response["blog_info_list"]))
-            log.step("%s 解析数量：%s" % (pagination_description, len(favorite_pagination_response["blog_info_list"])))
+            self.parse_result(pagination_description, favorite_pagination_response["blog_info_list"])
 
             for blog_info in favorite_pagination_response["blog_info_list"]:
                 blog_description = "微博%s" % blog_info["blog_id"]
-                log.step("开始解析 %s" % blog_description)
+                self.start_parse(blog_description)
 
-                log.trace("%s 解析结果：%s" % (blog_description, blog_info["photo_url_list"]))
-                log.step("%s 解析数量：%s" % (blog_description, len(blog_info["photo_url_list"])))
-
+                self.parse_result(blog_description, blog_info["photo_url_list"])
+                
                 photo_count = 1
                 photo_path = os.path.join(self.photo_download_path, blog_info["blog_id"])
                 for photo_url in blog_info["photo_url_list"]:

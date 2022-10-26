@@ -151,7 +151,7 @@ class Download(crawler.DownloadThread):
     # 解析单首音频
     def crawl_audio(self, audio_info):
         audio_description = "音频%s" % audio_info["audio_id"]
-        self.step("开始解析 %s" % audio_description)
+        self.start_parse(audio_description)
 
         # 获取音频播放页
         try:

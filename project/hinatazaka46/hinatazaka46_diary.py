@@ -150,10 +150,9 @@ class Download(crawler.DownloadThread):
     # 解析单个日志
     def crawl_blog(self, blog_info):
         blog_description = "日志%s" % blog_info["blog_id"]
-        self.step("开始解析 %s" % blog_description)
+        self.start_parse(blog_description)
 
-        self.trace("%s 解析结果：%s" % (blog_description, blog_info["photo_url_list"]))
-        self.step("%s 解析数量：%s" % (blog_description, len(blog_info["photo_url_list"])))
+        self.parse_result(blog_description, blog_info["photo_url_list"])
 
         photo_index = 1
         for photo_url in blog_info["photo_url_list"]:

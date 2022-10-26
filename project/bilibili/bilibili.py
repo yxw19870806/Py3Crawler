@@ -431,7 +431,7 @@ class Download(crawler.DownloadThread):
             self.main_thread_check()  # 检测主线程运行状态
 
             pagination_description = "第%s页视频" % page_count
-            self.step("开始解析 %s" % pagination_description)
+            self.start_parse(pagination_description)
 
             # 获取一页相簿
             try:
@@ -440,8 +440,7 @@ class Download(crawler.DownloadThread):
                 self.error(e.http_error(pagination_description))
                 raise
 
-            self.trace("%s 解析结果：%s" % (pagination_description, album_pagination_response["video_info_list"]))
-            self.step("%s 解析数量：%s" % (pagination_description, len(album_pagination_response["video_info_list"])))
+            self.parse_result(pagination_description, album_pagination_response["video_info_list"])
 
             # 寻找这一页符合条件的视频
             for video_info in album_pagination_response["video_info_list"]:
@@ -477,7 +476,7 @@ class Download(crawler.DownloadThread):
             self.main_thread_check()  # 检测主线程运行状态
 
             pagination_description = "第%s页音频" % page_count
-            self.step("开始解析 %s" % pagination_description)
+            self.start_parse(pagination_description)
 
             # 获取一页相簿
             try:
@@ -486,8 +485,7 @@ class Download(crawler.DownloadThread):
                 self.error(e.http_error(pagination_description))
                 raise
 
-            self.trace("%s 解析结果：%s" % (pagination_description, album_pagination_response["audio_info_list"]))
-            self.step("%s 解析数量：%s" % (pagination_description, len(album_pagination_response["audio_info_list"])))
+            self.parse_result(pagination_description, album_pagination_response["audio_info_list"])
 
             # 寻找这一页符合条件的音频
             for audio_info in album_pagination_response["audio_info_list"]:
@@ -523,7 +521,7 @@ class Download(crawler.DownloadThread):
             self.main_thread_check()  # 检测主线程运行状态
 
             pagination_description = "第%s页相簿" % page_count
-            self.step("开始解析 %s" % pagination_description)
+            self.start_parse(pagination_description)
 
             # 获取一页相簿
             try:
@@ -532,8 +530,7 @@ class Download(crawler.DownloadThread):
                 self.error(e.http_error(pagination_description))
                 raise
 
-            self.trace("%s 解析结果：%s" % (pagination_description, album_pagination_response["album_id_list"]))
-            self.step("%s 解析数量：%s" % (pagination_description, len(album_pagination_response["album_id_list"])))
+            self.parse_result(pagination_description, album_pagination_response["album_id_list"])
 
             # 寻找这一页符合条件的相簿
             for album_id in album_pagination_response["album_id_list"]:
