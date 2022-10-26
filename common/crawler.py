@@ -397,6 +397,15 @@ class Crawler(object):
             message += "，共计下载" + "，".join(download_result)
         log.step(message)
 
+    @staticmethod
+    def start_parse(description: str):
+        log.step("开始解析 " + description)
+
+    @staticmethod
+    def parse_result(description: str, parse_result_list: Union[list, dict]):
+        log.trace("%s 解析结果：%s" % (description, parse_result_list))
+        log.step("%s 解析数量：%s" % (description, len(parse_result_list)))
+
 
 class DownloadThread(threading.Thread):
     main_thread = None
@@ -536,11 +545,10 @@ class DownloadThread(threading.Thread):
         log.error(message)
 
     def start_parse(self, description: str):
-        self.step("开始解析 " + description)
+        self.main_thread.start_parse(description)
 
     def parse_result(self, description: str, parse_result_list: Union[list, dict]):
-        self.trace("%s 解析结果：%s" % (description, parse_result_list))
-        self.step("%s 解析数量：%s" % (description, len(parse_result_list)))
+        self.main_thread.parse_result(description, parse_result_list)
 
 
 class CrawlerException(SystemExit):
