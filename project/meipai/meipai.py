@@ -163,13 +163,15 @@ class Download(crawler.DownloadThread):
         # 获取全部还未下载过需要解析的视频
         while not is_over:
             self.main_thread_check()  # 检测主线程运行状态
-            self.step("开始解析第%s页视频" % page_count)
+
+            pagination_description = "第%s页视频" % page_count
+            self.step("开始解析 %s" % pagination_description)
 
             # 获取一页视频
             try:
                 video_pagination_response = get_one_page_video(self.index_key, page_count)
             except crawler.CrawlerException as e:
-                self.error(e.http_error("第%s页视频" % page_count))
+                self.error(e.http_error(pagination_description))
                 raise
 
             self.trace("第%s页解析的全部视频：%s" % (page_count, video_pagination_response["video_info_list"]))

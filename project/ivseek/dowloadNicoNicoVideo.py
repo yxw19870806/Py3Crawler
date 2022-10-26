@@ -44,11 +44,11 @@ def main():
             continue
 
         output.print_msg("开始下载视频%s 《%s》 %s" % (video_id, video_info_response["video_title"], video_info_response["video_url"]))
-        file_path = os.path.join(NICONICO_VIDEO_DOWNLOAD_PATH, "%08d - %s.mp4" % (int(video_id), path.filter_text(video_info_response["video_title"])))
+        video_path = os.path.join(NICONICO_VIDEO_DOWNLOAD_PATH, "%08d - %s.mp4" % (int(video_id), path.filter_text(video_info_response["video_title"])))
         cookies_list = niconico.COOKIE_INFO
         if video_info_response["extra_cookie"]:
             cookies_list.update(video_info_response["extra_cookie"])
-        download_return = net.Download(video_info_response["video_url"], file_path, cookies_list=cookies_list)
+        download_return = net.Download(video_info_response["video_url"], video_path, cookies_list=cookies_list)
         if download_return.status == net.Download.DOWNLOAD_SUCCEED:
             output.print_msg("视频%s 《%s》下载成功" % (video_id, video_info_response["video_title"]))
         else:
