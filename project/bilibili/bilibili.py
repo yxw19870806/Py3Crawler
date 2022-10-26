@@ -562,7 +562,7 @@ class Download(crawler.DownloadThread):
     # 解析单个视频
     def crawl_video(self, video_info):
         video_description = "视频%s《%s》" % (video_info["video_id"], video_info["video_title"])
-        self.step("开始解析 %s" % video_description)
+        self.start_parse(video_description)
 
         # 获取相簿
         try:
@@ -575,8 +575,7 @@ class Download(crawler.DownloadThread):
             log.error("%s 需要登录才能访问，跳过" % video_description)
             return
 
-        self.trace("%s 解析结果：%s" % (video_description, video_play_response["video_part_info_list"]))
-        self.step("%s 解析数量：%s" % (video_description, len(video_play_response["video_part_info_list"])))
+        self.parse_result(video_description, video_play_response["video_part_info_list"])
 
         video_index = 1
         video_part_index = 1
@@ -620,7 +619,7 @@ class Download(crawler.DownloadThread):
     # 解析单个相簿
     def crawl_audio(self, audio_info):
         audio_description = "音频%s《%s》" % (audio_info["audio_id"], audio_info["audio_title"])
-        self.step("开始解析 %s" % audio_description)
+        self.start_parse(audio_description)
 
         # 获取音频信息
         try:
@@ -649,7 +648,7 @@ class Download(crawler.DownloadThread):
     # 解析单个相簿
     def crawl_photo(self, album_id):
         album_description = "相簿%s" % album_id
-        self.step("开始解析 %s" % album_description)
+        self.start_parse(album_description)
 
         # 获取相簿
         try:
@@ -658,8 +657,7 @@ class Download(crawler.DownloadThread):
             self.error(e.http_error(album_description))
             raise
 
-        self.trace("%s 解析结果：%s" % (album_description, album_response["photo_url_list"]))
-        self.step("%s 解析数量：%s" % (album_description, len(album_response["photo_url_list"])))
+        self.parse_result(album_description, album_response["photo_url_list"])
 
         photo_index = 1
         for photo_url in album_response["photo_url_list"]:

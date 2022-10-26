@@ -175,7 +175,7 @@ class Download(crawler.DownloadThread):
             self.main_thread_check()  # 检测主线程运行状态
 
             pagination_description = "since %s后一页作品" % page_since_id
-            self.step("开始解析 %s" % pagination_description)
+            self.start_parse(pagination_description)
 
             # 获取一页作品
             try:
@@ -184,8 +184,7 @@ class Download(crawler.DownloadThread):
                 self.error(e.http_error(pagination_description))
                 raise
 
-            self.trace("%s 解析结果：%s" % (pagination_description, album_pagination_response["album_id_list"]))
-            self.step("%s 解析数量：%s" % (pagination_description, len(album_pagination_response["album_id_list"])))
+            self.parse_result(pagination_description, album_pagination_response["album_id_list"])
 
             # 寻找这一页符合条件的作品
             for album_id in album_pagination_response["album_id_list"]:
@@ -206,7 +205,7 @@ class Download(crawler.DownloadThread):
     # 解析单个作品
     def crawl_album(self, album_id):
         album_description = "作品%s" % album_id
-        self.step("开始解析 %s" % album_description)
+        self.start_parse(album_description)
 
         # 获取作品
         try:
@@ -229,8 +228,7 @@ class Download(crawler.DownloadThread):
 
     def crawl_photo(self, album_id, photo_url_list):
         album_description = "作品%s" % album_id
-        self.trace("%s 解析结果：%s" % (album_description, photo_url_list))
-        self.step("%s 解析数量：%s" % (album_description, len(photo_url_list)))
+        self.parse_result(album_description, photo_url_list)
 
         album_path = os.path.join(self.main_thread.photo_download_path, self.display_name, str(album_id))
         # 设置临时目录
@@ -264,7 +262,7 @@ class Download(crawler.DownloadThread):
 
     def crawl_video(self, album_id):
         video_description = "作品%s视频" % album_id
-        self.step("开始解析 %s" % video_description)
+        self.start_parse(video_description)
 
         try:
             video_response = get_album_page_by_selenium(album_id)

@@ -132,7 +132,7 @@ class Download(crawler.DownloadThread):
             self.main_thread_check()  # 检测主线程运行状态
 
             pagination_description = "第%s页%s歌曲" % (page_count, audio_type_name)
-            self.step("开始解析 %s" % pagination_description)
+            self.start_parse(pagination_description)
 
             # 获取一页歌曲
             try:
@@ -141,8 +141,7 @@ class Download(crawler.DownloadThread):
                 self.error(e.http_error(pagination_description))
                 raise
 
-            self.trace("%s 解析结果：%s" % (pagination_description, audio_pagination_response["audio_info_list"]))
-            self.step("%s 解析数量：%s" % (pagination_description, len(audio_pagination_response["audio_info_list"])))
+            self.parse_result(pagination_description, audio_pagination_response["audio_info_list"])
 
             # 寻找这一页符合条件的歌曲
             for audio_info in audio_pagination_response["audio_info_list"]:
@@ -173,7 +172,7 @@ class Download(crawler.DownloadThread):
         audio_type_name = self.audio_type_name_dict[audio_type]
 
         audio_description = "%s歌曲%s《%s》" % (audio_type_name, audio_info["audio_id"], audio_info["audio_title"])
-        self.step("开始解析 %s" % audio_description)
+        self.start_parse(audio_description)
 
         # 获取歌曲的详情页
         try:

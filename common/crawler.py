@@ -500,7 +500,7 @@ class DownloadThread(threading.Thread):
         if isinstance(self.main_thread, Crawler):
             self.main_thread.thread_semaphore.release()
 
-    def check_download_failure_exit(self, is_process_exit=True):
+    def check_download_failure_exit(self, is_process_exit: bool = True):
         """
         当下载失败，检测是否要退出线程
         """
@@ -511,7 +511,7 @@ class DownloadThread(threading.Thread):
                 return True
         return False
 
-    def trace(self, message, include_display_name=True):
+    def trace(self, message: str, include_display_name: bool = True):
         """
         trace log
         """
@@ -519,7 +519,7 @@ class DownloadThread(threading.Thread):
             message = self.display_name + " " + message
         log.trace(message)
 
-    def step(self, message, include_display_name=True):
+    def step(self, message: str, include_display_name: bool = True):
         """
         step log
         """
@@ -527,13 +527,20 @@ class DownloadThread(threading.Thread):
             message = self.display_name + " " + message
         log.step(message)
 
-    def error(self, message, include_display_name=True):
+    def error(self, message: str, include_display_name: bool = True):
         """
         error log
         """
         if include_display_name and self.display_name is not None:
             message = self.display_name + " " + message
         log.error(message)
+
+    def start_parse(self, description: str):
+        self.step("开始解析 " + description)
+
+    def parse_result(self, description: str, parse_result_list: Union[list, dict]):
+        self.trace("%s 解析结果：%s" % (description, parse_result_list))
+        self.step("%s 解析数量：%s" % (description, len(parse_result_list)))
 
 
 class CrawlerException(SystemExit):
