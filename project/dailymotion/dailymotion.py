@@ -203,7 +203,7 @@ class Download(crawler.DownloadThread):
             self.main_thread_check()  # 检测主线程运行状态
 
             pagination_description = "第%s页视频" % page_count
-            self.step("开始解析 %s" % pagination_description)
+            self.start_parse(pagination_description)
 
             try:
                 blog_pagination_response = get_one_page_video(self.index_key, page_count)
@@ -211,8 +211,7 @@ class Download(crawler.DownloadThread):
                 self.error(e.http_error(pagination_description))
                 raise
 
-            self.trace("%s 解析结果：%s" % (pagination_description, blog_pagination_response["video_info_list"]))
-            self.step("%s 解析数量：%s" % (pagination_description, len(blog_pagination_response["video_info_list"])))
+            self.parse_result(pagination_description, blog_pagination_response["video_info_list"])
 
             # 寻找这一页符合条件的日志
             for video_info in blog_pagination_response["video_info_list"]:
@@ -232,7 +231,7 @@ class Download(crawler.DownloadThread):
     # 解析单个视频
     def crawl_video(self, video_info):
         video_description = "视频%s 《%s》" % (video_info["video_id"], video_info["video_title"])
-        self.step("开始解析 %s" % video_description)
+        self.start_parse(video_description)
 
         # 获取指定视频信息
         try:

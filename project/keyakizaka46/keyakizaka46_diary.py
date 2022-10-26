@@ -118,7 +118,7 @@ class Download(crawler.DownloadThread):
             self.main_thread_check()  # 检测主线程运行状态
 
             pagination_description = "第%s页日志" % page_count
-            self.step("开始解析 %s" % pagination_description)
+            self.start_parse(pagination_description)
 
             # 获取一页博客信息
             try:
@@ -127,8 +127,7 @@ class Download(crawler.DownloadThread):
                 self.error(e.http_error(pagination_description))
                 raise
 
-            self.trace("%s 解析结果：%s" % (pagination_description, blog_pagination_response["blog_info_list"]))
-            self.step("%s 解析数量：%s" % (pagination_description, len(blog_pagination_response["blog_info_list"])))
+            self.parse_result(pagination_description, blog_pagination_response["blog_info_list"])
 
             # 寻找这一页符合条件的日志
             for blog_info in blog_pagination_response["blog_info_list"]:
@@ -150,16 +149,15 @@ class Download(crawler.DownloadThread):
     # 解析单个日志
     def crawl_blog(self, blog_info):
         blog_description = "日志%s" % blog_info["blog_id"]
-        self.step("开始解析 %s" % blog_description)
+        self.start_parse(blog_description)
 
-        self.trace("%s 解析结果：%s" % (blog_description, blog_info["photo_url_list"]))
-        self.step("%s 解析数量：%s" % (blog_description, len(blog_info["photo_url_list"])))
+        self.parse_result(blog_description, blog_info["photo_url_list"])
 
         photo_index = 1
         for photo_url in blog_info["photo_url_list"]:
             self.main_thread_check()  # 检测主线程运行状态
 
-            photo_description = "日志%s的第%s张图片" % (blog_info["blog_id"], photo_index)
+            photo_description = "日志%s第%s张图片" % (blog_info["blog_id"], photo_index)
             self.step("开始下载 %s %s" % (photo_description, photo_url))
 
             file_name = "%05d_%02d.%s" % (blog_info["blog_id"], photo_index, net.get_file_extension(photo_url))

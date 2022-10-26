@@ -133,7 +133,7 @@ class Download(crawler.DownloadThread):
             self.main_thread_check()  # 检测主线程运行状态
 
             pagination_description = "第%s页日志" % page_count
-            self.step("开始解析 %s" % pagination_description)
+            self.start_parse(pagination_description)
 
             try:
                 blog_pagination_response = get_one_page_blog(self.index_key, page_count)
@@ -141,8 +141,7 @@ class Download(crawler.DownloadThread):
                 self.error(e.http_error(pagination_description))
                 raise
 
-            self.trace("%s 解析结果：%s" % (pagination_description, blog_pagination_response["blog_url_list"]))
-            self.step("%s 解析数量：%s" % (pagination_description, len(blog_pagination_response["blog_url_list"])))
+            self.parse_result(pagination_description, blog_pagination_response["blog_url_list"])
 
             # 已经没有日志了
             if len(blog_pagination_response["blog_url_list"]) == 0:
@@ -172,7 +171,7 @@ class Download(crawler.DownloadThread):
     # 解析单个日志
     def crawl_blog(self, blog_url):
         blog_description = "日志%s" % blog_url
-        self.step("开始解析 %s" % blog_description)
+        self.start_parse(blog_description)
 
         # 获取日志
         try:
@@ -181,8 +180,7 @@ class Download(crawler.DownloadThread):
             self.error(e.http_error(blog_description))
             raise
 
-        self.trace("%s 解析结果：%s" % (blog_description, blog_response["photo_url_list"]))
-        self.step("%s 解析数量：%s" % (blog_description, len(blog_response["photo_url_list"])))
+        self.parse_result(blog_description, blog_response["photo_url_list"])
 
         blog_id = get_blog_id(blog_url)
         photo_index = 1
@@ -192,7 +190,7 @@ class Download(crawler.DownloadThread):
             # 去除图片地址的参数
             photo_url = get_photo_url(photo_url)
 
-            photo_description = "日志%s(%s)的第%s张图片" % (blog_id, blog_url, photo_index)
+            photo_description = "日志%s(%s)第%s张图片" % (blog_id, blog_url, photo_index)
             self.step("开始下载 %s %s" % (photo_description, photo_url))
 
             file_name = "%09d_%02d.%s" % (blog_id, photo_index, net.get_file_extension(photo_url))

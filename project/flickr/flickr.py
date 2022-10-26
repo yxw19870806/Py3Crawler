@@ -267,7 +267,7 @@ class Download(crawler.DownloadThread):
             self.main_thread_check()  # 检测主线程运行状态
 
             pagination_description = "第%s页图片" % page_count
-            self.step("开始解析 %s" % pagination_description)
+            self.start_parse(pagination_description)
 
             # 获取一页图片
             try:
@@ -276,8 +276,7 @@ class Download(crawler.DownloadThread):
                 self.error(e.http_error(pagination_description))
                 raise
 
-            self.trace("%s 解析结果：%s" % (pagination_description, photo_pagination_response["photo_info_list"]))
-            self.step("%s 解析数量：%s" % (pagination_description, len(photo_pagination_response["photo_info_list"])))
+            self.parse_result(pagination_description, photo_pagination_response["photo_info_list"])
 
             # 寻找这一页符合条件的图片
             for photo_info in photo_pagination_response["photo_info_list"]:

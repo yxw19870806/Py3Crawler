@@ -376,7 +376,7 @@ class Download(crawler.DownloadThread):
             self.main_thread_check()  # 检测主线程运行状态
 
             pagination_description = "cursor：%s后一页媒体" % cursor
-            self.step("开始解析 %s" % pagination_description)
+            self.start_parse(pagination_description)
 
             # 增加请求计数
             add_request_count(self.thread_lock)
@@ -387,8 +387,7 @@ class Download(crawler.DownloadThread):
                 self.error(e.http_error(pagination_description))
                 raise
 
-            self.trace("%s 解析结果：%s" % (pagination_description, media_pagination_response["media_info_list"]))
-            self.step("%s 解析数量：%s" % (pagination_description, len(media_pagination_response["media_info_list"])))
+            self.parse_result(pagination_description, media_pagination_response["media_info_list"])
 
             # 寻找这一页符合条件的媒体
             for media_info in media_pagination_response["media_info_list"]:
@@ -412,7 +411,7 @@ class Download(crawler.DownloadThread):
     # 解析单个媒体
     def crawl_media(self, media_info):
         media_description = "媒体%s/%s" % (media_info["page_id"], media_info["page_code"])
-        self.step("开始解析 %s" % media_description)
+        self.start_parse(media_description)
 
         # 获取媒体详细页
         try:
@@ -424,13 +423,12 @@ class Download(crawler.DownloadThread):
         # 图片下载
         photo_index = 1
         if self.main_thread.is_download_photo:
-            self.trace("%s 解析结果：%s" % (media_description, media_response["photo_url_list"]))
-            self.step("%s 解析数量：%s" % (media_description, len(media_response["photo_url_list"])))
+            self.parse_result(media_description + "图片", media_response["photo_url_list"])
 
             for photo_url in media_response["photo_url_list"]:
                 self.main_thread_check()  # 检测主线程运行状态
 
-                photo_description = "媒体%s/%s的第%s张图片" % (media_info["page_id"], media_info["page_code"], photo_index)
+                photo_description = "媒体%s/%s第%s张图片" % (media_info["page_id"], media_info["page_code"], photo_index)
                 self.step("开始下载 %s %s" % (photo_description, photo_url))
 
                 photo_name = "%019d_%02d.%s" % (media_info["page_id"], photo_index, net.get_file_extension(photo_url))
@@ -447,13 +445,12 @@ class Download(crawler.DownloadThread):
         # 视频下载
         video_index = 1
         if self.main_thread.is_download_video:
-            self.trace("%s 解析结果：%s" % (media_description, media_response["video_url_list"]))
-            self.step("%s 解析数量：%s" % (media_description, len(media_response["video_url_list"])))
+            self.parse_result(media_description + "视频", media_response["video_url_list"])
 
             for video_url in media_response["video_url_list"]:
                 self.main_thread_check()  # 检测主线程运行状态
 
-                video_description = "媒体%s/%s的第%s个视频" % (media_info["page_id"], media_info["page_code"], video_index)
+                video_description = "媒体%s/%s第%s个视频" % (media_info["page_id"], media_info["page_code"], video_index)
                 self.step("开始下载 %s %s" % (video_description, video_url))
 
                 video_name = "%019d_%02d.%s" % (media_info["page_id"], video_index, net.get_file_extension(video_url))

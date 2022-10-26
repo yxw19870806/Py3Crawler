@@ -295,7 +295,7 @@ class Download(crawler.DownloadThread):
             self.main_thread_check()  # 检测主线程运行状态
 
             pagination_description = "第%s页日志" % page_count
-            self.step("开始解析 %s" % pagination_description)
+            self.start_parse(pagination_description)
 
             # 获取一页日志
             try:
@@ -304,8 +304,7 @@ class Download(crawler.DownloadThread):
                 self.error(e.http_error(pagination_description))
                 raise
 
-            self.trace("%s 解析结果：%s" % (pagination_description, blog_pagination_response["blog_id_list"]))
-            self.step("%s 解析数量：%s" % (pagination_description, len(blog_pagination_response["blog_id_list"])))
+            self.parse_result(pagination_description, blog_pagination_response["blog_id_list"])
 
             for blog_id in blog_pagination_response["blog_id_list"]:
                 # 检查是否达到存档记录
@@ -329,7 +328,7 @@ class Download(crawler.DownloadThread):
     # 解析单个日志
     def crawl_blog(self, blog_id):
         album_description = "日志%s" % blog_id
-        self.step("开始解析 %s" % album_description)
+        self.start_parse(album_description)
 
         # 获取日志
         try:
@@ -343,8 +342,7 @@ class Download(crawler.DownloadThread):
             self.error("%s 已被删除，跳过" % album_description)
             return
 
-        self.trace("%s 解析结果：%s" % (album_description, blog_response["photo_url_list"]))
-        self.step("%s 解析数量：%s" % (album_description, len(blog_response["photo_url_list"])))
+        self.parse_result(album_description, blog_response["photo_url_list"])
 
         photo_index = 1
         for photo_url in blog_response["photo_url_list"]:
