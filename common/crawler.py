@@ -200,7 +200,7 @@ class Crawler(object):
             self.content_download_path = ""
 
         # 是否在下载失败后退出线程的运行
-        self.is_thread_exit_after_download_failure = analysis_config(config, "IS_THREAD_EXIT_AFTER_DOWNLOAD_FAILURE", "\\\\content", CONFIG_ANALYSIS_MODE_BOOLEAN)
+        self.thread_exit_after_download_failure = analysis_config(config, "THREAD_EXIT_AFTER_DOWNLOAD_FAILURE", "\\\\content", CONFIG_ANALYSIS_MODE_BOOLEAN)
 
         # 代理
         is_proxy = analysis_config(config, "IS_PROXY", 2, CONFIG_ANALYSIS_MODE_INTEGER)
@@ -345,10 +345,12 @@ class Crawler(object):
         """
         pass
 
-    def pause_process(self):
+    @staticmethod
+    def pause_process():
         net.pause_request()
 
-    def resume_process(self):
+    @staticmethod
+    def resume_process():
         net.resume_request()
 
     def stop_process(self):
@@ -513,7 +515,7 @@ class DownloadThread(threading.Thread):
         """
         当下载失败，检测是否要退出线程
         """
-        if self.main_thread.is_thread_exit_after_download_failure:
+        if self.main_thread.thread_exit_after_download_failure:
             if is_process_exit:
                 tool.process_exit(tool.PROCESS_EXIT_CODE_ERROR)
             else:
