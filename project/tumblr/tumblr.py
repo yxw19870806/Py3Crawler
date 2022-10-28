@@ -445,7 +445,7 @@ class Download(crawler.DownloadThread):
             self.error("账号只限登录账号访问，跳过")
             tool.process_exit()
 
-            # 查询当前任务大致需要从多少页开始爬取
+        # 查询当前任务大致需要从多少页开始爬取
         start_page_count = self.get_offset_page_count()
 
         while start_page_count >= 1:
