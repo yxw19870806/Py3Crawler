@@ -522,35 +522,42 @@ class DownloadThread(threading.Thread):
                 return True
         return False
 
+    def format_message(self, message: str):
+        if self.display_name is not None:
+            return self.display_name + " " + message
+        else:
+            return message
+
     def trace(self, message: str, include_display_name: bool = True):
         """
         trace log
         """
-        if include_display_name and self.display_name is not None:
-            message = self.display_name + " " + message
+        if include_display_name:
+            message = self.format_message(message)
         log.trace(message)
 
     def step(self, message: str, include_display_name: bool = True):
         """
         step log
         """
-        if include_display_name and self.display_name is not None:
-            message = self.display_name + " " + message
+        if include_display_name:
+            message = self.format_message(message)
         log.step(message)
 
     def error(self, message: str, include_display_name: bool = True):
         """
         error log
         """
-        if include_display_name and self.display_name is not None:
-            message = self.display_name + " " + message
+        if include_display_name:
+            message = self.format_message(message)
         log.error(message)
 
     def start_parse(self, description: str):
-        self.main_thread.start_parse(description)
+        self.step("开始解析 " + description)
 
     def parse_result(self, description: str, parse_result_list: Union[list, dict]):
-        self.main_thread.parse_result(description, parse_result_list)
+        self.trace("%s 解析结果：%s" % (description, parse_result_list))
+        self.step("%s 解析数量：%s" % (description, len(parse_result_list)))
 
 
 class CrawlerException(SystemExit):
