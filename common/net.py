@@ -504,7 +504,7 @@ class Download:
     CODE_PROCESS_EXIT = -10
     CODE_FILE_CREATE_FAILED = -11
 
-    def __init__(self, file_url, file_path, recheck_file_extension: bool = False, auto_multipart_download: bool = False, replace_if_exist: Optional[bool] = None, **kwargs):
+    def __init__(self, file_url: str, file_path: str, recheck_file_extension: bool = False, auto_multipart_download: bool = False, replace_if_exist: Optional[bool] = None, **kwargs):
         """
         下载远程文件到本地
 
