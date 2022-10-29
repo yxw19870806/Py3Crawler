@@ -671,6 +671,11 @@ class Download(crawler.DownloadThread):
             file_name = "%09d_%02d.%s" % (album_id, photo_index, net.get_file_extension(photo_url))
             file_path = os.path.join(self.main_thread.photo_download_path, self.display_name, file_name)
             download_return = net.Download(photo_url, file_path)
+            # 源文件禁止访问，增加后缀生成新的图片
+            if download_return.status == net.Download.DOWNLOAD_FAILED and download_return.code == 404:
+                photo_url = photo_url + "@100000w.jpg"
+                download_return = net.Download(photo_url, file_path)
+
             if download_return.status == net.Download.DOWNLOAD_SUCCEED:
                 self.temp_path_list.append(file_path)  # 设置临时目录
                 self.total_photo_count += 1  # 计数累加
