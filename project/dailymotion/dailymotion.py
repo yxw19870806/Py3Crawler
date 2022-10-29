@@ -201,16 +201,17 @@ class Download(crawler.DownloadThread):
         # 获取全部还未下载过需要解析的相册
         while not is_over:
             self.main_thread_check()  # 检测主线程运行状态
-            self.step("开始解析第%s页视频" % page_count)
+
+            pagination_description = "第%s页视频" % page_count
+            self.start_parse(pagination_description)
 
             try:
                 blog_pagination_response = get_one_page_video(self.index_key, page_count)
             except crawler.CrawlerException as e:
-                self.error(e.http_error("第%s页视频" % page_count))
+                self.error(e.http_error(pagination_description))
                 raise
 
-            self.trace("第%s页解析的全部视频：%s" % (page_count, blog_pagination_response["video_info_list"]))
-            self.step("第%s页解析获取%s个视频" % (page_count, len(blog_pagination_response["video_info_list"])))
+            self.parse_result(pagination_description, blog_pagination_response["video_info_list"])
 
             # 寻找这一页符合条件的日志
             for video_info in blog_pagination_response["video_info_list"]:
@@ -229,25 +230,26 @@ class Download(crawler.DownloadThread):
 
     # 解析单个视频
     def crawl_video(self, video_info):
-        self.step("开始解析视频%s" % video_info["video_id"])
+        video_description = "视频%s 《%s》" % (video_info["video_id"], video_info["video_title"])
+        self.start_parse(video_description)
 
         # 获取指定视频信息
         try:
             video_response = get_video_page(video_info["video_id"])
         except crawler.CrawlerException as e:
-            self.error(e.http_error("视频%s" % video_info["video_id"]))
+            self.error(e.http_error(video_description))
             raise
 
-        self.step("开始下载视频%s 《%s》 %s" % (video_info["video_id"], video_info["video_title"], video_response["video_url"]))
+        self.step("开始下载 %s %s" % (video_description, video_response["video_url"]))
 
-        video_file_name = "%s - %s.mp4" % (video_info["video_id"], path.filter_text(video_info["video_title"]))
-        video_file_path = os.path.join(self.main_thread.video_download_path, self.index_key, video_file_name)
-        download_return = net.Download(video_response["video_url"], video_file_path, auto_multipart_download=True, is_url_encode=False)
+        video_name = "%s - %s.mp4" % (video_info["video_id"], path.filter_text(video_info["video_title"]))
+        video_path = os.path.join(self.main_thread.video_download_path, self.index_key, video_name)
+        download_return = net.Download(video_response["video_url"], video_path, auto_multipart_download=True, is_url_encode=False)
         if download_return.status == net.Download.DOWNLOAD_SUCCEED:
             self.total_video_count += 1  # 计数累加
-            self.step("视频%s 《%s》下载成功" % (video_info["video_id"], video_info["video_title"]))
+            self.step("%s 下载成功" % video_description)
         else:
-            self.error("视频%s 《%s》 %s 下载失败，原因：%s" % (video_info["video_id"], video_info["video_title"], video_response["video_url"], crawler.download_failre(download_return.code)))
+            self.error("%s %s 下载失败，原因：%s" % (video_description, video_response["video_url"], crawler.download_failre(download_return.code)))
             self.check_download_failure_exit()
 
         # 视频全部下载完毕

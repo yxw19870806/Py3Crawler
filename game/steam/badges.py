@@ -46,6 +46,7 @@ def main():
     except crawler.CrawlerException as e:
         output.print_msg(e.http_error("个人徽章首页"))
         raise
+
     for badges_detail_url in badges_detail_url_list:
         game_id = badges_detail_url.split("/")[-2]
         # 跳过列表
@@ -58,46 +59,55 @@ def main():
         except crawler.CrawlerException as e:
             output.print_msg(e.http_error("徽章" % badges_detail_url))
             continue
-        if len(wanted_card_list) > 0:
-            if game_id in deleted_app_list:
-                continue
-            output.print_msg("game id: %s" % game_id, False)
-            # 获取全部卡牌的市场售价
-            try:
-                market_card_list = steam.get_market_game_trade_card_price(game_id)
-            except crawler.CrawlerException as e:
-                output.print_msg(e.http_error("游戏%s的市场" % game_id))
-                continue
-            card_hash_name_dict = {}
-            for card_hash_name in market_card_list:
-                card_name = card_hash_name.replace(" (Trading Card)", "")
-                card_hash_name_dict[card_name] = card_hash_name
-            print_message_list = []
-            is_total = True
-            total_price = 0
-            for card_name in wanted_card_list:
-                if card_name in card_hash_name_dict:
-                    card_hash_name = card_hash_name_dict[card_name]
-                else:
-                    card_hash_name = card_name
-                if card_hash_name in market_card_list:
-                    total_price += float(market_card_list[card_hash_name])
-                    if MIN_CARD_PRICE < float(market_card_list[card_hash_name]) <= MAX_CARD_PRICE:
-                        market_link = "http://steamcommunity.com/market/listings/753/%s-%s" % (game_id, urllib.parse.quote(card_hash_name))
-                        print_message_list.append("card: %s, wanted %s, min price: %s, link: %s" % (card_name, wanted_card_list[card_name], market_card_list[card_hash_name], market_link))
-                    else:
-                        is_total = False
-                else:
-                    market_link = "http://steamcommunity.com/market/listings/753/%s-%s" % (game_id, urllib.parse.quote(card_hash_name))
-                    print_message_list.append("card: %s, wanted %s, not found price in market, link: %s" % (card_name, wanted_card_list[card_hash_name], market_link))
-            if not IS_TOTAL_CARD or (IS_TOTAL_CARD and is_total):
-                if MAX_TOTAL_PRICE <= 0 or (MAX_TOTAL_PRICE > 0 and total_price <= MAX_TOTAL_PRICE):
-                    for print_message in print_message_list:
-                        output.print_msg(print_message, False)
-        else:
+        if len(wanted_card_list) == 0:
             # 已实际完成
             skip_list.append(game_id)
             file.write_file(json.dumps(skip_list), skip_list_file_path, file.WRITE_FILE_TYPE_REPLACE)
+            continue
+        if game_id in deleted_app_list:
+            continue
+        output.print_msg("game id: %s" % game_id, False)
+        # 获取全部卡牌的市场售价
+        try:
+            market_card_list = steam.get_market_game_trade_card_price(game_id)
+        except crawler.CrawlerException as e:
+            output.print_msg(e.http_error("游戏%s的市场" % game_id))
+            continue
+
+        card_hash_name_dict = {}
+        for card_hash_name in market_card_list:
+            card_name = card_hash_name.replace(" (Trading Card)", "")
+            card_hash_name_dict[card_name] = card_hash_name
+
+        print_message_list = []
+        is_total = True
+        total_price = 0
+        for card_name in wanted_card_list:
+            if card_name in card_hash_name_dict:
+                card_hash_name = card_hash_name_dict[card_name]
+            else:
+                card_hash_name = card_name
+
+            if card_hash_name in market_card_list:
+                card_price = float(market_card_list[card_hash_name])
+                total_price += card_price
+                if MIN_CARD_PRICE < card_price <= MAX_CARD_PRICE:
+                    market_link = "https://steamcommunity.com/market/listings/753/%s-%s" % (game_id, urllib.parse.quote(card_hash_name))
+                    message = "card: %s, wanted %s, min price: %s, link: %s" % (card_name, wanted_card_list[card_name], card_price, market_link)
+                    print_message_list.append(message)
+                else:
+                    is_total = False
+            else:
+                market_link = "https://steamcommunity.com/market/listings/753/%s-%s" % (game_id, urllib.parse.quote(card_hash_name))
+                message = "card: %s, wanted %s, not found price in market, link: %s" % (card_name, wanted_card_list[card_hash_name], market_link)
+                print_message_list.append(message)
+
+        if not IS_TOTAL_CARD or (IS_TOTAL_CARD and is_total):
+            if MAX_TOTAL_PRICE <= 0 or (MAX_TOTAL_PRICE > 0 and total_price <= MAX_TOTAL_PRICE):
+                for print_message in print_message_list:
+                    output.print_msg(print_message, False)
+
+
 
 
 if __name__ == "__main__":

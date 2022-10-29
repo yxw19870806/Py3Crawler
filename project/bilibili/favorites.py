@@ -69,15 +69,17 @@ class BiliBiliFavorites(bilibili.BiliBili):
 
         # 已下载列表
         exist_list = []
-        for file_path in path.get_dir_files_name(root_dir):
-            if file_path.find(" ") > 0:
-                video_id = file_path.split(" ")[0]
+        for video_path in path.get_dir_files_name(root_dir):
+            if video_path.find(" ") > 0:
+                video_id = video_path.split(" ")[0]
                 if tool.is_integer(video_id):
                     exist_list.append(int(video_id))
 
         while len(favorites_response["video_info_list"]) > 0:
             video_info = favorites_response["video_info_list"].pop()
-            log.step("开始解析视频%s 《%s》，剩余%s个视频" % (video_info["video_id"], video_info["video_title"], len(favorites_response["video_info_list"])))
+
+            video_description = "视频%s 《%s》" % (video_info["video_id"], video_info["video_title"])
+            self.start_parse(video_description + ", 剩余%s个视频" % len(favorites_response["video_info_list"]))
 
             if video_info["video_id"] in exist_list:
                 continue
@@ -86,15 +88,15 @@ class BiliBiliFavorites(bilibili.BiliBili):
             try:
                 video_play_response = bilibili.get_video_page(video_info["video_id"])
             except crawler.CrawlerException as e:
-                log.error(e.http_error("视频%s《%s》") % (video_info["video_id"], video_info["video_title"]))
+                log.error(e.http_error(video_description))
                 continue
 
             if video_play_response["is_private"]:
-                log.step("视频%s《%s》需要登录才能访问，跳过" % (video_info["video_id"], video_info["video_title"]))
+                log.step("%s 需要登录才能访问，跳过" % video_description)
                 continue
 
             if len(video_play_response["video_part_info_list"]) > 1:
-                log.step("视频%s《%s》共获取%s个分段" % (video_info["video_id"], video_info["video_title"], len(video_play_response["video_part_info_list"])))
+                log.step("%s 共获取%s个分段" % (video_description, len(video_play_response["video_part_info_list"])))
 
             video_index = 1
             video_part_index = 1
@@ -111,12 +113,12 @@ class BiliBiliFavorites(bilibili.BiliBili):
                         video_name += " (%s)" % video_split_index
                     video_name = path.filter_text(video_name)
                     video_name = "%s.%s" % (video_name, net.get_file_extension(video_part_url))
-                    file_path = os.path.join(root_dir, video_name)
+                    video_path = os.path.join(root_dir, video_name)
 
                     # 开始下载
-                    log.step("\n视频标题：%s\n视频地址：%s\n下载路径：%s" % (video_play_response["video_title"], video_part_url, file_path))
+                    log.step("\n视频标题：%s\n视频地址：%s\n下载路径：%s" % (video_play_response["video_title"], video_part_url, video_path))
                     header_list = {"Referer": "https://www.bilibili.com/video/av%s" % video_info["video_id"]}
-                    download_return = net.Download(video_part_url, file_path, auto_multipart_download=True, header_list=header_list)
+                    download_return = net.Download(video_part_url, video_path, auto_multipart_download=True, header_list=header_list)
                     if download_return.status == net.Download.DOWNLOAD_SUCCEED:
                         log.step("视频%s《%s》第%s个视频下载成功" % (video_info["video_id"], video_info["video_title"], video_index))
                     else:

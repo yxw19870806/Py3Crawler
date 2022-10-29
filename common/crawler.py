@@ -200,7 +200,7 @@ class Crawler(object):
             self.content_download_path = ""
 
         # 是否在下载失败后退出线程的运行
-        self.is_thread_exit_after_download_failure = analysis_config(config, "IS_THREAD_EXIT_AFTER_DOWNLOAD_FAILURE", "\\\\content", CONFIG_ANALYSIS_MODE_BOOLEAN)
+        self.thread_exit_after_download_failure = analysis_config(config, "THREAD_EXIT_AFTER_DOWNLOAD_FAILURE", "\\\\content", CONFIG_ANALYSIS_MODE_BOOLEAN)
 
         # 代理
         is_proxy = analysis_config(config, "IS_PROXY", 2, CONFIG_ANALYSIS_MODE_INTEGER)
@@ -345,10 +345,12 @@ class Crawler(object):
         """
         pass
 
-    def pause_process(self):
+    @staticmethod
+    def pause_process():
         net.pause_request()
 
-    def resume_process(self):
+    @staticmethod
+    def resume_process():
         net.resume_request()
 
     def stop_process(self):
@@ -396,6 +398,28 @@ class Crawler(object):
         if download_result:
             message += "，共计下载" + "，".join(download_result)
         log.step(message)
+
+    @staticmethod
+    def start_parse(description: str):
+        log.step("开始解析 " + description)
+
+    @staticmethod
+    def parse_result(description: str, parse_result_list: Union[list, dict]):
+        log.trace("%s 解析结果：%s" % (description, parse_result_list))
+        log.step("%s 解析数量：%s" % (description, len(parse_result_list)))
+
+    @staticmethod
+    def download(url: str, file_path: str, file_description: str, **kwargs):
+        log.step("开始下载 %s %s" % (file_description, url))
+        download_return = net.Download(url, file_path, **kwargs)
+        if download_return.status == net.Download.DOWNLOAD_SUCCEED:
+            log.step("%s 下载成功" % file_description)
+            return True
+        else:
+            log.error("%s %s 下载失败，原因：%s" % (file_description, url, crawler.download_failre(download_return.code)))
+            if self.thread_exit_after_download_failure:
+                tool.process_exit(tool.PROCESS_EXIT_CODE_NORMAL)
+            return False
 
 
 class DownloadThread(threading.Thread):
@@ -500,40 +524,64 @@ class DownloadThread(threading.Thread):
         if isinstance(self.main_thread, Crawler):
             self.main_thread.thread_semaphore.release()
 
-    def check_download_failure_exit(self, is_process_exit=True):
+    def check_download_failure_exit(self, is_process_exit: bool = True):
         """
         当下载失败，检测是否要退出线程
         """
-        if self.main_thread.is_thread_exit_after_download_failure:
+        if self.main_thread.thread_exit_after_download_failure:
             if is_process_exit:
                 tool.process_exit(tool.PROCESS_EXIT_CODE_ERROR)
             else:
                 return True
         return False
 
-    def trace(self, message, include_display_name=True):
+    def format_message(self, message: str):
+        if self.display_name is not None:
+            return self.display_name + " " + message
+        else:
+            return message
+
+    def trace(self, message: str, include_display_name: bool = True):
         """
         trace log
         """
-        if include_display_name and self.display_name is not None:
-            message = self.display_name + " " + message
+        if include_display_name:
+            message = self.format_message(message)
         log.trace(message)
 
-    def step(self, message, include_display_name=True):
+    def step(self, message: str, include_display_name: bool = True):
         """
         step log
         """
-        if include_display_name and self.display_name is not None:
-            message = self.display_name + " " + message
+        if include_display_name:
+            message = self.format_message(message)
         log.step(message)
 
-    def error(self, message, include_display_name=True):
+    def error(self, message: str, include_display_name: bool = True):
         """
         error log
         """
-        if include_display_name and self.display_name is not None:
-            message = self.display_name + " " + message
+        if include_display_name:
+            message = self.format_message(message)
         log.error(message)
+
+    def start_parse(self, description: str):
+        self.step("开始解析 " + description)
+
+    def parse_result(self, description: str, parse_result_list: Union[list, dict]):
+        self.trace("%s 解析结果：%s" % (description, parse_result_list))
+        self.step("%s 解析数量：%s" % (description, len(parse_result_list)))
+
+    def download(self, url: str, file_path: str, file_description, **kwargs):
+        self.step("开始下载 %s %s" % (file_description, url))
+        download_return = net.Download(url, file_path, **kwargs)
+        if download_return.status == net.Download.DOWNLOAD_SUCCEED:
+            self.step("%s 下载成功" % file_description)
+            return True
+        else:
+            self.error("%s %s 下载失败，原因：%s" % (file_description, url, crawler.download_failre(download_return.code)))
+            self.check_download_failure_exit()
+            return False
 
 
 class CrawlerException(SystemExit):
@@ -696,6 +744,7 @@ def get_json_value(json_data, *args, **kwargs):
         original_data = kwargs["original_data"]
     else:
         original_data = json_data
+
     last_arg = ""
     exception_string = ""
     for arg in args:
@@ -715,29 +764,32 @@ def get_json_value(json_data, *args, **kwargs):
             break
         last_arg = arg
         json_data = json_data[arg]
+
     # 检测结果类型
     if not exception_string and "type_check" in kwargs:
         type_error = False
-        if kwargs["type_check"] is int:  # 整数（包含int和符合整型规则的字符串）
+        type_check = type(kwargs["type_check"])
+        if type_check is int:  # 整数（包含int和符合整型规则的字符串）
             if tool.is_integer(json_data):
                 json_data = int(json_data)
             else:
                 type_error = True
-        elif kwargs["type_check"] is float:  # 浮点数（包含float、int和符合浮点数规则的字符串）
+        elif type_check is float:  # 浮点数（包含float、int和符合浮点数规则的字符串）
             try:
                 json_data = float(json_data)
             except TypeError:
                 type_error = True
             except ValueError:
                 type_error = True
-        elif kwargs["type_check"] is str:  # 直接强制类型转化
+        elif type_check is str:  # 直接强制类型转化
             json_data = str(json_data)
-        elif kwargs["type_check"] in [dict, list, bool]:  # 标准数据类型
-            type_error = not isinstance(json_data, kwargs["type_check"])
+        elif type_check is dict or type_check is list or type_check is bool:  # 标准数据类型
+            type_error = not isinstance(json_data, type_check)
         else:
             exception_string = "type_check: %s类型不正确" % kwargs['type_check']
         if type_error:
             exception_string = "'%s'字段类型不正确\n%s" % (last_arg, original_data)
+
     # 检测结果数值
     if not exception_string and "value_check" in kwargs:
         value_error = False
@@ -749,6 +801,7 @@ def get_json_value(json_data, *args, **kwargs):
                 value_error = True
         if value_error:
             exception_string = "'%s'字段取值不正确\n%s" % (last_arg, original_data)
+
     if exception_string:
         if "default_value" in kwargs:
             return kwargs["default_value"]

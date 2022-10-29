@@ -187,13 +187,15 @@ class IvSeek(crawler.Crawler):
         for archive_id in range(self.save_id, index_response["max_archive_id"]):
             if not self.is_running():
                 break
-            log.step("开始解析视频%s" % archive_id)
+
+            archive_description = "视频%s" % archive_id
+            self.start_parse(archive_description)
 
             # 获取一页图片
             try:
-                archive_response = get_archive_page(archive_id)
+                archive_response: dict = get_archive_page(archive_id)
             except crawler.CrawlerException as e:
-                log.error(e.http_error("视频%s" % archive_id))
+                log.error(e.http_error(archive_description))
                 raise
 
             if archive_response["is_delete"]:

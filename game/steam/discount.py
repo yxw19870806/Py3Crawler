@@ -8,6 +8,7 @@ email: hikaru870806@hotmail.com
 """
 import json
 import os
+
 from common import *
 from game.steam.lib import steam
 
@@ -71,7 +72,7 @@ def main():
     game_dlc_list = steam_class.load_game_dlc_list()
 
     # 从文件里获取打折列表
-    discount_game_list = load_discount_list(cache_file_path)
+    discount_game_list: list = load_discount_list(cache_file_path)
     if not discount_game_list:
         # 调用API获取打折列表
         try:
@@ -94,8 +95,11 @@ def main():
         # 获取到的价格不大于0的跳过
         if discount_info["now_price"] <= 0 or discount_info["old_price"] <= 0:
             continue
+        app_discount = discount_info["discount"]
         # 只显示当前价格或折扣小等于限制的那些游戏
-        if discount_info["now_price"] <= MAX_SELLING_PERCENT or MAX_DISCOUNT_PERCENT >= discount_info["discount"] >= MIN_DISCOUNT_PERCENT:
+        if discount_info["now_price"] <= MAX_SELLING_PERCENT or MAX_DISCOUNT_PERCENT >= app_discount >= MIN_DISCOUNT_PERCENT:
+            discount_info_string = f"discount {app_discount}%%, old price: {discount_info['old_price']}, discount price: {discount_info['now_price']}"
+
             # bundle 或者 package，都包含多个游戏
             if discount_info["type"] == "bundle" or discount_info["type"] == "package":
                 # 是否不显示package
@@ -115,16 +119,16 @@ def main():
                         # break
                 if not is_all:
                     if discount_info["type"] == "bundle":
-                        output.print_msg("http://store.steampowered.com/bundle/%s/ ,discount %s%%, old price: %s, discount price: %s" % (discount_info["id"], discount_info["discount"], discount_info["old_price"], discount_info["now_price"]), False)
+                        output.print_msg("https://store.steampowered.com/bundle/%s/ , %s" % (discount_info["id"], discount_info_string), False)
                     else:
-                        output.print_msg("http://store.steampowered.com/sub/%s/ ,discount %s%%, old price: %s, discount price: %s" % (discount_info["id"], discount_info["discount"], discount_info["old_price"], discount_info["now_price"]), False)
+                        output.print_msg("https://store.steampowered.com/sub/%s/ , %s" % (discount_info["id"], discount_info_string), False)
             else:
                 if not INCLUDE_GAME:
                     continue
                 if SKIP_RESTRICTED_GAME and discount_info["app_id"] in restricted_app_list:
                     continue
                 if discount_info["app_id"] not in owned_game_list and discount_info["app_id"] not in game_dlc_list:
-                    output.print_msg("http://store.steampowered.com/app/%s/ ,discount %s%%, old price: %s, discount price: %s" % (discount_info["id"], discount_info["discount"], discount_info["old_price"], discount_info["now_price"]), False)
+                    output.print_msg("https://store.steampowered.com/app/%s/ , %s" % (discount_info["id"], discount_info_string), False)
 
 
 if __name__ == "__main__":
