@@ -504,7 +504,7 @@ class Download:
     CODE_PROCESS_EXIT = -10
     CODE_FILE_CREATE_FAILED = -11
 
-    def __init__(self, file_url, file_path, recheck_file_extension: bool = False, auto_multipart_download: bool = False, replace_if_exist: Optional[bool] = None, **kwargs):
+    def __init__(self, file_url: str, file_path: str, recheck_file_extension: bool = False, auto_multipart_download: bool = False, replace_if_exist: Optional[bool] = None, **kwargs):
         """
         下载远程文件到本地
 
@@ -731,7 +731,7 @@ class Download:
                         if multipart_response.status == 206:
                             # 下载的文件和请求的文件大小不一致
                             if len(multipart_response.data) != (end_pos - start_pos + 1):
-                                output.print_msg(f"网络文件%s：range {start_pos} - {end_pos}实际下载大小 {len(multipart_response.data)} 不一致" % (self.file_url))
+                                output.print_msg(f"网络文件%s：range {start_pos} - {end_pos}实际下载大小 {len(multipart_response.data)} 不一致" % self.file_url)
                                 time.sleep(NET_CONFIG["HTTP_REQUEST_RETRY_WAIT_TIME"])
                             else:
                                 # 写入本地文件后退出

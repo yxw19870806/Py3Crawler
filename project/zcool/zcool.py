@@ -148,16 +148,17 @@ class Download(crawler.DownloadThread):
         # 获取全部还未下载过需要解析的作品
         while not is_over:
             self.main_thread_check()  # 检测主线程运行状态
-            self.step("开始解析第%s页作品" % page_count)
+
+            pagination_description = "第%s页作品" % page_count
+            self.start_parse(pagination_description)
 
             try:
                 album_pagination_response = get_one_page_album(self.index_key, page_count)
             except crawler.CrawlerException as e:
-                self.error(e.http_error("第%s页作品" % page_count))
+                self.error(e.http_error(pagination_description))
                 raise
 
-            self.trace("第%s页解析的全部作品：%s" % (page_count, album_pagination_response["album_info_list"]))
-            self.step("第%s页解析获取%s个作品" % (page_count, len(album_pagination_response["album_info_list"])))
+            self.parse_result(pagination_description, album_pagination_response["album_info_list"])
 
             # 寻找这一页符合条件的作品
             for album_info in album_pagination_response["album_info_list"]:
@@ -183,17 +184,17 @@ class Download(crawler.DownloadThread):
 
     # 解析单个作品
     def crawl_album(self, album_info):
-        self.step("开始解析作品 %s" % album_info["album_id"])
+        album_description = "作品%s《%s》" % (album_info["album_id"], album_info["album_title"])
+        self.start_parse(album_description)
 
         # 获取作品
         try:
             album_response = get_album_page(album_info["album_id"])
         except crawler.CrawlerException as e:
-            self.error(e.http_error("作品%s《%s》" % (album_info["album_id"], album_info["album_title"])))
+            self.error(e.http_error(album_description))
             raise
 
-        self.trace("作品%s解析的全部图片：%s" % (album_info["album_id"], album_response["photo_url_list"]))
-        self.step("作品%s解析获取%s张图片" % (album_info["album_id"], len(album_response["photo_url_list"])))
+        self.parse_result(album_description, album_response["photo_url_list"])
 
         photo_index = 1
         album_name = "%s %s" % (album_info["album_id"], path.filter_text(album_info["album_title"]))
@@ -202,15 +203,17 @@ class Download(crawler.DownloadThread):
         for photo_url in album_response["photo_url_list"]:
             self.main_thread_check()  # 检测主线程运行状态
             photo_url = get_photo_url(photo_url)
-            self.step("开始下载作品%s《%s》的第%s张图片 %s" % (album_info["album_id"], album_info["album_title"], photo_index, photo_url))
 
-            file_path = os.path.join(album_path, "%02d.%s" % (photo_index, net.get_file_extension(photo_url)))
-            download_return = net.Download(photo_url, file_path)
+            photo_description = "作品%s《%s》第%s张图片" % (album_info["album_id"], album_info["album_title"], photo_index)
+            self.step("开始下载 %s %s" % (photo_description, photo_url))
+
+            photo_path = os.path.join(album_path, "%02d.%s" % (photo_index, net.get_file_extension(photo_url)))
+            download_return = net.Download(photo_url, photo_path)
             if download_return.status == net.Download.DOWNLOAD_SUCCEED:
                 self.total_photo_count += 1  # 计数累加
-                self.step("作品%s《%s》的第%s张图片下载成功" % (album_info["album_id"], album_info["album_title"], photo_index))
+                self.step("%s 下载成功" % photo_description)
             else:
-                self.error("作品%s《%s》的第%s张图片 %s 下载失败，原因：%s" % (album_info["album_id"], album_info["album_title"], photo_index, photo_url, crawler.download_failre(download_return.code)))
+                self.error("%s %s 下载失败，原因：%s" % (photo_description, photo_url, crawler.download_failre(download_return.code)))
                 self.check_download_failure_exit()
             photo_index += 1
 

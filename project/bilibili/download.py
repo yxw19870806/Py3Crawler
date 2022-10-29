@@ -93,35 +93,33 @@ class BiliBiliDownload(bilibili.BiliBili):
                 "filetypes": [("all", "*")],
                 "parent": self.gui,
             }
-            file_path = tkinter.filedialog.asksaveasfilename(**options)
-            if not file_path:
+            video_path = tkinter.filedialog.asksaveasfilename(**options)
+            if not video_path:
                 continue
 
             # 开始下载
-            log.step("\n视频标题：%s\n视频地址：%s\n下载路径：%s" % (video_title, video_part_info["video_url_list"], file_path))
+            log.step("\n视频标题：%s\n视频地址：%s\n下载路径：%s" % (video_title, video_part_info["video_url_list"], video_path))
             video_index = 1
             for video_url in video_part_info["video_url_list"]:
                 if len(video_part_info["video_url_list"]) > 1:
-                    temp_list = os.path.basename(file_path).split(".")
+                    temp_list = os.path.basename(video_path).split(".")
                     file_extension = temp_list[-1]
-                    file_name = ".".join(temp_list[:-1])
-                    file_name += " (%s)" % video_index
-                    file_real_path = os.path.abspath(os.path.join(os.path.dirname(file_path), "%s.%s") % (file_name, file_extension))
+                    video_name = ".".join(temp_list[:-1])
+                    video_name += " (%s)" % video_index
+                    file_real_path = os.path.abspath(os.path.join(os.path.dirname(video_path), "%s.%s") % (video_name, file_extension))
                 else:
-                    file_real_path = file_path
+                    file_real_path = video_path
 
                 header_list = {"Referer": "https://www.bilibili.com/video/av%s" % video_id}
                 download_return = net.Download(video_url, file_real_path, auto_multipart_download=True, header_list=header_list)
-                if download_return.status == net.Download.DOWNLOAD_SUCCEED:
-                    if len(video_part_info["video_url_list"]) == 1:
-                        log.step("视频《%s》下载成功" % video_title)
-                    else:
-                        log.step("视频《%s》第%s段下载成功" % (video_title, video_index))
+                if len(video_part_info["video_url_list"]) == 1:
+                    video_description = "视频《%s》" % video_title
                 else:
-                    if len(video_part_info["video_url_list"]) == 1:
-                        log.step("视频《%s》下载失败，原因：%s" % (video_title, crawler.download_failre(download_return.code)))
-                    else:
-                        log.step("视频《%s》第%s段下载失败，原因：%s" % (video_title, video_index, crawler.download_failre(download_return.code)))
+                    video_description = "视频《%s》第%s段" % (video_title, video_index)
+                if download_return.status == net.Download.DOWNLOAD_SUCCEED:
+                    log.step("%s 下载成功" % video_description)
+                else:
+                    log.step("%s 下载失败，原因：%s" % (video_description, crawler.download_failre(download_return.code)))
                 video_index += 1
 
 
