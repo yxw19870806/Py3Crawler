@@ -177,7 +177,15 @@ def get_one_page_album(account_id, page_count):
     }
     if api_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(api_response.status))
-    for album_info in crawler.get_json_value(api_response.json_data, "data", "items", type_check=list):
+
+    try:
+        album_info_list = crawler.get_json_value(api_response.json_data, "data", "items", type_check=list)
+    except crawler.CrawlerException:
+        if crawler.get_json_value(api_response.json_data, "data", "items", value_check=None) is None:
+            album_info_list = []
+        else:
+            raise
+    for album_info in album_info_list:
         # 获取相簿id
         result["album_id_list"].append(crawler.get_json_value(album_info, "doc_id", type_check=int))
     return result
@@ -200,7 +208,13 @@ def get_one_page_audio(account_id, page_count):
     if api_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(api_response.status))
     # 没有任何音频
-    audio_info_list = crawler.get_json_value(api_response.json_data, "data", "data", type_check=list)
+    try:
+        audio_info_list = crawler.get_json_value(api_response.json_data, "data", "data", type_check=list)
+    except crawler.CrawlerException:
+        if crawler.get_json_value(api_response.json_data, "data", "data", value_check=None) is None:
+            audio_info_list = []
+        else:
+            raise
     for audio_info in audio_info_list:
         result_audio_info = {
             "audio_id": 0,  # 音频id
