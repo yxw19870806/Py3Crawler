@@ -99,17 +99,18 @@ class Download(crawler.DownloadThread):
         is_over = False
         while not is_over:
             self.main_thread_check()  # 检测主线程运行状态
-            self.step("开始解析第%s页图片" % page_count)
+
+            pagination_description = "第%s页图片" % page_count
+            self.start_parse(pagination_description)
 
             # 获取一页图片
             try:
                 photo_pagination_response = get_one_page_photo(self.index_key, page_count)
             except crawler.CrawlerException as e:
-                self.error(e.http_error("第%s页图片" % page_count))
+                self.error(e.http_error(pagination_description))
                 raise
 
-            self.trace("第%s页解析的全部图片：%s" % (page_count, photo_pagination_response["photo_info_list"]))
-            self.step("第%s页解析获取%s张图片" % (page_count, len(photo_pagination_response["photo_info_list"])))
+            self.parse_result(pagination_description, photo_pagination_response["photo_info_list"])
 
             # 寻找这一页符合条件的图片
             for photo_info in photo_pagination_response["photo_info_list"]:
@@ -135,18 +136,18 @@ class Download(crawler.DownloadThread):
 
     # 解析单个图片
     def crawl_photo(self, photo_info):
-        # 禁用指定分辨率
-        self.step("开始下载图片%s %s" % (photo_info["photo_id"], photo_info["photo_url"]))
+        photo_description = "图片%s" % photo_info["photo_id"]
+        self.step("开始下载 %s %s" % (photo_description, photo_info["photo_url"]))
 
         photo_url = get_photo_url(photo_info["photo_url"])
-        file_name = "%08d.%s" % (photo_info["photo_id"], net.get_file_extension(photo_url))
-        file_path = os.path.join(self.main_thread.photo_download_path, self.display_name, file_name)
-        download_return = net.Download(photo_url, file_path)
+        photo_name = "%08d.%s" % (photo_info["photo_id"], net.get_file_extension(photo_url))
+        photo_path = os.path.join(self.main_thread.photo_download_path, self.display_name, photo_name)
+        download_return = net.Download(photo_url, photo_path)
         if download_return.status == net.Download.DOWNLOAD_SUCCEED:
             self.total_photo_count += 1  # 计数累加
-            self.step("图片%s下载成功" % photo_info["photo_id"])
+            self.step("%s 下载成功" % photo_description)
         else:
-            self.error("图片%s %s，下载失败，原因：%s" % (photo_info["photo_id"], photo_info["photo_url"], crawler.download_failre(download_return.code)))
+            self.error("%s %s，下载失败，原因：%s" % (photo_description, photo_info["photo_url"], crawler.download_failre(download_return.code)))
             self.check_download_failure_exit()
 
         # 图片内图片下全部载完毕
