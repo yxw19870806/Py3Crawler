@@ -768,7 +768,7 @@ def get_json_value(json_data, *args, **kwargs):
     # 检测结果类型
     if not exception_string and "type_check" in kwargs:
         type_error = False
-        type_check = type(kwargs["type_check"])
+        type_check = kwargs["type_check"]
         if type_check is int:  # 整数（包含int和符合整型规则的字符串）
             if tool.is_integer(json_data):
                 json_data = int(json_data)
