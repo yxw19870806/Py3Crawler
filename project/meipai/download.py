@@ -37,11 +37,11 @@ class MeiPaiDownload(meipai.MeiPai):
     def main(self):
         try:
             while True:
-                self.download()
+                self.download_from_console()
         except KeyboardInterrupt:
             return
 
-    def download(self):
+    def download_from_console(self):
         # 输入需要解析的视频
         video_id = self.get_video_id_from_console()
         if not tool.is_integer(video_id):

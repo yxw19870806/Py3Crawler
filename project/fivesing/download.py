@@ -38,11 +38,11 @@ class FiveSingDownload(fivesing.FiveSing):
     def main(self):
         try:
             while True:
-                self.download()
+                self.download_from_console()
         except KeyboardInterrupt:
             return
 
-    def download(self):
+    def download_from_console(self):
         # 输入需要解析的歌曲
         audio_type, audio_id = self.get_audio_id_from_console()
         if not tool.is_integer(audio_id) or audio_type not in ["yc", "fc", "bz"]:
