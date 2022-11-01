@@ -367,13 +367,13 @@ class Download(crawler.DownloadThread):
         self.temp_path_list = []  # 临时目录设置清除
         self.single_save_data[1] = str(blog_id)  # 设置存档记录
 
-    @staticmethod
-    def download_success_callback(photo_url, photo_path, photo_description):
+    def download_success_callback(self, photo_url, photo_path, photo_description):
         if check_photo_invalid(photo_path):
             path.delete_dir_or_file(photo_path)
             self.step("%s %s 不符合规则，删除" % (photo_description, photo_url))
             return False
         return True
+
 
 if __name__ == "__main__":
     Ameblo().main()
