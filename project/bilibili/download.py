@@ -106,20 +106,16 @@ class BiliBiliDownload(bilibili.BiliBili):
                     file_extension = temp_list[-1]
                     video_name = ".".join(temp_list[:-1])
                     video_name += " (%s)" % video_index
-                    file_real_path = os.path.abspath(os.path.join(os.path.dirname(video_path), "%s.%s") % (video_name, file_extension))
+                    video_real_path = os.path.abspath(os.path.join(os.path.dirname(video_path), "%s.%s") % (video_name, file_extension))
                 else:
-                    file_real_path = video_path
+                    video_real_path = video_path
 
                 header_list = {"Referer": "https://www.bilibili.com/video/av%s" % video_id}
-                download_return = net.Download(video_url, file_real_path, auto_multipart_download=True, header_list=header_list)
                 if len(video_part_info["video_url_list"]) == 1:
                     video_description = "视频《%s》" % video_title
                 else:
                     video_description = "视频《%s》第%s段" % (video_title, video_index)
-                if download_return.status == net.Download.DOWNLOAD_SUCCEED:
-                    log.step("%s 下载成功" % video_description)
-                else:
-                    log.step("%s 下载失败，原因：%s" % (video_description, crawler.download_failre(download_return.code)))
+                self.download(video_url, video_real_path, video_description, auto_multipart_download=True, header_list=header_list)
                 video_index += 1
 
 

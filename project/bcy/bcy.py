@@ -270,16 +270,9 @@ class Download(crawler.DownloadThread):
             self.error(e.http_error(video_description))
             raise
 
-        self.step("开始下载 %s %s" % (video_description, video_response["video_url"]))
-
         video_path = os.path.join(self.main_thread.photo_download_path, self.display_name, "%s.%s" % (album_id, video_response["video_type"]))
-        download_return = net.Download(video_response["video_url"], video_path)
-        if download_return.status == net.Download.DOWNLOAD_SUCCEED:
+        if self.download(video_response["video_url"], video_path, video_description).is_success():
             self.total_video_count += 1  # 计数累加
-            self.step("%s 下载成功" % video_description)
-        else:
-            self.error("%s %s 下载失败，原因：%s" % (video_description, video_response["video_url"], crawler.download_failre(download_return.code)))
-            self.check_download_failure_exit()
 
 
 if __name__ == "__main__":

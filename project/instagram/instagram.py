@@ -428,18 +428,12 @@ class Download(crawler.DownloadThread):
             for photo_url in media_response["photo_url_list"]:
                 self.main_thread_check()  # 检测主线程运行状态
 
-                photo_description = "媒体%s/%s第%s张图片" % (media_info["page_id"], media_info["page_code"], photo_index)
-                self.step("开始下载 %s %s" % (photo_description, photo_url))
-
                 photo_name = "%019d_%02d.%s" % (media_info["page_id"], photo_index, net.get_file_extension(photo_url))
                 photo_path = os.path.join(self.main_thread.photo_download_path, self.index_key, photo_name)
-                download_return = net.Download(photo_url, photo_path)
-                if download_return.status == net.Download.DOWNLOAD_SUCCEED:
-                    self.temp_path_list.append(photo_path)  # 设置临时目录
-                    self.step("%s 下载成功" % photo_description)
-                else:
-                    self.error("%s %s 下载失败，原因：%s" % (photo_description, photo_url, crawler.download_failre(download_return.code)))
-                    self.check_download_failure_exit()
+                self.temp_path_list.append(photo_path)  # 设置临时目录
+                photo_description = "媒体%s/%s第%s张图片" % (media_info["page_id"], media_info["page_code"], photo_index)
+                if self.download(photo_url, photo_path, photo_description).is_success():
+                    self.total_photo_count += 1  # 计数累加
                 photo_index += 1
 
         # 视频下载
@@ -450,24 +444,16 @@ class Download(crawler.DownloadThread):
             for video_url in media_response["video_url_list"]:
                 self.main_thread_check()  # 检测主线程运行状态
 
-                video_description = "媒体%s/%s第%s个视频" % (media_info["page_id"], media_info["page_code"], video_index)
-                self.step("开始下载 %s %s" % (video_description, video_url))
-
                 video_name = "%019d_%02d.%s" % (media_info["page_id"], video_index, net.get_file_extension(video_url))
                 video_path = os.path.join(self.main_thread.video_download_path, self.index_key, video_name)
-                download_return = net.Download(video_url, video_path, auto_multipart_download=True)
-                if download_return.status == net.Download.DOWNLOAD_SUCCEED:
-                    self.temp_path_list.append(video_path)  # 设置临时目录
-                    self.step("%s 下载成功" % video_description)
-                else:
-                    self.error("%s %s 下载失败，原因：%s" % (video_description, video_url, crawler.download_failre(download_return.code)))
-                    self.check_download_failure_exit()
+                self.temp_path_list.append(video_path)  # 设置临时目录
+                video_description = "媒体%s/%s第%s个视频" % (media_info["page_id"], media_info["page_code"], video_index)
+                if self.download(video_url, video_path, video_description, auto_multipart_download=True).is_success():
+                    self.total_video_count += 1  # 计数累加
                 video_index += 1
 
         # 媒体内图片和视频全部下载完毕
         self.temp_path_list = []  # 临时目录设置清除
-        self.total_photo_count += photo_index - 1  # 计数累加
-        self.total_video_count += video_index - 1  # 计数累加
         self.single_save_data[2] = str(media_info["page_id"])  # 设置存档记录
 
 

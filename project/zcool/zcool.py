@@ -202,19 +202,12 @@ class Download(crawler.DownloadThread):
         self.temp_path_list.append(album_path)
         for photo_url in album_response["photo_url_list"]:
             self.main_thread_check()  # 检测主线程运行状态
+
             photo_url = get_photo_url(photo_url)
-
-            photo_description = "作品%s《%s》第%s张图片" % (album_info["album_id"], album_info["album_title"], photo_index)
-            self.step("开始下载 %s %s" % (photo_description, photo_url))
-
             photo_path = os.path.join(album_path, "%02d.%s" % (photo_index, net.get_file_extension(photo_url)))
-            download_return = net.Download(photo_url, photo_path)
-            if download_return.status == net.Download.DOWNLOAD_SUCCEED:
+            photo_description = "作品%s《%s》第%s张图片" % (album_info["album_id"], album_info["album_title"], photo_index)
+            if self.download(photo_url, photo_path, photo_description).is_success():
                 self.total_photo_count += 1  # 计数累加
-                self.step("%s 下载成功" % photo_description)
-            else:
-                self.error("%s %s 下载失败，原因：%s" % (photo_description, photo_url, crawler.download_failre(download_return.code)))
-                self.check_download_failure_exit()
             photo_index += 1
 
         # 作品内图片全部下载完毕
