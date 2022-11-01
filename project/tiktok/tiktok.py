@@ -166,17 +166,10 @@ class Download(crawler.DownloadThread):
 
     # 解析单个视频
     def crawl_video(self, video_info):
-        video_description = "视频%s" % video_info["video_id"]
-        self.step("开始下载 %s %s" % (video_description, video_info["video_url"]))
-
         video_path = os.path.join(self.main_thread.video_download_path, self.display_name, "%020d.mp4" % video_info["video_id"])
-        download_return = net.Download(video_info["video_url"], video_path, auto_multipart_download=True)
-        if download_return.status == net.Download.DOWNLOAD_SUCCEED:
+        video_description = "视频%s" % video_info["video_id"]
+        if self.download(video_info["video_url"], video_path, video_description, auto_multipart_download=True).is_success():
             self.total_video_count += 1  # 计数累加
-            self.step("%s 下载成功" % video_description)
-        else:
-            self.error("%s %s 下载失败，原因：%s" % (video_description, video_info["video_url"], crawler.download_failre(download_return.code)))
-            self.check_download_failure_exit()
 
         # 视频下载完毕
         self.single_save_data[1] = str(video_info["video_id"])  # 设置存档记录

@@ -198,18 +198,11 @@ class Download(crawler.DownloadThread):
         for photo_url in chapter_response["photo_url_list"]:
             self.main_thread_check()  # 检测主线程运行状态
 
-            photo_description = "漫画%s %s《%s》第%s张图片" % (chapter_info["chapter_id"], chapter_info["group_name"], chapter_info["chapter_name"], photo_index)
-            self.step("开始下载 %s %s" % (photo_description, photo_url))
-
             photo_path = os.path.join(chapter_path, "%03d.%s" % (photo_index, net.get_file_extension(photo_url)))
+            photo_description = "漫画%s %s《%s》第%s张图片" % (chapter_info["chapter_id"], chapter_info["group_name"], chapter_info["chapter_name"], photo_index)
             header_list = {"Referer": "https://www.manhuagui.com/comic/%s/%s.html" % (self.index_key, chapter_info["chapter_id"])}
-            download_return = net.Download(photo_url, photo_path, header_list=header_list, is_auto_proxy=False)
-            if download_return.status == net.Download.DOWNLOAD_SUCCEED:
+            if self.download(photo_url, photo_path, photo_description, header_list=header_list, is_auto_proxy=False).is_success():
                 self.total_photo_count += 1  # 计数累加
-                self.step("%s 下载成功" % photo_description)
-            else:
-                self.error("%s %s 下载失败，原因：%s" % (photo_description, photo_url, crawler.download_failre(download_return.code)))
-                self.check_download_failure_exit()
             photo_index += 1
 
         # 媒体内图片全部下载完毕

@@ -110,17 +110,10 @@ class Download(crawler.DownloadThread):
             self.error("%s 类型是视频，跳过" % audio_description)
         else:
             audio_url = audio_play_response["audio_url"]
-            self.step("开始下载 %s %s" % (audio_description, audio_url))
-
             audio_name = "%09d - %s.%s" % (audio_info["audio_id"], path.filter_text(audio_info["audio_title"]), net.get_file_extension(audio_url))
             audio_path = os.path.join(self.main_thread.audio_download_path, self.display_name, audio_name)
-            download_return = net.Download(audio_url, audio_path)
-            if download_return.status == net.Download.DOWNLOAD_SUCCEED:
+            if self.download(audio_url, audio_path, audio_description).is_success():
                 self.total_audio_count += 1  # 计数累加
-                self.step("%s 下载成功" % audio_description)
-            else:
-                self.error("%s %s 下载失败，原因：%s" % (audio_description, audio_url, crawler.download_failre(download_return.code)))
-                self.check_download_failure_exit()
 
         # 音频下载完毕
         self.single_save_data[1] = str(audio_info["audio_id"])  # 设置存档记录
