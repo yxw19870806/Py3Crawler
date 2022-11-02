@@ -573,7 +573,7 @@ class DownloadThread(threading.Thread):
         self.trace("%s 解析结果：%s" % (description, parse_result_list))
         self.step("%s 解析数量：%s" % (description, len(parse_result_list)))
 
-    def download(self, url: str, file_path: str, file_description: str, success_callback: Callable[[str, str, str], bool] = None, **kwargs) -> net.Download:
+    def download(self, url: str, file_path: str, file_description: str, success_callback: Callable[[str, str, str, net.Download], bool] = None, **kwargs) -> net.Download:
         """
         下载
 
@@ -589,7 +589,7 @@ class DownloadThread(threading.Thread):
         self.step("开始下载 %s %s" % (file_description, url))
         download_return = net.Download(url, file_path, **kwargs)
         if download_return.status == net.Download.DOWNLOAD_SUCCEED:
-            if success_callback is None or success_callback(url, file_path, file_description):
+            if success_callback is None or success_callback(url, file_path, file_description, download_return):
                 self.step("%s 下载成功" % file_description)
         else:
             self.error("%s %s 下载失败，原因：%s" % (file_description, url, download_failre(download_return.code)))
