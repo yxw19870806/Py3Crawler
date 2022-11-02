@@ -58,14 +58,14 @@ Visual Studio Installer安装完毕后，勾选"桌面应用和移动应用"标�
 
 # Support website / App
 
-* [Ameblo](https://ameblo.jp/) （最后更新日期：2022/07/19）
-* [半次元](https://bcy.net/) （最后更新日期：2022/07/19）
-* [哔哩哔哩](https://www.bilibili.com/) （最后更新日期：2022/07/19）
-* [哔哩哔哩漫画](https://manga.bilibili.com/) （最后更新日期：2022/07/19）
-* [Dailymotion](https://www.dailymotion.com/) （最后更新日期：2022/07/19）
-* [动漫之家漫画](https://www.dmzj.com/) （最后更新日期：2022/07/19）
-* [5sing](https://5sing.kugou.com/index.html) （最后更新日期：2022/07/19）
-* [Flickr](https://www.flickr.com/) （最后更新日期：2022/07/19）
+* [Ameblo](https://ameblo.jp/) （最后更新日期：2022/11/02）
+* [半次元](https://bcy.net/) （最后更新日期：2022/11/02）
+* [哔哩哔哩](https://www.bilibili.com/) （最后更新日期：2022/11/02）
+* [哔哩哔哩漫画](https://manga.bilibili.com/) （最后更新日期：2022/11/02）
+* [Dailymotion](https://www.dailymotion.com/) （最后更新日期：2022/11/02）
+* [动漫之家漫画](https://www.dmzj.com/) （最后更新日期：2022/11/02）
+* [5sing](https://5sing.kugou.com/index.html) （最后更新日期：2022/11/02）
+* [Flickr](https://www.flickr.com/) （最后更新日期：2022/11/02）
 * [日向坂46公式Blog](https://www.hinatazaka46.com/s/official/diary/member) （最后更新日期：2022/07/19）
 * [Instagram](https://www.instagram.com/) （最后更新日期：2022/07/25）
 * [欅坂46公式Blog](https://www.keyakizaka46.com/s/k46o/diary/member) （最后更新日期：2022/07/20）
