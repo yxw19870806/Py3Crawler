@@ -81,10 +81,8 @@ def get_one_page_video(account_id, page_count):
         result_video_info["video_title"] = crawler.get_json_value(video_info, "node", "title", type_check=str)
         result["video_info_list"].append(result_video_info)
     # 判断是不是最后一页
+    # 另API最多只能查询33页（990个）的视频，可以测试的账号 usatodaysports
     if crawler.get_json_value(api_response.json_data, "data", "channel", "channel_videos_all_videos", "pageInfo", "hasNextPage", type_check=bool) is False:
-        result["is_over"] = True
-    # API只能查询100页的视频，可以测试账号 usatodaysports
-    if page_count == 100:
         result["is_over"] = True
     return result
 
