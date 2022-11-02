@@ -409,6 +409,10 @@ class Youtube(crawler.Crawler):
         # account_id  video_string_id  video_number_id
         self.save_data = crawler.read_save_data(self.save_data_path, 0, ["", "", "0"])
 
+        # 下载线程
+        self.download_thread = Download
+
+    def init(self):
         # 检测登录状态
         if check_login():
             IS_LOGIN = True
@@ -420,9 +424,6 @@ class Youtube(crawler.Crawler):
                     tool.process_exit()
                 elif input_str in ["c", "continue"]:
                     break
-
-        # 下载线程
-        self.download_thread = Download
 
 
 class Download(crawler.DownloadThread):

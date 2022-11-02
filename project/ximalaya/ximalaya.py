@@ -223,7 +223,7 @@ class XiMaLaYa(crawler.Crawler):
     def __init__(self, sys_config=None, **kwargs):
         if sys_config is None:
             sys_config = {}
-        global COOKIE_INFO, DAILY_VIP_DOWNLOAD_COUNT, DAILY_VIP_DOWNLOAD_COUNT_CACHE_FILE, IS_LOGIN
+        global COOKIE_INFO, DAILY_VIP_DOWNLOAD_COUNT, DAILY_VIP_DOWNLOAD_COUNT_CACHE_FILE
         # 设置APP目录
         crawler.PROJECT_APP_PATH = os.path.abspath(os.path.dirname(__file__))
 
@@ -243,6 +243,9 @@ class XiMaLaYa(crawler.Crawler):
         DAILY_VIP_DOWNLOAD_COUNT = tool.json_decode(file.read_file(DAILY_VIP_DOWNLOAD_COUNT_CACHE_FILE))
         if not isinstance(DAILY_VIP_DOWNLOAD_COUNT, dict):
             DAILY_VIP_DOWNLOAD_COUNT = {}
+
+    def init(self):
+        global COOKIE_INFO, IS_LOGIN
 
         # 检测登录状态
         if check_login():

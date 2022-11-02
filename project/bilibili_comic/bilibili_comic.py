@@ -102,6 +102,10 @@ class BiliBiliComic(crawler.Crawler):
         # comic_id  last_comic_id (comic_name)
         self.save_data = crawler.read_save_data(self.save_data_path, 0, ["", "0"])
 
+        # 下载线程
+        self.download_thread = Download
+
+    def init(self):
         # 检测登录状态
         if not check_login():
             while True:
@@ -111,9 +115,6 @@ class BiliBiliComic(crawler.Crawler):
                     tool.process_exit()
                 elif input_str in ["c", "continue"]:
                     break
-
-        # 下载线程
-        self.download_thread = Download
 
 
 class Download(crawler.DownloadThread):

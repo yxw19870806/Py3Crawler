@@ -167,15 +167,16 @@ class DailyMotion(crawler.Crawler):
         # account_id  video_time
         self.save_data = crawler.read_save_data(self.save_data_path, 0, ["", "0"])
 
+        # 下载线程
+        self.download_thread = Download
+
+    def init(self):
         # 生成authorization，用于访问视频页
         try:
             init_session()
         except crawler.CrawlerException as e:
             log.error(e.http_error("生成authorization"))
             raise
-
-        # 下载线程
-        self.download_thread = Download
 
 
 class Download(crawler.DownloadThread):

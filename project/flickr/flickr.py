@@ -182,7 +182,7 @@ def get_one_page_photo(user_id, page_count, api_key, csrf, request_id):
 
 class Flickr(crawler.Crawler):
     def __init__(self, **kwargs):
-        global COOKIE_INFO, IS_LOGIN
+        global COOKIE_INFO
 
         # 设置APP目录
         crawler.PROJECT_APP_PATH = os.path.abspath(os.path.dirname(__file__))
@@ -202,9 +202,14 @@ class Flickr(crawler.Crawler):
         # account_id  last_photo_time
         self.save_data = crawler.read_save_data(self.save_data_path, 0, ["", "0"])
 
+        # 下载线程
+        self.download_thread = Download
+
+    def init(self):
         # 检测登录状态
         console_string = ""
         if check_login():
+            global IS_LOGIN
             IS_LOGIN = True
             # 检测safe search开启状态
             if not check_safe_search():
@@ -217,11 +222,9 @@ class Flickr(crawler.Crawler):
             if input_str in ["e", "exit"]:
                 tool.process_exit()
             elif input_str in ["c", "continue"]:
+                global COOKIE_INFO
                 COOKIE_INFO = {}
                 break
-
-        # 下载线程
-        self.download_thread = Download
 
 
 class Download(crawler.DownloadThread):

@@ -317,6 +317,10 @@ class Instagram(crawler.Crawler):
         # account_name  account_id  last_page_id
         self.save_data = crawler.read_save_data(self.save_data_path, 0, ["", "", "0"])
 
+        # 下载线程
+        self.download_thread = Download
+
+    def init(self):
         # 生成session信息
         init_session()
 
@@ -332,9 +336,6 @@ class Instagram(crawler.Crawler):
                         log.step("登录失败！")
                 elif input_str in ["e", "exit"]:
                     tool.process_exit()
-
-        # 下载线程
-        self.download_thread = Download
 
 
 class Download(crawler.DownloadThread):

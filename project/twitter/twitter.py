@@ -299,6 +299,10 @@ class Twitter(crawler.Crawler):
         # account_name  account_id  last_tweet_id
         self.save_data = crawler.read_save_data(self.save_data_path, 0, ["", "", "0"])
 
+        # 下载线程
+        self.download_thread = Download
+
+    def init(self):
         # 生成authorization，用于访问视频页
         try:
             if not check_login():
@@ -312,9 +316,6 @@ class Twitter(crawler.Crawler):
         except crawler.CrawlerException as e:
             log.error(e.http_error("生成authorization"))
             tool.process_exit()
-
-        # 下载线程
-        self.download_thread = Download
 
 
 class Download(crawler.DownloadThread):
