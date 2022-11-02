@@ -126,7 +126,7 @@ class Download(crawler.DownloadThread):
             self.display_name = single_save_data[0]
         crawler.DownloadThread.__init__(self, single_save_data, main_thread)
 
-    def _rum(self):
+    def _run(self):
         # 获取所有可下载章节
         comic_info_list = self.get_crawl_list()
         self.step("需要下载的全部漫画解析完毕，共%s个" % len(comic_info_list))
