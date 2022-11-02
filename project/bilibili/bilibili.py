@@ -371,10 +371,14 @@ class BiliBili(crawler.Crawler):
         # account_name  last_video_id  last_audio_id  last_album_id
         self.save_data = crawler.read_save_data(self.save_data_path, 0, ["", "0", "0", "0"])
 
+        # 下载线程
+        self.download_thread = Download
+
+    def init(self):
         # 检测登录状态
         if self.is_download_video:
-            global IS_LOGIN
             if check_login():
+                global IS_LOGIN
                 IS_LOGIN = True
             else:
                 while True:
@@ -384,9 +388,6 @@ class BiliBili(crawler.Crawler):
                         tool.process_exit()
                     elif input_str in ["c", "continue"]:
                         break
-
-        # 下载线程
-        self.download_thread = Download
 
 
 class Download(crawler.DownloadThread):

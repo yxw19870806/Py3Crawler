@@ -219,6 +219,10 @@ class Ameblo(crawler.Crawler):
         # account_name  last_blog_id
         self.save_data = crawler.read_save_data(self.save_data_path, 0, ["", "0"])
 
+        # 下载线程
+        self.download_thread = Download
+
+    def init(self):
         # 检测登录状态
         if not check_login():
             while True:
@@ -228,9 +232,6 @@ class Ameblo(crawler.Crawler):
                     tool.process_exit()
                 elif input_str in ["c", "continue"]:
                     break
-
-        # 下载线程
-        self.download_thread = Download
 
 
 class Download(crawler.DownloadThread):

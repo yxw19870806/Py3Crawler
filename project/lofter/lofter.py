@@ -101,10 +101,11 @@ class Lofter(crawler.Crawler):
         # account_name  last_blog_id
         self.save_data = crawler.read_save_data(self.save_data_path, 0, ["", "0"])
 
-        init_session()
-
         # 下载线程
         self.download_thread = Download
+
+    def init(self):
+        init_session()
 
 
 class Download(crawler.DownloadThread):

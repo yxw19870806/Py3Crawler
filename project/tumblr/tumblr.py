@@ -381,7 +381,7 @@ def get_video_play_page(account_id, post_id, is_https):
 
 class Tumblr(crawler.Crawler):
     def __init__(self, **kwargs):
-        global COOKIE_INFO, IS_LOGIN, IS_STEP_ERROR_403_AND_404, USER_AGENT
+        global COOKIE_INFO, IS_STEP_ERROR_403_AND_404, USER_AGENT
 
         # 设置APP目录
         crawler.PROJECT_APP_PATH = os.path.abspath(os.path.dirname(__file__))
@@ -408,6 +408,11 @@ class Tumblr(crawler.Crawler):
         # account_id  last_post_id
         self.save_data = crawler.read_save_data(self.save_data_path, 0, ["", "0"])
 
+        # 下载线程
+        self.download_thread = Download
+
+    def init(self):
+        global IS_LOGIN
         # 检测登录状态
         if check_login():
             IS_LOGIN = True
@@ -420,9 +425,6 @@ class Tumblr(crawler.Crawler):
                 elif input_str in ["c", "continue"]:
                     IS_LOGIN = False
                     break
-
-        # 下载线程
-        self.download_thread = Download
 
 
 class Download(crawler.DownloadThread):
