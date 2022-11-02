@@ -66,18 +66,18 @@ Visual Studio Installer安装完毕后，勾选"桌面应用和移动应用"标�
 * [动漫之家漫画](https://www.dmzj.com/) （最后更新日期：2022/11/02）
 * [5sing](https://5sing.kugou.com/index.html) （最后更新日期：2022/11/02）
 * [Flickr](https://www.flickr.com/) （最后更新日期：2022/11/02）
-* [日向坂46公式Blog](https://www.hinatazaka46.com/s/official/diary/member) （最后更新日期：2022/07/19）
+* [日向坂46公式Blog](https://www.hinatazaka46.com/s/official/diary/member) （最后更新日期：2022/11/02）
 * [Instagram](https://www.instagram.com/) （最后更新日期：2022/07/25）
-* [欅坂46公式Blog](https://www.keyakizaka46.com/s/k46o/diary/member) （最后更新日期：2022/07/20）
-* [Lofter](https://www.lofter.com/) （最后更新日期：2022/07/20）
-* [漫画柜漫画](https://www.manhuagui.com/) （最后更新日期：2022/07/20）
-* [美拍](https://www.meipai.com/) （最后更新日期：2022/07/20）
+* [欅坂46公式Blog](https://www.keyakizaka46.com/s/k46o/diary/member) （最后更新日期：2022/11/02）
+* [Lofter](https://www.lofter.com/) （最后更新日期：2022/11/02）
+* [漫画柜漫画](https://www.manhuagui.com/) （最后更新日期：2022/11/02）
+* [美拍](https://www.meipai.com/) （最后更新日期：2022/11/02）
 * [755](https://7gogo.jp/) （最后更新日期：2022/07/20）
-* [乃木坂46公式Blog](https://www.nogizaka46.com/s/n46/diary/MEMBER/list) （最后更新日期：2022/07/20）
+* [乃木坂46公式Blog](https://www.nogizaka46.com/s/n46/diary/MEMBER/list) （最后更新日期：2022/11/02）
 * [TikTok](https://www.tiktok.com/)
-* [听书宝](http://m.tingshubao.com/) （最后更新日期：2022/09/03）
-* [图虫](https://tuchong.com/) （最后更新日期：2022/07/20）
-* [Tumblr](https://www.tumblr.com/) （最后更新日期：2022/07/25）
+* [听书宝](http://m.tingshubao.com/) （最后更新日期：2022/11/02）
+* [图虫](https://tuchong.com/) （最后更新日期：2022/11/02）
+* [Tumblr](https://www.tumblr.com/) （最后更新日期：2022/11/02）
 * [Twitter](https://twitter.com/) （最后更新日期：2022/07/20）
 * [微博](https://weibo.com/) （最后更新日期：2022/07/25）
 * [World Cosplay](https://worldcosplay.net/) （最后更新日期：2022/07/25）
