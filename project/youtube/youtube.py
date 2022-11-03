@@ -140,7 +140,7 @@ def get_video_page(video_id):
     video_play_response_content = video_play_response.data.decode(errors="ignore")
 
     # window["ytInitialPlayerResponse"]
-    script_json_html = tool.find_sub_string(video_play_response_content, 'window["ytInitialPlayerResponse"] = (\n', ");\n")
+    script_json_html = tool.find_sub_string(video_play_response_content, "var ytInitialPlayerResponse = ", ";var meta = ")
     if not script_json_html:
         raise crawler.CrawlerException("页面截取ytInitialPlayerResponse失败\n" + video_play_response_content)
     script_json = tool.json_decode(script_json_html.strip())
@@ -162,7 +162,7 @@ def get_video_page(video_id):
             result["skip_reason"] = reason
 
     # window["ytInitialData"]
-    script_json_html = tool.find_sub_string(video_play_response_content, 'window["ytInitialData"] = ', ";\n")
+    script_json_html = tool.find_sub_string(video_play_response_content, 'var ytInitialData = ', ";</script>")
     if not script_json_html:
         raise crawler.CrawlerException("页面截取ytInitialData失败\n" + video_play_response_content)
     script_json = tool.json_decode(script_json_html.strip())
@@ -170,8 +170,7 @@ def get_video_page(video_id):
         raise crawler.CrawlerException("ytInitialData加载失败\n" + script_json_html)
     # 获取视频发布时间
     try:
-        video_time_string = crawler.get_json_value(script_json, "contents", "twoColumnWatchNextResults", "results", "results",
-                                                   "contents", 1, "videoSecondaryInfoRenderer", "dateText", "simpleText", type_check=str)
+        video_time_string = crawler.get_json_value(script_json, "contents", "twoColumnWatchNextResults", "results", "results", "contents", 0, "videoPrimaryInfoRenderer", "dateText", "simpleText", type_check=str)
     except crawler.CrawlerException:
         if video_status == "ERROR":
             result["skip_reason"] = "视频不存在"
