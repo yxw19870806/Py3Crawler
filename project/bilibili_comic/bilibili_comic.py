@@ -102,6 +102,10 @@ class BiliBiliComic(crawler.Crawler):
         # comic_id  last_comic_id (comic_name)
         self.save_data = crawler.read_save_data(self.save_data_path, 0, ["", "0"])
 
+        # 下载线程
+        self.download_thread = Download
+
+    def init(self):
         # 检测登录状态
         if not check_login():
             while True:
@@ -111,9 +115,6 @@ class BiliBiliComic(crawler.Crawler):
                     tool.process_exit()
                 elif input_str in ["c", "continue"]:
                     break
-
-        # 下载线程
-        self.download_thread = Download
 
 
 class Download(crawler.DownloadThread):
@@ -125,7 +126,7 @@ class Download(crawler.DownloadThread):
             self.display_name = single_save_data[0]
         crawler.DownloadThread.__init__(self, single_save_data, main_thread)
 
-    def _rum(self):
+    def _run(self):
         # 获取所有可下载章节
         comic_info_list = self.get_crawl_list()
         self.step("需要下载的全部漫画解析完毕，共%s个" % len(comic_info_list))
@@ -183,17 +184,10 @@ class Download(crawler.DownloadThread):
         for photo_url in chapter_response["photo_url_list"]:
             self.main_thread_check()  # 检测主线程运行状态
 
-            photo_description = "漫画%s 《%s》第%s张图片" % (comic_info["ep_id"], comic_info["ep_name"], photo_index)
-            self.step("开始下载 %s %s" % (photo_description, photo_url))
-
             photo_path = os.path.join(chapter_path, "%03d.%s" % (photo_index, net.get_file_extension(photo_url)))
-            download_return = net.Download(photo_url, photo_path, header_list={"Referer": "https://m.dmzj.com/"})
-            if download_return.status == net.Download.DOWNLOAD_SUCCEED:
+            photo_description = "漫画%s 《%s》第%s张图片" % (comic_info["ep_id"], comic_info["ep_name"], photo_index)
+            if self.download(photo_url, photo_path, photo_description, header_list={"Referer": "https://m.dmzj.com/"}).is_success():
                 self.total_photo_count += 1  # 计数累加
-                self.step("%s 下载成功" % photo_description)
-            else:
-                self.error("%s %s 下载失败，原因：%s" % (photo_description, photo_url, crawler.download_failre(download_return.code)))
-                self.check_download_failure_exit()
             photo_index += 1
 
         # 章节内图片全部下载完毕

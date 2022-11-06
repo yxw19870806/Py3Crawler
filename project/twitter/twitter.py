@@ -299,6 +299,10 @@ class Twitter(crawler.Crawler):
         # account_name  account_id  last_tweet_id
         self.save_data = crawler.read_save_data(self.save_data_path, 0, ["", "", "0"])
 
+        # 下载线程
+        self.download_thread = Download
+
+    def init(self):
         # 生成authorization，用于访问视频页
         try:
             if not check_login():
@@ -312,9 +316,6 @@ class Twitter(crawler.Crawler):
         except crawler.CrawlerException as e:
             log.error(e.http_error("生成authorization"))
             tool.process_exit()
-
-        # 下载线程
-        self.download_thread = Download
 
 
 class Download(crawler.DownloadThread):
@@ -438,22 +439,15 @@ class Download(crawler.DownloadThread):
         for video_url in media_info["video_url_list"]:
             self.main_thread_check()  # 检测主线程运行状态
 
-            video_description = "推特%s第%s个视频" % (media_info["blog_id"], video_index)
-            self.step("开始下载 %s %s" % (video_description, video_url))
-
             if len(media_info["video_url_list"]) > 1:
                 video_file_name = "%019d_%02d.%s" % (media_info["blog_id"], video_index, net.get_file_extension(video_url))
             else:
                 video_file_name = "%019d.%s" % (media_info["blog_id"], net.get_file_extension(video_url))
             video_path = os.path.join(self.main_thread.video_download_path, self.index_key, video_file_name)
-            download_return = net.Download(video_url, video_path, auto_multipart_download=True)
-            if download_return.status == net.Download.DOWNLOAD_SUCCEED:
-                self.temp_path_list.append(video_path)  # 设置临时目录
+            self.temp_path_list.append(video_path)  # 设置临时目录
+            video_description = "推特%s第%s个视频" % (media_info["blog_id"], video_index)
+            if self.download(video_url, video_path, video_description, auto_multipart_download=True).is_success():
                 self.total_video_count += 1  # 计数累加
-                self.step("%s 下载成功" % video_description)
-            else:
-                self.error("%s %s 下载失败，原因：%s" % (video_description, video_url, crawler.download_failre(download_return.code)))
-                self.check_download_failure_exit()
             video_index += 1
 
 

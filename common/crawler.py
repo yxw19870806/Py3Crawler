@@ -15,7 +15,8 @@ import threading
 import time
 import traceback
 import warnings
-from typing import Union
+from typing import Callable, Union
+
 
 # 项目根目录
 PROJECT_ROOT_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
@@ -409,17 +410,17 @@ class Crawler(object):
         log.step("%s 解析数量：%s" % (description, len(parse_result_list)))
 
     @staticmethod
-    def download(url: str, file_path: str, file_description: str, **kwargs):
+    def download(url: str, file_path: str, file_description: str, success_callback: Callable[[str, str, str], bool] = None, **kwargs) -> net.Download:
         log.step("开始下载 %s %s" % (file_description, url))
         download_return = net.Download(url, file_path, **kwargs)
         if download_return.status == net.Download.DOWNLOAD_SUCCEED:
-            log.step("%s 下载成功" % file_description)
-            return True
+            if success_callback is None or success_callback(url, file_path, file_description):
+                log.step("%s 下载成功" % file_description)
         else:
-            log.error("%s %s 下载失败，原因：%s" % (file_description, url, crawler.download_failre(download_return.code)))
+            log.error("%s %s 下载失败，原因：%s" % (file_description, url, download_failre(download_return.code)))
             if self.thread_exit_after_download_failure:
                 tool.process_exit(tool.PROCESS_EXIT_CODE_NORMAL)
-            return False
+        return download_return
 
 
 class DownloadThread(threading.Thread):
@@ -572,16 +573,28 @@ class DownloadThread(threading.Thread):
         self.trace("%s 解析结果：%s" % (description, parse_result_list))
         self.step("%s 解析数量：%s" % (description, len(parse_result_list)))
 
-    def download(self, url: str, file_path: str, file_description, **kwargs):
+    def download(self, url: str, file_path: str, file_description: str, success_callback: Callable[[str, str, str, net.Download], bool] = None, **kwargs) -> net.Download:
+        """
+        下载
+
+        :Args:
+        - url - 远程地址
+        - file_path - 本地下载路径
+        - file_description - 文件描述
+        - success_callback - 成功回调方法
+            :Returns:
+                True - 下载成功
+                False - 下载文件无效
+        """
         self.step("开始下载 %s %s" % (file_description, url))
         download_return = net.Download(url, file_path, **kwargs)
         if download_return.status == net.Download.DOWNLOAD_SUCCEED:
-            self.step("%s 下载成功" % file_description)
-            return True
+            if success_callback is None or success_callback(url, file_path, file_description, download_return):
+                self.step("%s 下载成功" % file_description)
         else:
-            self.error("%s %s 下载失败，原因：%s" % (file_description, url, crawler.download_failre(download_return.code)))
+            self.error("%s %s 下载失败，原因：%s" % (file_description, url, download_failre(download_return.code)))
             self.check_download_failure_exit()
-            return False
+        return download_return
 
 
 class CrawlerException(SystemExit):

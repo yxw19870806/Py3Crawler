@@ -175,21 +175,11 @@ class Favorite(crawler.Crawler):
                 photo_count = 1
                 photo_path = os.path.join(self.photo_download_path, blog_info["blog_id"])
                 for photo_url in blog_info["photo_url_list"]:
-                    photo_description = "微博%s第%s张图片" % (blog_info["blog_id"], photo_count)
-                    log.step("开始下载 %s %s" % (photo_description, photo_url))
-
                     photo_path = os.path.join(photo_path, "%s.%s" % (photo_count, net.get_file_extension(photo_url)))
-                    download_return = net.Download(photo_url, photo_path)
-                    if download_return.status == net.Download.DOWNLOAD_SUCCEED:
-                        if weibo.check_photo_invalid(photo_path):
-                            path.delete_dir_or_file(photo_path)
-                            log.error("%s %s 资源已被删除，跳过" % (photo_description, photo_url))
-                        else:
-                            log.step("%s 下载成功" % photo_description)
-                            photo_count += 1
-                            self.total_photo_count += 1
-                    else:
-                        log.error("%s %s 下载失败，原因：%s" % (photo_description, photo_url, crawler.download_failre(download_return.code)))
+                    photo_description = "微博%s第%s张图片" % (blog_info["blog_id"], photo_count)
+                    if self.download(photo_url, photo_path, photo_description, success_callback=self.download_success_callback).is_success():
+                        self.total_photo_count += 1
+                        photo_count += 1
 
             if favorite_pagination_response["is_over"]:
                 is_over = True
@@ -197,6 +187,13 @@ class Favorite(crawler.Crawler):
                 page_count += 1
 
         self.end_message()
+
+    def download_success_callback(self, photo_url, photo_path, photo_description, download_return):
+        if weibo.check_photo_invalid(photo_path):
+            path.delete_dir_or_file(photo_path)
+            self.error("%s %s 已被屏蔽，删除" % (photo_description, photo_url))
+            return False
+        return True
 
 
 if __name__ == "__main__":

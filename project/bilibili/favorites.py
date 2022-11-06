@@ -39,11 +39,11 @@ class BiliBiliFavorites(bilibili.BiliBili):
     def main(self):
         try:
             while True:
-                self.download()
+                self.download_from_console()
         except KeyboardInterrupt:
             return
 
-    def download(self):
+    def download_from_console(self):
         # 输入需要解析的视频
         favorites_id = self.get_favorites_id_from_console()
         if not tool.is_integer(favorites_id):
@@ -111,18 +111,13 @@ class BiliBiliFavorites(bilibili.BiliBili):
                             video_name += "_" + str(video_part_index)
                     if len(video_part_info["video_url_list"]) > 1:
                         video_name += " (%s)" % video_split_index
-                    video_name = path.filter_text(video_name)
-                    video_name = "%s.%s" % (video_name, net.get_file_extension(video_part_url))
+                    video_name = "%s.%s" % (path.filter_text(video_name), net.get_file_extension(video_part_url))
                     video_path = os.path.join(root_dir, video_name)
 
                     # 开始下载
                     log.step("\n视频标题：%s\n视频地址：%s\n下载路径：%s" % (video_play_response["video_title"], video_part_url, video_path))
                     header_list = {"Referer": "https://www.bilibili.com/video/av%s" % video_info["video_id"]}
-                    download_return = net.Download(video_part_url, video_path, auto_multipart_download=True, header_list=header_list)
-                    if download_return.status == net.Download.DOWNLOAD_SUCCEED:
-                        log.step("视频%s《%s》第%s个视频下载成功" % (video_info["video_id"], video_info["video_title"], video_index))
-                    else:
-                        log.error("视频%s《%s》第%s个视频 %s，下载失败，原因：%s" % (video_info["video_id"], video_info["video_title"], video_index, video_part_url, crawler.download_failre(download_return.code)))
+                    self.download(video_part_url, video_path, video_description, auto_multipart_download=True, header_list=header_list)
                     video_split_index += 1
                     video_index += 1
 

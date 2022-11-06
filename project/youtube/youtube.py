@@ -6,6 +6,7 @@ https://www.youtube.com/
 email: hikaru870806@hotmail.com
 如有问题或建议请联系
 """
+import json
 import os
 import re
 import time
@@ -58,7 +59,7 @@ def get_one_page_video(account_id, token):
             log.step("首页 %s 访问出现跳转，再次访问" % index_url)
             return get_one_page_video(account_id, token)
         # 截取初始化数据
-        script_json_html = tool.find_sub_string(index_response_content, 'window["ytInitialData"] =', ";\n").strip()
+        script_json_html = tool.find_sub_string(index_response_content, 'var ytInitialData = ', ";</script>").strip()
         if not script_json_html:
             raise crawler.CrawlerException("页面截取视频信息失败\n" + index_response_content)
         script_json = tool.json_decode(script_json_html)
@@ -82,30 +83,39 @@ def get_one_page_video(account_id, token):
             return result
         video_tab_json = crawler.get_json_value(channel_tab_json, 1, "tabRenderer", "content", "sectionListRenderer", "contents", 0, "itemSectionRenderer", "contents", 0, original_data=script_json, type_check=dict)
         try:
-            video_list_json = crawler.get_json_value(video_tab_json, "gridRenderer", original_data=script_json, type_check=dict)
+            video_info_list = crawler.get_json_value(video_tab_json, "gridRenderer", "items", original_data=script_json, type_check=list)
         except crawler.CrawlerException:
             # 没有上传过任何视频
             if crawler.get_json_value(video_tab_json, "messageRenderer", "text", "simpleText", default_value="", type_check=str) == "This channel has no videos.":
                 return result
             raise
     else:
-        query_url = "https://www.youtube.com/browse_ajax"
-        query_data = {"ctoken": token}
+        query_url = "https://www.youtube.com/youtubei/v1/browse?key=AIzaSyAO_FJ2SlqU8Q4STEHLGCilw_Y9_11qcW8&prettyPrint=false"
+        post_data = {
+            "context": {
+                "client": {
+                    "clientName": "WEB",
+                    "clientVersion": "2.20221101.00.00",
+                },
+            },
+            "continuation": token
+        }
         header_list = {
             "accept-language": "en",
             "x-youtube-client-name": "1",
-            "x-youtube-client-version": "2.20171207",
+            "x-youtube-client-version": "2.20221101.00.00",
         }
-        video_pagination_response = net.request(query_url, method="GET", fields=query_data, header_list=header_list, json_decode=True)
+        video_pagination_response = net.request(query_url, method="POST", binary_data=json.dumps(post_data), header_list=header_list, json_decode=True)
         if video_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
             raise crawler.CrawlerException(crawler.request_failre(video_pagination_response.status))
-        video_list_json = crawler.get_json_value(video_pagination_response.json_data, 1, "response", "continuationContents", "gridContinuation", type_check=dict)
+        video_info_list = crawler.get_json_value(video_pagination_response.json_data, "onResponseReceivedActions", 0, "appendContinuationItemsAction", "continuationItems", type_check=list)
     # 获取所有video id
-    for item in crawler.get_json_value(video_list_json, "items", type_check=list):
-        result["video_id_list"].append(crawler.get_json_value(item, "gridVideoRenderer", "videoId", type_check=str))
-    # 获取下一页token
-    if crawler.check_sub_key(("continuations",), video_list_json):
-        result["next_page_token"] = crawler.get_json_value(video_list_json, "continuations", 0, "nextContinuationData", "continuation", type_check=str)
+    for video_info in video_info_list:
+        if not crawler.check_sub_key(("continuationItemRenderer",), video_info):
+            result["video_id_list"].append(crawler.get_json_value(video_info, "gridVideoRenderer", "videoId", type_check=str))
+        else:
+            # 获取下一页token
+            result["next_page_token"] = crawler.get_json_value(video_info, "continuationItemRenderer", "continuationEndpoint", "continuationCommand", "token", type_check=str)
     return result
 
 
@@ -130,7 +140,7 @@ def get_video_page(video_id):
     video_play_response_content = video_play_response.data.decode(errors="ignore")
 
     # window["ytInitialPlayerResponse"]
-    script_json_html = tool.find_sub_string(video_play_response_content, 'window["ytInitialPlayerResponse"] = (\n', ");\n")
+    script_json_html = tool.find_sub_string(video_play_response_content, "var ytInitialPlayerResponse = ", ";var meta = ")
     if not script_json_html:
         raise crawler.CrawlerException("页面截取ytInitialPlayerResponse失败\n" + video_play_response_content)
     script_json = tool.json_decode(script_json_html.strip())
@@ -152,7 +162,7 @@ def get_video_page(video_id):
             result["skip_reason"] = reason
 
     # window["ytInitialData"]
-    script_json_html = tool.find_sub_string(video_play_response_content, 'window["ytInitialData"] = ', ";\n")
+    script_json_html = tool.find_sub_string(video_play_response_content, 'var ytInitialData = ', ";</script>")
     if not script_json_html:
         raise crawler.CrawlerException("页面截取ytInitialData失败\n" + video_play_response_content)
     script_json = tool.json_decode(script_json_html.strip())
@@ -160,8 +170,7 @@ def get_video_page(video_id):
         raise crawler.CrawlerException("ytInitialData加载失败\n" + script_json_html)
     # 获取视频发布时间
     try:
-        video_time_string = crawler.get_json_value(script_json, "contents", "twoColumnWatchNextResults", "results", "results",
-                                                   "contents", 1, "videoSecondaryInfoRenderer", "dateText", "simpleText", type_check=str)
+        video_time_string = crawler.get_json_value(script_json, "contents", "twoColumnWatchNextResults", "results", "results", "contents", 0, "videoPrimaryInfoRenderer", "dateText", "simpleText", type_check=str)
     except crawler.CrawlerException:
         if video_status == "ERROR":
             result["skip_reason"] = "视频不存在"
@@ -409,6 +418,10 @@ class Youtube(crawler.Crawler):
         # account_id  video_string_id  video_number_id
         self.save_data = crawler.read_save_data(self.save_data_path, 0, ["", "", "0"])
 
+        # 下载线程
+        self.download_thread = Download
+
+    def init(self):
         # 检测登录状态
         if check_login():
             IS_LOGIN = True
@@ -420,9 +433,6 @@ class Youtube(crawler.Crawler):
                     tool.process_exit()
                 elif input_str in ["c", "continue"]:
                     break
-
-        # 下载线程
-        self.download_thread = Download
 
 
 class Download(crawler.DownloadThread):
@@ -525,18 +535,11 @@ class Download(crawler.DownloadThread):
         if video_response["skip_reason"]:
             self.error("%s 已跳过，原因：%s" % (video_description, video_response["skip_reason"]))
         else:
-            video_description = "视频%s《%s》" % (video_id, video_response["video_title"])
-            self.step("开始下载 %s %s" % (video_description, video_response["video_url"]))
-
             video_name = "%s - %s.mp4" % (video_id, path.filter_text(video_response["video_title"]))
             video_path = os.path.join(self.main_thread.video_download_path, self.display_name, video_name)
-            download_return = net.Download(video_response["video_url"], video_path, auto_multipart_download=True)
-            if download_return.status == net.Download.DOWNLOAD_SUCCEED:
+            video_description = "视频%s《%s》" % (video_id, video_response["video_title"])
+            if self.download(video_response["video_url"], video_path, video_description, auto_multipart_download=True).is_success():
                 self.total_video_count += 1  # 计数累加
-                self.step("%s 下载成功" % video_description)
-            else:
-                self.error("%s %s 下载失败，原因：%s" % (video_description, video_response["video_url"], crawler.download_failre(download_return.code)))
-                self.check_download_failure_exit()
 
         # 媒体内图片和视频全部下载完毕
         self.single_save_data[1] = video_id  # 设置存档记录

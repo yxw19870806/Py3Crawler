@@ -81,10 +81,8 @@ def get_one_page_video(account_id, page_count):
         result_video_info["video_title"] = crawler.get_json_value(video_info, "node", "title", type_check=str)
         result["video_info_list"].append(result_video_info)
     # 判断是不是最后一页
+    # 另API最多只能查询33页（990个）的视频，可以测试的账号 usatodaysports
     if crawler.get_json_value(api_response.json_data, "data", "channel", "channel_videos_all_videos", "pageInfo", "hasNextPage", type_check=bool) is False:
-        result["is_over"] = True
-    # API只能查询100页的视频，可以测试账号 usatodaysports
-    if page_count == 100:
         result["is_over"] = True
     return result
 
@@ -167,15 +165,16 @@ class DailyMotion(crawler.Crawler):
         # account_id  video_time
         self.save_data = crawler.read_save_data(self.save_data_path, 0, ["", "0"])
 
+        # 下载线程
+        self.download_thread = Download
+
+    def init(self):
         # 生成authorization，用于访问视频页
         try:
             init_session()
         except crawler.CrawlerException as e:
             log.error(e.http_error("生成authorization"))
             raise
-
-        # 下载线程
-        self.download_thread = Download
 
 
 class Download(crawler.DownloadThread):
@@ -240,17 +239,10 @@ class Download(crawler.DownloadThread):
             self.error(e.http_error(video_description))
             raise
 
-        self.step("开始下载 %s %s" % (video_description, video_response["video_url"]))
-
         video_name = "%s - %s.mp4" % (video_info["video_id"], path.filter_text(video_info["video_title"]))
         video_path = os.path.join(self.main_thread.video_download_path, self.index_key, video_name)
-        download_return = net.Download(video_response["video_url"], video_path, auto_multipart_download=True, is_url_encode=False)
-        if download_return.status == net.Download.DOWNLOAD_SUCCEED:
+        if self.download(video_response["video_url"], video_path, video_description, auto_multipart_download=True, is_url_encode=False).is_success():
             self.total_video_count += 1  # 计数累加
-            self.step("%s 下载成功" % video_description)
-        else:
-            self.error("%s %s 下载失败，原因：%s" % (video_description, video_response["video_url"], crawler.download_failre(download_return.code)))
-            self.check_download_failure_exit()
 
         # 视频全部下载完毕
         self.single_save_data[1] = str(video_info["video_time"])  # 设置存档记录

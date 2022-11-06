@@ -118,15 +118,16 @@ def check_preview_photo(photo_url, real_photo_url):
 # 检测图片是否有效
 def check_photo_invalid(photo_path):
     file_size = os.path.getsize(photo_path)
-    # 文件小于5K
-    if file_size < 5120:
-        try:
-            image = Image.open(photo_path)
-        except IOError:  # 不是图片格式
-            return True
-        # 长或宽任意小于20像素的
-        if image.height <= 20 or image.width <= 20:
-            return True
+    # 文件小于1K
+    if file_size < 1024:
+        return True
+    try:
+        image = Image.open(photo_path)
+    except IOError:  # 不是图片格式
+        return True
+    # 长或宽任意小于20像素的
+    if image.height <= 20 or image.width <= 20:
+        return True
     return False
 
 

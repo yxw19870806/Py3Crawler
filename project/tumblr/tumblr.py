@@ -225,7 +225,8 @@ def get_post_page(post_url, post_id):
         # 获取图片地址
         photo_url = tool.find_sub_string(post_page_head, '<meta property="og:image" content="', '" />')
         if photo_url and photo_url.find("assets.tumblr.com/images/og/fb_landscape_share.png") == -1:
-            result["photo_url_list"].append(photo_url)
+            if not check_photo_url_invalid(photo_url):
+                result["photo_url_list"].append(photo_url)
         post_selector = pq(post_response_content).find("article")
         if post_selector.length > 1:
             post_selector = pq(post_response_content).find("article[data-post-id='%s']" % post_id)
@@ -252,9 +253,11 @@ def get_post_page(post_url, post_id):
             pass
         elif isinstance(image_info, dict):
             for photo_url in crawler.get_json_value(image_info, "@list", original_data=script_json, type_check=list):
-                result["photo_url_list"].append(photo_url)
+                if not check_photo_url_invalid(photo_url):
+                    result["photo_url_list"].append(photo_url)
         elif isinstance(image_info, str):
-            result["photo_url_list"].append(image_info)
+            if not check_photo_url_invalid(image_info):
+                result["photo_url_list"].append(image_info)
         else:
             raise crawler.CrawlerException("页面脚本%s中'image'字段类型错误" % script_json)
     else:
@@ -267,6 +270,8 @@ def get_post_page(post_url, post_id):
                 continue
             elif len(re.findall(r"/birthday\d_", photo_url)) == 1:
                 continue
+            elif check_photo_url_invalid(photo_url):
+                continue
             photo_id, resolution = analysis_photo(photo_url)
             # 判断是否有分辨率更小的相同图片
             if photo_id in new_photo_url_list:
@@ -277,6 +282,9 @@ def get_post_page(post_url, post_id):
         result["photo_url_list"] = list(new_photo_url_list.values())
     return result
 
+
+def check_photo_url_invalid(photo_url):
+    return photo_url[-4:] == ".pnj"
 
 def analysis_photo(photo_url):
     temp_list = photo_url.split("/")[-1].split(".")[0].split("_")
@@ -381,7 +389,7 @@ def get_video_play_page(account_id, post_id, is_https):
 
 class Tumblr(crawler.Crawler):
     def __init__(self, **kwargs):
-        global COOKIE_INFO, IS_LOGIN, IS_STEP_ERROR_403_AND_404, USER_AGENT
+        global COOKIE_INFO, IS_STEP_ERROR_403_AND_404, USER_AGENT
 
         # 设置APP目录
         crawler.PROJECT_APP_PATH = os.path.abspath(os.path.dirname(__file__))
@@ -408,6 +416,11 @@ class Tumblr(crawler.Crawler):
         # account_id  last_post_id
         self.save_data = crawler.read_save_data(self.save_data_path, 0, ["", "0"])
 
+        # 下载线程
+        self.download_thread = Download
+
+    def init(self):
+        global IS_LOGIN
         # 检测登录状态
         if check_login():
             IS_LOGIN = True
@@ -420,9 +433,6 @@ class Tumblr(crawler.Crawler):
                 elif input_str in ["c", "continue"]:
                     IS_LOGIN = False
                     break
-
-        # 下载线程
-        self.download_thread = Download
 
 
 class Download(crawler.DownloadThread):

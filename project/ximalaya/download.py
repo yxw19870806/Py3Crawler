@@ -36,11 +36,11 @@ class XiMaLaYaDownload(ximalaya.XiMaLaYa):
     def main(self):
         try:
             while True:
-                self.download()
+                self.download_from_console()
         except KeyboardInterrupt:
             return
 
-    def download(self):
+    def download_from_console(self):
         # 输入需要解析的音频
         audio_id = self.get_audio_id_from_console()
         if audio_id is None:
@@ -72,11 +72,8 @@ class XiMaLaYaDownload(ximalaya.XiMaLaYa):
 
         # 开始下载
         log.step("\n歌曲标题：%s\n歌曲地址：%s\n下载路径：%s" % (audio_response["audio_title"], audio_response["audio_url"], audio_path))
-        download_return = net.Download(audio_response["audio_url"], audio_path)
-        if download_return.status == net.Download.DOWNLOAD_SUCCEED:
-            log.step("歌曲《%s》下载成功" % audio_response["audio_title"])
-        else:
-            log.error("歌曲《%s》下载失败，原因：%s" % (audio_response["audio_title"], crawler.download_failre(download_return.code)))
+        audio_description = "歌曲《%s》" % audio_response["audio_title"]
+        self.download(audio_response["audio_url"], audio_path, audio_description)
 
 
 if __name__ == "__main__":

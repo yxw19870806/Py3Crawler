@@ -81,7 +81,7 @@ def get_album_page(album_id):
         raise crawler.CrawlerException("未知的作品类型：%s" % album_type)
     # 获取全部图片
     for photo_info in crawler.get_json_value(script_json, "detail", "post_data", "multi", type_check=list):
-        result["photo_url_list"].append(crawler.get_json_value(photo_info, "original", type_check=str))
+        result["photo_url_list"].append(crawler.get_json_value(photo_info, "original_path", type_check=str))
     if not is_skip and len(result["photo_url_list"]) == 0:
         raise crawler.CrawlerException("页面匹配图片地址失败\n" + album_response_content)
     return result
@@ -270,16 +270,9 @@ class Download(crawler.DownloadThread):
             self.error(e.http_error(video_description))
             raise
 
-        self.step("开始下载 %s %s" % (video_description, video_response["video_url"]))
-
         video_path = os.path.join(self.main_thread.photo_download_path, self.display_name, "%s.%s" % (album_id, video_response["video_type"]))
-        download_return = net.Download(video_response["video_url"], video_path)
-        if download_return.status == net.Download.DOWNLOAD_SUCCEED:
+        if self.download(video_response["video_url"], video_path, video_description).is_success():
             self.total_video_count += 1  # 计数累加
-            self.step("%s 下载成功" % video_description)
-        else:
-            self.error("%s %s 下载失败，原因：%s" % (video_description, video_response["video_url"], crawler.download_failre(download_return.code)))
-            self.check_download_failure_exit()
 
 
 if __name__ == "__main__":

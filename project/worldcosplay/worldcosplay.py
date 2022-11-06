@@ -136,19 +136,12 @@ class Download(crawler.DownloadThread):
 
     # 解析单个图片
     def crawl_photo(self, photo_info):
-        photo_description = "图片%s" % photo_info["photo_id"]
-        self.step("开始下载 %s %s" % (photo_description, photo_info["photo_url"]))
-
         photo_url = get_photo_url(photo_info["photo_url"])
         photo_name = "%08d.%s" % (photo_info["photo_id"], net.get_file_extension(photo_url))
         photo_path = os.path.join(self.main_thread.photo_download_path, self.display_name, photo_name)
-        download_return = net.Download(photo_url, photo_path)
-        if download_return.status == net.Download.DOWNLOAD_SUCCEED:
+        photo_description = "图片%s" % photo_info["photo_id"]
+        if self.download(photo_url, photo_path, photo_description).is_success():
             self.total_photo_count += 1  # 计数累加
-            self.step("%s 下载成功" % photo_description)
-        else:
-            self.error("%s %s，下载失败，原因：%s" % (photo_description, photo_info["photo_url"], crawler.download_failre(download_return.code)))
-            self.check_download_failure_exit()
 
         # 图片内图片下全部载完毕
         self.single_save_data[1] = str(photo_info["photo_id"])  # 设置存档记录

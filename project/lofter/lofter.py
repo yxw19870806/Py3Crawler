@@ -101,10 +101,11 @@ class Lofter(crawler.Crawler):
         # account_name  last_blog_id
         self.save_data = crawler.read_save_data(self.save_data_path, 0, ["", "0"])
 
-        init_session()
-
         # 下载线程
         self.download_thread = Download
+
+    def init(self):
+        init_session()
 
 
 class Download(crawler.DownloadThread):
@@ -190,28 +191,24 @@ class Download(crawler.DownloadThread):
             # 去除图片地址的参数
             photo_url = get_photo_url(photo_url)
 
-            photo_description = "日志%s(%s)第%s张图片" % (blog_id, blog_url, photo_index)
-            self.step("开始下载 %s %s" % (photo_description, photo_url))
-
             file_name = "%09d_%02d.%s" % (blog_id, photo_index, net.get_file_extension(photo_url))
             photo_path = os.path.join(self.main_thread.photo_download_path, self.index_key, file_name)
-            download_return = net.Download(photo_url, photo_path)
-            if download_return.status == net.Download.DOWNLOAD_SUCCEED:
-                if check_photo_invalid(download_return.photo_path):
-                    path.delete_dir_or_file(download_return.photo_path)
-                    self.error("%s %s 已被屏蔽，删除" % (photo_description, photo_url))
-                else:
-                    self.temp_path_list.append(photo_path)  # 设置临时目录
-                    self.total_photo_count += 1  # 计数累加
-                    self.step("%s 下载成功" % photo_description)
-            else:
-                self.error("%s %s 下载失败，原因：%s" % (photo_description, photo_url, crawler.download_failre(download_return.code)))
-                self.check_download_failure_exit()
+            self.temp_path_list.append(photo_path)  # 设置临时目录
+            photo_description = "日志%s(%s)第%s张图片" % (blog_id, blog_url, photo_index)
+            if self.download(photo_url, photo_path, photo_description, success_callback=self.download_success_callback).is_success():
+                self.total_photo_count += 1  # 计数累加
             photo_index += 1
 
         # 日志内图片全部下载完毕
         self.temp_path_list = []  # 临时目录设置清除
         self.single_save_data[1] = str(blog_id)  # 设置存档记录
+
+    def download_success_callback(self, photo_url, photo_path, photo_description, download_return):
+        if check_photo_invalid(photo_path):
+            path.delete_dir_or_file(photo_path)
+            self.error("%s %s 已被屏蔽，删除" % (photo_description, photo_url))
+            return False
+        return True
 
 
 if __name__ == "__main__":

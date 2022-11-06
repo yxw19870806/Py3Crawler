@@ -371,22 +371,23 @@ class BiliBili(crawler.Crawler):
         # account_name  last_video_id  last_audio_id  last_album_id
         self.save_data = crawler.read_save_data(self.save_data_path, 0, ["", "0", "0", "0"])
 
+        # 下载线程
+        self.download_thread = Download
+
+    def init(self):
         # 检测登录状态
         if self.is_download_video:
-            global IS_LOGIN
             if check_login():
+                global IS_LOGIN
                 IS_LOGIN = True
             else:
                 while True:
-                    input_str = input(tool.get_time() + " 没有检测到账号登录状态，可能无法解析需要登录才能查看的视频以及获取高分辨率，继续程序(C)ontinue？或者退出程序(E)xit？:")
+                    input_str = input(tool.get_time() + " 没有检测到账号登录状态，可能无法解析相簿、需要登录才能查看的视频以及获取高分辨率，继续程序(C)ontinue？或者退出程序(E)xit？:")
                     input_str = input_str.lower()
                     if input_str in ["e", "exit"]:
                         tool.process_exit()
                     elif input_str in ["c", "continue"]:
                         break
-
-        # 下载线程
-        self.download_thread = Download
 
 
 class Download(crawler.DownloadThread):
