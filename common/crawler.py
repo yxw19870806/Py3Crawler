@@ -409,8 +409,7 @@ class Crawler(object):
         log.trace("%s 解析结果：%s" % (description, parse_result_list))
         log.step("%s 解析数量：%s" % (description, len(parse_result_list)))
 
-    @staticmethod
-    def download(url: str, file_path: str, file_description: str, success_callback: Callable[[str, str, str], bool] = None, **kwargs) -> net.Download:
+    def download(self, url: str, file_path: str, file_description: str, success_callback: Callable[[str, str, str], bool] = None, **kwargs) -> net.Download:
         log.step("开始下载 %s %s" % (file_description, url))
         download_return = net.Download(url, file_path, **kwargs)
         if download_return.status == net.Download.DOWNLOAD_SUCCEED:
