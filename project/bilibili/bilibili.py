@@ -114,8 +114,8 @@ def get_one_page_video(account_id, page_count):
     for video_info in crawler.get_json_value(api_response.json_data, "data", "list", "vlist", type_check=list):
         result_video_info = {
             "video_id": 0,  # 视频id
+            "video_time": 0,  # 视频上传时间
             "video_title": "",  # 视频标题
-            "video_time": "",  # 视频上传时间
         }
         # 获取视频id
         result_video_info["video_id"] = crawler.get_json_value(video_info, "aid", type_check=int)
@@ -149,7 +149,8 @@ def get_one_page_short_video(account_id, nex_offset):
     for video_info in crawler.get_json_value(api_response.json_data, "data", "items", type_check=list):
         result_video_info = {
             "video_id": 0,  # 视频id
-            "video_url": "",  # 视频标题
+            "video_title": "",  # 视频标题
+            "video_url": "",  # 视频地址
         }
         # 获取视频id
         result_video_info["video_id"] = crawler.get_json_value(video_info, "id", type_check=int)
@@ -642,7 +643,8 @@ class Download(crawler.DownloadThread):
 
         self.step("开始下载 %s %s" % (audio_description, audio_info_response["audio_url"]))
 
-        audio_name = "%06d %s.%s" % (audio_info["audio_id"], path.filter_text(audio_info["audio_title"]), net.get_file_extension(audio_info_response["audio_url"]))
+        audio_type = net.get_file_extension(audio_info_response["audio_url"])
+        audio_name = "%06d %s.%s" % (audio_info["audio_id"], path.filter_text(audio_info["audio_title"]), audio_type)
         audio_path = os.path.join(self.main_thread.audio_download_path, self.display_name, audio_name)
         download_return = net.Download(audio_info_response["audio_url"], audio_path, header_list={"Referer": "https://www.bilibili.com/"})
         if download_return.status == net.Download.DOWNLOAD_SUCCEED:

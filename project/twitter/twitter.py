@@ -230,7 +230,7 @@ def get_video_play_page(tweet_id):
         elif m3u8_file_response.status != net.HTTP_RETURN_CODE_SUCCEED:
             raise crawler.CrawlerException("m3u8文件 %s 访问失败，%s" % (file_url, crawler.request_failre(m3u8_file_response.status)))
         m3u8_file_response_content = m3u8_file_response.data.decode(errors="ignore")
-        include_m3u8_file_list = re.findall(r"(/[\S]*.m3u8)", m3u8_file_response_content)
+        include_m3u8_file_list = re.findall(r"(/\S*.m3u8)", m3u8_file_response_content)
         if len(include_m3u8_file_list) > 0:
             # 生成最高分辨率视频所在的m3u8文件地址
             file_url = "%s://%s%s" % (file_url_protocol, file_url_host, include_m3u8_file_list[-1])
@@ -239,7 +239,7 @@ def get_video_play_page(tweet_id):
                 raise crawler.CrawlerException("最高分辨率m3u8文件 %s 访问失败，%s" % (file_url, crawler.request_failre(m3u8_file_response.status)))
             m3u8_file_response_content = m3u8_file_response.data.decode(errors="ignore")
         # 包含分P视频文件名的m3u8文件
-        ts_url_find = re.findall(r"(/[\S]*.ts)", m3u8_file_response_content)
+        ts_url_find = re.findall(r"(/\S*.ts)", m3u8_file_response_content)
         if len(ts_url_find) == 0:
             raise crawler.CrawlerException("m3u8文件%s截取视频地址失败\n%s" % (file_url, m3u8_file_response_content))
         result["video_url"] = []
