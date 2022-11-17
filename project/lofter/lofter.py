@@ -44,7 +44,7 @@ def get_one_page_blog(account_name, page_count):
     elif blog_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(blog_pagination_response.status))
     # 获取全部日志地址
-    blog_url_list = re.findall(r'"(http[s]?://%s.lofter.com/post/[^"]*)"' % account_name, blog_pagination_response.data.decode(errors="ignore"))
+    blog_url_list = re.findall(r'"(https?://%s.lofter.com/post/[^"]*)"' % account_name, blog_pagination_response.data.decode(errors="ignore"))
     # 去重排序
     result["blog_url_list"] = sorted(list(set(blog_url_list)), reverse=True)
     return result

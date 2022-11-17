@@ -262,7 +262,7 @@ def get_post_page(post_url, post_id):
             raise crawler.CrawlerException("页面脚本%s中'image'字段类型错误" % script_json)
     else:
         # 获取全部图片地址
-        photo_url_list = re.findall(r'"(http[s]?://\d*[.]?media.tumblr.com/[^"]*)"', post_page_head)
+        photo_url_list = re.findall(r'"(https?://\d*[.]?media.tumblr.com/[^"]*)"', post_page_head)
         new_photo_url_list = {}
         for photo_url in photo_url_list:
             # 头像，跳过
@@ -285,6 +285,7 @@ def get_post_page(post_url, post_id):
 
 def check_photo_url_invalid(photo_url):
     return photo_url[-4:] == ".pnj"
+
 
 def analysis_photo(photo_url):
     temp_list = photo_url.split("/")[-1].split(".")[0].split("_")
@@ -374,7 +375,7 @@ def get_video_play_page(account_id, post_id, is_https):
         return get_video_play_page(account_id, post_id, is_https)
     elif video_play_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(video_play_response.status))
-    video_url_find = re.findall(r'<source src="(http[s]?://%s.tumblr.com/video_file/[^"]*)" type="[^"]*"' % account_id, video_play_response_content)
+    video_url_find = re.findall(r'<source src="(https?://%s.tumblr.com/video_file/[^"]*)" type="[^"]*"' % account_id, video_play_response_content)
     if len(video_url_find) == 1:
         if tool.is_integer(video_url_find[0].split("/")[-1]):
             result["video_url"] = "/".join(video_url_find[0].split("/")[:-1])
