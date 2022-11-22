@@ -400,7 +400,6 @@ def _random_user_agent(browser_type=None):
     随机获取一个user agent
         Common firefox user agent   "Mozilla/5.0 (Windows NT 6.1; WOW64; rv:46.0) Gecko/20100101 Firefox/46.0"
         Common chrome user agent    "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/51.0.2704.103 Safari/537.36"
-        Common IE user agent        "Mozilla/4.0 (compatible; MSIE 8.0; Windows NT 6.1; WOW64)"
     """
     windows_version_dict = {
         "Windows 7": "Windows NT 6.1",
@@ -408,20 +407,18 @@ def _random_user_agent(browser_type=None):
         "Windows 8.1": "Windows NT 6.3",
         "Windows 10": "Windows NT 10.0",
     }
-    firefox_version_max = 96
-    # https://zh.wikipedia.org/zh-cn/Google_Chrome
-    chrome_version_list = ["94.0.4606.54", "94.0.4606.61", "94.0.4606.71", "94.0.4606.81", "95.0.4638.54", "95.0.4638.69", "96.0.4664.45", "96.0.4664.93", "96.0.4664.110", "97.0.4692.71"]
-    # browser_type = random.choice(["IE", "firefox", "chrome", "Edge"])
+    firefox_version_max = 108
+    chrome_version_max = 107
     if browser_type is None:
         browser_type = random.choice(["firefox", "chrome"])
     if browser_type == "firefox":
-        firefox_version = random.randint(firefox_version_max - 10, firefox_version_max)
+        firefox_version = random.randint(firefox_version_max - 3, firefox_version_max)
         os_type = random.choice(list(windows_version_dict.values()))
-        return f"Mozilla/5.0 ({os_type}; WOW64; rv:{firefox_version}.0) Gecko/20100101 Firefox/{firefox_version}.0"
+        return f"Mozilla/5.0 ({os_type}; Win64; x64; rv:{firefox_version}.0) Gecko/20100101 Firefox/{firefox_version}.0"
     elif browser_type == "chrome":
-        chrome_version = random.choice(chrome_version_list)
+        chrome_version = random.randint(chrome_version_max - 3, chrome_version_max)
         os_type = random.choice(list(windows_version_dict.values()))
-        return f"Mozilla/5.0 ({os_type}; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/{chrome_version} Safari/537.36"
+        return f"Mozilla/5.0 ({os_type}; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/{chrome_version}.0.0.0 Safari/537.36"
     return ""
 
 
