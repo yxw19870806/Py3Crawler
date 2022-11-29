@@ -65,7 +65,7 @@ def get_archive_page(archive_id):
     archive_response_content = archive_response.data.decode(errors="ignore")
     # 获取视频地址
     video_url_find1 = re.findall(r'<iframe[\s|\S]*?src="([^"]*)"', archive_response_content)
-    video_url_find2 = re.findall(r'<script type="\w*/javascript" src="(http[s]?://\w*.nicovideo.jp/[^"]*)"></script>', archive_response_content)
+    video_url_find2 = re.findall(r'<script type="\w*/javascript" src="(https?://\w*.nicovideo.jp/[^"]*)"></script>', archive_response_content)
     video_url_find = video_url_find1 + video_url_find2
     if len(video_url_find) == 0:
         return result
@@ -119,7 +119,7 @@ def get_archive_page(archive_id):
             if video_play_response.status != net.HTTP_RETURN_CODE_SUCCEED:
                 raise crawler.CrawlerException("视频播放页 %s，%s" % (result_video_info["video_url"], crawler.request_failre(video_play_response.status)))
             video_play_response_content = video_play_response.data.decode(errors="ignore")
-            script_json = tool.json_decode(pq(video_play_response_content).find("#js-initial-watch-data").attr("data-api-data"))
+            script_json: dict = tool.json_decode(pq(video_play_response_content).find("#js-initial-watch-data").attr("data-api-data"))
             if not script_json or not crawler.check_sub_key(("owner",), script_json):
                 raise crawler.CrawlerException("视频播放页 %s 截取视频信息失败，%s" % (result_video_info["video_url"], crawler.request_failre(video_play_response.status)))
             if script_json["owner"]:
