@@ -81,16 +81,20 @@ def get_one_page_video(account_id, token):
         # 没有视频标签
         if len(channel_tab_json) < 2:
             return result
-        video_tab_json = crawler.get_json_value(channel_tab_json, 1, "tabRenderer", "content", "sectionListRenderer", "contents", 0, "itemSectionRenderer", "contents", 0, original_data=script_json, type_check=dict)
         try:
-            video_info_list = crawler.get_json_value(video_tab_json, "gridRenderer", "items", original_data=script_json, type_check=list)
+            video_info_list = crawler.get_json_value(channel_tab_json, 1, "tabRenderer", "content", "richGridRenderer", "contents", original_data=script_json, type_check=list)
         except crawler.CrawlerException:
             # 没有上传过任何视频
             if crawler.get_json_value(video_tab_json, "messageRenderer", "text", "simpleText", default_value="", type_check=str) == "This channel has no videos.":
                 return result
             raise
     else:
-        query_url = "https://www.youtube.com/youtubei/v1/browse?key=AIzaSyAO_FJ2SlqU8Q4STEHLGCilw_Y9_11qcW8&prettyPrint=false"
+        query_url = "https://www.youtube.com/youtubei/v1/browse"
+        query_data = {
+            "key": "AIzaSyAO_FJ2SlqU8Q4STEHLGCilw_Y9_11qcW8",
+            "prettyPrint": "false",
+        }
+        query_url += "?" + urllib.parse.urlencode(query_data)
         post_data = {
             "context": {
                 "client": {
@@ -112,7 +116,7 @@ def get_one_page_video(account_id, token):
     # 获取所有video id
     for video_info in video_info_list:
         if not crawler.check_sub_key(("continuationItemRenderer",), video_info):
-            result["video_id_list"].append(crawler.get_json_value(video_info, "gridVideoRenderer", "videoId", type_check=str))
+            result["video_id_list"].append(crawler.get_json_value(video_info, "richItemRenderer", "content", "videoRenderer", "videoId", type_check=str))
         else:
             # 获取下一页token
             result["next_page_token"] = crawler.get_json_value(video_info, "continuationItemRenderer", "continuationEndpoint", "continuationCommand", "token", type_check=str)
