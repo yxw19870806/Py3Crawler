@@ -5,10 +5,14 @@
 email: hikaru870806@hotmail.com
 如有问题或建议请联系
 """
+import base64
 import json
 import os
 import platform
+import pywintypes
 import sqlite3
+from cryptography.hazmat.backends import default_backend
+from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
 from typing import Optional
 from selenium import webdriver
 from selenium.common.exceptions import WebDriverException
@@ -22,10 +26,10 @@ try:
 except ImportError:
     from common import crawler, file, net, output
 
-BROWSER_TYPE_IE = 1
-BROWSER_TYPE_FIREFOX = 2
-BROWSER_TYPE_CHROME = 3
-BROWSER_TYPE_TEXT = 4  # 直接从文件里读取cookies
+BROWSER_TYPE_IE = "ie"
+BROWSER_TYPE_FIREFOX = "firefox"
+BROWSER_TYPE_CHROME = "chrome"
+BROWSER_TYPE_TEXT = "text"  # 直接从文件里读取cookies
 
 
 class Chrome:
@@ -74,7 +78,11 @@ class Chrome:
         self.chrome.quit()
 
 
-def get_default_browser_application_path(browser_type: int) -> Optional[str]:
+def _get_chrome_user_data_path():
+    return os.path.abspath(os.path.join(os.getenv("LOCALAPPDATA"), "Google\\Chrome\\User Data"))
+
+
+def get_default_browser_application_path(browser_type: str) -> Optional[str]:
     """
     根据浏览器和操作系统，返回浏览器程序文件所在的路径
     """
@@ -87,11 +95,11 @@ def get_default_browser_application_path(browser_type: int) -> Optional[str]:
     elif browser_type == BROWSER_TYPE_CHROME:
         return os.path.abspath(os.path.join(os.getenv("ProgramFiles"), "Google\\Chrome\\Application\\chrome.exe"))
     else:
-        output.print_msg("不支持的浏览器类型：" + str(browser_type))
+        output.print_msg("不支持的浏览器类型：%s" % browser_type)
     return None
 
 
-def get_default_browser_cookie_path(browser_type: int) -> Optional[str]:
+def get_default_browser_cookie_path(browser_type: str) -> Optional[str]:
     """
     根据浏览器和操作系统，自动查找默认浏览器cookie路径(只支持windows)
     """
@@ -107,7 +115,7 @@ def get_default_browser_cookie_path(browser_type: int) -> Optional[str]:
                 if os.path.exists(os.path.join(sub_path, "cookies.sqlite")):
                     return os.path.abspath(sub_path)
     elif browser_type == BROWSER_TYPE_CHROME:
-        profile_file_path = os.path.abspath(os.path.join(os.getenv("LOCALAPPDATA"), "Google\\Chrome\\User Data\\Local State"))
+        profile_file_path = os.path.join(_get_chrome_user_data_path(), "Local State")
         default_profile_name = "Default"
         if os.path.exists(profile_file_path):
             with open(profile_file_path, "r", encoding="UTF-8") as file_handle:
@@ -119,15 +127,15 @@ def get_default_browser_cookie_path(browser_type: int) -> Optional[str]:
                         default_profile_name = profile_info["profile"]["last_used"]
                     elif "last_active_profiles" in profile_info["profile"] and isinstance(profile_info["profile"]["last_active_profiles"], dict) and len(profile_info["profile"]["last_active_profiles"]) == 1:
                         default_profile_name = profile_info["profile"]["last_active_profiles"][0]
-        return os.path.abspath(os.path.join(os.getenv("LOCALAPPDATA"), "Google\\Chrome\\User Data", default_profile_name))
+        return os.path.join(browser_data_path, default_profile_name)
     elif browser_type == BROWSER_TYPE_TEXT:
         return os.path.abspath(os.path.join(crawler.PROJECT_APP_PATH, "info/cookies.data"))
     else:
-        output.print_msg("不支持的浏览器类型：" + str(browser_type))
+        output.print_msg("不支持的浏览器类型：%s" % browser_type)
     return None
 
 
-def get_all_cookie_from_browser(browser_type: int, file_path: str) -> dict:
+def get_all_cookie_from_browser(browser_type: str, file_path: str) -> dict:
     """
     从浏览器保存的cookie文件中读取所有cookie
 
@@ -173,19 +181,50 @@ def get_all_cookie_from_browser(browser_type: int, file_path: str) -> dict:
         con.close()
     elif browser_type == BROWSER_TYPE_CHROME:
         # chrome仅支持windows系统的解密
-        # Chrome 80以上版本已不支持使用该方法对https协议保存的cookies
         if platform.system() != "Windows":
             return {}
-        con = sqlite3.connect(os.path.join(file_path, "Cookies"))
+
+        browser_data_path = _get_chrome_user_data_path()
+        profile_file_path = os.path.join(browser_data_path, "Local State")
+        encrypted_key = ""
+        if os.path.exists(profile_file_path):
+            with open(profile_file_path, "r", encoding="UTF-8") as file_handle:
+                profile_info = json.load(file_handle)
+                if "os_crypt" in profile_info and "encrypted_key" in profile_info["os_crypt"]:
+                    encrypted_key = profile_info["os_crypt"]["encrypted_key"]
+        if not encrypted_key:
+            output.print_msg("encrypted_key获取失败")
+            return {}
+
+        encrypted_key = base64.b64decode(encrypted_key.encode())[5:]
+        try:
+            encrypted_key = win32crypt.CryptUnprotectData(encrypted_key, None, None, None, 0)[1]
+        except pywintypes.error:
+            output.print_msg("encrypted_key解密失败")
+            return {}
+        cipher = Cipher(algorithms.AES(encrypted_key), None, backend=default_backend())
+
+        con = sqlite3.connect(os.path.join(file_path, "Network", "Cookies"))
         cur = con.cursor()
         cur.execute("SELECT host_key, path, name, value, encrypted_value FROM cookies")
         for cookie_info in cur.fetchall():
             cookie_domain = cookie_info[0]
             cookie_key = cookie_info[2]
-            try:
-                cookie_value = win32crypt.CryptUnprotectData(cookie_info[4], None, None, None, 0)[1]
-            except:
-                continue
+            if cookie_info[3]:
+                cookie_value = cookie_info[3]
+            else:
+                decrypt_value = cookie_info[4]
+                if decrypt_value[:4] == b'x01x00x00x00':
+                    try:
+                        cookie_value = win32crypt.CryptUnprotectData(decrypt_value, None, None, None, 0)[1]
+                    except pywintypes.error:
+                        continue
+                elif decrypt_value[:3] == b'v10':
+                    cipher.mode = modes.GCM(decrypt_value[3:15])
+                    value = cipher.decryptor().update(decrypt_value[15:])
+                    cookie_value = value[:-16]
+                else:
+                    continue
             if cookie_domain not in all_cookies:
                 all_cookies[cookie_domain] = {}
             all_cookies[cookie_domain][cookie_key] = cookie_value.decode()
@@ -193,6 +232,6 @@ def get_all_cookie_from_browser(browser_type: int, file_path: str) -> dict:
     elif browser_type == BROWSER_TYPE_TEXT:
         all_cookies["DEFAULT"] = net.split_cookies_from_cookie_string(file.read_file(file_path, file.READ_FILE_TYPE_FULL))
     else:
-        output.print_msg("不支持的浏览器类型：" + str(browser_type))
+        output.print_msg("不支持的浏览器类型：%s" % browser_type)
         return {}
     return all_cookies

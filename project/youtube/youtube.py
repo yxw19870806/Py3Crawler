@@ -81,16 +81,20 @@ def get_one_page_video(account_id, token):
         # 没有视频标签
         if len(channel_tab_json) < 2:
             return result
-        video_tab_json = crawler.get_json_value(channel_tab_json, 1, "tabRenderer", "content", "sectionListRenderer", "contents", 0, "itemSectionRenderer", "contents", 0, original_data=script_json, type_check=dict)
         try:
-            video_info_list = crawler.get_json_value(video_tab_json, "gridRenderer", "items", original_data=script_json, type_check=list)
+            video_info_list = crawler.get_json_value(channel_tab_json, 1, "tabRenderer", "content", "richGridRenderer", "contents", original_data=script_json, type_check=list)
         except crawler.CrawlerException:
             # 没有上传过任何视频
             if crawler.get_json_value(video_tab_json, "messageRenderer", "text", "simpleText", default_value="", type_check=str) == "This channel has no videos.":
                 return result
             raise
     else:
-        query_url = "https://www.youtube.com/youtubei/v1/browse?key=AIzaSyAO_FJ2SlqU8Q4STEHLGCilw_Y9_11qcW8&prettyPrint=false"
+        query_url = "https://www.youtube.com/youtubei/v1/browse"
+        query_data = {
+            "key": "AIzaSyAO_FJ2SlqU8Q4STEHLGCilw_Y9_11qcW8",
+            "prettyPrint": "false",
+        }
+        query_url += "?" + urllib.parse.urlencode(query_data)
         post_data = {
             "context": {
                 "client": {
@@ -112,7 +116,7 @@ def get_one_page_video(account_id, token):
     # 获取所有video id
     for video_info in video_info_list:
         if not crawler.check_sub_key(("continuationItemRenderer",), video_info):
-            result["video_id_list"].append(crawler.get_json_value(video_info, "gridVideoRenderer", "videoId", type_check=str))
+            result["video_id_list"].append(crawler.get_json_value(video_info, "richItemRenderer", "content", "videoRenderer", "videoId", type_check=str))
         else:
             # 获取下一页token
             result["next_page_token"] = crawler.get_json_value(video_info, "continuationItemRenderer", "continuationEndpoint", "continuationCommand", "token", type_check=str)
@@ -154,119 +158,70 @@ def get_video_page(video_id):
             if IS_LOGIN:
                 raise crawler.CrawlerException("登录状态丢失")
             result["skip_reason"] = "需要登录账号才能访问，" + reason
-        else:
-            # ERROR
-            # https://www.youtube.com/watch?v=_8zpXuXj_Tw
-            # UNPLAYABLE
-            # https://www.youtube.com/watch?v=ku0Jf8yiH-k
+        # https://www.youtube.com/watch?v=_8zpXuXj_Tw
+        elif video_status == "ERROR":
             result["skip_reason"] = reason
-
-    # window["ytInitialData"]
-    script_json_html = tool.find_sub_string(video_play_response_content, 'var ytInitialData = ', ";</script>")
-    if not script_json_html:
-        raise crawler.CrawlerException("页面截取ytInitialData失败\n" + video_play_response_content)
-    script_json = tool.json_decode(script_json_html.strip())
-    if script_json is None:
-        raise crawler.CrawlerException("ytInitialData加载失败\n" + script_json_html)
-    # 获取视频发布时间
-    try:
-        video_time_string = crawler.get_json_value(script_json, "contents", "twoColumnWatchNextResults", "results", "results", "contents", 0, "videoPrimaryInfoRenderer", "dateText", "simpleText", type_check=str)
-    except crawler.CrawlerException:
-        if video_status == "ERROR":
-            result["skip_reason"] = "视频不存在"
             return result
         else:
-            raise
-    video_time = 0
-    # en
-    video_time_find = re.findall(r"(\w* \d*, \d*)", video_time_string)
-    if len(video_time_find) == 1:
-        try:
-            video_time = time.strptime(video_time_string, "%b %d, %Y")
-        except ValueError:
-            pass
-    else:
-        # zh、zh-hk
-        video_time_find = re.findall(r"(\d*)年(\d*)月(\d*)日", video_time_string)
-        if len(video_time_find) != 1:
-            # ja
-            video_time_find = re.findall(r"(\d*)/(\d*)/(\d*)", video_time_string)
-        if len(video_time_find) == 1:
-            try:
-                video_time = time.strptime("%s %s %s" % (video_time_find[0][0], video_time_find[0][1], video_time_find[0][2]), "%Y %m %d")
-            except ValueError:
-                pass
-    if video_time == 0:
-        raise crawler.CrawlerException("视频发布时间%s的格式不正确" % video_time_string)
+            result["skip_reason"] = reason
+    # 获取视频标题
+    result["video_title"] = crawler.get_json_value(script_json, "videoDetails", "title", type_check=str)
+    # 获取视频时间
+    video_time_string = crawler.get_json_value(script_json, "microformat", "playerMicroformatRenderer", "uploadDate", type_check=str)
+    try:
+        video_time = time.strptime(video_time_string, "%Y-%m-%d")
+    except ValueError:
+        raise crawler.CrawlerException("时间%s解析失败" % video_time_string)
     result["video_time"] = int(time.mktime(video_time))
+
     if result["skip_reason"]:
         return result
 
-    # ytplayer.config
-    script_json_html = tool.find_sub_string(video_play_response_content, "ytplayer.config = ", ";ytplayer.load = ").strip()
-    if not script_json_html:
-        raise crawler.CrawlerException("页面截取ytplayer.config失败\n" + video_play_response_content)
-    script_json = tool.json_decode(script_json_html)
-    if script_json is None:
-        raise crawler.CrawlerException("ytplayer.config加载失败\n" + script_json_html)
-    # 获取视频标题
-    result["video_title"] = crawler.get_json_value(script_json, "args", "title", type_check=str)
     # 获取视频地址
     resolution_to_url = {}  # 各个分辨率下的视频地址
     decrypt_function_step = []  # signature生成步骤
-    url_encoded_fmt_stream_map_list = crawler.get_json_value(script_json, "args", "url_encoded_fmt_stream_map", type_check=str).split(",")
-    for sub_url_encoded_fmt_stream_map in url_encoded_fmt_stream_map_list:
-        video_resolution = video_url = signature = None
-        for sub_param in sub_url_encoded_fmt_stream_map.split("&"):
-            key, value = sub_param.split("=", 1)
-            if key == "type":  # 视频类型
-                video_type = urllib.parse.unquote(value)
-                if video_type.find("video/mp4") == 0:
-                    pass  # 只要mp4类型的
-                elif video_type.find("video/webm") == 0 or video_type.find("video/3gpp") == 0:
-                    break
-                else:
-                    log.notice("未知视频类型：" + video_type)
-                    break
-            elif key == "quality":  # 视频画质
-                if value == "tiny":
-                    video_resolution = 144
-                elif value == "small":
-                    video_resolution = 240
-                elif value == "medium":
-                    video_resolution = 360
-                elif value == "large":
-                    video_resolution = 480
-                elif value[:2] == "hd" and tool.is_integer(value[2:]):
-                    video_resolution = int(value[2:])
-                else:
-                    video_resolution = 1
-                    log.notice("未知视频画质：" + value)
-            elif key == "url":
-                video_url = urllib.parse.unquote(value)
-            elif key == "s":
-                # 解析JS文件，获取对应的加密方法
-                if len(decrypt_function_step) == 0:
-                    js_file_name = tool.find_sub_string(video_play_response_content, 'src="/yts/jsbin/player', '/base.js"')
-                    if not js_file_name:
-                        js_file_name = tool.find_sub_string(video_play_response_content, 'src="https://s.ytimg.com/yts/jsbin/player', '/base.js"')
-                    if js_file_name:
-                        js_file_url = "https://www.youtube.com/yts/jsbin/player%s/base.js" % js_file_name
-                    else:
-                        raise crawler.CrawlerException("播放器JS文件地址截取失败\n" + video_play_response_content)
-                    decrypt_function_step = get_decrypt_step(js_file_url)
-                # 生成加密字符串
-                signature = decrypt_signature(decrypt_function_step, value)
-            elif key == "sig":
-                signature = value
+    for video_info in crawler.get_json_value(script_json, "streamingData", "formats", type_check=list):
+        video_mime = crawler.get_json_value(video_info, "mimeType", type_check=str)
+        if video_mime.find("video/mp4") != 0:
+            continue
+        video_quality = crawler.get_json_value(video_info, "quality", type_check=str)
+        if video_quality == "tiny":
+            video_resolution = 144
+        elif video_quality == "small":
+            video_resolution = 240
+        elif video_quality == "medium":
+            video_resolution = 360
+        elif video_quality == "large":
+            video_resolution = 480
+        elif video_quality[:2] == "hd" and tool.is_integer(video_quality[2:]):
+            video_resolution = int(video_quality[2:])
         else:
-            if video_resolution is None or video_url is None:
-                log.notice("未知视频未知视频参数：%s" % url_encoded_fmt_stream_map_list)
-                continue
-            # 加上signature参数
-            if signature is not None:
-                video_url += "&signature=" + signature
-            resolution_to_url[video_resolution] = video_url
+            video_resolution = 1
+            log.notice("未知视频画质：" + video_quality)
+        try:
+            video_url = crawler.get_json_value(video_info, "url", type_check=str)
+        except crawler.CrawlerException:
+            decrypted_video_url = crawler.get_json_value(video_info, "signatureCipher", type_check=str)
+            video_url = ""
+            video_signature = ""
+            for sub_param in decrypted_video_url.split("&"):
+                key, value = sub_param.split("=")
+                if key == "s":
+                    video_signature = urllib.parse.unquote(value)
+                elif key == "url":
+                    video_url = urllib.parse.unquote(value)
+            # 解析JS文件，获取对应的加密方法
+            if len(decrypt_function_step) == 0:
+                js_file_path = tool.find_sub_string(video_play_response_content, '<script src="/s/player/', '"')
+                if js_file_path:
+                    js_file_url = "https://www.youtube.com/s/player/%s" % js_file_path
+                else:
+                    raise crawler.CrawlerException("播放器JS文件地址截取失败\n" + video_play_response_content)
+                decrypt_function_step = get_decrypt_step(js_file_url)
+            signature = decrypt_signature(decrypt_function_step, video_signature)
+            video_url += "&sig=" + signature
+        resolution_to_url[video_resolution] = video_url
+
     if len(resolution_to_url) == 0:
         raise crawler.CrawlerException("返回信息%s中视频地址解析错误" % script_json)
     # 优先使用配置中的分辨率
@@ -288,10 +243,9 @@ def get_video_page(video_id):
 # 部分版权视频需要的signature字段取值
 # 每隔一段时间访问视频播放页面后会插入一个动态生成JS地址
 # 里面包含3个子加密方法，但调用顺序、参数、次数每个JS文件中各不相
-# 其中一个例子：https://youtube.com/yts/jsbin/player-vfl4OEYh9/en_US/base.js
-# k.sig?f.set("signature",k.sig):k.s&&f.set("signature",SJ(k.s));
-# SJ=function(a){a=a.split("");RJ.yF(a,48);RJ.It(a,31);RJ.yF(a,24);RJ.It(a,74);return a.join("")};
-# var RJ={yF:function(a,b){var c=a[0];a[0]=a[b%a.length];a[b]=c},It:function(a){a.reverse()},yp:function(a,b){a.splice(0,b)}};
+# 其中一个例子：https://www.youtube.com/s/player/a0703e0f/player_ias.vflset/en_US/base.js
+# jC.av(a,2);jC.TI(a,1);jC.xB(a,31);jC.TI(a,2);jC.av(a,67);jC.av(a,41);jC.xB(a,44);jC.av(a,46);jC.TI(a,2);
+# var jC={TI:function(a,b){a.splice(0,b)},av:function(a,b){var c=a[0];a[0]=a[b%a.length];a[b%a.length]=c},xB:function(a){a.reverse()}};
 def get_decrypt_step(js_file_url):
     # 最终的调用子加密方法的顺序
     decrypt_function_step = []
@@ -299,26 +253,15 @@ def get_decrypt_step(js_file_url):
     if js_file_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException("播放器JS文件 %s 访问失败，原因：%s" % (js_file_url, crawler.request_failre(js_file_response.status)))
     js_file_response_content = js_file_response.data.decode(errors="ignore")
-    # # 加密方法入口
-    # # old k.sig?f.set("signature",k.sig):k.s&&f.set("signature",SJ(k.s));
-    # # new var l=k.sig;l?f.set("signature",l):k.s&&f.set("signature",CK(k.s));
-    # main_function_name = tool.find_sub_string(js_file_response_content, 'f.set("signature",', "(k.s));")
-    # if not main_function_name:
-    #     main_function_name = tool.find_sub_string(js_file_response_content, 'f.set(k.sp||"signature",', "(k.s))")
-    # if not main_function_name:
-    #     main_function_name = tool.find_sub_string(js_file_response_content, 'c&&(b||(b="signature"),d.set(b,', "(c))")
-    # if not main_function_name:
-    #     raise crawler.CrawlerException("播放器JS文件 %s，加密方法名截取失败" % js_file_url)
-    # # 加密方法体（包含子加密方法的调用参数&顺序）
-    # # SJ=function(a){a=a.split("");RJ.yF(a,48);RJ.It(a,31);RJ.yF(a,24);RJ.It(a,74);return a.join("")};
-    # main_function_body = tool.find_sub_string(js_file_response_content, '%s=function(a){a=a.split("");' % main_function_name, 'return a.join("")};')
+    # 加密方法体（包含子加密方法的调用参数&顺序）
+    # jC.av(a,2);jC.TI(a,1);jC.xB(a,31);jC.TI(a,2);jC.av(a,67);jC.av(a,41);jC.xB(a,44);jC.av(a,46);jC.TI(a,2);
     main_function_body = tool.find_sub_string(js_file_response_content, 'function(a){a=a.split("");', 'return a.join("")};')
     if not main_function_body:
         raise crawler.CrawlerException("播放器JS文件 %s，加密方法体截取失败" % js_file_url)
     # 子加密方法所在的变量名字
     decrypt_function_var = None
     for sub_decrypt_step in main_function_body.split(";"):
-        # RJ.yF(a,48); / RJ.It(a,31); / RJ.yF(a,24); / RJ.It(a,74);
+        # jC.av(a,2);jC.TI(a,1);jC.xB(a,31);jC.TI(a,2);jC.av(a,67);jC.av(a,41);jC.xB(a,44);jC.av(a,46);jC.TI(a,2);
         if not sub_decrypt_step:
             continue
         # (加密方法所在变量名，加密方法名，加密方法参数)
@@ -331,7 +274,9 @@ def get_decrypt_step(js_file_url):
             raise crawler.CrawlerException("播放器JS文件 %s，加密子方法所在变量不一致\n%s" % (js_file_url, main_function_body))
         decrypt_function_step.append([sub_decrypt_step_find[0][1], sub_decrypt_step_find[0][2]])  # 方法名，参数
     # 子加密方法所在的变量内容
-    # var RJ={yF:function(a,b){var c=a[0];a[0]=a[b%a.length];a[b]=c},It:function(a){a.reverse()},yp:function(a,b){a.splice(0,b)}};
+    # TI:function(a,b){a.splice(0,b)},
+    # av:function(a,b){var c=a[0];a[0]=a[b%a.length];a[b%a.length]=c},
+    # xB:function(a){a.reverse()}
     decrypt_function_var_body = tool.find_sub_string(js_file_response_content, "var %s={" % decrypt_function_var, "};")
     if not main_function_body:
         raise crawler.CrawlerException("播放器JS文件 %s，加密子方法截取失败" % js_file_url)
@@ -424,6 +369,7 @@ class Youtube(crawler.Crawler):
     def init(self):
         # 检测登录状态
         if check_login():
+            global IS_LOGIN
             IS_LOGIN = True
         else:
             while True:
