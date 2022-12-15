@@ -369,6 +369,7 @@ class Youtube(crawler.Crawler):
     def init(self):
         # 检测登录状态
         if check_login():
+            global IS_LOGIN
             IS_LOGIN = True
         else:
             while True:
