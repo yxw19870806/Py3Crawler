@@ -158,11 +158,11 @@ def get_video_page(video_id):
             if IS_LOGIN:
                 raise crawler.CrawlerException("登录状态丢失")
             result["skip_reason"] = "需要登录账号才能访问，" + reason
+        # https://www.youtube.com/watch?v=_8zpXuXj_Tw
+        elif video_status == "ERROR":
+            result["skip_reason"] = reason
+            return result
         else:
-            # ERROR
-            # https://www.youtube.com/watch?v=_8zpXuXj_Tw
-            # UNPLAYABLE
-            # https://www.youtube.com/watch?v=ku0Jf8yiH-k
             result["skip_reason"] = reason
     # 获取视频标题
     result["video_title"] = crawler.get_json_value(script_json, "videoDetails", "title", type_check=str)
