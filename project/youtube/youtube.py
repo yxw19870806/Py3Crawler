@@ -209,7 +209,7 @@ def get_video_page(video_id):
                 if key == "s":
                     video_signature = urllib.parse.unquote(value)
                 elif key == "url":
-                    video_url = value
+                    video_url = urllib.parse.unquote(value)
             # 解析JS文件，获取对应的加密方法
             if len(decrypt_function_step) == 0:
                 js_file_path = tool.find_sub_string(video_play_response_content, '<script src="/s/player/', '"')
@@ -219,6 +219,7 @@ def get_video_page(video_id):
                     raise crawler.CrawlerException("播放器JS文件地址截取失败\n" + video_play_response_content)
                 decrypt_function_step = get_decrypt_step(js_file_url)
             signature = decrypt_signature(decrypt_function_step, video_signature)
+            video_url += "&sig=" + signature
         resolution_to_url[video_resolution] = video_url
 
     if len(resolution_to_url) == 0:
@@ -242,10 +243,9 @@ def get_video_page(video_id):
 # 部分版权视频需要的signature字段取值
 # 每隔一段时间访问视频播放页面后会插入一个动态生成JS地址
 # 里面包含3个子加密方法，但调用顺序、参数、次数每个JS文件中各不相
-# 其中一个例子：https://youtube.com/yts/jsbin/player-vfl4OEYh9/en_US/base.js
-# k.sig?f.set("signature",k.sig):k.s&&f.set("signature",SJ(k.s));
-# SJ=function(a){a=a.split("");RJ.yF(a,48);RJ.It(a,31);RJ.yF(a,24);RJ.It(a,74);return a.join("")};
-# var RJ={yF:function(a,b){var c=a[0];a[0]=a[b%a.length];a[b]=c},It:function(a){a.reverse()},yp:function(a,b){a.splice(0,b)}};
+# 其中一个例子：https://www.youtube.com/s/player/a0703e0f/player_ias.vflset/en_US/base.js
+# jC.av(a,2);jC.TI(a,1);jC.xB(a,31);jC.TI(a,2);jC.av(a,67);jC.av(a,41);jC.xB(a,44);jC.av(a,46);jC.TI(a,2);
+# var jC={TI:function(a,b){a.splice(0,b)},av:function(a,b){var c=a[0];a[0]=a[b%a.length];a[b%a.length]=c},xB:function(a){a.reverse()}};
 def get_decrypt_step(js_file_url):
     # 最终的调用子加密方法的顺序
     decrypt_function_step = []
@@ -254,14 +254,14 @@ def get_decrypt_step(js_file_url):
         raise crawler.CrawlerException("播放器JS文件 %s 访问失败，原因：%s" % (js_file_url, crawler.request_failre(js_file_response.status)))
     js_file_response_content = js_file_response.data.decode(errors="ignore")
     # 加密方法体（包含子加密方法的调用参数&顺序）
-    # SJ=function(a){a=a.split("");RJ.yF(a,48);RJ.It(a,31);RJ.yF(a,24);RJ.It(a,74);return a.join("")};
+    # jC.av(a,2);jC.TI(a,1);jC.xB(a,31);jC.TI(a,2);jC.av(a,67);jC.av(a,41);jC.xB(a,44);jC.av(a,46);jC.TI(a,2);
     main_function_body = tool.find_sub_string(js_file_response_content, 'function(a){a=a.split("");', 'return a.join("")};')
     if not main_function_body:
         raise crawler.CrawlerException("播放器JS文件 %s，加密方法体截取失败" % js_file_url)
     # 子加密方法所在的变量名字
     decrypt_function_var = None
     for sub_decrypt_step in main_function_body.split(";"):
-        # RJ.yF(a,48); / RJ.It(a,31); / RJ.yF(a,24); / RJ.It(a,74);
+        # jC.av(a,2);jC.TI(a,1);jC.xB(a,31);jC.TI(a,2);jC.av(a,67);jC.av(a,41);jC.xB(a,44);jC.av(a,46);jC.TI(a,2);
         if not sub_decrypt_step:
             continue
         # (加密方法所在变量名，加密方法名，加密方法参数)
@@ -274,7 +274,9 @@ def get_decrypt_step(js_file_url):
             raise crawler.CrawlerException("播放器JS文件 %s，加密子方法所在变量不一致\n%s" % (js_file_url, main_function_body))
         decrypt_function_step.append([sub_decrypt_step_find[0][1], sub_decrypt_step_find[0][2]])  # 方法名，参数
     # 子加密方法所在的变量内容
-    # var RJ={yF:function(a,b){var c=a[0];a[0]=a[b%a.length];a[b]=c},It:function(a){a.reverse()},yp:function(a,b){a.splice(0,b)}};
+    # TI:function(a,b){a.splice(0,b)},
+    # av:function(a,b){var c=a[0];a[0]=a[b%a.length];a[b%a.length]=c},
+    # xB:function(a){a.reverse()}
     decrypt_function_var_body = tool.find_sub_string(js_file_response_content, "var %s={" % decrypt_function_var, "};")
     if not main_function_body:
         raise crawler.CrawlerException("播放器JS文件 %s，加密子方法截取失败" % js_file_url)
