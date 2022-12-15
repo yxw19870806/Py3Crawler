@@ -22,10 +22,10 @@ try:
 except ImportError:
     from common import crawler, file, net, output
 
-BROWSER_TYPE_IE = 1
-BROWSER_TYPE_FIREFOX = 2
-BROWSER_TYPE_CHROME = 3
-BROWSER_TYPE_TEXT = 4  # 直接从文件里读取cookies
+BROWSER_TYPE_IE = "ie"
+BROWSER_TYPE_FIREFOX = "firefox"
+BROWSER_TYPE_CHROME = "chrome"
+BROWSER_TYPE_TEXT = "text"  # 直接从文件里读取cookies
 
 
 class Chrome:
@@ -74,7 +74,7 @@ class Chrome:
         self.chrome.quit()
 
 
-def get_default_browser_application_path(browser_type: int) -> Optional[str]:
+def get_default_browser_application_path(browser_type: str) -> Optional[str]:
     """
     根据浏览器和操作系统，返回浏览器程序文件所在的路径
     """
@@ -87,11 +87,11 @@ def get_default_browser_application_path(browser_type: int) -> Optional[str]:
     elif browser_type == BROWSER_TYPE_CHROME:
         return os.path.abspath(os.path.join(os.getenv("ProgramFiles"), "Google\\Chrome\\Application\\chrome.exe"))
     else:
-        output.print_msg("不支持的浏览器类型：" + str(browser_type))
+        output.print_msg("不支持的浏览器类型：%s" % browser_type)
     return None
 
 
-def get_default_browser_cookie_path(browser_type: int) -> Optional[str]:
+def get_default_browser_cookie_path(browser_type: str) -> Optional[str]:
     """
     根据浏览器和操作系统，自动查找默认浏览器cookie路径(只支持windows)
     """
@@ -123,11 +123,11 @@ def get_default_browser_cookie_path(browser_type: int) -> Optional[str]:
     elif browser_type == BROWSER_TYPE_TEXT:
         return os.path.abspath(os.path.join(crawler.PROJECT_APP_PATH, "info/cookies.data"))
     else:
-        output.print_msg("不支持的浏览器类型：" + str(browser_type))
+        output.print_msg("不支持的浏览器类型：%s" % browser_type)
     return None
 
 
-def get_all_cookie_from_browser(browser_type: int, file_path: str) -> dict:
+def get_all_cookie_from_browser(browser_type: str, file_path: str) -> dict:
     """
     从浏览器保存的cookie文件中读取所有cookie
 
@@ -193,6 +193,6 @@ def get_all_cookie_from_browser(browser_type: int, file_path: str) -> dict:
     elif browser_type == BROWSER_TYPE_TEXT:
         all_cookies["DEFAULT"] = net.split_cookies_from_cookie_string(file.read_file(file_path, file.READ_FILE_TYPE_FULL))
     else:
-        output.print_msg("不支持的浏览器类型：" + str(browser_type))
+        output.print_msg("不支持的浏览器类型：%s" % browser_type)
         return {}
     return all_cookies
