@@ -83,7 +83,7 @@ Visual Studio Installer安装完毕后，勾选"桌面应用和移动应用"标�
 * [World Cosplay](https://worldcosplay.net/) （最后更新日期：2022/07/25）
 * [喜马拉雅FM](https://www.ximalaya.com/) （最后更新日期：2022/07/20）
 * [一直播](https://www.yizhibo.com/) （最后更新日期：2022/07/20）
-* [Youtube](https://www.youtube.com/)
+* [Youtube](https://www.youtube.com/) （最后更新日期：2022/12/15）
 
 # Code Structure
 
