@@ -115,7 +115,8 @@ def get_default_browser_cookie_path(browser_type: str) -> Optional[str]:
                 if os.path.exists(os.path.join(sub_path, "cookies.sqlite")):
                     return os.path.abspath(sub_path)
     elif browser_type == BROWSER_TYPE_CHROME:
-        profile_file_path = os.path.join(_get_chrome_user_data_path(), "Local State")
+        browser_data_path = _get_chrome_user_data_path()
+        profile_file_path = os.path.join(browser_data_path, "Local State")
         default_profile_name = "Default"
         if os.path.exists(profile_file_path):
             with open(profile_file_path, "r", encoding="UTF-8") as file_handle:
@@ -184,8 +185,7 @@ def get_all_cookie_from_browser(browser_type: str, file_path: str) -> dict:
         if platform.system() != "Windows":
             return {}
 
-        browser_data_path = _get_chrome_user_data_path()
-        profile_file_path = os.path.join(browser_data_path, "Local State")
+        profile_file_path = os.path.join(_get_chrome_user_data_path(), "Local State")
         encrypted_key = ""
         if os.path.exists(profile_file_path):
             with open(profile_file_path, "r", encoding="UTF-8") as file_handle:

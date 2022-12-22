@@ -218,7 +218,7 @@ class Crawler(object):
         self.cookie_value = {}
         if sys_get_cookie:
             # 操作系统&浏览器
-            browser_type = analysis_config(config, "BROWSER_TYPE", 2, CONFIG_ANALYSIS_MODE_INTEGER)
+            browser_type = analysis_config(config, "BROWSER_TYPE", "chrome", CONFIG_ANALYSIS_MODE_RAW)
             # cookie
             cookie_path = analysis_config(config, "COOKIE_PATH", "", CONFIG_ANALYSIS_MODE_RAW)
             if cookie_path:
