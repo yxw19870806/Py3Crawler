@@ -21,11 +21,11 @@ from typing import Callable, Union
 # 项目根目录
 PROJECT_ROOT_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 # 全局config.ini路径
-PROJECT_CONFIG_PATH = os.path.abspath(os.path.join(PROJECT_ROOT_PATH, "common/config.ini"))
+PROJECT_CONFIG_PATH = os.path.abspath(os.path.join(PROJECT_ROOT_PATH, "common", "config.ini"))
 # 默认当前进程的工作目录，应用在初始化时应该对该变量进行赋值
 PROJECT_APP_PATH = os.getcwd()
 # webdriver文件路径
-CHROME_WEBDRIVER_PATH = os.path.abspath(os.path.join(PROJECT_ROOT_PATH, "common/chromedriver.exe"))
+CHROME_WEBDRIVER_PATH = os.path.abspath(os.path.join(PROJECT_ROOT_PATH, "common", "chromedriver.exe"))
 try:
     from . import browser, file, log, net, output, path, port_listener_event, tool
 except ImportError:
@@ -218,7 +218,7 @@ class Crawler(object):
         self.cookie_value = {}
         if sys_get_cookie:
             # 操作系统&浏览器
-            browser_type = analysis_config(config, "BROWSER_TYPE", 2, CONFIG_ANALYSIS_MODE_INTEGER)
+            browser_type = analysis_config(config, "BROWSER_TYPE", "chrome", CONFIG_ANALYSIS_MODE_RAW)
             # cookie
             cookie_path = analysis_config(config, "COOKIE_PATH", "", CONFIG_ANALYSIS_MODE_RAW)
             if cookie_path:

@@ -79,7 +79,7 @@ class Chrome:
 
 
 def _get_chrome_user_data_path():
-    return os.path.abspath(os.path.join(os.getenv("LOCALAPPDATA"), "Google\\Chrome\\User Data"))
+    return os.path.abspath(os.path.join(os.getenv("LOCALAPPDATA"), "Google", "Chrome", "User Data"))
 
 
 def get_default_browser_application_path(browser_type: str) -> Optional[str]:
@@ -89,11 +89,11 @@ def get_default_browser_application_path(browser_type: str) -> Optional[str]:
     if platform.system() != "Windows":
         return None
     if browser_type == BROWSER_TYPE_IE:
-        return os.path.abspath(os.path.join(os.getenv("ProgramFiles"), "Internet Explorer\\iexplore.exe"))
+        return os.path.abspath(os.path.join(os.getenv("ProgramFiles"), "Internet Explorer", "iexplore.exe"))
     elif browser_type == BROWSER_TYPE_FIREFOX:
-        return os.path.abspath(os.path.join(os.getenv("ProgramFiles"), "Mozilla Firefox\\firefox.exe"))
+        return os.path.abspath(os.path.join(os.getenv("ProgramFiles"), "Mozilla Firefox", "firefox.exe"))
     elif browser_type == BROWSER_TYPE_CHROME:
-        return os.path.abspath(os.path.join(os.getenv("ProgramFiles"), "Google\\Chrome\\Application\\chrome.exe"))
+        return os.path.abspath(os.path.join(os.getenv("ProgramFiles"), "Google", "Chrome", "Application", "chrome.exe"))
     else:
         output.print_msg("不支持的浏览器类型：%s" % browser_type)
     return None
@@ -106,16 +106,17 @@ def get_default_browser_cookie_path(browser_type: str) -> Optional[str]:
     if platform.system() != "Windows":
         return None
     if browser_type == BROWSER_TYPE_IE:
-        return os.path.join(os.getenv("APPDATA"), "Microsoft\\Windows\\Cookies")
+        return os.path.join(os.getenv("APPDATA"), "Microsoft", "Windows", "Cookies")
     elif browser_type == BROWSER_TYPE_FIREFOX:
-        default_browser_path = os.path.join(os.getenv("APPDATA"), "Mozilla\\Firefox\\Profiles")
+        default_browser_path = os.path.join(os.getenv("APPDATA"), "Mozilla", "Firefox", "Profiles")
         for dir_name in os.listdir(default_browser_path):
             sub_path = os.path.join(default_browser_path, dir_name)
             if os.path.isdir(sub_path):
                 if os.path.exists(os.path.join(sub_path, "cookies.sqlite")):
                     return os.path.abspath(sub_path)
     elif browser_type == BROWSER_TYPE_CHROME:
-        profile_file_path = os.path.join(_get_chrome_user_data_path(), "Local State")
+        browser_data_path = _get_chrome_user_data_path()
+        profile_file_path = os.path.join(browser_data_path, "Local State")
         default_profile_name = "Default"
         if os.path.exists(profile_file_path):
             with open(profile_file_path, "r", encoding="UTF-8") as file_handle:
@@ -129,7 +130,7 @@ def get_default_browser_cookie_path(browser_type: str) -> Optional[str]:
                         default_profile_name = profile_info["profile"]["last_active_profiles"][0]
         return os.path.join(browser_data_path, default_profile_name)
     elif browser_type == BROWSER_TYPE_TEXT:
-        return os.path.abspath(os.path.join(crawler.PROJECT_APP_PATH, "info/cookies.data"))
+        return os.path.abspath(os.path.join(crawler.PROJECT_APP_PATH, "info", "cookies.data"))
     else:
         output.print_msg("不支持的浏览器类型：%s" % browser_type)
     return None
@@ -184,8 +185,7 @@ def get_all_cookie_from_browser(browser_type: str, file_path: str) -> dict:
         if platform.system() != "Windows":
             return {}
 
-        browser_data_path = _get_chrome_user_data_path()
-        profile_file_path = os.path.join(browser_data_path, "Local State")
+        profile_file_path = os.path.join(_get_chrome_user_data_path(), "Local State")
         encrypted_key = ""
         if os.path.exists(profile_file_path):
             with open(profile_file_path, "r", encoding="UTF-8") as file_handle:
