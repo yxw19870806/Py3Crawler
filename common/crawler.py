@@ -21,11 +21,11 @@ from typing import Callable, Union
 # 项目根目录
 PROJECT_ROOT_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 # 全局config.ini路径
-PROJECT_CONFIG_PATH = os.path.abspath(os.path.join(PROJECT_ROOT_PATH, "common/config.ini"))
+PROJECT_CONFIG_PATH = os.path.abspath(os.path.join(PROJECT_ROOT_PATH, "common", "config.ini"))
 # 默认当前进程的工作目录，应用在初始化时应该对该变量进行赋值
 PROJECT_APP_PATH = os.getcwd()
 # webdriver文件路径
-CHROME_WEBDRIVER_PATH = os.path.abspath(os.path.join(PROJECT_ROOT_PATH, "common/chromedriver.exe"))
+CHROME_WEBDRIVER_PATH = os.path.abspath(os.path.join(PROJECT_ROOT_PATH, "common", "chromedriver.exe"))
 try:
     from . import browser, file, log, net, output, path, port_listener_event, tool
 except ImportError:
