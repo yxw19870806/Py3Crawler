@@ -339,10 +339,11 @@ def request(url, method="GET", fields=None, binary_data=None, header_list=None, 
             message = str(e)
             if isinstance(e, urllib3.exceptions.ConnectTimeoutError):
                 # 域名无法解析
-                if message.find("[Errno 11004] getaddrinfo failed") >= 0:
+                if message.find("[Errno 11004] getaddrinfo failed") >= 0 or message.find("[Errno 11001] getaddrinfo failed") >= 0:
                     return ErrorResponse(HTTP_RETURN_CODE_DOMAIN_NOT_RESOLVED)
-                elif message.find("[Errno 11001] getaddrinfo failed") >= 0:
-                    return ErrorResponse(HTTP_RETURN_CODE_DOMAIN_NOT_RESOLVED)
+                elif message.find("[WinError 10061]") >= 0:
+                    # [WinError 10061] 由于目标计算机积极拒绝，无法连接。
+                    return ErrorResponse(HTTP_RETURN_CODE_RETRY)
             elif isinstance(e, urllib3.exceptions.MaxRetryError):
                 if message.find("Caused by ResponseError('too many redirects'") >= 0:
                     return ErrorResponse(HTTP_RETURN_CODE_TOO_MANY_REDIRECTS)
