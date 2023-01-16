@@ -360,13 +360,13 @@ class Crawler(object):
         net.EXIT_FLAG = True
         net.resume_request()
 
-    def get_run_time(self):
+    def get_run_time(self) -> int:
         """
         获取程序已运行时间（秒）
         """
         return int(time.time() - self.start_time)
 
-    def is_running(self):
+    def is_running(self) -> bool:
         return self.process_status
 
     def running_check(self):
@@ -539,7 +539,7 @@ class CrawlerThread(threading.Thread):
                 return True
         return False
 
-    def format_message(self, message: str):
+    def format_message(self, message: str) -> str:
         if self.display_name is not None:
             return self.display_name + " " + message
         else:
@@ -601,7 +601,7 @@ class CrawlerThread(threading.Thread):
 
 
 class DownloadThread(CrawlerThread):
-    def __init__(self, main_thread, file_path, file_url, file_description):
+    def __init__(self, main_thread: Crawler, file_path: str, file_url: str, file_description: str):
         CrawlerThread.__init__(self, [], main_thread)
         self.file_path = file_path
         self.file_url = file_url
@@ -613,10 +613,10 @@ class DownloadThread(CrawlerThread):
         self.result = self.download(self.file_url, self.file_path, self.file_description, header_list=self.header_list)
         self.notify_main_thread()
 
-    def get_result(self):
+    def get_result(self) -> bool:
         return self.result and self.result.is_success()
 
-    def set_download_header(self, header_list):
+    def set_download_header(self, header_list: dict):
         self.header_list = header_list
 
 
@@ -631,11 +631,11 @@ class CrawlerException(SystemExit):
     def message(self) -> str:
         return self.exception_message
 
-    def http_error(self, target: str):
+    def http_error(self, target: str) -> str:
         return "%s解析失败，原因：%s" % (target, self.message)
 
 
-def read_config(config_path) -> dict:
+def read_config(config_path: str) -> dict:
     """
     读取配置文件
     """

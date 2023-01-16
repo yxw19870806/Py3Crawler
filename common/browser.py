@@ -78,7 +78,7 @@ class Chrome:
         self.chrome.quit()
 
 
-def _get_chrome_user_data_path():
+def _get_chrome_user_data_path() -> str:
     return os.path.abspath(os.path.join(os.getenv("LOCALAPPDATA"), "Google", "Chrome", "User Data"))
 
 
