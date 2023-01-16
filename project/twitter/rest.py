@@ -7,7 +7,6 @@ email: hikaru870806@hotmail.com
 如有问题或建议请联系
 """
 import base64
-import json
 import os
 from common import *
 from common import crypto, quicky
@@ -47,7 +46,7 @@ def init():
         if get_access_token(api_key, api_secret):
             # 加密保存到文件中
             if not os.path.exists(token_file_path):
-                file.write_file(crypto.Crypto().encrypt(json.dumps({"api_key": api_key, "api_secret": api_secret})), token_file_path, file.WRITE_FILE_TYPE_REPLACE)
+                file.write_file(crypto.Crypto().encrypt(tool.json_encode({"api_key": api_key, "api_secret": api_secret})), token_file_path, file.WRITE_FILE_TYPE_REPLACE)
             output.print_msg("access token get succeed!")
             return True
         output.print_msg("incorrect api info, please type again!")
