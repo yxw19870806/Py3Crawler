@@ -131,21 +131,5 @@ class CNU(crawler.Crawler):
         file.write_file(str(self.album_id), self.save_data_path, file.WRITE_FILE_TYPE_REPLACE)
 
 
-class CrawlerThread(crawler.CrawlerThread):
-    def __init__(self, main_thread, file_path, photo_url, photo_index):
-        crawler.CrawlerThread.__init__(self, [], main_thread)
-        self.file_path = file_path
-        self.photo_url = photo_url
-        self.photo_index = photo_index
-        self.result = None
-
-    def run(self):
-        self.result = net.Download(self.photo_url, self.file_path)
-        self.notify_main_thread()
-
-    def get_result(self):
-        return self.result
-
-
 if __name__ == "__main__":
     CNU().main()
