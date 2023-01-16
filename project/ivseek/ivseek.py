@@ -185,8 +185,7 @@ class IvSeek(crawler.Crawler):
         log.step("最新视频id：%s" % index_response["max_archive_id"])
 
         for archive_id in range(self.save_id, index_response["max_archive_id"]):
-            if not self.is_running():
-                break
+            self.running_check()
 
             archive_description = "视频%s" % archive_id
             self.start_parse(archive_description)
