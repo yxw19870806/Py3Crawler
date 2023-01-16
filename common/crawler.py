@@ -596,6 +596,26 @@ class CrawlerThread(threading.Thread):
         return download_return
 
 
+class DownloadThread(CrawlerThread):
+    def __init__(self, main_thread, file_path, file_url, file_description):
+        CrawlerThread.__init__(self, [], main_thread)
+        self.file_path = file_path
+        self.file_url = file_url
+        self.file_description = file_description
+        self.result: Optional[net.Download] = None
+        self.header_list = {}
+
+    def run(self):
+        self.result = self.download(self.file_url, self.file_path, self.file_description, header_list=self.header_list)
+        self.notify_main_thread()
+
+    def get_result(self):
+        return self.result and self.result.is_success()
+
+    def set_download_header(self, header_list):
+        self.header_list = header_list
+
+
 class CrawlerException(SystemExit):
     def __init__(self, msg: str = "", is_print: bool = True):
         SystemExit.__init__(self, 1)
