@@ -68,10 +68,10 @@ class Template(crawler.Crawler):
                     break
 
         # 下载线程
-        self.download_thread = Download
+        self.crawler_thread = CrawlerThread
         
 
-class Download(crawler.CrawlerThread):
+class CrawlerThread(crawler.CrawlerThread):
     def __init__(self, single_save_data, main_thread):
         crawler.CrawlerThread.__init__(self, single_save_data, main_thread)
         self.index_key = self.single_save_data[0]
