@@ -220,7 +220,7 @@ class Ameblo(crawler.Crawler):
         self.save_data = crawler.read_save_data(self.save_data_path, 0, ["", "0"])
 
         # 下载线程
-        self.download_thread = Download
+        self.crawler_thread = CrawlerThread
 
     def init(self):
         # 检测登录状态
@@ -234,7 +234,7 @@ class Ameblo(crawler.Crawler):
                     break
 
 
-class Download(crawler.CrawlerThread):
+class CrawlerThread(crawler.CrawlerThread):
     def __init__(self, single_save_data, main_thread):
         self.index_key = single_save_data[0]  # account id
         if len(single_save_data) >= 3 and single_save_data[2]:

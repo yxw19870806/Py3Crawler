@@ -69,7 +69,7 @@ class Crawler(object):
     print_function = None
     thread_event = None
     process_status = True  # 主进程是否在运行
-    download_thread = None  # 下载子线程
+    crawler_thread = None  # 下载子线程
 
     # 程序全局变量的设置
     def __init__(self, sys_config, **kwargs):
@@ -291,7 +291,7 @@ class Crawler(object):
 
             self._main()
         except (KeyboardInterrupt, SystemExit) as e:
-            if self.download_thread and issubclass(self.download_thread, CrawlerThread):
+            if self.crawler_thread and issubclass(self.crawler_thread, CrawlerThread):
                 self.stop_process()
             else:
                 if isinstance(e, SystemExit) and e.code == tool.PROCESS_EXIT_CODE_ERROR:
@@ -315,7 +315,7 @@ class Crawler(object):
         self.end_message()
 
     def _main(self):
-        if self.download_thread and issubclass(self.download_thread, CrawlerThread):
+        if self.crawler_thread and issubclass(self.crawler_thread, CrawlerThread):
             # 循环下载每个id
             thread_list = []
             for index_key in sorted(self.save_data.keys()):
@@ -324,7 +324,7 @@ class Crawler(object):
                     break
 
                 # 开始下载
-                thread = self.download_thread(self.save_data[index_key], self)
+                thread = self.crawler_thread(self.save_data[index_key], self)
                 thread.start()
                 thread_list.append(thread)
 

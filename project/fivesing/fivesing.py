@@ -89,10 +89,10 @@ class FiveSing(crawler.Crawler):
         self.save_data = crawler.read_save_data(self.save_data_path, 0, ["", "0", "0"])
 
         # 下载线程
-        self.download_thread = Download
+        self.crawler_thread = CrawlerThread
 
 
-class Download(crawler.CrawlerThread):
+class CrawlerThread(crawler.CrawlerThread):
     EACH_PAGE_AUDIO_COUNT = 20  # 每页歌曲数量上限（请求数量是无法修改的，只做判断使用）
     AUDIO_TYPE_YC = "yc"  # 歌曲类型：原唱
     AUDIO_TYPE_FC = "fc"  # 歌曲类型：翻唱
