@@ -213,14 +213,14 @@ class Weibo(crawler.Crawler):
                 tool.process_exit()
 
 
-class Download(crawler.DownloadThread):
+class Download(crawler.CrawlerThread):
     def __init__(self, single_save_data, main_thread):
         self.index_key = single_save_data[0]  # account id
         if len(single_save_data) >= 4 and single_save_data[3]:
             self.display_name = single_save_data[3]
         else:
             self.display_name = single_save_data[0]
-        crawler.DownloadThread.__init__(self, single_save_data, main_thread)
+        crawler.CrawlerThread.__init__(self, single_save_data, main_thread)
 
     def _run(self):
         # 图片下载

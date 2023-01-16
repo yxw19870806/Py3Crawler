@@ -92,7 +92,7 @@ class FiveSing(crawler.Crawler):
         self.download_thread = Download
 
 
-class Download(crawler.DownloadThread):
+class Download(crawler.CrawlerThread):
     EACH_PAGE_AUDIO_COUNT = 20  # 每页歌曲数量上限（请求数量是无法修改的，只做判断使用）
     AUDIO_TYPE_YC = "yc"  # 歌曲类型：原唱
     AUDIO_TYPE_FC = "fc"  # 歌曲类型：翻唱
@@ -106,7 +106,7 @@ class Download(crawler.DownloadThread):
             self.display_name = single_save_data[3]
         else:
             self.display_name = single_save_data[0]
-        crawler.DownloadThread.__init__(self, single_save_data, main_thread)
+        crawler.CrawlerThread.__init__(self, single_save_data, main_thread)
 
     def _run(self):
         for audio_type in list(self.audio_type_to_index_dict.keys()):

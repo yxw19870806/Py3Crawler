@@ -291,7 +291,7 @@ class Crawler(object):
 
             self._main()
         except (KeyboardInterrupt, SystemExit) as e:
-            if self.download_thread and issubclass(self.download_thread, DownloadThread):
+            if self.download_thread and issubclass(self.download_thread, CrawlerThread):
                 self.stop_process()
             else:
                 if isinstance(e, SystemExit) and e.code == tool.PROCESS_EXIT_CODE_ERROR:
@@ -315,7 +315,7 @@ class Crawler(object):
         self.end_message()
 
     def _main(self):
-        if self.download_thread and issubclass(self.download_thread, DownloadThread):
+        if self.download_thread and issubclass(self.download_thread, CrawlerThread):
             # 循环下载每个id
             thread_list = []
             for index_key in sorted(self.save_data.keys()):
@@ -422,7 +422,7 @@ class Crawler(object):
         return download_return
 
 
-class DownloadThread(threading.Thread):
+class CrawlerThread(threading.Thread):
     main_thread = None
     thread_lock = None
     display_name = None

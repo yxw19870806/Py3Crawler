@@ -436,13 +436,13 @@ class Tumblr(crawler.Crawler):
                     break
 
 
-class Download(crawler.DownloadThread):
+class Download(crawler.CrawlerThread):
     is_https = True
     is_private = False
 
     def __init__(self, single_save_data, main_thread):
         self.index_key = self.display_name = single_save_data[0]  # account id
-        crawler.DownloadThread.__init__(self, single_save_data, main_thread)
+        crawler.CrawlerThread.__init__(self, single_save_data, main_thread)
 
     def _run(self):
         try:
