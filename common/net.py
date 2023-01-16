@@ -14,7 +14,7 @@ import time
 import threading
 import urllib.parse
 import urllib3
-from typing import Optional
+from typing import Optional, List
 from urllib3._collections import HTTPHeaderDict
 
 try:
@@ -200,7 +200,7 @@ def get_cookies_from_response_header(response_headers: HTTPHeaderDict) -> dict:
     return cookies_list
 
 
-def get_file_extension(file_url: str, default_file_type: str = ""):
+def get_file_extension(file_url: str, default_file_type: str = "") -> str:
     """
     获取url地址的文件类型
     """
@@ -212,7 +212,7 @@ def get_file_extension(file_url: str, default_file_type: str = ""):
         return file_name_and_type[-1]
 
 
-def url_encode(url):
+def url_encode(url: str) -> str:
     """
     url编码：百分号编码(Percent-Encoding)
     e.g. 'https://www.example.com/测 试/' -> 'https://www.example.com/%E6%B5%8B%20%E8%AF%95/'
@@ -220,9 +220,11 @@ def url_encode(url):
     return urllib.parse.quote(url, safe=";/?:@&=+$,%")
 
 
-def request(url, method="GET", fields=None, binary_data=None, header_list=None, cookies_list=None, encode_multipart=False, json_decode=False,
-            is_auto_proxy=True, is_auto_redirect=True, is_gzip=True, is_url_encode=True, is_auto_retry=True, is_random_ip=True,
-            is_check_qps=True, connection_timeout=NET_CONFIG["HTTP_CONNECTION_TIMEOUT"], read_timeout=NET_CONFIG["HTTP_READ_TIMEOUT"]):
+def request(url, method: str = "GET", fields: Optional[dict] = None, binary_data: Optional[str] = None, header_list: Optional[dict] = None,
+            cookies_list: Optional[dict] = None, encode_multipart: bool = False, json_decode: bool = False, is_auto_proxy: bool = True,
+            is_auto_redirect: bool = True, is_gzip: bool = True, is_url_encode: bool = True, is_auto_retry: bool = True, is_random_ip: bool = True,
+            is_check_qps: bool = True, connection_timeout: int = NET_CONFIG["HTTP_CONNECTION_TIMEOUT"],
+            read_timeout: int = NET_CONFIG["HTTP_READ_TIMEOUT"]):
     """
     HTTP请求
 
@@ -350,9 +352,10 @@ def request(url, method="GET", fields=None, binary_data=None, header_list=None, 
             elif isinstance(e, urllib3.exceptions.DecodeError):
                 if message.find("'Received response with content-encoding: gzip, but failed to decode it.'") >= 0:
                     return request(url, method=method, fields=fields, binary_data=binary_data, header_list=header_list, cookies_list=cookies_list,
-                                   encode_multipart=encode_multipart, json_decode=json_decode, is_auto_proxy=is_auto_proxy, is_auto_redirect=is_auto_redirect,
-                                   is_gzip=False, is_url_encode=False, is_auto_retry=is_auto_retry, is_random_ip=is_random_ip, is_check_qps=is_check_qps,
-                                   connection_timeout=connection_timeout, read_timeout=read_timeout)
+                                   encode_multipart=encode_multipart, json_decode=json_decode, is_auto_proxy=is_auto_proxy,
+                                   is_auto_redirect=is_auto_redirect, is_gzip=False, is_url_encode=False, is_auto_retry=is_auto_retry,
+                                   is_random_ip=is_random_ip, is_check_qps=is_check_qps, connection_timeout=connection_timeout,
+                                   read_timeout=read_timeout)
             # import traceback
             # output.print_msg(message)
             # output.print_msg(traceback.format_exc())
@@ -369,7 +372,7 @@ def request(url, method="GET", fields=None, binary_data=None, header_list=None, 
             return ErrorResponse(HTTP_RETURN_CODE_RETRY)
 
 
-def _qps(url):
+def _qps(url: str) -> bool:
     # 当前分钟
     day_minuter = int(time.strftime("%Y%m%d%H%M"))
     if day_minuter not in QPS:
@@ -396,7 +399,7 @@ def _qps(url):
     return False
 
 
-def _random_user_agent(browser_type=None):
+def _random_user_agent(browser_type: Optional[str] = None) -> str:
     """
     随机获取一个user agent
         Common firefox user agent   "Mozilla/5.0 (Windows NT 6.1; WOW64; rv:46.0) Gecko/20100101 Firefox/46.0"
@@ -423,14 +426,14 @@ def _random_user_agent(browser_type=None):
     return ""
 
 
-def _random_ip_address():
+def _random_ip_address() -> str:
     """
     Get a random IP address(not necessarily correct)
     """
     return f"{random.randint(1, 254)}.{random.randint(0, 255)}.{random.randint(0, 255)}.{random.randint(0, 255)}"
 
 
-def download_from_list(file_url_list, file_path, replace_if_exist=False, **kwargs):
+def download_from_list(file_url_list: List[str], file_path: str, replace_if_exist: bool = False, **kwargs) -> bool:
     """
     Visit web and save to local(multiple remote resource, single local file)
 
@@ -502,7 +505,8 @@ class Download:
     CODE_PROCESS_EXIT = -10
     CODE_FILE_CREATE_FAILED = -11
 
-    def __init__(self, file_url: str, file_path: str, recheck_file_extension: bool = False, auto_multipart_download: bool = False, replace_if_exist: Optional[bool] = None, **kwargs):
+    def __init__(self, file_url: str, file_path: str, recheck_file_extension: bool = False, auto_multipart_download: bool = False,
+                 replace_if_exist: Optional[bool] = None, **kwargs):
         """
         下载远程文件到本地
 
@@ -535,7 +539,7 @@ class Download:
 
         self.start_download()
 
-    def is_success(self):
+    def is_success(self) -> bool:
         return self.status == self.DOWNLOAD_SUCCEED
 
     def start_download(self):
@@ -653,12 +657,13 @@ class Download:
                         new_file_extension = content_type.split("/")[-1]
                     self.file_path = os.path.splitext(self.file_path)[0] + "." + new_file_extension
 
-    def single_download(self):
+    def single_download(self) -> bool:
         """
         单线程下载
         """
         try:
-            file_response = request(self.file_url, method="GET", connection_timeout=NET_CONFIG["DOWNLOAD_CONNECTION_TIMEOUT"], read_timeout=NET_CONFIG["DOWNLOAD_READ_TIMEOUT"], **self.kwargs.copy())
+            file_response = request(self.file_url, method="GET", connection_timeout=NET_CONFIG["DOWNLOAD_CONNECTION_TIMEOUT"],
+                                    read_timeout=NET_CONFIG["DOWNLOAD_READ_TIMEOUT"], **self.kwargs.copy())
         except SystemExit:
             return False
 
@@ -699,7 +704,7 @@ class Download:
                 raise
         return True
 
-    def multipart_download(self):
+    def multipart_download(self) -> bool:
         """
         分段下载
         """
@@ -726,7 +731,9 @@ class Download:
                 with os.fdopen(os.dup(file_no), "rb+", -1) as fd_handle:
                     for multipart_retry_count in range(NET_CONFIG["DOWNLOAD_RETRY_COUNT"]):
                         try:
-                            multipart_response = request(self.file_url, method="GET", header_list=header_list, connection_timeout=NET_CONFIG["DOWNLOAD_CONNECTION_TIMEOUT"], read_timeout=NET_CONFIG["DOWNLOAD_READ_TIMEOUT"], **multipart_kwargs)
+                            multipart_response = request(self.file_url, method="GET", header_list=header_list,
+                                                         connection_timeout=NET_CONFIG["DOWNLOAD_CONNECTION_TIMEOUT"],
+                                                         read_timeout=NET_CONFIG["DOWNLOAD_READ_TIMEOUT"], **multipart_kwargs)
                         except SystemExit:
                             return False
                         if multipart_response.status == 206:
