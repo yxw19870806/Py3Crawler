@@ -200,7 +200,7 @@ class Weibo(crawler.Crawler):
         self.save_data = crawler.read_save_data(self.save_data_path, 0, ["", "0", "0"])
 
         # 下载线程
-        self.download_thread = Download
+        self.crawler_thread = CrawlerThread
 
     def init(self):
         # 检测登录状态
@@ -213,7 +213,7 @@ class Weibo(crawler.Crawler):
                 tool.process_exit()
 
 
-class Download(crawler.CrawlerThread):
+class CrawlerThread(crawler.CrawlerThread):
     def __init__(self, single_save_data, main_thread):
         self.index_key = single_save_data[0]  # account id
         if len(single_save_data) >= 4 and single_save_data[3]:

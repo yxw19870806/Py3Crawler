@@ -102,13 +102,13 @@ class Lofter(crawler.Crawler):
         self.save_data = crawler.read_save_data(self.save_data_path, 0, ["", "0"])
 
         # 下载线程
-        self.download_thread = Download
+        self.crawler_thread = CrawlerThread
 
     def init(self):
         init_session()
 
 
-class Download(crawler.CrawlerThread):
+class CrawlerThread(crawler.CrawlerThread):
     def __init__(self, single_save_data, main_thread):
         self.index_key = self.display_name = single_save_data[0]  # account name
         crawler.CrawlerThread.__init__(self, single_save_data, main_thread)
