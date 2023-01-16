@@ -131,7 +131,7 @@ class CNU(crawler.Crawler):
         file.write_file(str(self.album_id), self.save_data_path, file.WRITE_FILE_TYPE_REPLACE)
 
 
-class Download(crawler.CrawlerThread):
+class CrawlerThread(crawler.CrawlerThread):
     def __init__(self, main_thread, file_path, photo_url, photo_index):
         crawler.CrawlerThread.__init__(self, [], main_thread)
         self.file_path = file_path

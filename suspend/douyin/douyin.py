@@ -115,14 +115,14 @@ class DouYin(crawler.Crawler):
         CACHE_FILE_PATH = self.cache_data_path
 
         # 下载线程
-        self.download_thread = Download
+        self.crawler_thread = CrawlerThread
 
     def done(self):
         # 删除临时缓存目录
         path.delete_dir_or_file(CACHE_FILE_PATH)
 
 
-class Download(crawler.CrawlerThread):
+class CrawlerThread(crawler.CrawlerThread):
     def __init__(self, single_save_data, main_thread):
         self.index_key = single_save_data[0]  # account id
         if len(single_save_data) >= 3 and single_save_data[2]:
