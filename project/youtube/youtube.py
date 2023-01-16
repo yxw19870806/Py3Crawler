@@ -381,7 +381,7 @@ class Youtube(crawler.Crawler):
                     break
 
 
-class Download(crawler.DownloadThread):
+class Download(crawler.CrawlerThread):
     is_find = False
 
     def __init__(self, single_save_data, main_thread):
@@ -390,7 +390,7 @@ class Download(crawler.DownloadThread):
             self.display_name = single_save_data[3]
         else:
             self.display_name = single_save_data[0]
-        crawler.DownloadThread.__init__(self, single_save_data, main_thread)
+        crawler.CrawlerThread.__init__(self, single_save_data, main_thread)
 
     def _run(self):
         # 获取所有可下载视频

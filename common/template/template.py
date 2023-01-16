@@ -71,9 +71,9 @@ class Template(crawler.Crawler):
         self.download_thread = Download
         
 
-class Download(crawler.DownloadThread):
+class Download(crawler.CrawlerThread):
     def __init__(self, single_save_data, main_thread):
-        crawler.DownloadThread.__init__(self, single_save_data, main_thread)
+        crawler.CrawlerThread.__init__(self, single_save_data, main_thread)
         self.index_key = self.single_save_data[0]
         # 日志前缀
         self.display_name = self.single_save_data[0]
