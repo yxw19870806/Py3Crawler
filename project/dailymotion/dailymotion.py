@@ -6,7 +6,6 @@ https://www.dailymotion.com/
 email: hikaru870806@hotmail.com
 如有问题或建议请联系
 """
-import json
 import os
 import random
 import re
@@ -62,7 +61,7 @@ def get_one_page_video(account_id, page_count):
         "is_over": False,  # 是否最后一页视频
         "video_info_list": [],  # 全部视频信息
     }
-    api_response = net.request(api_url, method="POST", binary_data=json.dumps(post_data), header_list=header_list, json_decode=True)
+    api_response = net.request(api_url, method="POST", binary_data=tool.json_encode(post_data), header_list=header_list, json_decode=True)
     if api_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(api_response.status))
     # 获取所有视频

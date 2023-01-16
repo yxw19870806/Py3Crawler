@@ -6,7 +6,6 @@ https://store.steampowered.com/
 email: hikaru870806@hotmail.com
 如有问题或建议请联系
 """
-import json
 import os
 import urllib.parse
 from common import output, crawler, file, tool
@@ -62,7 +61,7 @@ def main():
         if len(wanted_card_list) == 0:
             # 已实际完成
             skip_list.append(game_id)
-            file.write_file(json.dumps(skip_list), skip_list_file_path, file.WRITE_FILE_TYPE_REPLACE)
+            file.write_file(tool.json_encode(skip_list), skip_list_file_path, file.WRITE_FILE_TYPE_REPLACE)
             continue
         if game_id in deleted_app_list:
             continue

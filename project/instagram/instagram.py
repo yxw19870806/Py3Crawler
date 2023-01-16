@@ -6,7 +6,6 @@ https://www.instagram.com/
 email: hikaru870806@hotmail.com
 如有问题或建议请联系
 """
-import json
 import os
 import time
 from common import *
@@ -66,7 +65,7 @@ def login_from_console():
             if input_str in ["y", "yes"]:
                 if _do_login(email, password):
                     if IS_LOCAL_SAVE_SESSION and SESSION_DATA_PATH:
-                        encrypt_string = crypto.Crypto().encrypt(json.dumps({"email": email, "password": password}))
+                        encrypt_string = crypto.Crypto().encrypt(tool.json_encode({"email": email, "password": password}))
                         file.write_file(encrypt_string, SESSION_DATA_PATH, file.WRITE_FILE_TYPE_REPLACE)
                     return True
                 return False

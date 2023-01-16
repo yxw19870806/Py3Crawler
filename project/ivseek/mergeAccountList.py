@@ -6,7 +6,6 @@ http://www.ivseek.com/
 email: hikaru870806@hotmail.com
 如有问题或建议请联系
 """
-import json
 import os
 from common import *
 from project.ivseek import ivseek
@@ -50,7 +49,7 @@ def main():
             print(e.http_error("niconico账号%s的视频列表" % account_id))
             continue
         niconico_mylist_list[account_id] = account_mylist_response["list_id_list"]
-        file.write_file(json.dumps(niconico_mylist_list), niconico_mylist_cache_path, file.WRITE_FILE_TYPE_REPLACE)
+        file.write_file(tool.json_encode(niconico_mylist_list), niconico_mylist_cache_path, file.WRITE_FILE_TYPE_REPLACE)
 
     # 更新youtube的存档文件
     for account_id in account_id_list["youtube"]:
