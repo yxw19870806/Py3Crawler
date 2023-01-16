@@ -300,7 +300,7 @@ class Twitter(crawler.Crawler):
         self.save_data = crawler.read_save_data(self.save_data_path, 0, ["", "", "0"])
 
         # 下载线程
-        self.download_thread = Download
+        self.crawler_thread = CrawlerThread
 
     def init(self):
         # 生成authorization，用于访问视频页
@@ -318,10 +318,10 @@ class Twitter(crawler.Crawler):
             tool.process_exit()
 
 
-class Download(crawler.DownloadThread):
+class CrawlerThread(crawler.CrawlerThread):
     def __init__(self, single_save_data, main_thread):
         self.index_key = self.display_name = single_save_data[0]  # account name
-        crawler.DownloadThread.__init__(self, single_save_data, main_thread)
+        crawler.CrawlerThread.__init__(self, single_save_data, main_thread)
 
     def _run(self):
         try:

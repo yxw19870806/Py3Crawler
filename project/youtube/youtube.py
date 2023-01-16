@@ -6,7 +6,6 @@ https://www.youtube.com/
 email: hikaru870806@hotmail.com
 如有问题或建议请联系
 """
-import json
 import os
 import re
 import time
@@ -109,7 +108,7 @@ def get_one_page_video(account_id, token):
             "x-youtube-client-name": "1",
             "x-youtube-client-version": "2.20221101.00.00",
         }
-        video_pagination_response = net.request(query_url, method="POST", binary_data=json.dumps(post_data), header_list=header_list, json_decode=True)
+        video_pagination_response = net.request(query_url, method="POST", binary_data=tool.json_encode(post_data), header_list=header_list, json_decode=True)
         if video_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
             raise crawler.CrawlerException(crawler.request_failre(video_pagination_response.status))
         video_info_list = crawler.get_json_value(video_pagination_response.json_data, "onResponseReceivedActions", 0, "appendContinuationItemsAction", "continuationItems", type_check=list)
@@ -364,7 +363,7 @@ class Youtube(crawler.Crawler):
         self.save_data = crawler.read_save_data(self.save_data_path, 0, ["", "", "0"])
 
         # 下载线程
-        self.download_thread = Download
+        self.crawler_thread = CrawlerThread
 
     def init(self):
         # 检测登录状态
@@ -381,7 +380,7 @@ class Youtube(crawler.Crawler):
                     break
 
 
-class Download(crawler.DownloadThread):
+class CrawlerThread(crawler.CrawlerThread):
     is_find = False
 
     def __init__(self, single_save_data, main_thread):
@@ -390,7 +389,7 @@ class Download(crawler.DownloadThread):
             self.display_name = single_save_data[3]
         else:
             self.display_name = single_save_data[0]
-        crawler.DownloadThread.__init__(self, single_save_data, main_thread)
+        crawler.CrawlerThread.__init__(self, single_save_data, main_thread)
 
     def _run(self):
         # 获取所有可下载视频

@@ -30,7 +30,7 @@ class Crypto:
         # 任意字符串MD5后生成32位的key，然后base64
         self.PRIVATE_KEY = base64.urlsafe_b64encode(hashlib.md5(private_key.encode()).hexdigest().encode())
 
-    def encrypt(self, s):
+    def encrypt(self, s) -> str:
         if not isinstance(s, bytes):
             s = str(s).encode("UTF-8")
         f = Fernet(self.PRIVATE_KEY)

@@ -78,7 +78,7 @@ class Chrome:
         self.chrome.quit()
 
 
-def _get_chrome_user_data_path():
+def _get_chrome_user_data_path() -> str:
     return os.path.abspath(os.path.join(os.getenv("LOCALAPPDATA"), "Google", "Chrome", "User Data"))
 
 
@@ -121,13 +121,8 @@ def get_default_browser_cookie_path(browser_type: str) -> Optional[str]:
         if os.path.exists(profile_file_path):
             with open(profile_file_path, "r", encoding="UTF-8") as file_handle:
                 profile_info = json.load(file_handle)
-                if "profile" in profile_info:
-                    if "info_cache" in profile_info["profile"] and isinstance(profile_info["profile"]["info_cache"], dict) and len(profile_info["profile"]["info_cache"]) == 1:
-                        default_profile_name = list(profile_info["profile"]["info_cache"].keys())[0]
-                    elif "last_used" in profile_info["profile"]:
-                        default_profile_name = profile_info["profile"]["last_used"]
-                    elif "last_active_profiles" in profile_info["profile"] and isinstance(profile_info["profile"]["last_active_profiles"], dict) and len(profile_info["profile"]["last_active_profiles"]) == 1:
-                        default_profile_name = profile_info["profile"]["last_active_profiles"][0]
+                if "profile" in profile_info and "last_used" in profile_info["profile"]:
+                    default_profile_name = profile_info["profile"]["last_used"]
         return os.path.join(browser_data_path, default_profile_name)
     elif browser_type == BROWSER_TYPE_TEXT:
         return os.path.abspath(os.path.join(crawler.PROJECT_APP_PATH, "info", "cookies.data"))

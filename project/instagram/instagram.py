@@ -6,7 +6,6 @@ https://www.instagram.com/
 email: hikaru870806@hotmail.com
 如有问题或建议请联系
 """
-import json
 import os
 import time
 from common import *
@@ -66,7 +65,7 @@ def login_from_console():
             if input_str in ["y", "yes"]:
                 if _do_login(email, password):
                     if IS_LOCAL_SAVE_SESSION and SESSION_DATA_PATH:
-                        encrypt_string = crypto.Crypto().encrypt(json.dumps({"email": email, "password": password}))
+                        encrypt_string = crypto.Crypto().encrypt(tool.json_encode({"email": email, "password": password}))
                         file.write_file(encrypt_string, SESSION_DATA_PATH, file.WRITE_FILE_TYPE_REPLACE)
                     return True
                 return False
@@ -318,7 +317,7 @@ class Instagram(crawler.Crawler):
         self.save_data = crawler.read_save_data(self.save_data_path, 0, ["", "", "0"])
 
         # 下载线程
-        self.download_thread = Download
+        self.crawler_thread = CrawlerThread
 
     def init(self):
         # 生成session信息
@@ -338,10 +337,10 @@ class Instagram(crawler.Crawler):
                     tool.process_exit()
 
 
-class Download(crawler.DownloadThread):
+class CrawlerThread(crawler.CrawlerThread):
     def __init__(self, single_save_data, main_thread):
         self.index_key = self.display_name = single_save_data[0]  # account name
-        crawler.DownloadThread.__init__(self, single_save_data, main_thread)
+        crawler.CrawlerThread.__init__(self, single_save_data, main_thread)
 
     def _run(self):
         # 获取首页

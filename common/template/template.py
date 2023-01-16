@@ -5,7 +5,6 @@
 email: hikaru870806@hotmail.com
 如有问题或建议请联系
 """
-import json
 import os
 import re
 import time
@@ -68,12 +67,12 @@ class Template(crawler.Crawler):
                     break
 
         # 下载线程
-        self.download_thread = Download
+        self.crawler_thread = CrawlerThread
         
 
-class Download(crawler.DownloadThread):
+class CrawlerThread(crawler.CrawlerThread):
     def __init__(self, single_save_data, main_thread):
-        crawler.DownloadThread.__init__(self, single_save_data, main_thread)
+        crawler.CrawlerThread.__init__(self, single_save_data, main_thread)
         self.index_key = self.single_save_data[0]
         # 日志前缀
         self.display_name = self.single_save_data[0]

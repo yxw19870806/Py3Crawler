@@ -69,7 +69,7 @@ class Crawler(object):
     print_function = None
     thread_event = None
     process_status = True  # 主进程是否在运行
-    download_thread = None  # 下载子线程
+    crawler_thread = None  # 下载子线程
 
     # 程序全局变量的设置
     def __init__(self, sys_config, **kwargs):
@@ -291,7 +291,7 @@ class Crawler(object):
 
             self._main()
         except (KeyboardInterrupt, SystemExit) as e:
-            if self.download_thread and issubclass(self.download_thread, DownloadThread):
+            if self.crawler_thread and issubclass(self.crawler_thread, CrawlerThread):
                 self.stop_process()
             else:
                 if isinstance(e, SystemExit) and e.code == tool.PROCESS_EXIT_CODE_ERROR:
@@ -315,7 +315,7 @@ class Crawler(object):
         self.end_message()
 
     def _main(self):
-        if self.download_thread and issubclass(self.download_thread, DownloadThread):
+        if self.crawler_thread and issubclass(self.crawler_thread, CrawlerThread):
             # 循环下载每个id
             thread_list = []
             for index_key in sorted(self.save_data.keys()):
@@ -324,7 +324,7 @@ class Crawler(object):
                     break
 
                 # 开始下载
-                thread = self.download_thread(self.save_data[index_key], self)
+                thread = self.crawler_thread(self.save_data[index_key], self)
                 thread.start()
                 thread_list.append(thread)
 
@@ -360,14 +360,18 @@ class Crawler(object):
         net.EXIT_FLAG = True
         net.resume_request()
 
-    def get_run_time(self):
+    def get_run_time(self) -> int:
         """
         获取程序已运行时间（秒）
         """
         return int(time.time() - self.start_time)
 
-    def is_running(self):
+    def is_running(self) -> bool:
         return self.process_status
+
+    def running_check(self):
+        if not self.is_running():
+            tool.process_exit(tool.PROCESS_EXIT_CODE_NORMAL)
 
     def write_remaining_save_data(self):
         """
@@ -422,7 +426,7 @@ class Crawler(object):
         return download_return
 
 
-class DownloadThread(threading.Thread):
+class CrawlerThread(threading.Thread):
     main_thread = None
     thread_lock = None
     display_name = None
@@ -535,7 +539,7 @@ class DownloadThread(threading.Thread):
                 return True
         return False
 
-    def format_message(self, message: str):
+    def format_message(self, message: str) -> str:
         if self.display_name is not None:
             return self.display_name + " " + message
         else:
@@ -596,6 +600,26 @@ class DownloadThread(threading.Thread):
         return download_return
 
 
+class DownloadThread(CrawlerThread):
+    def __init__(self, main_thread: Crawler, file_path: str, file_url: str, file_description: str):
+        CrawlerThread.__init__(self, [], main_thread)
+        self.file_path = file_path
+        self.file_url = file_url
+        self.file_description = file_description
+        self.result: Optional[net.Download] = None
+        self.header_list = {}
+
+    def run(self):
+        self.result = self.download(self.file_url, self.file_path, self.file_description, header_list=self.header_list)
+        self.notify_main_thread()
+
+    def get_result(self) -> bool:
+        return self.result and self.result.is_success()
+
+    def set_download_header(self, header_list: dict):
+        self.header_list = header_list
+
+
 class CrawlerException(SystemExit):
     def __init__(self, msg: str = "", is_print: bool = True):
         SystemExit.__init__(self, 1)
@@ -607,11 +631,11 @@ class CrawlerException(SystemExit):
     def message(self) -> str:
         return self.exception_message
 
-    def http_error(self, target: str):
+    def http_error(self, target: str) -> str:
         return "%s解析失败，原因：%s" % (target, self.message)
 
 
-def read_config(config_path) -> dict:
+def read_config(config_path: str) -> dict:
     """
     读取配置文件
     """
