@@ -369,6 +369,10 @@ class Crawler(object):
     def is_running(self):
         return self.process_status
 
+    def running_check(self):
+        if not self.is_running():
+            tool.process_exit(tool.PROCESS_EXIT_CODE_NORMAL)
+
     def write_remaining_save_data(self):
         """
         将剩余未处理的存档数据写入临时存档文件
