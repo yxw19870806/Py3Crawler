@@ -140,8 +140,7 @@ class Favorite(crawler.Crawler):
         page_count = 1
         is_over = False
         while not is_over:
-            if not self.is_running():
-                tool.process_exit(tool.PROCESS_EXIT_CODE_NORMAL)
+            self.running_check()
 
             pagination_description = "第%s页收藏" % page_count
             self.start_parse(pagination_description)
