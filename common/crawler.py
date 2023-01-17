@@ -201,7 +201,7 @@ class Crawler(object):
             self.content_download_path = ""
 
         # 是否在下载失败后退出线程的运行
-        self.thread_exit_after_download_failure = analysis_config(config, "THREAD_EXIT_AFTER_DOWNLOAD_FAILURE", "\\\\content", CONFIG_ANALYSIS_MODE_BOOLEAN)
+        self.exit_after_download_failure = analysis_config(config, "EXIT_AFTER_DOWNLOAD_FAILURE", "\\\\content", CONFIG_ANALYSIS_MODE_BOOLEAN)
 
         # 代理
         is_proxy = analysis_config(config, "IS_PROXY", 2, CONFIG_ANALYSIS_MODE_INTEGER)
