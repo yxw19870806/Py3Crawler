@@ -100,13 +100,13 @@ class CrawlerThread(crawler.CrawlerThread):
     audio_type_to_index_dict = {AUDIO_TYPE_YC: 1, AUDIO_TYPE_FC: 2}  # 存档文件里的下标
     audio_type_name_dict = {AUDIO_TYPE_YC: "原唱", AUDIO_TYPE_FC: "翻唱"}  # 显示名字
 
-    def __init__(self, single_save_data, main_thread):
+    def __init__(self, main_thread, single_save_data):
         self.index_key = single_save_data[0]  # account id
         if len(single_save_data) >= 4 and single_save_data[3]:
             self.display_name = single_save_data[3]
         else:
             self.display_name = single_save_data[0]
-        crawler.CrawlerThread.__init__(self, single_save_data, main_thread)
+        crawler.CrawlerThread.__init__(self, main_thread, single_save_data)
 
     def _run(self):
         for audio_type in list(self.audio_type_to_index_dict.keys()):

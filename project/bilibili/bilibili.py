@@ -392,13 +392,13 @@ class BiliBili(crawler.Crawler):
 
 
 class CrawlerThread(crawler.CrawlerThread):
-    def __init__(self, single_save_data, main_thread):
+    def __init__(self, main_thread, single_save_data):
         self.index_key = single_save_data[0]  # account id
         if len(single_save_data) >= 5 and single_save_data[4]:
             self.display_name = single_save_data[4]
         else:
             self.display_name = single_save_data[0]
-        crawler.CrawlerThread.__init__(self, single_save_data, main_thread)
+        crawler.CrawlerThread.__init__(self, main_thread, single_save_data)
 
     def _run(self):
         # 视频下载

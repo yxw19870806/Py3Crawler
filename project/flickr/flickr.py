@@ -230,9 +230,9 @@ class Flickr(crawler.Crawler):
 class CrawlerThread(crawler.CrawlerThread):
     request_id = tool.generate_random_string(8)  # 生成一个随机的request id用作访问（模拟页面传入）
 
-    def __init__(self, single_save_data, main_thread):
+    def __init__(self, main_thread, single_save_data):
         self.index_key = self.display_name = single_save_data[0]  # account name
-        crawler.CrawlerThread.__init__(self, single_save_data, main_thread)
+        crawler.CrawlerThread.__init__(self, main_thread, single_save_data)
 
     def _run(self):
         # 获取相册首页页面
