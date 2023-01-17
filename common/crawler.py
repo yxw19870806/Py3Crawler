@@ -15,7 +15,7 @@ import threading
 import time
 import traceback
 import warnings
-from typing import Callable, Union
+from typing import Callable, Optional, Union
 
 
 # 项目根目录
@@ -603,7 +603,7 @@ class CrawlerThread(threading.Thread):
 
 class DownloadThread(CrawlerThread):
     def __init__(self, main_thread: Crawler, file_url: str, file_path: str, file_description: str):
-        CrawlerThread.__init__(self, [], main_thread)
+        CrawlerThread.__init__(self, main_thread, [])
         self.file_url = file_url
         self.file_path = file_path
         self.file_description = file_description
