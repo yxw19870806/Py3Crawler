@@ -179,7 +179,6 @@ def get_all_cookie_from_browser(browser_type: str, file_path: str) -> dict:
         # chrome仅支持windows系统的解密
         if platform.system() != "Windows":
             return {}
-
         profile_file_path = os.path.join(_get_chrome_user_data_path(), "Local State")
         encrypted_key = ""
         if os.path.exists(profile_file_path):
@@ -190,7 +189,6 @@ def get_all_cookie_from_browser(browser_type: str, file_path: str) -> dict:
         if not encrypted_key:
             output.print_msg("encrypted_key获取失败")
             return {}
-
         encrypted_key = base64.b64decode(encrypted_key.encode())[5:]
         try:
             encrypted_key = win32crypt.CryptUnprotectData(encrypted_key, None, None, None, 0)[1]
