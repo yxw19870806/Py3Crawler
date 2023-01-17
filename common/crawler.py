@@ -748,22 +748,6 @@ def read_save_data(save_data_path: str, key_index: int = 0, default_value_list: 
     return result_list
 
 
-def rewrite_save_file(temp_save_data_path: str, save_data_path: str):
-    """
-    将临时存档文件按照主键排序后写入原始存档文件
-    只支持一行一条记录，每条记录格式相同的存档文件
-    """
-    warnings.warn(
-        "rewrite_save_file commands are deprecated.",
-        DeprecationWarning,
-        stacklevel=2,
-    )
-    account_list = read_save_data(temp_save_data_path, 0, [])
-    temp_list = [account_list[key] for key in sorted(account_list.keys())]
-    file.write_file(tool.list_to_string(temp_list), save_data_path, file.WRITE_FILE_TYPE_REPLACE)
-    path.delete_dir_or_file(temp_save_data_path)
-
-
 def get_json_value(json_data, *args, **kwargs):
     """
     获取一个json文件的指定字段
