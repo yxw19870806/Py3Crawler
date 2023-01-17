@@ -602,10 +602,10 @@ class CrawlerThread(threading.Thread):
 
 
 class DownloadThread(CrawlerThread):
-    def __init__(self, main_thread: Crawler, file_path: str, file_url: str, file_description: str):
+    def __init__(self, main_thread: Crawler, file_url: str, file_path: str, file_description: str):
         CrawlerThread.__init__(self, [], main_thread)
-        self.file_path = file_path
         self.file_url = file_url
+        self.file_path = file_path
         self.file_description = file_description
         self.result: Optional[net.Download] = None
         self.header_list = {}
