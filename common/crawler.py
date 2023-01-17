@@ -325,7 +325,7 @@ class Crawler(object):
                     break
 
                 # 开始下载
-                thread = self.crawler_thread(self.save_data[index_key], self)
+                thread = self.crawler_thread(self, self.save_data[index_key])
                 thread.start()
                 thread_list.append(thread)
 
@@ -433,7 +433,7 @@ class CrawlerThread(threading.Thread):
     display_name = None
     index_key = ''
 
-    def __init__(self, single_save_data: list, main_thread: Crawler):
+    def __init__(self, main_thread: Crawler, single_save_data: list):
         """
         多线程下载
 
@@ -446,10 +446,10 @@ class CrawlerThread(threading.Thread):
             tool.process_exit()
         try:
             threading.Thread.__init__(self)
-            self.single_save_data = single_save_data
             self.main_thread = main_thread
             self.thread_lock = main_thread.thread_lock
             main_thread.thread_semaphore.acquire()
+            self.single_save_data = single_save_data
         except KeyboardInterrupt:
             self.main_thread.stop_process()
         self.total_photo_count = 0

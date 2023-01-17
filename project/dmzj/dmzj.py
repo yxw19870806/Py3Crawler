@@ -91,13 +91,13 @@ class DMZJ(crawler.Crawler):
 
 
 class CrawlerThread(crawler.CrawlerThread):
-    def __init__(self, single_save_data, main_thread):
+    def __init__(self, main_thread, single_save_data):
         self.index_key = single_save_data[0]  # comic id
         if len(single_save_data) >= 3 and single_save_data[2]:
             self.display_name = single_save_data[2]
         else:
             self.display_name = single_save_data[0]
-        crawler.CrawlerThread.__init__(self, single_save_data, main_thread)
+        crawler.CrawlerThread.__init__(self, main_thread, single_save_data)
 
     def _run(self):
         # 获取所有可下载章节
