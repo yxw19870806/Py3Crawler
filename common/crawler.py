@@ -15,7 +15,7 @@ import threading
 import time
 import traceback
 import warnings
-from typing import Callable, Union
+from typing import Callable, Optional, Union
 
 
 # 项目根目录
@@ -133,9 +133,10 @@ class Crawler(object):
         # 应用配置
         self.app_config = {}
         if SYS_APP_CONFIG in sys_config and len(sys_config[SYS_APP_CONFIG]) > 0:
-            for app_config_template in sys_config[SYS_APP_CONFIG]:
-                if len(app_config_template) == 3:
-                    self.app_config[app_config_template[0]] = analysis_config(config, app_config_template[0], app_config_template[1], app_config_template[2])
+            for app_config_temp in sys_config[SYS_APP_CONFIG]:
+                if len(app_config_temp) != 3:
+                    continue
+                self.app_config[app_config_temp[0]] = analysis_config(config, app_config_temp[0], app_config_temp[1], app_config_temp[2])
 
         # 是否下载
         self.is_download_photo = analysis_config(config, "IS_DOWNLOAD_PHOTO", True, CONFIG_ANALYSIS_MODE_BOOLEAN) and sys_download_photo
@@ -143,8 +144,8 @@ class Crawler(object):
         self.is_download_audio = analysis_config(config, "IS_DOWNLOAD_AUDIO", True, CONFIG_ANALYSIS_MODE_BOOLEAN) and sys_download_audio
         self.is_download_content = analysis_config(config, "IS_DOWNLOAD_CONTENT", True, CONFIG_ANALYSIS_MODE_BOOLEAN) and sys_download_content
 
-        if not sys_not_download and not self.is_download_photo and not self.is_download_video and not self.is_download_audio and not self.is_download_content:
-            if sys_download_photo or sys_download_video or sys_download_audio or sys_download_content:
+        if not sys_not_download and (sys_download_photo or sys_download_video or sys_download_audio or sys_download_content):
+            if not (self.is_download_photo or self.is_download_video or self.is_download_audio or self.is_download_content):
                 output.print_msg("所有支持的下载都没有开启，请检查配置！")
                 tool.process_exit()
                 return
@@ -201,7 +202,7 @@ class Crawler(object):
             self.content_download_path = ""
 
         # 是否在下载失败后退出线程的运行
-        self.thread_exit_after_download_failure = analysis_config(config, "THREAD_EXIT_AFTER_DOWNLOAD_FAILURE", "\\\\content", CONFIG_ANALYSIS_MODE_BOOLEAN)
+        self.exit_after_download_failure = analysis_config(config, "EXIT_AFTER_DOWNLOAD_FAILURE", "\\\\content", CONFIG_ANALYSIS_MODE_BOOLEAN)
 
         # 代理
         is_proxy = analysis_config(config, "IS_PROXY", 2, CONFIG_ANALYSIS_MODE_INTEGER)
@@ -324,7 +325,7 @@ class Crawler(object):
                     break
 
                 # 开始下载
-                thread = self.crawler_thread(self.save_data[index_key], self)
+                thread = self.crawler_thread(self, self.save_data[index_key])
                 thread.start()
                 thread_list.append(thread)
 
@@ -413,15 +414,15 @@ class Crawler(object):
         log.trace("%s 解析结果：%s" % (description, parse_result_list))
         log.step("%s 解析数量：%s" % (description, len(parse_result_list)))
 
-    def download(self, url: str, file_path: str, file_description: str, success_callback: Callable[[str, str, str], bool] = None, **kwargs) -> net.Download:
-        log.step("开始下载 %s %s" % (file_description, url))
-        download_return = net.Download(url, file_path, **kwargs)
+    def download(self, file_url: str, file_path: str, file_description: str, success_callback: Callable[[str, str, str], bool] = None, **kwargs) -> net.Download:
+        log.step("开始下载 %s %s" % (file_description, file_url))
+        download_return = net.Download(file_url, file_path, **kwargs)
         if download_return.status == net.Download.DOWNLOAD_SUCCEED:
-            if success_callback is None or success_callback(url, file_path, file_description):
+            if success_callback is None or success_callback(file_url, file_path, file_description):
                 log.step("%s 下载成功" % file_description)
         else:
-            log.error("%s %s 下载失败，原因：%s" % (file_description, url, download_failre(download_return.code)))
-            if self.thread_exit_after_download_failure:
+            log.error("%s %s 下载失败，原因：%s" % (file_description, file_url, download_failre(download_return.code)))
+            if self.exit_after_download_failure:
                 tool.process_exit(tool.PROCESS_EXIT_CODE_NORMAL)
         return download_return
 
@@ -432,7 +433,7 @@ class CrawlerThread(threading.Thread):
     display_name = None
     index_key = ''
 
-    def __init__(self, single_save_data: list, main_thread: Crawler):
+    def __init__(self, main_thread: Crawler, single_save_data: list):
         """
         多线程下载
 
@@ -445,10 +446,10 @@ class CrawlerThread(threading.Thread):
             tool.process_exit()
         try:
             threading.Thread.__init__(self)
-            self.single_save_data = single_save_data
             self.main_thread = main_thread
             self.thread_lock = main_thread.thread_lock
             main_thread.thread_semaphore.acquire()
+            self.single_save_data = single_save_data
         except KeyboardInterrupt:
             self.main_thread.stop_process()
         self.total_photo_count = 0
@@ -532,7 +533,7 @@ class CrawlerThread(threading.Thread):
         """
         当下载失败，检测是否要退出线程
         """
-        if self.main_thread.thread_exit_after_download_failure:
+        if self.main_thread.exit_after_download_failure:
             if is_process_exit:
                 tool.process_exit(tool.PROCESS_EXIT_CODE_ERROR)
             else:
@@ -576,12 +577,12 @@ class CrawlerThread(threading.Thread):
         self.trace("%s 解析结果：%s" % (description, parse_result_list))
         self.step("%s 解析数量：%s" % (description, len(parse_result_list)))
 
-    def download(self, url: str, file_path: str, file_description: str, success_callback: Callable[[str, str, str, net.Download], bool] = None, **kwargs) -> net.Download:
+    def download(self, file_url: str, file_path: str, file_description: str, success_callback: Callable[[str, str, str, net.Download], bool] = None, **kwargs) -> net.Download:
         """
         下载
 
         :Args:
-        - url - 远程地址
+        - file_url - 远程地址
         - file_path - 本地下载路径
         - file_description - 文件描述
         - success_callback - 成功回调方法
@@ -589,22 +590,22 @@ class CrawlerThread(threading.Thread):
                 True - 下载成功
                 False - 下载文件无效
         """
-        self.step("开始下载 %s %s" % (file_description, url))
-        download_return = net.Download(url, file_path, **kwargs)
+        self.step("开始下载 %s %s" % (file_description, file_url))
+        download_return = net.Download(file_url, file_path, **kwargs)
         if download_return.status == net.Download.DOWNLOAD_SUCCEED:
-            if success_callback is None or success_callback(url, file_path, file_description, download_return):
+            if success_callback is None or success_callback(file_url, file_path, file_description, download_return):
                 self.step("%s 下载成功" % file_description)
         else:
-            self.error("%s %s 下载失败，原因：%s" % (file_description, url, download_failre(download_return.code)))
+            self.error("%s %s 下载失败，原因：%s" % (file_description, file_url, download_failre(download_return.code)))
             self.check_download_failure_exit()
         return download_return
 
 
 class DownloadThread(CrawlerThread):
-    def __init__(self, main_thread: Crawler, file_path: str, file_url: str, file_description: str):
-        CrawlerThread.__init__(self, [], main_thread)
-        self.file_path = file_path
+    def __init__(self, main_thread: Crawler, file_url: str, file_path: str, file_description: str):
+        CrawlerThread.__init__(self, main_thread, [])
         self.file_url = file_url
+        self.file_path = file_path
         self.file_description = file_description
         self.result: Optional[net.Download] = None
         self.header_list = {}
@@ -745,22 +746,6 @@ def read_save_data(save_data_path: str, key_index: int = 0, default_value_list: 
             index += 1
         result_list[single_save_list[key_index]] = single_save_list
     return result_list
-
-
-def rewrite_save_file(temp_save_data_path: str, save_data_path: str):
-    """
-    将临时存档文件按照主键排序后写入原始存档文件
-    只支持一行一条记录，每条记录格式相同的存档文件
-    """
-    warnings.warn(
-        "rewrite_save_file commands are deprecated.",
-        DeprecationWarning,
-        stacklevel=2,
-    )
-    account_list = read_save_data(temp_save_data_path, 0, [])
-    temp_list = [account_list[key] for key in sorted(account_list.keys())]
-    file.write_file(tool.list_to_string(temp_list), save_data_path, file.WRITE_FILE_TYPE_REPLACE)
-    path.delete_dir_or_file(temp_save_data_path)
 
 
 def get_json_value(json_data, *args, **kwargs):

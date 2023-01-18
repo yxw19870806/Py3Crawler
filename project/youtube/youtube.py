@@ -383,13 +383,13 @@ class Youtube(crawler.Crawler):
 class CrawlerThread(crawler.CrawlerThread):
     is_find = False
 
-    def __init__(self, single_save_data, main_thread):
+    def __init__(self, main_thread, single_save_data):
         self.index_key = single_save_data[0]  # account id
         if len(single_save_data) >= 4 and single_save_data[3]:
             self.display_name = single_save_data[3]
         else:
             self.display_name = single_save_data[0]
-        crawler.CrawlerThread.__init__(self, single_save_data, main_thread)
+        crawler.CrawlerThread.__init__(self, main_thread, single_save_data)
 
     def _run(self):
         # 获取所有可下载视频

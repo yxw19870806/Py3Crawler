@@ -49,7 +49,7 @@ def main():
         if video_info_response["extra_cookie"]:
             cookies_list.update(video_info_response["extra_cookie"])
         video_description = "视频%s《%s》 %s" % (video_id, video_info_response["video_title"], video_info_response["video_url"])
-        if not self.download(video_info_response["video_url"], video_path, video_description, cookies_list=cookies_list):
+        if not ivseek_class.download(video_info_response["video_url"], video_path, video_description, cookies_list=cookies_list):
             continue
 
         # 增加已处理标记

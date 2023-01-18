@@ -235,13 +235,13 @@ class Ameblo(crawler.Crawler):
 
 
 class CrawlerThread(crawler.CrawlerThread):
-    def __init__(self, single_save_data, main_thread):
+    def __init__(self, main_thread, single_save_data):
         self.index_key = single_save_data[0]  # account id
         if len(single_save_data) >= 3 and single_save_data[2]:
             self.display_name = single_save_data[2]
         else:
             self.display_name = single_save_data[0]
-        crawler.CrawlerThread.__init__(self, single_save_data, main_thread)
+        crawler.CrawlerThread.__init__(self, main_thread, single_save_data)
         self.duplicate_list = {}
 
     def _run(self):
@@ -356,29 +356,28 @@ class CrawlerThread(crawler.CrawlerThread):
             else:
                 self.duplicate_list[photo_url] = 1
 
-            photo_description = "日志%s第%s张图片" % (blog_id, photo_index)
-            self.step("开始下载 %s %s" % (photo_description, photo_url))
-
             photo_name = "%011d_%02d.%s" % (blog_id, photo_index, net.get_file_extension(photo_url, "jpg"))
             photo_path = os.path.join(self.main_thread.photo_download_path, self.index_key, photo_name)
-            download_return = net.Download(photo_url, photo_path)
-            if download_return.status == net.Download.DOWNLOAD_SUCCEED:
-                if check_photo_invalid(photo_path):
-                    path.delete_dir_or_file(photo_path)
-                    self.step("%s %s 不符合规则，删除" % (photo_description, photo_url))
-                    continue
-                else:
-                    self.temp_path_list.append(photo_path)  # 设置临时目录
-                    self.total_photo_count += 1  # 计数累加
-                    self.step("%s 下载成功" % photo_description)
-            else:
-                self.error("%s %s 下载失败，原因：%s" % (photo_description, photo_url, crawler.download_failre(download_return.code)))
-                self.check_download_failure_exit()
+            photo_description = "日志%s第%s张图片" % (blog_id, photo_index)
+            download_return = self.download(photo_url, photo_path, photo_description, success_callback=self.download_success_callback)
+            if download_return.is_success() and not download_return.ext_is_invalid_photo:
+                self.temp_path_list.append(photo_path)  # 设置临时目录
+                self.total_photo_count += 1  # 计数累加
+
             photo_index += 1
 
         # 日志内图片全部下载完毕
         self.temp_path_list = []  # 临时目录设置清除
         self.single_save_data[1] = str(blog_id)  # 设置存档记录
+
+    def download_success_callback(self, photo_url, photo_path, photo_description, download_return: net.Download):
+        if check_photo_invalid(photo_path):
+            path.delete_dir_or_file(photo_path)
+            self.step("%s %s 不符合规则，删除" % (photo_description, photo_url))
+            download_return.ext_is_invalid_photo = True
+            return False
+        download_return.ext_is_invalid_photo = False
+        return True
 
 
 if __name__ == "__main__":

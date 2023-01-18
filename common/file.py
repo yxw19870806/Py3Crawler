@@ -37,19 +37,19 @@ def read_file(file_path: str, read_type: int = READ_FILE_TYPE_FULL) -> Union[str
         READ_FILE_TYPE_FULL     type of string
         READ_FILE_TYPE_LINE     type of list
     """
+    if read_type not in [READ_FILE_TYPE_FULL, READ_FILE_TYPE_LINE]:
+        read_type = READ_FILE_TYPE_FULL
+    if read_type == READ_FILE_TYPE_FULL:
+        default_value = ""
+    else:
+        default_value = []
     if not file_path:
-        if read_type == 1:
-            return ""
-        else:
-            return []
+        return default_value
     file_path = os.path.abspath(file_path)
-    if not os.path.exists(file_path):
-        if read_type == 1:
-            return ""
-        else:
-            return []
+    if not os.path.exists(file_path) or not os.path.isfile(file_path):
+        return default_value
     with open(file_path, "r", encoding="UTF-8") as file_handle:
-        if read_type == 1:
+        if read_type == READ_FILE_TYPE_FULL:
             result = file_handle.read()
             if len(result) > 0:
                 if result[0] == BOM_SIGN:
@@ -70,7 +70,7 @@ def read_file(file_path: str, read_type: int = READ_FILE_TYPE_FULL) -> Union[str
     return result
 
 
-def write_file(msg: str, file_path: str, append_type: int = WRITE_FILE_TYPE_APPEND, encoding: str = "UTF-8"):
+def write_file(msg: str, file_path: str, append_type: int = WRITE_FILE_TYPE_APPEND, encoding: str = "UTF-8") -> bool:
     """
     写入文件
 
@@ -84,6 +84,8 @@ def write_file(msg: str, file_path: str, append_type: int = WRITE_FILE_TYPE_APPE
         READ_FILE_TYPE_FULL     type of string
         READ_FILE_TYPE_LINE     type of list
     """
+    if append_type not in [WRITE_FILE_TYPE_APPEND, WRITE_FILE_TYPE_REPLACE]:
+        append_type = WRITE_FILE_TYPE_APPEND
     if not file_path:
         return False
     file_path = os.path.abspath(file_path)
@@ -97,6 +99,7 @@ def write_file(msg: str, file_path: str, append_type: int = WRITE_FILE_TYPE_APPE
         return False
     with open(file_path, open_type, encoding=encoding) as file_handle:
         file_handle.write(msg + "\n")
+    return True
 
 
 def get_file_md5(file_path: str) -> Optional[str]:
