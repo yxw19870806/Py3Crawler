@@ -422,7 +422,7 @@ class Crawler(object):
                 log.step("%s 下载成功" % file_description)
         else:
             log.error("%s %s 下载失败，原因：%s" % (file_description, file_url, download_failre(download_return.code)))
-            if self.thread_exit_after_download_failure:
+            if self.exit_after_download_failure:
                 tool.process_exit(tool.PROCESS_EXIT_CODE_NORMAL)
         return download_return
 
@@ -533,7 +533,7 @@ class CrawlerThread(threading.Thread):
         """
         当下载失败，检测是否要退出线程
         """
-        if self.main_thread.thread_exit_after_download_failure:
+        if self.main_thread.exit_after_download_failure:
             if is_process_exit:
                 tool.process_exit(tool.PROCESS_EXIT_CODE_ERROR)
             else:
