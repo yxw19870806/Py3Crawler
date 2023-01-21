@@ -188,7 +188,7 @@ class Weibo(crawler.Crawler):
         sys_config = {
             crawler.SYS_DOWNLOAD_PHOTO: True,
             crawler.SYS_DOWNLOAD_VIDEO: True,
-            crawler.SYS_GET_COOKIE: ("sina.com.cn", "login.sina.com.cn"),
+            crawler.SYS_GET_COOKIE: ("weibo.com",),
         }
         crawler.Crawler.__init__(self, sys_config, **kwargs)
 
@@ -337,7 +337,7 @@ class CrawlerThread(crawler.CrawlerThread):
 
         photo_name = "%16d.%s" % (photo_info["photo_id"], net.get_file_extension(photo_info["photo_url"], "jpg"))
         photo_path = os.path.join(self.main_thread.photo_download_path, self.display_name, photo_name)
-        download_return = net.Download(photo_info["photo_url"], photo_path)
+        download_return = net.Download(photo_info["photo_url"], photo_path, header_list={"Referer": "https://weibo.com/"})
         if download_return.status == net.Download.DOWNLOAD_SUCCEED:
             if check_photo_invalid(photo_path):
                 path.delete_dir_or_file(photo_path)
