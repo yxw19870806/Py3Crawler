@@ -79,6 +79,8 @@ def get_blog_page(blog_id):
         # 图片动作
         photo_selector = photo_list_selector.eq(photo_index)
         photo_url = photo_selector.attr("src")
+        if not photo_url:
+            raise crawler.CrawlerException("图片地址截取失败\n" + photo_selector.html())
         if not (photo_url.find("https://") == 0 or photo_url.find("https://") == 0):
             photo_url = "https://www.nogizaka46.com/%s" % photo_url
         result_photo_info["photo_url"] = photo_url
