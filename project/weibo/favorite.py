@@ -190,7 +190,7 @@ class Favorite(crawler.Crawler):
     def download_success_callback(self, photo_url, photo_path, photo_description, download_return):
         if weibo.check_photo_invalid(photo_path):
             path.delete_dir_or_file(photo_path)
-            self.error("%s %s 已被屏蔽，删除" % (photo_description, photo_url))
+            log.error("%s %s 已被屏蔽，删除" % (photo_description, photo_url))
             return False
         return True
 
