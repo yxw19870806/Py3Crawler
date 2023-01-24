@@ -45,10 +45,7 @@ def get_one_page_album(album_id, page_count):
         "audio_info_list": [],  # 全部音频信息
         "is_over": False,  # 是否最后一页音频
     }
-    if album_pagination_response.status == 404 and page_count > 1:
-        time.sleep(5)
-        return get_one_page_album(album_id, page_count)
-    elif album_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
+    if album_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(album_pagination_response.status))
     # 获取音频信息
     try:
@@ -57,6 +54,9 @@ def get_one_page_album(album_id, page_count):
         error_message = crawler.get_json_value(album_pagination_response.json_data, "msg", type_check=str, default_value="")
         if error_message == "该专辑[id:%s]已被删除~" % album_id or error_message == "该专辑[id:%s]已下架~" % album_id:
             raise crawler.CrawlerException("专辑已被删除")
+        elif error_message == "该专辑不存在~" and page_count > 1:
+            time.sleep(3)
+            return get_one_page_album(album_id, page_count)
         else:
             raise
     for audio_info in audio_info_list:
@@ -141,6 +141,7 @@ def get_audio_info_page(audio_id):
         result["is_delete"] = True
         return result
     elif return_code == 500:
+        time.sleep(3)
         return get_audio_info_page(audio_id)
     else:
         raise crawler.CrawlerException("音频简易信息%s中'ret'返回值不正确" % audio_simple_info_response.json_data)
@@ -158,13 +159,15 @@ def get_audio_info_page(audio_id):
     }
     while True:
         audio_info_response = net.request(audio_info_url, method="GET", fields=query_data, json_decode=True)
-        if audio_info_response.status == net.HTTP_RETURN_CODE_SUCCEED:
+        if audio_info_response.status != net.HTTP_RETURN_CODE_SUCCEED:
+            raise crawler.CrawlerException("音频详细信息" + crawler.request_failre(audio_info_response.status))
+        return_code = crawler.get_json_value(audio_info_response.json_data, "ret", type_check=int)
+        if return_code == 200:
             break
+        elif return_code == 500:
+            time.sleep(3)
         else:
-            if crawler.get_json_value(audio_info_response.json_data, "ret", type_check=int) == 500:
-                continue
-            else:
-                raise crawler.CrawlerException("音频详细信息" + crawler.request_failre(audio_info_response.status))
+            raise crawler.CrawlerException("音频详细信息" + crawler.request_failre(audio_info_response.status))
     # 获取音频地址
     try:
         result["audio_url"] = crawler.get_json_value(audio_info_response.json_data, "data", "src", type_check=str)
