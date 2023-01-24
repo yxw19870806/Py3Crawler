@@ -414,16 +414,33 @@ class Crawler(object):
         log.trace("%s 解析结果：%s" % (description, parse_result_list))
         log.step("%s 解析数量：%s" % (description, len(parse_result_list)))
 
-    def download(self, file_url: str, file_path: str, file_description: str, success_callback: Callable[[str, str, str], bool] = None, **kwargs) -> net.Download:
+    def download(self, file_url: str, file_path: str, file_description: str, success_callback: Callable[[str, str, str, net.Download], bool] = None,
+                 failure_callback: Callable[[str, str, str, net.Download], bool] = None, **kwargs) -> net.Download:
+        """
+        下载
+        :Args:
+        - file_url - 远程地址
+        - file_path - 本地下载路径
+        - file_description - 文件描述
+        - success_callback - 成功回调方法
+            :Returns: 是否需要输出下载成功的日志
+                True - 需要
+                False - 不需要
+        - failure_callback - 失败回调方法
+            :Returns: 是否需要输出下载失败的日志并根据exit_after_download_failure检测程序是否退出
+                True - 需要
+                False - 不需要
+        """
         log.step("开始下载 %s %s" % (file_description, file_url))
         download_return = net.Download(file_url, file_path, **kwargs)
         if download_return.status == net.Download.DOWNLOAD_SUCCEED:
-            if success_callback is None or success_callback(file_url, file_path, file_description):
+            if success_callback is None or success_callback(file_url, file_path, file_description, download_return):
                 log.step("%s 下载成功" % file_description)
         else:
-            log.error("%s %s 下载失败，原因：%s" % (file_description, file_url, download_failre(download_return.code)))
-            if self.exit_after_download_failure:
-                tool.process_exit(tool.PROCESS_EXIT_CODE_NORMAL)
+            if failure_callback is None or failure_callback(file_url, file_path, file_description, download_return):
+                log.error("%s %s 下载失败，原因：%s" % (file_description, file_url, download_failre(download_return.code)))
+                if self.exit_after_download_failure:
+                    tool.process_exit(tool.PROCESS_EXIT_CODE_NORMAL)
         return download_return
 
 
@@ -577,7 +594,8 @@ class CrawlerThread(threading.Thread):
         self.trace("%s 解析结果：%s" % (description, parse_result_list))
         self.step("%s 解析数量：%s" % (description, len(parse_result_list)))
 
-    def download(self, file_url: str, file_path: str, file_description: str, success_callback: Callable[[str, str, str, net.Download], bool] = None, **kwargs) -> net.Download:
+    def download(self, file_url: str, file_path: str, file_description: str, success_callback: Callable[[str, str, str, net.Download], bool] = None,
+                 failure_callback: Callable[[str, str, str, net.Download], bool] = None, **kwargs) -> net.Download:
         """
         下载
 
@@ -586,9 +604,13 @@ class CrawlerThread(threading.Thread):
         - file_path - 本地下载路径
         - file_description - 文件描述
         - success_callback - 成功回调方法
-            :Returns:
-                True - 下载成功
-                False - 下载文件无效
+            :Returns: 是否需要输出下载成功的日志
+                True - 需要
+                False - 不需要
+        - failure_callback - 失败回调方法
+            :Returns: 是否需要输出下载失败的日志并根据exit_after_download_failure检测程序是否退出
+                True - 需要
+                False - 不需要
         """
         self.step("开始下载 %s %s" % (file_description, file_url))
         download_return = net.Download(file_url, file_path, **kwargs)
@@ -596,8 +618,9 @@ class CrawlerThread(threading.Thread):
             if success_callback is None or success_callback(file_url, file_path, file_description, download_return):
                 self.step("%s 下载成功" % file_description)
         else:
-            self.error("%s %s 下载失败，原因：%s" % (file_description, file_url, download_failre(download_return.code)))
-            self.check_download_failure_exit()
+            if failure_callback is None or failure_callback(file_url, file_path, file_description, download_return):
+                self.error("%s %s 下载失败，原因：%s" % (file_description, file_url, download_failre(download_return.code)))
+                self.check_download_failure_exit()
         return download_return
 
 
