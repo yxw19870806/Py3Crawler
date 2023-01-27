@@ -308,7 +308,7 @@ class CrawlerThread(crawler.CrawlerThread):
             photo_path = os.path.join(self.main_thread.photo_download_path, self.index_key, photo_name)
             self.temp_path_list.append(photo_path)  # 设置临时目录
             photo_description = "图片%s" % photo_info["photo_id"]
-            if self.download(photo_info["photo_url"], photo_path, photo_description).is_success():
+            if self.download(photo_info["photo_url"], photo_path, photo_description):
                 self.total_photo_count += 1  # 计数累加
 
         # 图片下载完毕

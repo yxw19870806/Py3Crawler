@@ -161,7 +161,7 @@ class CrawlerThread(crawler.CrawlerThread):
 
             photo_path = os.path.join(chapter_path, "%03d.%s" % (photo_index, net.get_file_extension(photo_url)))
             photo_description = "漫画%s %s《%s》第%s张图片" % (comic_info["page_id"], comic_info["version_name"], comic_info["chapter_name"], photo_index)
-            if self.download(photo_url, photo_path, photo_description, header_list={"Referer": "https://m.dmzj.com/"}).is_success():
+            if self.download(photo_url, photo_path, photo_description, header_list={"Referer": "https://m.dmzj.com/"}):
                 self.total_photo_count += 1  # 计数累加
             photo_index += 1
 

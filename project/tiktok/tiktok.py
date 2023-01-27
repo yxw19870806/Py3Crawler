@@ -168,7 +168,7 @@ class CrawlerThread(crawler.CrawlerThread):
     def crawl_video(self, video_info):
         video_path = os.path.join(self.main_thread.video_download_path, self.display_name, "%020d.mp4" % video_info["video_id"])
         video_description = "视频%s" % video_info["video_id"]
-        if self.download(video_info["video_url"], video_path, video_description, auto_multipart_download=True).is_success():
+        if self.download(video_info["video_url"], video_path, video_description, auto_multipart_download=True):
             self.total_video_count += 1  # 计数累加
 
         # 视频下载完毕

@@ -446,7 +446,7 @@ class CrawlerThread(crawler.CrawlerThread):
             video_path = os.path.join(self.main_thread.video_download_path, self.index_key, video_file_name)
             self.temp_path_list.append(video_path)  # 设置临时目录
             video_description = "推特%s第%s个视频" % (media_info["blog_id"], video_index)
-            if self.download(video_url, video_path, video_description, auto_multipart_download=True).is_success():
+            if self.download(video_url, video_path, video_description, auto_multipart_download=True):
                 self.total_video_count += 1  # 计数累加
             video_index += 1
 

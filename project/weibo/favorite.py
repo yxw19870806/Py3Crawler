@@ -176,7 +176,7 @@ class Favorite(crawler.Crawler):
                 for photo_url in blog_info["photo_url_list"]:
                     photo_path = os.path.join(photo_path, "%s.%s" % (photo_count, net.get_file_extension(photo_url)))
                     photo_description = "微博%s第%s张图片" % (blog_info["blog_id"], photo_count)
-                    if self.download(photo_url, photo_path, photo_description, success_callback=self.download_success_callback).is_success():
+                    if self.download(photo_url, photo_path, photo_description, success_callback=self.download_success_callback):
                         self.total_photo_count += 1
                         photo_count += 1
 
