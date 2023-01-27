@@ -171,7 +171,7 @@ class CrawlerThread(crawler.CrawlerThread):
 
             photo_path = os.path.join(post_path, "%s.jpg" % photo_index)
             photo_description = "相册%s《%s》第%s张图片" % (album_info["album_id"], album_info["album_title"], photo_index)
-            if self.download(photo_url, photo_path, photo_description).is_success():
+            if self.download(photo_url, photo_path, photo_description):
                 self.total_photo_count += 1  # 计数累加
             photo_index += 1
 

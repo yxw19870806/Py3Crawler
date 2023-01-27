@@ -360,7 +360,7 @@ class CrawlerThread(crawler.CrawlerThread):
             photo_path = os.path.join(self.main_thread.photo_download_path, self.index_key, photo_name)
             photo_description = "日志%s第%s张图片" % (blog_id, photo_index)
             download_return = self.download(photo_url, photo_path, photo_description, success_callback=self.download_success_callback)
-            if download_return.is_success() and not download_return.ext_is_invalid_photo:
+            if download_return and not download_return.ext_is_invalid_photo:
                 self.temp_path_list.append(photo_path)  # 设置临时目录
                 self.total_photo_count += 1  # 计数累加
 
