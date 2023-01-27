@@ -271,7 +271,7 @@ class CrawlerThread(crawler.CrawlerThread):
             raise
 
         video_path = os.path.join(self.main_thread.photo_download_path, self.display_name, "%s.%s" % (album_id, video_response["video_type"]))
-        if self.download(video_response["video_url"], video_path, video_description).is_success():
+        if self.download(video_response["video_url"], video_path, video_description):
             self.total_video_count += 1  # 计数累加
 
 

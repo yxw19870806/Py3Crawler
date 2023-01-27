@@ -483,7 +483,7 @@ class CrawlerThread(crawler.CrawlerThread):
             video_name = "%s - %s.mp4" % (video_id, path.filter_text(video_response["video_title"]))
             video_path = os.path.join(self.main_thread.video_download_path, self.display_name, video_name)
             video_description = "视频%s《%s》" % (video_id, video_response["video_title"])
-            if self.download(video_response["video_url"], video_path, video_description, auto_multipart_download=True).is_success():
+            if self.download(video_response["video_url"], video_path, video_description, auto_multipart_download=True):
                 self.total_video_count += 1  # 计数累加
 
         # 媒体内图片和视频全部下载完毕

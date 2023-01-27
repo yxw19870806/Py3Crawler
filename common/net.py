@@ -539,7 +539,7 @@ class Download:
 
         self.start_download()
 
-    def is_success(self) -> bool:
+    def __bool__(self):
         return self.status == self.DOWNLOAD_SUCCEED
 
     def start_download(self):

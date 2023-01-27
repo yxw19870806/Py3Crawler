@@ -432,7 +432,7 @@ class CrawlerThread(crawler.CrawlerThread):
                 photo_path = os.path.join(self.main_thread.photo_download_path, self.index_key, photo_name)
                 self.temp_path_list.append(photo_path)  # 设置临时目录
                 photo_description = "媒体%s/%s第%s张图片" % (media_info["page_id"], media_info["page_code"], photo_index)
-                if self.download(photo_url, photo_path, photo_description).is_success():
+                if self.download(photo_url, photo_path, photo_description):
                     self.total_photo_count += 1  # 计数累加
                 photo_index += 1
 
@@ -448,7 +448,7 @@ class CrawlerThread(crawler.CrawlerThread):
                 video_path = os.path.join(self.main_thread.video_download_path, self.index_key, video_name)
                 self.temp_path_list.append(video_path)  # 设置临时目录
                 video_description = "媒体%s/%s第%s个视频" % (media_info["page_id"], media_info["page_code"], video_index)
-                if self.download(video_url, video_path, video_description, auto_multipart_download=True).is_success():
+                if self.download(video_url, video_path, video_description, auto_multipart_download=True):
                     self.total_video_count += 1  # 计数累加
                 video_index += 1
 
