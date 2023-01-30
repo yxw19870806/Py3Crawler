@@ -444,33 +444,6 @@ class CrawlerThread(crawler.CrawlerThread):
         self.index_key = self.display_name = single_save_data[0]  # account id
         crawler.CrawlerThread.__init__(self, main_thread, single_save_data)
 
-    def _run(self):
-        try:
-            self.is_https, self.is_private = get_index_setting(self.index_key)
-        except crawler.CrawlerException as e:
-            self.error(e.http_error("账号设置"))
-            raise
-
-            # 未登录&开启safe mode直接退出
-        if not IS_LOGIN and self.is_private:
-            self.error("账号只限登录账号访问，跳过")
-            tool.process_exit()
-
-        # 查询当前任务大致需要从多少页开始爬取
-        start_page_count = self.get_offset_page_count()
-
-        while start_page_count >= 1:
-            # 获取所有可下载日志
-            post_info_list = self.get_crawl_list(start_page_count)
-            self.step("需要下载的全部日志解析完毕，共%s个" % len(post_info_list))
-
-            # 从最早的日志开始下载
-            while len(post_info_list) > 0:
-                self.crawl_post(post_info_list.pop())
-                self.main_thread_check()  # 检测主线程运行状态
-
-            start_page_count -= EACH_LOOP_MAX_PAGE_COUNT
-
     # 获取偏移量，避免一次查询过多页数
     def get_offset_page_count(self):
         start_page_count = 1
@@ -655,6 +628,33 @@ class CrawlerThread(crawler.CrawlerThread):
         # 日志内图片和视频全部下载完毕
         self.temp_path_list = []  # 临时目录设置清除
         self.single_save_data[1] = str(post_info["post_id"])  # 设置存档记录
+
+    def _run(self):
+        try:
+            self.is_https, self.is_private = get_index_setting(self.index_key)
+        except crawler.CrawlerException as e:
+            self.error(e.http_error("账号设置"))
+            raise
+
+            # 未登录&开启safe mode直接退出
+        if not IS_LOGIN and self.is_private:
+            self.error("账号只限登录账号访问，跳过")
+            tool.process_exit()
+
+        # 查询当前任务大致需要从多少页开始爬取
+        start_page_count = self.get_offset_page_count()
+
+        while start_page_count >= 1:
+            # 获取所有可下载日志
+            post_info_list = self.get_crawl_list(start_page_count)
+            self.step("需要下载的全部日志解析完毕，共%s个" % len(post_info_list))
+
+            # 从最早的日志开始下载
+            while len(post_info_list) > 0:
+                self.crawl_post(post_info_list.pop())
+                self.main_thread_check()  # 检测主线程运行状态
+
+            start_page_count -= EACH_LOOP_MAX_PAGE_COUNT
 
 
 if __name__ == "__main__":

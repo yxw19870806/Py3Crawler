@@ -400,43 +400,6 @@ class CrawlerThread(crawler.CrawlerThread):
             self.display_name = single_save_data[0]
         crawler.CrawlerThread.__init__(self, main_thread, single_save_data)
 
-    def _run(self):
-        # 视频下载
-        if self.main_thread.is_download_video:
-            # 获取所有可下载视频
-            video_info_list = self.get_crawl_video_list()
-            self.step("需要下载的全部视频解析完毕，共%s个" % len(video_info_list))
-
-            # 从最早的视频开始下载
-            while len(video_info_list) > 0:
-                if not self.crawl_video(video_info_list.pop()):
-                    break
-                self.main_thread_check()  # 检测主线程运行状态
-
-        # 音频下载
-        if self.main_thread.is_download_audio:
-            # 获取所有可下载音频
-            audio_info_list = self.get_crawl_audio_list()
-            self.step("需要下载的全部音频解析完毕，共%s个" % len(audio_info_list))
-
-            # 从最早的相簿开始下载
-            while len(audio_info_list) > 0:
-                if not self.crawl_audio(audio_info_list.pop()):
-                    break
-                self.main_thread_check()  # 检测主线程运行状态
-
-        # 图片下载
-        if self.main_thread.is_download_photo:
-            # 获取所有可下载相簿
-            album_id_list = self.get_crawl_photo_list()
-            self.step("需要下载的全部相簿解析完毕，共%s个" % len(album_id_list))
-
-            # 从最早的相簿开始下载
-            while len(album_id_list) > 0:
-                if not self.crawl_photo(album_id_list.pop()):
-                    break
-                self.main_thread_check()  # 检测主线程运行状态
-
     # 获取所有可下载视频
     def get_crawl_video_list(self):
         page_count = 1
@@ -702,6 +665,43 @@ class CrawlerThread(crawler.CrawlerThread):
         self.temp_path_list = []  # 临时目录设置清除
         self.single_save_data[3] = str(album_id)  # 设置存档记录
         return True
+
+    def _run(self):
+        # 视频下载
+        if self.main_thread.is_download_video:
+            # 获取所有可下载视频
+            video_info_list = self.get_crawl_video_list()
+            self.step("需要下载的全部视频解析完毕，共%s个" % len(video_info_list))
+
+            # 从最早的视频开始下载
+            while len(video_info_list) > 0:
+                if not self.crawl_video(video_info_list.pop()):
+                    break
+                self.main_thread_check()  # 检测主线程运行状态
+
+        # 音频下载
+        if self.main_thread.is_download_audio:
+            # 获取所有可下载音频
+            audio_info_list = self.get_crawl_audio_list()
+            self.step("需要下载的全部音频解析完毕，共%s个" % len(audio_info_list))
+
+            # 从最早的相簿开始下载
+            while len(audio_info_list) > 0:
+                if not self.crawl_audio(audio_info_list.pop()):
+                    break
+                self.main_thread_check()  # 检测主线程运行状态
+
+        # 图片下载
+        if self.main_thread.is_download_photo:
+            # 获取所有可下载相簿
+            album_id_list = self.get_crawl_photo_list()
+            self.step("需要下载的全部相簿解析完毕，共%s个" % len(album_id_list))
+
+            # 从最早的相簿开始下载
+            while len(album_id_list) > 0:
+                if not self.crawl_photo(album_id_list.pop()):
+                    break
+                self.main_thread_check()  # 检测主线程运行状态
 
 
 if __name__ == "__main__":

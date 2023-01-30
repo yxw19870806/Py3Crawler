@@ -234,32 +234,6 @@ class CrawlerThread(crawler.CrawlerThread):
         self.index_key = self.display_name = single_save_data[0]  # account name
         crawler.CrawlerThread.__init__(self, main_thread, single_save_data)
 
-    def _run(self):
-        # 获取相册首页页面
-        try:
-            account_index_response = get_account_index_page(self.index_key)
-        except crawler.CrawlerException as e:
-            self.error(e.http_error("相册首页"))
-            raise
-
-        # 获取所有可下载图片
-        photo_info_list = self.get_crawl_list(account_index_response["user_id"], account_index_response["site_key"], account_index_response["csrf"])
-        self.step("需要下载的全部图片解析完毕，共%s张" % len(photo_info_list))
-
-        # 从最早的图片开始下载
-        deal_photo_info_list = []
-        while len(photo_info_list) > 0:
-            photo_info = photo_info_list.pop()
-            # 下一张图片的上传时间一致，合并下载
-            deal_photo_info_list.append(photo_info)
-            if len(photo_info_list) > 0 and photo_info_list[-1]["photo_time"] == photo_info["photo_time"]:
-                continue
-
-            # 下载同一上传时间的所有图片
-            self.crawl_photo(deal_photo_info_list)
-            deal_photo_info_list = []  # 累加图片地址清除
-            self.main_thread_check()  # 检测主线程运行状态
-
     # 获取所有可下载图片
     def get_crawl_list(self, user_id, site_key, csrf):
         page_count = 1
@@ -314,6 +288,32 @@ class CrawlerThread(crawler.CrawlerThread):
         # 图片下载完毕
         self.temp_path_list = []  # 临时目录设置清除
         self.single_save_data[1] = str(photo_info_list[0]["photo_time"])  # 设置存档记
+
+    def _run(self):
+        # 获取相册首页页面
+        try:
+            account_index_response = get_account_index_page(self.index_key)
+        except crawler.CrawlerException as e:
+            self.error(e.http_error("相册首页"))
+            raise
+
+        # 获取所有可下载图片
+        photo_info_list = self.get_crawl_list(account_index_response["user_id"], account_index_response["site_key"], account_index_response["csrf"])
+        self.step("需要下载的全部图片解析完毕，共%s张" % len(photo_info_list))
+
+        # 从最早的图片开始下载
+        deal_photo_info_list = []
+        while len(photo_info_list) > 0:
+            photo_info = photo_info_list.pop()
+            # 下一张图片的上传时间一致，合并下载
+            deal_photo_info_list.append(photo_info)
+            if len(photo_info_list) > 0 and photo_info_list[-1]["photo_time"] == photo_info["photo_time"]:
+                continue
+
+            # 下载同一上传时间的所有图片
+            self.crawl_photo(deal_photo_info_list)
+            deal_photo_info_list = []  # 累加图片地址清除
+            self.main_thread_check()  # 检测主线程运行状态
 
 
 if __name__ == "__main__":

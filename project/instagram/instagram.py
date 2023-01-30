@@ -342,30 +342,6 @@ class CrawlerThread(crawler.CrawlerThread):
         self.index_key = self.display_name = single_save_data[0]  # account name
         crawler.CrawlerThread.__init__(self, main_thread, single_save_data)
 
-    def _run(self):
-        # 获取首页
-        try:
-            account_index_response = get_account_index_page(self.index_key)
-        except crawler.CrawlerException as e:
-            self.error(e.http_error("首页"))
-            raise
-
-        if self.single_save_data[1] == "":
-            self.single_save_data[1] = str(account_index_response["account_id"])
-        else:
-            if self.single_save_data[1] != str(account_index_response["account_id"]):
-                self.error("account id 不符合，原账号已改名")
-                tool.process_exit()
-
-        # 获取所有可下载媒体
-        media_info_list = self.get_crawl_list()
-        self.step("需要下载的全部媒体解析完毕，共%s个" % len(media_info_list))
-
-        # 从最早的媒体开始下载
-        while len(media_info_list) > 0:
-            self.crawl_media(media_info_list.pop())
-            self.main_thread_check()  # 检测主线程运行状态
-
     # 获取所有可下载媒体
     def get_crawl_list(self):
         cursor = ""
@@ -455,6 +431,30 @@ class CrawlerThread(crawler.CrawlerThread):
         # 媒体内图片和视频全部下载完毕
         self.temp_path_list = []  # 临时目录设置清除
         self.single_save_data[2] = str(media_info["page_id"])  # 设置存档记录
+
+    def _run(self):
+        # 获取首页
+        try:
+            account_index_response = get_account_index_page(self.index_key)
+        except crawler.CrawlerException as e:
+            self.error(e.http_error("首页"))
+            raise
+
+        if self.single_save_data[1] == "":
+            self.single_save_data[1] = str(account_index_response["account_id"])
+        else:
+            if self.single_save_data[1] != str(account_index_response["account_id"]):
+                self.error("account id 不符合，原账号已改名")
+                tool.process_exit()
+
+        # 获取所有可下载媒体
+        media_info_list = self.get_crawl_list()
+        self.step("需要下载的全部媒体解析完毕，共%s个" % len(media_info_list))
+
+        # 从最早的媒体开始下载
+        while len(media_info_list) > 0:
+            self.crawl_media(media_info_list.pop())
+            self.main_thread_check()  # 检测主线程运行状态
 
 
 if __name__ == "__main__":
