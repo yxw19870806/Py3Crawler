@@ -113,16 +113,6 @@ class CrawlerThread(crawler.CrawlerThread):
         self.index_key = self.display_name = single_save_data[0]  # account name
         crawler.CrawlerThread.__init__(self, main_thread, single_save_data)
 
-    def _run(self):
-        # 获取所有可下载日志
-        blog_url_list = self.get_crawl_list()
-        self.step("需要下载的全部日志解析完毕，共%s个" % len(blog_url_list))
-
-        # 从最早的日志开始下载
-        while len(blog_url_list) > 0:
-            self.crawl_blog(blog_url_list.pop())
-            self.main_thread_check()  # 检测主线程运行状态
-
     # 获取所有可下载日志
     def get_crawl_list(self):
         page_count = 1
@@ -209,6 +199,16 @@ class CrawlerThread(crawler.CrawlerThread):
             self.error("%s %s 已被屏蔽，删除" % (photo_description, photo_url))
             return False
         return True
+
+    def _run(self):
+        # 获取所有可下载日志
+        blog_url_list = self.get_crawl_list()
+        self.step("需要下载的全部日志解析完毕，共%s个" % len(blog_url_list))
+
+        # 从最早的日志开始下载
+        while len(blog_url_list) > 0:
+            self.crawl_blog(blog_url_list.pop())
+            self.main_thread_check()  # 检测主线程运行状态
 
 
 if __name__ == "__main__":

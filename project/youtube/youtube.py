@@ -391,18 +391,6 @@ class CrawlerThread(crawler.CrawlerThread):
             self.display_name = single_save_data[0]
         crawler.CrawlerThread.__init__(self, main_thread, single_save_data)
 
-    def _run(self):
-        # 获取所有可下载视频
-        video_id_list = self.get_crawl_list()
-        self.step("需要下载的全部视频解析完毕，共%s个" % len(video_id_list))
-        if not self.is_find:
-            self.step("存档所在视频已删除，需要在下载时进行过滤")
-
-        # 从最早的视频开始下载
-        while len(video_id_list) > 0:
-            self.crawl_video(video_id_list.pop(), len(video_id_list) == 0)
-            self.main_thread_check()  # 检测主线程运行状态
-
     # 获取所有可下载视频
     def get_crawl_list(self):
         token = ""
@@ -489,6 +477,18 @@ class CrawlerThread(crawler.CrawlerThread):
         # 媒体内图片和视频全部下载完毕
         self.single_save_data[1] = video_id  # 设置存档记录
         self.single_save_data[2] = str(video_response["video_time"])  # 设置存档记录
+
+    def _run(self):
+        # 获取所有可下载视频
+        video_id_list = self.get_crawl_list()
+        self.step("需要下载的全部视频解析完毕，共%s个" % len(video_id_list))
+        if not self.is_find:
+            self.step("存档所在视频已删除，需要在下载时进行过滤")
+
+        # 从最早的视频开始下载
+        while len(video_id_list) > 0:
+            self.crawl_video(video_id_list.pop(), len(video_id_list) == 0)
+            self.main_thread_check()  # 检测主线程运行状态
 
 
 if __name__ == "__main__":

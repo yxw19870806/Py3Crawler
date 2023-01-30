@@ -99,16 +99,6 @@ class CrawlerThread(crawler.CrawlerThread):
             self.display_name = single_save_data[0]
         crawler.CrawlerThread.__init__(self, main_thread, single_save_data)
 
-    def _run(self):
-        # 获取所有可下载日志
-        blog_info_list = self.get_crawl_list()
-        self.step("需要下载的全部日志解析完毕，共%s个" % len(blog_info_list))
-
-        # 从最早的日志开始下载
-        while len(blog_info_list) > 0:
-            self.crawl_blog(blog_info_list.pop())
-            self.main_thread_check()  # 检测主线程运行状态
-
     # 获取所有可下载日志
     def get_crawl_list(self):
         page_count = 1
@@ -169,6 +159,16 @@ class CrawlerThread(crawler.CrawlerThread):
         # 日志内图片全部下载完毕
         self.temp_path_list = []  # 临时目录设置清除
         self.single_save_data[1] = str(blog_info["blog_id"])  # 设置存档记录
+
+    def _run(self):
+        # 获取所有可下载日志
+        blog_info_list = self.get_crawl_list()
+        self.step("需要下载的全部日志解析完毕，共%s个" % len(blog_info_list))
+
+        # 从最早的日志开始下载
+        while len(blog_info_list) > 0:
+            self.crawl_blog(blog_info_list.pop())
+            self.main_thread_check()  # 检测主线程运行状态
 
 
 if __name__ == "__main__":

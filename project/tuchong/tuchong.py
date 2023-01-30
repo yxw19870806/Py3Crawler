@@ -100,22 +100,6 @@ class CrawlerThread(crawler.CrawlerThread):
         self.index_key = self.display_name = single_save_data[0]  # account name
         crawler.CrawlerThread.__init__(self, main_thread, single_save_data)
 
-    def _run(self):
-        try:
-            account_index_response = get_account_index_page(self.index_key)
-        except crawler.CrawlerException as e:
-            self.error(e.http_error("主页"))
-            raise
-
-            # 获取所有可下载相册
-        album_info_list = self.get_crawl_list(account_index_response["account_id"])
-        self.step("需要下载的全部相册解析完毕，共%s个" % len(album_info_list))
-
-        # 从最早的相册开始下载
-        while len(album_info_list) > 0:
-            self.crawl_album(album_info_list.pop())
-            self.main_thread_check()  # 检测主线程运行状态
-
     # 获取所有可下载相册
     def get_crawl_list(self, account_id):
         post_time = tool.get_time("%Y-%m-%d %H:%M:%S")
@@ -178,6 +162,22 @@ class CrawlerThread(crawler.CrawlerThread):
         # 相册内图片全部下载完毕
         self.temp_path_list = []  # 临时目录设置清除
         self.single_save_data[1] = str(album_info["album_id"])  # 设置存档记录
+
+    def _run(self):
+        try:
+            account_index_response = get_account_index_page(self.index_key)
+        except crawler.CrawlerException as e:
+            self.error(e.http_error("主页"))
+            raise
+
+            # 获取所有可下载相册
+        album_info_list = self.get_crawl_list(account_index_response["account_id"])
+        self.step("需要下载的全部相册解析完毕，共%s个" % len(album_info_list))
+
+        # 从最早的相册开始下载
+        while len(album_info_list) > 0:
+            self.crawl_album(album_info_list.pop())
+            self.main_thread_check()  # 检测主线程运行状态
 
 
 if __name__ == "__main__":

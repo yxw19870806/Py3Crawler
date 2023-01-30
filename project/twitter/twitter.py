@@ -323,29 +323,6 @@ class CrawlerThread(crawler.CrawlerThread):
         self.index_key = self.display_name = single_save_data[0]  # account name
         crawler.CrawlerThread.__init__(self, main_thread, single_save_data)
 
-    def _run(self):
-        try:
-            account_index_response = get_account_index_page(self.index_key)
-        except crawler.CrawlerException as e:
-            self.error(e.http_error("首页"))
-            raise
-
-        if self.single_save_data[1] == "":
-            self.single_save_data[1] = account_index_response["account_id"]
-        else:
-            if self.single_save_data[1] != account_index_response["account_id"]:
-                self.error("account id 不符合，原账号已改名")
-                tool.process_exit()
-
-        # 获取所有可下载推特
-        media_info_list = self.get_crawl_list()
-        self.step("需要下载的全部推特解析完毕，共%s个" % len(media_info_list))
-
-        # 从最早的推特开始下载
-        while len(media_info_list) > 0:
-            self.crawl_media(media_info_list.pop())
-            self.main_thread_check()  # 检测主线程运行状态
-
     # 获取所有可下载推特
     def get_crawl_list(self):
         cursor = ""
@@ -449,6 +426,29 @@ class CrawlerThread(crawler.CrawlerThread):
             if self.download(video_url, video_path, video_description, auto_multipart_download=True):
                 self.total_video_count += 1  # 计数累加
             video_index += 1
+
+    def _run(self):
+        try:
+            account_index_response = get_account_index_page(self.index_key)
+        except crawler.CrawlerException as e:
+            self.error(e.http_error("首页"))
+            raise
+
+        if self.single_save_data[1] == "":
+            self.single_save_data[1] = account_index_response["account_id"]
+        else:
+            if self.single_save_data[1] != account_index_response["account_id"]:
+                self.error("account id 不符合，原账号已改名")
+                tool.process_exit()
+
+        # 获取所有可下载推特
+        media_info_list = self.get_crawl_list()
+        self.step("需要下载的全部推特解析完毕，共%s个" % len(media_info_list))
+
+        # 从最早的推特开始下载
+        while len(media_info_list) > 0:
+            self.crawl_media(media_info_list.pop())
+            self.main_thread_check()  # 检测主线程运行状态
 
 
 if __name__ == "__main__":

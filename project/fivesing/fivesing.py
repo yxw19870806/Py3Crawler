@@ -108,16 +108,6 @@ class CrawlerThread(crawler.CrawlerThread):
             self.display_name = single_save_data[0]
         crawler.CrawlerThread.__init__(self, main_thread, single_save_data)
 
-    def _run(self):
-        for audio_type in list(self.audio_type_to_index_dict.keys()):
-            # 获取所有可下载歌曲
-            audio_info_list = self.get_crawl_list(audio_type)
-            self.step("需要下载的全部%s歌曲解析完毕，共%s首" % (self.audio_type_name_dict[audio_type], len(audio_info_list)))
-
-            # 从最早的歌曲开始下载
-            while len(audio_info_list) > 0:
-                self.crawl_audio(audio_type, audio_info_list.pop())
-
     # 获取所有可下载歌曲
     def get_crawl_list(self, audio_type):
         audio_type_index = self.audio_type_to_index_dict[audio_type]
@@ -193,6 +183,16 @@ class CrawlerThread(crawler.CrawlerThread):
 
         # 歌曲下载完毕
         self.single_save_data[self.audio_type_to_index_dict[audio_type]] = str(audio_info["audio_id"])  # 设置存档记录
+
+    def _run(self):
+        for audio_type in list(self.audio_type_to_index_dict.keys()):
+            # 获取所有可下载歌曲
+            audio_info_list = self.get_crawl_list(audio_type)
+            self.step("需要下载的全部%s歌曲解析完毕，共%s首" % (self.audio_type_name_dict[audio_type], len(audio_info_list)))
+
+            # 从最早的歌曲开始下载
+            while len(audio_info_list) > 0:
+                self.crawl_audio(audio_type, audio_info_list.pop())
 
 
 if __name__ == "__main__":
