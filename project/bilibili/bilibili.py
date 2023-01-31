@@ -560,9 +560,6 @@ class CrawlerThread(crawler.CrawlerThread):
             for video_part_url in video_part_info["video_url_list"]:
                 self.main_thread_check()  # 检测主线程运行状态
 
-                video_description = "视频%s《%s》第%s个视频" % (video_info["video_id"], video_info["video_title"], video_index)
-                self.step("开始下载 %s %s" % (video_description, video_part_url))
-
                 video_name = "%010d %s" % (video_info["video_id"], video_info["video_title"])
                 if len(video_play_response["video_part_info_list"]) > 1:
                     if video_part_info["video_part_title"]:
@@ -573,16 +570,13 @@ class CrawlerThread(crawler.CrawlerThread):
                     video_name += " (%s)" % video_split_index
                 video_name = "%s.%s" % (path.filter_text(video_name), net.get_file_extension(video_part_url))
                 video_path = os.path.join(self.main_thread.video_download_path, self.display_name, video_name)
+                part_video_description = "视频%s《%s》第%s个视频" % (video_info["video_id"], video_info["video_title"], video_index)
                 header_list = {"Referer": "https://www.bilibili.com/video/av%s" % video_info["video_id"]}
-                download_return = net.Download(video_part_url, video_path, auto_multipart_download=True, header_list=header_list)
-                if download_return.status == net.Download.DOWNLOAD_SUCCEED:
+                if self.download(video_part_url, video_path, part_video_description, auto_multipart_download=True, header_list=header_list):
                     self.temp_path_list.append(video_path)  # 设置临时目录
                     self.total_video_count += 1  # 计数累加
-                    self.step("%s 下载成功" % video_description)
                 else:
-                    self.error("%s %s 下载失败，原因：%s" % (video_description, video_part_url, crawler.download_failre(download_return.code)))
-                    if self.check_download_failure_exit(False):
-                        return False
+                    return False
                 video_split_index += 1
                 video_index += 1
             video_part_index += 1
@@ -604,19 +598,13 @@ class CrawlerThread(crawler.CrawlerThread):
             self.error(e.http_error(audio_description))
             raise
 
-        self.step("开始下载 %s %s" % (audio_description, audio_info_response["audio_url"]))
-
         audio_type = net.get_file_extension(audio_info_response["audio_url"])
         audio_name = "%06d %s.%s" % (audio_info["audio_id"], path.filter_text(audio_info["audio_title"]), audio_type)
         audio_path = os.path.join(self.main_thread.audio_download_path, self.display_name, audio_name)
-        download_return = net.Download(audio_info_response["audio_url"], audio_path, header_list={"Referer": "https://www.bilibili.com/"})
-        if download_return.status == net.Download.DOWNLOAD_SUCCEED:
+        if self.download(audio_info_response["audio_url"], audio_path, audio_description, header_list={"Referer": "https://www.bilibili.com/"}):
             self.total_audio_count += 1  # 计数累加
-            self.step("%s 下载成功" % audio_description)
         else:
-            self.error("%s %s 下载失败，原因：%s" % (audio_description, audio_info_response["audio_url"], crawler.download_failre(download_return.code)))
-            if self.check_download_failure_exit(False):
-                return False
+            return False
 
         # 音频下载完毕
         self.single_save_data[2] = str(audio_info["audio_id"])  # 设置存档记录
