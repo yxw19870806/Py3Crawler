@@ -244,22 +244,6 @@ class CrawlerThread(crawler.CrawlerThread):
         crawler.CrawlerThread.__init__(self, main_thread, single_save_data)
         self.duplicate_list = {}
 
-    def _run(self):
-        # 查询当前任务大致需要从多少页开始爬取
-        start_page_count = self.get_offset_page_count()
-
-        while start_page_count >= 1:
-            # 获取所有可下载日志
-            blog_id_list = self.get_crawl_list(start_page_count)
-            self.step("需要下载的全部日志解析完毕，共%s个" % len(blog_id_list))
-
-            # 从最早的日志开始下载
-            while len(blog_id_list) > 0:
-                self.crawl_blog(blog_id_list.pop())
-                self.main_thread_check()  # 检测主线程运行状态
-
-            start_page_count -= EACH_LOOP_MAX_PAGE_COUNT
-
     # 获取偏移量，避免一次查询过多页数
     def get_offset_page_count(self):
         start_page_count = 1
@@ -378,6 +362,22 @@ class CrawlerThread(crawler.CrawlerThread):
             return False
         download_return.ext_is_invalid_photo = False
         return True
+
+    def _run(self):
+        # 查询当前任务大致需要从多少页开始爬取
+        start_page_count = self.get_offset_page_count()
+
+        while start_page_count >= 1:
+            # 获取所有可下载日志
+            blog_id_list = self.get_crawl_list(start_page_count)
+            self.step("需要下载的全部日志解析完毕，共%s个" % len(blog_id_list))
+
+            # 从最早的日志开始下载
+            while len(blog_id_list) > 0:
+                self.crawl_blog(blog_id_list.pop())
+                self.main_thread_check()  # 检测主线程运行状态
+
+            start_page_count -= EACH_LOOP_MAX_PAGE_COUNT
 
 
 if __name__ == "__main__":

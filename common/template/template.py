@@ -71,7 +71,7 @@ class Template(crawler.Crawler):
         
 
 class CrawlerThread(crawler.CrawlerThread):
-    def __init__(self, main_thread, single_save_data)::
+    def __init__(self, main_thread, single_save_data):
         crawler.CrawlerThread.__init__(self, main_thread, single_save_data)
         self.index_key = self.single_save_data[0]
         # 日志前缀

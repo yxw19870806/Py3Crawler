@@ -141,16 +141,6 @@ class CrawlerThread(crawler.CrawlerThread):
             self.display_name = single_save_data[0]
         crawler.CrawlerThread.__init__(self, main_thread, single_save_data)
 
-    def _run(self):
-        # 获取所有可下载章节
-        chapter_info_list = self.get_crawl_list()
-        self.step("需要下载的全部漫画解析完毕，共%s个" % len(chapter_info_list))
-
-        # 从最早的章节开始下载
-        while len(chapter_info_list) > 0:
-            self.crawl_comic(chapter_info_list.pop())
-            self.main_thread_check()  # 检测主线程运行状态
-
     # 获取所有可下载章节
     def get_crawl_list(self):
         chapter_info_list = {}
@@ -208,6 +198,16 @@ class CrawlerThread(crawler.CrawlerThread):
         # 媒体内图片全部下载完毕
         self.temp_path_list = []  # 临时目录设置清除
         self.single_save_data[1] = str(chapter_info["chapter_id"])  # 设置存档记录
+
+    def _run(self):
+        # 获取所有可下载章节
+        chapter_info_list = self.get_crawl_list()
+        self.step("需要下载的全部漫画解析完毕，共%s个" % len(chapter_info_list))
+
+        # 从最早的章节开始下载
+        while len(chapter_info_list) > 0:
+            self.crawl_comic(chapter_info_list.pop())
+            self.main_thread_check()  # 检测主线程运行状态
 
 
 if __name__ == "__main__":

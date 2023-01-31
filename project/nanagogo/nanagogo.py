@@ -97,23 +97,6 @@ class CrawlerThread(crawler.CrawlerThread):
         self.index_key = self.display_name = single_save_data[0]  # account name
         crawler.CrawlerThread.__init__(self, main_thread, single_save_data)
 
-    def _run(self):
-        # 获取首页
-        try:
-            get_index_page(self.index_key)
-        except crawler.CrawlerException as e:
-            self.error(e.http_error("首页"))
-            raise
-
-        # 获取所有可下载日志
-        blog_info_list = self.get_crawl_list()
-        self.step("需要下载的全部日志解析完毕，共%s个" % len(blog_info_list))
-
-        # 从最早的日志开始下载
-        while len(blog_info_list) > 0:
-            self.crawl_blog(blog_info_list.pop())
-            self.main_thread_check()  # 检测主线程运行状态
-
     # 获取所有可下载日志
     def get_crawl_list(self):
         target_id = INIT_TARGET_ID
@@ -198,6 +181,23 @@ class CrawlerThread(crawler.CrawlerThread):
             if self.download(video_url, video_path, video_description):
                 self.total_video_count += 1  # 计数累加
             video_index += 1
+
+    def _run(self):
+        # 获取首页
+        try:
+            get_index_page(self.index_key)
+        except crawler.CrawlerException as e:
+            self.error(e.http_error("首页"))
+            raise
+
+        # 获取所有可下载日志
+        blog_info_list = self.get_crawl_list()
+        self.step("需要下载的全部日志解析完毕，共%s个" % len(blog_info_list))
+
+        # 从最早的日志开始下载
+        while len(blog_info_list) > 0:
+            self.crawl_blog(blog_info_list.pop())
+            self.main_thread_check()  # 检测主线程运行状态
 
 
 if __name__ == "__main__":

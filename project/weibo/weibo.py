@@ -222,31 +222,6 @@ class CrawlerThread(crawler.CrawlerThread):
             self.display_name = single_save_data[0]
         crawler.CrawlerThread.__init__(self, main_thread, single_save_data)
 
-    def _run(self):
-        # 图片下载
-        if self.main_thread.is_download_photo:
-            # 获取所有可下载图片
-            photo_info_list = self.get_crawl_photo_list()
-            self.step("需要下载的全部图片解析完毕，共%s张" % len(photo_info_list))
-
-            # 从最早的图片开始下载
-            while len(photo_info_list) > 0:
-                if not self.crawl_photo(photo_info_list.pop()):
-                    break
-                self.main_thread_check()  # 检测主线程运行状态
-
-        # 视频下载
-        if self.main_thread.is_download_video:
-            # 获取所有可下载视频
-            video_info_list = self.get_crawl_video_list()
-            self.step("需要下载的全部视频片解析完毕，共%s个" % len(video_info_list))
-
-            # 从最早的视频开始下载
-            while len(video_info_list) > 0:
-                if not self.crawl_video(video_info_list.pop()):
-                    break
-                self.main_thread_check()  # 检测主线程运行状态
-
     # 获取所有可下载图片
     def get_crawl_photo_list(self):
         page_count = 1
@@ -381,6 +356,31 @@ class CrawlerThread(crawler.CrawlerThread):
         # 视频下载完毕
         self.single_save_data[2] = str(video_info["video_id"])  # 设置存档记录
         return True
+
+    def _run(self):
+        # 图片下载
+        if self.main_thread.is_download_photo:
+            # 获取所有可下载图片
+            photo_info_list = self.get_crawl_photo_list()
+            self.step("需要下载的全部图片解析完毕，共%s张" % len(photo_info_list))
+
+            # 从最早的图片开始下载
+            while len(photo_info_list) > 0:
+                if not self.crawl_photo(photo_info_list.pop()):
+                    break
+                self.main_thread_check()  # 检测主线程运行状态
+
+        # 视频下载
+        if self.main_thread.is_download_video:
+            # 获取所有可下载视频
+            video_info_list = self.get_crawl_video_list()
+            self.step("需要下载的全部视频片解析完毕，共%s个" % len(video_info_list))
+
+            # 从最早的视频开始下载
+            while len(video_info_list) > 0:
+                if not self.crawl_video(video_info_list.pop()):
+                    break
+                self.main_thread_check()  # 检测主线程运行状态
 
 
 if __name__ == "__main__":
