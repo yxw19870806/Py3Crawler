@@ -642,6 +642,7 @@ class DownloadThread(CrawlerThread):
 
     def set_download_header(self, header_list: dict):
         self.header_list = header_list
+        return self
 
 
 class CrawlerException(SystemExit):
