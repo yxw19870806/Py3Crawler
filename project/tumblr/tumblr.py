@@ -617,7 +617,7 @@ class CrawlerThread(crawler.CrawlerThread):
                 self.step("%s 下载成功" % video_description)
                 return False
         if IS_STEP_ERROR_403_AND_404 and download_return.code in [403, 404]:
-            self.step("%s %s 下载失败，原因：%s" % (video_description, video_url, download_failre(download_return.code)))
+            self.step("%s %s 下载失败，原因：%s" % (video_description, video_url, crawler.download_failre(download_return.code)))
             return False
         return True
 
