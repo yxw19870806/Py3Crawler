@@ -229,7 +229,7 @@ class NicoNico(crawler.Crawler):
 
 
 class CrawlerThread(crawler.CrawlerThread):
-    def __init__(self, main_thread, single_save_data)::
+    def __init__(self, main_thread, single_save_data):
         self.index_key = single_save_data[0]  # list id
         if len(single_save_data) >= 3 and single_save_data[2]:
             self.display_name = single_save_data[2]
