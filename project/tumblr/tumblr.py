@@ -116,7 +116,7 @@ def get_one_page_post(account_id, page_count, is_https):
         # 获取日志id
         post_id = tool.find_sub_string(result_post_info["post_url"], "/post/").split("/")[0]
         if not tool.is_integer(post_id):
-            crawler.CrawlerException("日志地址%s截取日志id失败" % result_post_info["post_url"])
+            raise crawler.CrawlerException("日志地址%s截取日志id失败" % result_post_info["post_url"])
         result_post_info["post_id"] = int(post_id)
         result["post_info_list"].append(result_post_info)
     return result
@@ -169,7 +169,7 @@ def get_one_page_private_blog(account_id, page_count):
         # 获取日志id
         post_id = tool.find_sub_string(result_post_info["post_url"], "/post/").split("/")[0]
         if not tool.is_integer(post_id):
-            crawler.CrawlerException("日志地址 %s 截取日志id失败" % result_post_info["post_url"])
+            raise crawler.CrawlerException("日志地址 %s 截取日志id失败" % result_post_info["post_url"])
         result_post_info["post_id"] = int(post_id)
         # 视频
         if crawler.get_json_value(post_info, "type", type_check=str) == "video":

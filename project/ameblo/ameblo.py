@@ -49,35 +49,31 @@ def get_one_page_blog(account_name, page_count):
     if len(result["blog_id_list"]) == 0:
         # goto-risako
         blog_list_selector = pq(blog_pagination_response_content).find("#main li a.skin-titleLink")
-        if blog_list_selector.length > 0:
-            for blog_url_index in range(blog_list_selector.length):
-                blog_url = blog_list_selector.eq(blog_url_index).attr("href")
-                blog_id = tool.find_sub_string(blog_url, "entry-", ".html")
-                if not tool.is_integer(blog_id):
-                    raise crawler.CrawlerException("日志地址%s截取日志id失败" % blog_url)
-                result["blog_id_list"].append(int(blog_id))
+        for blog_url_index in range(blog_list_selector.length):
+            blog_url = blog_list_selector.eq(blog_url_index).attr("href")
+            blog_id = tool.find_sub_string(blog_url, "entry-", ".html")
+            if not tool.is_integer(blog_id):
+                raise crawler.CrawlerException("日志地址%s截取日志id失败" % blog_url)
+            result["blog_id_list"].append(int(blog_id))
     if len(result["blog_id_list"]) == 0:
         if page_count == 1:
             raise crawler.CrawlerException("页面匹配日志id失败\n" + blog_pagination_response_content)
-        else:
-            log.error(account_name + " 新的分页页面")
-            result["is_over"] = True
-            return result
+        log.error(account_name + " 新的分页页面")
+        result["is_over"] = True
+        return result
     # 判断是不是最后一页
     # https://ameblo.jp/18prokonan/
     if pq(blog_pagination_response_content).find("div.pagingArea").length > 0:
-        if pq(blog_pagination_response_content).find("div.pagingArea a.pagingNext").length == 0:
-            if pq(blog_pagination_response_content).find("div.pagingArea a.pagingPrev").length == 0:
-                raise crawler.CrawlerException("页面截取分页信息div.pagingArea失败\n" + blog_pagination_response_content)
-            else:
-                result["is_over"] = True
+        if pq(blog_pagination_response_content).find("div.pagingArea a.pagingNext").length == 0 and \
+                pq(blog_pagination_response_content).find("div.pagingArea a.pagingPrev").length == 0:
+            raise crawler.CrawlerException("页面截取分页信息div.pagingArea失败\n" + blog_pagination_response_content)
+        result["is_over"] = True
     # https://ameblo.jp/1108ayanyan/
     elif pq(blog_pagination_response_content).find("ul.skin-paging").length > 0:
-        if pq(blog_pagination_response_content).find("ul.skin-paging a.skin-pagingNext").length == 0:
-            if pq(blog_pagination_response_content).find("ul.skin-paging a.skin-pagingPrev").length == 0:
-                raise crawler.CrawlerException("页面截取分页信息ul.skin-paging失败\n" + blog_pagination_response_content)
-            else:
-                result["is_over"] = True
+        if pq(blog_pagination_response_content).find("ul.skin-paging a.skin-pagingNext").length == 0 and \
+                pq(blog_pagination_response_content).find("ul.skin-paging a.skin-pagingPrev").length == 0:
+            raise crawler.CrawlerException("页面截取分页信息ul.skin-paging失败\n" + blog_pagination_response_content)
+        result["is_over"] = True
     # https://ameblo.jp/48orii48/
     elif pq(blog_pagination_response_content).find("div.page").length > 0:
         pagination_selector = pq(blog_pagination_response_content).find("div.page").eq(0).find("a")
@@ -224,14 +220,15 @@ class Ameblo(crawler.Crawler):
 
     def init(self):
         # 检测登录状态
-        if not check_login():
-            while True:
-                input_str = input(tool.get_time() + " 没有检测到账号登录状态，可能无法解析只对会员开放的日志，继续程序(C)ontinue？或者退出程序(E)xit？:")
-                input_str = input_str.lower()
-                if input_str in ["e", "exit"]:
-                    tool.process_exit()
-                elif input_str in ["c", "continue"]:
-                    break
+        if check_login():
+            return
+        while True:
+            input_str = input(tool.get_time() + " 没有检测到账号登录状态，可能无法解析只对会员开放的日志，继续程序(C)ontinue？或者退出程序(E)xit？:")
+            input_str = input_str.lower()
+            if input_str in ["e", "exit"]:
+                tool.process_exit()
+            elif input_str in ["c", "continue"]:
+                break
 
 
 class CrawlerThread(crawler.CrawlerThread):
@@ -332,13 +329,13 @@ class CrawlerThread(crawler.CrawlerThread):
         photo_index = 1
         for photo_url in blog_response["photo_url_list"]:
             self.main_thread_check()  # 检测主线程运行状态
+
             # 获取原始图片下载地址
             photo_url = get_origin_photo_url(photo_url)
             if photo_url in self.duplicate_list:
                 self.step("%s的图片 %s 已存在" % (album_description, photo_url))
                 continue
-            else:
-                self.duplicate_list[photo_url] = 1
+            self.duplicate_list[photo_url] = 1
 
             photo_name = "%011d_%02d.%s" % (blog_id, photo_index, net.get_file_extension(photo_url, "jpg"))
             photo_path = os.path.join(self.main_thread.photo_download_path, self.index_key, photo_name)

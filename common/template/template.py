@@ -56,18 +56,20 @@ class Template(crawler.Crawler):
         # account_id
         self.save_data = crawler.read_save_data(self.save_data_path, 0, ["", ])
 
-        # 检测登录状态
-        if not check_login():
-            while True:
-                input_str = input(tool.get_time() + " 没有检测到账号登录状态，可能无法解析只对会员开放的日志，继续程序(C)ontinue？或者退出程序(E)xit？:")
-                input_str = input_str.lower()
-                if input_str in ["e", "exit"]:
-                    tool.process_exit()
-                elif input_str in ["c", "continue"]:
-                    break
-
         # 下载线程
         self.crawler_thread = CrawlerThread
+
+    def init(self):
+        # 检测登录状态
+        if check_login():
+            return
+        while True:
+            input_str = input(tool.get_time() + " 没有检测到账号登录状态，可能无法解析只对会员开放的日志，继续程序(C)ontinue？或者退出程序(E)xit？:")
+            input_str = input_str.lower()
+            if input_str in ["e", "exit"]:
+                tool.process_exit()
+            elif input_str in ["c", "continue"]:
+                break
         
 
 class CrawlerThread(crawler.CrawlerThread):

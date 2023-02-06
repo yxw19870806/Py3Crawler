@@ -69,12 +69,11 @@ def get_favorites_list(favorites_id):
             "direction": "false",
         }
         api_response = net.request(api_url, method="GET", fields=query_data, cookies_list=COOKIE_INFO, json_decode=True)
+        video_info_list = []
         try:
             video_info_list = crawler.get_json_value(api_response.json_data, "data", "media_list", type_check=list)
         except crawler.CrawlerException:
-            if crawler.get_json_value(api_response.json_data, "data", "media_list", value_check=None) is None:
-                video_info_list = []
-            else:
+            if crawler.get_json_value(api_response.json_data, "data", "media_list", value_check=None) is not None:
                 raise
         for video_info in video_info_list:
             result_video_info = {
@@ -179,12 +178,11 @@ def get_one_page_album(account_id, page_count):
     if api_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(api_response.status))
 
+    album_info_list = []
     try:
         album_info_list = crawler.get_json_value(api_response.json_data, "data", "items", type_check=list)
     except crawler.CrawlerException:
-        if crawler.get_json_value(api_response.json_data, "data", "items", value_check=None) is None:
-            album_info_list = []
-        else:
+        if crawler.get_json_value(api_response.json_data, "data", "items", value_check=None) is not None:
             raise
     for album_info in album_info_list:
         # 获取相簿id
@@ -208,13 +206,11 @@ def get_one_page_audio(account_id, page_count):
     }
     if api_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(api_response.status))
-    # 没有任何音频
+    audio_info_list = []
     try:
         audio_info_list = crawler.get_json_value(api_response.json_data, "data", "data", type_check=list)
     except crawler.CrawlerException:
-        if crawler.get_json_value(api_response.json_data, "data", "data", value_check=None) is None:
-            audio_info_list = []
-        else:
+        if crawler.get_json_value(api_response.json_data, "data", "data", value_check=None) is not None:
             raise
     for audio_info in audio_info_list:
         result_audio_info = {

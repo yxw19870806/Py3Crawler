@@ -219,13 +219,14 @@ class NicoNico(crawler.Crawler):
         # mylist_id  last_video_id
         self.save_data = crawler.read_save_data(self.save_data_path, 0, ["", "0"])
 
+        # 下载线程
+        self.crawler_thread = CrawlerThread
+
+    def init(self):
         # 检测登录状态
         if not check_login():
             log.error("没有检测到账号登录状态，退出程序！")
             tool.process_exit()
-
-        # 下载线程
-        self.crawler_thread = CrawlerThread
 
 
 class CrawlerThread(crawler.CrawlerThread):
