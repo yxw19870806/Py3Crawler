@@ -324,17 +324,18 @@ class Instagram(crawler.Crawler):
         init_session()
 
         # 检测登录状态
-        if not check_login():
-            while True:
-                input_str = input(tool.get_time() + " 没有检测到账号登录状态，手动输入账号密码登录继续(C)ontinue？或者退出程序(E)xit？:")
-                input_str = input_str.lower()
-                if input_str in ["c", "yes"]:
-                    if login_from_console():
-                        break
-                    else:
-                        log.step("登录失败！")
-                elif input_str in ["e", "exit"]:
-                    tool.process_exit()
+        if check_login():
+            return
+        while True:
+            input_str = input(tool.get_time() + " 没有检测到账号登录状态，手动输入账号密码登录继续(C)ontinue？或者退出程序(E)xit？:")
+            input_str = input_str.lower()
+            if input_str in ["c", "yes"]:
+                if login_from_console():
+                    break
+                else:
+                    log.step("登录失败！")
+            elif input_str in ["e", "exit"]:
+                tool.process_exit()
 
 
 class CrawlerThread(crawler.CrawlerThread):

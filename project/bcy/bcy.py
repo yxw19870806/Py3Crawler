@@ -119,7 +119,7 @@ def get_album_page_by_selenium(album_id):
             encryption_video_url = crawler.get_json_value(video_info, "main_url", type_check=str)
             result["video_type"] = crawler.get_json_value(video_info, "vtype", type_check=str)
     if encryption_video_url is None:
-        crawler.CrawlerException("视频信息截取加密视频地址失败\n" + video_info_response.json_data)
+        raise crawler.CrawlerException("视频信息截取加密视频地址失败\n" + video_info_response.json_data)
     try:
         result["video_url"] = base64.b64decode(encryption_video_url).decode(errors="ignore")
     except TypeError:

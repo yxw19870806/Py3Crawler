@@ -204,13 +204,14 @@ class Weibo(crawler.Crawler):
 
     def init(self):
         # 检测登录状态
-        if not check_login():
-            # 如果没有获得登录相关的cookie，则模拟登录并更新cookie
-            if init_session() and check_login():
-                pass
-            else:
-                log.error("没有检测到登录信息")
-                tool.process_exit()
+        if check_login():
+            return
+        # 如果没有获得登录相关的cookie，则模拟登录并更新cookie
+        if init_session() and check_login():
+            pass
+        else:
+            log.error("没有检测到登录信息")
+            tool.process_exit()
 
 
 class CrawlerThread(crawler.CrawlerThread):
