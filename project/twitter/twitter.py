@@ -310,6 +310,7 @@ class Twitter(crawler.Crawler):
         except crawler.CrawlerException as e:
             log.error(e.http_error("生成authorization"))
             tool.process_exit()
+
         while True:
             input_str = input(tool.get_time() + " 没有检测到账号登录状态，是否继续(C)ontinue？或者退出程序(E)xit？:")
             input_str = input_str.lower()

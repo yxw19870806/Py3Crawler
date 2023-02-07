@@ -206,6 +206,7 @@ class Weibo(crawler.Crawler):
         # 检测登录状态
         if check_login():
             return
+
         # 如果没有获得登录相关的cookie，则模拟登录并更新cookie
         if init_session() and check_login():
             pass
