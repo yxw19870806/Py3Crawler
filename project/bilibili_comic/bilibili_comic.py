@@ -109,6 +109,7 @@ class BiliBiliComic(crawler.Crawler):
         # 检测登录状态
         if check_login():
             return
+
         while True:
             input_str = input(tool.get_time() + " 没有检测到账号登录状态，可能无法解析需要登录才能查看的漫画，继续程序(C)ontinue？或者退出程序(E)xit？:")
             input_str = input_str.lower()

@@ -26,6 +26,8 @@ def check_login():
     if index_response.status == 303 and index_response.getheader("Location").find("https://accounts.google.com/ServiceLogin?") == 0:
         return False
     elif index_response.status == net.HTTP_RETURN_CODE_SUCCEED:
+        global IS_LOGIN
+        IS_LOGIN = True
         return True
     return False
 
@@ -212,11 +214,9 @@ def get_video_page(video_id):
             # 解析JS文件，获取对应的加密方法
             if len(decrypt_function_step) == 0:
                 js_file_path = tool.find_sub_string(video_play_response_content, '<script src="/s/player/', '"')
-                if js_file_path:
-                    js_file_url = "https://www.youtube.com/s/player/%s" % js_file_path
-                else:
+                if not js_file_path:
                     raise crawler.CrawlerException("播放器JS文件地址截取失败\n" + video_play_response_content)
-                decrypt_function_step = get_decrypt_step(js_file_url)
+                decrypt_function_step = get_decrypt_step("https://www.youtube.com/s/player/%s" % js_file_path)
             signature = decrypt_signature(decrypt_function_step, video_signature)
             video_url += "&sig=" + signature
         resolution_to_url[video_resolution] = video_url
@@ -368,16 +368,15 @@ class Youtube(crawler.Crawler):
     def init(self):
         # 检测登录状态
         if check_login():
-            global IS_LOGIN
-            IS_LOGIN = True
-        else:
-            while True:
-                input_str = input(tool.get_time() + " 没有检测到账号登录状态，可能无法解析受限制的视频，继续程序(C)ontinue？或者退出程序(E)xit？:")
-                input_str = input_str.lower()
-                if input_str in ["e", "exit"]:
-                    tool.process_exit()
-                elif input_str in ["c", "continue"]:
-                    break
+            return
+
+        while True:
+            input_str = input(tool.get_time() + " 没有检测到账号登录状态，可能无法解析受限制的视频，继续程序(C)ontinue？或者退出程序(E)xit？:")
+            input_str = input_str.lower()
+            if input_str in ["e", "exit"]:
+                tool.process_exit()
+            elif input_str in ["c", "continue"]:
+                break
 
 
 class CrawlerThread(crawler.CrawlerThread):

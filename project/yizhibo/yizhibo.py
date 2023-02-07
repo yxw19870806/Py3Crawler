@@ -28,13 +28,14 @@ def get_photo_index_page(account_id):
     if photo_index_response_content == '<script>window.location.href="/404.html";</script>':
         raise crawler.CrawlerException("账号不存在")
     # 获取全部图片地址
-    if pq(photo_index_response_content).find(".index_all_list p").html() != "还没有照片哦":
-        video_list_selector = pq(photo_index_response_content).find("img.index_img_main")
-        for video_index in range(video_list_selector.length):
-            photo_url = video_list_selector.eq(video_index).attr("src")
-            result["photo_url_list"].append(photo_url.split("@")[0])
-        if len(result["photo_url_list"]) == 0:
-            raise crawler.CrawlerException("页面匹配图片地址失败\n" + photo_index_response_content)
+    if pq(photo_index_response_content).find(".index_all_list p").html() == "还没有照片哦":
+        return result
+    video_list_selector = pq(photo_index_response_content).find("img.index_img_main")
+    for video_index in range(video_list_selector.length):
+        photo_url = video_list_selector.eq(video_index).attr("src")
+        result["photo_url_list"].append(photo_url.split("@")[0])
+    if len(result["photo_url_list"]) == 0:
+        raise crawler.CrawlerException("页面匹配图片地址失败\n" + photo_index_response_content)
     return result
 
 
@@ -74,12 +75,13 @@ def get_video_index_page(account_id):
     video_pagination_response_content = video_pagination_response.data.decode(errors="ignore")
     if video_pagination_response_content == '<script>window.location.href="/404.html";</script>':
         raise crawler.CrawlerException("账号不存在")
-    if pq(video_pagination_response_content).find(".index_all_list p").html() != "还没有直播哦":
-        video_list_selector = pq(video_pagination_response_content).find("div.scid")
-        for video_index in range(video_list_selector.length):
-            result["video_id_list"].append(video_list_selector.eq(video_index).html())
-        if len(result["video_id_list"]) == 0:
-            raise crawler.CrawlerException("页面匹配视频id失败\n" + video_pagination_response_content)
+    if pq(video_pagination_response_content).find(".index_all_list p").html() == "还没有直播哦":
+        return result
+    video_list_selector = pq(video_pagination_response_content).find("div.scid")
+    for video_index in range(video_list_selector.length):
+        result["video_id_list"].append(video_list_selector.eq(video_index).html())
+    if len(result["video_id_list"]) == 0:
+        raise crawler.CrawlerException("页面匹配视频id失败\n" + video_pagination_response_content)
     return result
 
 
@@ -185,19 +187,13 @@ class CrawlerThread(crawler.CrawlerThread):
     def crawl_photo(self, photo_info):
         photo_index = int(self.single_save_data[3]) + 1
 
-        photo_description = "第%s张图片" % photo_index
-        self.step("开始下载 %s %s" % (photo_description, photo_info["photo_url"]))
-
         photo_name = "%04d.%s" % (photo_index, net.get_file_extension(photo_info["photo_url"]))
         photo_path = os.path.join(self.main_thread.photo_download_path, self.display_name, photo_name)
-        download_return = net.Download(photo_info["photo_url"], photo_path)
-        if download_return.status == net.Download.DOWNLOAD_SUCCEED:
+        photo_description = "第%s张图片" % photo_index
+        if self.download(photo_info["photo_url"], photo_path, photo_description):
             self.total_photo_count += 1  # 计数累加
-            self.step("%s 下载成功" % photo_description)
         else:
-            self.error("%s %s 下载失败，原因：%s" % (photo_description, photo_info["photo_url"], crawler.download_failre(download_return.code)))
-            if self.check_download_failure_exit(False):
-                return False
+            return False
 
         # 图片下载完毕
         self.single_save_data[3] = str(photo_index)  # 设置存档记录

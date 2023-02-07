@@ -326,6 +326,7 @@ class Instagram(crawler.Crawler):
         # 检测登录状态
         if check_login():
             return
+
         while True:
             input_str = input(tool.get_time() + " 没有检测到账号登录状态，手动输入账号密码登录继续(C)ontinue？或者退出程序(E)xit？:")
             input_str = input_str.lower()
