@@ -572,7 +572,7 @@ class CrawlerThread(crawler.CrawlerThread):
 
             video_path = os.path.join(self.main_thread.video_download_path, self.index_key, "%012d.mp4" % post_info["post_id"])
             video_description = "日志%s(%s)视频" % (post_info["post_id"], post_info["post_url"])
-            if self.download(video_url, video_path, video_description, failure_callback=self.download_failure_callback, auto_multipart_download=True):
+            if self.download(video_url, video_path, video_description, failure_callback=self.video_download_failure_callback, auto_multipart_download=True):
                 self.temp_path_list.append(video_path)  # 设置临时目录
                 self.total_video_count += 1  # 计数累加
             break
@@ -585,32 +585,19 @@ class CrawlerThread(crawler.CrawlerThread):
             for photo_url in photo_url_list:
                 self.main_thread_check()  # 检测主线程运行状态
 
-                photo_description = "日志%s(%s)第%s张图片" % (post_info["post_id"], post_info["post_url"], photo_index)
-                self.step("开始下载 %s" % photo_description)
-
                 photo_name = "%012d_%02d.%s" % (post_info["post_id"], photo_index, net.get_file_extension(photo_url))
                 photo_path = os.path.join(self.main_thread.photo_download_path, self.index_key, photo_name)
-                download_return = net.Download(photo_url, photo_path)
-                if download_return.status == net.Download.DOWNLOAD_SUCCEED:
+                photo_description = "日志%s(%s)第%s张图片" % (post_info["post_id"], post_info["post_url"], photo_index)
+                if self.download(photo_url, photo_path, photo_description, failure_callback=self.photo_download_failure_callback):
                     self.temp_path_list.append(photo_path)  # 设置临时目录
                     self.total_photo_count += 1  # 计数累加
-                    self.step("%s 下载成功" % photo_description)
-                else:
-                    error_message = "%s %s 下载失败，原因：%s" % (photo_description, photo_url, crawler.download_failre(download_return.code))
-                    # 403、404错误作为step log输出
-                    if IS_STEP_ERROR_403_AND_404 and download_return.code in [403, 404]:
-                        self.step(error_message)
-                        continue
-                    else:
-                        self.error(error_message)
-                        self.check_download_failure_exit()
                 photo_index += 1
 
         # 日志内图片和视频全部下载完毕
         self.temp_path_list = []  # 临时目录设置清除
         self.single_save_data[1] = str(post_info["post_id"])  # 设置存档记录
 
-    def download_failure_callback(self, video_url, video_path, video_description, download_return: net.Download):
+    def video_download_failure_callback(self, video_url, video_path, video_description, download_return: net.Download):
         if download_return.code == 403 and video_url.find("_r1_720") != -1:
             video_url = video_url.replace("_r1_720", "_r1")
             download_return = net.Download(video_url, video_path, auto_multipart_download=True)
@@ -619,6 +606,12 @@ class CrawlerThread(crawler.CrawlerThread):
                 return False
         if IS_STEP_ERROR_403_AND_404 and download_return.code in [403, 404]:
             self.step("%s %s 下载失败，原因：%s" % (video_description, video_url, crawler.download_failre(download_return.code)))
+            return False
+        return True
+
+    def photo_download_failure_callback(self, photo_url, photo_path, photo_description, download_return: net.Download):
+        if IS_STEP_ERROR_403_AND_404 and download_return.code in [403, 404]:
+            self.step("%s %s 下载失败，原因：%s" % (photo_description, photo_url, crawler.download_failre(download_return.code)))
             return False
         return True
 
