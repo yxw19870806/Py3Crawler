@@ -223,29 +223,24 @@ class CrawlerThread(crawler.CrawlerThread):
             else:
                 photo_url = photo_info["photo_url"]
 
-            photo_description = "日志%s第%s张图片" % (blog_id, photo_index)
-            self.step("开始下载 %s %s" % (photo_description, photo_url))
-
             photo_name = "%06d_%02d.%s" % (blog_id, photo_index, net.get_file_extension(photo_url, "jpg"))
             photo_path = os.path.join(self.main_thread.photo_download_path, self.display_name, photo_name)
-            download_return = net.Download(photo_url, photo_path, cookies_list=preview_photo_response["cookies"])
-            if download_return.status == net.Download.DOWNLOAD_SUCCEED:
-                if check_photo_invalid(photo_path):
-                    path.delete_dir_or_file(photo_path)
-                    self.step("%s %s 不符合规则，删除" % (photo_description, photo_url))
-                    continue
-                else:
-                    self.temp_path_list.append(photo_path)  # 设置临时目录
-                    self.total_photo_count += 1  # 计数累加
-                    self.step("%s 下载成功" % photo_description)
-            else:
-                self.error("%s %s 下载失败，原因：%s" % (photo_description, photo_url, crawler.download_failre(download_return.code)))
-                self.check_download_failure_exit()
+            photo_description = "日志%s第%s张图片" % (blog_id, photo_index)
+            if self.download(photo_url, photo_path, photo_description, success_callback=self.download_success_callback, cookies_list=preview_photo_response["cookies"]):
+                self.temp_path_list.append(photo_path)  # 设置临时目录
+                self.total_photo_count += 1  # 计数累加
             photo_index += 1
 
         # 日志内图片全部下载完毕
         self.temp_path_list = []  # 临时目录设置清除
         self.single_save_data[1] = str(blog_id)  # 设置存档记录
+
+    def download_success_callback(self, photo_url, photo_path, photo_description, download_return):
+        if check_photo_invalid(photo_path):
+            path.delete_dir_or_file(photo_path)
+            self.step("%s %s 不符合规则，删除" % (photo_description, photo_url))
+            return False
+        return True
 
     def _run(self):
         # 获取所有可下载日志
