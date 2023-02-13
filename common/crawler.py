@@ -405,8 +405,8 @@ class Crawler(object):
             message += "，共计下载" + "，".join(download_result)
         log.step(message)
 
-    @staticmethod
-    def start_parse(description: str):
+    def start_parse(self, description: str):
+        self.running_check()
         log.step("开始解析 " + description)
 
     @staticmethod
@@ -431,6 +431,7 @@ class Crawler(object):
                 True - 需要
                 False - 不需要
         """
+        self.running_check()
         log.step("开始下载 %s %s" % (file_description, file_url))
         download_return = net.Download(file_url, file_path, **kwargs)
         if download_return.status == net.Download.DOWNLOAD_SUCCEED:
@@ -588,7 +589,7 @@ class CrawlerThread(threading.Thread):
         log.error(message)
 
     def start_parse(self, description: str):
-        self.main_thread_check()  # 检测主线程运行状态
+        self.main_thread_check()
         self.step("开始解析 " + description)
 
     def parse_result(self, description: str, parse_result_list: Union[list, dict]):
@@ -613,7 +614,7 @@ class CrawlerThread(threading.Thread):
                 True - 需要
                 False - 不需要
         """
-        self.main_thread_check()  # 检测主线程运行状态
+        self.main_thread_check()
         self.step("开始下载 %s %s" % (file_description, file_url))
         download_return = net.Download(file_url, file_path, **kwargs)
         if download_return.status == net.Download.DOWNLOAD_SUCCEED:
