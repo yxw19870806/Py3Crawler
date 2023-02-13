@@ -329,8 +329,6 @@ class CrawlerThread(crawler.CrawlerThread):
 
         photo_index = 1
         for photo_url in blog_response["photo_url_list"]:
-            self.main_thread_check()  # 检测主线程运行状态
-
             # 获取原始图片下载地址
             photo_url = get_origin_photo_url(photo_url)
             if photo_url in self.duplicate_list:

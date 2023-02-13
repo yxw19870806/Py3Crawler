@@ -612,6 +612,7 @@ class CrawlerThread(threading.Thread):
                 True - 需要
                 False - 不需要
         """
+        self.main_thread_check()  # 检测主线程运行状态
         self.step("开始下载 %s %s" % (file_description, file_url))
         download_return = net.Download(file_url, file_path, **kwargs)
         if download_return.status == net.Download.DOWNLOAD_SUCCEED:

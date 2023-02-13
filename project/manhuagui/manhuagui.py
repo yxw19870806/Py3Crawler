@@ -186,8 +186,6 @@ class CrawlerThread(crawler.CrawlerThread):
         # 设置临时目录
         self.temp_path_list.append(chapter_path)
         for photo_url in chapter_response["photo_url_list"]:
-            self.main_thread_check()  # 检测主线程运行状态
-
             photo_path = os.path.join(chapter_path, "%03d.%s" % (photo_index, net.get_file_extension(photo_url)))
             photo_description = "漫画%s %s《%s》第%s张图片" % (chapter_info["chapter_id"], chapter_info["group_name"], chapter_info["chapter_name"], photo_index)
             header_list = {"Referer": "https://www.manhuagui.com/comic/%s/%s.html" % (self.index_key, chapter_info["chapter_id"])}

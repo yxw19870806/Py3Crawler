@@ -555,8 +555,6 @@ class CrawlerThread(crawler.CrawlerThread):
         for video_part_info in video_play_response["video_part_info_list"]:
             video_split_index = 1
             for video_part_url in video_part_info["video_url_list"]:
-                self.main_thread_check()  # 检测主线程运行状态
-
                 video_name = "%010d %s" % (video_info["video_id"], video_info["video_title"])
                 if len(video_play_response["video_part_info_list"]) > 1:
                     if video_part_info["video_part_title"]:

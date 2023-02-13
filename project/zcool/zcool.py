@@ -191,8 +191,6 @@ class CrawlerThread(crawler.CrawlerThread):
         album_path = os.path.join(self.main_thread.photo_download_path, self.index_key, album_name)
         self.temp_path_list.append(album_path)
         for photo_url in album_response["photo_url_list"]:
-            self.main_thread_check()  # 检测主线程运行状态
-
             photo_url = get_photo_url(photo_url)
             photo_path = os.path.join(album_path, "%02d.%s" % (photo_index, net.get_file_extension(photo_url)))
             photo_description = "作品%s《%s》第%s张图片" % (album_info["album_id"], album_info["album_title"], photo_index)
