@@ -351,20 +351,14 @@ class CrawlerThread(crawler.CrawlerThread):
         is_over = False
         # 获取全部还未下载过需要解析的媒体
         while not is_over:
-            self.main_thread_check()  # 检测主线程运行状态
-
             pagination_description = "cursor：%s后一页媒体" % cursor
             self.start_parse(pagination_description)
-
-            # 增加请求计数
-            add_request_count(self.thread_lock)
-            # 获取指定时间后的一页媒体信息
+            add_request_count(self.thread_lock)  # 增加请求计数
             try:
                 media_pagination_response: dict = get_one_page_media(self.single_save_data[1], cursor)
             except crawler.CrawlerException as e:
                 self.error(e.http_error(pagination_description))
                 raise
-
             self.parse_result(pagination_description, media_pagination_response["media_info_list"])
 
             # 寻找这一页符合条件的媒体
@@ -390,8 +384,6 @@ class CrawlerThread(crawler.CrawlerThread):
     def crawl_media(self, media_info):
         media_description = "媒体%s/%s" % (media_info["page_id"], media_info["page_code"])
         self.start_parse(media_description)
-
-        # 获取媒体详细页
         try:
             media_response = get_media_page(media_info["page_id"])
         except crawler.CrawlerException as e:
@@ -399,10 +391,10 @@ class CrawlerThread(crawler.CrawlerThread):
             raise
 
         # 图片下载
-        photo_index = 1
         if self.main_thread.is_download_photo:
             self.parse_result(media_description + "图片", media_response["photo_url_list"])
 
+            photo_index = 1
             for photo_url in media_response["photo_url_list"]:
                 photo_name = "%019d_%02d.%s" % (media_info["page_id"], photo_index, net.get_file_extension(photo_url))
                 photo_path = os.path.join(self.main_thread.photo_download_path, self.index_key, photo_name)
@@ -413,10 +405,10 @@ class CrawlerThread(crawler.CrawlerThread):
                 photo_index += 1
 
         # 视频下载
-        video_index = 1
         if self.main_thread.is_download_video:
             self.parse_result(media_description + "视频", media_response["video_url_list"])
 
+            video_index = 1
             for video_url in media_response["video_url_list"]:
                 video_name = "%019d_%02d.%s" % (media_info["page_id"], video_index, net.get_file_extension(video_url))
                 video_path = os.path.join(self.main_thread.video_download_path, self.index_key, video_name)

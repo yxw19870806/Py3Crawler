@@ -120,13 +120,11 @@ class CrawlerThread(crawler.CrawlerThread):
 
         index_description = "首页"
         self.start_parse(index_description)
-
         try:
             album_index_response = get_album_index_page(self.index_key)
         except crawler.CrawlerException as e:
             self.error(e.http_error(index_description))
             raise
-
         self.parse_result(index_description, album_index_response["audio_info_list"])
 
         for audio_info in album_index_response["audio_info_list"]:
@@ -142,8 +140,6 @@ class CrawlerThread(crawler.CrawlerThread):
     def crawl_audio(self, audio_info):
         audio_description = "音频%s" % audio_info["audio_id"]
         self.start_parse(audio_description)
-
-        # 获取音频播放页
         try:
             audio_play_response = get_audio_info_page(audio_info["audio_play_url"])
         except crawler.CrawlerException as e:

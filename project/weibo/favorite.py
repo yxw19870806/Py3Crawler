@@ -140,17 +140,13 @@ class Favorite(crawler.Crawler):
         page_count = 1
         is_over = False
         while not is_over:
-            self.running_check()
-
             pagination_description = "第%s页收藏" % page_count
             self.start_parse(pagination_description)
-
             try:
                 favorite_pagination_response = get_one_page_favorite(page_count)
             except crawler.CrawlerException as e:
                 log.error(e.http_error(pagination_description))
                 raise
-
             self.parse_result(pagination_description + "已删除微博", favorite_pagination_response["delete_blog_id_list"])
 
             for blog_id in favorite_pagination_response["delete_blog_id_list"]:
@@ -168,7 +164,6 @@ class Favorite(crawler.Crawler):
             for blog_info in favorite_pagination_response["blog_info_list"]:
                 blog_description = "微博%s" % blog_info["blog_id"]
                 self.start_parse(blog_description)
-
                 self.parse_result(blog_description, blog_info["photo_url_list"])
                 
                 photo_count = 1

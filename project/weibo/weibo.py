@@ -232,18 +232,13 @@ class CrawlerThread(crawler.CrawlerThread):
         is_over = False
         # 获取全部还未下载过需要解析的图片
         while not is_over:
-            self.main_thread_check()  # 检测主线程运行状态
-
             pagination_description = "第%s页图片" % page_count
             self.start_parse(pagination_description)
-
-            # 获取指定一页图片的信息
             try:
                 photo_pagination_response = get_one_page_photo(self.index_key, page_count)
             except crawler.CrawlerException as e:
                 self.error(e.http_error("第%s页图片" % page_count))
                 raise
-
             self.parse_result(pagination_description, photo_pagination_response["photo_info_list"])
 
             # 寻找这一页符合条件的图片
@@ -275,18 +270,13 @@ class CrawlerThread(crawler.CrawlerThread):
         is_over = False
         # 获取全部还未下载过需要解析的视频
         while not is_over:
-            self.main_thread_check()  # 检测主线程运行状态
-
             pagination_description = "since_id：%s后一页视频" % since_id
             self.start_parse(pagination_description)
-
-            # 获取指定时间点后的一页视频信息
             try:
                 video_pagination_response: dict = get_one_page_video(self.index_key, since_id)
             except crawler.CrawlerException as e:
                 self.error(e.http_error(pagination_description))
                 raise
-
             self.parse_result(pagination_description, video_pagination_response["video_info_list"])
 
             # 寻找这一页符合条件的视频

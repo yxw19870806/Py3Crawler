@@ -241,18 +241,13 @@ class CrawlerThread(crawler.CrawlerThread):
         is_over = False
         # 获取全部还未下载过需要解析的图片
         while not is_over:
-            self.main_thread_check()  # 检测主线程运行状态
-
             pagination_description = "第%s页图片" % page_count
             self.start_parse(pagination_description)
-
-            # 获取一页图片
             try:
                 photo_pagination_response = get_one_page_photo(user_id, page_count, site_key, csrf, self.request_id)
             except crawler.CrawlerException as e:
                 self.error(e.http_error(pagination_description))
                 raise
-
             self.parse_result(pagination_description, photo_pagination_response["photo_info_list"])
 
             # 寻找这一页符合条件的图片

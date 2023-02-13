@@ -88,18 +88,13 @@ class CrawlerThread(crawler.CrawlerThread):
         photo_info_list = []
         is_over = False
         while not is_over:
-            self.main_thread_check()  # 检测主线程运行状态
-
             pagination_description = "第%s页图片" % page_count
             self.start_parse(pagination_description)
-
-            # 获取一页图片
             try:
                 photo_pagination_response = get_one_page_photo(self.index_key, page_count)
             except crawler.CrawlerException as e:
                 self.error(e.http_error(pagination_description))
                 raise
-
             self.parse_result(pagination_description, photo_pagination_response["photo_info_list"])
 
             # 寻找这一页符合条件的图片

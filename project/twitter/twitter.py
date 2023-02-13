@@ -332,21 +332,13 @@ class CrawlerThread(crawler.CrawlerThread):
         is_over = False
         # 获取全部还未下载过需要解析的推特
         while not is_over:
-            self.main_thread_check()  # 检测主线程运行状态
-
             pagination_description = "cursor：%s后一页推特" % cursor
             self.start_parse(pagination_description)
-
-            # 获取指定时间点后的一页图片信息
             try:
                 media_pagination_response = get_one_page_media(self.index_key, self.single_save_data[1], cursor)
             except crawler.CrawlerException as e:
                 self.error(e.http_error(pagination_description))
                 raise
-
-            if media_pagination_response["is_over"]:
-                break
-
             self.parse_result(pagination_description, media_pagination_response["media_info_list"])
 
             # 寻找这一页符合条件的推特

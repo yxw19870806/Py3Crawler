@@ -588,6 +588,7 @@ class CrawlerThread(threading.Thread):
         log.error(message)
 
     def start_parse(self, description: str):
+        self.main_thread_check()  # 检测主线程运行状态
         self.step("开始解析 " + description)
 
     def parse_result(self, description: str, parse_result_list: Union[list, dict]):

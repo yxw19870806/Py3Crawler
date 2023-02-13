@@ -480,12 +480,8 @@ class CrawlerThread(crawler.CrawlerThread):
         is_over = False
         # 获取全部还未下载过需要解析的日志
         while not is_over:
-            self.main_thread_check()  # 检测主线程运行状态
-
             pagination_description = "第%s页日志" % page_count
             self.start_parse(pagination_description)
-
-            # 获取一页的日志地址
             try:
                 if self.is_private:
                     post_pagination_response: dict = get_one_page_private_blog(self.index_key, page_count)
@@ -494,10 +490,8 @@ class CrawlerThread(crawler.CrawlerThread):
             except crawler.CrawlerException as e:
                 self.error(e.http_error(pagination_description))
                 raise
-
             if not self.is_private and post_pagination_response["is_over"]:
                 break
-
             self.parse_result(pagination_description, post_pagination_response["post_info_list"])
 
             # 寻找这一页符合条件的日志

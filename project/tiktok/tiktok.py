@@ -124,18 +124,13 @@ class CrawlerThread(crawler.CrawlerThread):
         is_over = False
         # 获取全部还未下载过需要解析的视频
         while not is_over:
-            self.main_thread_check()  # 检测主线程运行状态
-
             pagination_description = "cursor %s后的一页视频" % cursor_id
             self.start_parse(pagination_description)
-
-            # 获取指定一页的视频信息
             try:
                 video_pagination_response = get_one_page_video(self.index_key, cursor_id, account_index_response["signature"])
             except crawler.CrawlerException as e:
                 self.error(e.http_error(pagination_description))
                 raise
-
             self.parse_result(pagination_description, video_pagination_response["video_info_list"])
 
             # 寻找这一页符合条件的视频

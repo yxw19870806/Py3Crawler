@@ -164,11 +164,8 @@ class CrawlerThread(crawler.CrawlerThread):
         # 寻找这一页符合条件的图片
         photo_info_list = []
         for photo_url in photo_index_response["photo_url_list"]:
-            self.main_thread_check()  # 检测主线程运行状态
-
             photo_description = "图片%s" % photo_url
             self.start_parse(photo_description)
-
             try:
                 photo_head_response = get_photo_header(photo_url)
             except crawler.CrawlerException as e:
@@ -216,12 +213,8 @@ class CrawlerThread(crawler.CrawlerThread):
         # 寻找这一页符合条件的视频
         video_info_list = []
         for video_id in video_pagination_response["video_id_list"]:
-            self.main_thread_check()  # 检测主线程运行状态
-
             video_description = "视频%s" % video_id
             self.start_parse(video_description)
-
-            # 获取视频的时间和下载地址
             try:
                 video_info_response = get_video_info_page(video_id)
             except crawler.CrawlerException as e:

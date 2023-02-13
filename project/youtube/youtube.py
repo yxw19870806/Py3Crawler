@@ -400,18 +400,13 @@ class CrawlerThread(crawler.CrawlerThread):
         is_over = False
         # 获取全部还未下载过需要解析的相册
         while not is_over:
-            self.main_thread_check()  # 检测主线程运行状态
-
             pagination_description = "token：%s后一页视频" % token
             self.start_parse(pagination_description)
-
-            # 获取一页视频
             try:
                 video_pagination_response = get_one_page_video(self.index_key, token)
             except crawler.CrawlerException as e:
                 self.error(e.http_error(pagination_description))
                 raise
-
             self.parse_result(pagination_description, video_pagination_response["video_id_list"])
 
             if len(self.single_save_data) < 4:
@@ -442,8 +437,6 @@ class CrawlerThread(crawler.CrawlerThread):
     def crawl_video(self, video_id, is_last):
         video_description = "视频%s" % video_id
         self.start_parse(video_description)
-
-        # 获取指定视频信息
         try:
             video_response = get_video_page(video_id)
         except crawler.CrawlerException as e:
