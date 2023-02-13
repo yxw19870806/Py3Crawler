@@ -107,7 +107,5 @@ def main():
                     output.print_msg(print_message, False)
 
 
-
-
 if __name__ == "__main__":
     main()

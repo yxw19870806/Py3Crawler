@@ -17,7 +17,6 @@ import traceback
 import warnings
 from typing import Callable, Optional, Union
 
-
 # 项目根目录
 PROJECT_ROOT_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 # 全局config.ini路径

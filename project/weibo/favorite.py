@@ -165,7 +165,7 @@ class Favorite(crawler.Crawler):
                 blog_description = "微博%s" % blog_info["blog_id"]
                 self.start_parse(blog_description)
                 self.parse_result(blog_description, blog_info["photo_url_list"])
-                
+
                 photo_count = 1
                 photo_path = os.path.join(self.photo_download_path, blog_info["blog_id"])
                 for photo_url in blog_info["photo_url_list"]:
