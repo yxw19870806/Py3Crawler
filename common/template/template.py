@@ -71,7 +71,7 @@ class Template(crawler.Crawler):
                 tool.process_exit()
             elif input_str in ["c", "continue"]:
                 break
-        
+
 
 class CrawlerThread(crawler.CrawlerThread):
     def __init__(self, main_thread, single_save_data):

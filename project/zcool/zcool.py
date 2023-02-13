@@ -207,7 +207,7 @@ class CrawlerThread(crawler.CrawlerThread):
         while len(album_info_list) > 0:
             self.crawl_album(album_info_list.pop())
             self.main_thread_check()  # 检测主线程运行状态
-            
+
 
 if __name__ == "__main__":
     ZCool().main()

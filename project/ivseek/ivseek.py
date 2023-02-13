@@ -181,7 +181,7 @@ class IvSeek(crawler.Crawler):
         except crawler.CrawlerException as e:
             log.error(e.http_error("首页"))
             raise
-        
+
         log.step("最新视频id：%s" % index_response["max_archive_id"])
 
         for archive_id in range(self.save_id, index_response["max_archive_id"]):
