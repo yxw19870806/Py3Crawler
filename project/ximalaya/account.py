@@ -58,18 +58,13 @@ class CrawlerThread(crawler.CrawlerThread):
         is_over = False
         # 获取全部还未下载过需要解析的音频
         while not is_over:
-            self.main_thread_check()  # 检测主线程运行状态
-
             pagination_description = "第%s页音频" % page_count
             self.start_parse(pagination_description)
-
-            # 获取一页音频
             try:
                 audit_pagination_response = ximalaya.get_one_page_audio(self.index_key, page_count)
             except crawler.CrawlerException as e:
                 self.error(e.http_error(pagination_description))
                 raise
-
             self.parse_result(pagination_description, audit_pagination_response["audio_info_list"])
 
             # 寻找这一页符合条件的媒体
@@ -98,14 +93,11 @@ class CrawlerThread(crawler.CrawlerThread):
     def crawl_audio(self, audio_info):
         audio_description = "音频%s《%s》" % (audio_info["audio_id"], audio_info["audio_title"])
         self.start_parse(audio_description)
-
-        # 获取音频播放页
         try:
             audio_play_response = ximalaya.get_audio_info_page(audio_info["audio_id"])
         except crawler.CrawlerException as e:
             self.error(e.http_error(audio_description))
             raise
-
         if audio_play_response["is_delete"]:
             self.error("%s 不存在" % audio_description)
             raise

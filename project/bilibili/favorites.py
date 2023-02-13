@@ -80,23 +80,17 @@ class BiliBiliFavorites(bilibili.BiliBili):
 
             video_description = "视频%s 《%s》" % (video_info["video_id"], video_info["video_title"])
             self.start_parse(video_description + ", 剩余%s个视频" % len(favorites_response["video_info_list"]))
-
             if video_info["video_id"] in exist_list:
                 continue
-
-            # 获取下载地址
             try:
                 video_play_response = bilibili.get_video_page(video_info["video_id"])
             except crawler.CrawlerException as e:
                 log.error(e.http_error(video_description))
                 continue
-
             if video_play_response["is_private"]:
                 log.step("%s 需要登录才能访问，跳过" % video_description)
                 continue
-
-            if len(video_play_response["video_part_info_list"]) > 1:
-                log.step("%s 共获取%s个分段" % (video_description, len(video_play_response["video_part_info_list"])))
+            self.parse_result(video_description, video_play_response["video_part_info_list"])
 
             video_index = 1
             video_part_index = 1

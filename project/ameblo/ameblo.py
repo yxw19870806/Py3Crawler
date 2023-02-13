@@ -275,18 +275,13 @@ class CrawlerThread(crawler.CrawlerThread):
         is_over = False
         # 获取全部还未下载过需要解析的日志
         while not is_over:
-            self.main_thread_check()  # 检测主线程运行状态
-
             pagination_description = "第%s页日志" % page_count
             self.start_parse(pagination_description)
-
-            # 获取一页日志
             try:
                 blog_pagination_response = get_one_page_blog(self.index_key, page_count)
             except crawler.CrawlerException as e:
                 self.error(e.http_error(pagination_description))
                 raise
-
             self.parse_result(pagination_description, blog_pagination_response["blog_id_list"])
 
             for blog_id in blog_pagination_response["blog_id_list"]:
@@ -312,19 +307,15 @@ class CrawlerThread(crawler.CrawlerThread):
     def crawl_blog(self, blog_id):
         album_description = "日志%s" % blog_id
         self.start_parse(album_description)
-
-        # 获取日志
         try:
             blog_response = get_blog_page(self.index_key, blog_id)
         except crawler.CrawlerException as e:
             self.error(e.http_error(album_description))
             raise
-
         # 日志只对关注者可见
         if blog_response["is_delete"]:
             self.error("%s 已被删除，跳过" % album_description)
             return
-
         self.parse_result(album_description, blog_response["photo_url_list"])
 
         photo_index = 1

@@ -404,18 +404,13 @@ class CrawlerThread(crawler.CrawlerThread):
         video_info_list = []
         is_over = False
         while not is_over:
-            self.main_thread_check()  # 检测主线程运行状态
-
             pagination_description = "第%s页视频" % page_count
             self.start_parse(pagination_description)
-
-            # 获取一页相簿
             try:
                 album_pagination_response = get_one_page_video(self.index_key, page_count)
             except crawler.CrawlerException as e:
                 self.error(e.http_error(pagination_description))
                 raise
-
             self.parse_result(pagination_description, album_pagination_response["video_info_list"])
 
             # 寻找这一页符合条件的视频
@@ -449,18 +444,13 @@ class CrawlerThread(crawler.CrawlerThread):
         audio_info_list = []
         is_over = False
         while not is_over:
-            self.main_thread_check()  # 检测主线程运行状态
-
             pagination_description = "第%s页音频" % page_count
             self.start_parse(pagination_description)
-
-            # 获取一页相簿
             try:
                 album_pagination_response = get_one_page_audio(self.index_key, page_count)
             except crawler.CrawlerException as e:
                 self.error(e.http_error(pagination_description))
                 raise
-
             self.parse_result(pagination_description, album_pagination_response["audio_info_list"])
 
             # 寻找这一页符合条件的音频
@@ -494,18 +484,13 @@ class CrawlerThread(crawler.CrawlerThread):
         album_id_list = []
         is_over = False
         while not is_over:
-            self.main_thread_check()  # 检测主线程运行状态
-
             pagination_description = "第%s页相簿" % page_count
             self.start_parse(pagination_description)
-
-            # 获取一页相簿
             try:
                 album_pagination_response = get_one_page_album(self.index_key, page_count)
             except crawler.CrawlerException as e:
                 self.error(e.http_error(pagination_description))
                 raise
-
             self.parse_result(pagination_description, album_pagination_response["album_id_list"])
 
             # 寻找这一页符合条件的相簿
@@ -536,18 +521,14 @@ class CrawlerThread(crawler.CrawlerThread):
     def crawl_video(self, video_info):
         video_description = "视频%s《%s》" % (video_info["video_id"], video_info["video_title"])
         self.start_parse(video_description)
-
-        # 获取相簿
         try:
             video_play_response = get_video_page(video_info["video_id"])
         except crawler.CrawlerException as e:
             self.error(e.http_error(video_description))
             raise
-
         if video_play_response["is_private"]:
             log.error("%s 需要登录才能访问，跳过" % video_description)
             return
-
         self.parse_result(video_description, video_play_response["video_part_info_list"])
 
         video_index = 1
@@ -585,8 +566,6 @@ class CrawlerThread(crawler.CrawlerThread):
     def crawl_audio(self, audio_info):
         audio_description = "音频%s《%s》" % (audio_info["audio_id"], audio_info["audio_title"])
         self.start_parse(audio_description)
-
-        # 获取音频信息
         try:
             audio_info_response = get_audio_info_page(audio_info["audio_id"])
         except crawler.CrawlerException as e:
@@ -609,14 +588,11 @@ class CrawlerThread(crawler.CrawlerThread):
     def crawl_photo(self, album_id):
         album_description = "相簿%s" % album_id
         self.start_parse(album_description)
-
-        # 获取相簿
         try:
             album_response = get_album_page(album_id)
         except crawler.CrawlerException as e:
             self.error(e.http_error(album_description))
             raise
-
         self.parse_result(album_description, album_response["photo_url_list"])
 
         photo_index = 1

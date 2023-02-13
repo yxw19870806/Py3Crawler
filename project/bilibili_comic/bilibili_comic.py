@@ -132,7 +132,6 @@ class CrawlerThread(crawler.CrawlerThread):
     def get_crawl_list(self):
         comic_info_list = []
 
-        # 获取漫画首页
         index_description = "漫画首页"
         self.start_parse(index_description)
         try:
@@ -140,7 +139,6 @@ class CrawlerThread(crawler.CrawlerThread):
         except crawler.CrawlerException as e:
             self.error(e.http_error(index_description))
             raise
-
         self.parse_result(index_description, blog_pagination_response["comic_info_list"])
 
         # 寻找符合条件的章节
@@ -157,14 +155,11 @@ class CrawlerThread(crawler.CrawlerThread):
     def crawl_comic(self, comic_info):
         comic_description = "漫画%s 《%s》" % (comic_info["ep_id"], comic_info["ep_name"])
         self.start_parse(comic_description)
-
-        # 获取指定漫画章节
         try:
             chapter_response = get_chapter_page(comic_info["ep_id"])
         except crawler.CrawlerException as e:
             self.error(e.http_error(comic_description))
             raise
-
         self.parse_result(comic_description, chapter_response["photo_url_list"])
 
         # 图片下载

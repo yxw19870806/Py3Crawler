@@ -107,18 +107,13 @@ class CrawlerThread(crawler.CrawlerThread):
         is_over = False
         # 获取全部还未下载过需要解析的相册
         while not is_over:
-            self.main_thread_check()  # 检测主线程运行状态
-
             pagination_description = "%s后一页相册" % post_time
             self.start_parse(pagination_description)
-
-            # 获取一页相册
             try:
                 album_pagination_response = get_one_page_album(account_id, post_time)
             except crawler.CrawlerException as e:
                 self.error(e.http_error("%s后一页相册" % post_time))
                 raise
-
             self.parse_result(pagination_description, album_pagination_response["album_info_list"])
 
             # 已经没有相册了

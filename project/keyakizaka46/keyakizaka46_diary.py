@@ -105,18 +105,13 @@ class CrawlerThread(crawler.CrawlerThread):
         is_over = False
         # 获取全部还未下载过需要解析的日志
         while not is_over:
-            self.main_thread_check()  # 检测主线程运行状态
-
             pagination_description = "第%s页日志" % page_count
             self.start_parse(pagination_description)
-
-            # 获取一页博客信息
             try:
                 blog_pagination_response = get_one_page_blog(self.index_key, page_count)
             except crawler.CrawlerException as e:
                 self.error(e.http_error(pagination_description))
                 raise
-
             self.parse_result(pagination_description, blog_pagination_response["blog_info_list"])
 
             # 寻找这一页符合条件的日志
@@ -140,7 +135,6 @@ class CrawlerThread(crawler.CrawlerThread):
     def crawl_blog(self, blog_info):
         blog_description = "日志%s" % blog_info["blog_id"]
         self.start_parse(blog_description)
-
         self.parse_result(blog_description, blog_info["photo_url_list"])
 
         photo_index = 1
