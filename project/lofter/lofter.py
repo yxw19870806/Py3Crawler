@@ -176,8 +176,6 @@ class CrawlerThread(crawler.CrawlerThread):
         blog_id = get_blog_id(blog_url)
         photo_index = 1
         for photo_url in blog_response["photo_url_list"]:
-            self.main_thread_check()  # 检测主线程运行状态
-
             # 去除图片地址的参数
             photo_url = get_photo_url(photo_url)
 

@@ -404,8 +404,6 @@ class CrawlerThread(crawler.CrawlerThread):
             self.parse_result(media_description + "图片", media_response["photo_url_list"])
 
             for photo_url in media_response["photo_url_list"]:
-                self.main_thread_check()  # 检测主线程运行状态
-
                 photo_name = "%019d_%02d.%s" % (media_info["page_id"], photo_index, net.get_file_extension(photo_url))
                 photo_path = os.path.join(self.main_thread.photo_download_path, self.index_key, photo_name)
                 self.temp_path_list.append(photo_path)  # 设置临时目录
@@ -420,8 +418,6 @@ class CrawlerThread(crawler.CrawlerThread):
             self.parse_result(media_description + "视频", media_response["video_url_list"])
 
             for video_url in media_response["video_url_list"]:
-                self.main_thread_check()  # 检测主线程运行状态
-
                 video_name = "%019d_%02d.%s" % (media_info["page_id"], video_index, net.get_file_extension(video_url))
                 video_path = os.path.join(self.main_thread.video_download_path, self.index_key, video_name)
                 self.temp_path_list.append(video_path)  # 设置临时目录

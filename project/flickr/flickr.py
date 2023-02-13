@@ -276,8 +276,6 @@ class CrawlerThread(crawler.CrawlerThread):
     # 下载同一上传时间的所有图片
     def crawl_photo(self, photo_info_list):
         for photo_info in photo_info_list:
-            self.main_thread_check()  # 检测主线程运行状态
-
             photo_name = "%011d.%s" % (photo_info["photo_id"], net.get_file_extension(photo_info["photo_url"]))
             photo_path = os.path.join(self.main_thread.photo_download_path, self.index_key, photo_name)
             self.temp_path_list.append(photo_path)  # 设置临时目录

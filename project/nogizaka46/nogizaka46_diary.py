@@ -214,8 +214,6 @@ class CrawlerThread(crawler.CrawlerThread):
 
         photo_index = 1
         for photo_info in blog_response["photo_info_list"]:
-            self.main_thread_check()  # 检测主线程运行状态
-
             # 检查是否存在大图可以下载
             preview_photo_response = check_preview_photo(photo_info["photo_url"], photo_info["real_photo_url"])
             if preview_photo_response["cookies"]:

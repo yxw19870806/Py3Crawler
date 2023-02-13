@@ -151,8 +151,6 @@ class CrawlerThread(crawler.CrawlerThread):
             post_path = os.path.join(self.main_thread.photo_download_path, self.index_key, "%08d" % album_info["album_id"])
         self.temp_path_list.append(post_path)
         for photo_url in album_info["photo_url_list"]:
-            self.main_thread_check()  # 检测主线程运行状态
-
             photo_path = os.path.join(post_path, "%s.jpg" % photo_index)
             photo_description = "相册%s《%s》第%s张图片" % (album_info["album_id"], album_info["album_title"], photo_index)
             if self.download(photo_url, photo_path, photo_description):

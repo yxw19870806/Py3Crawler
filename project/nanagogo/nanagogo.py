@@ -157,8 +157,6 @@ class CrawlerThread(crawler.CrawlerThread):
 
         photo_index = 1
         for photo_url in blog_info["photo_url_list"]:
-            self.main_thread_check()  # 检测主线程运行状态
-
             photo_name = "%05d_%02d.%s" % (blog_info["blog_id"], photo_index, net.get_file_extension(photo_url))
             photo_path = os.path.join(self.main_thread.photo_download_path, self.index_key, photo_name)
             self.temp_path_list.append(photo_path)  # 设置临时目录
@@ -172,8 +170,6 @@ class CrawlerThread(crawler.CrawlerThread):
 
         video_index = 1
         for video_url in blog_info["video_url_list"]:
-            self.main_thread_check()  # 检测主线程运行状态
-
             video_name = "%05d_%02d.%s" % (blog_info["blog_id"], video_index, net.get_file_extension(video_url))
             video_path = os.path.join(self.main_thread.video_download_path, self.index_key, video_name)
             self.temp_path_list.append(video_path)  # 设置临时目录

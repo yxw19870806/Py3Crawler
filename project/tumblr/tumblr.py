@@ -583,8 +583,6 @@ class CrawlerThread(crawler.CrawlerThread):
 
             photo_index = 1
             for photo_url in photo_url_list:
-                self.main_thread_check()  # 检测主线程运行状态
-
                 photo_name = "%012d_%02d.%s" % (post_info["post_id"], photo_index, net.get_file_extension(photo_url))
                 photo_path = os.path.join(self.main_thread.photo_download_path, self.index_key, photo_name)
                 photo_description = "日志%s(%s)第%s张图片" % (post_info["post_id"], post_info["post_url"], photo_index)

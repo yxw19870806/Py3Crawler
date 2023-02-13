@@ -416,8 +416,6 @@ class CrawlerThread(crawler.CrawlerThread):
     def crawl_video(self, media_info):
         video_index = 1
         for video_url in media_info["video_url_list"]:
-            self.main_thread_check()  # 检测主线程运行状态
-
             if len(media_info["video_url_list"]) > 1:
                 video_file_name = "%019d_%02d.%s" % (media_info["blog_id"], video_index, net.get_file_extension(video_url))
             else:
