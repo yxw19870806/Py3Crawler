@@ -597,13 +597,11 @@ class CrawlerThread(crawler.CrawlerThread):
 
         photo_index = 1
         for photo_url in album_response["photo_url_list"]:
-            self.main_thread_check()  # 检测主线程运行状态
-
             photo_description = "相簿%s第%s张图片" % (album_id, photo_index)
             self.step("开始下载 %s %s" % (photo_description, photo_url))
-
             photo_name = "%09d_%02d.%s" % (album_id, photo_index, net.get_file_extension(photo_url))
             photo_path = os.path.join(self.main_thread.photo_download_path, self.display_name, photo_name)
+            self.main_thread_check()  # 检测主线程运行状态
             download_return = net.Download(photo_url, photo_path)
             # 源文件禁止访问，增加后缀生成新的图片
             if download_return.status == net.Download.DOWNLOAD_FAILED and download_return.code == 404:
@@ -636,7 +634,6 @@ class CrawlerThread(crawler.CrawlerThread):
             while len(video_info_list) > 0:
                 if not self.crawl_video(video_info_list.pop()):
                     break
-                self.main_thread_check()  # 检测主线程运行状态
 
         # 音频下载
         if self.main_thread.is_download_audio:
@@ -648,7 +645,6 @@ class CrawlerThread(crawler.CrawlerThread):
             while len(audio_info_list) > 0:
                 if not self.crawl_audio(audio_info_list.pop()):
                     break
-                self.main_thread_check()  # 检测主线程运行状态
 
         # 图片下载
         if self.main_thread.is_download_photo:
@@ -660,7 +656,6 @@ class CrawlerThread(crawler.CrawlerThread):
             while len(album_id_list) > 0:
                 if not self.crawl_photo(album_id_list.pop()):
                     break
-                self.main_thread_check()  # 检测主线程运行状态
 
 
 if __name__ == "__main__":

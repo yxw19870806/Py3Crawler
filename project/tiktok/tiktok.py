@@ -167,7 +167,6 @@ class CrawlerThread(crawler.CrawlerThread):
         # 从最早的视频开始下载
         while len(video_id_list) > 0:
             self.crawl_video(video_id_list.pop())
-            self.main_thread_check()  # 检测主线程运行状态
 
 
 if __name__ == "__main__":

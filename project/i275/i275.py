@@ -143,7 +143,6 @@ class CrawlerThread(crawler.CrawlerThread):
         # 从最早的媒体开始下载
         while len(audio_info_list) > 0:
             self.crawl_audio(audio_info_list.pop())
-            self.main_thread_check()  # 检测主线程运行状态
 
 
 if __name__ == "__main__":

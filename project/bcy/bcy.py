@@ -218,8 +218,6 @@ class CrawlerThread(crawler.CrawlerThread):
         self.temp_path_list.append(album_path)
         photo_index = 1
         for photo_url in photo_url_list:
-            self.main_thread_check()  # 检测主线程运行状态
-
             photo_description = "作品%s第%s张图片" % (album_id, photo_index)
             self.step("开始下载 %s %s" % (photo_description, photo_url))
 
@@ -228,6 +226,7 @@ class CrawlerThread(crawler.CrawlerThread):
                 file_extension = "jpg"
             photo_path = os.path.join(album_path, "%03d.%s" % (photo_index, file_extension))
             for retry_count in range(10):
+                self.main_thread_check()  # 检测主线程运行状态
                 download_return = net.Download(photo_url, photo_path)
                 if download_return.status == net.Download.DOWNLOAD_SUCCEED:
                     self.total_photo_count += 1  # 计数累加
@@ -264,7 +263,6 @@ class CrawlerThread(crawler.CrawlerThread):
         # 从最早的作品开始下载
         while len(album_id_list) > 0:
             self.crawl_album(album_id_list.pop())
-            self.main_thread_check()  # 检测主线程运行状态
 
 
 if __name__ == "__main__":
