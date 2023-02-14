@@ -449,27 +449,25 @@ class CrawlerThread(crawler.CrawlerThread):
     def get_offset_page_count(self):
         start_page_count = 1
         while EACH_LOOP_MAX_PAGE_COUNT > 0:
-            self.main_thread_check()  # 检测主线程运行状态
             start_page_count += EACH_LOOP_MAX_PAGE_COUNT
+            post_pagination_description = "第%s页日志" % start_page_count
+            self.start_parse(post_pagination_description)
             try:
                 if self.is_private:
                     post_pagination_response: dict = get_one_page_private_blog(self.index_key, start_page_count)
                 else:
                     post_pagination_response: dict = get_one_page_post(self.index_key, start_page_count, self.is_https)
             except crawler.CrawlerException as e:
-                self.error(e.http_error("第%s页日志" % start_page_count))
+                self.error(e.http_error(post_pagination_description))
                 raise
-
             # 这页没有任何内容，返回上一个检查节点
             if post_pagination_response["is_over"]:
                 start_page_count -= EACH_LOOP_MAX_PAGE_COUNT
                 break
-
             # 这页已经匹配到存档点，返回上一个节点
             if post_pagination_response["post_info_list"][-1]["post_id"] < int(self.single_save_data[1]):
                 start_page_count -= EACH_LOOP_MAX_PAGE_COUNT
                 break
-
             self.step("前%s页日志全部符合条件，跳过%s页后继续查询" % (start_page_count, EACH_LOOP_MAX_PAGE_COUNT))
         return start_page_count
 
@@ -630,7 +628,6 @@ class CrawlerThread(crawler.CrawlerThread):
             # 从最早的日志开始下载
             while len(post_info_list) > 0:
                 self.crawl_post(post_info_list.pop())
-                self.main_thread_check()  # 检测主线程运行状态
 
             start_page_count -= EACH_LOOP_MAX_PAGE_COUNT
 

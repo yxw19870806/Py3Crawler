@@ -261,7 +261,6 @@ class CrawlerThread(crawler.CrawlerThread):
             while len(photo_info_list) > 0:
                 if not self.crawl_photo(photo_info_list.pop()):
                     break
-                self.main_thread_check()  # 检测主线程运行状态
 
         # 视频下载
         if self.main_thread.is_download_video:
@@ -273,7 +272,6 @@ class CrawlerThread(crawler.CrawlerThread):
             while len(video_info_list) > 0:
                 if not self.crawl_video(video_info_list.pop()):
                     break
-                self.main_thread_check()  # 检测主线程运行状态
 
 
 if __name__ == "__main__":

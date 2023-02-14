@@ -284,10 +284,12 @@ class CrawlerThread(crawler.CrawlerThread):
 
     def _run(self):
         # 获取相册首页页面
+        index_description = "相册首页"
+        self.start_parse(index_description)
         try:
             account_index_response = get_account_index_page(self.index_key)
         except crawler.CrawlerException as e:
-            self.error(e.http_error("相册首页"))
+            self.error(e.http_error(index_description))
             raise
 
         # 获取所有可下载图片
@@ -306,7 +308,6 @@ class CrawlerThread(crawler.CrawlerThread):
             # 下载同一上传时间的所有图片
             self.crawl_photo(deal_photo_info_list)
             deal_photo_info_list = []  # 累加图片地址清除
-            self.main_thread_check()  # 检测主线程运行状态
 
 
 if __name__ == "__main__":

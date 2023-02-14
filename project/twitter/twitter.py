@@ -382,14 +382,13 @@ class CrawlerThread(crawler.CrawlerThread):
     def crawl_photo(self, media_info):
         photo_index = 1
         for photo_url in media_info["photo_url_list"]:
-            self.main_thread_check()  # 检测主线程运行状态
-
             photo_description = "推特%s第%s张图片" % (media_info["blog_id"], photo_index)
             self.step("开始下载 %s %s" % (photo_description, photo_url))
 
             photo_name = "%019d_%02d.%s" % (media_info["blog_id"], photo_index, net.get_file_extension(photo_url))
             photo_path = os.path.join(self.main_thread.photo_download_path, self.index_key, photo_name)
             for retry_count in range(5):
+                self.main_thread_check()  # 检测主线程运行状态
                 download_return = net.Download(photo_url, photo_path)
                 if download_return.status == net.Download.DOWNLOAD_SUCCEED:
                     self.temp_path_list.append(photo_path)  # 设置临时目录
@@ -440,7 +439,6 @@ class CrawlerThread(crawler.CrawlerThread):
         # 从最早的推特开始下载
         while len(media_info_list) > 0:
             self.crawl_media(media_info_list.pop())
-            self.main_thread_check()  # 检测主线程运行状态
 
 
 if __name__ == "__main__":
