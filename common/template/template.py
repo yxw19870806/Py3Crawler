@@ -6,9 +6,6 @@ email: hikaru870806@hotmail.com
 如有问题或建议请联系
 """
 import os
-import re
-import time
-from pyquery import PyQuery as pq
 from common import *
 
 
@@ -53,8 +50,8 @@ class Template(crawler.Crawler):
 
         # todo 存档文件格式
         # 解析存档文件
-        # account_id
-        self.save_data = crawler.read_save_data(self.save_data_path, 0, ["", ])
+        # account_id, blog_id
+        self.save_data = crawler.read_save_data(self.save_data_path, 0, ["", "0"])
 
         # 下载线程
         self.crawler_thread = CrawlerThread
@@ -99,18 +96,14 @@ class CrawlerThread(crawler.CrawlerThread):
         is_over = False
         # 获取全部还未下载过需要解析的日志
         while not is_over:
-            self.main_thread_check()  # 检测主线程运行状态
-            self.step("开始解析第%s页日志" % page_count)
-
-            # todo 一页日志解析规则
-            # 获取指定时间后的一页日志
+            blog_pagination_description = "第%s页日志" % page_count
+            self.start_parse(blog_pagination_description)
             try:
                 blog_pagination_response = get_one_page_blog(self.index_key, page_count)
             except crawler.CrawlerException as e:
-                self.error(e.http_error("第%s页日志" % page_count))
+                self.error(e.http_error(blog_pagination_description))
                 raise
-
-            self.trace("第%s页解析的全部日志：%s" % (page_count, blog_pagination_response["blog_id_list"]))
+            self.parse_result(blog_pagination_description, blog_pagination_response["blog_id_list"])
 
             # 寻找这一页符合条件的媒体
             for blog_id in blog_pagination_response["blog_id_list"]:
@@ -125,82 +118,68 @@ class CrawlerThread(crawler.CrawlerThread):
 
     # 解析单个日志
     def crawl_blog(self, blog_id):
-        self.step("开始解析日志%s" % blog_id)
-
-        # todo 日志解析规则
+        blog_description = "日志%s" % blog_id
+        self.start_parse(blog_description)
         # 获取指定日志
         try:
             blog_response = get_blog_page(self.index_key, blog_id)
         except crawler.CrawlerException as e:
-            self.error(e.http_error("日志%s" % blog_id))
+            self.error(e.http_error(blog_description))
             raise
 
         # todo 图片下载逻辑
         # 图片下载
-        photo_index = self.single_save_data[1] + 1
         if self.main_thread.is_download_photo:
-            for photo_url in blog_response["photo_url_list"]:
-                self.main_thread_check()  # 检测主线程运行状态
-                self.step("开始下载第%s张图片 %s" % (photo_index, photo_url))
+            self.parse_result(blog_description + "图片", blog_response["photo_url_list"])
 
+            photo_index = 1
+            for photo_url in blog_response["photo_url_list"]:
                 file_extension = net.get_file_extension(photo_url)
                 photo_file_path = os.path.join(self.main_thread.photo_download_path, self.index_key, "%04d.%s" % (photo_index, file_extension))
-                download_return = net.Download(photo_url, photo_file_path)
-                if download_return.status == net.Download.DOWNLOAD_SUCCEED:
-                    # 设置临时目录
-                    self.temp_path_list.append(photo_file_path)
-                    self.step("第%s张图片下载成功" % photo_index)
-                    photo_index += 1
-                else:
-                    self.error("第%s张图片 %s 下载失败，原因：%s" % (photo_index, photo_url, crawler.download_failre(download_return.code)))
+                photo_file_description = "第%s张图片" % photo_index
+                if self.download(photo_url, photo_file_path, photo_file_description):
+                    self.temp_path_list.append(photo_file_path)  # 设置临时目录
+                    self.total_photo_count += 1  # 计数累加
+                photo_index += 1
 
         # todo 视频下载逻辑
         # 视频下载
-        video_index = self.single_save_data[2] + 1
         if self.main_thread.is_download_video:
-            for video_url in blog_response["video_url_list"]:
-                self.main_thread_check()  # 检测主线程运行状态
-                self.step("开始下载第%s个视频 %s" % (video_index, video_url))
+            self.parse_result(blog_description + "视频", blog_response["video_url_list"])
 
+            video_index = 1
+            for video_url in blog_response["video_url_list"]:
                 file_extension = net.get_file_extension(video_url)
                 video_file_path = os.path.join(self.main_thread.video_download_path, self.index_key, "%04d.%s" % (video_index, file_extension))
-                download_return = net.Download(video_url, video_file_path)
-                if download_return.status == net.Download.DOWNLOAD_SUCCEED:
-                    # 设置临时目录
-                    self.temp_path_list.append(video_file_path)
-                    self.step("第%s个视频下载成功" % video_index)
-                    video_index += 1
-                else:
-                    self.error("第%s个视频 %s 下载失败，原因：%s" % (video_index, video_url, crawler.download_failre(download_return.code)))
+                video_file_description = "第%s个视频" % video_index
+                if self.download(video_url, video_file_path, video_file_description):
+                    self.temp_path_list.append(video_file_path)  # 设置临时目录
+                    self.total_video_count += 1  # 计数累加
+                video_index += 1
 
         # todo 音频下载逻辑
         # 音频下载
-        audio_index = self.single_save_data[2] + 1
         if self.main_thread.is_download_audio:
-            for audio_url in blog_response["audio_url_list"]:
-                self.main_thread_check()  # 检测主线程运行状态
-                self.step("开始下载第%s个音频 %s" % (audio_index, audio_url))
+            self.parse_result(blog_description + "音频", blog_response["audio_url_list"])
 
+            audio_index = 1
+            for audio_url in blog_response["audio_url_list"]:
                 file_extension = net.get_file_extension(audio_url)
                 audio_file_path = os.path.join(self.main_thread.audio_download_path, self.index_key, "%04d.%s" % (audio_index, file_extension))
-                download_return = net.Download(audio_url, audio_file_path)
-                if download_return.status == net.Download.DOWNLOAD_SUCCEED:
-                    # 设置临时目录
-                    self.temp_path_list.append(audio_file_path)
-                    self.step("第%s个音频下载成功" % audio_index)
-                    audio_index += 1
-                else:
-                    self.error("第%s个音频 %s 下载失败，原因：%s" % (audio_index, audio_url, crawler.download_failre(download_return.code)))
+                audio_file_description = "第%s个音频" % audio_index
+                if self.download(audio_url, audio_file_path, audio_file_description):
+                    self.temp_path_list.append(audio_file_path)  # 设置临时目录
+                    self.total_audio_count += 1  # 计数累加
+                audio_index += 1
 
         # 日志内图片、视频和音频全部下载完毕
         self.temp_path_list = []  # 临时目录设置清除
-        self.total_photo_count += (photo_index - 1) - int(self.single_save_data[1])  # 计数累加
-        self.total_video_count += (video_index - 1) - int(self.single_save_data[2])  # 计数累加
-        self.total_audio_count += (audio_index - 1) - int(self.single_save_data[3])  # 计数累加
-        self.single_save_data[1] = str(photo_index - 1)  # 设置存档记录
-        self.single_save_data[2] = str(video_index - 1)  # 设置存档记录
-        self.single_save_data[3] = str(audio_index - 1)  # 设置存档记录
-        self.single_save_data[4] = ""  # 设置存档记录
+        self.single_save_data[1] = str(blog_id)  # 设置存档记录
+
+    def done(self):
+        if self.temp_path_list:
+            for temp_path in self.temp_path_list:
+                path.delete_dir_or_file(temp_path)
 
 
 if __name__ == "__main__":
