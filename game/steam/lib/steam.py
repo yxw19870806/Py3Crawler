@@ -429,11 +429,11 @@ class Steam(crawler.Crawler):
 
         # 初始化参数
         sys_config = {
-            crawler.SYS_SET_PROXY: True,
-            crawler.SYS_NOT_DOWNLOAD: True,
-            crawler.SYS_NOT_CHECK_SAVE_DATA: True,
-            crawler.SYS_GET_COOKIE: ("store.steampowered.com",),
-            crawler.SYS_APP_CONFIG_PATH: os.path.join(crawler.PROJECT_APP_PATH, "lib", "steam.ini"),
+            crawler.SysConfigKey.SET_PROXY: True,
+            crawler.SysConfigKey.NOT_DOWNLOAD: True,
+            crawler.SysConfigKey.NOT_CHECK_SAVE_DATA: True,
+            crawler.SysConfigKey.GET_COOKIE: ("store.steampowered.com",),
+            crawler.SysConfigKey.APP_CONFIG_PATH: os.path.join(crawler.PROJECT_APP_PATH, "lib", "steam.ini"),
         }
         crawler.Crawler.__init__(self, sys_config, **kwargs)
 

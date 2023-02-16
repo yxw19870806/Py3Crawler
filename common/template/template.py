@@ -40,11 +40,11 @@ class Template(crawler.Crawler):
         # 初始化参数
         # todo 配置
         sys_config = {
-            crawler.SYS_DOWNLOAD_PHOTO: True,
-            crawler.SYS_DOWNLOAD_VIDEO: True,
-            crawler.SYS_DOWNLOAD_AUDIO: True,
-            crawler.SYS_SET_PROXY: True,
-            crawler.SYS_NOT_CHECK_SAVE_DATA: True,
+            crawler.SysConfigKey.DOWNLOAD_PHOTO: True,
+            crawler.SysConfigKey.DOWNLOAD_VIDEO: True,
+            crawler.SysConfigKey.DOWNLOAD_AUDIO: True,
+            crawler.SysConfigKey.SET_PROXY: True,
+            crawler.SysConfigKey.NOT_CHECK_SAVE_DATA: True,
         }
         crawler.Crawler.__init__(self, sys_config, **kwargs)
 

@@ -244,9 +244,9 @@ class XiMaLaYa(crawler.Crawler):
 
         # 初始化参数
         default_sys_config = {
-            crawler.SYS_NOT_CHECK_SAVE_DATA: True,
-            crawler.SYS_DOWNLOAD_AUDIO: True,
-            crawler.SYS_GET_COOKIE: ("ximalaya.com",),
+            crawler.SysConfigKey.NOT_CHECK_SAVE_DATA: True,
+            crawler.SysConfigKey.DOWNLOAD_AUDIO: True,
+            crawler.SysConfigKey.GET_COOKIE: ("ximalaya.com",),
         }
         default_sys_config.update(sys_config)
         crawler.Crawler.__init__(self, default_sys_config, **kwargs)

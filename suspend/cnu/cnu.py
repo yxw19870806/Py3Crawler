@@ -51,8 +51,8 @@ class CNU(crawler.Crawler):
 
         # 初始化参数
         sys_config = {
-            crawler.SYS_DOWNLOAD_PHOTO: True,
-            crawler.SYS_NOT_CHECK_SAVE_DATA: True,
+            crawler.SysConfigKey.DOWNLOAD_PHOTO: True,
+            crawler.SysConfigKey.NOT_CHECK_SAVE_DATA: True,
         }
         crawler.Crawler.__init__(self, sys_config, **kwargs)
 
