@@ -55,7 +55,7 @@ def quickly_get_all_cookies_from_browser(config: Optional[dict] = None) -> dict:
         config = _get_config()
     # 是否自动查找cookies路径
     # 操作系统&浏览器
-    browser_type = crawler.analysis_config(config, "BROWSER_TYPE", browser.BROWSER_TYPE_CHROME, crawler.ConfigAnalysisMode.INTEGER)
+    browser_type = crawler.analysis_config(config, "BROWSER_TYPE", browser.BrowserType.CHROME, crawler.ConfigAnalysisMode.INTEGER)
     cookie_path = browser.get_default_browser_cookie_path(browser_type)
     return browser.get_all_cookie_from_browser(browser_type, cookie_path)
 

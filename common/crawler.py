@@ -231,7 +231,7 @@ class Crawler(object):
             else:
                 cookie_path = browser.get_default_browser_cookie_path(browser_type)
             all_cookie_from_browser = browser.get_all_cookie_from_browser(browser_type, cookie_path)
-            if browser_type == browser.BROWSER_TYPE_TEXT:
+            if browser_type == browser.BrowserType.TEXT:
                 if "DEFAULT" in all_cookie_from_browser:
                     self.cookie_value.update(all_cookie_from_browser["DEFAULT"])
             else:
