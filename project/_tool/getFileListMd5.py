@@ -52,7 +52,7 @@ class GetFileListMd5(crawler.Crawler):
         self.record_list = {}
         self.check_count = 0
 
-        self.file_root_path = os.path.abspath("D:\\")
+        self.file_root_path = os.path.abspath(r"D:\\")
 
     # 获取目录所有文件md5值
     def get_file_md5_from_dir(self, dir_path):

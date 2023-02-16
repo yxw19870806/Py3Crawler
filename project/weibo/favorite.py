@@ -33,8 +33,8 @@ def get_one_page_favorite(page_count):
     if not favorite_data_html:
         raise crawler.CrawlerException("页面截取收藏信息失败\n" + favorite_pagination_content)
     # 替换全部转义斜杠以及没有用的换行符等
-    html_data = favorite_data_html.replace("\\\\", chr(1))
-    for replace_string in ["\\n", "\\r", "\\t", "\\"]:
+    html_data = favorite_data_html.replace(r"\\", chr(1))
+    for replace_string in [r"\n", r"\r", r"\t", "\\"]:
         html_data = html_data.replace(replace_string, "")
     html_data = html_data.replace(chr(1), "\\")
     # 解析页面

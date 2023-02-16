@@ -153,7 +153,7 @@ class Crawler(object):
         net.DOWNLOAD_REPLACE_IF_EXIST = analysis_config(config, "IS_DOWNLOAD_REPLACE_IF_EXIST", False, CONFIG_ANALYSIS_MODE_BOOLEAN)
 
         # 存档
-        self.save_data_path = analysis_config(config, "SAVE_DATA_PATH", "\\\\info/save.data", CONFIG_ANALYSIS_MODE_PATH)
+        self.save_data_path = analysis_config(config, "SAVE_DATA_PATH", r"\\info/save.data", CONFIG_ANALYSIS_MODE_PATH)
         self.temp_save_data_path = ""
         if not sys_not_check_save_data:
             if not os.path.exists(self.save_data_path):
@@ -170,38 +170,38 @@ class Crawler(object):
                 return
 
         # cache
-        self.cache_data_path = analysis_config(config, "CACHE_DATA_PATH", "\\\\cache", CONFIG_ANALYSIS_MODE_PATH)
+        self.cache_data_path = analysis_config(config, "CACHE_DATA_PATH", r"\\cache", CONFIG_ANALYSIS_MODE_PATH)
 
         # session
-        self.session_data_path = analysis_config(config, "SESSION_DATA_PATH", "\\\\info/session.data", CONFIG_ANALYSIS_MODE_PATH)
+        self.session_data_path = analysis_config(config, "SESSION_DATA_PATH", r"\\info/session.data", CONFIG_ANALYSIS_MODE_PATH)
 
         # 是否需要下载图片
         if self.is_download_photo:
             # 图片保存目录
-            self.photo_download_path = analysis_config(config, "PHOTO_DOWNLOAD_PATH", "\\\\photo", CONFIG_ANALYSIS_MODE_PATH)
+            self.photo_download_path = analysis_config(config, "PHOTO_DOWNLOAD_PATH", r"\\photo", CONFIG_ANALYSIS_MODE_PATH)
         else:
             self.photo_download_path = ""
         # 是否需要下载视频
         if self.is_download_video:
             # 视频保存目录
-            self.video_download_path = analysis_config(config, "VIDEO_DOWNLOAD_PATH", "\\\\video", CONFIG_ANALYSIS_MODE_PATH)
+            self.video_download_path = analysis_config(config, "VIDEO_DOWNLOAD_PATH", r"\\video", CONFIG_ANALYSIS_MODE_PATH)
         else:
             self.video_download_path = ""
         # 是否需要下载音频
         if self.is_download_audio:
             # 音频保存目录
-            self.audio_download_path = analysis_config(config, "AUDIO_DOWNLOAD_PATH", "\\\\audio", CONFIG_ANALYSIS_MODE_PATH)
+            self.audio_download_path = analysis_config(config, "AUDIO_DOWNLOAD_PATH", r"\\audio", CONFIG_ANALYSIS_MODE_PATH)
         else:
             self.audio_download_path = ""
         # 是否需要下载文本内容
         if self.is_download_content:
             # 音频保存目录
-            self.content_download_path = analysis_config(config, "CONTENT_DOWNLOAD_PATH", "\\\\content", CONFIG_ANALYSIS_MODE_PATH)
+            self.content_download_path = analysis_config(config, "CONTENT_DOWNLOAD_PATH", r"\\content", CONFIG_ANALYSIS_MODE_PATH)
         else:
             self.content_download_path = ""
 
         # 是否在下载失败后退出线程的运行
-        self.exit_after_download_failure = analysis_config(config, "EXIT_AFTER_DOWNLOAD_FAILURE", "\\\\content", CONFIG_ANALYSIS_MODE_BOOLEAN)
+        self.exit_after_download_failure = analysis_config(config, "EXIT_AFTER_DOWNLOAD_FAILURE", r"\\content", CONFIG_ANALYSIS_MODE_BOOLEAN)
 
         # 代理
         is_proxy = analysis_config(config, "IS_PROXY", 2, CONFIG_ANALYSIS_MODE_INTEGER)
@@ -666,9 +666,9 @@ def read_config(config_path: str) -> dict:
     """
     读取配置文件
     """
-    if not os.path.exists(config_path):
-        return {}
     config = {}
+    if not os.path.exists(config_path):
+        return config
     with codecs.open(config_path, encoding="UTF-8-SIG") as file_handle:
         config_file = configparser.ConfigParser()
         config_file.read_file(file_handle)
@@ -721,7 +721,7 @@ def analysis_config(config: dict, key: str, default_value, mode: str = CONFIG_AN
             output.print_msg("配置文件config.ini中key为'" + key + "'的值必须是一个浮点数，使用程序默认设置")
             value = default_value
     elif mode == CONFIG_ANALYSIS_MODE_PATH:
-        if len(value) > 2 and value[:2] == "\\\\":  # \\ 开头，程序所在目录
+        if len(value) > 2 and value[:2] == r"\\":  # \\ 开头，程序所在目录
             value = os.path.join(PROJECT_APP_PATH, value[2:])  # \\ 仅做标记使用，实际需要去除
         elif len(value) > 1 and value[0] == "\\":  # \ 开头，项目根目录（common目录上级）
             value = os.path.join(PROJECT_ROOT_PATH, value[1:])  # \ 仅做标记使用，实际需要去除
