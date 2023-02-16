@@ -15,8 +15,8 @@ from suspend.niconico import niconico
 
 def main():
     # 初始化类
-    youtube_class = youtube.Youtube(extra_sys_config={crawler.SYS_NOT_CHECK_SAVE_DATA: True})
-    nicoNico_class = niconico.NicoNico(extra_sys_config={crawler.SYS_NOT_CHECK_SAVE_DATA: True})
+    youtube_class = youtube.Youtube(extra_sys_config={crawler.SysConfigKey.NOT_CHECK_SAVE_DATA: True})
+    nicoNico_class = niconico.NicoNico(extra_sys_config={crawler.SysConfigKey.NOT_CHECK_SAVE_DATA: True})
     ivseek_class = ivseek.IvSeek()
 
     save_data_list = ivseek.read_save_data(ivseek_class.save_data_path)

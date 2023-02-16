@@ -60,7 +60,7 @@ class WorldCosplay(crawler.Crawler):
 
         # 初始化参数
         sys_config = {
-            crawler.SYS_DOWNLOAD_PHOTO: True,
+            crawler.SysConfigKey.DOWNLOAD_PHOTO: True,
         }
         crawler.Crawler.__init__(self, sys_config, **kwargs)
 

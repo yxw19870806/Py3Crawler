@@ -13,10 +13,10 @@ import pywintypes
 import sqlite3
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
-from typing import Optional
 from selenium import webdriver
 from selenium.common.exceptions import WebDriverException
 from selenium.webdriver.chrome.webdriver import WebDriver
+from typing import Optional
 
 if platform.system() == "Windows":
     import win32crypt
@@ -33,7 +33,7 @@ BROWSER_TYPE_TEXT = "text"  # 直接从文件里读取cookies
 
 
 class Chrome:
-    def __init__(self, url, **kwargs):
+    def __init__(self, url: str, **kwargs):
         """
         返回selenium.webdriver.Chrome()方法创建的chrome驱动对象
 

@@ -23,10 +23,10 @@ def main():
     global MIN_CARD_PRICE, MAX_CARD_PRICE, MAX_TOTAL_PRICE, IS_TOTAL_CARD
     config = crawler.read_config(EXTRA_CONFIG_FILE_PATH)
 
-    MIN_CARD_PRICE = crawler.analysis_config(config, "MIN_CARD_PRICE", 0, crawler.CONFIG_ANALYSIS_MODE_BOOLEAN)
-    MAX_CARD_PRICE = crawler.analysis_config(config, "MAX_CARD_PRICE", 0.5, crawler.CONFIG_ANALYSIS_MODE_BOOLEAN)
-    MAX_TOTAL_PRICE = crawler.analysis_config(config, "MAX_TOTAL_PRICE", 1.5, crawler.CONFIG_ANALYSIS_MODE_BOOLEAN)
-    IS_TOTAL_CARD = crawler.analysis_config(config, "IS_TOTAL_CARD", False, crawler.CONFIG_ANALYSIS_MODE_BOOLEAN)
+    MIN_CARD_PRICE = crawler.analysis_config(config, "MIN_CARD_PRICE", 0, crawler.ConfigAnalysisMode.BOOLEAN)
+    MAX_CARD_PRICE = crawler.analysis_config(config, "MAX_CARD_PRICE", 0.5, crawler.ConfigAnalysisMode.BOOLEAN)
+    MAX_TOTAL_PRICE = crawler.analysis_config(config, "MAX_TOTAL_PRICE", 1.5, crawler.ConfigAnalysisMode.BOOLEAN)
+    IS_TOTAL_CARD = crawler.analysis_config(config, "IS_TOTAL_CARD", False, crawler.ConfigAnalysisMode.BOOLEAN)
 
     # 获取登录状态
     steam_class = steam.Steam(need_login=True)

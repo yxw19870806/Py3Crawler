@@ -16,7 +16,7 @@ from suspend.kuwo import kuwo
 class KuWoPlaylist(kuwo.KuWo):
     def __init__(self, **kwargs):
         sys_config = {
-            crawler.SYS_NOT_CHECK_SAVE_DATA: True
+            crawler.SysConfigKey.NOT_CHECK_SAVE_DATA: True
         }
         kuwo.KuWo.__init__(self, extra_sys_config=sys_config, **kwargs)
 

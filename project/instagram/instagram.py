@@ -297,12 +297,12 @@ class Instagram(crawler.Crawler):
 
         # 初始化参数
         sys_config = {
-            crawler.SYS_DOWNLOAD_PHOTO: True,
-            crawler.SYS_DOWNLOAD_VIDEO: True,
-            crawler.SYS_SET_PROXY: True,
-            crawler.SYS_GET_COOKIE: ("instagram.com",),
-            crawler.SYS_APP_CONFIG: (
-                ("IS_LOCAL_SAVE_SESSION", False, crawler.CONFIG_ANALYSIS_MODE_BOOLEAN),
+            crawler.SysConfigKey.DOWNLOAD_PHOTO: True,
+            crawler.SysConfigKey.DOWNLOAD_VIDEO: True,
+            crawler.SysConfigKey.SET_PROXY: True,
+            crawler.SysConfigKey.GET_COOKIE: ("instagram.com",),
+            crawler.SysConfigKey.APP_CONFIG: (
+                ("IS_LOCAL_SAVE_SESSION", False, crawler.ConfigAnalysisMode.BOOLEAN),
             ),
         }
         crawler.Crawler.__init__(self, sys_config, **kwargs)

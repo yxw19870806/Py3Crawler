@@ -103,7 +103,7 @@ class DouYin(crawler.Crawler):
         crawler.PROJECT_APP_PATH = os.path.abspath(os.path.dirname(__file__))
 
         sys_config = {
-            crawler.SYS_DOWNLOAD_VIDEO: True,
+            crawler.SysConfigKey.DOWNLOAD_VIDEO: True,
         }
         crawler.Crawler.__init__(self, sys_config, **kwargs)
 
