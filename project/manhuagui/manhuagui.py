@@ -79,7 +79,7 @@ def get_chapter_page(comic_id, chapter_id):
     if chapter_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(chapter_response.status))
     chapter_response_content = chapter_response.data.decode(errors="ignore")
-    script_code = tool.find_sub_string(chapter_response_content, 'window["\\x65\\x76\\x61\\x6c"]', "</script>")
+    script_code = tool.find_sub_string(chapter_response_content, r'window["\x65\x76\x61\x6c"]', "</script>")
     if not script_code:
         raise crawler.CrawlerException("页面截取脚本代码失败\n" + chapter_response_content)
 

@@ -14,7 +14,7 @@ from common import crypto, quicky
 API_HOST = "https://api.twitter.com"
 API_VERSION = "1.1"
 ACCESS_TOKEN = None
-token_file_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "info\\session"))
+token_file_path = os.path.abspath(os.path.join(os.path.dirname(__file__), r"info\session"))
 
 
 def init():

@@ -44,7 +44,7 @@ def quickly_get_save_data_path(config: Optional[dict] = None) -> str:
     """
     if not isinstance(config, configparser.SafeConfigParser):
         config = _get_config()
-    return crawler.analysis_config(config, "SAVE_DATA_PATH", "\\\\info/save.data", crawler.CONFIG_ANALYSIS_MODE_PATH)
+    return crawler.analysis_config(config, "SAVE_DATA_PATH", r"\\info/save.data", crawler.CONFIG_ANALYSIS_MODE_PATH)
 
 
 def quickly_get_all_cookies_from_browser(config: Optional[dict] = None) -> dict:
