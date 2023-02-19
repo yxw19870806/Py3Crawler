@@ -80,7 +80,7 @@ class FiveSing(crawler.Crawler):
 
         # 初始化参数
         sys_config = {
-            crawler.SYS_DOWNLOAD_AUDIO: True,
+            crawler.SysConfigKey.DOWNLOAD_AUDIO: True,
         }
         crawler.Crawler.__init__(self, sys_config, **kwargs)
 
@@ -119,18 +119,13 @@ class CrawlerThread(crawler.CrawlerThread):
         is_over = False
         # 获取全部还未下载过需要解析的歌曲
         while not is_over:
-            self.main_thread_check()  # 检测主线程运行状态
-
             pagination_description = "第%s页%s歌曲" % (page_count, audio_type_name)
             self.start_parse(pagination_description)
-
-            # 获取一页歌曲
             try:
                 audio_pagination_response = get_one_page_audio(self.index_key, audio_type, page_count)
             except crawler.CrawlerException as e:
                 self.error(e.http_error(pagination_description))
                 raise
-
             self.parse_result(pagination_description, audio_pagination_response["audio_info_list"])
 
             # 寻找这一页符合条件的歌曲
@@ -163,14 +158,11 @@ class CrawlerThread(crawler.CrawlerThread):
 
         audio_description = "%s歌曲%s《%s》" % (audio_type_name, audio_info["audio_id"], audio_info["audio_title"])
         self.start_parse(audio_description)
-
-        # 获取歌曲的详情页
         try:
             audio_info_response = get_audio_play_page(audio_info["audio_id"], audio_type)
         except crawler.CrawlerException as e:
             self.error(e.http_error(audio_description))
             raise
-
         if audio_info_response["is_delete"]:
             self.error("%s 已删除" % audio_description)
             return

@@ -69,12 +69,11 @@ def get_favorites_list(favorites_id):
             "direction": "false",
         }
         api_response = net.request(api_url, method="GET", fields=query_data, cookies_list=COOKIE_INFO, json_decode=True)
+        video_info_list = []
         try:
             video_info_list = crawler.get_json_value(api_response.json_data, "data", "media_list", type_check=list)
         except crawler.CrawlerException:
-            if crawler.get_json_value(api_response.json_data, "data", "media_list", value_check=None) is None:
-                video_info_list = []
-            else:
+            if crawler.get_json_value(api_response.json_data, "data", "media_list", value_check=None) is not None:
                 raise
         for video_info in video_info_list:
             result_video_info = {
@@ -179,12 +178,11 @@ def get_one_page_album(account_id, page_count):
     if api_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(api_response.status))
 
+    album_info_list = []
     try:
         album_info_list = crawler.get_json_value(api_response.json_data, "data", "items", type_check=list)
     except crawler.CrawlerException:
-        if crawler.get_json_value(api_response.json_data, "data", "items", value_check=None) is None:
-            album_info_list = []
-        else:
+        if crawler.get_json_value(api_response.json_data, "data", "items", value_check=None) is not None:
             raise
     for album_info in album_info_list:
         # 获取相簿id
@@ -208,13 +206,11 @@ def get_one_page_audio(account_id, page_count):
     }
     if api_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(api_response.status))
-    # 没有任何音频
+    audio_info_list = []
     try:
         audio_info_list = crawler.get_json_value(api_response.json_data, "data", "data", type_check=list)
     except crawler.CrawlerException:
-        if crawler.get_json_value(api_response.json_data, "data", "data", value_check=None) is None:
-            audio_info_list = []
-        else:
+        if crawler.get_json_value(api_response.json_data, "data", "data", value_check=None) is not None:
             raise
     for audio_info in audio_info_list:
         result_audio_info = {
@@ -358,10 +354,10 @@ class BiliBili(crawler.Crawler):
 
         # 初始化参数
         sys_config = {
-            crawler.SYS_DOWNLOAD_PHOTO: True,
-            crawler.SYS_DOWNLOAD_VIDEO: True,
-            crawler.SYS_DOWNLOAD_AUDIO: True,
-            crawler.SYS_GET_COOKIE: ("bilibili.com",),
+            crawler.SysConfigKey.DOWNLOAD_PHOTO: True,
+            crawler.SysConfigKey.DOWNLOAD_VIDEO: True,
+            crawler.SysConfigKey.DOWNLOAD_AUDIO: True,
+            crawler.SysConfigKey.GET_COOKIE: ("bilibili.com",),
         }
         crawler.Crawler.__init__(self, sys_config, **kwargs)
 
@@ -381,14 +377,15 @@ class BiliBili(crawler.Crawler):
             if check_login():
                 global IS_LOGIN
                 IS_LOGIN = True
-            else:
-                while True:
-                    input_str = input(tool.get_time() + " 没有检测到账号登录状态，可能无法解析相簿、需要登录才能查看的视频以及获取高分辨率，继续程序(C)ontinue？或者退出程序(E)xit？:")
-                    input_str = input_str.lower()
-                    if input_str in ["e", "exit"]:
-                        tool.process_exit()
-                    elif input_str in ["c", "continue"]:
-                        break
+                return
+
+            while True:
+                input_str = input(tool.get_time() + " 没有检测到账号登录状态，可能无法解析相簿、需要登录才能查看的视频以及获取高分辨率，继续程序(C)ontinue？或者退出程序(E)xit？:")
+                input_str = input_str.lower()
+                if input_str in ["e", "exit"]:
+                    tool.process_exit()
+                elif input_str in ["c", "continue"]:
+                    break
 
 
 class CrawlerThread(crawler.CrawlerThread):
@@ -407,18 +404,13 @@ class CrawlerThread(crawler.CrawlerThread):
         video_info_list = []
         is_over = False
         while not is_over:
-            self.main_thread_check()  # 检测主线程运行状态
-
             pagination_description = "第%s页视频" % page_count
             self.start_parse(pagination_description)
-
-            # 获取一页相簿
             try:
                 album_pagination_response = get_one_page_video(self.index_key, page_count)
             except crawler.CrawlerException as e:
                 self.error(e.http_error(pagination_description))
                 raise
-
             self.parse_result(pagination_description, album_pagination_response["video_info_list"])
 
             # 寻找这一页符合条件的视频
@@ -452,18 +444,13 @@ class CrawlerThread(crawler.CrawlerThread):
         audio_info_list = []
         is_over = False
         while not is_over:
-            self.main_thread_check()  # 检测主线程运行状态
-
             pagination_description = "第%s页音频" % page_count
             self.start_parse(pagination_description)
-
-            # 获取一页相簿
             try:
                 album_pagination_response = get_one_page_audio(self.index_key, page_count)
             except crawler.CrawlerException as e:
                 self.error(e.http_error(pagination_description))
                 raise
-
             self.parse_result(pagination_description, album_pagination_response["audio_info_list"])
 
             # 寻找这一页符合条件的音频
@@ -497,18 +484,13 @@ class CrawlerThread(crawler.CrawlerThread):
         album_id_list = []
         is_over = False
         while not is_over:
-            self.main_thread_check()  # 检测主线程运行状态
-
             pagination_description = "第%s页相簿" % page_count
             self.start_parse(pagination_description)
-
-            # 获取一页相簿
             try:
                 album_pagination_response = get_one_page_album(self.index_key, page_count)
             except crawler.CrawlerException as e:
                 self.error(e.http_error(pagination_description))
                 raise
-
             self.parse_result(pagination_description, album_pagination_response["album_id_list"])
 
             # 寻找这一页符合条件的相簿
@@ -539,18 +521,14 @@ class CrawlerThread(crawler.CrawlerThread):
     def crawl_video(self, video_info):
         video_description = "视频%s《%s》" % (video_info["video_id"], video_info["video_title"])
         self.start_parse(video_description)
-
-        # 获取相簿
         try:
             video_play_response = get_video_page(video_info["video_id"])
         except crawler.CrawlerException as e:
             self.error(e.http_error(video_description))
             raise
-
         if video_play_response["is_private"]:
             log.error("%s 需要登录才能访问，跳过" % video_description)
             return
-
         self.parse_result(video_description, video_play_response["video_part_info_list"])
 
         video_index = 1
@@ -558,8 +536,6 @@ class CrawlerThread(crawler.CrawlerThread):
         for video_part_info in video_play_response["video_part_info_list"]:
             video_split_index = 1
             for video_part_url in video_part_info["video_url_list"]:
-                self.main_thread_check()  # 检测主线程运行状态
-
                 video_name = "%010d %s" % (video_info["video_id"], video_info["video_title"])
                 if len(video_play_response["video_part_info_list"]) > 1:
                     if video_part_info["video_part_title"]:
@@ -590,8 +566,6 @@ class CrawlerThread(crawler.CrawlerThread):
     def crawl_audio(self, audio_info):
         audio_description = "音频%s《%s》" % (audio_info["audio_id"], audio_info["audio_title"])
         self.start_parse(audio_description)
-
-        # 获取音频信息
         try:
             audio_info_response = get_audio_info_page(audio_info["audio_id"])
         except crawler.CrawlerException as e:
@@ -614,25 +588,20 @@ class CrawlerThread(crawler.CrawlerThread):
     def crawl_photo(self, album_id):
         album_description = "相簿%s" % album_id
         self.start_parse(album_description)
-
-        # 获取相簿
         try:
             album_response = get_album_page(album_id)
         except crawler.CrawlerException as e:
             self.error(e.http_error(album_description))
             raise
-
         self.parse_result(album_description, album_response["photo_url_list"])
 
         photo_index = 1
         for photo_url in album_response["photo_url_list"]:
-            self.main_thread_check()  # 检测主线程运行状态
-
             photo_description = "相簿%s第%s张图片" % (album_id, photo_index)
             self.step("开始下载 %s %s" % (photo_description, photo_url))
-
             photo_name = "%09d_%02d.%s" % (album_id, photo_index, net.get_file_extension(photo_url))
             photo_path = os.path.join(self.main_thread.photo_download_path, self.display_name, photo_name)
+            self.main_thread_check()  # 检测主线程运行状态
             download_return = net.Download(photo_url, photo_path)
             # 源文件禁止访问，增加后缀生成新的图片
             if download_return.status == net.Download.DOWNLOAD_FAILED and download_return.code == 404:
@@ -665,7 +634,6 @@ class CrawlerThread(crawler.CrawlerThread):
             while len(video_info_list) > 0:
                 if not self.crawl_video(video_info_list.pop()):
                     break
-                self.main_thread_check()  # 检测主线程运行状态
 
         # 音频下载
         if self.main_thread.is_download_audio:
@@ -677,7 +645,6 @@ class CrawlerThread(crawler.CrawlerThread):
             while len(audio_info_list) > 0:
                 if not self.crawl_audio(audio_info_list.pop()):
                     break
-                self.main_thread_check()  # 检测主线程运行状态
 
         # 图片下载
         if self.main_thread.is_download_photo:
@@ -689,7 +656,6 @@ class CrawlerThread(crawler.CrawlerThread):
             while len(album_id_list) > 0:
                 if not self.crawl_photo(album_id_list.pop()):
                     break
-                self.main_thread_check()  # 检测主线程运行状态
 
 
 if __name__ == "__main__":

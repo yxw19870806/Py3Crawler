@@ -99,13 +99,13 @@ class SteamDb(crawler.Crawler):
 
         # 初始化参数
         sys_config = {
-            crawler.SYS_SET_PROXY: True,
-            crawler.SYS_NOT_DOWNLOAD: True,
-            crawler.SYS_NOT_CHECK_SAVE_DATA: True,
-            crawler.SYS_GET_COOKIE: ("steamdb.info",),
-            crawler.SYS_APP_CONFIG_PATH: os.path.join(crawler.PROJECT_APP_PATH, "lib", "steamdb.ini"),
-            crawler.SYS_APP_CONFIG: (
-                ("USER_AGENT", "", crawler.CONFIG_ANALYSIS_MODE_RAW),
+            crawler.SysConfigKey.SET_PROXY: True,
+            crawler.SysConfigKey.NOT_DOWNLOAD: True,
+            crawler.SysConfigKey.NOT_CHECK_SAVE_DATA: True,
+            crawler.SysConfigKey.GET_COOKIE: ("steamdb.info",),
+            crawler.SysConfigKey.APP_CONFIG_PATH: os.path.join(crawler.PROJECT_APP_PATH, "lib", "steamdb.ini"),
+            crawler.SysConfigKey.APP_CONFIG: (
+                ("USER_AGENT", "", crawler.ConfigAnalysisMode.RAW),
             ),
         }
         crawler.Crawler.__init__(self, sys_config, **kwargs)

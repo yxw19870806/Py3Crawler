@@ -33,8 +33,8 @@ def get_one_page_favorite(page_count):
     if not favorite_data_html:
         raise crawler.CrawlerException("页面截取收藏信息失败\n" + favorite_pagination_content)
     # 替换全部转义斜杠以及没有用的换行符等
-    html_data = favorite_data_html.replace("\\\\", chr(1))
-    for replace_string in ["\\n", "\\r", "\\t", "\\"]:
+    html_data = favorite_data_html.replace(r"\\", chr(1))
+    for replace_string in [r"\n", r"\r", r"\t", "\\"]:
         html_data = html_data.replace(replace_string, "")
     html_data = html_data.replace(chr(1), "\\")
     # 解析页面
@@ -118,9 +118,9 @@ class Favorite(crawler.Crawler):
 
         # 初始化参数
         sys_config = {
-            crawler.SYS_DOWNLOAD_PHOTO: True,
-            crawler.SYS_NOT_CHECK_SAVE_DATA: True,
-            crawler.SYS_GET_COOKIE: ("sina.com.cn", "login.sina.com.cn"),
+            crawler.SysConfigKey.DOWNLOAD_PHOTO: True,
+            crawler.SysConfigKey.NOT_CHECK_SAVE_DATA: True,
+            crawler.SysConfigKey.GET_COOKIE: ("sina.com.cn", "login.sina.com.cn"),
         }
         crawler.Crawler.__init__(self, sys_config, **kwargs)
 
@@ -140,17 +140,13 @@ class Favorite(crawler.Crawler):
         page_count = 1
         is_over = False
         while not is_over:
-            self.running_check()
-
             pagination_description = "第%s页收藏" % page_count
             self.start_parse(pagination_description)
-
             try:
                 favorite_pagination_response = get_one_page_favorite(page_count)
             except crawler.CrawlerException as e:
                 log.error(e.http_error(pagination_description))
                 raise
-
             self.parse_result(pagination_description + "已删除微博", favorite_pagination_response["delete_blog_id_list"])
 
             for blog_id in favorite_pagination_response["delete_blog_id_list"]:
@@ -168,9 +164,8 @@ class Favorite(crawler.Crawler):
             for blog_info in favorite_pagination_response["blog_info_list"]:
                 blog_description = "微博%s" % blog_info["blog_id"]
                 self.start_parse(blog_description)
-
                 self.parse_result(blog_description, blog_info["photo_url_list"])
-                
+
                 photo_count = 1
                 photo_path = os.path.join(self.photo_download_path, blog_info["blog_id"])
                 for photo_url in blog_info["photo_url_list"]:

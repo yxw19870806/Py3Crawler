@@ -78,7 +78,7 @@ class DMZJ(crawler.Crawler):
 
         # 初始化参数
         sys_config = {
-            crawler.SYS_DOWNLOAD_PHOTO: True,
+            crawler.SysConfigKey.DOWNLOAD_PHOTO: True,
         }
         crawler.Crawler.__init__(self, sys_config, **kwargs)
 
@@ -103,16 +103,13 @@ class CrawlerThread(crawler.CrawlerThread):
     def get_crawl_list(self):
         comic_info_list = []
 
-        # 获取漫画首页
         index_description = "漫画首页"
         self.start_parse(index_description)
-
         try:
             blog_pagination_response = get_comic_index_page(self.index_key)
         except crawler.CrawlerException as e:
             self.error(e.http_error(index_description))
             raise
-
         self.parse_result(index_description, blog_pagination_response["comic_info_list"])
 
         # 寻找符合条件的章节
@@ -130,14 +127,11 @@ class CrawlerThread(crawler.CrawlerThread):
     def crawl_comic(self, comic_info):
         comic_description = "漫画%s %s《%s》" % (comic_info["page_id"], comic_info["version_name"], comic_info["chapter_name"])
         self.start_parse(comic_description)
-
-        # 获取指定漫画章节
         try:
             chapter_response = get_chapter_page(comic_info["comic_id"], comic_info["page_id"])
         except crawler.CrawlerException as e:
             self.error(e.http_error(comic_description))
             raise
-
         self.parse_result(comic_description, chapter_response["photo_url_list"])
 
         # 图片下载
@@ -147,8 +141,6 @@ class CrawlerThread(crawler.CrawlerThread):
         # 设置临时目录
         self.temp_path_list.append(chapter_path)
         for photo_url in chapter_response["photo_url_list"]:
-            self.main_thread_check()  # 检测主线程运行状态
-
             photo_path = os.path.join(chapter_path, "%03d.%s" % (photo_index, net.get_file_extension(photo_url)))
             photo_description = "漫画%s %s《%s》第%s张图片" % (comic_info["page_id"], comic_info["version_name"], comic_info["chapter_name"], photo_index)
             if self.download(photo_url, photo_path, photo_description, header_list={"Referer": "https://m.dmzj.com/"}):
@@ -167,7 +159,6 @@ class CrawlerThread(crawler.CrawlerThread):
         # 从最早的章节开始下载
         while len(comic_info_list) > 0:
             self.crawl_comic(comic_info_list.pop())
-            self.main_thread_check()  # 检测主线程运行状态
 
 
 if __name__ == "__main__":

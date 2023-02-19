@@ -18,8 +18,8 @@ class XiMaLaYaAccount(ximalaya.XiMaLaYa):
 
         # 初始化参数
         sys_config = {
-            crawler.SYS_NOT_CHECK_SAVE_DATA: False,
-            crawler.SYS_APP_CONFIG_PATH: os.path.join(crawler.PROJECT_APP_PATH, "account.ini"),
+            crawler.SysConfigKey.NOT_CHECK_SAVE_DATA: False,
+            crawler.SysConfigKey.APP_CONFIG_PATH: os.path.join(crawler.PROJECT_APP_PATH, "account.ini"),
         }
         ximalaya.XiMaLaYa.__init__(self, sys_config, **kwargs)
 
@@ -40,16 +40,6 @@ class CrawlerThread(crawler.CrawlerThread):
             self.display_name = single_save_data[0]
         crawler.CrawlerThread.__init__(self, main_thread, single_save_data)
 
-    def _run(self):
-        # 获取所有可下载音频
-        audio_info_list = self.get_crawl_list()
-        self.step("需要下载的全部音频解析完毕，共%s个" % len(audio_info_list))
-
-        # 从最早的媒体开始下载
-        while len(audio_info_list) > 0:
-            self.crawl_audio(audio_info_list.pop())
-            self.main_thread_check()  # 检测主线程运行状态
-
     # 获取所有可下载音频
     def get_crawl_list(self):
         page_count = 1
@@ -58,18 +48,13 @@ class CrawlerThread(crawler.CrawlerThread):
         is_over = False
         # 获取全部还未下载过需要解析的音频
         while not is_over:
-            self.main_thread_check()  # 检测主线程运行状态
-
             pagination_description = "第%s页音频" % page_count
             self.start_parse(pagination_description)
-
-            # 获取一页音频
             try:
                 audit_pagination_response = ximalaya.get_one_page_audio(self.index_key, page_count)
             except crawler.CrawlerException as e:
                 self.error(e.http_error(pagination_description))
                 raise
-
             self.parse_result(pagination_description, audit_pagination_response["audio_info_list"])
 
             # 寻找这一页符合条件的媒体
@@ -98,14 +83,11 @@ class CrawlerThread(crawler.CrawlerThread):
     def crawl_audio(self, audio_info):
         audio_description = "音频%s《%s》" % (audio_info["audio_id"], audio_info["audio_title"])
         self.start_parse(audio_description)
-
-        # 获取音频播放页
         try:
             audio_play_response = ximalaya.get_audio_info_page(audio_info["audio_id"])
         except crawler.CrawlerException as e:
             self.error(e.http_error(audio_description))
             raise
-
         if audio_play_response["is_delete"]:
             self.error("%s 不存在" % audio_description)
             raise
@@ -118,6 +100,15 @@ class CrawlerThread(crawler.CrawlerThread):
 
         # 音频下载完毕
         self.single_save_data[1] = str(audio_info["audio_id"])  # 设置存档记录
+
+    def _run(self):
+        # 获取所有可下载音频
+        audio_info_list = self.get_crawl_list()
+        self.step("需要下载的全部音频解析完毕，共%s个" % len(audio_info_list))
+
+        # 从最早的媒体开始下载
+        while len(audio_info_list) > 0:
+            self.crawl_audio(audio_info_list.pop())
 
 
 if __name__ == "__main__":

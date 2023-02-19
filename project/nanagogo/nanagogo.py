@@ -74,10 +74,10 @@ class NanaGoGo(crawler.Crawler):
 
         # 初始化参数
         sys_config = {
-            crawler.SYS_DOWNLOAD_PHOTO: True,
-            crawler.SYS_DOWNLOAD_VIDEO: True,
-            crawler.SYS_SET_PROXY: True,
-            crawler.SYS_GET_COOKIE: ("7gogo.jp", "api.7gogo.jp"),
+            crawler.SysConfigKey.DOWNLOAD_PHOTO: True,
+            crawler.SysConfigKey.DOWNLOAD_VIDEO: True,
+            crawler.SysConfigKey.SET_PROXY: True,
+            crawler.SysConfigKey.GET_COOKIE: ("7gogo.jp", "api.7gogo.jp"),
         }
         crawler.Crawler.__init__(self, sys_config, **kwargs)
 
@@ -104,18 +104,13 @@ class CrawlerThread(crawler.CrawlerThread):
         is_over = False
         # 获取全部还未下载过需要解析的日志
         while not is_over:
-            self.main_thread_check()  # 检测主线程运行状态
-
             pagination_description = "target：%s后一页日志" % target_id
             self.start_parse(pagination_description)
-
-            # 获取一页日志信息
             try:
                 blog_pagination_response = get_one_page_blog(self.index_key, target_id)
             except crawler.CrawlerException as e:
                 self.error(e.http_error(pagination_description))
                 raise
-
             self.parse_result(pagination_description, blog_pagination_response["blog_info_list"])
 
             # 已经没有日志了
@@ -157,13 +152,11 @@ class CrawlerThread(crawler.CrawlerThread):
 
         photo_index = 1
         for photo_url in blog_info["photo_url_list"]:
-            self.main_thread_check()  # 检测主线程运行状态
-
             photo_name = "%05d_%02d.%s" % (blog_info["blog_id"], photo_index, net.get_file_extension(photo_url))
             photo_path = os.path.join(self.main_thread.photo_download_path, self.index_key, photo_name)
-            self.temp_path_list.append(photo_path)  # 设置临时目录
             photo_description = "日志%s第%s张图片" % (blog_info["blog_id"], photo_index)
             if self.download(photo_url, photo_path, photo_description):
+                self.temp_path_list.append(photo_path)  # 设置临时目录
                 self.total_photo_count += 1  # 计数累加
             photo_index += 1
 
@@ -172,13 +165,11 @@ class CrawlerThread(crawler.CrawlerThread):
 
         video_index = 1
         for video_url in blog_info["video_url_list"]:
-            self.main_thread_check()  # 检测主线程运行状态
-
             video_name = "%05d_%02d.%s" % (blog_info["blog_id"], video_index, net.get_file_extension(video_url))
             video_path = os.path.join(self.main_thread.video_download_path, self.index_key, video_name)
-            self.temp_path_list.append(video_path)  # 设置临时目录
             video_description = "日志%s第%s个视频" % (blog_info["blog_id"], video_index)
             if self.download(video_url, video_path, video_description):
+                self.temp_path_list.append(video_path)  # 设置临时目录
                 self.total_video_count += 1  # 计数累加
             video_index += 1
 
@@ -197,7 +188,6 @@ class CrawlerThread(crawler.CrawlerThread):
         # 从最早的日志开始下载
         while len(blog_info_list) > 0:
             self.crawl_blog(blog_info_list.pop())
-            self.main_thread_check()  # 检测主线程运行状态
 
 
 if __name__ == "__main__":

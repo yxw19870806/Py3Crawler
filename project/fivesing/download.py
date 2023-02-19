@@ -15,7 +15,7 @@ from project.fivesing import fivesing
 class FiveSingDownload(fivesing.FiveSing):
     def __init__(self, **kwargs):
         extra_sys_config = {
-            crawler.SYS_NOT_CHECK_SAVE_DATA: True
+            crawler.SysConfigKey.NOT_CHECK_SAVE_DATA: True
         }
         fivesing.FiveSing.__init__(self, extra_sys_config=extra_sys_config, **kwargs)
 

@@ -108,7 +108,7 @@ class ZCool(crawler.Crawler):
 
         # 初始化参数
         sys_config = {
-            crawler.SYS_DOWNLOAD_PHOTO: True,
+            crawler.SysConfigKey.DOWNLOAD_PHOTO: True,
         }
         crawler.Crawler.__init__(self, sys_config, **kwargs)
 
@@ -137,17 +137,13 @@ class CrawlerThread(crawler.CrawlerThread):
         is_over = False
         # 获取全部还未下载过需要解析的作品
         while not is_over:
-            self.main_thread_check()  # 检测主线程运行状态
-
             pagination_description = "第%s页作品" % page_count
             self.start_parse(pagination_description)
-
             try:
                 album_pagination_response = get_one_page_album(self.index_key, page_count)
             except crawler.CrawlerException as e:
                 self.error(e.http_error(pagination_description))
                 raise
-
             self.parse_result(pagination_description, album_pagination_response["album_info_list"])
 
             # 寻找这一页符合条件的作品
@@ -191,8 +187,6 @@ class CrawlerThread(crawler.CrawlerThread):
         album_path = os.path.join(self.main_thread.photo_download_path, self.index_key, album_name)
         self.temp_path_list.append(album_path)
         for photo_url in album_response["photo_url_list"]:
-            self.main_thread_check()  # 检测主线程运行状态
-
             photo_url = get_photo_url(photo_url)
             photo_path = os.path.join(album_path, "%02d.%s" % (photo_index, net.get_file_extension(photo_url)))
             photo_description = "作品%s《%s》第%s张图片" % (album_info["album_id"], album_info["album_title"], photo_index)
@@ -212,8 +206,7 @@ class CrawlerThread(crawler.CrawlerThread):
         # 从最早的作品开始下载
         while len(album_info_list) > 0:
             self.crawl_album(album_info_list.pop())
-            self.main_thread_check()  # 检测主线程运行状态
-            
+
 
 if __name__ == "__main__":
     ZCool().main()

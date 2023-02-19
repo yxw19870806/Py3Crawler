@@ -119,7 +119,7 @@ def get_album_page_by_selenium(album_id):
             encryption_video_url = crawler.get_json_value(video_info, "main_url", type_check=str)
             result["video_type"] = crawler.get_json_value(video_info, "vtype", type_check=str)
     if encryption_video_url is None:
-        crawler.CrawlerException("视频信息截取加密视频地址失败\n" + video_info_response.json_data)
+        raise crawler.CrawlerException("视频信息截取加密视频地址失败\n" + video_info_response.json_data)
     try:
         result["video_url"] = base64.b64decode(encryption_video_url).decode(errors="ignore")
     except TypeError:
@@ -134,8 +134,8 @@ class Bcy(crawler.Crawler):
 
         # 初始化参数
         sys_config = {
-            crawler.SYS_DOWNLOAD_PHOTO: True,
-            crawler.SYS_DOWNLOAD_VIDEO: True,
+            crawler.SysConfigKey.DOWNLOAD_PHOTO: True,
+            crawler.SysConfigKey.DOWNLOAD_VIDEO: True,
         }
         crawler.Crawler.__init__(self, sys_config, **kwargs)
 
@@ -162,18 +162,13 @@ class CrawlerThread(crawler.CrawlerThread):
         album_id_list = []
         is_over = False
         while not is_over:
-            self.main_thread_check()  # 检测主线程运行状态
-
             pagination_description = "since %s后一页作品" % page_since_id
             self.start_parse(pagination_description)
-
-            # 获取一页作品
             try:
                 album_pagination_response = get_one_page_album(self.index_key, page_since_id)
             except crawler.CrawlerException as e:
                 self.error(e.http_error(pagination_description))
                 raise
-
             self.parse_result(pagination_description, album_pagination_response["album_id_list"])
 
             # 寻找这一页符合条件的作品
@@ -196,8 +191,6 @@ class CrawlerThread(crawler.CrawlerThread):
     def crawl_album(self, album_id):
         album_description = "作品%s" % album_id
         self.start_parse(album_description)
-
-        # 获取作品
         try:
             album_response = get_album_page(album_id)
         except crawler.CrawlerException as e:
@@ -225,8 +218,6 @@ class CrawlerThread(crawler.CrawlerThread):
         self.temp_path_list.append(album_path)
         photo_index = 1
         for photo_url in photo_url_list:
-            self.main_thread_check()  # 检测主线程运行状态
-
             photo_description = "作品%s第%s张图片" % (album_id, photo_index)
             self.step("开始下载 %s %s" % (photo_description, photo_url))
 
@@ -235,6 +226,7 @@ class CrawlerThread(crawler.CrawlerThread):
                 file_extension = "jpg"
             photo_path = os.path.join(album_path, "%03d.%s" % (photo_index, file_extension))
             for retry_count in range(10):
+                self.main_thread_check()  # 检测主线程运行状态
                 download_return = net.Download(photo_url, photo_path)
                 if download_return.status == net.Download.DOWNLOAD_SUCCEED:
                     self.total_photo_count += 1  # 计数累加
@@ -253,7 +245,6 @@ class CrawlerThread(crawler.CrawlerThread):
     def crawl_video(self, album_id):
         video_description = "作品%s视频" % album_id
         self.start_parse(video_description)
-
         try:
             video_response = get_album_page_by_selenium(album_id)
         except crawler.CrawlerException as e:
@@ -272,7 +263,6 @@ class CrawlerThread(crawler.CrawlerThread):
         # 从最早的作品开始下载
         while len(album_id_list) > 0:
             self.crawl_album(album_id_list.pop())
-            self.main_thread_check()  # 检测主线程运行状态
 
 
 if __name__ == "__main__":

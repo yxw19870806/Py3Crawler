@@ -136,9 +136,9 @@ class DailyMotion(crawler.Crawler):
 
         # 初始化参数
         sys_config = {
-            crawler.SYS_DOWNLOAD_VIDEO: True,
-            crawler.SYS_APP_CONFIG: (
-                ("VIDEO_QUALITY", 6, crawler.CONFIG_ANALYSIS_MODE_INTEGER),
+            crawler.SysConfigKey.DOWNLOAD_VIDEO: True,
+            crawler.SysConfigKey.APP_CONFIG: (
+                ("VIDEO_QUALITY", 6, crawler.ConfigAnalysisMode.INTEGER),
             ),
         }
         crawler.Crawler.__init__(self, sys_config, **kwargs)
@@ -188,17 +188,13 @@ class CrawlerThread(crawler.CrawlerThread):
         is_over = False
         # 获取全部还未下载过需要解析的相册
         while not is_over:
-            self.main_thread_check()  # 检测主线程运行状态
-
             pagination_description = "第%s页视频" % page_count
             self.start_parse(pagination_description)
-
             try:
                 blog_pagination_response = get_one_page_video(self.index_key, page_count)
             except crawler.CrawlerException as e:
                 self.error(e.http_error(pagination_description))
                 raise
-
             self.parse_result(pagination_description, blog_pagination_response["video_info_list"])
 
             # 寻找这一页符合条件的日志
@@ -220,8 +216,6 @@ class CrawlerThread(crawler.CrawlerThread):
     def crawl_video(self, video_info):
         video_description = "视频%s 《%s》" % (video_info["video_id"], video_info["video_title"])
         self.start_parse(video_description)
-
-        # 获取指定视频信息
         try:
             video_response = get_video_page(video_info["video_id"])
         except crawler.CrawlerException as e:
@@ -244,7 +238,6 @@ class CrawlerThread(crawler.CrawlerThread):
         # 从最早的视频开始下载
         while len(video_info_list) > 0:
             self.crawl_video(video_info_list.pop())
-            self.main_thread_check()  # 检测主线程运行状态
 
 
 if __name__ == "__main__":

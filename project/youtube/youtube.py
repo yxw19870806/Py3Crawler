@@ -26,6 +26,8 @@ def check_login():
     if index_response.status == 303 and index_response.getheader("Location").find("https://accounts.google.com/ServiceLogin?") == 0:
         return False
     elif index_response.status == net.HTTP_RETURN_CODE_SUCCEED:
+        global IS_LOGIN
+        IS_LOGIN = True
         return True
     return False
 
@@ -212,11 +214,9 @@ def get_video_page(video_id):
             # 解析JS文件，获取对应的加密方法
             if len(decrypt_function_step) == 0:
                 js_file_path = tool.find_sub_string(video_play_response_content, '<script src="/s/player/', '"')
-                if js_file_path:
-                    js_file_url = "https://www.youtube.com/s/player/%s" % js_file_path
-                else:
+                if not js_file_path:
                     raise crawler.CrawlerException("播放器JS文件地址截取失败\n" + video_play_response_content)
-                decrypt_function_step = get_decrypt_step(js_file_url)
+                decrypt_function_step = get_decrypt_step("https://www.youtube.com/s/player/%s" % js_file_path)
             signature = decrypt_signature(decrypt_function_step, video_signature)
             video_url += "&sig=" + signature
         resolution_to_url[video_resolution] = video_url
@@ -331,11 +331,11 @@ class Youtube(crawler.Crawler):
 
         # 初始化参数
         sys_config = {
-            crawler.SYS_DOWNLOAD_VIDEO: True,
-            crawler.SYS_SET_PROXY: True,
-            crawler.SYS_GET_COOKIE: ("youtube.com",),
-            crawler.SYS_APP_CONFIG: (
-                ("VIDEO_QUALITY", 6, crawler.CONFIG_ANALYSIS_MODE_INTEGER),
+            crawler.SysConfigKey.DOWNLOAD_VIDEO: True,
+            crawler.SysConfigKey.SET_PROXY: True,
+            crawler.SysConfigKey.GET_COOKIE: ("youtube.com",),
+            crawler.SysConfigKey.APP_CONFIG: (
+                ("VIDEO_QUALITY", 6, crawler.ConfigAnalysisMode.INTEGER),
             ),
         }
         crawler.Crawler.__init__(self, sys_config, **kwargs)
@@ -368,16 +368,15 @@ class Youtube(crawler.Crawler):
     def init(self):
         # 检测登录状态
         if check_login():
-            global IS_LOGIN
-            IS_LOGIN = True
-        else:
-            while True:
-                input_str = input(tool.get_time() + " 没有检测到账号登录状态，可能无法解析受限制的视频，继续程序(C)ontinue？或者退出程序(E)xit？:")
-                input_str = input_str.lower()
-                if input_str in ["e", "exit"]:
-                    tool.process_exit()
-                elif input_str in ["c", "continue"]:
-                    break
+            return
+
+        while True:
+            input_str = input(tool.get_time() + " 没有检测到账号登录状态，可能无法解析受限制的视频，继续程序(C)ontinue？或者退出程序(E)xit？:")
+            input_str = input_str.lower()
+            if input_str in ["e", "exit"]:
+                tool.process_exit()
+            elif input_str in ["c", "continue"]:
+                break
 
 
 class CrawlerThread(crawler.CrawlerThread):
@@ -401,18 +400,13 @@ class CrawlerThread(crawler.CrawlerThread):
         is_over = False
         # 获取全部还未下载过需要解析的相册
         while not is_over:
-            self.main_thread_check()  # 检测主线程运行状态
-
             pagination_description = "token：%s后一页视频" % token
             self.start_parse(pagination_description)
-
-            # 获取一页视频
             try:
                 video_pagination_response = get_one_page_video(self.index_key, token)
             except crawler.CrawlerException as e:
                 self.error(e.http_error(pagination_description))
                 raise
-
             self.parse_result(pagination_description, video_pagination_response["video_id_list"])
 
             if len(self.single_save_data) < 4:
@@ -443,8 +437,6 @@ class CrawlerThread(crawler.CrawlerThread):
     def crawl_video(self, video_id, is_last):
         video_description = "视频%s" % video_id
         self.start_parse(video_description)
-
-        # 获取指定视频信息
         try:
             video_response = get_video_page(video_id)
         except crawler.CrawlerException as e:
@@ -488,7 +480,6 @@ class CrawlerThread(crawler.CrawlerThread):
         # 从最早的视频开始下载
         while len(video_id_list) > 0:
             self.crawl_video(video_id_list.pop(), len(video_id_list) == 0)
-            self.main_thread_check()  # 检测主线程运行状态
 
 
 if __name__ == "__main__":

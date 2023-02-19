@@ -77,7 +77,7 @@ class Keyakizaka46Diary(crawler.Crawler):
 
         # 初始化参数
         sys_config = {
-            crawler.SYS_DOWNLOAD_PHOTO: True,
+            crawler.SysConfigKey.DOWNLOAD_PHOTO: True,
         }
         crawler.Crawler.__init__(self, sys_config, **kwargs)
 
@@ -105,18 +105,13 @@ class CrawlerThread(crawler.CrawlerThread):
         is_over = False
         # 获取全部还未下载过需要解析的日志
         while not is_over:
-            self.main_thread_check()  # 检测主线程运行状态
-
             pagination_description = "第%s页日志" % page_count
             self.start_parse(pagination_description)
-
-            # 获取一页博客信息
             try:
                 blog_pagination_response = get_one_page_blog(self.index_key, page_count)
             except crawler.CrawlerException as e:
                 self.error(e.http_error(pagination_description))
                 raise
-
             self.parse_result(pagination_description, blog_pagination_response["blog_info_list"])
 
             # 寻找这一页符合条件的日志
@@ -140,18 +135,15 @@ class CrawlerThread(crawler.CrawlerThread):
     def crawl_blog(self, blog_info):
         blog_description = "日志%s" % blog_info["blog_id"]
         self.start_parse(blog_description)
-
         self.parse_result(blog_description, blog_info["photo_url_list"])
 
         photo_index = 1
         for photo_url in blog_info["photo_url_list"]:
-            self.main_thread_check()  # 检测主线程运行状态
-
             file_name = "%05d_%02d.%s" % (blog_info["blog_id"], photo_index, net.get_file_extension(photo_url))
             photo_path = os.path.join(self.main_thread.photo_download_path, self.display_name, file_name)
-            self.temp_path_list.append(photo_path)  # 设置临时目录
             photo_description = "日志%s第%s张图片" % (blog_info["blog_id"], photo_index)
             if self.download(photo_url, photo_path, photo_description):
+                self.temp_path_list.append(photo_path)  # 设置临时目录
                 self.total_photo_count += 1  # 计数累加
             photo_index += 1
 
@@ -167,7 +159,6 @@ class CrawlerThread(crawler.CrawlerThread):
         # 从最早的日志开始下载
         while len(blog_info_list) > 0:
             self.crawl_blog(blog_info_list.pop())
-            self.main_thread_check()  # 检测主线程运行状态
 
 
 if __name__ == "__main__":

@@ -283,10 +283,10 @@ class Twitter(crawler.Crawler):
 
         # 初始化参数
         sys_config = {
-            crawler.SYS_DOWNLOAD_PHOTO: True,
-            crawler.SYS_DOWNLOAD_VIDEO: True,
-            crawler.SYS_SET_PROXY: True,
-            crawler.SYS_GET_COOKIE: ("twitter.com",),
+            crawler.SysConfigKey.DOWNLOAD_PHOTO: True,
+            crawler.SysConfigKey.DOWNLOAD_VIDEO: True,
+            crawler.SysConfigKey.SET_PROXY: True,
+            crawler.SysConfigKey.GET_COOKIE: ("twitter.com",),
         }
         crawler.Crawler.__init__(self, sys_config, **kwargs)
 
@@ -305,17 +305,19 @@ class Twitter(crawler.Crawler):
     def init(self):
         # 生成authorization，用于访问视频页
         try:
-            if not check_login():
-                while True:
-                    input_str = input(tool.get_time() + " 没有检测到账号登录状态，是否继续(C)ontinue？或者退出程序(E)xit？:")
-                    input_str = input_str.lower()
-                    if input_str in ["c", "yes"]:
-                        break
-                    elif input_str in ["e", "exit"]:
-                        tool.process_exit()
+            if check_login():
+                return
         except crawler.CrawlerException as e:
             log.error(e.http_error("生成authorization"))
             tool.process_exit()
+
+        while True:
+            input_str = input(tool.get_time() + " 没有检测到账号登录状态，是否继续(C)ontinue？或者退出程序(E)xit？:")
+            input_str = input_str.lower()
+            if input_str in ["c", "yes"]:
+                break
+            elif input_str in ["e", "exit"]:
+                tool.process_exit()
 
 
 class CrawlerThread(crawler.CrawlerThread):
@@ -330,21 +332,13 @@ class CrawlerThread(crawler.CrawlerThread):
         is_over = False
         # 获取全部还未下载过需要解析的推特
         while not is_over:
-            self.main_thread_check()  # 检测主线程运行状态
-
             pagination_description = "cursor：%s后一页推特" % cursor
             self.start_parse(pagination_description)
-
-            # 获取指定时间点后的一页图片信息
             try:
                 media_pagination_response = get_one_page_media(self.index_key, self.single_save_data[1], cursor)
             except crawler.CrawlerException as e:
                 self.error(e.http_error(pagination_description))
                 raise
-
-            if media_pagination_response["is_over"]:
-                break
-
             self.parse_result(pagination_description, media_pagination_response["media_info_list"])
 
             # 寻找这一页符合条件的推特
@@ -388,14 +382,13 @@ class CrawlerThread(crawler.CrawlerThread):
     def crawl_photo(self, media_info):
         photo_index = 1
         for photo_url in media_info["photo_url_list"]:
-            self.main_thread_check()  # 检测主线程运行状态
-
             photo_description = "推特%s第%s张图片" % (media_info["blog_id"], photo_index)
             self.step("开始下载 %s %s" % (photo_description, photo_url))
 
             photo_name = "%019d_%02d.%s" % (media_info["blog_id"], photo_index, net.get_file_extension(photo_url))
             photo_path = os.path.join(self.main_thread.photo_download_path, self.index_key, photo_name)
             for retry_count in range(5):
+                self.main_thread_check()  # 检测主线程运行状态
                 download_return = net.Download(photo_url, photo_path)
                 if download_return.status == net.Download.DOWNLOAD_SUCCEED:
                     self.temp_path_list.append(photo_path)  # 设置临时目录
@@ -414,16 +407,14 @@ class CrawlerThread(crawler.CrawlerThread):
     def crawl_video(self, media_info):
         video_index = 1
         for video_url in media_info["video_url_list"]:
-            self.main_thread_check()  # 检测主线程运行状态
-
             if len(media_info["video_url_list"]) > 1:
                 video_file_name = "%019d_%02d.%s" % (media_info["blog_id"], video_index, net.get_file_extension(video_url))
             else:
                 video_file_name = "%019d.%s" % (media_info["blog_id"], net.get_file_extension(video_url))
             video_path = os.path.join(self.main_thread.video_download_path, self.index_key, video_file_name)
-            self.temp_path_list.append(video_path)  # 设置临时目录
             video_description = "推特%s第%s个视频" % (media_info["blog_id"], video_index)
             if self.download(video_url, video_path, video_description, auto_multipart_download=True):
+                self.temp_path_list.append(video_path)  # 设置临时目录
                 self.total_video_count += 1  # 计数累加
             video_index += 1
 
@@ -448,7 +439,6 @@ class CrawlerThread(crawler.CrawlerThread):
         # 从最早的推特开始下载
         while len(media_info_list) > 0:
             self.crawl_media(media_info_list.pop())
-            self.main_thread_check()  # 检测主线程运行状态
 
 
 if __name__ == "__main__":

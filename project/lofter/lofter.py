@@ -93,7 +93,7 @@ class Lofter(crawler.Crawler):
 
         # 初始化参数
         sys_config = {
-            crawler.SYS_DOWNLOAD_PHOTO: True,
+            crawler.SysConfigKey.DOWNLOAD_PHOTO: True,
         }
         crawler.Crawler.__init__(self, sys_config, **kwargs)
 
@@ -121,17 +121,13 @@ class CrawlerThread(crawler.CrawlerThread):
         is_over = False
         # 获取全部还未下载过需要解析的日志
         while not is_over:
-            self.main_thread_check()  # 检测主线程运行状态
-
             pagination_description = "第%s页日志" % page_count
             self.start_parse(pagination_description)
-
             try:
                 blog_pagination_response = get_one_page_blog(self.index_key, page_count)
             except crawler.CrawlerException as e:
                 self.error(e.http_error(pagination_description))
                 raise
-
             self.parse_result(pagination_description, blog_pagination_response["blog_url_list"])
 
             # 已经没有日志了
@@ -163,29 +159,24 @@ class CrawlerThread(crawler.CrawlerThread):
     def crawl_blog(self, blog_url):
         blog_description = "日志%s" % blog_url
         self.start_parse(blog_description)
-
-        # 获取日志
         try:
             blog_response = get_blog_page(blog_url)
         except crawler.CrawlerException as e:
             self.error(e.http_error(blog_description))
             raise
-
         self.parse_result(blog_description, blog_response["photo_url_list"])
 
         blog_id = get_blog_id(blog_url)
         photo_index = 1
         for photo_url in blog_response["photo_url_list"]:
-            self.main_thread_check()  # 检测主线程运行状态
-
             # 去除图片地址的参数
             photo_url = get_photo_url(photo_url)
 
             file_name = "%09d_%02d.%s" % (blog_id, photo_index, net.get_file_extension(photo_url))
             photo_path = os.path.join(self.main_thread.photo_download_path, self.index_key, file_name)
-            self.temp_path_list.append(photo_path)  # 设置临时目录
             photo_description = "日志%s(%s)第%s张图片" % (blog_id, blog_url, photo_index)
             if self.download(photo_url, photo_path, photo_description, success_callback=self.download_success_callback):
+                self.temp_path_list.append(photo_path)  # 设置临时目录
                 self.total_photo_count += 1  # 计数累加
             photo_index += 1
 
@@ -208,7 +199,6 @@ class CrawlerThread(crawler.CrawlerThread):
         # 从最早的日志开始下载
         while len(blog_url_list) > 0:
             self.crawl_blog(blog_url_list.pop())
-            self.main_thread_check()  # 检测主线程运行状态
 
 
 if __name__ == "__main__":

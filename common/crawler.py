@@ -14,9 +14,8 @@ import sys
 import threading
 import time
 import traceback
-import warnings
-from typing import Callable, Optional, Union
-
+from enum import Enum, unique
+from typing import Any, Callable, Dict, Optional, Union
 
 # 项目根目录
 PROJECT_ROOT_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
@@ -36,43 +35,47 @@ if platform.system() == "Windows":
     except ImportError:
         from common import keyboard_event
 
-# 程序是否支持下载图片功能
-SYS_DOWNLOAD_PHOTO = "download_photo"
-# 程序是否支持下载视频功能
-SYS_DOWNLOAD_VIDEO = "download_video"
-# 程序是否支持下载音频功能
-SYS_DOWNLOAD_AUDIO = "download_audio"
-# 程序是否支持下载文本内容功能
-SYS_DOWNLOAD_CONTENT = "download_content"
-# 程序是否默认需要设置代理
-SYS_SET_PROXY = "set_proxy"
-# 程序是否支持不需要存档文件就可以开始运行
-SYS_NOT_CHECK_SAVE_DATA = "no_save_data"
-# 程序没有任何下载行为
-SYS_NOT_DOWNLOAD = "no_download"
-# 程序是否需要从浏览器存储的cookie中获取指定cookie的值
-SYS_GET_COOKIE = "get_cookie"
-# 程序额外应用配置
-# 传入参数类型为tuple，每一位参数为长度3的tuple，顺序为(配置名字，默认值，配置读取方式)，同analysis_config方法后三个参数
-SYS_APP_CONFIG = "app_config"
-# 程序默认的app配置文件路径
-SYS_APP_CONFIG_PATH = 'app_config_path'
 
-CONFIG_ANALYSIS_MODE_RAW = "raw"
-CONFIG_ANALYSIS_MODE_INTEGER = "int"
-CONFIG_ANALYSIS_MODE_BOOLEAN = "bool"
-CONFIG_ANALYSIS_MODE_FLOAT = "float"
-CONFIG_ANALYSIS_MODE_PATH = "path"
+@unique
+class SysConfigKey(Enum):
+    # 程序是否支持下载图片功能
+    DOWNLOAD_PHOTO = "download_photo"
+    # 程序是否支持下载视频功能
+    DOWNLOAD_VIDEO = "download_video"
+    # 程序是否支持下载音频功能
+    DOWNLOAD_AUDIO = "download_audio"
+    # 程序是否支持下载文本内容功能
+    DOWNLOAD_CONTENT = "download_content"
+    # 程序是否默认需要设置代理
+    SET_PROXY = "set_proxy"
+    # 程序是否支持不需要存档文件就可以开始运行
+    NOT_CHECK_SAVE_DATA = "no_save_data"
+    # 程序没有任何下载行为
+    NOT_DOWNLOAD = "no_download"
+    # 程序是否需要从浏览器存储的cookie中获取指定cookie的值
+    GET_COOKIE = "get_cookie"
+    # 程序额外应用配置
+    # 传入参数类型为tuple，每一位参数为长度3的tuple，顺序为(配置名字，默认值，配置读取方式)，同analysis_config方法后三个参数
+    APP_CONFIG = "app_config"
+    # 程序默认的app配置文件路径
+    APP_CONFIG_PATH = "app_config_path"
+
+
+@unique
+class ConfigAnalysisMode(Enum):
+    RAW = "raw"
+    INTEGER = "int"
+    BOOLEAN = "bool"
+    FLOAT = "float"
+    PATH = "path"
 
 
 class Crawler(object):
-    print_function = None
     thread_event = None
-    process_status = True  # 主进程是否在运行
     crawler_thread = None  # 下载子线程
 
     # 程序全局变量的设置
-    def __init__(self, sys_config, **kwargs):
+    def __init__(self, sys_config: Dict[SysConfigKey, Any], **kwargs):
         """
         :Args:
         - sys_config
@@ -91,6 +94,7 @@ class Crawler(object):
             - extra_app_config - 通过类实例化时传入的应用配置
         """
         self.start_time = time.time()
+        self.process_status = True  # 主进程是否在运行
 
         # 程序启动配置
         if not isinstance(sys_config, dict):
@@ -100,14 +104,14 @@ class Crawler(object):
         # 额外初始化配置（直接通过实例化中传入，可覆盖子类__init__方法传递的sys_config参数）
         if "extra_sys_config" in kwargs and isinstance(kwargs["extra_sys_config"], dict):
             sys_config.update(kwargs["extra_sys_config"])
-        sys_download_photo = SYS_DOWNLOAD_PHOTO in sys_config and sys_config[SYS_DOWNLOAD_PHOTO]
-        sys_download_video = SYS_DOWNLOAD_VIDEO in sys_config and sys_config[SYS_DOWNLOAD_VIDEO]
-        sys_download_audio = SYS_DOWNLOAD_AUDIO in sys_config and sys_config[SYS_DOWNLOAD_AUDIO]
-        sys_download_content = SYS_DOWNLOAD_CONTENT in sys_config and sys_config[SYS_DOWNLOAD_CONTENT]
-        sys_set_proxy = SYS_SET_PROXY in sys_config and sys_config[SYS_SET_PROXY]
-        sys_get_cookie = SYS_GET_COOKIE in sys_config and sys_config[SYS_GET_COOKIE]
-        sys_not_check_save_data = SYS_NOT_CHECK_SAVE_DATA in sys_config and sys_config[SYS_NOT_CHECK_SAVE_DATA]
-        sys_not_download = SYS_NOT_DOWNLOAD in sys_config and sys_config[SYS_NOT_DOWNLOAD]
+        sys_download_photo = SysConfigKey.DOWNLOAD_PHOTO in sys_config and sys_config[SysConfigKey.DOWNLOAD_PHOTO]
+        sys_download_video = SysConfigKey.DOWNLOAD_VIDEO in sys_config and sys_config[SysConfigKey.DOWNLOAD_VIDEO]
+        sys_download_audio = SysConfigKey.DOWNLOAD_AUDIO in sys_config and sys_config[SysConfigKey.DOWNLOAD_AUDIO]
+        sys_download_content = SysConfigKey.DOWNLOAD_CONTENT in sys_config and sys_config[SysConfigKey.DOWNLOAD_CONTENT]
+        sys_set_proxy = SysConfigKey.SET_PROXY in sys_config and sys_config[SysConfigKey.SET_PROXY]
+        sys_get_cookie = SysConfigKey.GET_COOKIE in sys_config and sys_config[SysConfigKey.GET_COOKIE]
+        sys_not_check_save_data = SysConfigKey.NOT_CHECK_SAVE_DATA in sys_config and sys_config[SysConfigKey.NOT_CHECK_SAVE_DATA]
+        sys_not_download = SysConfigKey.NOT_DOWNLOAD in sys_config and sys_config[SysConfigKey.NOT_DOWNLOAD]
 
         # exe程序
         if tool.IS_EXECUTABLE:
@@ -120,8 +124,8 @@ class Crawler(object):
         # 程序配置
         config = read_config(config_path)
         # 应用配置
-        if SYS_APP_CONFIG_PATH in sys_config:
-            app_config_path = sys_config[SYS_APP_CONFIG_PATH]
+        if SysConfigKey.APP_CONFIG_PATH in sys_config:
+            app_config_path = sys_config[SysConfigKey.APP_CONFIG_PATH]
         else:
             app_config_path = os.path.abspath(os.path.join(PROJECT_APP_PATH, "app.ini"))
         if os.path.exists(app_config_path):
@@ -132,17 +136,17 @@ class Crawler(object):
 
         # 应用配置
         self.app_config = {}
-        if SYS_APP_CONFIG in sys_config and len(sys_config[SYS_APP_CONFIG]) > 0:
-            for app_config_temp in sys_config[SYS_APP_CONFIG]:
+        if SysConfigKey.APP_CONFIG in sys_config and len(sys_config[SysConfigKey.APP_CONFIG]) > 0:
+            for app_config_temp in sys_config[SysConfigKey.APP_CONFIG]:
                 if len(app_config_temp) != 3:
                     continue
                 self.app_config[app_config_temp[0]] = analysis_config(config, app_config_temp[0], app_config_temp[1], app_config_temp[2])
 
         # 是否下载
-        self.is_download_photo = analysis_config(config, "IS_DOWNLOAD_PHOTO", True, CONFIG_ANALYSIS_MODE_BOOLEAN) and sys_download_photo
-        self.is_download_video = analysis_config(config, "IS_DOWNLOAD_VIDEO", True, CONFIG_ANALYSIS_MODE_BOOLEAN) and sys_download_video
-        self.is_download_audio = analysis_config(config, "IS_DOWNLOAD_AUDIO", True, CONFIG_ANALYSIS_MODE_BOOLEAN) and sys_download_audio
-        self.is_download_content = analysis_config(config, "IS_DOWNLOAD_CONTENT", True, CONFIG_ANALYSIS_MODE_BOOLEAN) and sys_download_content
+        self.is_download_photo = analysis_config(config, "IS_DOWNLOAD_PHOTO", True, ConfigAnalysisMode.BOOLEAN) and sys_download_photo
+        self.is_download_video = analysis_config(config, "IS_DOWNLOAD_VIDEO", True, ConfigAnalysisMode.BOOLEAN) and sys_download_video
+        self.is_download_audio = analysis_config(config, "IS_DOWNLOAD_AUDIO", True, ConfigAnalysisMode.BOOLEAN) and sys_download_audio
+        self.is_download_content = analysis_config(config, "IS_DOWNLOAD_CONTENT", True, ConfigAnalysisMode.BOOLEAN) and sys_download_content
 
         if not sys_not_download and (sys_download_photo or sys_download_video or sys_download_audio or sys_download_content):
             if not (self.is_download_photo or self.is_download_video or self.is_download_audio or self.is_download_content):
@@ -151,10 +155,10 @@ class Crawler(object):
                 return
 
         # 下载文件时是否覆盖已存在的同名文件
-        net.DOWNLOAD_REPLACE_IF_EXIST = analysis_config(config, "IS_DOWNLOAD_REPLACE_IF_EXIST", False, CONFIG_ANALYSIS_MODE_BOOLEAN)
+        net.DOWNLOAD_REPLACE_IF_EXIST = analysis_config(config, "IS_DOWNLOAD_REPLACE_IF_EXIST", False, ConfigAnalysisMode.BOOLEAN)
 
         # 存档
-        self.save_data_path = analysis_config(config, "SAVE_DATA_PATH", "\\\\info/save.data", CONFIG_ANALYSIS_MODE_PATH)
+        self.save_data_path = analysis_config(config, "SAVE_DATA_PATH", r"\\info/save.data", ConfigAnalysisMode.PATH)
         self.temp_save_data_path = ""
         if not sys_not_check_save_data:
             if not os.path.exists(self.save_data_path):
@@ -171,41 +175,41 @@ class Crawler(object):
                 return
 
         # cache
-        self.cache_data_path = analysis_config(config, "CACHE_DATA_PATH", "\\\\cache", CONFIG_ANALYSIS_MODE_PATH)
+        self.cache_data_path = analysis_config(config, "CACHE_DATA_PATH", r"\\cache", ConfigAnalysisMode.PATH)
 
         # session
-        self.session_data_path = analysis_config(config, "SESSION_DATA_PATH", "\\\\info/session.data", CONFIG_ANALYSIS_MODE_PATH)
+        self.session_data_path = analysis_config(config, "SESSION_DATA_PATH", r"\\info/session.data", ConfigAnalysisMode.PATH)
 
         # 是否需要下载图片
         if self.is_download_photo:
             # 图片保存目录
-            self.photo_download_path = analysis_config(config, "PHOTO_DOWNLOAD_PATH", "\\\\photo", CONFIG_ANALYSIS_MODE_PATH)
+            self.photo_download_path = analysis_config(config, "PHOTO_DOWNLOAD_PATH", r"\\photo", ConfigAnalysisMode.PATH)
         else:
             self.photo_download_path = ""
         # 是否需要下载视频
         if self.is_download_video:
             # 视频保存目录
-            self.video_download_path = analysis_config(config, "VIDEO_DOWNLOAD_PATH", "\\\\video", CONFIG_ANALYSIS_MODE_PATH)
+            self.video_download_path = analysis_config(config, "VIDEO_DOWNLOAD_PATH", r"\\video", ConfigAnalysisMode.PATH)
         else:
             self.video_download_path = ""
         # 是否需要下载音频
         if self.is_download_audio:
             # 音频保存目录
-            self.audio_download_path = analysis_config(config, "AUDIO_DOWNLOAD_PATH", "\\\\audio", CONFIG_ANALYSIS_MODE_PATH)
+            self.audio_download_path = analysis_config(config, "AUDIO_DOWNLOAD_PATH", r"\\audio", ConfigAnalysisMode.PATH)
         else:
             self.audio_download_path = ""
         # 是否需要下载文本内容
         if self.is_download_content:
             # 音频保存目录
-            self.content_download_path = analysis_config(config, "CONTENT_DOWNLOAD_PATH", "\\\\content", CONFIG_ANALYSIS_MODE_PATH)
+            self.content_download_path = analysis_config(config, "CONTENT_DOWNLOAD_PATH", r"\\content", ConfigAnalysisMode.PATH)
         else:
             self.content_download_path = ""
 
         # 是否在下载失败后退出线程的运行
-        self.exit_after_download_failure = analysis_config(config, "EXIT_AFTER_DOWNLOAD_FAILURE", "\\\\content", CONFIG_ANALYSIS_MODE_BOOLEAN)
+        self.exit_after_download_failure = analysis_config(config, "EXIT_AFTER_DOWNLOAD_FAILURE", r"\\content", ConfigAnalysisMode.BOOLEAN)
 
         # 代理
-        is_proxy = analysis_config(config, "IS_PROXY", 2, CONFIG_ANALYSIS_MODE_INTEGER)
+        is_proxy = analysis_config(config, "IS_PROXY", 2, ConfigAnalysisMode.INTEGER)
         if is_proxy == 1 or (is_proxy == 2 and sys_set_proxy):
             proxy_ip = analysis_config(config, "PROXY_IP", "127.0.0.1")
             proxy_port = analysis_config(config, "PROXY_PORT", "8087")
@@ -219,19 +223,19 @@ class Crawler(object):
         self.cookie_value = {}
         if sys_get_cookie:
             # 操作系统&浏览器
-            browser_type = analysis_config(config, "BROWSER_TYPE", "chrome", CONFIG_ANALYSIS_MODE_RAW)
+            browser_type = analysis_config(config, "BROWSER_TYPE", "chrome", ConfigAnalysisMode.RAW)
             # cookie
-            cookie_path = analysis_config(config, "COOKIE_PATH", "", CONFIG_ANALYSIS_MODE_RAW)
+            cookie_path = analysis_config(config, "COOKIE_PATH", "", ConfigAnalysisMode.RAW)
             if cookie_path:
-                cookie_path = analysis_config(config, "COOKIE_PATH", "", CONFIG_ANALYSIS_MODE_PATH)
+                cookie_path = analysis_config(config, "COOKIE_PATH", "", ConfigAnalysisMode.PATH)
             else:
                 cookie_path = browser.get_default_browser_cookie_path(browser_type)
             all_cookie_from_browser = browser.get_all_cookie_from_browser(browser_type, cookie_path)
-            if browser_type == browser.BROWSER_TYPE_TEXT:
+            if browser_type == browser.BrowserType.TEXT:
                 if "DEFAULT" in all_cookie_from_browser:
                     self.cookie_value.update(all_cookie_from_browser["DEFAULT"])
             else:
-                for cookie_domain in sys_config[SYS_GET_COOKIE]:
+                for cookie_domain in sys_config[SysConfigKey.GET_COOKIE]:
                     check_domain_list = [cookie_domain]
                     if cookie_domain[0] != ".":
                         check_domain_list.append("." + cookie_domain)
@@ -242,13 +246,13 @@ class Crawler(object):
                             self.cookie_value.update(all_cookie_from_browser[check_domain])
 
         # 线程数
-        self.thread_count = analysis_config(config, "THREAD_COUNT", 10, CONFIG_ANALYSIS_MODE_INTEGER)
+        self.thread_count = analysis_config(config, "THREAD_COUNT", 10, ConfigAnalysisMode.INTEGER)
         self.thread_lock = threading.Lock()  # 线程锁，避免操作一些全局参数
         self.thread_semaphore = threading.Semaphore(self.thread_count)  # 线程总数信号量
 
         # 启用线程监控是否需要暂停其他下载线程
-        if analysis_config(config, "IS_PORT_LISTENER_EVENT", False, CONFIG_ANALYSIS_MODE_BOOLEAN):
-            listener_port = analysis_config(config, "LISTENER_PORT", 12345, CONFIG_ANALYSIS_MODE_INTEGER)
+        if analysis_config(config, "IS_PORT_LISTENER_EVENT", False, ConfigAnalysisMode.BOOLEAN):
+            listener_port = analysis_config(config, "LISTENER_PORT", 12345, ConfigAnalysisMode.INTEGER)
             listener_event_bind = {
                 str(port_listener_event.PROCESS_STATUS_PAUSE): net.pause_request,  # 暂停进程
                 str(port_listener_event.PROCESS_STATUS_RUN): net.resume_request,  # 继续进程
@@ -259,7 +263,7 @@ class Crawler(object):
             process_control_thread.start()
 
         # 键盘监控线程（仅支持windows）
-        if platform.system() == "Windows" and analysis_config(config, "IS_KEYBOARD_EVENT", False, CONFIG_ANALYSIS_MODE_BOOLEAN):
+        if platform.system() == "Windows" and analysis_config(config, "IS_KEYBOARD_EVENT", False, ConfigAnalysisMode.BOOLEAN):
             keyboard_event_bind = {}
             pause_process_key = analysis_config(config, "PAUSE_PROCESS_KEYBOARD_KEY", "F9")
             # 暂停进程
@@ -405,8 +409,8 @@ class Crawler(object):
             message += "，共计下载" + "，".join(download_result)
         log.step(message)
 
-    @staticmethod
-    def start_parse(description: str):
+    def start_parse(self, description: str):
+        self.running_check()
         log.step("开始解析 " + description)
 
     @staticmethod
@@ -431,6 +435,7 @@ class Crawler(object):
                 True - 需要
                 False - 不需要
         """
+        self.running_check()
         log.step("开始下载 %s %s" % (file_description, file_url))
         download_return = net.Download(file_url, file_path, **kwargs)
         if download_return.status == net.Download.DOWNLOAD_SUCCEED:
@@ -588,6 +593,7 @@ class CrawlerThread(threading.Thread):
         log.error(message)
 
     def start_parse(self, description: str):
+        self.main_thread_check()
         self.step("开始解析 " + description)
 
     def parse_result(self, description: str, parse_result_list: Union[list, dict]):
@@ -612,6 +618,7 @@ class CrawlerThread(threading.Thread):
                 True - 需要
                 False - 不需要
         """
+        self.main_thread_check()
         self.step("开始下载 %s %s" % (file_description, file_url))
         download_return = net.Download(file_url, file_path, **kwargs)
         if download_return.status == net.Download.DOWNLOAD_SUCCEED:
@@ -664,9 +671,9 @@ def read_config(config_path: str) -> dict:
     """
     读取配置文件
     """
-    if not os.path.exists(config_path):
-        return {}
     config = {}
+    if not os.path.exists(config_path):
+        return config
     with codecs.open(config_path, encoding="UTF-8-SIG") as file_handle:
         config_file = configparser.ConfigParser()
         config_file.read_file(file_handle)
@@ -675,7 +682,7 @@ def read_config(config_path: str) -> dict:
     return config
 
 
-def analysis_config(config: dict, key: str, default_value, mode: str = CONFIG_ANALYSIS_MODE_RAW):
+def analysis_config(config: dict, key: str, default_value: Any, mode: ConfigAnalysisMode = ConfigAnalysisMode.RAW):
     """
     解析配置
 
@@ -701,25 +708,25 @@ def analysis_config(config: dict, key: str, default_value, mode: str = CONFIG_AN
         if not tool.IS_EXECUTABLE:
             output.print_msg("配置文件config.ini中没有找到key为'" + key + "'的参数，使用程序默认设置")
         value = default_value
-    if mode == CONFIG_ANALYSIS_MODE_INTEGER:
+    if mode == ConfigAnalysisMode.INTEGER:
         if isinstance(value, int) or isinstance(value, int) or (isinstance(value, str) and value.isdigit()):
             value = int(value)
         else:
             output.print_msg("配置文件config.ini中key为'" + key + "'的值必须是一个整数，使用程序默认设置")
             value = default_value
-    elif mode == CONFIG_ANALYSIS_MODE_BOOLEAN:
+    elif mode == ConfigAnalysisMode.BOOLEAN:
         if not value or value == "0" or (isinstance(value, str) and value.lower() == "false"):
             value = False
         else:
             value = True
-    elif mode == CONFIG_ANALYSIS_MODE_FLOAT:
+    elif mode == ConfigAnalysisMode.FLOAT:
         try:
             value = float(value)
         except ValueError:
             output.print_msg("配置文件config.ini中key为'" + key + "'的值必须是一个浮点数，使用程序默认设置")
             value = default_value
-    elif mode == CONFIG_ANALYSIS_MODE_PATH:
-        if len(value) > 2 and value[:2] == "\\\\":  # \\ 开头，程序所在目录
+    elif mode == ConfigAnalysisMode.PATH:
+        if len(value) > 2 and value[:2] == r"\\":  # \\ 开头，程序所在目录
             value = os.path.join(PROJECT_APP_PATH, value[2:])  # \\ 仅做标记使用，实际需要去除
         elif len(value) > 1 and value[0] == "\\":  # \ 开头，项目根目录（common目录上级）
             value = os.path.join(PROJECT_ROOT_PATH, value[1:])  # \ 仅做标记使用，实际需要去除
@@ -829,7 +836,7 @@ def get_json_value(json_data, *args, **kwargs):
         elif type_check is str:  # 直接强制类型转化
             json_data = str(json_data)
         elif type_check is dict or type_check is list or type_check is bool:  # 标准数据类型
-            type_error = not isinstance(json_data, type_check)
+            type_error = json_data is not type_check
         else:
             exception_string = "type_check: %s类型不正确" % kwargs['type_check']
         if type_error:

@@ -14,7 +14,7 @@ from common import crypto, quicky
 API_HOST = "https://api.twitter.com"
 API_VERSION = "1.1"
 ACCESS_TOKEN = None
-token_file_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "info\\session"))
+token_file_path = os.path.abspath(os.path.join(os.path.dirname(__file__), r"info\session"))
 
 
 def init():
@@ -63,11 +63,7 @@ def get_access_token(api_key, api_secret):
         "grant_type": "client_credentials"
     }
     response = net.request(auth_url, method="POST", header_list=header_list, fields=post_data, json_decode=True)
-    if (
-        response.status == net.HTTP_RETURN_CODE_SUCCEED and
-        crawler.check_sub_key(("token_type", "access_token"), response.json_data) and
-        response.json_data["token_type"] == "bearer"
-    ):
+    if response.status == net.HTTP_RETURN_CODE_SUCCEED and crawler.check_sub_key(("token_type", "access_token"), response.json_data) and response.json_data["token_type"] == "bearer":
         global ACCESS_TOKEN
         ACCESS_TOKEN = response.json_data["access_token"]
         return True
@@ -102,4 +98,5 @@ def follow_account(user_id):
     return False
 
 
-init()
+if __name__ == "__main__":
+    init()

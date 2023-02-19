@@ -189,9 +189,9 @@ class Flickr(crawler.Crawler):
 
         # 初始化参数
         sys_config = {
-            crawler.SYS_DOWNLOAD_PHOTO: True,
-            crawler.SYS_SET_PROXY: True,
-            crawler.SYS_GET_COOKIE: ("flickr.com",),
+            crawler.SysConfigKey.DOWNLOAD_PHOTO: True,
+            crawler.SysConfigKey.SET_PROXY: True,
+            crawler.SysConfigKey.GET_COOKIE: ("flickr.com",),
         }
         crawler.Crawler.__init__(self, sys_config, **kwargs)
 
@@ -241,18 +241,13 @@ class CrawlerThread(crawler.CrawlerThread):
         is_over = False
         # 获取全部还未下载过需要解析的图片
         while not is_over:
-            self.main_thread_check()  # 检测主线程运行状态
-
             pagination_description = "第%s页图片" % page_count
             self.start_parse(pagination_description)
-
-            # 获取一页图片
             try:
                 photo_pagination_response = get_one_page_photo(user_id, page_count, site_key, csrf, self.request_id)
             except crawler.CrawlerException as e:
                 self.error(e.http_error(pagination_description))
                 raise
-
             self.parse_result(pagination_description, photo_pagination_response["photo_info_list"])
 
             # 寻找这一页符合条件的图片
@@ -276,8 +271,6 @@ class CrawlerThread(crawler.CrawlerThread):
     # 下载同一上传时间的所有图片
     def crawl_photo(self, photo_info_list):
         for photo_info in photo_info_list:
-            self.main_thread_check()  # 检测主线程运行状态
-
             photo_name = "%011d.%s" % (photo_info["photo_id"], net.get_file_extension(photo_info["photo_url"]))
             photo_path = os.path.join(self.main_thread.photo_download_path, self.index_key, photo_name)
             self.temp_path_list.append(photo_path)  # 设置临时目录
@@ -291,10 +284,12 @@ class CrawlerThread(crawler.CrawlerThread):
 
     def _run(self):
         # 获取相册首页页面
+        index_description = "相册首页"
+        self.start_parse(index_description)
         try:
             account_index_response = get_account_index_page(self.index_key)
         except crawler.CrawlerException as e:
-            self.error(e.http_error("相册首页"))
+            self.error(e.http_error(index_description))
             raise
 
         # 获取所有可下载图片
@@ -313,7 +308,6 @@ class CrawlerThread(crawler.CrawlerThread):
             # 下载同一上传时间的所有图片
             self.crawl_photo(deal_photo_info_list)
             deal_photo_info_list = []  # 累加图片地址清除
-            self.main_thread_check()  # 检测主线程运行状态
 
 
 if __name__ == "__main__":

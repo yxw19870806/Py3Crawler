@@ -79,7 +79,7 @@ def get_chapter_page(comic_id, chapter_id):
     if chapter_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(chapter_response.status))
     chapter_response_content = chapter_response.data.decode(errors="ignore")
-    script_code = tool.find_sub_string(chapter_response_content, 'window["\\x65\\x76\\x61\\x6c"]', "</script>")
+    script_code = tool.find_sub_string(chapter_response_content, r'window["\x65\x76\x61\x6c"]', "</script>")
     if not script_code:
         raise crawler.CrawlerException("页面截取脚本代码失败\n" + chapter_response_content)
 
@@ -120,7 +120,7 @@ class ManHuaGui(crawler.Crawler):
 
         # 初始化参数
         sys_config = {
-            crawler.SYS_DOWNLOAD_PHOTO: True,
+            crawler.SysConfigKey.DOWNLOAD_PHOTO: True,
         }
         crawler.Crawler.__init__(self, sys_config, **kwargs)
 
@@ -145,16 +145,13 @@ class CrawlerThread(crawler.CrawlerThread):
     def get_crawl_list(self):
         chapter_info_list = {}
 
-        # 获取漫画首页
         index_description = "漫画首页"
         self.start_parse(index_description)
-
         try:
             blog_pagination_response = get_comic_index_page(self.index_key)
         except crawler.CrawlerException as e:
             self.error(e.http_error(index_description))
             raise
-
         self.parse_result(index_description, blog_pagination_response["chapter_info_list"])
 
         # 寻找符合条件的章节
@@ -169,14 +166,11 @@ class CrawlerThread(crawler.CrawlerThread):
     def crawl_comic(self, chapter_info):
         comic_description = "漫画%s %s《%s》" % (chapter_info["chapter_id"], chapter_info["group_name"], chapter_info["chapter_name"])
         self.start_parse(comic_description)
-
-        # 获取指定漫画章节
         try:
             chapter_response = get_chapter_page(self.index_key, chapter_info["chapter_id"])
         except crawler.CrawlerException as e:
             self.error(e.http_error(comic_description))
             raise
-
         self.parse_result(comic_description, chapter_response["photo_url_list"])
 
         # 图片下载
@@ -186,8 +180,6 @@ class CrawlerThread(crawler.CrawlerThread):
         # 设置临时目录
         self.temp_path_list.append(chapter_path)
         for photo_url in chapter_response["photo_url_list"]:
-            self.main_thread_check()  # 检测主线程运行状态
-
             photo_path = os.path.join(chapter_path, "%03d.%s" % (photo_index, net.get_file_extension(photo_url)))
             photo_description = "漫画%s %s《%s》第%s张图片" % (chapter_info["chapter_id"], chapter_info["group_name"], chapter_info["chapter_name"], photo_index)
             header_list = {"Referer": "https://www.manhuagui.com/comic/%s/%s.html" % (self.index_key, chapter_info["chapter_id"])}
@@ -207,7 +199,6 @@ class CrawlerThread(crawler.CrawlerThread):
         # 从最早的章节开始下载
         while len(chapter_info_list) > 0:
             self.crawl_comic(chapter_info_list.pop())
-            self.main_thread_check()  # 检测主线程运行状态
 
 
 if __name__ == "__main__":

@@ -163,9 +163,9 @@ class IvSeek(crawler.Crawler):
 
         # 初始化参数
         sys_config = {
-            crawler.SYS_NOT_CHECK_SAVE_DATA: True,
-            crawler.SYS_NOT_DOWNLOAD: True,
-            crawler.SYS_SET_PROXY: True,
+            crawler.SysConfigKey.NOT_CHECK_SAVE_DATA: True,
+            crawler.SysConfigKey.NOT_DOWNLOAD: True,
+            crawler.SysConfigKey.SET_PROXY: True,
         }
         crawler.Crawler.__init__(self, sys_config, **kwargs)
 
@@ -181,24 +181,20 @@ class IvSeek(crawler.Crawler):
         except crawler.CrawlerException as e:
             log.error(e.http_error("首页"))
             raise
-        
+
         log.step("最新视频id：%s" % index_response["max_archive_id"])
 
         for archive_id in range(self.save_id, index_response["max_archive_id"]):
-            self.running_check()
-
             archive_description = "视频%s" % archive_id
             self.start_parse(archive_description)
-
-            # 获取一页图片
             try:
-                archive_response: dict = get_archive_page(archive_id)
+                archive_response = get_archive_page(archive_id)
             except crawler.CrawlerException as e:
                 log.error(e.http_error(archive_description))
                 raise
-
             if archive_response["is_delete"]:
                 continue
+            self.parse_result(archive_description, archive_response["video_info_list"])
 
             for video_info in archive_response["video_info_list"]:
                 log.step("视频%s《%s》: %s" % (archive_id, archive_response["video_title"], video_info["video_url"]))

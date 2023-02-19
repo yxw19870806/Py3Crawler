@@ -83,7 +83,7 @@ class TuChong(crawler.Crawler):
 
         # 初始化参数
         sys_config = {
-            crawler.SYS_DOWNLOAD_PHOTO: True,
+            crawler.SysConfigKey.DOWNLOAD_PHOTO: True,
         }
         crawler.Crawler.__init__(self, sys_config, **kwargs)
 
@@ -107,18 +107,13 @@ class CrawlerThread(crawler.CrawlerThread):
         is_over = False
         # 获取全部还未下载过需要解析的相册
         while not is_over:
-            self.main_thread_check()  # 检测主线程运行状态
-
             pagination_description = "%s后一页相册" % post_time
             self.start_parse(pagination_description)
-
-            # 获取一页相册
             try:
                 album_pagination_response = get_one_page_album(account_id, post_time)
             except crawler.CrawlerException as e:
                 self.error(e.http_error("%s后一页相册" % post_time))
                 raise
-
             self.parse_result(pagination_description, album_pagination_response["album_info_list"])
 
             # 已经没有相册了
@@ -151,8 +146,6 @@ class CrawlerThread(crawler.CrawlerThread):
             post_path = os.path.join(self.main_thread.photo_download_path, self.index_key, "%08d" % album_info["album_id"])
         self.temp_path_list.append(post_path)
         for photo_url in album_info["photo_url_list"]:
-            self.main_thread_check()  # 检测主线程运行状态
-
             photo_path = os.path.join(post_path, "%s.jpg" % photo_index)
             photo_description = "相册%s《%s》第%s张图片" % (album_info["album_id"], album_info["album_title"], photo_index)
             if self.download(photo_url, photo_path, photo_description):
@@ -177,7 +170,6 @@ class CrawlerThread(crawler.CrawlerThread):
         # 从最早的相册开始下载
         while len(album_info_list) > 0:
             self.crawl_album(album_info_list.pop())
-            self.main_thread_check()  # 检测主线程运行状态
 
 
 if __name__ == "__main__":

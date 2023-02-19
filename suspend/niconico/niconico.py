@@ -206,9 +206,9 @@ class NicoNico(crawler.Crawler):
 
         # 初始化参数
         sys_config = {
-            crawler.SYS_DOWNLOAD_VIDEO: True,
-            crawler.SYS_SET_PROXY: True,
-            crawler.SYS_GET_COOKIE: ("nicovideo.jp",),
+            crawler.SysConfigKey.DOWNLOAD_VIDEO: True,
+            crawler.SysConfigKey.SET_PROXY: True,
+            crawler.SysConfigKey.GET_COOKIE: ("nicovideo.jp",),
         }
         crawler.Crawler.__init__(self, sys_config, **kwargs)
 
@@ -219,17 +219,18 @@ class NicoNico(crawler.Crawler):
         # mylist_id  last_video_id
         self.save_data = crawler.read_save_data(self.save_data_path, 0, ["", "0"])
 
+        # 下载线程
+        self.crawler_thread = CrawlerThread
+
+    def init(self):
         # 检测登录状态
         if not check_login():
             log.error("没有检测到账号登录状态，退出程序！")
             tool.process_exit()
 
-        # 下载线程
-        self.crawler_thread = CrawlerThread
-
 
 class CrawlerThread(crawler.CrawlerThread):
-    def __init__(self, main_thread, single_save_data)::
+    def __init__(self, main_thread, single_save_data):
         self.index_key = single_save_data[0]  # list id
         if len(single_save_data) >= 3 and single_save_data[2]:
             self.display_name = single_save_data[2]
