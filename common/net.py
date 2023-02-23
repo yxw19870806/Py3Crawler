@@ -247,7 +247,7 @@ def request(url, method: str = "GET", fields: Optional[dict] = None, binary_data
         if decode failure will replace response status with HTTP_RETURN_CODE_JSON_DECODE_ERROR
     """
     url = str(url).strip()
-    if not (url.find("http://") == 0 or url.find("https://") == 0):
+    if not (url.startswith("http://") or url.startswith("https://")):
         return ErrorResponse(HTTP_RETURN_CODE_URL_INVALID)
     method = method.upper()
     if method not in ["GET", "POST", "HEAD", "PUT", "DELETE", "OPTIONS", "TRACE"]:

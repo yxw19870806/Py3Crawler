@@ -52,18 +52,18 @@ def read_file(file_path: str, read_type: int = READ_FILE_TYPE_FULL) -> Union[str
         if read_type == READ_FILE_TYPE_FULL:
             result = file_handle.read()
             if len(result) > 0:
-                if result[0] == BOM_SIGN:
-                    result = result[1:]
-                if result[-1] == "\n":
-                    result = result[:-1]
+                if result.startswith(BOM_SIGN):
+                    result = result[len(BOM_SIGN):]
+                if result.endswith("\n"):
+                    result = result[:-len("\n")]
         else:
             result = []
             for line in file_handle.readlines():
                 if len(line) > 0:
-                    if line[0] == BOM_SIGN:
-                        line = line[1:]
-                    if line[-1] == "\n":
-                        line = line[:-1]
+                    if line.startswith(BOM_SIGN):
+                        line = line[len(BOM_SIGN):]
+                    if line.endswith("\n"):
+                        line = line[:-len("\n")]
                 if len(line) == 0:
                     continue
                 result.append(line)
