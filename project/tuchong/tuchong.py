@@ -22,7 +22,7 @@ def get_account_index_page(account_name):
     result = {
         "account_id": 0,  # 账号id（字母账号->数字账号)
     }
-    if account_index_response.status == 302 and account_index_response.getheader("Location").find("https://tuchong.com/") == 0 and account_index_response.getheader("Location")[-5:] == "/work":
+    if account_index_response.status == 302 and account_index_response.getheader("Location").startswith("https://tuchong.com/") and account_index_response.getheader("Location").endswith("/work"):
         account_index_url += "/work"
         account_index_response = net.request(account_index_url, method="GET", is_auto_redirect=False)
     if account_index_response.status == 301 and account_index_response.getheader("Location") == "https://tuchong.com/":

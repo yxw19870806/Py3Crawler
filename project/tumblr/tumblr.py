@@ -40,13 +40,13 @@ def get_index_setting(account_id):
     is_private = False
     if index_response.status == 301:
         redirect_url = index_response.getheader("Location")
-        if redirect_url.find("http://") == 0:
+        if redirect_url.startswith("http://"):
             is_https = False
         is_private = False
         # raise crawler.CrawlerException("此账号已重定向第三方网站")
     elif index_response.status == 302:
         redirect_url = index_response.getheader("Location")
-        if redirect_url.find("http://%s.tumblr.com/" % account_id) == 0:
+        if redirect_url.startswith("http://%s.tumblr.com/" % account_id):
             is_https = False
             index_url = "http://%s.tumblr.com/" % account_id
             index_response = net.request(index_url, method="GET", is_auto_redirect=False)
@@ -57,7 +57,7 @@ def get_index_setting(account_id):
             redirect_url = index_response.getheader("Location")
         if redirect_url.find("www.tumblr.com/safe-mode?url=") > 0:
             is_private = True
-            if tool.find_sub_string(redirect_url, "?https://www.tumblr.com/safe-mode?url=").find("http://") == 0:
+            if tool.find_sub_string(redirect_url, "?https://www.tumblr.com/safe-mode?url=").startswith("http://"):
                 is_https = False
         # "Show this blog on the web" disabled
         elif redirect_url.find("//www.tumblr.com/login_required/%s" % account_id) > 0:
@@ -305,10 +305,10 @@ def analysis_photo(photo_url):
         elif tool.is_integer(temp_list[-1]):
             resolution = int(temp_list[-1])
         # https://78.media.tumblr.com/19b0b807d374ed9e4ed22caf74cb1ec0/tumblr_mxukamH4GV1s4or9ao1_500h.jpg
-        elif temp_list[-1][-1] == "h" and tool.is_integer(temp_list[-1][:-1]):
+        elif temp_list[-1].endswith("h") and tool.is_integer(temp_list[-1][:-len("h")]):
             resolution = int(temp_list[-1][:-1])
         # https://78.media.tumblr.com/5c0b9f4e8ac839a628863bb5d7255938/tumblr_inline_p6ve89vOZA1uhchy5_250sq.jpg
-        elif temp_list[-1][-2:] == "sq" and tool.is_integer(temp_list[-1][:-2]):
+        elif temp_list[-1].endswith("sq") and tool.is_integer(temp_list[-1][:-len("sq")]):
             photo_url = photo_url.replace("_250sq", "1280")
             resolution = 1280
         # http://78.media.tumblr.com/tumblr_m9rwkpsRwt1rr15s5.jpg

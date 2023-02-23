@@ -726,10 +726,10 @@ def analysis_config(config: dict, key: str, default_value: Any, mode: ConfigAnal
             output.print_msg("配置文件config.ini中key为'" + key + "'的值必须是一个浮点数，使用程序默认设置")
             value = default_value
     elif mode == ConfigAnalysisMode.PATH:
-        if len(value) > 2 and value[:2] == r"\\":  # \\ 开头，程序所在目录
-            value = os.path.join(PROJECT_APP_PATH, value[2:])  # \\ 仅做标记使用，实际需要去除
-        elif len(value) > 1 and value[0] == "\\":  # \ 开头，项目根目录（common目录上级）
-            value = os.path.join(PROJECT_ROOT_PATH, value[1:])  # \ 仅做标记使用，实际需要去除
+        if len(value) > 2 and value.startswith(r"\\"):  # \\ 开头，程序所在目录
+            value = os.path.join(PROJECT_APP_PATH, value[len(r"\\"):])  # \\ 仅做标记使用，实际需要去除
+        elif len(value) > 1 and value.startswith("\\"):  # \ 开头，项目根目录（common目录上级）
+            value = os.path.join(PROJECT_ROOT_PATH, value[len("\\"):])  # \ 仅做标记使用，实际需要去除
         elif not value:
             value = "."
         value = os.path.abspath(value)

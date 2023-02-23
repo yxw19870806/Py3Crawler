@@ -32,8 +32,8 @@ class NicoNicoDownload(niconico.NicoNico):
             video_id = video_url.split("/")[-1].split("?")[0].replace("sm", "")
         elif tool.is_integer(video_url):
             video_id = video_url
-        elif video_url[:2] == "sm" and tool.is_integer(video_url[2:]):
-            video_id = video_url[2:]
+        elif video_url.startswith("sm") and tool.is_integer(video_url[len("sm"):]):
+            video_id = video_url[len("sm"):]
         return video_id
 
     def main(self):

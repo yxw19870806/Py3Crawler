@@ -23,7 +23,7 @@ def check_login():
         return False
     account_index_url = "https://www.youtube.com/account"
     index_response = net.request(account_index_url, method="GET", cookies_list=COOKIE_INFO, is_auto_redirect=False)
-    if index_response.status == 303 and index_response.getheader("Location").find("https://accounts.google.com/ServiceLogin?") == 0:
+    if index_response.status == 303 and index_response.getheader("Location").startswith("https://accounts.google.com/ServiceLogin?"):
         return False
     elif index_response.status == net.HTTP_RETURN_CODE_SUCCEED:
         global IS_LOGIN
@@ -194,8 +194,8 @@ def get_video_page(video_id):
             video_resolution = 360
         elif video_quality == "large":
             video_resolution = 480
-        elif video_quality[:2] == "hd" and tool.is_integer(video_quality[2:]):
-            video_resolution = int(video_quality[2:])
+        elif video_quality.startswith("hd") and tool.is_integer(video_quality[len("hd"):]):
+            video_resolution = int(video_quality[len("hd"):])
         else:
             video_resolution = 1
             log.notice("未知视频画质：" + video_quality)

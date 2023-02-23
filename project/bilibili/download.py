@@ -36,9 +36,9 @@ class BiliBiliDownload(bilibili.BiliBili):
             video_id = bilibili.bv_id_2_av_id(bv_id)
         elif tool.is_integer(lower_video_url):
             video_id = lower_video_url
-        elif lower_video_url[:2] == "av" and tool.is_integer(lower_video_url[2:]):
-            video_id = lower_video_url[2:]
-        elif lower_video_url[:2] == "bv":
+        elif lower_video_url.startswith("av") and tool.is_integer(lower_video_url[len("av"):]):
+            video_id = lower_video_url[len("av"):]
+        elif lower_video_url.startswith("bv"):
             video_id = bilibili.bv_id_2_av_id(video_url)
         return video_id
 

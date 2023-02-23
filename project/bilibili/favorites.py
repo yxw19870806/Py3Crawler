@@ -32,8 +32,8 @@ class BiliBiliFavorites(bilibili.BiliBili):
             favorites_id = tool.find_sub_string(video_url, "//www.bilibili.com/medialist/play/ml").split("?")[0].split("/")[0]
         elif tool.is_integer(video_url):
             favorites_id = video_url
-        elif video_url[:2] == "ml" and tool.is_integer(video_url[2:]):
-            favorites_id = video_url[2:]
+        elif video_url.startswith("ml") and tool.is_integer(video_url[len("ml"):]):
+            favorites_id = video_url[len("ml"):]
         return favorites_id
 
     def main(self):
