@@ -6,7 +6,7 @@ email: hikaru870806@hotmail.com
 如有问题或建议请联系
 """
 import time
-from common import output
+from common import output, tool
 from game.clickHero import clickerHeroes
 
 

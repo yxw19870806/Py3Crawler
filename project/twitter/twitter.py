@@ -221,8 +221,7 @@ def get_video_play_page(tweet_id):
             raise
     file_extension = net.get_file_extension(file_url)
     if file_extension == "m3u8":  # https://api.twitter.com/1.1/videos/tweet/config/996368816174084097.json
-        file_url_protocol, file_url_path = urllib.parse.splittype(file_url)
-        file_url_host = urllib.parse.splithost(file_url_path)[0]
+        file_url_protocol, file_url_host = urllib.parse.urlparse(file_url)[:2]
         m3u8_file_response = net.request(file_url, method="GET")
         # 没有权限（可能是地域限制）或者已删除
         if m3u8_file_response.status in [403, 404]:

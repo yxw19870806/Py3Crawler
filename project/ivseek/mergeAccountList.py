@@ -16,7 +16,7 @@ from suspend.niconico import niconico
 def main():
     # 初始化类
     youtube_class = youtube.Youtube(extra_sys_config={crawler.SysConfigKey.NOT_CHECK_SAVE_DATA: True})
-    nicoNico_class = niconico.NicoNico(extra_sys_config={crawler.SysConfigKey.NOT_CHECK_SAVE_DATA: True})
+    niconico_class = niconico.NicoNico(extra_sys_config={crawler.SysConfigKey.NOT_CHECK_SAVE_DATA: True})
     ivseek_class = ivseek.IvSeek()
 
     save_data_list = ivseek.read_save_data(ivseek_class.save_data_path)
@@ -61,9 +61,9 @@ def main():
     for account_id in niconico_mylist_list:
         for mylist_id in niconico_mylist_list[account_id]:
             mylist_id = str(mylist_id)
-            if mylist_id not in nicoNico_class.save_data:
-                nicoNico_class.save_data[mylist_id] = [mylist_id]
-    file.write_file(tool.list_to_string(nicoNico_class.save_data.values()), nicoNico_class.save_data_path, file.WRITE_FILE_TYPE_REPLACE)
+            if mylist_id not in niconico_class.save_data:
+                niconico_class.save_data[mylist_id] = [mylist_id]
+    file.write_file(tool.list_to_string(niconico_class.save_data.values()), niconico_class.save_data_path, file.WRITE_FILE_TYPE_REPLACE)
 
     file.write_file(tool.list_to_string(save_data_list), ivseek_class.save_data_path, file.WRITE_FILE_TYPE_REPLACE)
 

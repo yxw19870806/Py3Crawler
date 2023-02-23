@@ -8,7 +8,6 @@ email: hikaru870806@hotmail.com
 """
 import time
 from common import *
-from common import quicky
 from project.nanagogo import nanagogo
 
 
