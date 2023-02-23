@@ -91,7 +91,7 @@ def get_game_store_index(game_id):
 class SteamDb(crawler.Crawler):
     account_id = None
 
-    def __init__(self, need_login=True, **kwargs):
+    def __init__(self, **kwargs):
         global COOKIE_INFO, USER_AGENT
 
         # 设置APP目录

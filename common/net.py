@@ -231,18 +231,18 @@ def request(url, method: str = "GET", fields: Optional[dict] = None, binary_data
     :Args:
     - url - the url which you want visit, start with "http://" or "https://"
     - method - request method, value in ["GET", "POST", "HEAD", "PUT", "DELETE", "OPTIONS", "TRACE"]
-    - fields - dictionary type of request data, will urlencode() them to string. like post data, query string, etc
+    - fields - dictionary type of request data, will urlencode() them to string. like post data, query string, etc.
         not work with binary_data
     - binary_data - binary type of request data, not work with post_data
     - header_list - customize header dictionary
-    - cookies_list - customize cookies dictionary, will replaced header_list["Cookie"]
+    - cookies_list - customize cookies dictionary, will replace header_list["Cookie"]
     - encode_multipart - see "encode_multipart" in urllib3.request_encode_body
     - is_auto_proxy - is auto use proxy when init PROXY_HTTP_CONNECTION_POOL
     - is_auto_redirect - is auto redirect, when response.status in [301, 302, 303, 307, 308]
     - is_auto_retry - is auto retry, when response.status in [500, 502, 503, 504]
     - connection_timeout - customize connection timeout seconds
     - read_timeout - customize read timeout seconds
-    - is_random_ip - is counterfeit a request header with random ip, will replaced header_list["X-Forwarded-For"] and header_list["X-Real-Ip"]
+    - is_random_ip - is counterfeit a request header with random ip, will replace header_list["X-Forwarded-For"] and header_list["X-Real-Ip"]
     - json_decode - is return a decoded json data when response status = 200
         if decode failure will replace response status with HTTP_RETURN_CODE_JSON_DECODE_ERROR
     """

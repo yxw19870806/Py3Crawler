@@ -37,11 +37,11 @@ class KuWoPlaylist(kuwo.KuWo):
     def main(self):
         try:
             while True:
-                self.download()
+                self._main()
         except KeyboardInterrupt:
             return
 
-    def download(self):
+    def _main(self):
         # 输入需要解析的视频
         playlist_id = self.get_playlist_id_from_console()
         # 无效的歌单地址
