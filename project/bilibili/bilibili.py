@@ -22,8 +22,8 @@ add = 8728348608
 
 # av id转bv id
 def av_id_2_bv_id(av_id):
-    if isinstance(av_id, str) and av_id[:2].lower() == "av":
-        av_id = av_id[2:]
+    if isinstance(av_id, str) and av_id.lower().startswith("av"):
+        av_id = av_id[len("av"):]
     av_id = (av_id ^ xor) + add
     result = list("BV1  4 1 7  ")
     for i in range(6):

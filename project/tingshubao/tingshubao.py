@@ -71,7 +71,7 @@ def get_audio_info_page(audio_play_url):
         temp = chr(int(temp) & 0xffff)
         temp_list.append(temp)
     audio_url = "".join(temp_list).split("&")[0]
-    if audio_url[:7] == "http://":
+    if audio_url.startswith("http://"):
         result["audio_url"] = audio_url
     else:
         audio_detail_url = "http://43.129.176.64/player/key.php"

@@ -9,7 +9,6 @@ email: hikaru870806@hotmail.com
 import base64
 import os
 import time
-import urllib.parse
 from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
 from common import *
 from common import browser

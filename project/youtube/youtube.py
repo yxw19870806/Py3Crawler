@@ -23,7 +23,7 @@ def check_login():
         return False
     account_index_url = "https://www.youtube.com/account"
     index_response = net.request(account_index_url, method="GET", cookies_list=COOKIE_INFO, is_auto_redirect=False)
-    if index_response.status == 303 and index_response.getheader("Location").find("https://accounts.google.com/ServiceLogin?") == 0:
+    if index_response.status == 303 and index_response.getheader("Location").startswith("https://accounts.google.com/ServiceLogin?"):
         return False
     elif index_response.status == net.HTTP_RETURN_CODE_SUCCEED:
         global IS_LOGIN
@@ -86,7 +86,7 @@ def get_one_page_video(account_id, token):
             video_info_list = crawler.get_json_value(channel_tab_json, 1, "tabRenderer", "content", "richGridRenderer", "contents", original_data=script_json, type_check=list)
         except crawler.CrawlerException:
             # 没有上传过任何视频
-            if crawler.get_json_value(video_tab_json, "messageRenderer", "text", "simpleText", default_value="", type_check=str) == "This channel has no videos.":
+            if crawler.get_json_value(channel_tab_json, "messageRenderer", "text", "simpleText", default_value="", type_check=str) == "This channel has no videos.":
                 return result
             raise
     else:
@@ -194,8 +194,8 @@ def get_video_page(video_id):
             video_resolution = 360
         elif video_quality == "large":
             video_resolution = 480
-        elif video_quality[:2] == "hd" and tool.is_integer(video_quality[2:]):
-            video_resolution = int(video_quality[2:])
+        elif video_quality.startswith("hd") and tool.is_integer(video_quality[len("hd"):]):
+            video_resolution = int(video_quality[len("hd"):])
         else:
             video_resolution = 1
             log.notice("未知视频画质：" + video_quality)

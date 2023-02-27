@@ -32,18 +32,18 @@ class NicoNicoDownload(niconico.NicoNico):
             video_id = video_url.split("/")[-1].split("?")[0].replace("sm", "")
         elif tool.is_integer(video_url):
             video_id = video_url
-        elif video_url[:2] == "sm" and tool.is_integer(video_url[2:]):
-            video_id = video_url[2:]
+        elif video_url.startswith("sm") and tool.is_integer(video_url[len("sm"):]):
+            video_id = video_url[len("sm"):]
         return video_id
 
     def main(self):
         try:
             while True:
-                self.download()
+                self._main()
         except KeyboardInterrupt:
             return
 
-    def download(self):
+    def _main(self):
         # 输入需要解析的视频
         video_id = self.get_video_id_from_console()
         if not tool.is_integer(video_id):

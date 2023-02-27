@@ -67,7 +67,7 @@ def get_game_store_index(game_id):
                 if history_type:
                     history_type = history_type.strip()
                     check_text = "Removed developer –"
-                    if history_type[:len(check_text)] == check_text:
+                    if history_type.startswith(check_text):
                         develop_name = history_type[len(check_text):].strip()
                         if develop_name:
                             result["develop_name"] = develop_name
@@ -80,7 +80,7 @@ def get_game_store_index(game_id):
                 if history_type:
                     history_type = history_type.strip()
                     check_text = "Removed publisher –"
-                    if history_type[:len(check_text)] == check_text:
+                    if history_type.startswith(check_text):
                         publisher_name = history_type[len(check_text):].strip()
                         if publisher_name:
                             result["publisher_name"] = publisher_name
@@ -91,7 +91,7 @@ def get_game_store_index(game_id):
 class SteamDb(crawler.Crawler):
     account_id = None
 
-    def __init__(self, need_login=True, **kwargs):
+    def __init__(self, **kwargs):
         global COOKIE_INFO, USER_AGENT
 
         # 设置APP目录

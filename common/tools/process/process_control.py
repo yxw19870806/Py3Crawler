@@ -9,7 +9,7 @@ from multiprocessing.connection import Client
 from common import crawler, port_listener_event
 
 
-class ProcessControl():
+class ProcessControl:
     def __init__(self):
         config = crawler.read_config(crawler.PROJECT_CONFIG_PATH)
         server_port = crawler.analysis_config(config, "LISTENER_PORT", 0, crawler.ConfigAnalysisMode.INTEGER)

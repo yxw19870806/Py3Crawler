@@ -111,7 +111,7 @@ def get_video_page(video_id):
     max_resolution = 0
     video_url = ""
     for line in m3u8_file_response_content.split("\n"):
-        if line[:len("#EXT-X-STREAM-INF:")] != "#EXT-X-STREAM-INF:":
+        if not line.startswith("#EXT-X-STREAM-INF:"):
             continue
         resolution_find = re.findall(r"RESOLUTION=(\d*)x(\d*)", line)
         if len(resolution_find) != 1 or len(resolution_find[0]) != 2:
