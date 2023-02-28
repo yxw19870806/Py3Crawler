@@ -166,8 +166,8 @@ def get_file_version(file_path: str):
     获取文件的版本信息
     """
     info = win32api.GetFileVersionInfo(file_path, os.sep)
-    ms = info['FileVersionMS']
-    ls = info['FileVersionLS']
+    ms = info["FileVersionMS"]
+    ls = info["FileVersionLS"]
     return "%d.%d.%d.%04d" % (win32api.HIWORD(ms), win32api.LOWORD(ms), win32api.HIWORD(ls), win32api.LOWORD(ls))
 
 
