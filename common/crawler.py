@@ -259,7 +259,7 @@ class Crawler(object):
                 str(port_listener_event.PROCESS_STATUS_STOP): self.stop_process  # 结束进程（取消当前的线程，完成任务）
             }
             process_control_thread = port_listener_event.PortListenerEvent(port=listener_port, event_list=listener_event_bind)
-            process_control_thread.setDaemon(True)
+            process_control_thread.daemon = True
             process_control_thread.start()
 
         # 键盘监控线程（仅支持windows）
@@ -280,7 +280,7 @@ class Crawler(object):
 
             if keyboard_event_bind:
                 keyboard_control_thread = keyboard_event.KeyboardEvent(keyboard_event_bind)
-                keyboard_control_thread.setDaemon(True)
+                keyboard_control_thread.daemon = True
                 keyboard_control_thread.start()
 
         self.save_data = {}
