@@ -42,10 +42,10 @@ def get_one_page_blog(account_id, page_count):
     # 判断是不是最后一页
     paginate_selector = pq(blog_pagination_response_content).find(".bl--pg .tolast a")
     if paginate_selector.length == 1:
-        last_page_url = paginate_selector.attr("href")
-        if not last_page_url:
+        latest_url = paginate_selector.attr("href")
+        if not latest_url:
             raise crawler.CrawlerException("页面截取最后一页按钮失败\n" + paginate_selector.html())
-        max_page_count = tool.find_sub_string(last_page_url, "page=", "&")
+        max_page_count = tool.find_sub_string(latest_url, "page=", "&")
         if not tool.is_integer(max_page_count):
             raise crawler.CrawlerException("页面截取最后一页失败\n" + paginate_selector.html())
         result["is_over"] = page_count >= int(max_page_count)

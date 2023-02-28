@@ -54,15 +54,15 @@ def get_comic_index_page(comic_id):
             }
             chapter_selector = chapter_list_selector.eq(page_index)
             # 获取章节ID
-            page_url = chapter_selector.find("a").attr("href")
-            chapter_id = tool.find_sub_string(page_url, "/comic/%s/" % comic_id, ".html")
+            chapter_url = chapter_selector.find("a").attr("href")
+            chapter_id = tool.find_sub_string(chapter_url, "/comic/%s/" % comic_id, ".html")
             if not tool.is_integer(chapter_id):
-                raise crawler.CrawlerException("页面地址 %s 截取页面id失败" % page_url)
+                raise crawler.CrawlerException("页面地址 %s 截取页面id失败" % chapter_url)
             result_comic_info["chapter_id"] = int(chapter_id)
             # 获取章节名称
             chapter_name = chapter_selector.find("a").attr("title")
             if not chapter_name:
-                raise crawler.CrawlerException("页面地址 %s 截取章节名失败" % page_url)
+                raise crawler.CrawlerException("页面地址 %s 截取章节名失败" % chapter_url)
             result_comic_info["chapter_name"] = chapter_name.strip()
             result["chapter_info_list"].append(result_comic_info)
     return result
