@@ -109,7 +109,7 @@ def get_video_info_page(video_id):
     if video_file_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException("m3u8文件 %s，%s" % (video_file_url, crawler.request_failre(video_file_response.status)))
     video_file_response_content = video_file_response.data.decode(errors="ignore")
-    ts_id_list = re.findall(r"([\S]*.ts)", video_file_response_content)
+    ts_id_list = re.findall(r"(\S*.ts)", video_file_response_content)
     if len(ts_id_list) == 0:
         raise crawler.CrawlerException("分集文件匹配视频地址失败\n" + video_file_response_content)
     # http://playbackyzbold.live.weibo.com/2021101/f0b/f97/bVFjTEK9nYTEqQ6p/index.m3u8
