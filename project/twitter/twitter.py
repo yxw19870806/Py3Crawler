@@ -26,19 +26,19 @@ def check_login():
     global AUTHORIZATION, COOKIE_INFO, IS_LOGIN, QUERY_ID
     index_url = "https://twitter.com/home"
     header_list = {"referer": "https://twitter.com"}
-    index_page_response = net.request(index_url, method="GET", cookies_list=COOKIE_INFO, header_list=header_list, is_auto_redirect=False)
-    if index_page_response.status == 200:
+    index_response = net.request(index_url, method="GET", cookies_list=COOKIE_INFO, header_list=header_list, is_auto_redirect=False)
+    if index_response.status == 200:
         IS_LOGIN = True
-    elif index_page_response.status == 302 and index_page_response.getheader("Location") == "/login?redirect_after_login=%2Fhome":
+    elif index_response.status == 302 and index_response.getheader("Location") == "/login?redirect_after_login=%2Fhome":
         pass
     else:
-        raise crawler.CrawlerException(crawler.request_failre(index_page_response.status))
-    index_page_response_content = index_page_response.data.decode(errors="ignore")
+        raise crawler.CrawlerException(crawler.request_failre(index_response.status))
+    index_response_content = index_response.data.decode(errors="ignore")
     # 更新cookies
-    COOKIE_INFO.update(net.get_cookies_from_response_header(index_page_response.headers))
-    init_js_url_find = re.findall(r'href="(https://abs.twimg.com/responsive-web/client-web-legacy/main.[^\.]*.[\w]*.js)"', index_page_response_content)
+    COOKIE_INFO.update(net.get_cookies_from_response_header(index_response.headers))
+    init_js_url_find = re.findall(r'href="(https://abs.twimg.com/responsive-web/client-web-legacy/main.[^\.]*.[\w]*.js)"', index_response_content)
     if len(init_js_url_find) != 1:
-        raise crawler.CrawlerException("初始化JS地址截取失败\n" + index_page_response_content)
+        raise crawler.CrawlerException("初始化JS地址截取失败\n" + index_response_content)
     init_js_response = net.request(init_js_url_find[0], method="GET")
     if init_js_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException("初始化JS文件，" + crawler.request_failre(init_js_response.status))
