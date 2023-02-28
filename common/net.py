@@ -119,7 +119,7 @@ class ErrorResponse(object):
 
     def __init__(self, status=-1):
         self.status = status
-        self.data = b''
+        self.data = b""
         self.headers = {}
         self.json_data = []
 
@@ -295,7 +295,7 @@ def request(url, method: str = "GET", fields: Optional[dict] = None, binary_data
             continue
 
         try:
-            if method in ['DELETE', 'GET', 'HEAD', 'OPTIONS']:
+            if method in ["DELETE", "GET", "HEAD", "OPTIONS"]:
                 response = connection_pool.request(method, url, headers=header_list, redirect=is_auto_redirect, timeout=timeout, fields=fields)
             else:
                 if binary_data is None:

@@ -91,7 +91,7 @@ def is_integer(number) -> bool:
     elif isinstance(number, bool) or isinstance(number, list) or isinstance(number, dict) or number is None:
         return False
     else:
-        return not re.compile('^[-+]?[0-9]+$').match(str(number)) is None
+        return not re.compile("^[-+]?[0-9]+$").match(str(number)) is None
 
 
 def json_decode(json_string: str, default_value=None) -> Union[list, dict, str]:
@@ -186,7 +186,7 @@ def string_md5(source_string: str) -> str:
     字符串md5
     """
     if not isinstance(source_string, str):
-        return ''
+        return ""
     md5_class = hashlib.md5()
     md5_class.update(source_string.encode())
     return md5_class.hexdigest()

@@ -453,7 +453,7 @@ class CrawlerThread(threading.Thread):
     main_thread = None
     thread_lock = None
     display_name = None
-    index_key = ''
+    index_key = ""
 
     def __init__(self, main_thread: Crawler, single_save_data: list):
         """
@@ -881,10 +881,10 @@ def filter_emoji(text: str) -> str:
     替换文本中的表情符号
     """
     try:
-        emoji = re.compile('[\U00010000-\U0010ffff]')
+        emoji = re.compile("[\U00010000-\U0010ffff]")
     except re.error:
-        emoji = re.compile('[\uD800-\uDBFF][\uDC00-\uDFFF]')
-    return emoji.sub('', text)
+        emoji = re.compile("[\uD800-\uDBFF][\uDC00-\uDFFF]")
+    return emoji.sub("", text)
 
 
 def download_failre(return_code: int) -> str:
