@@ -255,18 +255,14 @@ class CrawlerThread(crawler.CrawlerThread):
         is_over = False
         # 获取全部还未下载过需要解析的视频
         while not is_over:
-            self.main_thread_check()  # 检测主线程运行状态
-            self.step("开始解析第%s页视频" % page_count)
-
-            # 获取一页视频
+            mylist_pagination_description = "第%s页视频" % page_count
+            self.start_parse(mylist_pagination_description)
             try:
                 mylist_pagination_response = get_one_page_mylist_video(self.index_key, page_count)
             except crawler.CrawlerException as e:
-                self.error(e.http_error("第%s页视频" % page_count))
+                self.error(e.http_error(mylist_pagination_description))
                 raise
-
-            self.trace("第%s页解析的全部视频：%s" % (page_count, mylist_pagination_response["video_info_list"]))
-            self.step("第%s页解析获取%s个视频" % (page_count, len(mylist_pagination_response["video_info_list"])))
+            self.parse_result(mylist_pagination_description, mylist_pagination_response["video_info_list"])
 
             # 寻找这一页符合条件的视频
             for video_info in mylist_pagination_response["video_info_list"]:
@@ -286,24 +282,21 @@ class CrawlerThread(crawler.CrawlerThread):
 
     # 解析单个视频
     def crawl_video(self, video_info):
-        self.step("开始解析视频 %s 《%s》" % (video_info["video_id"], video_info["video_title"]))
-
+        video_description = "%s 《%s》" % (video_info["video_id"], video_info["video_title"])
+        self.start_parse(video_description)
         try:
             video_info_response = get_video_info(video_info["video_id"])
         except crawler.CrawlerException as e:
-            self.error(e.http_error("视频%s 《%s》" % (video_info["video_id"], video_info["video_title"])))
+            self.error(e.http_error(video_description))
             raise
-
         if video_info_response["is_delete"]:
             self.error("视频%s 《%s》已删除，跳过" % (video_info["video_id"], video_info["video_title"]))
             return
-
         if video_info_response["is_private"]:
             self.error("视频%s 《%s》未公开，跳过" % (video_info["video_id"], video_info["video_title"]))
             return
 
         self.step("视频%s 《%s》 %s 开始下载" % (video_info["video_id"], video_info["video_title"], video_info_response["video_url"]))
-
         video_file_path = os.path.join(self.main_thread.video_download_path, self.display_name, "%08d - %s.mp4" % (video_info["video_id"], path.filter_text(video_info["video_title"])))
         cookies_list = COOKIE_INFO
         if video_info_response["extra_cookie"]:
