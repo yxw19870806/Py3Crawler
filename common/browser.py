@@ -211,13 +211,13 @@ def get_all_cookie_from_browser(browser_type: BrowserType, file_path: str) -> di
                 cookie_value = cookie_info[3]
             else:
                 decrypt_value = cookie_info[4]
-                if decrypt_value.startswith(b'x01x00x00x00'):
+                if decrypt_value.startswith(b"x01x00x00x00"):
                     try:
                         cookie_value = win32crypt.CryptUnprotectData(decrypt_value, None, None, None, 0)[1]
                     except pywintypes.error:
                         continue
-                elif decrypt_value.startswith(b'v10'):
-                    cipher.mode = modes.GCM(decrypt_value[len(b'v10'):15])
+                elif decrypt_value.startswith(b"v10"):
+                    cipher.mode = modes.GCM(decrypt_value[len(b"v10"):15])
                     value = cipher.decryptor().update(decrypt_value[15:])
                     cookie_value = value[:-16]
                 else:

@@ -33,9 +33,9 @@ if __name__ == "__main__":
         if len(equip_info) >= 10:
             equip_attr[equip_info[8]] = equip_info[9]
         equip_info_list.append({
-            'name': equip_name,
-            'level': equip_level,
-            'attribute': equip_attr,
+            "name": equip_name,
+            "level": equip_level,
+            "attribute": equip_attr,
         })
 
     for equip_info in equip_info_list:

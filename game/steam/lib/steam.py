@@ -174,7 +174,7 @@ def get_self_uncompleted_account_badges(account_id):
             if badge_selector.find(".badge_title").html().find("- 闪亮徽章") >= 0:
                 continue
             # 获取game id
-            badge_detail_url = badge_selector.find('a.badge_row_overlay').attr("href")
+            badge_detail_url = badge_selector.find("a.badge_row_overlay").attr("href")
             if badge_detail_url is None:
                 raise crawler.CrawlerException("徽章信息截取徽章详情地址失败\n" + badge_selector.html())
             # 非游戏徽章
