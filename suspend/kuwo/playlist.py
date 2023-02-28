@@ -64,16 +64,21 @@ class KuWoPlaylist(kuwo.KuWo):
         page_count = 1
         audio_info_list = []
         while not is_over:
-            log.step("开始解析第%s页歌曲" % page_count)
+            playlist_pagination_description = "第%s页歌曲" % page_count
+            self.start_parse(playlist_pagination_description)
             try:
                 playlist_pagination_response = kuwo.get_one_page_playlist(playlist_id, page_count)
             except crawler.CrawlerException as e:
-                log.error(e.http_error("第%s页歌单" % page_count))
+                log.error(e.http_error(playlist_pagination_description))
                 return
+            self.parse_result(playlist_pagination_description, playlist_pagination_response["audio_info_list"])
 
             audio_info_list += playlist_pagination_response["audio_info_list"]
-            is_over = playlist_pagination_response["is_over"]
-            page_count += 1
+            
+            if playlist_pagination_response["is_over"]:
+                is_over = True
+            else:
+                page_count += 1
         log.step("用户总共解析获得%s首歌曲" % len(audio_info_list))
 
         # 循环待下载列表
