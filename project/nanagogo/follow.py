@@ -1,7 +1,7 @@
 # -*- coding:UTF-8  -*-
 """
 7gogo批量关注
-https://www.instagram.com/
+https://7gogo.jp/
 @author: hikaru
 email: hikaru870806@hotmail.com
 如有问题或建议请联系
