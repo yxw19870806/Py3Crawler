@@ -1,16 +1,16 @@
 Python Crawler（auto download from website）
 =====
 
-# Required
+### Required
 
 * OS：windows（maybe Linux and mac）<br>
 * Python：v3.8+, not supported Python 2.X
 
-# Suggest
+### Suggest
 
 * IDE and Project Encoding setting with UTF-8
 
-# Features
+### Features
 
 * 多线程<br>
   multithreading<br>
@@ -35,7 +35,7 @@ Python Crawler（auto download from website）
     * 可设置是否自动跳转（http code 301、302、303、307、308）<br>
       set whether auto redirect(http code 301, 302, 303, 307, 308) <br>
 
-# Install
+### Install
 
 * 如果已安装Visual C++ 生成工具和swig（并将swig的安装路径加入系统变量中，否则会提示无法找到swig.exe），请运行install/install.bat<br>
   If you have installed Visual C++ Build Tools and swig for windows (and add swig's install path to your environment
@@ -56,7 +56,7 @@ Visual Studio Installer安装完毕后，勾选"桌面应用和移动应用"标�
   (Don't suggest) If you haven't installed Visual C++ Build Tools and swig for windows, you can run
   install/install_whl.bat<br>
 
-# Support website / App
+### Support website / App
 
 * [Ameblo](https://ameblo.jp/) （最后更新日期：2022/11/02）
 * [半次元](https://bcy.net/) （最后更新日期：2022/11/02）
@@ -85,28 +85,26 @@ Visual Studio Installer安装完毕后，勾选"桌面应用和移动应用"标�
 * [一直播](https://www.yizhibo.com/) （最后更新日期：2022/07/20）
 * [Youtube](https://www.youtube.com/) （最后更新日期：2022/12/15）
 
-# Code Structure
+### Code Structure  
 
 1. /common，公共类<br>
-
-* /common/crawler.py 爬虫父类，多线程爬取父类，异常类<br>
-* /common/browser.py 浏览器类，获取操作系统中安装的浏览器目录以及保存的cookies<br>
-* /common/crypto.py 加密解密类，使用基于本计算机信息（MAC+计算机名）的私钥对隐私信息进行AES128加密（如输入的账号、密码）<br>
-* /common/file.py 文件操作类，读、写文件，计算文件MD5值<br>
-* /common/keyboard_event.py 键盘监听事件类，可以通过指定快捷键暂停/重启/立刻结束爬虫（默认在下一次网络请求时阻塞线程）<br>
-* /common/log.py 日志记录类，线程安全，4个级别（error、step、trace、notice）的日志记录方法<br>
-* /common/net.py 网络通信类（基于urllib3），网页访问、资源下载等<br>
-* /common/output.py 控制台输出类，线程安全<br>
-* /common/path.py 操作系统路径相关类，创建/删除目录，移动/复制文件或文件夹等操作<br>
-* /common/port_listener_event.py 端口监听类，可以通过向指定端口发送请求暂停/重启/立刻结束爬虫（默认在下一次网络请求时阻塞线程）<br>
-* /common/tool.py 其他一些公共方法类，如字符串截取，字符串和列表的转化等
-* /common/log_config.json 日志类的配置文件
-* /common/net_config.json 网络通信类的配置文件
-
+   * /common/crawler.py 爬虫父类，多线程爬取父类，异常类<br>
+   * /common/browser.py 浏览器类，获取操作系统中安装的浏览器目录以及保存的cookies<br>
+   * /common/crypto.py 加密解密类，使用基于本计算机信息（MAC+计算机名）的私钥对隐私信息进行AES128加密（如输入的账号、密码）<br>
+   * /common/file.py 文件操作类，读、写文件，计算文件MD5值<br>
+   * /common/keyboard_event.py 键盘监听事件类，可以通过指定快捷键暂停/重启/立刻结束爬虫（默认在下一次网络请求时阻塞线程）<br>
+   * /common/log.py 日志记录类，线程安全，4个级别（error、step、trace、notice）的日志记录方法<br>
+   * /common/net.py 网络通信类（基于urllib3），网页访问、资源下载等<br>
+   * /common/output.py 控制台输出类，线程安全<br>
+   * /common/path.py 操作系统路径相关类，创建/删除目录，移动/复制文件或文件夹等操作<br>
+   * /common/port_listener_event.py 端口监听类，可以通过向指定端口发送请求暂停/重启/立刻结束爬虫（默认在下一次网络请求时阻塞线程）<br>
+   * /common/tool.py 其他一些公共方法类，如字符串截取，字符串和列表的转化等
+   * /common/log_config.json 日志类的配置文件
+   * /common/net_config.json 网络通信类的配置文件
 2. /install，项目依赖的一些扩展包的安装文件（使用pip install）
 3. /project，爬虫项目
 
-# Known Issue
+### Known Issue
 
 * **install/install_whl.bat** 中使用的PyHook（用于在windows中监听鼠标、键盘事件）在python3下有兼容性问题<br>
   如果前台激活了存在非ascii字符的窗口，会抛出异常（类似于 TypeError: KeyboardSwitch() missing 8 required positional arguments: 'msg', '
