@@ -188,14 +188,14 @@ class CrawlerThread(crawler.CrawlerThread):
         is_over = False
         # 获取全部还未下载过需要解析的相册
         while not is_over:
-            pagination_description = "第%s页视频" % page_count
-            self.start_parse(pagination_description)
+            blog_pagination_description = "第%s页视频" % page_count
+            self.start_parse(blog_pagination_description)
             try:
                 blog_pagination_response = get_one_page_video(self.index_key, page_count)
             except crawler.CrawlerException as e:
-                self.error(e.http_error(pagination_description))
+                self.error(e.http_error(blog_pagination_description))
                 raise
-            self.parse_result(pagination_description, blog_pagination_response["video_info_list"])
+            self.parse_result(blog_pagination_description, blog_pagination_response["video_info_list"])
 
             # 寻找这一页符合条件的日志
             for video_info in blog_pagination_response["video_info_list"]:

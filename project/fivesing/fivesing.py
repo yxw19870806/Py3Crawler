@@ -119,14 +119,14 @@ class CrawlerThread(crawler.CrawlerThread):
         is_over = False
         # 获取全部还未下载过需要解析的歌曲
         while not is_over:
-            pagination_description = "第%s页%s歌曲" % (page_count, audio_type_name)
-            self.start_parse(pagination_description)
+            audio_pagination_description = "第%s页%s歌曲" % (page_count, audio_type_name)
+            self.start_parse(audio_pagination_description)
             try:
                 audio_pagination_response = get_one_page_audio(self.index_key, audio_type, page_count)
             except crawler.CrawlerException as e:
-                self.error(e.http_error(pagination_description))
+                self.error(e.http_error(audio_pagination_description))
                 raise
-            self.parse_result(pagination_description, audio_pagination_response["audio_info_list"])
+            self.parse_result(audio_pagination_description, audio_pagination_response["audio_info_list"])
 
             # 寻找这一页符合条件的歌曲
             for audio_info in audio_pagination_response["audio_info_list"]:

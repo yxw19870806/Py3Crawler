@@ -351,15 +351,15 @@ class CrawlerThread(crawler.CrawlerThread):
         is_over = False
         # 获取全部还未下载过需要解析的媒体
         while not is_over:
-            pagination_description = "cursor：%s后一页媒体" % cursor
-            self.start_parse(pagination_description)
+            media_pagination_description = "cursor：%s后一页媒体" % cursor
+            self.start_parse(media_pagination_description)
             add_request_count(self.thread_lock)  # 增加请求计数
             try:
                 media_pagination_response: dict = get_one_page_media(self.single_save_data[1], cursor)
             except crawler.CrawlerException as e:
-                self.error(e.http_error(pagination_description))
+                self.error(e.http_error(media_pagination_description))
                 raise
-            self.parse_result(pagination_description, media_pagination_response["media_info_list"])
+            self.parse_result(media_pagination_description, media_pagination_response["media_info_list"])
 
             # 寻找这一页符合条件的媒体
             for media_info in media_pagination_response["media_info_list"]:
