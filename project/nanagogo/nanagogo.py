@@ -104,14 +104,14 @@ class CrawlerThread(crawler.CrawlerThread):
         is_over = False
         # 获取全部还未下载过需要解析的日志
         while not is_over:
-            pagination_description = "target：%s后一页日志" % target_id
-            self.start_parse(pagination_description)
+            blog_pagination_description = "target：%s后一页日志" % target_id
+            self.start_parse(blog_pagination_description)
             try:
                 blog_pagination_response = get_one_page_blog(self.index_key, target_id)
             except crawler.CrawlerException as e:
-                self.error(e.http_error(pagination_description))
+                self.error(e.http_error(blog_pagination_description))
                 raise
-            self.parse_result(pagination_description, blog_pagination_response["blog_info_list"])
+            self.parse_result(blog_pagination_description, blog_pagination_response["blog_info_list"])
 
             # 已经没有日志了
             if len(blog_pagination_response["blog_info_list"]) == 0:

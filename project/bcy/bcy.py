@@ -161,14 +161,14 @@ class CrawlerThread(crawler.CrawlerThread):
         album_id_list = []
         is_over = False
         while not is_over:
-            pagination_description = "since %s后一页作品" % page_since_id
-            self.start_parse(pagination_description)
+            album_pagination_description = "since %s后一页作品" % page_since_id
+            self.start_parse(album_pagination_description)
             try:
                 album_pagination_response = get_one_page_album(self.index_key, page_since_id)
             except crawler.CrawlerException as e:
-                self.error(e.http_error(pagination_description))
+                self.error(e.http_error(album_pagination_description))
                 raise
-            self.parse_result(pagination_description, album_pagination_response["album_id_list"])
+            self.parse_result(album_pagination_description, album_pagination_response["album_id_list"])
 
             # 寻找这一页符合条件的作品
             for album_id in album_pagination_response["album_id_list"]:
