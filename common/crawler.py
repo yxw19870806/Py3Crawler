@@ -14,7 +14,7 @@ import sys
 import threading
 import time
 import traceback
-from enum import Enum, unique
+from enum import Enum, unique, EnumMeta
 from typing import Any, Callable, Dict, Optional, Union
 
 # 项目根目录
@@ -25,6 +25,14 @@ PROJECT_CONFIG_PATH = os.path.abspath(os.path.join(PROJECT_ROOT_PATH, "common", 
 PROJECT_APP_PATH = os.getcwd()
 # webdriver文件路径
 CHROME_WEBDRIVER_PATH = os.path.abspath(os.path.join(PROJECT_ROOT_PATH, "common", "chromedriver.exe"))
+
+class CrawlerEnumMeta(EnumMeta):
+    def __getitem__(self, name):
+        try:
+            return super().__getitem__(name.upper())
+        except (TypeError, KeyError):
+            return "unknown"
+
 try:
     from . import browser, file, log, net, output, path, port_listener_event, tool
 except ImportError:
@@ -223,7 +231,7 @@ class Crawler(object):
         self.cookie_value = {}
         if sys_get_cookie:
             # 操作系统&浏览器
-            browser_type = analysis_config(config, "BROWSER_TYPE", "chrome", ConfigAnalysisMode.RAW)
+            browser_type = browser.BrowserType[analysis_config(config, "BROWSER_TYPE", "chrome", ConfigAnalysisMode.RAW)]
             # cookie
             cookie_path = analysis_config(config, "COOKIE_PATH", "", ConfigAnalysisMode.RAW)
             if cookie_path:
@@ -259,7 +267,7 @@ class Crawler(object):
                 str(port_listener_event.PROCESS_STATUS_STOP): self.stop_process  # 结束进程（取消当前的线程，完成任务）
             }
             process_control_thread = port_listener_event.PortListenerEvent(port=listener_port, event_list=listener_event_bind)
-            process_control_thread.setDaemon(True)
+            process_control_thread.daemon = True
             process_control_thread.start()
 
         # 键盘监控线程（仅支持windows）
@@ -280,7 +288,7 @@ class Crawler(object):
 
             if keyboard_event_bind:
                 keyboard_control_thread = keyboard_event.KeyboardEvent(keyboard_event_bind)
-                keyboard_control_thread.setDaemon(True)
+                keyboard_control_thread.daemon = True
                 keyboard_control_thread.start()
 
         self.save_data = {}

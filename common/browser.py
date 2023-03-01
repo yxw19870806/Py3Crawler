@@ -29,11 +29,11 @@ except ImportError:
 
 
 @unique
-class BrowserType(Enum):
-    IE = "ie"
-    FIREFOX = "firefox"
-    CHROME = "chrome"
-    TEXT = "text"  # 直接从文件里读取cookies
+class BrowserType(Enum, metaclass=crawler.CrawlerEnumMeta):
+    IE: str = "ie"
+    FIREFOX: str = "firefox"
+    CHROME: str = "chrome"
+    TEXT: str = "text"  # 直接从文件里读取cookies
 
 
 class Chrome:

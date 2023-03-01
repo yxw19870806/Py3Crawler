@@ -35,7 +35,7 @@ class WindowsApplication:
             self.set_window_size(default_windows_size[0], default_windows_size[1])
         keyboard_event_bind = {"Prior": self.pause_process, "Next": self.resume_process}
         keyboard_control_thread = keyboard_event.KeyboardEvent(keyboard_event_bind)
-        keyboard_control_thread.setDaemon(True)
+        keyboard_control_thread.daemon = True
         keyboard_control_thread.start()
 
     def pause_process(self):
