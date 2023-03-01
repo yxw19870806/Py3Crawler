@@ -844,7 +844,7 @@ def get_json_value(json_data, *args, **kwargs):
         elif type_check is str:  # 直接强制类型转化
             json_data = str(json_data)
         elif type_check is dict or type_check is list or type_check is bool:  # 标准数据类型
-            type_error = json_data is not type_check
+            type_error = type(json_data) is not type_check
         else:
             exception_string = "type_check: %s类型不正确" % kwargs['type_check']
         if type_error:
