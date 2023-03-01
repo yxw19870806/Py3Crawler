@@ -14,7 +14,7 @@ import sys
 import threading
 import time
 import traceback
-from enum import Enum, unique
+from enum import Enum, unique, EnumMeta
 from typing import Any, Callable, Dict, Optional, Union
 
 # 项目根目录
@@ -25,6 +25,14 @@ PROJECT_CONFIG_PATH = os.path.abspath(os.path.join(PROJECT_ROOT_PATH, "common", 
 PROJECT_APP_PATH = os.getcwd()
 # webdriver文件路径
 CHROME_WEBDRIVER_PATH = os.path.abspath(os.path.join(PROJECT_ROOT_PATH, "common", "chromedriver.exe"))
+
+class CrawlerEnumMeta(EnumMeta):
+    def __getitem__(self, name):
+        try:
+            return super().__getitem__(name.upper())
+        except (TypeError, KeyError):
+            return "unknown"
+
 try:
     from . import browser, file, log, net, output, path, port_listener_event, tool
 except ImportError:
@@ -223,7 +231,7 @@ class Crawler(object):
         self.cookie_value = {}
         if sys_get_cookie:
             # 操作系统&浏览器
-            browser_type = analysis_config(config, "BROWSER_TYPE", "chrome", ConfigAnalysisMode.RAW)
+            browser_type = browser.BrowserType[analysis_config(config, "BROWSER_TYPE", "chrome", ConfigAnalysisMode.RAW)]
             # cookie
             cookie_path = analysis_config(config, "COOKIE_PATH", "", ConfigAnalysisMode.RAW)
             if cookie_path:
