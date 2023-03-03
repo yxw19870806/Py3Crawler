@@ -21,7 +21,7 @@ class CreateDirMode(Enum):
 
 @unique
 class OrderType(Enum):
-    ASC: str = "asc"    # 升序
+    ASC: str = "asc"  # 升序
     DESC: str = "desc"  # 降序
     DEFAULT: str = "default"  # 默认
 
@@ -39,7 +39,7 @@ def create_dir(dir_path: str, create_mode: CreateDirMode = CreateDirMode.IGNORE)
         True    创建成功
         False   创建失败
     """
-    if create_mode not in [CreateDirMode.IGNORE, CreateDirMode.DELETE]:
+    if not isinstance(create_mode, CreateDirMode):
         raise ValueError("invalid create_mode")
     dir_path = os.path.abspath(dir_path)
     # 目录存在
@@ -118,7 +118,7 @@ def get_dir_files_name(dir_path: str, order: OrderType = OrderType.DEFAULT, recu
     - recursive - 是否递归获取子目录
     - full_path - 返回的列表是否包含完整路径
     """
-    if order not in [OrderType.ASC, OrderType.DESC, OrderType.DEFAULT]:
+    if not isinstance(order, OrderType):
         raise ValueError("invalid order")
     dir_path = os.path.abspath(dir_path)
     if not os.path.exists(dir_path) or not os.path.isdir(dir_path):

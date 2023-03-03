@@ -45,7 +45,7 @@ def read_file(file_path: str, read_type: ReadFileMode = ReadFileMode.FULL) -> Un
         ReadFileMode.FULL   type of string
         ReadFileMode.LINE   type of list
     """
-    if read_type not in [ReadFileMode.FULL, ReadFileMode.LINE]:
+    if not isinstance(read_type, ReadFileMode):
         raise ValueError("invalid read_type")
     if read_type == ReadFileMode.FULL:
         default_value = ""
@@ -88,7 +88,7 @@ def write_file(msg: str, file_path: str, write_type: WriteFileMode = WriteFileMo
         WriteFileMode.APPEND    "a" mode to write file
         WriteFileMode.REPLACE   "w" mode to write file
     """
-    if write_type not in [WriteFileMode.APPEND, WriteFileMode.REPLACE]:
+    if not isinstance(write_type, WriteFileMode):
         raise ValueError("invalid write_type")
     if not file_path:
         return False
