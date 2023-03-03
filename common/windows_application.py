@@ -12,7 +12,7 @@ import time
 import win32api
 import win32con
 import win32gui
-from typing import Tuple
+from typing import Tuple, Optional
 
 try:
     from . import keyboard_event
@@ -38,14 +38,14 @@ class WindowsApplication:
         keyboard_control_thread.daemon = True
         keyboard_control_thread.start()
 
-    def pause_process(self):
+    def pause_process(self) -> None:
         """
         设置暂停状态
         """
         if self.thread_event.is_set():
             self.thread_event.clear()
 
-    def resume_process(self):
+    def resume_process(self) -> None:
         """
         设置运行状态
         """
@@ -56,21 +56,21 @@ class WindowsApplication:
     def window_handle(self):
         return win32gui.FindWindow(None, self.window_title)
 
-    def get_window_size(self):
+    def get_window_size(self) -> Tuple[int, int]:
         """
         获取窗口大小
         """
         win_rect = win32gui.GetWindowRect(self.window_handle)
         return win_rect[2] - win_rect[0], win_rect[3] - win_rect[1]  # width, height
 
-    def get_client_size(self):
+    def get_client_size(self) -> Tuple[int, int]:
         """
         获取显示大小（去除windows标题栏和边框的尺寸）
         """
         win_rect = win32gui.GetClientRect(self.window_handle)
         return win_rect[2] - win_rect[0], win_rect[3] - win_rect[1]  # width, height
 
-    def set_window_size(self, width: int, height: int):
+    def set_window_size(self, width: int, height: int) -> None:
         """
         设置窗口大小
         win32gui.SetWindowPos参数详解
@@ -103,13 +103,13 @@ class WindowsApplication:
         """
         win32gui.SetWindowPos(self.window_handle, 0, 0, 0, width, height, win32con.SWP_NOMOVE | win32con.SWP_NOZORDER)
 
-    def set_window_pos(self, pos_x: int, pos_y: int):
+    def set_window_pos(self, pos_x: int, pos_y: int) -> None:
         """
         设置窗口坐标
         """
         win32gui.SetWindowPos(self.window_handle, 0, pos_x, pos_y, 0, 0, win32con.SWP_NOSIZE | win32con.SWP_NOZORDER)
 
-    def auto_click(self, pos_x: int, pos_y: int, click_type: str = CLICK_TYPE_LEFT_BUTTON, click_time: int = 0):
+    def auto_click(self, pos_x: int, pos_y: int, click_type: str = CLICK_TYPE_LEFT_BUTTON, click_time: int = 0) -> None:
         """
         自动点击窗口某个坐标（窗口可以不在最顶端）
         """
@@ -126,7 +126,7 @@ class WindowsApplication:
                 time.sleep(click_time)
             win32gui.SendMessage(self.window_handle, win32con.WM_RBUTTONUP, win32con.MK_RBUTTON, tmp)
 
-    def send_key(self, keyboard):
+    def send_key(self, keyboard) -> None:
         """
         自动向窗口发送按键指令（窗口必须在最顶端）
         """
@@ -135,7 +135,7 @@ class WindowsApplication:
         # key up
         win32api.PostMessage(self.window_handle, win32con.WM_KEYUP, keyboard, 0)
 
-    def get_color(self, pos_x: int, pos_y: int):
+    def get_color(self, pos_x: int, pos_y: int) -> Tuple[Optional[int], Optional[int], Optional[int]]:
         """
         获取窗口某个坐标的颜色（窗口必须在最顶端）
         """
@@ -148,7 +148,7 @@ class WindowsApplication:
         blue = (color >> 16) & 255
         return red, green, blue
 
-    def is_foreground_window(self):
+    def is_foreground_window(self) -> bool:
         """
         判断是不是最顶端窗口
         """
@@ -161,7 +161,7 @@ class WindowsApplication:
         return win32gui.ScreenToClient(self.window_handle, (pos_x, pos_y))
 
 
-def get_file_version(file_path: str):
+def get_file_version(file_path: str) -> str:
     """
     获取文件的版本信息
     """
@@ -171,7 +171,7 @@ def get_file_version(file_path: str):
     return "%d.%d.%d.%04d" % (win32api.HIWORD(ms), win32api.LOWORD(ms), win32api.HIWORD(ls), win32api.LOWORD(ls))
 
 
-def send_keyboard_event(keyboard):
+def send_keyboard_event(keyboard) -> None:
     """
     前台输入指定按键
     """
@@ -179,7 +179,7 @@ def send_keyboard_event(keyboard):
     win32api.keybd_event(keyboard, 0, win32con.KEYEVENTF_KEYUP, 0)
 
 
-def send_mouse_click(pos_x, pos_y, click_type: str = CLICK_TYPE_LEFT_BUTTON, click_time: int = 0):
+def send_mouse_click(pos_x, pos_y, click_type: str = CLICK_TYPE_LEFT_BUTTON, click_time: int = 0) -> None:
     """
     鼠标移动到指定坐标后点击左右键
     """

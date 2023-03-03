@@ -124,7 +124,7 @@ class ErrorResponse(object):
         self.json_data = []
 
 
-def init_http_connection_pool():
+def init_http_connection_pool() -> None:
     """
     初始化连接池
     """
@@ -132,7 +132,7 @@ def init_http_connection_pool():
     HTTP_CONNECTION_POOL = urllib3.PoolManager(retries=False)
 
 
-def set_proxy(ip: str, port: str):
+def set_proxy(ip: str, port: str) -> None:
     """
     初始化代理连接池
     """
@@ -477,7 +477,7 @@ def download_from_list(file_url_list: List[str], file_path: str, replace_if_exis
     return is_succeed
 
 
-def pause_request():
+def pause_request() -> None:
     """
     Block thread when use request()
     """
@@ -486,7 +486,7 @@ def pause_request():
         thread_event.clear()
 
 
-def resume_request():
+def resume_request() -> None:
     """
     Resume thread
     """
@@ -539,10 +539,10 @@ class Download:
 
         self.start_download()
 
-    def __bool__(self):
+    def __bool__(self) -> bool:
         return self.status == self.DOWNLOAD_SUCCEED
 
-    def start_download(self):
+    def start_download(self) -> None:
         """
         主体下载逻辑
         """
@@ -599,7 +599,7 @@ class Download:
         # 删除可能出现的临时文件
         path.delete_dir_or_file(self.file_path)
 
-    def check_auto_multipart_download(self):
+    def check_auto_multipart_download(self) -> None:
         """
         是否需要分段下载
         """
@@ -636,7 +636,7 @@ class Download:
                 if self.auto_multipart_download and self.content_length > NET_CONFIG["DOWNLOAD_MULTIPART_MIN_SIZE"]:
                     self.is_multipart_download = True
 
-    def rename_file_extension(self, response):
+    def rename_file_extension(self, response) -> None:
         """
         检测文件后缀名是否正确
         """

@@ -83,7 +83,7 @@ def delete_dir_or_file(dir_path: str) -> bool:
             return False
 
 
-def delete_null_dir(dir_path: str):
+def delete_null_dir(dir_path: str) -> None:
     """
     删除所有空的子目录
     """

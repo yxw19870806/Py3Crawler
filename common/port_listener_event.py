@@ -30,7 +30,7 @@ class PortListenerEvent(threading.Thread):
         if isinstance(self.listener, Listener):
             self.listener.close()
 
-    def run(self):
+    def run(self) -> None:
         self.listener = Listener((self.ip, self.port))
         while True:
             conn = self.listener.accept()

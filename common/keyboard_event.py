@@ -106,7 +106,7 @@ class KeyboardEvent(threading.Thread):
             self.key_down_list[key] = False
         return 1
 
-    def run(self):
+    def run(self) -> None:
         if pyHook is None:
             return
 

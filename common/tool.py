@@ -13,7 +13,7 @@ import re
 import string
 import sys
 import time
-from typing import Optional, Union, List
+from typing import Optional, Union, List, NoReturn
 
 # if sys.stdout.encoding != "UTF-8":
 #     raise Exception("项目编码必须是UTF-8，请在IDE中修改相关设置")
@@ -192,7 +192,7 @@ def string_md5(source_string: str) -> str:
     return md5_class.hexdigest()
 
 
-def process_exit(exit_code: int = PROCESS_EXIT_CODE_ERROR):
+def process_exit(exit_code: int = PROCESS_EXIT_CODE_ERROR) -> NoReturn:
     """
     结束进程
 
@@ -204,7 +204,7 @@ def process_exit(exit_code: int = PROCESS_EXIT_CODE_ERROR):
     sys.exit(exit_code)
 
 
-def shutdown(delay_time: int = 30):
+def shutdown(delay_time: int = 30) -> None:
     """
     定时关机
     """
