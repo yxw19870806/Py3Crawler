@@ -87,7 +87,7 @@ def sort_file(source_path: str, destination_path: str, start_count: int, file_na
     - start_count - 重命名开始的序号
     - file_name_length - 复制后的文件名长度
     """
-    file_list = path.get_dir_files_name(source_path, path.RETURN_FILE_LIST_DESC)
+    file_list = path.get_dir_files_name(source_path, path.OrderType.DESC)
     # 判断排序目标文件夹是否存在
     if len(file_list) >= 1:
         if not path.create_dir(destination_path):

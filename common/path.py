@@ -19,8 +19,11 @@ class CreateDirMode(Enum):
     DELETE: str = "delete"  # 目录存在时先删除再创建
 
 
-RETURN_FILE_LIST_ASC = 1
-RETURN_FILE_LIST_DESC = 2
+@unique
+class OrderType(Enum):
+    ASC: str = "asc"    # 升序
+    DESC: str = "desc"  # 降序
+    DEFAULT: str = "default"  # 默认
 
 
 def create_dir(dir_path: str, create_mode: CreateDirMode = CreateDirMode.IGNORE) -> bool:
@@ -103,22 +106,22 @@ def delete_null_dir(dir_path: str) -> None:
             os.rmdir(dir_path)
 
 
-def get_dir_files_name(dir_path: str, order: Optional[str] = None, recursive: bool = False, full_path: bool = False) -> List[str]:
+def get_dir_files_name(dir_path: str, order: OrderType = OrderType.DEFAULT, recursive: bool = False, full_path: bool = False) -> List[str]:
     """
     获取目录下的所有文件名
 
     :Args:
     - order - 排序模式
-        RETURN_FILE_LIST_ASC    根据文件名升序
-        RETURN_FILE_LIST_DESC   根据文件名降序
-        Other                   系统默认返回数据
+        OrderType.ASC       根据文件名升序
+        OrderType.DESC      根据文件名降序
+        OrderType>DEFAULT   默认返回数据
     - recursive - 是否递归获取子目录
     - full_path - 返回的列表是否包含完整路径
     """
+    if order not in [OrderType.ASC, OrderType.DESC, OrderType.DEFAULT]:
+        raise ValueError("invalid order")
     dir_path = os.path.abspath(dir_path)
-    if not os.path.exists(dir_path):
-        return []
-    if not os.path.isdir(dir_path):
+    if not os.path.exists(dir_path) or not os.path.isdir(dir_path):
         return []
 
     if recursive:
@@ -136,10 +139,10 @@ def get_dir_files_name(dir_path: str, order: Optional[str] = None, recursive: bo
         except PermissionError:
             return []
     # 升序
-    if order == RETURN_FILE_LIST_ASC:
+    if order == OrderType.ASC:
         return sorted(files_list, reverse=False)
     # 降序
-    elif order == RETURN_FILE_LIST_DESC:
+    elif order == OrderType.DESC:
         return sorted(files_list, reverse=True)
     else:
         return files_list
