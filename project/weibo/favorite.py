@@ -28,7 +28,7 @@ def get_one_page_favorite(page_count):
     if favorite_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(favorite_pagination_response.status))
     favorite_pagination_content = favorite_pagination_response.data.decode(errors="ignore")
-    favorite_data_html = tool.find_sub_string(favorite_pagination_content, '"ns":"pl.content.favoriteFeed.index"', '"})</script>', tool.SUB_STRING_MODE_ONLY_END)
+    favorite_data_html = tool.find_sub_string(favorite_pagination_content, '"ns":"pl.content.favoriteFeed.index"', '"})</script>', tool.IncludeStringMode.END)
     favorite_data_html = tool.find_sub_string(favorite_data_html, '"html":"', '"})')
     if not favorite_data_html:
         raise crawler.CrawlerException("页面截取收藏信息失败\n" + favorite_pagination_content)
