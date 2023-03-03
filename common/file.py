@@ -7,6 +7,7 @@ email: hikaru870806@hotmail.com
 """
 import hashlib
 import os
+from enum import unique, Enum
 from typing import Union, Optional
 
 try:
@@ -14,8 +15,12 @@ try:
 except ImportError:
     from common import path
 
-READ_FILE_TYPE_FULL = 1  # 读取整个文件 ，返回字符串
-READ_FILE_TYPE_LINE = 2  # 按行读取，返回list
+
+@unique
+class ReadFileMode(Enum):
+    FULL: str = "full"  # 读取整个文件 ，返回字符串
+    LINE: str = "line"  # 按行读取，返回list
+
 
 WRITE_FILE_TYPE_APPEND = 1  # 追加写入文件
 WRITE_FILE_TYPE_REPLACE = 2  # 覆盖写入文件
@@ -23,23 +28,23 @@ WRITE_FILE_TYPE_REPLACE = 2  # 覆盖写入文件
 BOM_SIGN = b"\xef\xbb\xbf".decode()
 
 
-def read_file(file_path: str, read_type: int = READ_FILE_TYPE_FULL) -> Union[str, list]:
+def read_file(file_path: str, read_type: ReadFileMode = ReadFileMode.FULL) -> Union[str, list]:
     """
     读取文件
 
     :Args:
     - file_path - 需要读取文件的路径
     - read_type - 读取类型
-        READ_FILE_TYPE_FULL     read full file
-        READ_FILE_TYPE_LINE     read each line of file
+        ReadFileMode.FULL   read full file
+        ReadFileMode.LINE   read each line of file
 
     :Returns:
-        READ_FILE_TYPE_FULL     type of string
-        READ_FILE_TYPE_LINE     type of list
+        ReadFileMode.FULL   type of string
+        ReadFileMode.LINE   type of list
     """
-    if read_type not in [READ_FILE_TYPE_FULL, READ_FILE_TYPE_LINE]:
-        read_type = READ_FILE_TYPE_FULL
-    if read_type == READ_FILE_TYPE_FULL:
+    if read_type not in [ReadFileMode.FULL, ReadFileMode.LINE]:
+        raise ValueError("invalid read_type")
+    if read_type == ReadFileMode.FULL:
         default_value = ""
     else:
         default_value = []
@@ -49,7 +54,7 @@ def read_file(file_path: str, read_type: int = READ_FILE_TYPE_FULL) -> Union[str
     if not os.path.exists(file_path) or not os.path.isfile(file_path):
         return default_value
     with open(file_path, "r", encoding="UTF-8") as file_handle:
-        if read_type == READ_FILE_TYPE_FULL:
+        if read_type == ReadFileMode.FULL:
             result = file_handle.read()
             if len(result) > 0:
                 if result.startswith(BOM_SIGN):
@@ -79,10 +84,6 @@ def write_file(msg: str, file_path: str, append_type: int = WRITE_FILE_TYPE_APPE
     - append_type - 写入模式
         WRITE_FILE_TYPE_APPEND      "a" mode to write file
         WRITE_FILE_TYPE_REPLACE     "w" mode to write file
-
-    :Returns:
-        READ_FILE_TYPE_FULL     type of string
-        READ_FILE_TYPE_LINE     type of list
     """
     if append_type not in [WRITE_FILE_TYPE_APPEND, WRITE_FILE_TYPE_REPLACE]:
         append_type = WRITE_FILE_TYPE_APPEND
