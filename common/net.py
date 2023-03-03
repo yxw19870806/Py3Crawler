@@ -14,7 +14,7 @@ import time
 import threading
 import urllib.parse
 import urllib3
-from typing import Optional, List
+from typing import Optional, List, Final
 from urllib3._collections import HTTPHeaderDict
 
 try:
@@ -28,9 +28,9 @@ urllib3.disable_warnings()
 # disable URLError: <urlopen error [SSL: CERTIFICATE_VERIFY_FAILED] certificate verify failed (_ssl.c:590)>
 ssl._create_default_https_context = ssl._create_unverified_context
 
-SIZE_KB = 2 ** 10  # 1KB = 多少字节
-SIZE_MB = 2 ** 20  # 1MB = 多少字节
-SIZE_GB = 2 ** 30  # 1GB = 多少字节
+SIZE_KB: Final[int] = 2 ** 10  # 1KB = 多少字节
+SIZE_MB: Final[int] = 2 ** 20  # 1MB = 多少字节
+SIZE_GB: Final[int] = 2 ** 30  # 1GB = 多少字节
 
 
 def convert_to_bytes(value, default_value: int) -> int:
