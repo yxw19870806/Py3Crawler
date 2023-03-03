@@ -34,8 +34,10 @@ class IncludeStringMode(Enum):
     ALL: str = "all"  # 同时包含start_string和end_string
 
 
-PROCESS_EXIT_CODE_NORMAL = 0
-PROCESS_EXIT_CODE_ERROR = 1
+@unique
+class ExitCode(Enum):
+    NORMAL: int = 0
+    ERROR: int = 1
 
 
 def find_sub_string(haystack, start_string: Optional[str] = None, end_string: Optional[str] = None, include_string: IncludeStringMode = IncludeStringMode.NONE) -> str:
@@ -196,14 +198,14 @@ def string_md5(source_string: str) -> str:
     return md5_class.hexdigest()
 
 
-def process_exit(exit_code: int = PROCESS_EXIT_CODE_ERROR) -> NoReturn:
+def process_exit(exit_code: ExitCode = ExitCode.ERROR) -> NoReturn:
     """
     结束进程
 
     :Args:
     - exit_code - 状态码
-        0   正常结束
-        1   异常退出
+        ExitCode.NORMAL     正常结束
+        ExitCode.ERROR      异常退出
     """
     sys.exit(exit_code)
 

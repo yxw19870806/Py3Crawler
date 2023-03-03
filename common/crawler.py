@@ -309,7 +309,7 @@ class Crawler(object):
             if self.crawler_thread and issubclass(self.crawler_thread, CrawlerThread):
                 self.stop_process()
             else:
-                if isinstance(e, SystemExit) and e.code == tool.PROCESS_EXIT_CODE_ERROR:
+                if isinstance(e, SystemExit) and e.code == tool.ExitCode.ERROR:
                     log.step("异常退出")
                 else:
                     log.step("提前退出")
@@ -386,7 +386,7 @@ class Crawler(object):
 
     def running_check(self) -> None:
         if not self.is_running():
-            tool.process_exit(tool.PROCESS_EXIT_CODE_NORMAL)
+            tool.process_exit(tool.ExitCode.NORMAL)
 
     def write_remaining_save_data(self) -> None:
         """
@@ -455,7 +455,7 @@ class Crawler(object):
             if failure_callback is None or failure_callback(file_url, file_path, file_description, download_return):
                 log.error("%s %s 下载失败，原因：%s" % (file_description, file_url, download_failre(download_return.code)))
                 if self.exit_after_download_failure:
-                    tool.process_exit(tool.PROCESS_EXIT_CODE_NORMAL)
+                    tool.process_exit(tool.ExitCode.NORMAL)
         return download_return
 
 
@@ -498,7 +498,7 @@ class CrawlerThread(threading.Thread):
         except KeyboardInterrupt:
             self.step("提前退出")
         except SystemExit as e:
-            if e.code == tool.PROCESS_EXIT_CODE_ERROR:
+            if e.code == tool.ExitCode.ERROR:
                 self.error("异常退出")
             else:
                 self.step("提前退出")
@@ -552,7 +552,7 @@ class CrawlerThread(threading.Thread):
         """
         if not self.main_thread.is_running():
             self.notify_main_thread()
-            tool.process_exit(tool.PROCESS_EXIT_CODE_NORMAL)
+            tool.process_exit(tool.ExitCode.NORMAL)
 
     def notify_main_thread(self) -> None:
         """
@@ -567,7 +567,7 @@ class CrawlerThread(threading.Thread):
         """
         if self.main_thread.exit_after_download_failure:
             if is_process_exit:
-                tool.process_exit(tool.PROCESS_EXIT_CODE_ERROR)
+                tool.process_exit(tool.ExitCode.ERROR)
             else:
                 return True
         return False
