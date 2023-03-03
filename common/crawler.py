@@ -403,7 +403,7 @@ class Crawler(object):
         if self.temp_save_data_path:
             save_data = read_save_data(self.temp_save_data_path, 0, [])
             temp_list = [save_data[key] for key in sorted(save_data.keys())]
-            file.write_file(tool.list_to_string(temp_list), self.save_data_path, file.WRITE_FILE_TYPE_REPLACE)
+            file.write_file(tool.list_to_string(temp_list), self.save_data_path, file.WriteFileMode.REPLACE)
             path.delete_dir_or_file(self.temp_save_data_path)
 
     def end_message(self) -> None:
@@ -513,7 +513,7 @@ class CrawlerThread(threading.Thread):
         # 写入存档
         if self.single_save_data and self.main_thread.temp_save_data_path:
             with self.thread_lock:
-                file.write_file("\t".join(self.single_save_data), self.main_thread.temp_save_data_path, file.WRITE_FILE_TYPE_APPEND)
+                file.write_file("\t".join(self.single_save_data), self.main_thread.temp_save_data_path)
 
         # 主线程计数累加
         if self.main_thread.is_download_photo:

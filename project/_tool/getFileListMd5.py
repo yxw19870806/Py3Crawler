@@ -93,7 +93,7 @@ class GetFileListMd5(crawler.Crawler):
         for file_md5 in duplicate_list:
             delete_list = deal_one_group(duplicate_list[file_md5])
             if len(delete_list) > 0:
-                file.write_file("\n".join(delete_list), self.deleted_file_path, file.WRITE_FILE_TYPE_APPEND)
+                file.write_file("\n".join(delete_list), self.deleted_file_path, file.WriteFileMode.APPEND)
 
     # 重写记录文件
     def rewrite_recode_file(self):
@@ -115,11 +115,11 @@ class GetFileListMd5(crawler.Crawler):
             if len(new_result) > 10000:
                 print("rewrite %s - %s record" % ((write_count - 1) * 10000, (write_count + 1) * 10000))
                 write_count += 1
-                file.write_file("\n".join(new_result), self.temp_save_data_path, file.WRITE_FILE_TYPE_APPEND)
+                file.write_file("\n".join(new_result), self.temp_save_data_path)
                 new_result = []
         if len(new_result) > 0:
             print("rewrite last %s record" % len(new_result))
-            file.write_file("\n".join(new_result), self.temp_save_data_path, file.WRITE_FILE_TYPE_APPEND)
+            file.write_file("\n".join(new_result), self.temp_save_data_path)
 
     def _main(self):
         # 读取记录

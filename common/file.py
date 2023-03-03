@@ -22,8 +22,11 @@ class ReadFileMode(Enum):
     LINE: str = "line"  # 按行读取，返回list
 
 
-WRITE_FILE_TYPE_APPEND = 1  # 追加写入文件
-WRITE_FILE_TYPE_REPLACE = 2  # 覆盖写入文件
+@unique
+class WriteFileMode(Enum):
+    APPEND: str = "append"  # 追加写入文件
+    REPLACE: str = "replace"  # 覆盖写入文件
+
 
 BOM_SIGN = b"\xef\xbb\xbf".decode()
 
@@ -75,29 +78,27 @@ def read_file(file_path: str, read_type: ReadFileMode = ReadFileMode.FULL) -> Un
     return result
 
 
-def write_file(msg: str, file_path: str, append_type: int = WRITE_FILE_TYPE_APPEND, encoding: str = "UTF-8") -> bool:
+def write_file(msg: str, file_path: str, write_type: WriteFileMode = WriteFileMode.APPEND, encoding: str = "UTF-8") -> bool:
     """
     写入文件
 
     :Args:
     - file_path: - 需要写入文件的路径
     - append_type - 写入模式
-        WRITE_FILE_TYPE_APPEND      "a" mode to write file
-        WRITE_FILE_TYPE_REPLACE     "w" mode to write file
+        WriteFileMode.APPEND    "a" mode to write file
+        WriteFileMode.REPLACE   "w" mode to write file
     """
-    if append_type not in [WRITE_FILE_TYPE_APPEND, WRITE_FILE_TYPE_REPLACE]:
-        append_type = WRITE_FILE_TYPE_APPEND
+    if write_type not in [WriteFileMode.APPEND, WriteFileMode.REPLACE]:
+        raise ValueError("invalid write_type")
     if not file_path:
         return False
     file_path = os.path.abspath(file_path)
     if not path.create_dir(os.path.dirname(file_path)):
         return False
-    if append_type == WRITE_FILE_TYPE_APPEND:
+    if write_type == WriteFileMode.APPEND:
         open_type = "a"
-    elif append_type == WRITE_FILE_TYPE_REPLACE:
-        open_type = "w"
     else:
-        return False
+        open_type = "w"
     with open(file_path, open_type, encoding=encoding) as file_handle:
         file_handle.write(msg + "\n")
     return True
