@@ -77,7 +77,7 @@ def main():
 
         # 增加检测标记
         checked_apps_list.append(game_id)
-        file.write_file(",".join(checked_apps_list), checked_apps_file_path, file.WRITE_FILE_TYPE_REPLACE)
+        file.write_file(",".join(checked_apps_list), checked_apps_file_path, file.WriteFileMode.REPLACE)
 
 
 if __name__ == "__main__":
