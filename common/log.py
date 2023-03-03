@@ -39,7 +39,7 @@ NOTICE_LOG_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), LOG_CO
 thread_lock = threading.Lock()
 
 
-def error(msg: str):
+def error(msg: str) -> None:
     """
     error日志
     """
@@ -51,7 +51,7 @@ def error(msg: str):
             file.write_file(msg, _replace_path_macro(ERROR_LOG_PATH))
 
 
-def step(msg: str):
+def step(msg: str) -> None:
     """
     step日志
     """
@@ -63,7 +63,7 @@ def step(msg: str):
             file.write_file(msg, _replace_path_macro(STEP_LOG_PATH))
 
 
-def trace(msg: str):
+def trace(msg: str) -> None:
     """
     trace日志
     """
@@ -75,7 +75,7 @@ def trace(msg: str):
             file.write_file(msg, _replace_path_macro(TRACE_LOG_PATH))
 
 
-def notice(msg: str):
+def notice(msg: str) -> None:
     """
     notice日志
     """

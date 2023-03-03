@@ -77,7 +77,7 @@ def unzip_file(zip_file_path: str, destination_path: str) -> bool:
     return os.path.exists(destination_path)
 
 
-def sort_file(source_path: str, destination_path: str, start_count: int, file_name_length: int):
+def sort_file(source_path: str, destination_path: str, start_count: int, file_name_length: int) -> bool:
     """
     将指定文件夹内的所有文件排序重命名并复制到其他文件夹中
 
@@ -107,7 +107,7 @@ def sort_file(source_path: str, destination_path: str, start_count: int, file_na
 multi_download_thread_semaphore = threading.Semaphore(NET_CONFIG["DOWNLOAD_MULTI_THREAD_MAX_COUNT"])
 
 
-def download(file_url, file_path, recheck_file_extension=False, head_check=False, replace_if_exist: Optional[bool] = None, **kwargs):
+def download(file_url, file_path, recheck_file_extension=False, head_check=False, replace_if_exist: Optional[bool] = None, **kwargs) -> dict:
     """
     现在远程文件到本地
 
@@ -231,7 +231,7 @@ def download(file_url, file_path, recheck_file_extension=False, head_check=False
     return return_code
 
 
-def _check_multi_thread_download_file(file_path):
+def _check_multi_thread_download_file(file_path) -> bool:
     """
     Check fhe file download with multi thread
 
@@ -260,7 +260,7 @@ class MultiThreadDownload(threading.Thread):
         self.error_flag = error_flag
         multi_download_thread_semaphore.acquire()
 
-    def run(self):
+    def run(self) -> bool:
         header_list = {"Range": f"bytes={self.start_pos}-{self.end_pos}"}
         range_size = self.end_pos - self.start_pos + 1
         for retry_count in range(NET_CONFIG["DOWNLOAD_RETRY_COUNT"]):
