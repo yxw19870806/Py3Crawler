@@ -52,7 +52,7 @@ def find_sub_string(haystack, start_string: Optional[str] = None, end_string: Op
         IncludeStringMode.ALL   包含start_string和end_string
     """
     # 参数验证
-    if include_string not in [IncludeStringMode.NONE, IncludeStringMode.START, IncludeStringMode.END, IncludeStringMode.ALL]:
+    if not isinstance(include_string, IncludeStringMode):
         raise ValueError("invalid include_string")
     haystack = str(haystack)
     if start_string is not None:
