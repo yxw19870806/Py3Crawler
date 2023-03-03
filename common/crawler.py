@@ -264,9 +264,9 @@ class Crawler(object):
         if analysis_config(config, "IS_PORT_LISTENER_EVENT", False, ConfigAnalysisMode.BOOLEAN):
             listener_port = analysis_config(config, "LISTENER_PORT", 12345, ConfigAnalysisMode.INTEGER)
             listener_event_bind = {
-                str(port_listener_event.PROCESS_STATUS_PAUSE): net.pause_request,  # 暂停进程
-                str(port_listener_event.PROCESS_STATUS_RUN): net.resume_request,  # 继续进程
-                str(port_listener_event.PROCESS_STATUS_STOP): self.stop_process  # 结束进程（取消当前的线程，完成任务）
+                str(port_listener_event.ProcessStatus.PAUSE): net.pause_request,  # 暂停进程
+                str(port_listener_event.ProcessStatus.RUN): net.resume_request,  # 继续进程
+                str(port_listener_event.ProcessStatus.STOP): self.stop_process  # 结束进程（取消当前的线程，完成任务）
             }
             process_control_thread = port_listener_event.PortListenerEvent(port=listener_port, event_list=listener_event_bind)
             process_control_thread.daemon = True
