@@ -8,6 +8,7 @@ email: hikaru870806@hotmail.com
 import os
 import threading
 import time
+from typing import Final
 
 try:
     from . import file, output, tool
@@ -29,7 +30,7 @@ DEFAULT_LOG_CONFIG = {
     "TRACE_LOG_PATH": "../log/traceLog_{date}.txt",  # 追踪日志保存路径，支持相对路径和绝对路径
     "NOTICE_LOG_PATH": "../log/noticeLog.txt",  # 提示日志保存路径，支持相对路径和绝对路径
 }
-LOG_CONFIG = tool.json_decode(file.read_file(os.path.join(os.path.dirname(__file__), "log_config.json")), DEFAULT_LOG_CONFIG)
+LOG_CONFIG: Final = tool.json_decode(file.read_file(os.path.join(os.path.dirname(__file__), "log_config.json")), DEFAULT_LOG_CONFIG)
 # 日志路径
 ERROR_LOG_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), LOG_CONFIG["ERROR_LOG_PATH"]))
 STEP_LOG_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), LOG_CONFIG["STEP_LOG_PATH"]))

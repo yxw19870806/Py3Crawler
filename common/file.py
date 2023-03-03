@@ -8,7 +8,7 @@ email: hikaru870806@hotmail.com
 import hashlib
 import os
 from enum import unique, Enum
-from typing import Union, Optional
+from typing import Union, Optional, Final
 
 try:
     from . import path
@@ -28,7 +28,7 @@ class WriteFileMode(Enum):
     REPLACE: str = "replace"  # 覆盖写入文件
 
 
-BOM_SIGN = b"\xef\xbb\xbf".decode()
+BOM_SIGN: Final[str] = b"\xef\xbb\xbf".decode()
 
 
 def read_file(file_path: str, read_type: ReadFileMode = ReadFileMode.FULL) -> Union[str, list]:
