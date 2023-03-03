@@ -12,7 +12,7 @@ NAME_COLUMN = 0
 # 检测存档文件中是否有相同的主键
 def check_is_repeat():
     history = []
-    for line in file.read_file(SAVE_FILE_PATH, file.READ_FILE_TYPE_LINE):
+    for line in file.read_file(SAVE_FILE_PATH, file.ReadFileMode.LINE):
         temp_list = line.replace("\n", "").split("\t")
         if temp_list[NAME_COLUMN] in history:
             output.print_msg(temp_list[NAME_COLUMN])

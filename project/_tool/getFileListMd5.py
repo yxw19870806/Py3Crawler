@@ -76,7 +76,7 @@ class GetFileListMd5(crawler.Crawler):
 
     # 根据生产的md5文件查重并是删除
     def check_record_data(self):
-        record_list = file.read_file(self.save_data_path, file.READ_FILE_TYPE_LINE)
+        record_list = file.read_file(self.save_data_path, file.ReadFileMode.LINE)
         duplicate_list = {}
         check_list = {}
         for record in record_list:
@@ -98,8 +98,8 @@ class GetFileListMd5(crawler.Crawler):
     # 重写记录文件
     def rewrite_recode_file(self):
         self.temp_save_data_path = os.path.join(os.path.dirname(__file__), "md5_new.txt")
-        record_list = file.read_file(self.save_data_path, file.READ_FILE_TYPE_LINE)
-        delete_list = file.read_file(self.deleted_file_path, file.READ_FILE_TYPE_LINE)
+        record_list = file.read_file(self.save_data_path, file.ReadFileMode.LINE)
+        delete_list = file.read_file(self.deleted_file_path, file.ReadFileMode.LINE)
         delete_dict = {}
         for key in delete_list:
             delete_dict[key] = 1
@@ -123,7 +123,7 @@ class GetFileListMd5(crawler.Crawler):
 
     def _main(self):
         # 读取记录
-        record_string_list = file.read_file(self.save_data_path, file.READ_FILE_TYPE_LINE)
+        record_string_list = file.read_file(self.save_data_path, file.ReadFileMode.LINE)
         for record in record_string_list:
             temp = record.split("\t")
             self.record_list[os.path.basename(temp[0])] = temp[1]

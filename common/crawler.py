@@ -15,7 +15,7 @@ import threading
 import time
 import traceback
 from enum import Enum, unique, EnumMeta
-from typing import Any, Callable, Dict, Optional, Self, Union
+from typing import Any, Callable, Dict, Optional, Union
 
 # 项目根目录
 PROJECT_ROOT_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
@@ -49,35 +49,35 @@ if platform.system() == "Windows":
 @unique
 class SysConfigKey(Enum):
     # 程序是否支持下载图片功能
-    DOWNLOAD_PHOTO = "download_photo"
+    DOWNLOAD_PHOTO: str = "download_photo"
     # 程序是否支持下载视频功能
-    DOWNLOAD_VIDEO = "download_video"
+    DOWNLOAD_VIDEO: str = "download_video"
     # 程序是否支持下载音频功能
-    DOWNLOAD_AUDIO = "download_audio"
+    DOWNLOAD_AUDIO: str = "download_audio"
     # 程序是否支持下载文本内容功能
-    DOWNLOAD_CONTENT = "download_content"
+    DOWNLOAD_CONTENT: str = "download_content"
     # 程序是否默认需要设置代理
-    SET_PROXY = "set_proxy"
+    SET_PROXY: str = "set_proxy"
     # 程序是否支持不需要存档文件就可以开始运行
-    NOT_CHECK_SAVE_DATA = "no_save_data"
+    NOT_CHECK_SAVE_DATA: str = "no_save_data"
     # 程序没有任何下载行为
-    NOT_DOWNLOAD = "no_download"
+    NOT_DOWNLOAD: str = "no_download"
     # 程序是否需要从浏览器存储的cookie中获取指定cookie的值
-    GET_COOKIE = "get_cookie"
+    GET_COOKIE: str = "get_cookie"
     # 程序额外应用配置
     # 传入参数类型为tuple，每一位参数为长度3的tuple，顺序为(配置名字，默认值，配置读取方式)，同analysis_config方法后三个参数
-    APP_CONFIG = "app_config"
+    APP_CONFIG: str = "app_config"
     # 程序默认的app配置文件路径
-    APP_CONFIG_PATH = "app_config_path"
+    APP_CONFIG_PATH: str = "app_config_path"
 
 
 @unique
 class ConfigAnalysisMode(Enum):
-    RAW = "raw"
-    INTEGER = "int"
-    BOOLEAN = "bool"
-    FLOAT = "float"
-    PATH = "path"
+    RAW: str = "raw"
+    INTEGER: str = "int"
+    BOOLEAN: str = "bool"
+    FLOAT: str = "float"
+    PATH: str = "path"
 
 
 class Crawler(object):
@@ -657,7 +657,7 @@ class DownloadThread(CrawlerThread):
     def get_result(self) -> bool:
         return bool(self.result)
 
-    def set_download_header(self, header_list: dict) -> Self:
+    def set_download_header(self, header_list: dict) -> CrawlerThread:
         self.header_list = header_list
         return self
 
@@ -761,7 +761,7 @@ def read_save_data(save_data_path: str, key_index: int = 0, default_value_list: 
     result_list = {}
     if not os.path.exists(save_data_path):
         return result_list
-    for single_save_data in file.read_file(save_data_path, file.READ_FILE_TYPE_LINE):
+    for single_save_data in file.read_file(save_data_path, file.ReadFileMode.LINE):
         single_save_data = single_save_data.replace("\n", "").replace("\r", "")
         if len(single_save_data) == 0:
             continue
