@@ -657,7 +657,7 @@ class DownloadThread(CrawlerThread):
     def get_result(self) -> bool:
         return bool(self.result)
 
-    def set_download_header(self, header_list: dict) -> CrawlerThread:
+    def set_download_header(self, header_list: dict) -> "DownloadThread":
         self.header_list = header_list
         return self
 

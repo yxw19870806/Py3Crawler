@@ -14,7 +14,7 @@ import string
 import sys
 import time
 from enum import unique, Enum
-from typing import Optional, Union, List, NoReturn
+from typing import Optional, Union, List, NoReturn, Any
 
 # if sys.stdout.encoding != "UTF-8":
 #     raise Exception("项目编码必须是UTF-8，请在IDE中修改相关设置")
@@ -100,7 +100,7 @@ def is_integer(number) -> bool:
         return not re.compile("^[-+]?[0-9]+$").match(str(number)) is None
 
 
-def json_decode(json_string: str, default_value=None) -> Union[list, dict, str]:
+def json_decode(json_string: str, default_value=None) -> Any:
     """
     将json字符串解码为json对象
     """

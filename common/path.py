@@ -10,7 +10,7 @@ import platform
 import shutil
 import time
 from enum import unique, Enum
-from typing import Optional, List
+from typing import List
 
 
 @unique
