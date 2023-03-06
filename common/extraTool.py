@@ -260,7 +260,7 @@ class MultiThreadDownload(threading.Thread):
         self.error_flag = error_flag
         multi_download_thread_semaphore.acquire()
 
-    def run(self) -> bool:
+    def run(self) -> None:
         header_list = {"Range": f"bytes={self.start_pos}-{self.end_pos}"}
         range_size = self.end_pos - self.start_pos + 1
         for retry_count in range(NET_CONFIG["DOWNLOAD_RETRY_COUNT"]):
