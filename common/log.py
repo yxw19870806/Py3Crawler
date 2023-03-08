@@ -8,6 +8,7 @@ email: hikaru870806@hotmail.com
 import os
 import threading
 import time
+from typing import Final
 
 try:
     from . import file, output, tool
@@ -29,7 +30,7 @@ DEFAULT_LOG_CONFIG = {
     "TRACE_LOG_PATH": "../log/traceLog_{date}.txt",  # 追踪日志保存路径，支持相对路径和绝对路径
     "NOTICE_LOG_PATH": "../log/noticeLog.txt",  # 提示日志保存路径，支持相对路径和绝对路径
 }
-LOG_CONFIG = tool.json_decode(file.read_file(os.path.join(os.path.dirname(__file__), "log_config.json")), DEFAULT_LOG_CONFIG)
+LOG_CONFIG: Final = tool.json_decode(file.read_file(os.path.join(os.path.dirname(__file__), "log_config.json")), DEFAULT_LOG_CONFIG)
 # 日志路径
 ERROR_LOG_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), LOG_CONFIG["ERROR_LOG_PATH"]))
 STEP_LOG_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), LOG_CONFIG["STEP_LOG_PATH"]))
@@ -39,7 +40,7 @@ NOTICE_LOG_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), LOG_CO
 thread_lock = threading.Lock()
 
 
-def error(msg: str):
+def error(msg: str) -> None:
     """
     error日志
     """
@@ -51,7 +52,7 @@ def error(msg: str):
             file.write_file(msg, _replace_path_macro(ERROR_LOG_PATH))
 
 
-def step(msg: str):
+def step(msg: str) -> None:
     """
     step日志
     """
@@ -63,7 +64,7 @@ def step(msg: str):
             file.write_file(msg, _replace_path_macro(STEP_LOG_PATH))
 
 
-def trace(msg: str):
+def trace(msg: str) -> None:
     """
     trace日志
     """
@@ -75,7 +76,7 @@ def trace(msg: str):
             file.write_file(msg, _replace_path_macro(TRACE_LOG_PATH))
 
 
-def notice(msg: str):
+def notice(msg: str) -> None:
     """
     notice日志
     """

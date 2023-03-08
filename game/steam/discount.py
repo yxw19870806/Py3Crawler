@@ -23,7 +23,7 @@ EXTRA_CONFIG_FILE_PATH = os.path.join(os.path.dirname(__file__), "lib", "discoun
 
 # 打折游戏列表保存到文件
 def save_discount_list(cache_file_path, discount_game_list):
-    file.write_file(tool.json_encode(discount_game_list), cache_file_path, file.WRITE_FILE_TYPE_REPLACE)
+    file.write_file(tool.json_encode(discount_game_list), cache_file_path, file.WriteFileMode.REPLACE)
 
 
 # 获取文件中的打折列表
@@ -71,7 +71,7 @@ def main():
     game_dlc_list = steam_class.load_game_dlc_list()
 
     # 从文件里获取打折列表
-    discount_game_list: list = load_discount_list(cache_file_path)
+    discount_game_list = load_discount_list(cache_file_path)
     if not discount_game_list:
         # 调用API获取打折列表
         try:

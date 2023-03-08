@@ -11,7 +11,7 @@ from common import browser, crawler, net
 from typing import Optional
 
 
-def quickly_set_proxy(config: Optional[dict] = None, is_auto: bool = True):
+def quickly_set_proxy(config: Optional[dict] = None, is_auto: bool = True) -> None:
     """
     读取配置文件，快速设置代理
 
@@ -60,7 +60,7 @@ def quickly_get_all_cookies_from_browser(config: Optional[dict] = None) -> dict:
     return browser.get_all_cookie_from_browser(browser_type, cookie_path)
 
 
-def _get_config():
+def _get_config() -> dict:
     config = crawler.read_config(crawler.PROJECT_CONFIG_PATH)
     app_config_path = os.path.abspath(os.path.join(crawler.PROJECT_APP_PATH, "app.ini"))
     if os.path.exists(app_config_path):

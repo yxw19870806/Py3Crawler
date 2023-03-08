@@ -9,38 +9,47 @@ import os
 import platform
 import shutil
 import time
-from typing import Optional, List
-
-CREATE_DIR_MODE_IGNORE_IF_EXIST = 1
-CREATE_DIR_MODE_DELETE_IF_EXIST = 2
-RETURN_FILE_LIST_ASC = 1
-RETURN_FILE_LIST_DESC = 2
+from enum import unique, Enum
+from typing import List
 
 
-def create_dir(dir_path: str, create_mode: int = CREATE_DIR_MODE_IGNORE_IF_EXIST) -> bool:
+@unique
+class CreateDirMode(Enum):
+    IGNORE: str = "ignore"  # 目录存在时忽略
+    DELETE: str = "delete"  # 目录存在时先删除再创建
+
+
+@unique
+class OrderType(Enum):
+    ASC: str = "asc"  # 升序
+    DESC: str = "desc"  # 降序
+    DEFAULT: str = "default"  # 默认
+
+
+def create_dir(dir_path: str, create_mode: CreateDirMode = CreateDirMode.IGNORE) -> bool:
     """
     创建文件夹
 
     :Args:
     - create_mode - 创建模式
-        CREATE_DIR_MODE_IGNORE_IF_EXIST   当目标不能存在时创建，如果目标目录存在则跳过
-        CREATE_DIR_MODE_DELETE_IF_EXIST   当目录
+        CreateDirMode.IGNORE   当目录存在时忽略
+        CreateDirMode.DELETE   当目录存在时先删除再创建
 
     :Returns:
         True    创建成功
         False   创建失败
     """
-    if create_mode not in [CREATE_DIR_MODE_IGNORE_IF_EXIST, CREATE_DIR_MODE_DELETE_IF_EXIST]:
-        create_mode = CREATE_DIR_MODE_IGNORE_IF_EXIST
+    if not isinstance(create_mode, CreateDirMode):
+        raise ValueError("invalid create_mode")
     dir_path = os.path.abspath(dir_path)
     # 目录存在
     if os.path.exists(dir_path):
-        if create_mode == CREATE_DIR_MODE_IGNORE_IF_EXIST:
+        if create_mode == CreateDirMode.IGNORE:
             if os.path.isdir(dir_path):
                 return True
             else:
                 return False
-        elif create_mode == CREATE_DIR_MODE_DELETE_IF_EXIST:
+        else:
             if os.path.isdir(dir_path):
                 # empty dir
                 if not os.listdir(dir_path):
@@ -83,7 +92,7 @@ def delete_dir_or_file(dir_path: str) -> bool:
             return False
 
 
-def delete_null_dir(dir_path: str):
+def delete_null_dir(dir_path: str) -> None:
     """
     删除所有空的子目录
     """
@@ -97,22 +106,22 @@ def delete_null_dir(dir_path: str):
             os.rmdir(dir_path)
 
 
-def get_dir_files_name(dir_path: str, order: Optional[str] = None, recursive: bool = False, full_path: bool = False) -> List[str]:
+def get_dir_files_name(dir_path: str, order: OrderType = OrderType.DEFAULT, recursive: bool = False, full_path: bool = False) -> List[str]:
     """
     获取目录下的所有文件名
 
     :Args:
     - order - 排序模式
-        RETURN_FILE_LIST_ASC    根据文件名升序
-        RETURN_FILE_LIST_DESC   根据文件名降序
-        Other                   系统默认返回数据
+        OrderType.ASC       根据文件名升序
+        OrderType.DESC      根据文件名降序
+        OrderType>DEFAULT   默认返回数据
     - recursive - 是否递归获取子目录
     - full_path - 返回的列表是否包含完整路径
     """
+    if not isinstance(order, OrderType):
+        raise ValueError("invalid order")
     dir_path = os.path.abspath(dir_path)
-    if not os.path.exists(dir_path):
-        return []
-    if not os.path.isdir(dir_path):
+    if not os.path.exists(dir_path) or not os.path.isdir(dir_path):
         return []
 
     if recursive:
@@ -130,10 +139,10 @@ def get_dir_files_name(dir_path: str, order: Optional[str] = None, recursive: bo
         except PermissionError:
             return []
     # 升序
-    if order == RETURN_FILE_LIST_ASC:
+    if order == OrderType.ASC:
         return sorted(files_list, reverse=False)
     # 降序
-    elif order == RETURN_FILE_LIST_DESC:
+    elif order == OrderType.DESC:
         return sorted(files_list, reverse=True)
     else:
         return files_list

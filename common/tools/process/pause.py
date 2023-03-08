@@ -9,4 +9,4 @@ from common import port_listener_event
 from common.tools.process import process_control
 
 if __name__ == "__main__":
-    process_control.ProcessControl().send_code(port_listener_event.PROCESS_STATUS_PAUSE)
+    process_control.ProcessControl().send_code(port_listener_event.ProcessStatus.PAUSE)

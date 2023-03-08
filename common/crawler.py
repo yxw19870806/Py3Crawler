@@ -26,12 +26,14 @@ PROJECT_APP_PATH = os.getcwd()
 # webdriver文件路径
 CHROME_WEBDRIVER_PATH = os.path.abspath(os.path.join(PROJECT_ROOT_PATH, "common", "chromedriver.exe"))
 
+
 class CrawlerEnumMeta(EnumMeta):
     def __getitem__(self, name):
         try:
             return super().__getitem__(name.upper())
         except (TypeError, KeyError):
             return "unknown"
+
 
 try:
     from . import browser, file, log, net, output, path, port_listener_event, tool
@@ -47,35 +49,35 @@ if platform.system() == "Windows":
 @unique
 class SysConfigKey(Enum):
     # 程序是否支持下载图片功能
-    DOWNLOAD_PHOTO = "download_photo"
+    DOWNLOAD_PHOTO: str = "download_photo"
     # 程序是否支持下载视频功能
-    DOWNLOAD_VIDEO = "download_video"
+    DOWNLOAD_VIDEO: str = "download_video"
     # 程序是否支持下载音频功能
-    DOWNLOAD_AUDIO = "download_audio"
+    DOWNLOAD_AUDIO: str = "download_audio"
     # 程序是否支持下载文本内容功能
-    DOWNLOAD_CONTENT = "download_content"
+    DOWNLOAD_CONTENT: str = "download_content"
     # 程序是否默认需要设置代理
-    SET_PROXY = "set_proxy"
+    SET_PROXY: str = "set_proxy"
     # 程序是否支持不需要存档文件就可以开始运行
-    NOT_CHECK_SAVE_DATA = "no_save_data"
+    NOT_CHECK_SAVE_DATA: str = "no_save_data"
     # 程序没有任何下载行为
-    NOT_DOWNLOAD = "no_download"
+    NOT_DOWNLOAD: str = "no_download"
     # 程序是否需要从浏览器存储的cookie中获取指定cookie的值
-    GET_COOKIE = "get_cookie"
+    GET_COOKIE: str = "get_cookie"
     # 程序额外应用配置
     # 传入参数类型为tuple，每一位参数为长度3的tuple，顺序为(配置名字，默认值，配置读取方式)，同analysis_config方法后三个参数
-    APP_CONFIG = "app_config"
+    APP_CONFIG: str = "app_config"
     # 程序默认的app配置文件路径
-    APP_CONFIG_PATH = "app_config_path"
+    APP_CONFIG_PATH: str = "app_config_path"
 
 
 @unique
 class ConfigAnalysisMode(Enum):
-    RAW = "raw"
-    INTEGER = "int"
-    BOOLEAN = "bool"
-    FLOAT = "float"
-    PATH = "path"
+    RAW: str = "raw"
+    INTEGER: str = "int"
+    BOOLEAN: str = "bool"
+    FLOAT: str = "float"
+    PATH: str = "path"
 
 
 class Crawler(object):
@@ -262,9 +264,9 @@ class Crawler(object):
         if analysis_config(config, "IS_PORT_LISTENER_EVENT", False, ConfigAnalysisMode.BOOLEAN):
             listener_port = analysis_config(config, "LISTENER_PORT", 12345, ConfigAnalysisMode.INTEGER)
             listener_event_bind = {
-                str(port_listener_event.PROCESS_STATUS_PAUSE): net.pause_request,  # 暂停进程
-                str(port_listener_event.PROCESS_STATUS_RUN): net.resume_request,  # 继续进程
-                str(port_listener_event.PROCESS_STATUS_STOP): self.stop_process  # 结束进程（取消当前的线程，完成任务）
+                str(port_listener_event.ProcessStatus.PAUSE): net.pause_request,  # 暂停进程
+                str(port_listener_event.ProcessStatus.RUN): net.resume_request,  # 继续进程
+                str(port_listener_event.ProcessStatus.STOP): self.stop_process  # 结束进程（取消当前的线程，完成任务）
             }
             process_control_thread = port_listener_event.PortListenerEvent(port=listener_port, event_list=listener_event_bind)
             process_control_thread.daemon = True
@@ -298,7 +300,7 @@ class Crawler(object):
 
         output.print_msg("初始化完成")
 
-    def main(self):
+    def main(self) -> None:
         try:
             self.init()
 
@@ -307,7 +309,7 @@ class Crawler(object):
             if self.crawler_thread and issubclass(self.crawler_thread, CrawlerThread):
                 self.stop_process()
             else:
-                if isinstance(e, SystemExit) and e.code == tool.PROCESS_EXIT_CODE_ERROR:
+                if isinstance(e, SystemExit) and e.code == tool.ExitCode.ERROR:
                     log.step("异常退出")
                 else:
                     log.step("提前退出")
@@ -327,7 +329,7 @@ class Crawler(object):
         # 结束日志
         self.end_message()
 
-    def _main(self):
+    def _main(self) -> None:
         if self.crawler_thread and issubclass(self.crawler_thread, CrawlerThread):
             # 循环下载每个id
             thread_list = []
@@ -347,27 +349,27 @@ class Crawler(object):
             while len(thread_list) > 0:
                 thread_list.pop().join()
 
-    def init(self):
+    def init(self) -> None:
         """
         其他初始化的方法
         """
         pass
 
-    def done(self):
+    def done(self) -> None:
         """
         其他结束操作
         """
         pass
 
     @staticmethod
-    def pause_process():
+    def pause_process() -> None:
         net.pause_request()
 
     @staticmethod
-    def resume_process():
+    def resume_process() -> None:
         net.resume_request()
 
-    def stop_process(self):
+    def stop_process(self) -> None:
         output.print_msg("stop process")
         self.process_status = False
         net.EXIT_FLAG = True
@@ -382,18 +384,18 @@ class Crawler(object):
     def is_running(self) -> bool:
         return self.process_status
 
-    def running_check(self):
+    def running_check(self) -> None:
         if not self.is_running():
-            tool.process_exit(tool.PROCESS_EXIT_CODE_NORMAL)
+            tool.process_exit(tool.ExitCode.NORMAL)
 
-    def write_remaining_save_data(self):
+    def write_remaining_save_data(self) -> None:
         """
         将剩余未处理的存档数据写入临时存档文件
         """
         if len(self.save_data) > 0 and self.temp_save_data_path:
             file.write_file(tool.list_to_string(list(self.save_data.values())), self.temp_save_data_path)
 
-    def rewrite_save_file(self):
+    def rewrite_save_file(self) -> None:
         """
         将临时存档文件按照主键排序后写入原始存档文件
         只支持一行一条记录，每条记录格式相同的存档文件
@@ -401,10 +403,10 @@ class Crawler(object):
         if self.temp_save_data_path:
             save_data = read_save_data(self.temp_save_data_path, 0, [])
             temp_list = [save_data[key] for key in sorted(save_data.keys())]
-            file.write_file(tool.list_to_string(temp_list), self.save_data_path, file.WRITE_FILE_TYPE_REPLACE)
+            file.write_file(tool.list_to_string(temp_list), self.save_data_path, file.WriteFileMode.REPLACE)
             path.delete_dir_or_file(self.temp_save_data_path)
 
-    def end_message(self):
+    def end_message(self) -> None:
         message = f"全部下载完毕，耗时{self.get_run_time()}秒"
         download_result = []
         if self.is_download_photo:
@@ -417,12 +419,12 @@ class Crawler(object):
             message += "，共计下载" + "，".join(download_result)
         log.step(message)
 
-    def start_parse(self, description: str):
+    def start_parse(self, description: str) -> None:
         self.running_check()
         log.step("开始解析 " + description)
 
     @staticmethod
-    def parse_result(description: str, parse_result_list: Union[list, dict]):
+    def parse_result(description: str, parse_result_list: Union[list, dict]) -> None:
         log.trace("%s 解析结果：%s" % (description, parse_result_list))
         log.step("%s 解析数量：%s" % (description, len(parse_result_list)))
 
@@ -453,7 +455,7 @@ class Crawler(object):
             if failure_callback is None or failure_callback(file_url, file_path, file_description, download_return):
                 log.error("%s %s 下载失败，原因：%s" % (file_description, file_url, download_failre(download_return.code)))
                 if self.exit_after_download_failure:
-                    tool.process_exit(tool.PROCESS_EXIT_CODE_NORMAL)
+                    tool.process_exit(tool.ExitCode.NORMAL)
         return download_return
 
 
@@ -490,13 +492,13 @@ class CrawlerThread(threading.Thread):
         if single_save_data:
             self.step("开始")
 
-    def run(self):
+    def run(self) -> None:
         try:
             self._run()
         except KeyboardInterrupt:
             self.step("提前退出")
         except SystemExit as e:
-            if e.code == tool.PROCESS_EXIT_CODE_ERROR:
+            if e.code == tool.ExitCode.ERROR:
                 self.error("异常退出")
             else:
                 self.step("提前退出")
@@ -511,7 +513,7 @@ class CrawlerThread(threading.Thread):
         # 写入存档
         if self.single_save_data and self.main_thread.temp_save_data_path:
             with self.thread_lock:
-                file.write_file("\t".join(self.single_save_data), self.main_thread.temp_save_data_path, file.WRITE_FILE_TYPE_APPEND)
+                file.write_file("\t".join(self.single_save_data), self.main_thread.temp_save_data_path)
 
         # 主线程计数累加
         if self.main_thread.is_download_photo:
@@ -541,31 +543,31 @@ class CrawlerThread(threading.Thread):
         # 唤醒主线程
         self.notify_main_thread()
 
-    def _run(self):
+    def _run(self) -> None:
         pass
 
-    def main_thread_check(self):
+    def main_thread_check(self) -> None:
         """
         检测主线程是否已经结束（外部中断）
         """
         if not self.main_thread.is_running():
             self.notify_main_thread()
-            tool.process_exit(tool.PROCESS_EXIT_CODE_NORMAL)
+            tool.process_exit(tool.ExitCode.NORMAL)
 
-    def notify_main_thread(self):
+    def notify_main_thread(self) -> None:
         """
         线程下完完成后唤醒主线程，开启新的线程（必须在线程完成后手动调用，否则会卡死主线程）
         """
         if isinstance(self.main_thread, Crawler):
             self.main_thread.thread_semaphore.release()
 
-    def check_download_failure_exit(self, is_process_exit: bool = True):
+    def check_download_failure_exit(self, is_process_exit: bool = True) -> bool:
         """
         当下载失败，检测是否要退出线程
         """
         if self.main_thread.exit_after_download_failure:
             if is_process_exit:
-                tool.process_exit(tool.PROCESS_EXIT_CODE_ERROR)
+                tool.process_exit(tool.ExitCode.ERROR)
             else:
                 return True
         return False
@@ -576,7 +578,7 @@ class CrawlerThread(threading.Thread):
         else:
             return message
 
-    def trace(self, message: str, include_display_name: bool = True):
+    def trace(self, message: str, include_display_name: bool = True) -> None:
         """
         trace log
         """
@@ -584,7 +586,7 @@ class CrawlerThread(threading.Thread):
             message = self.format_message(message)
         log.trace(message)
 
-    def step(self, message: str, include_display_name: bool = True):
+    def step(self, message: str, include_display_name: bool = True) -> None:
         """
         step log
         """
@@ -592,7 +594,7 @@ class CrawlerThread(threading.Thread):
             message = self.format_message(message)
         log.step(message)
 
-    def error(self, message: str, include_display_name: bool = True):
+    def error(self, message: str, include_display_name: bool = True) -> None:
         """
         error log
         """
@@ -600,11 +602,11 @@ class CrawlerThread(threading.Thread):
             message = self.format_message(message)
         log.error(message)
 
-    def start_parse(self, description: str):
+    def start_parse(self, description: str) -> None:
         self.main_thread_check()
         self.step("开始解析 " + description)
 
-    def parse_result(self, description: str, parse_result_list: Union[list, dict]):
+    def parse_result(self, description: str, parse_result_list: Union[list, dict]) -> None:
         self.trace("%s 解析结果：%s" % (description, parse_result_list))
         self.step("%s 解析数量：%s" % (description, len(parse_result_list)))
 
@@ -648,14 +650,14 @@ class DownloadThread(CrawlerThread):
         self.result: Optional[net.Download] = None
         self.header_list = {}
 
-    def run(self):
+    def run(self) -> None:
         self.result = self.download(self.file_url, self.file_path, self.file_description, header_list=self.header_list)
         self.notify_main_thread()
 
     def get_result(self) -> bool:
         return bool(self.result)
 
-    def set_download_header(self, header_list: dict):
+    def set_download_header(self, header_list: dict) -> "DownloadThread":
         self.header_list = header_list
         return self
 
@@ -690,7 +692,7 @@ def read_config(config_path: str) -> dict:
     return config
 
 
-def analysis_config(config: dict, key: str, default_value: Any, mode: ConfigAnalysisMode = ConfigAnalysisMode.RAW):
+def analysis_config(config: dict, key: str, default_value: Any, mode: ConfigAnalysisMode = ConfigAnalysisMode.RAW) -> Any:
     """
     解析配置
 
@@ -759,7 +761,7 @@ def read_save_data(save_data_path: str, key_index: int = 0, default_value_list: 
     result_list = {}
     if not os.path.exists(save_data_path):
         return result_list
-    for single_save_data in file.read_file(save_data_path, file.READ_FILE_TYPE_LINE):
+    for single_save_data in file.read_file(save_data_path, file.ReadFileMode.LINE):
         single_save_data = single_save_data.replace("\n", "").replace("\r", "")
         if len(single_save_data) == 0:
             continue
@@ -787,7 +789,7 @@ def read_save_data(save_data_path: str, key_index: int = 0, default_value_list: 
     return result_list
 
 
-def get_json_value(json_data, *args, **kwargs):
+def get_json_value(json_data, *args, **kwargs) -> Any:
     """
     获取一个json文件的指定字段
 

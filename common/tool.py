@@ -13,7 +13,8 @@ import re
 import string
 import sys
 import time
-from typing import Optional, Union, List
+from enum import unique, Enum
+from typing import Optional, Union, List, NoReturn, Any
 
 # if sys.stdout.encoding != "UTF-8":
 #     raise Exception("项目编码必须是UTF-8，请在IDE中修改相关设置")
@@ -24,35 +25,40 @@ if getattr(sys, "frozen", False):
 else:
     IS_EXECUTABLE = False
 
-SUB_STRING_MODE_NONE = 0  # 不包含start_string和end_string
-SUB_STRING_MODE_ONLY_START = 1  # 只包含start_string
-SUB_STRING_MODE_ONLY_END = 2  # 只包含end_string
-SUB_STRING_MODE_BOTH = 3  # 同时包含start_string和end_string
 
-PROCESS_EXIT_CODE_NORMAL = 0
-PROCESS_EXIT_CODE_ERROR = 1
+@unique
+class IncludeStringMode(Enum):
+    NONE: str = "none"  # 不包含start_string和end_string
+    START: str = "start"  # 只包含start_string
+    END: str = "end"  # 只包含end_string
+    ALL: str = "all"  # 同时包含start_string和end_string
 
 
-def find_sub_string(haystack, start_string: Optional[str] = None, end_string: Optional[str] = None, include_string: int = SUB_STRING_MODE_NONE) -> str:
+@unique
+class ExitCode(Enum):
+    NORMAL: int = 0
+    ERROR: int = 1
+
+
+def find_sub_string(haystack, start_string: Optional[str] = None, end_string: Optional[str] = None, include_string: IncludeStringMode = IncludeStringMode.NONE) -> str:
     """
     根据开始与结束的字符串，截取字符串
 
     :Args:
     - include_string - 是否包含查询条件的字符串
-        0   都不包含
-        1   只包含start_string
-        2   只包含end_string
-        3   包含start_string和end_string
+        IncludeStringMode.NONE  都不包含
+        IncludeStringMode.START 只包含start_string
+        IncludeStringMode.END   只包含end_string
+        IncludeStringMode.ALL   包含start_string和end_string
     """
     # 参数验证
+    if not isinstance(include_string, IncludeStringMode):
+        raise ValueError("invalid include_string")
     haystack = str(haystack)
     if start_string is not None:
         start_string = str(start_string)
     if end_string is not None:
         end_string = str(end_string)
-    include_string = int(include_string)
-    if SUB_STRING_MODE_NONE < include_string > SUB_STRING_MODE_BOTH:
-        include_string = SUB_STRING_MODE_BOTH
 
     if start_string is None:
         start_index = 0
@@ -75,9 +81,9 @@ def find_sub_string(haystack, start_string: Optional[str] = None, end_string: Op
 
     find_string = haystack[start_index:stop_index]
     # 是否需要追加开始或结束字符串
-    if include_string & SUB_STRING_MODE_ONLY_START == SUB_STRING_MODE_ONLY_START and start_string is not None:
+    if start_string is not None and include_string in [IncludeStringMode.START, IncludeStringMode.ALL]:
         find_string = start_string + find_string
-    if include_string & SUB_STRING_MODE_ONLY_END == SUB_STRING_MODE_ONLY_END and end_string is not None:
+    if end_string is not None and include_string in [IncludeStringMode.END, IncludeStringMode.ALL]:
         find_string += end_string
     return find_string
 
@@ -94,7 +100,7 @@ def is_integer(number) -> bool:
         return not re.compile("^[-+]?[0-9]+$").match(str(number)) is None
 
 
-def json_decode(json_string: str, default_value=None) -> Union[list, dict, str]:
+def json_decode(json_string: str, default_value=None) -> Any:
     """
     将json字符串解码为json对象
     """
@@ -192,19 +198,19 @@ def string_md5(source_string: str) -> str:
     return md5_class.hexdigest()
 
 
-def process_exit(exit_code: int = PROCESS_EXIT_CODE_ERROR):
+def process_exit(exit_code: ExitCode = ExitCode.ERROR) -> NoReturn:
     """
     结束进程
 
     :Args:
     - exit_code - 状态码
-        0   正常结束
-        1   异常退出
+        ExitCode.NORMAL     正常结束
+        ExitCode.ERROR      异常退出
     """
     sys.exit(exit_code)
 
 
-def shutdown(delay_time: int = 30):
+def shutdown(delay_time: int = 30) -> None:
     """
     定时关机
     """

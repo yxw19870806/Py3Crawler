@@ -17,7 +17,7 @@ def main():
 
     # 所有打折游戏
     discount_game_file_path = os.path.abspath(os.path.join(steam_class.cache_data_path, "discount.txt"))
-    discount_game_list: list = tool.json_decode(file.read_file(discount_game_file_path), [])
+    discount_game_list = tool.json_decode(file.read_file(discount_game_file_path), [])
     game_id_list = []
     for game_info in discount_game_list:
         if game_info["type"] == "game":
@@ -77,7 +77,7 @@ def main():
 
         # 增加检测标记
         checked_apps_list.append(game_id)
-        file.write_file(",".join(checked_apps_list), checked_apps_file_path, file.WRITE_FILE_TYPE_REPLACE)
+        file.write_file(",".join(checked_apps_list), checked_apps_file_path, file.WriteFileMode.REPLACE)
 
 
 if __name__ == "__main__":

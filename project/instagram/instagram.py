@@ -66,7 +66,7 @@ def login_from_console():
                 if _do_login(email, password):
                     if IS_LOCAL_SAVE_SESSION and SESSION_DATA_PATH:
                         encrypt_string = crypto.Crypto().encrypt(tool.json_encode({"email": email, "password": password}))
-                        file.write_file(encrypt_string, SESSION_DATA_PATH, file.WRITE_FILE_TYPE_REPLACE)
+                        file.write_file(encrypt_string, SESSION_DATA_PATH, file.WriteFileMode.REPLACE)
                     return True
                 return False
             elif input_str in ["n", "no"]:

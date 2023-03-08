@@ -214,7 +214,7 @@ def get_post_page(post_url, post_id):
     elif post_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(post_response.status))
     post_response_content = post_response.data.decode(errors="ignore")
-    post_page_head = tool.find_sub_string(post_response_content, "<head", "</head>", tool.SUB_STRING_MODE_BOTH)
+    post_page_head = tool.find_sub_string(post_response_content, "<head", "</head>", tool.IncludeStringMode.ALL)
     if not post_page_head:
         raise crawler.CrawlerException("页面截取正文失败\n" + post_response_content)
     # 获取og_type（页面类型的是视频还是图片或其他）
