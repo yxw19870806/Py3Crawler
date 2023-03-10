@@ -7,10 +7,10 @@ python.exe -m pip install --upgrade pip
 echo install lzstring
 pip.exe install lzstring
 
-echo install PyExecJS
+echo install PyExecJS (execjs)
 pip.exe install PyExecJS
 
-echo install Pillow
+echo install Pillow (PIL)
 pip.exe install Pillow
 
 echo install Urllib3
