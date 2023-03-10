@@ -260,9 +260,9 @@ class Crawler(object):
                 self.stop_process()
             else:
                 if isinstance(e, SystemExit) and e.code == tool.ExitCode.ERROR:
-                    log.step("异常退出")
+                    log.info("异常退出")
                 else:
-                    log.step("提前退出")
+                    log.info("提前退出")
         except Exception as e:
             log.error("未知异常")
             log.error(str(e) + "\n" + traceback.format_exc())
@@ -367,16 +367,16 @@ class Crawler(object):
             download_result.append(f"音频{self.total_audio_count}个")
         if download_result:
             message += "，共计下载" + "，".join(download_result)
-        log.step(message)
+        log.info(message)
 
     def start_parse(self, description: str) -> None:
         self.running_check()
-        log.step("开始解析 " + description)
+        log.info("开始解析 " + description)
 
     @staticmethod
     def parse_result(description: str, parse_result_list: Union[list, dict]) -> None:
-        log.trace("%s 解析结果：%s" % (description, parse_result_list))
-        log.step("%s 解析数量：%s" % (description, len(parse_result_list)))
+        log.debug("%s 解析结果：%s" % (description, parse_result_list))
+        log.info("%s 解析数量：%s" % (description, len(parse_result_list)))
 
     def download(self, file_url: str, file_path: str, file_description: str, success_callback: Callable[[str, str, str, net.Download], bool] = None,
                  failure_callback: Callable[[str, str, str, net.Download], bool] = None, **kwargs) -> net.Download:
@@ -396,11 +396,11 @@ class Crawler(object):
                 False - 不需要
         """
         self.running_check()
-        log.step("开始下载 %s %s" % (file_description, file_url))
+        log.info("开始下载 %s %s" % (file_description, file_url))
         download_return = net.Download(file_url, file_path, **kwargs)
         if download_return.status == net.Download.DOWNLOAD_SUCCEED:
             if success_callback is None or success_callback(file_url, file_path, file_description, download_return):
-                log.step("%s 下载成功" % file_description)
+                log.info("%s 下载成功" % file_description)
         else:
             if failure_callback is None or failure_callback(file_url, file_path, file_description, download_return):
                 log.error("%s %s 下载失败，原因：%s" % (file_description, file_url, download_failre(download_return.code)))
@@ -440,18 +440,18 @@ class CrawlerThread(threading.Thread):
         self.total_content_count = 0
         self.temp_path_list = []
         if single_save_data:
-            self.step("开始")
+            self.info("开始")
 
     def run(self) -> None:
         try:
             self._run()
         except KeyboardInterrupt:
-            self.step("提前退出")
+            self.info("提前退出")
         except SystemExit as e:
             if e.code == tool.ExitCode.ERROR:
                 self.error("异常退出")
             else:
-                self.step("提前退出")
+                self.info("提前退出")
         except Exception as e:
             self.error("未知异常")
             self.error(str(e) + "\n" + traceback.format_exc(), False)
@@ -488,7 +488,7 @@ class CrawlerThread(threading.Thread):
             download_result.append(f"音频{self.total_audio_count}个")
         if download_result:
             message += "，共计下载" + "，".join(download_result)
-        self.step(message)
+        self.info(message)
 
         # 唤醒主线程
         self.notify_main_thread()
@@ -528,21 +528,29 @@ class CrawlerThread(threading.Thread):
         else:
             return message
 
-    def trace(self, message: str, include_display_name: bool = True) -> None:
+    def debug(self, message: str, include_display_name: bool = True) -> None:
         """
         trace log
         """
         if include_display_name:
             message = self.format_message(message)
-        log.trace(message)
+        log.debug(message)
 
-    def step(self, message: str, include_display_name: bool = True) -> None:
+    def info(self, message: str, include_display_name: bool = True) -> None:
         """
         step log
         """
         if include_display_name:
             message = self.format_message(message)
-        log.step(message)
+        log.info(message)
+
+    def warning(self, message: str, include_display_name: bool = True) -> None:
+        """
+        error log
+        """
+        if include_display_name:
+            message = self.format_message(message)
+        log.warning(message)
 
     def error(self, message: str, include_display_name: bool = True) -> None:
         """
@@ -554,11 +562,11 @@ class CrawlerThread(threading.Thread):
 
     def start_parse(self, description: str) -> None:
         self.main_thread_check()
-        self.step("开始解析 " + description)
+        self.info("开始解析 " + description)
 
     def parse_result(self, description: str, parse_result_list: Union[list, dict]) -> None:
-        self.trace("%s 解析结果：%s" % (description, parse_result_list))
-        self.step("%s 解析数量：%s" % (description, len(parse_result_list)))
+        self.debug("%s 解析结果：%s" % (description, parse_result_list))
+        self.info("%s 解析数量：%s" % (description, len(parse_result_list)))
 
     def download(self, file_url: str, file_path: str, file_description: str, success_callback: Callable[[str, str, str, net.Download], bool] = None,
                  failure_callback: Callable[[str, str, str, net.Download], bool] = None, **kwargs) -> net.Download:
@@ -579,11 +587,11 @@ class CrawlerThread(threading.Thread):
                 False - 不需要
         """
         self.main_thread_check()
-        self.step("开始下载 %s %s" % (file_description, file_url))
+        self.info("开始下载 %s %s" % (file_description, file_url))
         download_return = net.Download(file_url, file_path, **kwargs)
         if download_return.status == net.Download.DOWNLOAD_SUCCEED:
             if success_callback is None or success_callback(file_url, file_path, file_description, download_return):
-                self.step("%s 下载成功" % file_description)
+                self.info("%s 下载成功" % file_description)
         else:
             if failure_callback is None or failure_callback(file_url, file_path, file_description, download_return):
                 self.error("%s %s 下载失败，原因：%s" % (file_description, file_url, download_failre(download_return.code)))

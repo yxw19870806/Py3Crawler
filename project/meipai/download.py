@@ -45,7 +45,7 @@ class MeiPaiDownload(meipai.MeiPai):
         # 输入需要解析的视频
         video_id = self.get_video_id_from_console()
         if not tool.is_integer(video_id):
-            log.step("错误的视频地址，正确的地址格式如：https://www.meipai.com/media/209045867")
+            log.info("错误的视频地址，正确的地址格式如：https://www.meipai.com/media/209045867")
             return
 
         video_description = "视频%s" % video_id
@@ -56,7 +56,7 @@ class MeiPaiDownload(meipai.MeiPai):
             log.error(e.http_error(video_description))
             return
         if video_response["is_delete"]:
-            log.step("%s 不存在，跳过" % video_description)
+            log.info("%s 不存在，跳过" % video_description)
             return
 
         # 选择下载目录
@@ -71,7 +71,7 @@ class MeiPaiDownload(meipai.MeiPai):
             return
 
         # 开始下载
-        log.step("\n视频地址：%s\n下载路径：%s" % (video_response["video_url"], video_path))
+        log.info("\n视频地址：%s\n下载路径：%s" % (video_response["video_url"], video_path))
         self.download(video_response["video_url"], video_path, video_description, auto_multipart_download=True)
 
 

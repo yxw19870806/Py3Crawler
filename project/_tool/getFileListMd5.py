@@ -56,7 +56,7 @@ class GetFileListMd5(crawler.Crawler):
 
     # 获取目录所有文件md5值
     def get_file_md5_from_dir(self, dir_path):
-        log.step("开始检测目录：" + dir_path)
+        log.info("开始检测目录：" + dir_path)
         for file_name in path.get_dir_files_name(dir_path):
             self.running_check()
 
@@ -70,9 +70,9 @@ class GetFileListMd5(crawler.Crawler):
 
                 file_md5 = file.get_file_md5(file_path)
                 self.check_count += 1
-                log.step("%s -> %s" % (file_path, file_md5))
+                log.info("%s -> %s" % (file_path, file_md5))
                 file.write_file("%s\t%s" % (file_path, file_md5), self.save_data_path)
-        log.step("已完成：" + dir_path)
+        log.info("已完成：" + dir_path)
 
     # 根据生产的md5文件查重并是删除
     def check_record_data(self):
@@ -88,7 +88,7 @@ class GetFileListMd5(crawler.Crawler):
                     duplicate_list[file_md5] = [check_list[file_md5]]
                 duplicate_list[file_md5].append(file_path)
 
-        log.step("重复文件组数：%s" % len(duplicate_list))
+        log.info("重复文件组数：%s" % len(duplicate_list))
 
         for file_md5 in duplicate_list:
             delete_list = deal_one_group(duplicate_list[file_md5])
@@ -103,7 +103,7 @@ class GetFileListMd5(crawler.Crawler):
         delete_dict = {}
         for key in delete_list:
             delete_dict[key] = 1
-        log.step("总文件数：%s，已删除文件数量：%s" % (len(record_list), len(delete_dict)))
+        log.info("总文件数：%s，已删除文件数量：%s" % (len(record_list), len(delete_dict)))
 
         new_result = []
         write_count = 0
@@ -127,7 +127,7 @@ class GetFileListMd5(crawler.Crawler):
         for record in record_string_list:
             temp = record.split("\t")
             self.record_list[os.path.basename(temp[0])] = temp[1]
-        log.step("历史检测记录加载完毕，共计文件%s个" % len(self.record_list))
+        log.info("历史检测记录加载完毕，共计文件%s个" % len(self.record_list))
 
         # 循环获取目录文件md5值
         self.get_file_md5_from_dir(self.file_root_path)
@@ -139,7 +139,7 @@ class GetFileListMd5(crawler.Crawler):
         self.rewrite_recode_file()
 
     def end_message(self):
-        log.step("全部文件检测完毕，耗时%s秒，共计文件%s个" % (self.get_run_time(), self.check_count))
+        log.info("全部文件检测完毕，耗时%s秒，共计文件%s个" % (self.get_run_time(), self.check_count))
 
 
 if __name__ == "__main__":

@@ -134,7 +134,7 @@ class CrawlerThread(crawler.CrawlerThread):
     def _run(self):
         # 获取所有可下载视频
         video_id_list = self.get_crawl_list()
-        self.step("需要下载的全部视频解析完毕，共%s个" % len(video_id_list))
+        self.info("需要下载的全部视频解析完毕，共%s个" % len(video_id_list))
 
         # 从最早的视频开始下载
         while len(video_id_list) > 0:
@@ -182,13 +182,13 @@ class CrawlerThread(crawler.CrawlerThread):
 
     # 解析单个视频
     def crawl_video(self, video_info):
-        self.step("开始下载视频%s %s" % (video_info["video_id"], video_info["video_url"]))
+        self.info("开始下载视频%s %s" % (video_info["video_id"], video_info["video_url"]))
 
         file_path = os.path.join(self.main_thread.video_download_path, self.display_name, "%020d.mp4" % video_info["video_id"])
         download_return = net.Download(video_info["video_url"], file_path, auto_multipart_download=True)
         if download_return.status == net.Download.DOWNLOAD_SUCCEED:
             self.total_video_count += 1  # 计数累加
-            self.step("视频%s下载成功" % video_info["video_id"])
+            self.info("视频%s下载成功" % video_info["video_id"])
         else:
             self.error("视频%s %s 下载失败，原因：%s" % (video_info["video_id"], video_info["video_url"], crawler.download_failre(download_return.code)))
             self.check_download_failure_exit()

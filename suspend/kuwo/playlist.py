@@ -46,11 +46,11 @@ class KuWoPlaylist(kuwo.KuWo):
         playlist_id = self.get_playlist_id_from_console()
         # 无效的歌单地址
         if not tool.is_integer(playlist_id):
-            log.step("错误的歌单地址，正确的地址格式如：https://www.kuwo.cn/playlist_detail/123456789")
+            log.info("错误的歌单地址，正确的地址格式如：https://www.kuwo.cn/playlist_detail/123456789")
             return
 
         # 选择下载目录
-        log.step("请选择下载目录")
+        log.info("请选择下载目录")
         options = {
             "initialdir": self.video_download_path,
             "parent": self.gui,
@@ -79,12 +79,12 @@ class KuWoPlaylist(kuwo.KuWo):
                 is_over = True
             else:
                 page_count += 1
-        log.step("用户总共解析获得%s首歌曲" % len(audio_info_list))
+        log.info("用户总共解析获得%s首歌曲" % len(audio_info_list))
 
         # 循环待下载列表
         while len(audio_info_list) > 0:
             audio_info = audio_info_list.pop()
-            log.step("开始解析歌曲%s《%s》，剩余%s首歌曲" % (audio_info["audio_id"], audio_info["audio_title"], len(audio_info_list)))
+            log.info("开始解析歌曲%s《%s》，剩余%s首歌曲" % (audio_info["audio_id"], audio_info["audio_title"], len(audio_info_list)))
 
             # 获取下载地址
             try:
@@ -98,15 +98,15 @@ class KuWoPlaylist(kuwo.KuWo):
                 continue
 
             # 开始下载
-            log.step("\n歌曲名：%s\n歌曲地址：%s\n下载路径：%s" % (audio_info["audio_title"], audio_info_response["audio_url"], file_path))
+            log.info("\n歌曲名：%s\n歌曲地址：%s\n下载路径：%s" % (audio_info["audio_title"], audio_info_response["audio_url"], file_path))
             download_return = net.Download(audio_info_response["audio_url"], file_path, auto_multipart_download=True)
             if download_return.status == net.Download.DOWNLOAD_SUCCEED:
                 # 设置临时目录
-                log.step("歌曲《%s》下载成功" % audio_info["audio_title"])
+                log.info("歌曲《%s》下载成功" % audio_info["audio_title"])
             else:
-                log.step("歌曲《%s》下载失败，原因：%s" % (audio_info["audio_title"], crawler.download_failre(download_return.code)))
+                log.info("歌曲《%s》下载失败，原因：%s" % (audio_info["audio_title"], crawler.download_failre(download_return.code)))
 
-        log.step("歌单歌曲全部下载完毕")
+        log.info("歌单歌曲全部下载完毕")
 
 
 if __name__ == "__main__":

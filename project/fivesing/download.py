@@ -46,7 +46,7 @@ class FiveSingDownload(fivesing.FiveSing):
         # 输入需要解析的歌曲
         audio_type, audio_id = self.get_audio_id_from_console()
         if not tool.is_integer(audio_id) or audio_type not in ["yc", "fc", "bz"]:
-            log.step("错误的歌曲地址，正确的地址格式如：http://5sing.kugou.com/fc/15887314.html")
+            log.info("错误的歌曲地址，正确的地址格式如：http://5sing.kugou.com/fc/15887314.html")
             return
 
         # 获取下载地址
@@ -56,11 +56,11 @@ class FiveSingDownload(fivesing.FiveSing):
             log.error(e.http_error("歌曲"))
             return
         if audio_response["is_delete"]:
-            log.step("歌曲不存在，跳过")
+            log.info("歌曲不存在，跳过")
             return
 
         # 选择下载目录
-        log.step("请选择下载目录")
+        log.info("请选择下载目录")
         file_extension = net.get_file_extension(audio_response["audio_url"])
         options = {
             "initialdir": self.audio_download_path,
@@ -73,7 +73,7 @@ class FiveSingDownload(fivesing.FiveSing):
             return
 
         # 开始下载
-        log.step("\n歌曲标题：%s\n歌曲地址：%s\n下载路径：%s" % (audio_response["audio_title"], audio_response["audio_url"], audio_path))
+        log.info("\n歌曲标题：%s\n歌曲地址：%s\n下载路径：%s" % (audio_response["audio_title"], audio_response["audio_url"], audio_path))
 
         audio_description = "歌曲《%s》" % audio_response["audio_title"]
         self.download(audio_response["audio_url"], audio_path, audio_description)

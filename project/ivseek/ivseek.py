@@ -98,7 +98,7 @@ def get_archive_page(archive_id):
             if account_id:
                 result_video_info["account_id"] = account_id
             else:
-                log.notice("视频 %s 发布账号截取失败\n%s" % (result_video_info["video_url"], video_play_response_content))
+                log.warning("视频 %s 发布账号截取失败\n%s" % (result_video_info["video_url"], video_play_response_content))
         elif video_url.find(".nicovideo.jp/") >= 0:
             # https://embed.nicovideo.jp/watch/sm23008734/script?w=640&#038;h=360
             if video_url.find("embed.nicovideo.jp/watch") >= 0:
@@ -113,7 +113,7 @@ def get_archive_page(archive_id):
             # 获取视频发布账号
             video_play_response = net.request(result_video_info["video_url"], method="GET", cookies_list=niconico.COOKIE_INFO)
             while video_play_response.status == 403:
-                log.step("视频%s访问异常，重试" % video_id)
+                log.info("视频%s访问异常，重试" % video_id)
                 time.sleep(60)
                 video_play_response = net.request(result_video_info["video_url"], method="GET", cookies_list=niconico.COOKIE_INFO)
             if video_play_response.status != net.HTTP_RETURN_CODE_SUCCEED:
@@ -126,7 +126,7 @@ def get_archive_page(archive_id):
                 if crawler.check_sub_key(("id",), script_json["owner"]):
                     result_video_info["account_id"] = script_json["owner"]["id"]
                 else:
-                    log.notice("视频 %s 发布账号截取失败\n%s" % (result_video_info["video_url"], video_play_response_content))
+                    log.warning("视频 %s 发布账号截取失败\n%s" % (result_video_info["video_url"], video_play_response_content))
         # http://www.dailymotion.com/embed/video/x5oi0x
         elif video_url.find("//www.dailymotion.com/") >= 0:
             video_url = video_url.replace("http://", "https://")
@@ -182,7 +182,7 @@ class IvSeek(crawler.Crawler):
             log.error(e.http_error("首页"))
             raise
 
-        log.step("最新视频id：%s" % index_response["max_archive_id"])
+        log.info("最新视频id：%s" % index_response["max_archive_id"])
 
         for archive_id in range(self.save_id, index_response["max_archive_id"]):
             archive_description = "视频%s" % archive_id
@@ -197,7 +197,7 @@ class IvSeek(crawler.Crawler):
             self.parse_result(archive_description, archive_response["video_info_list"])
 
             for video_info in archive_response["video_info_list"]:
-                log.step("视频%s《%s》: %s" % (archive_id, archive_response["video_title"], video_info["video_url"]))
+                log.info("视频%s《%s》: %s" % (archive_id, archive_response["video_title"], video_info["video_url"]))
                 file.write_file("%s\t%s\t%s\t%s\t" % (archive_id, archive_response["video_title"], video_info["video_url"], video_info["account_id"]), self.save_data_path)
 
     def rewrite_save_file(self):

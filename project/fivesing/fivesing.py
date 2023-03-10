@@ -180,7 +180,7 @@ class CrawlerThread(crawler.CrawlerThread):
         for audio_type in list(self.audio_type_to_index_dict.keys()):
             # 获取所有可下载歌曲
             audio_info_list = self.get_crawl_list(audio_type)
-            self.step("需要下载的全部%s歌曲解析完毕，共%s首" % (self.audio_type_name_dict[audio_type], len(audio_info_list)))
+            self.info("需要下载的全部%s歌曲解析完毕，共%s首" % (self.audio_type_name_dict[audio_type], len(audio_info_list)))
 
             # 从最早的歌曲开始下载
             while len(audio_info_list) > 0:

@@ -138,7 +138,7 @@ class CrawlerThread(crawler.CrawlerThread):
     def _run(self):
         # 获取所有可下载音频
         audio_info_list = self.get_crawl_list()
-        self.step("需要下载的全部音频解析完毕，共%s个" % len(audio_info_list))
+        self.info("需要下载的全部音频解析完毕，共%s个" % len(audio_info_list))
 
         # 从最早的媒体开始下载
         while len(audio_info_list) > 0:

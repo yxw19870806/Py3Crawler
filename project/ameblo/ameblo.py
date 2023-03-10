@@ -136,7 +136,7 @@ def get_blog_page(account_name, blog_id):
         elif photo_url.startswith("data:image/gif;base64,") or photo_url.startswith("file://"):
             pass
         else:
-            log.notice("未知图片地址：%s (%s)" % (photo_url, blog_url))
+            log.warning("未知图片地址：%s (%s)" % (photo_url, blog_url))
     # todo 含有视频
     # https://ameblo.jp/kawasaki-nozomi/entry-12111279076.html
     return result
@@ -169,7 +169,7 @@ def get_origin_photo_url(photo_url):
             elif tool.is_integer(photo_name.split(".")[0]):
                 pass
             else:
-                log.trace("无法解析的图片地址 %s" % photo_url)
+                log.warning("无法解析的图片地址 %s" % photo_url)
     elif photo_url.find("//stat100.ameba.jp/blog/img/") > 0:
         pass
     return photo_url
@@ -262,7 +262,7 @@ class CrawlerThread(crawler.CrawlerThread):
             if blog_pagination_response["blog_id_list"][-1] < int(self.single_save_data[1]):
                 start_page_count -= EACH_LOOP_MAX_PAGE_COUNT
                 break
-            self.step("前%s页日志全部符合条件，跳过%s页后继续查询" % (start_page_count, EACH_LOOP_MAX_PAGE_COUNT))
+            self.info("前%s页日志全部符合条件，跳过%s页后继续查询" % (start_page_count, EACH_LOOP_MAX_PAGE_COUNT))
         return start_page_count
 
     # 获取所有可下载日志
@@ -319,7 +319,7 @@ class CrawlerThread(crawler.CrawlerThread):
             # 获取原始图片下载地址
             photo_url = get_origin_photo_url(photo_url)
             if photo_url in self.duplicate_list:
-                self.step("%s的图片 %s 已存在" % (album_description, photo_url))
+                self.info("%s的图片 %s 已存在" % (album_description, photo_url))
                 continue
             self.duplicate_list[photo_url] = 1
 
@@ -340,7 +340,7 @@ class CrawlerThread(crawler.CrawlerThread):
     def download_success_callback(self, photo_url, photo_path, photo_description, download_return: net.Download):
         if check_photo_invalid(photo_path):
             path.delete_dir_or_file(photo_path)
-            self.step("%s %s 不符合规则，删除" % (photo_description, photo_url))
+            self.info("%s %s 不符合规则，删除" % (photo_description, photo_url))
             download_return.ext_is_invalid_photo = True
             return False
         download_return.ext_is_invalid_photo = False
@@ -353,7 +353,7 @@ class CrawlerThread(crawler.CrawlerThread):
         while start_page_count >= 1:
             # 获取所有可下载日志
             blog_id_list = self.get_crawl_list(start_page_count)
-            self.step("需要下载的全部日志解析完毕，共%s个" % len(blog_id_list))
+            self.info("需要下载的全部日志解析完毕，共%s个" % len(blog_id_list))
 
             # 从最早的日志开始下载
             while len(blog_id_list) > 0:
