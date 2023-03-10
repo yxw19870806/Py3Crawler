@@ -18,10 +18,7 @@ from typing import Any, Callable, Dict, Optional, Union
 from common import browser, file, log, net, output, path, port_listener_event, tool, crawler_enum
 
 if platform.system() == "Windows":
-    try:
-        from . import keyboard_event
-    except ImportError:
-        from common import keyboard_event
+    from common import keyboard_event
 
 # 项目根目录
 PROJECT_ROOT_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
