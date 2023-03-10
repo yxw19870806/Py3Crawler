@@ -21,7 +21,10 @@ from typing import Optional
 if platform.system() == "Windows":
     import win32crypt
 
-from common import crawler, file, net, output, crawler_enum
+from common import crawler, file, net, output, crawler_enum, PROJECT_ROOT_PATH
+
+# webdriver文件路径
+CHROME_WEBDRIVER_PATH = os.path.abspath(os.path.join(PROJECT_ROOT_PATH, "common", "chromedriver.exe"))
 
 
 class Chrome:
@@ -34,8 +37,8 @@ class Chrome:
         - kwargs
             - headless - chrome-headless模式，默认值：True
         """
-        if not os.path.exists(crawler.CHROME_WEBDRIVER_PATH):
-            raise crawler.CrawlerException("CHROME_WEBDRIVER_PATH: %s不存在" % crawler.CHROME_WEBDRIVER_PATH)
+        if not os.path.exists(CHROME_WEBDRIVER_PATH):
+            raise crawler.CrawlerException("CHROME_WEBDRIVER_PATH: %s不存在" % CHROME_WEBDRIVER_PATH)
 
         self.url = url
         # 浏览器参数
@@ -52,7 +55,7 @@ class Chrome:
 
         while True:
             try:
-                self.chrome = webdriver.Chrome(executable_path=crawler.CHROME_WEBDRIVER_PATH, options=chrome_options, desired_capabilities=desired_capabilities)
+                self.chrome = webdriver.Chrome(executable_path=CHROME_WEBDRIVER_PATH, options=chrome_options, desired_capabilities=desired_capabilities)
             except WebDriverException as e:
                 message = str(e)
                 if message.find("chrome not reachable") >= 0:

@@ -16,18 +16,13 @@ import time
 import traceback
 from typing import Any, Callable, Dict, Optional, Union
 from common import browser, file, log, net, output, path, port_listener_event, tool, crawler_enum
+from common import PROJECT_ROOT_PATH, PROJECT_CONFIG_PATH
 
 if platform.system() == "Windows":
     from common import keyboard_event
 
-# 项目根目录
-PROJECT_ROOT_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
-# 全局config.ini路径
-PROJECT_CONFIG_PATH = os.path.abspath(os.path.join(PROJECT_ROOT_PATH, "common", "config.ini"))
 # 默认当前进程的工作目录，应用在初始化时应该对该变量进行赋值
 PROJECT_APP_PATH = os.getcwd()
-# webdriver文件路径
-CHROME_WEBDRIVER_PATH = os.path.abspath(os.path.join(PROJECT_ROOT_PATH, "common", "chromedriver.exe"))
 
 
 class Crawler(object):
@@ -666,8 +661,8 @@ def analysis_config(config: dict, key: str, default_value: Any, mode: crawler_en
                     等价于False的值，或者值为"0"或"false"的字符串将转换为False
                     其他字符串将转换为True
         path    转换成路径
-                    当字符串以'\'开头，相对于crawler.PROJECT_ROOT_PATH
-                    当字符串以'\\'开头，相对于crawler.PROJECT_APP_PATH
+                    当字符串以'\'开头，相对于PROJECT_ROOT_PATH
+                    当字符串以'\\'开头，相对于PROJECT_APP_PATH
     """
     key = key.lower()
     if isinstance(config, dict) and key in config:
