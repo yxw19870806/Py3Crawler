@@ -317,7 +317,7 @@ def request(url, method: str = "GET", fields: Optional[dict] = None, binary_data
                                 charset = "GBK"
                             try:
                                 response.json_data = json.loads(response.data.decode(charset))
-                            except Exception:
+                            except (json.decoder.JSONDecodeError, LookupError):
                                 pass
                             else:
                                 is_error = False
