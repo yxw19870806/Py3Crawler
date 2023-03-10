@@ -162,7 +162,7 @@ class CrawlerThread(crawler.CrawlerThread):
     def _run(self):
         # 获取所有可下载视频
         video_id_list = self.get_crawl_list()
-        self.step("需要下载的全部视频解析完毕，共%s个" % len(video_id_list))
+        self.info("需要下载的全部视频解析完毕，共%s个" % len(video_id_list))
 
         # 从最早的视频开始下载
         while len(video_id_list) > 0:

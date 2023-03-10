@@ -122,7 +122,7 @@ class CrawlerThread(crawler.CrawlerThread):
     def _run(self):
         # 获取所有可下载章节
         chapter_info_list = self.get_crawl_list()
-        self.step("需要下载的全部小说解析完毕，共%s个" % len(chapter_info_list))
+        self.info("需要下载的全部小说解析完毕，共%s个" % len(chapter_info_list))
 
         # 从最早的章节开始下载
         while len(chapter_info_list) > 0:
@@ -134,15 +134,15 @@ class CrawlerThread(crawler.CrawlerThread):
         chapter_info_list = []
 
         # 获取小说首页
-        self.step("开始解析小说首页")
+        self.info("开始解析小说首页")
         try:
             index_response = get_book_index(self.index_key)
         except crawler.CrawlerException as e:
             self.error("小说首页解析失败，原因：%s" % e.message)
             raise
 
-        self.trace("小说首页解析的全部章节：%s" % index_response["chapter_info_list"])
-        self.step("小说首页解析获取%s个章节" % len(index_response["chapter_info_list"]))
+        self.debug("小说首页解析的全部章节：%s" % index_response["chapter_info_list"])
+        self.info("小说首页解析获取%s个章节" % len(index_response["chapter_info_list"]))
 
         # 寻找符合条件的章节
         for chapter_info in index_response["chapter_info_list"]:
@@ -156,7 +156,7 @@ class CrawlerThread(crawler.CrawlerThread):
 
     # 解析单章节小说
     def crawl_chapter(self, chapter_info):
-        self.step("开始解析章节《%s》 %s" % (chapter_info["chapter_title"], chapter_info["chapter_url"]))
+        self.info("开始解析章节《%s》 %s" % (chapter_info["chapter_title"], chapter_info["chapter_url"]))
 
         # 获取指定小说章节
         try:
@@ -171,7 +171,7 @@ class CrawlerThread(crawler.CrawlerThread):
 
         content_file_path = os.path.join(self.main_thread.content_download_path, self.display_name, "%s %s.txt" % (chapter_info["chapter_time_string"], chapter_info["chapter_title"]))
         file.write_file(chapter_response["content"], content_file_path)
-        self.step("章节《%s》下载成功" % chapter_info["chapter_title"])
+        self.info("章节《%s》下载成功" % chapter_info["chapter_title"])
 
         # 章节内图片全部下载完毕
         self.total_content_count += 1  # 计数累加

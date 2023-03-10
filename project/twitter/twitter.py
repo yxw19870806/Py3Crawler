@@ -142,8 +142,8 @@ def get_one_page_media(account_name, account_id, cursor):
         # 获取日志id
         result_media_info["blog_id"] = int(tweet_id)
         if "extended_entities" not in tweet_info:
-            # log.notice(tweet_id)
-            # log.notice(tweet_info)
+            # log.warning(tweet_id)
+            # log.warning(tweet_info)
             continue
         for media_info in crawler.get_json_value(tweet_info, "extended_entities", "media", type_check=list):
             media_type = crawler.get_json_value(media_info, "type", type_check=str)
@@ -382,7 +382,7 @@ class CrawlerThread(crawler.CrawlerThread):
         photo_index = 1
         for photo_url in media_info["photo_url_list"]:
             photo_description = "推特%s第%s张图片" % (media_info["blog_id"], photo_index)
-            self.step("开始下载 %s %s" % (photo_description, photo_url))
+            self.info("开始下载 %s %s" % (photo_description, photo_url))
 
             photo_name = "%019d_%02d.%s" % (media_info["blog_id"], photo_index, net.get_file_extension(photo_url))
             photo_path = os.path.join(self.main_thread.photo_download_path, self.index_key, photo_name)
@@ -392,7 +392,7 @@ class CrawlerThread(crawler.CrawlerThread):
                 if download_return.status == net.Download.DOWNLOAD_SUCCEED:
                     self.temp_path_list.append(photo_path)  # 设置临时目录
                     self.total_photo_count += 1  # 计数累加
-                    self.step("%s 下载成功" % photo_description)
+                    self.info("%s 下载成功" % photo_description)
                 else:
                     # 502报错，重新下载
                     if download_return.code == 502:
@@ -433,7 +433,7 @@ class CrawlerThread(crawler.CrawlerThread):
 
         # 获取所有可下载推特
         media_info_list = self.get_crawl_list()
-        self.step("需要下载的全部推特解析完毕，共%s个" % len(media_info_list))
+        self.info("需要下载的全部推特解析完毕，共%s个" % len(media_info_list))
 
         # 从最早的推特开始下载
         while len(media_info_list) > 0:

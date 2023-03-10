@@ -165,7 +165,7 @@ class CrawlerThread(crawler.CrawlerThread):
 
             # 获取所有可下载相册
         album_info_list = self.get_crawl_list(account_index_response["account_id"])
-        self.step("需要下载的全部相册解析完毕，共%s个" % len(album_info_list))
+        self.info("需要下载的全部相册解析完毕，共%s个" % len(album_info_list))
 
         # 从最早的相册开始下载
         while len(album_info_list) > 0:

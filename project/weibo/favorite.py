@@ -151,13 +151,13 @@ class Favorite(crawler.Crawler):
 
             for blog_id in favorite_pagination_response["delete_blog_id_list"]:
                 blog_description = "微博%s" % blog_id
-                log.step("开始删除 %s" % blog_description)
+                log.info("开始删除 %s" % blog_description)
                 try:
                     delete_favorite(blog_id)
                 except crawler.CrawlerException as e:
                     log.error(e.http_error(blog_description))
                     raise
-                log.step("%s 删除成功" % blog_description)
+                log.info("%s 删除成功" % blog_description)
 
             self.parse_result(favorite_pagination_description, favorite_pagination_response["blog_info_list"])
 

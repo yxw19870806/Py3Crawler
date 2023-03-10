@@ -334,7 +334,7 @@ class Instagram(crawler.Crawler):
                 if login_from_console():
                     break
                 else:
-                    log.step("登录失败！")
+                    log.info("登录失败！")
             elif input_str in ["e", "exit"]:
                 tool.process_exit()
 
@@ -439,7 +439,7 @@ class CrawlerThread(crawler.CrawlerThread):
 
         # 获取所有可下载媒体
         media_info_list = self.get_crawl_list()
-        self.step("需要下载的全部媒体解析完毕，共%s个" % len(media_info_list))
+        self.info("需要下载的全部媒体解析完毕，共%s个" % len(media_info_list))
 
         # 从最早的媒体开始下载
         while len(media_info_list) > 0:

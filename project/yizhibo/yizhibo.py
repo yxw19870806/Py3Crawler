@@ -233,13 +233,13 @@ class CrawlerThread(crawler.CrawlerThread):
     def crawl_video(self, video_info):
         video_index = int(self.single_save_data[1]) + 1
         video_description = "第%s个视频" % video_index
-        self.step("开始下载 %s %s" % (video_description, video_info["video_url_list"]))
+        self.info("开始下载 %s %s" % (video_description, video_info["video_url_list"]))
 
         video_path = os.path.join(self.main_thread.video_download_path, self.display_name, "%04d.ts" % video_index)
         download_return = net.download_from_list(video_info["video_url_list"], video_path)
         if download_return:
             self.total_video_count += 1  # 计数累加
-            self.step("%s 下载成功" % video_description)
+            self.info("%s 下载成功" % video_description)
         else:
             self.error("%s %s 下载失败" % (video_description, video_info["video_url_list"]))
             if self.check_download_failure_exit(False):
@@ -255,7 +255,7 @@ class CrawlerThread(crawler.CrawlerThread):
         if self.main_thread.is_download_photo:
             # 获取所有可下载图片
             photo_info_list = self.get_crawl_photo_list()
-            self.step("需要下载的全部图片解析完毕，共%s张" % len(photo_info_list))
+            self.info("需要下载的全部图片解析完毕，共%s张" % len(photo_info_list))
 
             # 从最早的图片开始下载
             while len(photo_info_list) > 0:
@@ -266,7 +266,7 @@ class CrawlerThread(crawler.CrawlerThread):
         if self.main_thread.is_download_video:
             # 获取所有可下载视频
             video_info_list = self.get_crawl_video_list()
-            self.step("需要下载的全部视频解析完毕，共%s个" % len(video_info_list))
+            self.info("需要下载的全部视频解析完毕，共%s个" % len(video_info_list))
 
             # 从最早的视频开始下载
             while len(video_info_list) > 0:
