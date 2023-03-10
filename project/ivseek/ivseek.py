@@ -21,7 +21,7 @@ def read_save_data(save_data_path):
     result_list = []
     if not os.path.exists(save_data_path):
         return result_list
-    for single_save_data in file.read_file(save_data_path, file.ReadFileMode.LINE):
+    for single_save_data in file.read_file(save_data_path, enum.ReadFileMode.LINE):
         single_save_data = single_save_data.replace("\xef\xbb\xbf", "").replace("\n", "").replace("\r", "")
         if len(single_save_data) == 0:
             continue
@@ -163,15 +163,15 @@ class IvSeek(crawler.Crawler):
 
         # 初始化参数
         sys_config = {
-            crawler.SysConfigKey.NOT_CHECK_SAVE_DATA: True,
-            crawler.SysConfigKey.NOT_DOWNLOAD: True,
-            crawler.SysConfigKey.SET_PROXY: True,
+            enum.SysConfigKey.NOT_CHECK_SAVE_DATA: True,
+            enum.SysConfigKey.NOT_DOWNLOAD: True,
+            enum.SysConfigKey.SET_PROXY: True,
         }
         crawler.Crawler.__init__(self, sys_config, **kwargs)
 
     def _main(self):
         self.save_id = 1
-        save_info_list = file.read_file(self.save_data_path, file.ReadFileMode.LINE)
+        save_info_list = file.read_file(self.save_data_path, enum.ReadFileMode.LINE)
         if len(save_info_list) > 0:
             self.save_id = int(save_info_list[-1].split("\t")[0]) + 1
 

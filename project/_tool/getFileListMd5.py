@@ -42,8 +42,8 @@ class GetFileListMd5(crawler.Crawler):
 
         # 初始化参数
         sys_config = {
-            crawler.SysConfigKey.NOT_CHECK_SAVE_DATA: True,
-            crawler.SysConfigKey.NOT_DOWNLOAD: True,
+            enum.SysConfigKey.NOT_CHECK_SAVE_DATA: True,
+            enum.SysConfigKey.NOT_DOWNLOAD: True,
         }
         crawler.Crawler.__init__(self, sys_config, **kwargs)
 
@@ -76,7 +76,7 @@ class GetFileListMd5(crawler.Crawler):
 
     # 根据生产的md5文件查重并是删除
     def check_record_data(self):
-        record_list = file.read_file(self.save_data_path, file.ReadFileMode.LINE)
+        record_list = file.read_file(self.save_data_path, enum.ReadFileMode.LINE)
         duplicate_list = {}
         check_list = {}
         for record in record_list:
@@ -93,13 +93,13 @@ class GetFileListMd5(crawler.Crawler):
         for file_md5 in duplicate_list:
             delete_list = deal_one_group(duplicate_list[file_md5])
             if len(delete_list) > 0:
-                file.write_file("\n".join(delete_list), self.deleted_file_path, file.WriteFileMode.APPEND)
+                file.write_file("\n".join(delete_list), self.deleted_file_path, enum.WriteFileMode.APPEND)
 
     # 重写记录文件
     def rewrite_recode_file(self):
         self.temp_save_data_path = os.path.join(os.path.dirname(__file__), "md5_new.txt")
-        record_list = file.read_file(self.save_data_path, file.ReadFileMode.LINE)
-        delete_list = file.read_file(self.deleted_file_path, file.ReadFileMode.LINE)
+        record_list = file.read_file(self.save_data_path, enum.ReadFileMode.LINE)
+        delete_list = file.read_file(self.deleted_file_path, enum.ReadFileMode.LINE)
         delete_dict = {}
         for key in delete_list:
             delete_dict[key] = 1
@@ -123,7 +123,7 @@ class GetFileListMd5(crawler.Crawler):
 
     def _main(self):
         # 读取记录
-        record_string_list = file.read_file(self.save_data_path, file.ReadFileMode.LINE)
+        record_string_list = file.read_file(self.save_data_path, enum.ReadFileMode.LINE)
         for record in record_string_list:
             temp = record.split("\t")
             self.record_list[os.path.basename(temp[0])] = temp[1]

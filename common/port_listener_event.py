@@ -6,17 +6,9 @@ email: hikaru870806@hotmail.com
 如有问题或建议请联系
 """
 import threading
-from enum import unique, Enum
 from multiprocessing.connection import Listener
 
 SERVER_IP = "localhost"  # 监听服务器IP
-
-
-@unique
-class ProcessStatus(Enum):
-    RUN: int = 0  # 进程运行中
-    PAUSE: int = 1  # 进程暂停，知道状态变为0时才继续下载
-    STOP: int = 2  # 进程立刻停止，删除还未完成的数据
 
 
 class PortListenerEvent(threading.Thread):

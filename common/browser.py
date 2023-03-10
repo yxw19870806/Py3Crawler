@@ -13,7 +13,6 @@ import pywintypes
 import sqlite3
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
-from enum import Enum, unique
 from selenium import webdriver
 from selenium.common.exceptions import WebDriverException
 from selenium.webdriver.chrome.webdriver import WebDriver
@@ -22,18 +21,7 @@ from typing import Optional
 if platform.system() == "Windows":
     import win32crypt
 
-try:
-    from . import crawler, file, net, output
-except ImportError:
-    from common import crawler, file, net, output
-
-
-@unique
-class BrowserType(Enum, metaclass=crawler.CrawlerEnumMeta):
-    IE: str = "ie"
-    FIREFOX: str = "firefox"
-    CHROME: str = "chrome"
-    TEXT: str = "text"  # 直接从文件里读取cookies
+from common import crawler, file, net, output, enum
 
 
 class Chrome:
@@ -86,39 +74,39 @@ def _get_chrome_user_data_path() -> str:
     return os.path.abspath(os.path.join(os.getenv("LOCALAPPDATA"), "Google", "Chrome", "User Data"))
 
 
-def get_default_browser_application_path(browser_type: BrowserType) -> Optional[str]:
+def get_default_browser_application_path(browser_type: enum.BrowserType) -> Optional[str]:
     """
     根据浏览器和操作系统，返回浏览器程序文件所在的路径
     """
     if platform.system() != "Windows":
         return None
-    if browser_type == BrowserType.IE:
+    if browser_type == enum.BrowserType.IE:
         return os.path.abspath(os.path.join(os.getenv("ProgramFiles"), "Internet Explorer", "iexplore.exe"))
-    elif browser_type == BrowserType.FIREFOX:
+    elif browser_type == enum.BrowserType.FIREFOX:
         return os.path.abspath(os.path.join(os.getenv("ProgramFiles"), "Mozilla Firefox", "firefox.exe"))
-    elif browser_type == BrowserType.CHROME:
+    elif browser_type == enum.BrowserType.CHROME:
         return os.path.abspath(os.path.join(os.getenv("ProgramFiles"), "Google", "Chrome", "Application", "chrome.exe"))
     else:
         output.print_msg("不支持的浏览器类型：%s" % browser_type)
     return None
 
 
-def get_default_browser_cookie_path(browser_type: BrowserType) -> Optional[str]:
+def get_default_browser_cookie_path(browser_type: enum.BrowserType) -> Optional[str]:
     """
     根据浏览器和操作系统，自动查找默认浏览器cookie路径(只支持windows)
     """
     if platform.system() != "Windows":
         return None
-    if browser_type == BrowserType.IE:
+    if browser_type == enum.BrowserType.IE:
         return os.path.join(os.getenv("APPDATA"), "Microsoft", "Windows", "Cookies")
-    elif browser_type == BrowserType.FIREFOX:
+    elif browser_type == enum.BrowserType.FIREFOX:
         default_browser_path = os.path.join(os.getenv("APPDATA"), "Mozilla", "Firefox", "Profiles")
         for dir_name in os.listdir(default_browser_path):
             sub_path = os.path.join(default_browser_path, dir_name)
             if os.path.isdir(sub_path):
                 if os.path.exists(os.path.join(sub_path, "cookies.sqlite")):
                     return os.path.abspath(sub_path)
-    elif browser_type == BrowserType.CHROME:
+    elif browser_type == enum.BrowserType.CHROME:
         browser_data_path = _get_chrome_user_data_path()
         profile_file_path = os.path.join(browser_data_path, "Local State")
         default_profile_name = "Default"
@@ -128,14 +116,14 @@ def get_default_browser_cookie_path(browser_type: BrowserType) -> Optional[str]:
                 if "profile" in profile_info and "last_used" in profile_info["profile"]:
                     default_profile_name = profile_info["profile"]["last_used"]
         return os.path.join(browser_data_path, default_profile_name)
-    elif browser_type == BrowserType.TEXT:
+    elif browser_type == enum.BrowserType.TEXT:
         return os.path.abspath(os.path.join(crawler.PROJECT_APP_PATH, "info", "cookies.data"))
     else:
         output.print_msg("不支持的浏览器类型：%s" % browser_type)
     return None
 
 
-def get_all_cookie_from_browser(browser_type: BrowserType, file_path: str) -> dict:
+def get_all_cookie_from_browser(browser_type: enum.BrowserType, file_path: str) -> dict:
     """
     从浏览器保存的cookie文件中读取所有cookie
 
@@ -150,7 +138,7 @@ def get_all_cookie_from_browser(browser_type: BrowserType, file_path: str) -> di
         output.print_msg("cookie目录：" + file_path + " 不存在")
         return {}
     all_cookies = {}
-    if browser_type == BrowserType.IE:
+    if browser_type == enum.BrowserType.IE:
         # win10，IE 11已不支持该方法读取
         for cookie_name in os.listdir(file_path):
             if cookie_name.find(".txt") == -1:
@@ -167,7 +155,7 @@ def get_all_cookie_from_browser(browser_type: BrowserType, file_path: str) -> di
                 if cookie_domain not in all_cookies:
                     all_cookies[cookie_domain] = {}
                 all_cookies[cookie_domain][cookie_key] = cookie_value
-    elif browser_type == BrowserType.FIREFOX:
+    elif browser_type == enum.BrowserType.FIREFOX:
         con = sqlite3.connect(os.path.join(file_path, "cookies.sqlite"))
         cur = con.cursor()
         cur.execute("SELECT host, path, name, value FROM moz_cookies")
@@ -179,7 +167,7 @@ def get_all_cookie_from_browser(browser_type: BrowserType, file_path: str) -> di
                 all_cookies[cookie_domain] = {}
             all_cookies[cookie_domain][cookie_key] = cookie_value
         con.close()
-    elif browser_type == BrowserType.CHROME:
+    elif browser_type == enum.BrowserType.CHROME:
         # chrome仅支持windows系统的解密
         if platform.system() != "Windows":
             return {}
@@ -226,7 +214,7 @@ def get_all_cookie_from_browser(browser_type: BrowserType, file_path: str) -> di
                 all_cookies[cookie_domain] = {}
             all_cookies[cookie_domain][cookie_key] = cookie_value.decode()
         con.close()
-    elif browser_type == BrowserType.TEXT:
+    elif browser_type == enum.BrowserType.TEXT:
         all_cookies["DEFAULT"] = net.split_cookies_from_cookie_string(file.read_file(file_path))
     else:
         output.print_msg("不支持的浏览器类型：%s" % browser_type)

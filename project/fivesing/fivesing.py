@@ -80,7 +80,7 @@ class FiveSing(crawler.Crawler):
 
         # 初始化参数
         sys_config = {
-            crawler.SysConfigKey.DOWNLOAD_AUDIO: True,
+            enum.SysConfigKey.DOWNLOAD_AUDIO: True,
         }
         crawler.Crawler.__init__(self, sys_config, **kwargs)
 

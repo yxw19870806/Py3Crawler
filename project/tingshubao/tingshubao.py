@@ -92,8 +92,8 @@ class TingShuBao(crawler.Crawler):
 
         # 初始化参数
         sys_config = {
-            crawler.SysConfigKey.DOWNLOAD_AUDIO: True,
-            crawler.SysConfigKey.APP_CONFIG_PATH: os.path.join(crawler.PROJECT_APP_PATH, "app.ini"),
+            enum.SysConfigKey.DOWNLOAD_AUDIO: True,
+            enum.SysConfigKey.APP_CONFIG_PATH: os.path.join(crawler.PROJECT_APP_PATH, "app.ini"),
         }
         crawler.Crawler.__init__(self, sys_config, **kwargs)
 

@@ -7,47 +7,30 @@ email: hikaru870806@hotmail.com
 """
 import hashlib
 import os
-from enum import unique, Enum
 from typing import Union, Optional, Final
-
-try:
-    from . import path
-except ImportError:
-    from common import path
-
-
-@unique
-class ReadFileMode(Enum):
-    FULL: str = "full"  # 读取整个文件 ，返回字符串
-    LINE: str = "line"  # 按行读取，返回list
-
-
-@unique
-class WriteFileMode(Enum):
-    APPEND: str = "append"  # 追加写入文件
-    REPLACE: str = "replace"  # 覆盖写入文件
+from common import path, enum
 
 
 BOM_SIGN: Final[str] = b"\xef\xbb\xbf".decode()
 
 
-def read_file(file_path: str, read_type: ReadFileMode = ReadFileMode.FULL) -> Union[str, list]:
+def read_file(file_path: str, read_type: enum.ReadFileMode = enum.ReadFileMode.FULL) -> Union[str, list]:
     """
     读取文件
 
     :Args:
     - file_path - 需要读取文件的路径
     - read_type - 读取类型
-        ReadFileMode.FULL   read full file
-        ReadFileMode.LINE   read each line of file
+        enum.ReadFileMode.FULL   read full file
+        enum.ReadFileMode.LINE   read each line of file
 
     :Returns:
-        ReadFileMode.FULL   type of string
-        ReadFileMode.LINE   type of list
+        enum.ReadFileMode.FULL   type of string
+        enum.ReadFileMode.LINE   type of list
     """
-    if not isinstance(read_type, ReadFileMode):
+    if not isinstance(read_type, enum.ReadFileMode):
         raise ValueError("invalid read_type")
-    if read_type == ReadFileMode.FULL:
+    if read_type == enum.ReadFileMode.FULL:
         default_value = ""
     else:
         default_value = []
@@ -57,7 +40,7 @@ def read_file(file_path: str, read_type: ReadFileMode = ReadFileMode.FULL) -> Un
     if not os.path.exists(file_path) or not os.path.isfile(file_path):
         return default_value
     with open(file_path, "r", encoding="UTF-8") as file_handle:
-        if read_type == ReadFileMode.FULL:
+        if read_type == enum.ReadFileMode.FULL:
             result = file_handle.read()
             if len(result) > 0:
                 if result.startswith(BOM_SIGN):
@@ -78,24 +61,24 @@ def read_file(file_path: str, read_type: ReadFileMode = ReadFileMode.FULL) -> Un
     return result
 
 
-def write_file(msg: str, file_path: str, write_type: WriteFileMode = WriteFileMode.APPEND, encoding: str = "UTF-8") -> bool:
+def write_file(msg: str, file_path: str, write_type: enum.WriteFileMode = enum.WriteFileMode.APPEND, encoding: str = "UTF-8") -> bool:
     """
     写入文件
 
     :Args:
     - file_path: - 需要写入文件的路径
     - append_type - 写入模式
-        WriteFileMode.APPEND    "a" mode to write file
-        WriteFileMode.REPLACE   "w" mode to write file
+        enum.WriteFileMode.APPEND    "a" mode to write file
+        enum.WriteFileMode.REPLACE   "w" mode to write file
     """
-    if not isinstance(write_type, WriteFileMode):
+    if not isinstance(write_type, enum.WriteFileMode):
         raise ValueError("invalid write_type")
     if not file_path:
         return False
     file_path = os.path.abspath(file_path)
     if not path.create_dir(os.path.dirname(file_path)):
         return False
-    if write_type == WriteFileMode.APPEND:
+    if write_type == enum.WriteFileMode.APPEND:
         open_type = "a"
     else:
         open_type = "w"
