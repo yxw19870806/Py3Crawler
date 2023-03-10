@@ -8,29 +8,29 @@ email: hikaru870806@hotmail.com
 import hashlib
 import os
 from typing import Union, Optional, Final
-from common import path, enum
+from common import path, crawler_enum
 
 
 BOM_SIGN: Final[str] = b"\xef\xbb\xbf".decode()
 
 
-def read_file(file_path: str, read_type: enum.ReadFileMode = enum.ReadFileMode.FULL) -> Union[str, list]:
+def read_file(file_path: str, read_type: crawler_enum.ReadFileMode = crawler_enum.ReadFileMode.FULL) -> Union[str, list]:
     """
     读取文件
 
     :Args:
     - file_path - 需要读取文件的路径
     - read_type - 读取类型
-        enum.ReadFileMode.FULL   read full file
-        enum.ReadFileMode.LINE   read each line of file
+        crawler_enum.ReadFileMode.FULL   read full file
+        crawler_enum.ReadFileMode.LINE   read each line of file
 
     :Returns:
-        enum.ReadFileMode.FULL   type of string
-        enum.ReadFileMode.LINE   type of list
+        crawler_enum.ReadFileMode.FULL   type of string
+        crawler_enum.ReadFileMode.LINE   type of list
     """
-    if not isinstance(read_type, enum.ReadFileMode):
+    if not isinstance(read_type, crawler_enum.ReadFileMode):
         raise ValueError("invalid read_type")
-    if read_type == enum.ReadFileMode.FULL:
+    if read_type == crawler_enum.ReadFileMode.FULL:
         default_value = ""
     else:
         default_value = []
@@ -40,7 +40,7 @@ def read_file(file_path: str, read_type: enum.ReadFileMode = enum.ReadFileMode.F
     if not os.path.exists(file_path) or not os.path.isfile(file_path):
         return default_value
     with open(file_path, "r", encoding="UTF-8") as file_handle:
-        if read_type == enum.ReadFileMode.FULL:
+        if read_type == crawler_enum.ReadFileMode.FULL:
             result = file_handle.read()
             if len(result) > 0:
                 if result.startswith(BOM_SIGN):
@@ -61,24 +61,24 @@ def read_file(file_path: str, read_type: enum.ReadFileMode = enum.ReadFileMode.F
     return result
 
 
-def write_file(msg: str, file_path: str, write_type: enum.WriteFileMode = enum.WriteFileMode.APPEND, encoding: str = "UTF-8") -> bool:
+def write_file(msg: str, file_path: str, write_type: crawler_enum.WriteFileMode = crawler_enum.WriteFileMode.APPEND, encoding: str = "UTF-8") -> bool:
     """
     写入文件
 
     :Args:
     - file_path: - 需要写入文件的路径
     - append_type - 写入模式
-        enum.WriteFileMode.APPEND    "a" mode to write file
-        enum.WriteFileMode.REPLACE   "w" mode to write file
+        crawler_enum.WriteFileMode.APPEND    "a" mode to write file
+        crawler_enum.WriteFileMode.REPLACE   "w" mode to write file
     """
-    if not isinstance(write_type, enum.WriteFileMode):
+    if not isinstance(write_type, crawler_enum.WriteFileMode):
         raise ValueError("invalid write_type")
     if not file_path:
         return False
     file_path = os.path.abspath(file_path)
     if not path.create_dir(os.path.dirname(file_path)):
         return False
-    if write_type == enum.WriteFileMode.APPEND:
+    if write_type == crawler_enum.WriteFileMode.APPEND:
         open_type = "a"
     else:
         open_type = "w"

@@ -397,13 +397,13 @@ class Tumblr(crawler.Crawler):
 
         # 初始化参数
         sys_config = {
-            enum.SysConfigKey.DOWNLOAD_PHOTO: True,
-            enum.SysConfigKey.DOWNLOAD_VIDEO: True,
-            enum.SysConfigKey.GET_COOKIE: ("tumblr.com", "www.tumblr.com"),
-            enum.SysConfigKey.SET_PROXY: True,
-            enum.SysConfigKey.APP_CONFIG: (
-                ("USER_AGENT", "", enum.ConfigAnalysisMode.RAW),
-                ("IS_STEP_ERROR_403_AND_404", False, enum.ConfigAnalysisMode.BOOLEAN)
+            crawler_enum.SysConfigKey.DOWNLOAD_PHOTO: True,
+            crawler_enum.SysConfigKey.DOWNLOAD_VIDEO: True,
+            crawler_enum.SysConfigKey.GET_COOKIE: ("tumblr.com", "www.tumblr.com"),
+            crawler_enum.SysConfigKey.SET_PROXY: True,
+            crawler_enum.SysConfigKey.APP_CONFIG: (
+                ("USER_AGENT", "", crawler_enum.ConfigAnalysisMode.RAW),
+                ("IS_STEP_ERROR_403_AND_404", False, crawler_enum.ConfigAnalysisMode.BOOLEAN)
             ),
         }
         crawler.Crawler.__init__(self, sys_config, **kwargs)

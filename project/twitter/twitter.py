@@ -282,10 +282,10 @@ class Twitter(crawler.Crawler):
 
         # 初始化参数
         sys_config = {
-            enum.SysConfigKey.DOWNLOAD_PHOTO: True,
-            enum.SysConfigKey.DOWNLOAD_VIDEO: True,
-            enum.SysConfigKey.SET_PROXY: True,
-            enum.SysConfigKey.GET_COOKIE: ("twitter.com",),
+            crawler_enum.SysConfigKey.DOWNLOAD_PHOTO: True,
+            crawler_enum.SysConfigKey.DOWNLOAD_VIDEO: True,
+            crawler_enum.SysConfigKey.SET_PROXY: True,
+            crawler_enum.SysConfigKey.GET_COOKIE: ("twitter.com",),
         }
         crawler.Crawler.__init__(self, sys_config, **kwargs)
 

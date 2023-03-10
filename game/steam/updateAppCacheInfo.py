@@ -76,7 +76,7 @@ def main():
                     steam_class.save_game_dlc_list(game_dlc_list)
 
         checked_apps_list.append(game_id)
-        file.write_file(",".join(checked_apps_list), checked_apps_file_path, enum.WriteFileMode.REPLACE)
+        file.write_file(",".join(checked_apps_list), checked_apps_file_path, crawler_enum.WriteFileMode.REPLACE)
 
 
 if __name__ == "__main__":

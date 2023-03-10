@@ -42,7 +42,7 @@ def get_account_index_page(account_id):
     template_html = file.read_file(TEMPLATE_HTML_PATH)
     template_html = template_html.replace("%%USER_AGENT%%", USER_AGENT).replace("%%TAC%%", script_tac).replace("%%UID%%", str(account_id))
     cache_html_path = os.path.join(CACHE_FILE_PATH, "%s.html" % account_id)
-    file.write_file(template_html, cache_html_path, enum.WriteFileMode.REPLACE)
+    file.write_file(template_html, cache_html_path, crawler_enum.WriteFileMode.REPLACE)
     # 使用抖音的加密JS方法算出signature的值
     chrome_options_argument = ["user-agent=" + USER_AGENT]
     with browser.Chrome("file:///" + os.path.realpath(cache_html_path), add_argument=chrome_options_argument) as chrome:
@@ -103,7 +103,7 @@ class DouYin(crawler.Crawler):
         crawler.PROJECT_APP_PATH = os.path.abspath(os.path.dirname(__file__))
 
         sys_config = {
-            enum.SysConfigKey.DOWNLOAD_VIDEO: True,
+            crawler_enum.SysConfigKey.DOWNLOAD_VIDEO: True,
         }
         crawler.Crawler.__init__(self, sys_config, **kwargs)
 

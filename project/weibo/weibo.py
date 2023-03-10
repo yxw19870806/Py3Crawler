@@ -186,9 +186,9 @@ class Weibo(crawler.Crawler):
 
         # 初始化参数
         sys_config = {
-            enum.SysConfigKey.DOWNLOAD_PHOTO: True,
-            enum.SysConfigKey.DOWNLOAD_VIDEO: True,
-            enum.SysConfigKey.GET_COOKIE: ("weibo.com",),
+            crawler_enum.SysConfigKey.DOWNLOAD_PHOTO: True,
+            crawler_enum.SysConfigKey.DOWNLOAD_VIDEO: True,
+            crawler_enum.SysConfigKey.GET_COOKIE: ("weibo.com",),
         }
         crawler.Crawler.__init__(self, sys_config, **kwargs)
 
