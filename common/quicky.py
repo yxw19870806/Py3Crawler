@@ -7,8 +7,8 @@ email: hikaru870806@hotmail.com
 """
 import configparser
 import os
-from common import browser, crawler, crawler_enum, net
 from typing import Optional
+from common import browser, crawler, crawler_enum, net, PROJECT_CONFIG_PATH
 
 
 def quickly_set_proxy(config: Optional[dict] = None, is_auto: bool = True) -> None:
@@ -61,7 +61,7 @@ def quickly_get_all_cookies_from_browser(config: Optional[dict] = None) -> dict:
 
 
 def _get_config() -> dict:
-    config = crawler.read_config(crawler.PROJECT_CONFIG_PATH)
+    config = crawler.read_config(PROJECT_CONFIG_PATH)
     app_config_path = os.path.abspath(os.path.join(crawler.PROJECT_APP_PATH, "app.ini"))
     if os.path.exists(app_config_path):
         app_config = crawler.read_config(app_config_path)
