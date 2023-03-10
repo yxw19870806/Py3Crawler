@@ -118,9 +118,9 @@ class Favorite(crawler.Crawler):
 
         # 初始化参数
         sys_config = {
-            crawler.SysConfigKey.DOWNLOAD_PHOTO: True,
-            crawler.SysConfigKey.NOT_CHECK_SAVE_DATA: True,
-            crawler.SysConfigKey.GET_COOKIE: ("sina.com.cn", "login.sina.com.cn"),
+            crawler_enum.SysConfigKey.DOWNLOAD_PHOTO: True,
+            crawler_enum.SysConfigKey.NOT_CHECK_SAVE_DATA: True,
+            crawler_enum.SysConfigKey.GET_COOKIE: ("sina.com.cn", "login.sina.com.cn"),
         }
         crawler.Crawler.__init__(self, sys_config, **kwargs)
 
@@ -151,13 +151,13 @@ class Favorite(crawler.Crawler):
 
             for blog_id in favorite_pagination_response["delete_blog_id_list"]:
                 blog_description = "微博%s" % blog_id
-                log.step("开始删除 %s" % blog_description)
+                log.info("开始删除 %s" % blog_description)
                 try:
                     delete_favorite(blog_id)
                 except crawler.CrawlerException as e:
                     log.error(e.http_error(blog_description))
                     raise
-                log.step("%s 删除成功" % blog_description)
+                log.info("%s 删除成功" % blog_description)
 
             self.parse_result(favorite_pagination_description, favorite_pagination_response["blog_info_list"])
 

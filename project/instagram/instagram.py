@@ -66,7 +66,7 @@ def login_from_console():
                 if _do_login(email, password):
                     if IS_LOCAL_SAVE_SESSION and SESSION_DATA_PATH:
                         encrypt_string = crypto.Crypto().encrypt(tool.json_encode({"email": email, "password": password}))
-                        file.write_file(encrypt_string, SESSION_DATA_PATH, file.WriteFileMode.REPLACE)
+                        file.write_file(encrypt_string, SESSION_DATA_PATH, crawler_enum.WriteFileMode.REPLACE)
                     return True
                 return False
             elif input_str in ["n", "no"]:
@@ -297,12 +297,12 @@ class Instagram(crawler.Crawler):
 
         # 初始化参数
         sys_config = {
-            crawler.SysConfigKey.DOWNLOAD_PHOTO: True,
-            crawler.SysConfigKey.DOWNLOAD_VIDEO: True,
-            crawler.SysConfigKey.SET_PROXY: True,
-            crawler.SysConfigKey.GET_COOKIE: ("instagram.com",),
-            crawler.SysConfigKey.APP_CONFIG: (
-                ("IS_LOCAL_SAVE_SESSION", False, crawler.ConfigAnalysisMode.BOOLEAN),
+            crawler_enum.SysConfigKey.DOWNLOAD_PHOTO: True,
+            crawler_enum.SysConfigKey.DOWNLOAD_VIDEO: True,
+            crawler_enum.SysConfigKey.SET_PROXY: True,
+            crawler_enum.SysConfigKey.GET_COOKIE: ("instagram.com",),
+            crawler_enum.SysConfigKey.APP_CONFIG: (
+                ("IS_LOCAL_SAVE_SESSION", False, crawler_enum.ConfigAnalysisMode.BOOLEAN),
             ),
         }
         crawler.Crawler.__init__(self, sys_config, **kwargs)
@@ -334,7 +334,7 @@ class Instagram(crawler.Crawler):
                 if login_from_console():
                     break
                 else:
-                    log.step("登录失败！")
+                    log.info("登录失败！")
             elif input_str in ["e", "exit"]:
                 tool.process_exit()
 
@@ -439,7 +439,7 @@ class CrawlerThread(crawler.CrawlerThread):
 
         # 获取所有可下载媒体
         media_info_list = self.get_crawl_list()
-        self.step("需要下载的全部媒体解析完毕，共%s个" % len(media_info_list))
+        self.info("需要下载的全部媒体解析完毕，共%s个" % len(media_info_list))
 
         # 从最早的媒体开始下载
         while len(media_info_list) > 0:

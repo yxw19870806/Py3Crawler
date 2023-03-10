@@ -23,7 +23,7 @@ EXTRA_CONFIG_FILE_PATH = os.path.join(os.path.dirname(__file__), "lib", "discoun
 
 # 打折游戏列表保存到文件
 def save_discount_list(cache_file_path, discount_game_list):
-    file.write_file(tool.json_encode(discount_game_list), cache_file_path, file.WriteFileMode.REPLACE)
+    file.write_file(tool.json_encode(discount_game_list), cache_file_path, crawler_enum.WriteFileMode.REPLACE)
 
 
 # 获取文件中的打折列表
@@ -51,13 +51,13 @@ def main():
     global MIN_DISCOUNT_PERCENT, MAX_DISCOUNT_PERCENT, MAX_SELLING_PERCENT
     config = crawler.read_config(EXTRA_CONFIG_FILE_PATH)
 
-    INCLUDE_GAME = crawler.analysis_config(config, "INCLUDE_GAME", True, crawler.ConfigAnalysisMode.BOOLEAN)
-    INCLUDE_PACKAGE = crawler.analysis_config(config, "INCLUDE_PACKAGE", True, crawler.ConfigAnalysisMode.BOOLEAN)
-    INCLUDE_BUNDLE = crawler.analysis_config(config, "INCLUDE_BUNDLE", True, crawler.ConfigAnalysisMode.BOOLEAN)
-    SKIP_RESTRICTED_GAME = crawler.analysis_config(config, "SKIP_RESTRICTED_GAME", True, crawler.ConfigAnalysisMode.BOOLEAN)
-    MIN_DISCOUNT_PERCENT = crawler.analysis_config(config, "MIN_DISCOUNT_PERCENT", 75, crawler.ConfigAnalysisMode.INTEGER)
-    MAX_DISCOUNT_PERCENT = crawler.analysis_config(config, "MAX_DISCOUNT_PERCENT", 100, crawler.ConfigAnalysisMode.INTEGER)
-    MAX_SELLING_PERCENT = crawler.analysis_config(config, "MAX_SELLING_PERCENT", 1, crawler.ConfigAnalysisMode.INTEGER)
+    INCLUDE_GAME = crawler.analysis_config(config, "INCLUDE_GAME", True, crawler_enum.ConfigAnalysisMode.BOOLEAN)
+    INCLUDE_PACKAGE = crawler.analysis_config(config, "INCLUDE_PACKAGE", True, crawler_enum.ConfigAnalysisMode.BOOLEAN)
+    INCLUDE_BUNDLE = crawler.analysis_config(config, "INCLUDE_BUNDLE", True, crawler_enum.ConfigAnalysisMode.BOOLEAN)
+    SKIP_RESTRICTED_GAME = crawler.analysis_config(config, "SKIP_RESTRICTED_GAME", True, crawler_enum.ConfigAnalysisMode.BOOLEAN)
+    MIN_DISCOUNT_PERCENT = crawler.analysis_config(config, "MIN_DISCOUNT_PERCENT", 75, crawler_enum.ConfigAnalysisMode.INTEGER)
+    MAX_DISCOUNT_PERCENT = crawler.analysis_config(config, "MAX_DISCOUNT_PERCENT", 100, crawler_enum.ConfigAnalysisMode.INTEGER)
+    MAX_SELLING_PERCENT = crawler.analysis_config(config, "MAX_SELLING_PERCENT", 1, crawler_enum.ConfigAnalysisMode.INTEGER)
     MIN_DISCOUNT_PERCENT = min(max(MIN_DISCOUNT_PERCENT, 1), 100)
     MAX_DISCOUNT_PERCENT = min(max(MAX_DISCOUNT_PERCENT, 1), 100)
     MAX_SELLING_PERCENT = max(MAX_SELLING_PERCENT, 1)

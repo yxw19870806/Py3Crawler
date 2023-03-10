@@ -16,7 +16,7 @@ DUPLICATE_CSV_FILE_PATH = os.path.abspath("duplicate.csv")
 def main(file_path):
     group_id = 1
     group_list = []
-    for line in file.read_file(file_path, file.ReadFileMode.LINE):
+    for line in file.read_file(file_path, crawler_enum.ReadFileMode.LINE):
         row = line.split("\t")
         # 处理一个组别的
         if group_id != int(row[4]):

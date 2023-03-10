@@ -13,7 +13,7 @@ if __name__ == "__main__":
 
     equip_list_file_path = os.path.join("equip.txt")
     equip_info_list = []
-    for equip_info_string in file.read_file(equip_list_file_path, file.ReadFileMode.LINE):
+    for equip_info_string in file.read_file(equip_list_file_path, crawler_enum.ReadFileMode.LINE):
         equip_info = equip_info_string.split("\t")
         equip_name = equip_info[0]
         equip_level = equip_info[1]

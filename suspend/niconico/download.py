@@ -15,7 +15,7 @@ from suspend.niconico import niconico
 class NicoNicoDownload(niconico.NicoNico):
     def __init__(self, **kwargs):
         extra_sys_config = {
-            crawler.SysConfigKey.NOT_CHECK_SAVE_DATA: True
+            crawler_enum.SysConfigKey.NOT_CHECK_SAVE_DATA: True
         }
         niconico.NicoNico.__init__(self, extra_sys_config=extra_sys_config, **kwargs)
 
@@ -47,7 +47,7 @@ class NicoNicoDownload(niconico.NicoNico):
         # 输入需要解析的视频
         video_id = self.get_video_id_from_console()
         if not tool.is_integer(video_id):
-            log.step("错误的视频地址，正确的地址格式如：http://www.nicovideo.jp/watch/sm20429274")
+            log.info("错误的视频地址，正确的地址格式如：http://www.nicovideo.jp/watch/sm20429274")
             return
 
         # 获取下载地址
@@ -57,11 +57,11 @@ class NicoNicoDownload(niconico.NicoNico):
             log.error(e.http_error("视频"))
             return
         if video_response["is_delete"]:
-            log.step("视频不存在，跳过")
+            log.info("视频不存在，跳过")
             return
 
         # 选择下载目录
-        log.step("请选择下载目录")
+        log.info("请选择下载目录")
         options = {
             "initialdir": self.video_download_path,
             "initialfile": "%08d - %s.mp4" % (int(video_id), path.filter_text(video_response["video_title"])),
@@ -73,13 +73,13 @@ class NicoNicoDownload(niconico.NicoNico):
             return
 
         # 开始下载
-        log.step("\n视频标题：%s\n视频地址：%s\n下载路径：%s" % (video_response["video_title"], video_response["video_url"], file_path))
+        log.info("\n视频标题：%s\n视频地址：%s\n下载路径：%s" % (video_response["video_title"], video_response["video_url"], file_path))
         cookies_list = niconico.COOKIE_INFO
         if video_response["extra_cookie"]:
             cookies_list.update(video_response["extra_cookie"])
         download_return = net.Download(video_response["video_url"], file_path, auto_multipart_download=True, cookies_list=cookies_list)
         if download_return.status == net.Download.DOWNLOAD_SUCCEED:
-            log.step("视频《%s》下载成功" % video_response["video_title"])
+            log.info("视频《%s》下载成功" % video_response["video_title"])
         else:
             log.error("视频《%s》下载失败，原因：%s" % (video_response["video_title"], crawler.download_failre(download_return.code)))
 

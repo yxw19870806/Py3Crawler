@@ -133,8 +133,8 @@ class Bcy(crawler.Crawler):
 
         # 初始化参数
         sys_config = {
-            crawler.SysConfigKey.DOWNLOAD_PHOTO: True,
-            crawler.SysConfigKey.DOWNLOAD_VIDEO: True,
+            crawler_enum.SysConfigKey.DOWNLOAD_PHOTO: True,
+            crawler_enum.SysConfigKey.DOWNLOAD_VIDEO: True,
         }
         crawler.Crawler.__init__(self, sys_config, **kwargs)
 
@@ -218,7 +218,7 @@ class CrawlerThread(crawler.CrawlerThread):
         photo_index = 1
         for photo_url in photo_url_list:
             photo_description = "作品%s第%s张图片" % (album_id, photo_index)
-            self.step("开始下载 %s %s" % (photo_description, photo_url))
+            self.info("开始下载 %s %s" % (photo_description, photo_url))
 
             file_extension = net.get_file_extension(photo_url, "jpg")
             if file_extension == "image":
@@ -229,11 +229,11 @@ class CrawlerThread(crawler.CrawlerThread):
                 download_return = net.Download(photo_url, photo_path)
                 if download_return.status == net.Download.DOWNLOAD_SUCCEED:
                     self.total_photo_count += 1  # 计数累加
-                    self.step("%s 下载成功" % photo_description)
+                    self.info("%s 下载成功" % photo_description)
                 else:
                     # 560报错，重新下载
                     if download_return.code == 404 and retry_count < 4:
-                        log.step("图片 %s 访问异常，重试" % photo_url)
+                        log.info("图片 %s 访问异常，重试" % photo_url)
                         time.sleep(5)
                         continue
                     self.error("%s %s 下载失败，原因：%s" % (photo_description, photo_url, crawler.download_failre(download_return.code)))
@@ -257,7 +257,7 @@ class CrawlerThread(crawler.CrawlerThread):
     def _run(self):
         # 获取所有可下载作品
         album_id_list = self.get_crawl_list()
-        self.step("需要下载的全部作品解析完毕，共%s个" % len(album_id_list))
+        self.info("需要下载的全部作品解析完毕，共%s个" % len(album_id_list))
 
         # 从最早的作品开始下载
         while len(album_id_list) > 0:

@@ -16,7 +16,7 @@ from project.bilibili import bilibili
 class BiliBiliFavorites(bilibili.BiliBili):
     def __init__(self, **kwargs):
         extra_sys_config = {
-            crawler.SysConfigKey.NOT_CHECK_SAVE_DATA: True
+            crawler_enum.SysConfigKey.NOT_CHECK_SAVE_DATA: True
         }
         bilibili.BiliBili.__init__(self, extra_sys_config=extra_sys_config, **kwargs)
 
@@ -47,7 +47,7 @@ class BiliBiliFavorites(bilibili.BiliBili):
         # 输入需要解析的视频
         favorites_id = self.get_favorites_id_from_console()
         if not tool.is_integer(favorites_id):
-            log.step("错误的收藏夹播放地址，正确的地址格式如：https://www.bilibili.com/medialist/play/ml1234567890")
+            log.info("错误的收藏夹播放地址，正确的地址格式如：https://www.bilibili.com/medialist/play/ml1234567890")
             return
 
         # 访问视频播放页
@@ -58,7 +58,7 @@ class BiliBiliFavorites(bilibili.BiliBili):
             return
 
         # 选择下载目录
-        log.step("请选择下载目录")
+        log.info("请选择下载目录")
         options = {
             "initialdir": self.video_download_path,
             "parent": self.gui,
@@ -88,7 +88,7 @@ class BiliBiliFavorites(bilibili.BiliBili):
                 log.error(e.http_error(video_description))
                 continue
             if video_play_response["is_private"]:
-                log.step("%s 需要登录才能访问，跳过" % video_description)
+                log.info("%s 需要登录才能访问，跳过" % video_description)
                 continue
             self.parse_result(video_description, video_play_response["video_part_info_list"])
 
@@ -109,7 +109,7 @@ class BiliBiliFavorites(bilibili.BiliBili):
                     video_path = os.path.join(root_dir, video_name)
 
                     # 开始下载
-                    log.step("\n视频标题：%s\n视频地址：%s\n下载路径：%s" % (video_play_response["video_title"], video_part_url, video_path))
+                    log.info("\n视频标题：%s\n视频地址：%s\n下载路径：%s" % (video_play_response["video_title"], video_part_url, video_path))
                     header_list = {"Referer": "https://www.bilibili.com/video/av%s" % video_info["video_id"]}
                     self.download(video_part_url, video_path, video_description, auto_multipart_download=True, header_list=header_list)
                     video_split_index += 1

@@ -16,7 +16,7 @@ from project.bilibili import bilibili
 class BiliBiliDownload(bilibili.BiliBili):
     def __init__(self, **kwargs):
         extra_sys_config = {
-            crawler.SysConfigKey.NOT_CHECK_SAVE_DATA: True
+            crawler_enum.SysConfigKey.NOT_CHECK_SAVE_DATA: True
         }
         bilibili.BiliBili.__init__(self, extra_sys_config=extra_sys_config, **kwargs)
 
@@ -53,7 +53,7 @@ class BiliBiliDownload(bilibili.BiliBili):
         # 输入需要解析的视频
         video_id = self.get_video_id_from_console()
         if not tool.is_integer(video_id):
-            log.step("错误的视频地址，正确的地址格式如：https://www.bilibili.com/video/av123456")
+            log.info("错误的视频地址，正确的地址格式如：https://www.bilibili.com/video/av123456")
             return
 
         # 获取下载地址
@@ -63,18 +63,18 @@ class BiliBiliDownload(bilibili.BiliBili):
             log.error(e.http_error("视频"))
             return
         if video_response["is_private"]:
-            log.step("视频需要登录才能访问，跳过")
+            log.info("视频需要登录才能访问，跳过")
             return
         if len(video_response["video_part_info_list"]) > 1:
-            log.step("视频共获取%s个分段" % len(video_response["video_part_info_list"]))
+            log.info("视频共获取%s个分段" % len(video_response["video_part_info_list"]))
 
         part_index = 1
         for video_part_info in video_response["video_part_info_list"]:
             if len(video_part_info["video_url_list"]) == 0:
                 if len(video_response["video_part_info_list"]) > 1:
-                    log.step("视频第%s个分段已删除" % part_index)
+                    log.info("视频第%s个分段已删除" % part_index)
                 else:
-                    log.step("视频已删除")
+                    log.info("视频已删除")
                 return
 
             video_title = video_response["video_title"]
@@ -86,7 +86,7 @@ class BiliBiliDownload(bilibili.BiliBili):
             video_name = "%010d %s.%s" % (int(video_id), path.filter_text(video_title), net.get_file_extension(video_part_info["video_url_list"][0]))
 
             # 选择下载目录
-            log.step("请选择下载目录")
+            log.info("请选择下载目录")
             options = {
                 "initialdir": self.video_download_path,
                 "initialfile": video_name,
@@ -98,7 +98,7 @@ class BiliBiliDownload(bilibili.BiliBili):
                 continue
 
             # 开始下载
-            log.step("\n视频标题：%s\n视频地址：%s\n下载路径：%s" % (video_title, video_part_info["video_url_list"], video_path))
+            log.info("\n视频标题：%s\n视频地址：%s\n下载路径：%s" % (video_title, video_part_info["video_url_list"], video_path))
             video_index = 1
             for video_url in video_part_info["video_url_list"]:
                 if len(video_part_info["video_url_list"]) > 1:

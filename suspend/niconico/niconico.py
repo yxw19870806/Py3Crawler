@@ -167,7 +167,7 @@ def get_video_info(video_id):
         "video_url": "",  # 视频地址
     }
     if video_play_response.status == 403:
-        log.step("视频%s访问异常，重试" % video_id)
+        log.info("视频%s访问异常，重试" % video_id)
         time.sleep(30)
         return get_video_info(video_id)
     elif video_play_response.status == 404:
@@ -206,9 +206,9 @@ class NicoNico(crawler.Crawler):
 
         # 初始化参数
         sys_config = {
-            crawler.SysConfigKey.DOWNLOAD_VIDEO: True,
-            crawler.SysConfigKey.SET_PROXY: True,
-            crawler.SysConfigKey.GET_COOKIE: ("nicovideo.jp",),
+            crawler_enum.SysConfigKey.DOWNLOAD_VIDEO: True,
+            crawler_enum.SysConfigKey.SET_PROXY: True,
+            crawler_enum.SysConfigKey.GET_COOKIE: ("nicovideo.jp",),
         }
         crawler.Crawler.__init__(self, sys_config, **kwargs)
 
@@ -241,7 +241,7 @@ class CrawlerThread(crawler.CrawlerThread):
     def _run(self):
         # 获取所有可下载视频
         video_info_list = self.get_crawl_list()
-        self.step("需要下载的全部视频解析完毕，共%s个" % len(video_info_list))
+        self.info("需要下载的全部视频解析完毕，共%s个" % len(video_info_list))
 
         # 从最早的视频开始下载
         while len(video_info_list) > 0:
@@ -296,7 +296,7 @@ class CrawlerThread(crawler.CrawlerThread):
             self.error("视频%s 《%s》未公开，跳过" % (video_info["video_id"], video_info["video_title"]))
             return
 
-        self.step("视频%s 《%s》 %s 开始下载" % (video_info["video_id"], video_info["video_title"], video_info_response["video_url"]))
+        self.info("视频%s 《%s》 %s 开始下载" % (video_info["video_id"], video_info["video_title"], video_info_response["video_url"]))
         video_file_path = os.path.join(self.main_thread.video_download_path, self.display_name, "%08d - %s.mp4" % (video_info["video_id"], path.filter_text(video_info["video_title"])))
         cookies_list = COOKIE_INFO
         if video_info_response["extra_cookie"]:
@@ -304,7 +304,7 @@ class CrawlerThread(crawler.CrawlerThread):
         download_return = net.Download(video_info_response["video_url"], video_file_path, cookies_list=cookies_list)
         if download_return.status == net.Download.DOWNLOAD_SUCCEED:
             self.total_video_count += 1  # 计数累加
-            self.step("视频%s 《%s》下载成功" % (video_info["video_id"], video_info["video_title"]))
+            self.info("视频%s 《%s》下载成功" % (video_info["video_id"], video_info["video_title"]))
         else:
             self.error("视频%s 《%s》 %s 下载失败，原因：%s" % (video_info["video_id"], video_info["video_title"], video_info_response["video_url"], crawler.download_failre(download_return.code)))
             self.check_download_failure_exit()

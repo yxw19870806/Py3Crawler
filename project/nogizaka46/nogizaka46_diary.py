@@ -140,7 +140,7 @@ class Nogizaka46Diary(crawler.Crawler):
 
         # 初始化参数
         sys_config = {
-            crawler.SysConfigKey.DOWNLOAD_PHOTO: True,
+            crawler_enum.SysConfigKey.DOWNLOAD_PHOTO: True,
         }
         crawler.Crawler.__init__(self, sys_config, **kwargs)
 
@@ -228,14 +228,14 @@ class CrawlerThread(crawler.CrawlerThread):
     def download_success_callback(self, photo_url, photo_path, photo_description, download_return):
         if check_photo_invalid(photo_path):
             path.delete_dir_or_file(photo_path)
-            self.step("%s %s 不符合规则，删除" % (photo_description, photo_url))
+            self.info("%s %s 不符合规则，删除" % (photo_description, photo_url))
             return False
         return True
 
     def _run(self):
         # 获取所有可下载日志
         blog_id_list = self.get_crawl_list()
-        self.step("需要下载的全部日志解析完毕，共%s个" % len(blog_id_list))
+        self.info("需要下载的全部日志解析完毕，共%s个" % len(blog_id_list))
 
         # 从最早的日志开始下载
         while len(blog_id_list) > 0:

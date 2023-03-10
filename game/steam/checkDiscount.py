@@ -7,7 +7,7 @@ email: hikaru870806@hotmail.com
 如有问题或建议请联系
 """
 import os
-from common import crawler, file, output, tool
+from common import crawler, crawler_enum, file, output, tool
 from game.steam.lib import steam
 
 
@@ -77,7 +77,7 @@ def main():
 
         # 增加检测标记
         checked_apps_list.append(game_id)
-        file.write_file(",".join(checked_apps_list), checked_apps_file_path, file.WriteFileMode.REPLACE)
+        file.write_file(",".join(checked_apps_list), checked_apps_file_path, crawler_enum.WriteFileMode.REPLACE)
 
 
 if __name__ == "__main__":

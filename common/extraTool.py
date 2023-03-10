@@ -10,7 +10,7 @@ import threading
 import time
 import zipfile
 from typing import Optional
-from common import file, net, output, path, tool
+from common import crawler_enum, file, net, output, path, tool
 
 NET_CONFIG = {
     "DOWNLOAD_LIMIT_SIZE": 1.5 * net.SIZE_GB,  # 下载文件超过多少字节跳过不下载
@@ -87,7 +87,7 @@ def sort_file(source_path: str, destination_path: str, start_count: int, file_na
     - start_count - 重命名开始的序号
     - file_name_length - 复制后的文件名长度
     """
-    file_list = path.get_dir_files_name(source_path, path.OrderType.DESC)
+    file_list = path.get_dir_files_name(source_path, crawler_enum.OrderType.DESC)
     # 判断排序目标文件夹是否存在
     if len(file_list) >= 1:
         if not path.create_dir(destination_path):

@@ -1,14 +1,14 @@
 {
-  "IS_SHOW_ERROR": true,
-  "IS_SHOW_STEP": true,
-  "IS_SHOW_TRACE": false,
-  "IS_SHOW_NOTICE": true,
-  "IS_LOG_ERROR": true,
-  "IS_LOG_STEP": false,
-  "IS_LOG_TRACE": false,
-  "IS_LOG_NOTICE": true,
-  "ERROR_LOG_PATH": "../log/errorLog.txt",
-  "STEP_LOG_PATH": "../log/stepLog.txt",
-  "TRACE_LOG_PATH": "../log/traceLog.txt",
-  "NOTICE_LOG_PATH": "../log/noticeLog.txt"
+  "IS_CONSOLE_DEBUG": false,
+  "IS_CONSOLE_INFO": true,
+  "IS_CONSOLE_WARNING": true,
+  "IS_CONSOLE_ERROR": true,
+  "IS_WRITE_DEBUG": false,
+  "IS_WRITE_INFO": false,
+  "IS_WRITE_WARNING": true,
+  "IS_WRITE_ERROR": true,
+  "LOG_DEBUG_PATH": "../log/debugLog.txt",
+  "LOG_INFO_PATH": "../log/infoLog.txt",
+  "LOG_WARNING_PATH": "../log/warningLog.txt",
+  "LOG_ERROR_PATH": "../log/errorLog.txt"
 }

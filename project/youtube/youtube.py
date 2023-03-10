@@ -57,7 +57,7 @@ def get_one_page_video(account_id, token):
             raise crawler.CrawlerException(crawler.request_failre(index_response.status))
         index_response_content = index_response.data.decode(errors="ignore")
         if index_response_content.find('<button id="a11y-skip-nav" class="skip-nav"') >= 0:
-            log.step("首页 %s 访问出现跳转，再次访问" % index_url)
+            log.info("首页 %s 访问出现跳转，再次访问" % index_url)
             return get_one_page_video(account_id, token)
         # 截取初始化数据
         script_json_html = tool.find_sub_string(index_response_content, 'var ytInitialData = ', ";</script>").strip()
@@ -198,7 +198,7 @@ def get_video_page(video_id):
             video_resolution = int(video_quality[len("hd"):])
         else:
             video_resolution = 1
-            log.notice("未知视频画质：" + video_quality)
+            log.warning("未知视频画质：" + video_quality)
         try:
             video_url = crawler.get_json_value(video_info, "url", type_check=str)
         except crawler.CrawlerException:
@@ -331,11 +331,11 @@ class Youtube(crawler.Crawler):
 
         # 初始化参数
         sys_config = {
-            crawler.SysConfigKey.DOWNLOAD_VIDEO: True,
-            crawler.SysConfigKey.SET_PROXY: True,
-            crawler.SysConfigKey.GET_COOKIE: ("youtube.com",),
-            crawler.SysConfigKey.APP_CONFIG: (
-                ("VIDEO_QUALITY", 6, crawler.ConfigAnalysisMode.INTEGER),
+            crawler_enum.SysConfigKey.DOWNLOAD_VIDEO: True,
+            crawler_enum.SysConfigKey.SET_PROXY: True,
+            crawler_enum.SysConfigKey.GET_COOKIE: ("youtube.com",),
+            crawler_enum.SysConfigKey.APP_CONFIG: (
+                ("VIDEO_QUALITY", 6, crawler_enum.ConfigAnalysisMode.INTEGER),
             ),
         }
         crawler.Crawler.__init__(self, sys_config, **kwargs)
@@ -410,7 +410,7 @@ class CrawlerThread(crawler.CrawlerThread):
             self.parse_result(video_pagination_description, video_pagination_response["video_id_list"])
 
             if len(self.single_save_data) < 4:
-                self.step("频道名：%s" % video_pagination_response["channel_name"])
+                self.info("频道名：%s" % video_pagination_response["channel_name"])
                 self.display_name = video_pagination_response["channel_name"]
                 self.single_save_data.append(self.display_name)
 
@@ -446,7 +446,7 @@ class CrawlerThread(crawler.CrawlerThread):
         # 如果解析需要下载的视频时没有找到上次的记录，表示存档所在的视频已被删除，则判断数字id
         if not self.is_find:
             if video_response["video_time"] < int(self.single_save_data[2]):
-                self.step("%s 跳过" % video_description)
+                self.info("%s 跳过" % video_description)
                 # 如果最后一个视频仍然没有找到，重新设置存档
                 if is_last:
                     self.single_save_data[1] = video_id  # 设置存档记录
@@ -473,9 +473,9 @@ class CrawlerThread(crawler.CrawlerThread):
     def _run(self):
         # 获取所有可下载视频
         video_id_list = self.get_crawl_list()
-        self.step("需要下载的全部视频解析完毕，共%s个" % len(video_id_list))
+        self.info("需要下载的全部视频解析完毕，共%s个" % len(video_id_list))
         if not self.is_find:
-            self.step("存档所在视频已删除，需要在下载时进行过滤")
+            self.info("存档所在视频已删除，需要在下载时进行过滤")
 
         # 从最早的视频开始下载
         while len(video_id_list) > 0:

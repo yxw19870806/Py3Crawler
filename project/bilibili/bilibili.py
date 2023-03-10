@@ -354,10 +354,10 @@ class BiliBili(crawler.Crawler):
 
         # 初始化参数
         sys_config = {
-            crawler.SysConfigKey.DOWNLOAD_PHOTO: True,
-            crawler.SysConfigKey.DOWNLOAD_VIDEO: True,
-            crawler.SysConfigKey.DOWNLOAD_AUDIO: True,
-            crawler.SysConfigKey.GET_COOKIE: ("bilibili.com",),
+            crawler_enum.SysConfigKey.DOWNLOAD_PHOTO: True,
+            crawler_enum.SysConfigKey.DOWNLOAD_VIDEO: True,
+            crawler_enum.SysConfigKey.DOWNLOAD_AUDIO: True,
+            crawler_enum.SysConfigKey.GET_COOKIE: ("bilibili.com",),
         }
         crawler.Crawler.__init__(self, sys_config, **kwargs)
 
@@ -598,7 +598,7 @@ class CrawlerThread(crawler.CrawlerThread):
         photo_index = 1
         for photo_url in album_response["photo_url_list"]:
             photo_description = "相簿%s第%s张图片" % (album_id, photo_index)
-            self.step("开始下载 %s %s" % (photo_description, photo_url))
+            self.info("开始下载 %s %s" % (photo_description, photo_url))
             photo_name = "%09d_%02d.%s" % (album_id, photo_index, net.get_file_extension(photo_url))
             photo_path = os.path.join(self.main_thread.photo_download_path, self.display_name, photo_name)
             self.main_thread_check()  # 检测主线程运行状态
@@ -611,7 +611,7 @@ class CrawlerThread(crawler.CrawlerThread):
             if download_return.status == net.Download.DOWNLOAD_SUCCEED:
                 self.temp_path_list.append(photo_path)  # 设置临时目录
                 self.total_photo_count += 1  # 计数累加
-                self.step("%s 下载成功" % photo_description)
+                self.info("%s 下载成功" % photo_description)
             else:
                 self.error("%s %s 下载失败，原因：%s" % (photo_description, photo_url, crawler.download_failre(download_return.code)))
                 if self.check_download_failure_exit(False):
@@ -628,7 +628,7 @@ class CrawlerThread(crawler.CrawlerThread):
         if self.main_thread.is_download_video:
             # 获取所有可下载视频
             video_info_list = self.get_crawl_video_list()
-            self.step("需要下载的全部视频解析完毕，共%s个" % len(video_info_list))
+            self.info("需要下载的全部视频解析完毕，共%s个" % len(video_info_list))
 
             # 从最早的视频开始下载
             while len(video_info_list) > 0:
@@ -639,7 +639,7 @@ class CrawlerThread(crawler.CrawlerThread):
         if self.main_thread.is_download_audio:
             # 获取所有可下载音频
             audio_info_list = self.get_crawl_audio_list()
-            self.step("需要下载的全部音频解析完毕，共%s个" % len(audio_info_list))
+            self.info("需要下载的全部音频解析完毕，共%s个" % len(audio_info_list))
 
             # 从最早的相簿开始下载
             while len(audio_info_list) > 0:
@@ -650,7 +650,7 @@ class CrawlerThread(crawler.CrawlerThread):
         if self.main_thread.is_download_photo:
             # 获取所有可下载相簿
             album_id_list = self.get_crawl_photo_list()
-            self.step("需要下载的全部相簿解析完毕，共%s个" % len(album_id_list))
+            self.info("需要下载的全部相簿解析完毕，共%s个" % len(album_id_list))
 
             # 从最早的相簿开始下载
             while len(album_id_list) > 0:

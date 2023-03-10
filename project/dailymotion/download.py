@@ -16,7 +16,7 @@ from project.dailymotion import dailymotion
 class DailyMotionDownload(dailymotion.DailyMotion):
     def __init__(self, **kwargs):
         extra_sys_config = {
-            crawler.SysConfigKey.NOT_CHECK_SAVE_DATA: True
+            crawler_enum.SysConfigKey.NOT_CHECK_SAVE_DATA: True
         }
         dailymotion.DailyMotion.__init__(self, extra_sys_config=extra_sys_config, **kwargs)
 
@@ -46,7 +46,7 @@ class DailyMotionDownload(dailymotion.DailyMotion):
         # 输入需要解析的视频
         video_id = self.get_video_id_from_console()
         if video_id is None:
-            log.step("错误的视频地址，正确的地址格式如：https://www.dailymotion.com/video/x6njw4l")
+            log.info("错误的视频地址，正确的地址格式如：https://www.dailymotion.com/video/x6njw4l")
             return
 
         # 获取下载地址
@@ -56,11 +56,11 @@ class DailyMotionDownload(dailymotion.DailyMotion):
             log.error(e.http_error("视频"))
             return
         if video_response["is_delete"]:
-            log.step("视频不存在，跳过")
+            log.info("视频不存在，跳过")
             return
 
         # 选择下载目录
-        log.step("请选择下载目录")
+        log.info("请选择下载目录")
         options = {
             "initialdir": self.video_download_path,
             "initialfile": "%s - %s.mp4" % (video_id, path.filter_text(video_response["video_title"])),
@@ -72,7 +72,7 @@ class DailyMotionDownload(dailymotion.DailyMotion):
             return
 
         # 开始下载
-        log.step("\n视频标题：%s\n视频地址：%s\n下载路径：%s" % (video_response["video_title"], video_response["video_url"], video_path))
+        log.info("\n视频标题：%s\n视频地址：%s\n下载路径：%s" % (video_response["video_title"], video_response["video_url"], video_path))
         video_description = "视频《%s》" % video_response["video_title"]
         self.download(video_response["video_url"], video_path, video_description, auto_multipart_download=True)
 

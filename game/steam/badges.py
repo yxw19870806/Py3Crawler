@@ -8,7 +8,7 @@ email: hikaru870806@hotmail.com
 """
 import os
 import urllib.parse
-from common import output, crawler, file, tool
+from common import *
 from game.steam.lib import steam
 
 MIN_CARD_PRICE = 0  # 最低卡牌价格
@@ -23,10 +23,10 @@ def main():
     global MIN_CARD_PRICE, MAX_CARD_PRICE, MAX_TOTAL_PRICE, IS_TOTAL_CARD
     config = crawler.read_config(EXTRA_CONFIG_FILE_PATH)
 
-    MIN_CARD_PRICE = crawler.analysis_config(config, "MIN_CARD_PRICE", 0, crawler.ConfigAnalysisMode.BOOLEAN)
-    MAX_CARD_PRICE = crawler.analysis_config(config, "MAX_CARD_PRICE", 0.5, crawler.ConfigAnalysisMode.BOOLEAN)
-    MAX_TOTAL_PRICE = crawler.analysis_config(config, "MAX_TOTAL_PRICE", 1.5, crawler.ConfigAnalysisMode.BOOLEAN)
-    IS_TOTAL_CARD = crawler.analysis_config(config, "IS_TOTAL_CARD", False, crawler.ConfigAnalysisMode.BOOLEAN)
+    MIN_CARD_PRICE = crawler.analysis_config(config, "MIN_CARD_PRICE", 0, crawler_enum.ConfigAnalysisMode.BOOLEAN)
+    MAX_CARD_PRICE = crawler.analysis_config(config, "MAX_CARD_PRICE", 0.5, crawler_enum.ConfigAnalysisMode.BOOLEAN)
+    MAX_TOTAL_PRICE = crawler.analysis_config(config, "MAX_TOTAL_PRICE", 1.5, crawler_enum.ConfigAnalysisMode.BOOLEAN)
+    IS_TOTAL_CARD = crawler.analysis_config(config, "IS_TOTAL_CARD", False, crawler_enum.ConfigAnalysisMode.BOOLEAN)
 
     # 获取登录状态
     steam_class = steam.Steam(need_login=True)
@@ -61,7 +61,7 @@ def main():
         if len(wanted_card_list) == 0:
             # 已实际完成
             skip_list.append(game_id)
-            file.write_file(tool.json_encode(skip_list), skip_list_file_path, file.WriteFileMode.REPLACE)
+            file.write_file(tool.json_encode(skip_list), skip_list_file_path, crawler_enum.WriteFileMode.REPLACE)
             continue
         if game_id in deleted_app_list:
             continue

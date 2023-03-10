@@ -90,8 +90,8 @@ class BiliBiliComic(crawler.Crawler):
 
         # 初始化参数
         sys_config = {
-            crawler.SysConfigKey.DOWNLOAD_PHOTO: True,
-            crawler.SysConfigKey.GET_COOKIE: ("bilibili.com",),
+            crawler_enum.SysConfigKey.DOWNLOAD_PHOTO: True,
+            crawler_enum.SysConfigKey.GET_COOKIE: ("bilibili.com",),
         }
         crawler.Crawler.__init__(self, sys_config, **kwargs)
 
@@ -182,7 +182,7 @@ class CrawlerThread(crawler.CrawlerThread):
     def _run(self):
         # 获取所有可下载章节
         comic_info_list = self.get_crawl_list()
-        self.step("需要下载的全部漫画解析完毕，共%s个" % len(comic_info_list))
+        self.info("需要下载的全部漫画解析完毕，共%s个" % len(comic_info_list))
 
         # 从最早的章节开始下载
         while len(comic_info_list) > 0:

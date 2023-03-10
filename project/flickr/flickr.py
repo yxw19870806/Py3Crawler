@@ -189,9 +189,9 @@ class Flickr(crawler.Crawler):
 
         # 初始化参数
         sys_config = {
-            crawler.SysConfigKey.DOWNLOAD_PHOTO: True,
-            crawler.SysConfigKey.SET_PROXY: True,
-            crawler.SysConfigKey.GET_COOKIE: ("flickr.com",),
+            crawler_enum.SysConfigKey.DOWNLOAD_PHOTO: True,
+            crawler_enum.SysConfigKey.SET_PROXY: True,
+            crawler_enum.SysConfigKey.GET_COOKIE: ("flickr.com",),
         }
         crawler.Crawler.__init__(self, sys_config, **kwargs)
 
@@ -294,7 +294,7 @@ class CrawlerThread(crawler.CrawlerThread):
 
         # 获取所有可下载图片
         photo_info_list = self.get_crawl_list(account_index_response["user_id"], account_index_response["site_key"], account_index_response["csrf"])
-        self.step("需要下载的全部图片解析完毕，共%s张" % len(photo_info_list))
+        self.info("需要下载的全部图片解析完毕，共%s张" % len(photo_info_list))
 
         # 从最早的图片开始下载
         deal_photo_info_list = []

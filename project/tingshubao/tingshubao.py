@@ -92,8 +92,8 @@ class TingShuBao(crawler.Crawler):
 
         # 初始化参数
         sys_config = {
-            crawler.SysConfigKey.DOWNLOAD_AUDIO: True,
-            crawler.SysConfigKey.APP_CONFIG_PATH: os.path.join(crawler.PROJECT_APP_PATH, "app.ini"),
+            crawler_enum.SysConfigKey.DOWNLOAD_AUDIO: True,
+            crawler_enum.SysConfigKey.APP_CONFIG_PATH: os.path.join(crawler.PROJECT_APP_PATH, "app.ini"),
         }
         crawler.Crawler.__init__(self, sys_config, **kwargs)
 
@@ -147,7 +147,7 @@ class CrawlerThread(crawler.CrawlerThread):
             raise
 
         audio_url = audio_play_response["audio_url"]
-        self.step("开始下载 %s %s" % (audio_description, audio_url))
+        self.info("开始下载 %s %s" % (audio_description, audio_url))
 
         for retry_count in range(5):
             audio_name = "%04d %s.%s" % (audio_info["audio_id"], audio_info["audio_title"], net.get_file_extension(audio_url))
@@ -155,14 +155,14 @@ class CrawlerThread(crawler.CrawlerThread):
             download_return = net.Download(audio_url, audio_path)
             if download_return.status == net.Download.DOWNLOAD_SUCCEED:
                 self.total_audio_count += 1  # 计数累加
-                self.step("%s 下载成功" % audio_description)
+                self.info("%s 下载成功" % audio_description)
                 break
             else:
                 if download_return.code != net.HTTP_RETURN_CODE_TOO_MANY_REDIRECTS or retry_count >= 4:
                     self.error("%s %s 下载失败，原因：%s" % (audio_description, audio_url, crawler.download_failre(download_return.code)))
                     self.check_download_failure_exit()
                 else:
-                    self.step("%s %s 下载失败，重试" % (audio_description, audio_url))
+                    self.info("%s %s 下载失败，重试" % (audio_description, audio_url))
 
         # 音频下载完毕
         self.single_save_data[1] = str(audio_info["audio_id"])  # 设置存档记录
@@ -170,7 +170,7 @@ class CrawlerThread(crawler.CrawlerThread):
     def _run(self):
         # 获取所有可下载音频
         audio_info_list = self.get_crawl_list()
-        self.step("需要下载的全部音频解析完毕，共%s个" % len(audio_info_list))
+        self.info("需要下载的全部音频解析完毕，共%s个" % len(audio_info_list))
 
         # 从最早的媒体开始下载
         while len(audio_info_list) > 0:

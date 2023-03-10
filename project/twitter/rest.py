@@ -46,7 +46,7 @@ def init():
         if get_access_token(api_key, api_secret):
             # 加密保存到文件中
             if not os.path.exists(token_file_path):
-                file.write_file(crypto.Crypto().encrypt(tool.json_encode({"api_key": api_key, "api_secret": api_secret})), token_file_path, file.WriteFileMode.REPLACE)
+                file.write_file(crypto.Crypto().encrypt(tool.json_encode({"api_key": api_key, "api_secret": api_secret})), token_file_path, crawler_enum.WriteFileMode.REPLACE)
             output.print_msg("access token get succeed!")
             return True
         output.print_msg("incorrect api info, please type again!")
