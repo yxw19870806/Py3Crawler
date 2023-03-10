@@ -94,8 +94,8 @@ def get_favorites_list(favorites_id):
 
 # 获取指定页数的全部视频
 def get_one_page_video(account_id, page_count):
-    # https://space.bilibili.com/ajax/member/getSubmitVideos?mid=116683&pagesize=30&tid=0&page=3&keyword=&order=pubdate
-    api_url = "https://api.bilibili.com/x/space/arc/search"
+    # https://api.bilibili.com/x/space/wbi/arc/search?mid=2026561407&ps=30&tid=0&pn=1&keyword=&order=pubdate&platform=web&web_location=1550101&order_avoided=true&w_rid=8c57e654e483627aed4f8554d5e18950&wts=1678460182
+    api_url = "https://api.bilibili.com/x/space/wbi/arc/search"
     query_data = {
         "keyword": "",
         "mid": account_id,
@@ -163,8 +163,8 @@ def get_one_page_short_video(account_id, nex_offset):
 
 # 获取指定页数的全部相簿
 def get_one_page_album(account_id, page_count):
-    # https://api.vc.bilibili.com/link_draw/v1/doc/doc_list?uid=116683&page_num=1&page_size=30&biz=all
-    api_url = "https://api.vc.bilibili.com/link_draw/v1/doc/doc_list"
+    # https://api.bilibili.com/x/dynamic/feed/draw/doc_list?uid=2026561407&page_num=0&page_size=30&biz=all&jsonp=jsonp
+    api_url = "https://api.bilibili.com/x/dynamic/feed/draw/doc_list"
     query_data = {
         "uid": account_id,
         "page_num": page_count - 1,
