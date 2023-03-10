@@ -206,9 +206,9 @@ class NicoNico(crawler.Crawler):
 
         # 初始化参数
         sys_config = {
-            enum.SysConfigKey.DOWNLOAD_VIDEO: True,
-            enum.SysConfigKey.SET_PROXY: True,
-            enum.SysConfigKey.GET_COOKIE: ("nicovideo.jp",),
+            crawler_enum.SysConfigKey.DOWNLOAD_VIDEO: True,
+            crawler_enum.SysConfigKey.SET_PROXY: True,
+            crawler_enum.SysConfigKey.GET_COOKIE: ("nicovideo.jp",),
         }
         crawler.Crawler.__init__(self, sys_config, **kwargs)
 

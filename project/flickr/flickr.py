@@ -189,9 +189,9 @@ class Flickr(crawler.Crawler):
 
         # 初始化参数
         sys_config = {
-            enum.SysConfigKey.DOWNLOAD_PHOTO: True,
-            enum.SysConfigKey.SET_PROXY: True,
-            enum.SysConfigKey.GET_COOKIE: ("flickr.com",),
+            crawler_enum.SysConfigKey.DOWNLOAD_PHOTO: True,
+            crawler_enum.SysConfigKey.SET_PROXY: True,
+            crawler_enum.SysConfigKey.GET_COOKIE: ("flickr.com",),
         }
         crawler.Crawler.__init__(self, sys_config, **kwargs)
 

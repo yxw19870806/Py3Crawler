@@ -429,11 +429,11 @@ class Steam(crawler.Crawler):
 
         # 初始化参数
         sys_config = {
-            enum.SysConfigKey.SET_PROXY: True,
-            enum.SysConfigKey.NOT_DOWNLOAD: True,
-            enum.SysConfigKey.NOT_CHECK_SAVE_DATA: True,
-            enum.SysConfigKey.GET_COOKIE: ("store.steampowered.com",),
-            enum.SysConfigKey.APP_CONFIG_PATH: os.path.join(crawler.PROJECT_APP_PATH, "lib", "steam.ini"),
+            crawler_enum.SysConfigKey.SET_PROXY: True,
+            crawler_enum.SysConfigKey.NOT_DOWNLOAD: True,
+            crawler_enum.SysConfigKey.NOT_CHECK_SAVE_DATA: True,
+            crawler_enum.SysConfigKey.GET_COOKIE: ("store.steampowered.com",),
+            crawler_enum.SysConfigKey.APP_CONFIG_PATH: os.path.join(crawler.PROJECT_APP_PATH, "lib", "steam.ini"),
         }
         crawler.Crawler.__init__(self, sys_config, **kwargs)
 
@@ -480,7 +480,7 @@ class Steam(crawler.Crawler):
                 input_str = input_str.lower()
                 if input_str in ["y", "yes"]:
                     account_id = console_account_id
-                    file.write_file(console_account_id, account_id_file_path, enum.WriteFileMode.REPLACE)
+                    file.write_file(console_account_id, account_id_file_path, crawler_enum.WriteFileMode.REPLACE)
                     break
                 elif input_str in ["n", "no"]:
                     break
@@ -497,7 +497,7 @@ class Steam(crawler.Crawler):
         return apps_cache_data
 
     def save_cache_apps_info(self, apps_cache_data):
-        file.write_file(tool.json_encode(apps_cache_data), self.apps_cache_file_path, enum.WriteFileMode.REPLACE)
+        file.write_file(tool.json_encode(apps_cache_data), self.apps_cache_file_path, crawler_enum.WriteFileMode.REPLACE)
 
     def load_deleted_app_list(self):
         deleted_app_list_string = file.read_file(self.deleted_app_list_path)
@@ -507,7 +507,7 @@ class Steam(crawler.Crawler):
         return deleted_app_list
 
     def save_deleted_app_list(self, deleted_app_list):
-        file.write_file(",".join(deleted_app_list), self.deleted_app_list_path, enum.WriteFileMode.REPLACE)
+        file.write_file(",".join(deleted_app_list), self.deleted_app_list_path, crawler_enum.WriteFileMode.REPLACE)
 
     def load_restricted_app_list(self):
         restricted_app_list_string = file.read_file(self.restricted_app_list_path)
@@ -517,13 +517,13 @@ class Steam(crawler.Crawler):
         return restricted_app_list
 
     def save_restricted_app_list(self, restricted_app_list):
-        file.write_file(",".join(restricted_app_list), self.restricted_app_list_path, enum.WriteFileMode.REPLACE)
+        file.write_file(",".join(restricted_app_list), self.restricted_app_list_path, crawler_enum.WriteFileMode.REPLACE)
 
     def load_game_dlc_list(self):
         return tool.json_decode(file.read_file(self.game_dlc_list_path), {})
 
     def save_game_dlc_list(self, game_dlc_list):
-        file.write_file(tool.json_encode(game_dlc_list), self.game_dlc_list_path, enum.WriteFileMode.REPLACE)
+        file.write_file(tool.json_encode(game_dlc_list), self.game_dlc_list_path, crawler_enum.WriteFileMode.REPLACE)
 
     def format_cache_app_info(self):
         apps_cache_data = self.load_cache_apps_info()

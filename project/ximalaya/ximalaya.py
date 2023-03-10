@@ -206,7 +206,7 @@ def get_audio_info_page(audio_id):
 
     # 保存每日vip下载计数
     DAILY_VIP_DOWNLOAD_COUNT[day] += 1
-    file.write_file(tool.json_encode(DAILY_VIP_DOWNLOAD_COUNT), DAILY_VIP_DOWNLOAD_COUNT_CACHE_FILE, enum.WriteFileMode.REPLACE)
+    file.write_file(tool.json_encode(DAILY_VIP_DOWNLOAD_COUNT), DAILY_VIP_DOWNLOAD_COUNT_CACHE_FILE, crawler_enum.WriteFileMode.REPLACE)
 
     # 使用喜马拉雅的加密JS方法解密url地址
     js_code = file.read_file(os.path.join(crawler.PROJECT_APP_PATH, "js", "aes.js"))
@@ -244,9 +244,9 @@ class XiMaLaYa(crawler.Crawler):
 
         # 初始化参数
         default_sys_config = {
-            enum.SysConfigKey.NOT_CHECK_SAVE_DATA: True,
-            enum.SysConfigKey.DOWNLOAD_AUDIO: True,
-            enum.SysConfigKey.GET_COOKIE: ("ximalaya.com",),
+            crawler_enum.SysConfigKey.NOT_CHECK_SAVE_DATA: True,
+            crawler_enum.SysConfigKey.DOWNLOAD_AUDIO: True,
+            crawler_enum.SysConfigKey.GET_COOKIE: ("ximalaya.com",),
         }
         default_sys_config.update(sys_config)
         crawler.Crawler.__init__(self, default_sys_config, **kwargs)

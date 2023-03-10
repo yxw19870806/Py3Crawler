@@ -35,7 +35,7 @@ def main():
     temp_save_data = crawler.read_save_data(temp_save_data_file_path, PRIME_KEY_INDEX)
     save_data.update(temp_save_data)
     temp_list = [save_data[key] for key in sorted(save_data.keys())]
-    file.write_file(tool.list_to_string(temp_list), save_data_file_path, enum.WriteFileMode.REPLACE)
+    file.write_file(tool.list_to_string(temp_list), save_data_file_path, crawler_enum.WriteFileMode.REPLACE)
 
 
 if __name__ == "__main__":

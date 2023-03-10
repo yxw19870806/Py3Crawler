@@ -16,11 +16,8 @@ import urllib.parse
 import urllib3
 from typing import Optional, List, Final
 from urllib3._collections import HTTPHeaderDict
+from common import file, output, path, tool
 
-try:
-    from . import file, output, path, tool
-except ImportError:
-    from common import file, output, path, tool
 
 # https://www.python.org/dev/peps/pep-0476/
 # disable urllib3 HTTPS warning

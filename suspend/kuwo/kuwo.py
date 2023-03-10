@@ -82,8 +82,8 @@ class KuWo(crawler.Crawler):
 
         # 初始化参数
         default_sys_config = {
-            enum.SysConfigKey.NOT_CHECK_SAVE_DATA: True,
-            enum.SysConfigKey.DOWNLOAD_AUDIO: True,
+            crawler_enum.SysConfigKey.NOT_CHECK_SAVE_DATA: True,
+            crawler_enum.SysConfigKey.DOWNLOAD_AUDIO: True,
         }
         default_sys_config.update(sys_config)
         crawler.Crawler.__init__(self, sys_config, **kwargs)

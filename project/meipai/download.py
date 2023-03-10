@@ -15,7 +15,7 @@ from project.meipai import meipai
 class MeiPaiDownload(meipai.MeiPai):
     def __init__(self, **kwargs):
         extra_sys_config = {
-            enum.SysConfigKey.NOT_CHECK_SAVE_DATA: True
+            crawler_enum.SysConfigKey.NOT_CHECK_SAVE_DATA: True
         }
         meipai.MeiPai.__init__(self, extra_sys_config=extra_sys_config, **kwargs)
 

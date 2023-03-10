@@ -9,11 +9,8 @@ import os
 import threading
 import time
 from typing import Final
+from common import file, output, tool
 
-try:
-    from . import file, output, tool
-except ImportError:
-    from common import file, output, tool
 
 # 读取日志相关配置
 DEFAULT_LOG_CONFIG = {

@@ -15,7 +15,7 @@ from suspend.niconico import niconico
 class NicoNicoDownload(niconico.NicoNico):
     def __init__(self, **kwargs):
         extra_sys_config = {
-            enum.SysConfigKey.NOT_CHECK_SAVE_DATA: True
+            crawler_enum.SysConfigKey.NOT_CHECK_SAVE_DATA: True
         }
         niconico.NicoNico.__init__(self, extra_sys_config=extra_sys_config, **kwargs)
 

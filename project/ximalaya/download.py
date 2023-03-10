@@ -15,7 +15,7 @@ from project.ximalaya import ximalaya
 class XiMaLaYaDownload(ximalaya.XiMaLaYa):
     def __init__(self, **kwargs):
         extra_sys_config = {
-            enum.SysConfigKey.NOT_CHECK_SAVE_DATA: True
+            crawler_enum.SysConfigKey.NOT_CHECK_SAVE_DATA: True
         }
         ximalaya.XiMaLaYa.__init__(self, extra_sys_config=extra_sys_config, **kwargs)
 

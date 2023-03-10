@@ -13,11 +13,7 @@ import win32api
 import win32con
 import win32gui
 from typing import Tuple, Optional
-
-try:
-    from . import keyboard_event
-except ImportError:
-    from common import keyboard_event
+from common import keyboard_event
 
 CLICK_TYPE_LEFT_BUTTON = "left"
 CLICK_TYPE_RIGHT_BUTTON = "right"
