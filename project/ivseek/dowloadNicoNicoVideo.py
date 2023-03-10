@@ -55,7 +55,7 @@ def main():
         # 增加已处理标记
         single_save_list[4] = ivseek.DONE_SING
         # 保存记录
-        file.write_file(tool.list_to_string(save_data_list), ivseek_class.save_data_path, file.WriteFileMode.REPLACE)
+        file.write_file(tool.list_to_string(save_data_list), ivseek_class.save_data_path, enum.WriteFileMode.REPLACE)
 
 
 if __name__ == "__main__":

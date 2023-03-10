@@ -78,7 +78,7 @@ class DMZJ(crawler.Crawler):
 
         # 初始化参数
         sys_config = {
-            crawler.SysConfigKey.DOWNLOAD_PHOTO: True,
+            enum.SysConfigKey.DOWNLOAD_PHOTO: True,
         }
         crawler.Crawler.__init__(self, sys_config, **kwargs)
 

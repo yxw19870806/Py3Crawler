@@ -66,7 +66,7 @@ def login_from_console():
                 if _do_login(email, password):
                     if IS_LOCAL_SAVE_SESSION and SESSION_DATA_PATH:
                         encrypt_string = crypto.Crypto().encrypt(tool.json_encode({"email": email, "password": password}))
-                        file.write_file(encrypt_string, SESSION_DATA_PATH, file.WriteFileMode.REPLACE)
+                        file.write_file(encrypt_string, SESSION_DATA_PATH, enum.WriteFileMode.REPLACE)
                     return True
                 return False
             elif input_str in ["n", "no"]:
@@ -297,12 +297,12 @@ class Instagram(crawler.Crawler):
 
         # 初始化参数
         sys_config = {
-            crawler.SysConfigKey.DOWNLOAD_PHOTO: True,
-            crawler.SysConfigKey.DOWNLOAD_VIDEO: True,
-            crawler.SysConfigKey.SET_PROXY: True,
-            crawler.SysConfigKey.GET_COOKIE: ("instagram.com",),
-            crawler.SysConfigKey.APP_CONFIG: (
-                ("IS_LOCAL_SAVE_SESSION", False, crawler.ConfigAnalysisMode.BOOLEAN),
+            enum.SysConfigKey.DOWNLOAD_PHOTO: True,
+            enum.SysConfigKey.DOWNLOAD_VIDEO: True,
+            enum.SysConfigKey.SET_PROXY: True,
+            enum.SysConfigKey.GET_COOKIE: ("instagram.com",),
+            enum.SysConfigKey.APP_CONFIG: (
+                ("IS_LOCAL_SAVE_SESSION", False, enum.ConfigAnalysisMode.BOOLEAN),
             ),
         }
         crawler.Crawler.__init__(self, sys_config, **kwargs)

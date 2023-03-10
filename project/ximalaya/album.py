@@ -18,8 +18,8 @@ class XiMaLaYaAlbum(ximalaya.XiMaLaYa):
 
         # 初始化参数
         sys_config = {
-            crawler.SysConfigKey.NOT_CHECK_SAVE_DATA: False,
-            crawler.SysConfigKey.APP_CONFIG_PATH: os.path.join(crawler.PROJECT_APP_PATH, "album.ini"),
+            enum.SysConfigKey.NOT_CHECK_SAVE_DATA: False,
+            enum.SysConfigKey.APP_CONFIG_PATH: os.path.join(crawler.PROJECT_APP_PATH, "album.ini"),
         }
         ximalaya.XiMaLaYa.__init__(self, sys_config, **kwargs)
 

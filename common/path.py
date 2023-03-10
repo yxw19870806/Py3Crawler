@@ -9,42 +9,29 @@ import os
 import platform
 import shutil
 import time
-from enum import unique, Enum
 from typing import List
+from common import enum
 
 
-@unique
-class CreateDirMode(Enum):
-    IGNORE: str = "ignore"  # 目录存在时忽略
-    DELETE: str = "delete"  # 目录存在时先删除再创建
-
-
-@unique
-class OrderType(Enum):
-    ASC: str = "asc"  # 升序
-    DESC: str = "desc"  # 降序
-    DEFAULT: str = "default"  # 默认
-
-
-def create_dir(dir_path: str, create_mode: CreateDirMode = CreateDirMode.IGNORE) -> bool:
+def create_dir(dir_path: str, create_mode: enum.CreateDirMode = enum.CreateDirMode.IGNORE) -> bool:
     """
     创建文件夹
 
     :Args:
     - create_mode - 创建模式
-        CreateDirMode.IGNORE   当目录存在时忽略
-        CreateDirMode.DELETE   当目录存在时先删除再创建
+        enum.CreateDirMode.IGNORE   当目录存在时忽略
+        enum.CreateDirMode.DELETE   当目录存在时先删除再创建
 
     :Returns:
         True    创建成功
         False   创建失败
     """
-    if not isinstance(create_mode, CreateDirMode):
+    if not isinstance(create_mode, enum.CreateDirMode):
         raise ValueError("invalid create_mode")
     dir_path = os.path.abspath(dir_path)
     # 目录存在
     if os.path.exists(dir_path):
-        if create_mode == CreateDirMode.IGNORE:
+        if create_mode == enum.CreateDirMode.IGNORE:
             if os.path.isdir(dir_path):
                 return True
             else:
@@ -106,19 +93,19 @@ def delete_null_dir(dir_path: str) -> None:
             os.rmdir(dir_path)
 
 
-def get_dir_files_name(dir_path: str, order: OrderType = OrderType.DEFAULT, recursive: bool = False, full_path: bool = False) -> List[str]:
+def get_dir_files_name(dir_path: str, order: enum.OrderType = enum.OrderType.DEFAULT, recursive: bool = False, full_path: bool = False) -> List[str]:
     """
     获取目录下的所有文件名
 
     :Args:
     - order - 排序模式
-        OrderType.ASC       根据文件名升序
-        OrderType.DESC      根据文件名降序
-        OrderType>DEFAULT   默认返回数据
+        enum.OrderType.ASC       根据文件名升序
+        enum.OrderType.DESC      根据文件名降序
+        enum.OrderType>DEFAULT   默认返回数据
     - recursive - 是否递归获取子目录
     - full_path - 返回的列表是否包含完整路径
     """
-    if not isinstance(order, OrderType):
+    if not isinstance(order, enum.OrderType):
         raise ValueError("invalid order")
     dir_path = os.path.abspath(dir_path)
     if not os.path.exists(dir_path) or not os.path.isdir(dir_path):
@@ -139,10 +126,10 @@ def get_dir_files_name(dir_path: str, order: OrderType = OrderType.DEFAULT, recu
         except PermissionError:
             return []
     # 升序
-    if order == OrderType.ASC:
+    if order == enum.OrderType.ASC:
         return sorted(files_list, reverse=False)
     # 降序
-    elif order == OrderType.DESC:
+    elif order == enum.OrderType.DESC:
         return sorted(files_list, reverse=True)
     else:
         return files_list

@@ -123,7 +123,7 @@ class MeiPai(crawler.Crawler):
 
         # 初始化参数
         sys_config = {
-            crawler.SysConfigKey.DOWNLOAD_VIDEO: True,
+            enum.SysConfigKey.DOWNLOAD_VIDEO: True,
         }
         crawler.Crawler.__init__(self, sys_config, **kwargs)
 

@@ -1,7 +1,7 @@
 # -*- coding:UTF-8  -*-
 # 判断存档文件中的数量和保存目录中的数量是否一致
 import os
-from common import output, file
+from common import enum, output, file
 
 # 文件保存目录
 FILE_STORAGE_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), "photo"))
@@ -44,7 +44,7 @@ def get_save_data_file_count():
         output.print_msg("save data %s not exist" % SAVE_DATA_FILE_PATH)
         return {}
     account_list = {}
-    for line in file.read_file(SAVE_DATA_FILE_PATH, file.ReadFileMode.LINE):
+    for line in file.read_file(SAVE_DATA_FILE_PATH, enum.ReadFileMode.LINE):
         temp_list = line.replace("\n", "").split("\t")
         account_list[temp_list[PRIME_KEY_INDEX]] = int(temp_list[COUNT_INDEX])
     return account_list

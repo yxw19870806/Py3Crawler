@@ -331,11 +331,11 @@ class Youtube(crawler.Crawler):
 
         # 初始化参数
         sys_config = {
-            crawler.SysConfigKey.DOWNLOAD_VIDEO: True,
-            crawler.SysConfigKey.SET_PROXY: True,
-            crawler.SysConfigKey.GET_COOKIE: ("youtube.com",),
-            crawler.SysConfigKey.APP_CONFIG: (
-                ("VIDEO_QUALITY", 6, crawler.ConfigAnalysisMode.INTEGER),
+            enum.SysConfigKey.DOWNLOAD_VIDEO: True,
+            enum.SysConfigKey.SET_PROXY: True,
+            enum.SysConfigKey.GET_COOKIE: ("youtube.com",),
+            enum.SysConfigKey.APP_CONFIG: (
+                ("VIDEO_QUALITY", 6, enum.ConfigAnalysisMode.INTEGER),
             ),
         }
         crawler.Crawler.__init__(self, sys_config, **kwargs)

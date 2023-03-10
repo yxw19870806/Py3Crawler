@@ -7,7 +7,7 @@ email: hikaru870806@hotmail.com
 """
 import configparser
 import os
-from common import browser, crawler, net
+from common import browser, crawler, enum, net
 from typing import Optional
 
 
@@ -24,7 +24,7 @@ def quickly_set_proxy(config: Optional[dict] = None, is_auto: bool = True) -> No
         config = _get_config()
     # 设置代理
     if is_auto:
-        is_proxy = crawler.analysis_config(config, "IS_PROXY", 2, crawler.ConfigAnalysisMode.INTEGER)
+        is_proxy = crawler.analysis_config(config, "IS_PROXY", 2, enum.ConfigAnalysisMode.INTEGER)
         if is_proxy == 0:
             return
     proxy_ip = crawler.analysis_config(config, "PROXY_IP", "127.0.0.1")
@@ -44,7 +44,7 @@ def quickly_get_save_data_path(config: Optional[dict] = None) -> str:
     """
     if not isinstance(config, configparser.SafeConfigParser):
         config = _get_config()
-    return crawler.analysis_config(config, "SAVE_DATA_PATH", r"\\info/save.data", crawler.ConfigAnalysisMode.PATH)
+    return crawler.analysis_config(config, "SAVE_DATA_PATH", r"\\info/save.data", enum.ConfigAnalysisMode.PATH)
 
 
 def quickly_get_all_cookies_from_browser(config: Optional[dict] = None) -> dict:
@@ -55,7 +55,7 @@ def quickly_get_all_cookies_from_browser(config: Optional[dict] = None) -> dict:
         config = _get_config()
     # 是否自动查找cookies路径
     # 操作系统&浏览器
-    browser_type = browser.BrowserType[crawler.analysis_config(config, "BROWSER_TYPE", browser.BrowserType.CHROME, crawler.ConfigAnalysisMode.RAW)]
+    browser_type = enum.BrowserType[crawler.analysis_config(config, "BROWSER_TYPE", enum.BrowserType.CHROME, enum.ConfigAnalysisMode.RAW)]
     cookie_path = browser.get_default_browser_cookie_path(browser_type)
     return browser.get_all_cookie_from_browser(browser_type, cookie_path)
 

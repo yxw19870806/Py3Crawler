@@ -354,10 +354,10 @@ class BiliBili(crawler.Crawler):
 
         # 初始化参数
         sys_config = {
-            crawler.SysConfigKey.DOWNLOAD_PHOTO: True,
-            crawler.SysConfigKey.DOWNLOAD_VIDEO: True,
-            crawler.SysConfigKey.DOWNLOAD_AUDIO: True,
-            crawler.SysConfigKey.GET_COOKIE: ("bilibili.com",),
+            enum.SysConfigKey.DOWNLOAD_PHOTO: True,
+            enum.SysConfigKey.DOWNLOAD_VIDEO: True,
+            enum.SysConfigKey.DOWNLOAD_AUDIO: True,
+            enum.SysConfigKey.GET_COOKIE: ("bilibili.com",),
         }
         crawler.Crawler.__init__(self, sys_config, **kwargs)
 
