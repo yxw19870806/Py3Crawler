@@ -14,7 +14,7 @@ import sys
 import threading
 import time
 import traceback
-from typing import Any, Callable, Dict, Optional, Union
+from typing import Any, Callable, Dict, Optional, Union, Type, Self
 from common import const, browser, file, log, net, output, path, port_listener_event, tool
 from common import IS_EXECUTABLE, PROJECT_ROOT_PATH, PROJECT_CONFIG_PATH
 
@@ -26,8 +26,7 @@ PROJECT_APP_PATH = os.getcwd()
 
 
 class Crawler(object):
-    thread_event = None
-    crawler_thread = None  # 下载子线程
+    crawler_thread: Optional[Type["CrawlerThread"]] = None  # 下载子线程
 
     # 程序全局变量的设置
     def __init__(self, sys_config: Dict[const.SysConfigKey, Any], **kwargs):
@@ -405,10 +404,10 @@ class Crawler(object):
 
 
 class CrawlerThread(threading.Thread):
-    main_thread = None
-    thread_lock = None
-    display_name = None
-    index_key = ""
+    main_thread: Optional[Crawler] = None
+    thread_lock: Optional[threading.Lock] = None
+    display_name: Optional[str] = None
+    index_key: str = ""
 
     def __init__(self, main_thread: Crawler, single_save_data: list):
         """
@@ -597,11 +596,11 @@ class CrawlerThread(threading.Thread):
 class DownloadThread(CrawlerThread):
     def __init__(self, main_thread: Crawler, file_url: str, file_path: str, file_description: str):
         CrawlerThread.__init__(self, main_thread, [])
-        self.file_url = file_url
-        self.file_path = file_path
-        self.file_description = file_description
+        self.file_url: str = file_url
+        self.file_path: str = file_path
+        self.file_description: str = file_description
         self.result: Optional[net.Download] = None
-        self.header_list = {}
+        self.header_list: dict = {}
 
     def run(self) -> None:
         self.result = self.download(self.file_url, self.file_path, self.file_description, header_list=self.header_list)
@@ -610,7 +609,7 @@ class DownloadThread(CrawlerThread):
     def get_result(self) -> bool:
         return bool(self.result)
 
-    def set_download_header(self, header_list: dict) -> "DownloadThread":
+    def set_download_header(self, header_list: dict) -> Self:
         self.header_list = header_list
         return self
 
