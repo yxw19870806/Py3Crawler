@@ -29,7 +29,7 @@ def get_one_page_video(account_id, page_count):
     result = {
         "video_info_list": [],  # 全部视频信息
     }
-    if video_pagination_response.status != const.HTTP_RETURN_CODE_SUCCEED:
+    if video_pagination_response.status != const.ResponseCode.SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(video_pagination_response.status))
     for media_info in crawler.get_json_value(video_pagination_response.json_data, "medias", type_check=list):
         # 历史直播，跳过
@@ -62,7 +62,7 @@ def get_video_play_page(video_id):
     if video_play_response.status == 404:
         result["is_delete"] = True
         return result
-    elif video_play_response.status != const.HTTP_RETURN_CODE_SUCCEED:
+    elif video_play_response.status != const.ResponseCode.SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(video_play_response.status))
     video_play_response_content = video_play_response.data.decode(errors="ignore")
     video_url_crypt_string = pq(video_play_response_content).find("meta[property='og:video:url']").attr("content")

@@ -22,7 +22,7 @@ def get_photo_index_page(account_id):
     result = {
         "photo_url_list": [],  # 全部图片地址
     }
-    if photo_index_response.status != const.HTTP_RETURN_CODE_SUCCEED:
+    if photo_index_response.status != const.ResponseCode.SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(photo_index_response.status))
     photo_index_response_content = photo_index_response.data.decode(errors="ignore")
     if photo_index_response_content == '<script>window.location.href="/404.html";</script>':
@@ -47,7 +47,7 @@ def get_photo_header(photo_url):
     }
     if photo_head_response.status == 404:
         return result
-    elif photo_head_response.status != const.HTTP_RETURN_CODE_SUCCEED:
+    elif photo_head_response.status != const.ResponseCode.SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(photo_head_response.status))
     last_modified = photo_head_response.headers.get("Last-Modified")
     if not last_modified:
@@ -70,7 +70,7 @@ def get_video_index_page(account_id):
         "is_exist": True,  # 是否存在视频
         "video_id_list": [],  # 全部视频id
     }
-    if video_pagination_response.status != const.HTTP_RETURN_CODE_SUCCEED:
+    if video_pagination_response.status != const.ResponseCode.SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(video_pagination_response.status))
     video_pagination_response_content = video_pagination_response.data.decode(errors="ignore")
     if video_pagination_response_content == '<script>window.location.href="/404.html";</script>':
@@ -95,7 +95,7 @@ def get_video_info_page(video_id):
         "video_time": 0,  # 视频上传时间
         "video_url_list": [],  # 全部视频分集地址
     }
-    if video_info_response.status != const.HTTP_RETURN_CODE_SUCCEED:
+    if video_info_response.status != const.ResponseCode.SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(video_info_response.status))
     video_info_response_content = video_info_response.data.decode(errors="ignore")
     # 获取视频上传时间
@@ -106,7 +106,7 @@ def get_video_info_page(video_id):
     # 获取视频地址所在文件地址
     video_file_url = tool.find_sub_string(video_info_response_content, 'play_url:"', '",')
     video_file_response = net.request(video_file_url, method="GET")
-    if video_file_response.status != const.HTTP_RETURN_CODE_SUCCEED:
+    if video_file_response.status != const.ResponseCode.SUCCEED:
         raise crawler.CrawlerException("m3u8文件 %s，%s" % (video_file_url, crawler.request_failre(video_file_response.status)))
     video_file_response_content = video_file_response.data.decode(errors="ignore")
     ts_id_list = re.findall(r"(\S*.ts)", video_file_response_content)

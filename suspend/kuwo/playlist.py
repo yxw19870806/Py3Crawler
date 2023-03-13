@@ -100,7 +100,7 @@ class KuWoPlaylist(kuwo.KuWo):
             # 开始下载
             log.info("\n歌曲名：%s\n歌曲地址：%s\n下载路径：%s" % (audio_info["audio_title"], audio_info_response["audio_url"], file_path))
             download_return = net.Download(audio_info_response["audio_url"], file_path, auto_multipart_download=True)
-            if download_return.status == const.DOWNLOAD_STATUS_SUCCEED:
+            if download_return.status == const.DownloadStatus.SUCCEED:
                 # 设置临时目录
                 log.info("歌曲《%s》下载成功" % audio_info["audio_title"])
             else:

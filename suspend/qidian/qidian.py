@@ -20,7 +20,7 @@ def get_book_index(book_id):
     result = {
         "chapter_info_list": [],  # 章节信息列表
     }
-    if index_response.status != const.HTTP_RETURN_CODE_SUCCEED:
+    if index_response.status != const.ResponseCode.SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(index_response.status))
     index_response_content = index_response.data.decode(errors="ignore")
     chapter_info_list_selector = pq(index_response_content).find(".catalog-content-wrap .cf li")
@@ -71,7 +71,7 @@ def get_chapter_page(chapter_url):
         "content": "",  # 文章内容
         "is_vip": False,  # 是否需要vip解锁
     }
-    if chapter_response.status != const.HTTP_RETURN_CODE_SUCCEED:
+    if chapter_response.status != const.ResponseCode.SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(chapter_response.status))
     chapter_response_content = chapter_response.data.decode(errors="ignore")
     # 判断是否是vip解锁

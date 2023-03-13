@@ -27,7 +27,7 @@ def check_login():
         return False
     api_url = "https://www.ximalaya.com/revision/main/getCurrentUser"
     api_response = net.request(api_url, method="GET", cookies_list=COOKIE_INFO, json_decode=True)
-    if api_response.status == const.HTTP_RETURN_CODE_SUCCEED:
+    if api_response.status == const.ResponseCode.SUCCEED:
         return crawler.get_json_value(api_response.json_data, "ret", type_check=int, default_value=0) == 200
     return False
 
@@ -45,7 +45,7 @@ def get_one_page_album(album_id, page_count):
         "audio_info_list": [],  # 全部音频信息
         "is_over": False,  # 是否最后一页音频
     }
-    if album_pagination_response.status != const.HTTP_RETURN_CODE_SUCCEED:
+    if album_pagination_response.status != const.ResponseCode.SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(album_pagination_response.status))
     # 获取音频信息
     try:
@@ -97,7 +97,7 @@ def get_one_page_audio(account_id, page_count):
         "audio_info_list": [],  # 全部音频信息
         "is_over": False,  # 是否最后一页音频
     }
-    if audit_pagination_response.status != const.HTTP_RETURN_CODE_SUCCEED:
+    if audit_pagination_response.status != const.ResponseCode.SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(audit_pagination_response.status))
     # 获取音频信息
     for audio_info in crawler.get_json_value(audit_pagination_response.json_data, "data", "trackList", type_check=list):
@@ -132,7 +132,7 @@ def get_audio_info_page(audio_id):
         "trackId": audio_id,
     }
     audio_simple_info_response = net.request(audio_simple_info_url, method="GET", fields=query_data, json_decode=True)
-    if audio_simple_info_response.status != const.HTTP_RETURN_CODE_SUCCEED:
+    if audio_simple_info_response.status != const.ResponseCode.SUCCEED:
         raise crawler.CrawlerException("音频简易信息 " + crawler.request_failre(audio_simple_info_response.status))
     return_code = crawler.get_json_value(audio_simple_info_response.json_data, "ret", type_check=int)
     if return_code == 200:
@@ -159,7 +159,7 @@ def get_audio_info_page(audio_id):
     }
     while True:
         audio_info_response = net.request(audio_info_url, method="GET", fields=query_data, json_decode=True)
-        if audio_info_response.status != const.HTTP_RETURN_CODE_SUCCEED:
+        if audio_info_response.status != const.ResponseCode.SUCCEED:
             raise crawler.CrawlerException("音频详细信息" + crawler.request_failre(audio_info_response.status))
         return_code = crawler.get_json_value(audio_info_response.json_data, "ret", type_check=int)
         if return_code == 200:
@@ -191,7 +191,7 @@ def get_audio_info_page(audio_id):
         "trackId": audio_id,
     }
     vip_audio_info_response = net.request(vip_audio_info_url, method="GET", fields=query_data, cookies_list=COOKIE_INFO, json_decode=True)
-    if vip_audio_info_response.status != const.HTTP_RETURN_CODE_SUCCEED:
+    if vip_audio_info_response.status != const.ResponseCode.SUCCEED:
         raise crawler.CrawlerException("vip音频详细信息" + crawler.request_failre(vip_audio_info_response.status))
     try:
         decrypt_url = crawler.get_json_value(vip_audio_info_response.json_data, "trackInfo", "playUrlList", 0, "url", type_check=str)

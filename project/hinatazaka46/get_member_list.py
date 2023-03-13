@@ -16,7 +16,7 @@ def get_account_from_index():
     index_url = "https://www.hinatazaka46.com/s/official/diary/member"
     index_response = net.request(index_url, method="GET")
     account_list = {}
-    if index_response.status != const.HTTP_RETURN_CODE_SUCCEED:
+    if index_response.status != const.ResponseCode.SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(index_response.status))
     index_response_content = index_response.data.decode(errors="ignore")
     member_info_list_selector = pq(index_response_content).find(".p-blog-face__group .p-blog-face__list")

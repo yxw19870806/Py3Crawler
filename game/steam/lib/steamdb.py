@@ -28,7 +28,7 @@ def get_game_store_index(game_id):
         "develop_name": None,  # Developer
         "publisher_name": None,  # Publisher
     }
-    if game_index_response.status != const.HTTP_RETURN_CODE_SUCCEED:
+    if game_index_response.status != const.ResponseCode.SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(game_index_response.status))
     game_index_response_content = game_index_response.data.decode(errors="ignore")
     # 获取游戏名字
@@ -56,7 +56,7 @@ def get_game_store_index(game_id):
         }
         header_list["X-Requested-With"] = "XMLHttpRequest"
         history_api_response = net.request(history_api_url, method="GET", fields=query_data, header_list=header_list, cookies_list=COOKIE_INFO, is_random_ip=False)
-        if history_api_response.status != const.HTTP_RETURN_CODE_SUCCEED:
+        if history_api_response.status != const.ResponseCode.SUCCEED:
             raise crawler.CrawlerException("历史记录，%s" % crawler.request_failre(history_api_response.status))
         history_response_content = history_api_response.data.decode(errors="ignore")
         if not result["develop_name"]:

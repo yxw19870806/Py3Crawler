@@ -19,7 +19,7 @@ def get_member_from_talk(talk_id):
     talk_index_url = "https://7gogo.jp/%s" % talk_id
     talk_index_response = net.request(talk_index_url, method="GET")
     account_list = {}
-    if talk_index_response.status != const.HTTP_RETURN_CODE_SUCCEED:
+    if talk_index_response.status != const.ResponseCode.SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(talk_index_response.status))
     talk_index_response_content = talk_index_response.data.decode(errors="ignore")
     script_json_html = tool.find_sub_string(talk_index_response_content, "window.__DEHYDRATED_STATES__ = ", "</script>")

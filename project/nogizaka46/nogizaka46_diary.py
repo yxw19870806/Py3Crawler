@@ -25,7 +25,7 @@ def get_one_page_blog(account_id, page_count):
     }
     if blog_pagination_response.status == 404:
         raise crawler.CrawlerException("账号不存在")
-    elif blog_pagination_response.status != const.HTTP_RETURN_CODE_SUCCEED:
+    elif blog_pagination_response.status != const.ResponseCode.SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(blog_pagination_response.status))
     blog_pagination_response_content = blog_pagination_response.data.decode(errors="ignore")
     blog_info_select_list = pq(blog_pagination_response_content).find(".bl--card.js-pos")
@@ -63,7 +63,7 @@ def get_blog_page(blog_id):
     result = {
         "photo_info_list": [],  # 全部图片地址
     }
-    if blog_response.status != const.HTTP_RETURN_CODE_SUCCEED:
+    if blog_response.status != const.ResponseCode.SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(blog_response.status))
     blog_response_content = blog_response.data.decode(errors="ignore")
     blog_html_selector = pq(blog_response_content).find(".bd--edit")
@@ -102,7 +102,7 @@ def check_preview_photo(photo_url, real_photo_url):
     # 没有预览地址，直接返回图片原始地址
     if real_photo_url:
         real_photo_response = net.request(real_photo_url, method="GET")
-        if real_photo_response.status == const.HTTP_RETURN_CODE_SUCCEED:
+        if real_photo_response.status == const.ResponseCode.SUCCEED:
             # 检测是不是已经过期删除
             temp_photo_url = tool.find_sub_string(real_photo_response.data, '<img src="', '"')
             if temp_photo_url != "/img/expired.gif":

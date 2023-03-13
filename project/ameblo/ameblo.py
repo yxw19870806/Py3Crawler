@@ -39,7 +39,7 @@ def get_one_page_blog(account_name, page_count):
     }
     if blog_pagination_response.status == 404:
         raise crawler.CrawlerException("账号不存在")
-    elif blog_pagination_response.status != const.HTTP_RETURN_CODE_SUCCEED:
+    elif blog_pagination_response.status != const.ResponseCode.SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(blog_pagination_response.status))
     blog_pagination_response_content = blog_pagination_response.data.decode(errors="ignore")
     # 获取日志id
@@ -99,7 +99,7 @@ def get_blog_page(account_name, blog_id):
     if blog_response.status == 404:
         result["is_delete"] = True
         return result
-    elif blog_response.status != const.HTTP_RETURN_CODE_SUCCEED:
+    elif blog_response.status != const.ResponseCode.SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(blog_response.status))
     blog_response_content = blog_response.data.decode(errors="ignore")
     if blog_response_content.find("この記事はアメンバーさん限定です。") >= 0:

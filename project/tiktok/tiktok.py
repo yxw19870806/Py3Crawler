@@ -62,7 +62,7 @@ def get_one_page_video(account_id, cursor_id, signature):
         "next_page_cursor_id": 0,  # 下一页视频指针
         "video_info_list": [],  # 全部视频信息
     }
-    if video_pagination_response.status != const.HTTP_RETURN_CODE_SUCCEED:
+    if video_pagination_response.status != const.ResponseCode.SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(video_pagination_response.status))
     # 判断是不是最后一页
     result["is_over"] = crawler.get_json_value(video_pagination_response.json_data, "body", "hasMore", type_check=bool) is True

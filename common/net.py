@@ -174,14 +174,14 @@ def request(url, method: str = "GET", fields: Optional[dict] = None, binary_data
     - read_timeout - customize read timeout seconds
     - is_random_ip - is counterfeit a request header with random ip, will replace header_list["X-Forwarded-For"] and header_list["X-Real-Ip"]
     - json_decode - is return a decoded json data when response status = 200
-        if decode failure will replace response status with const.HTTP_RETURN_CODE_JSON_DECODE_ERROR
+        if decode failure will replace response status with const.ResponseCode.JSON_DECODE_ERROR
     """
     url = str(url).strip()
     if not (url.startswith("http://") or url.startswith("https://")):
-        return ErrorResponse(const.HTTP_RETURN_CODE_URL_INVALID)
+        return ErrorResponse(const.ResponseCode.URL_INVALID)
     method = method.upper()
     if method not in ["GET", "POST", "HEAD", "PUT", "DELETE", "OPTIONS", "TRACE"]:
-        return ErrorResponse(const.HTTP_RETURN_CODE_URL_INVALID)
+        return ErrorResponse(const.ResponseCode.URL_INVALID)
     if HTTP_CONNECTION_POOL is None:
         init_http_connection_pool()
     connection_pool = HTTP_CONNECTION_POOL
@@ -234,7 +234,7 @@ def request(url, method: str = "GET", fields: Optional[dict] = None, binary_data
                 else:
                     response = connection_pool.request(method, url, body=binary_data, encode_multipart=encode_multipart, headers=header_list,
                                                        redirect=is_auto_redirect, timeout=timeout)
-            if response.status == const.HTTP_RETURN_CODE_SUCCEED and json_decode:
+            if response.status == const.ResponseCode.SUCCEED and json_decode:
                 try:
                     response.json_data = json.loads(response.data.decode())
                 except ValueError:
@@ -252,7 +252,7 @@ def request(url, method: str = "GET", fields: Optional[dict] = None, binary_data
                             else:
                                 is_error = False
                     if is_error:
-                        response.status = const.HTTP_RETURN_CODE_JSON_DECODE_ERROR
+                        response.status = const.ResponseCode.JSON_DECODE_ERROR
             elif response.status == 429:  # Too Many Requests
                 output.print_msg(url + " Too Many Requests, sleep")
                 time.sleep(NET_CONFIG["TOO_MANY_REQUESTS_WAIT_TIME"])
@@ -266,19 +266,19 @@ def request(url, method: str = "GET", fields: Optional[dict] = None, binary_data
                     return response
             return response
         except MemoryError:
-            return ErrorResponse(const.HTTP_RETURN_CODE_RESPONSE_TO_LARGE)
+            return ErrorResponse(const.ResponseCode.RESPONSE_TO_LARGE)
         except Exception as e:
             message = str(e)
             if isinstance(e, urllib3.exceptions.ConnectTimeoutError):
                 # 域名无法解析
                 if message.find("[Errno 11004] getaddrinfo failed") >= 0 or message.find("[Errno 11001] getaddrinfo failed") >= 0:
-                    return ErrorResponse(const.HTTP_RETURN_CODE_DOMAIN_NOT_RESOLVED)
+                    return ErrorResponse(const.ResponseCode.DOMAIN_NOT_RESOLVED)
                 elif message.find("[WinError 10061]") >= 0:
                     # [WinError 10061] 由于目标计算机积极拒绝，无法连接。
-                    return ErrorResponse(const.HTTP_RETURN_CODE_RETRY)
+                    return ErrorResponse(const.ResponseCode.RETRY)
             elif isinstance(e, urllib3.exceptions.MaxRetryError):
                 if message.find("Caused by ResponseError('too many redirects'") >= 0:
-                    return ErrorResponse(const.HTTP_RETURN_CODE_TOO_MANY_REDIRECTS)
+                    return ErrorResponse(const.ResponseCode.TOO_MANY_REDIRECTS)
             elif isinstance(e, urllib3.exceptions.DecodeError):
                 if message.find("'Received response with content-encoding: gzip, but failed to decode it.'") >= 0:
                     return request(url, method=method, fields=fields, binary_data=binary_data, header_list=header_list, cookies_list=cookies_list,
@@ -299,7 +299,7 @@ def request(url, method: str = "GET", fields: Optional[dict] = None, binary_data
         retry_count += 1
         if retry_count >= NET_CONFIG["HTTP_REQUEST_RETRY_COUNT"]:
             output.print_msg("无法访问页面：" + url)
-            return ErrorResponse(const.HTTP_RETURN_CODE_RETRY)
+            return ErrorResponse(const.ResponseCode.RETRY)
 
 
 def _qps(url: str) -> bool:
@@ -455,13 +455,13 @@ class Download:
         # 是否开启分段下载
         self.is_multipart_download = False
         # 结果
-        self.status = const.DOWNLOAD_STATUS_FAILED
+        self.status = const.DownloadStatus.FAILED
         self.code = 0
 
         self.start_download()
 
     def __bool__(self) -> bool:
-        return self.status == const.DOWNLOAD_STATUS_SUCCEED
+        return self.status == const.DownloadStatus.SUCCEED
 
     def start_download(self) -> None:
         """
@@ -474,12 +474,12 @@ class Download:
         # 同名文件已经存在，直接返回
         if not self.replace_if_exist and os.path.exists(self.file_path) and os.path.getsize(self.file_path) > 0:
             output.print_msg("文件%s（%s）已存在，跳过" % (self.file_path, self.file_url))
-            self.status = const.DOWNLOAD_STATUS_SUCCEED
+            self.status = const.DownloadStatus.SUCCEED
             return
 
         # 判断保存目录是否存在
         if not path.create_dir(os.path.dirname(self.file_path)):
-            self.code = const.DOWNLOAD_RETURN_CODE_FILE_CREATE_FAILED
+            self.code = const.DownloadCode.FILE_CREATE_FAILED
             return
 
         # 是否需要分段下载
@@ -488,7 +488,7 @@ class Download:
         # 下载
         for retry_count in range(NET_CONFIG["DOWNLOAD_RETRY_COUNT"]):
             if EXIT_FLAG:
-                self.code = const.DOWNLOAD_RETURN_CODE_PROCESS_EXIT
+                self.code = const.DownloadCode.PROCESS_EXIT
                 break
 
             if not self.is_multipart_download:
@@ -502,18 +502,18 @@ class Download:
 
             # 如果没有返回文件的长度，直接下载成功
             if self.content_length == 0:
-                self.status = const.DOWNLOAD_STATUS_SUCCEED
+                self.status = const.DownloadStatus.SUCCEED
                 self.code = 0
                 return
 
             # 判断文件下载后的大小和response中的Content-Length是否一致
             file_size = os.path.getsize(self.file_path)
             if self.content_length == file_size:
-                self.status = const.DOWNLOAD_STATUS_SUCCEED
+                self.status = const.DownloadStatus.SUCCEED
                 self.code = 0
                 return
             else:
-                self.code = const.DOWNLOAD_RETURN_CODE_FILE_SIZE_INVALID
+                self.code = const.DownloadCode.FILE_SIZE_INVALID
                 output.print_msg(f"本地文件%s：{self.content_length}和网络文件%s：{file_size}不一致" % (self.file_path, self.file_url))
                 time.sleep(NET_CONFIG["HTTP_REQUEST_RETRY_WAIT_TIME"])
 
@@ -528,19 +528,19 @@ class Download:
         if self.auto_multipart_download:
             head_response = request(self.file_url, method="HEAD", is_check_qps=False, **self.kwargs.copy())
             # 其他返回状态，退出
-            if head_response.status != const.HTTP_RETURN_CODE_SUCCEED:
+            if head_response.status != const.ResponseCode.SUCCEED:
                 # URL格式不正确
-                if head_response.status == const.HTTP_RETURN_CODE_URL_INVALID:
-                    self.code = const.DOWNLOAD_RETURN_CODE_URL_INVALID
+                if head_response.status == const.ResponseCode.URL_INVALID:
+                    self.code = const.DownloadCode.URL_INVALID
                 # 域名无法解析
-                elif head_response.status == const.HTTP_RETURN_CODE_DOMAIN_NOT_RESOLVED:
-                    self.code = const.DOWNLOAD_RETURN_CODE_RETRY_MAX_COUNT
+                elif head_response.status == const.ResponseCode.DOMAIN_NOT_RESOLVED:
+                    self.code = const.DownloadCode.RETRY_MAX_COUNT
                 # 重定向次数过多
-                elif head_response.status == const.HTTP_RETURN_CODE_TOO_MANY_REDIRECTS:
-                    self.code = const.DOWNLOAD_RETURN_CODE_RETRY_MAX_COUNT
+                elif head_response.status == const.ResponseCode.TOO_MANY_REDIRECTS:
+                    self.code = const.DownloadCode.RETRY_MAX_COUNT
                 # 超过重试次数
-                elif head_response.status == const.HTTP_RETURN_CODE_RETRY:
-                    self.code = const.DOWNLOAD_RETURN_CODE_RETRY_MAX_COUNT
+                elif head_response.status == const.ResponseCode.RETRY:
+                    self.code = const.DownloadCode.RETRY_MAX_COUNT
                 # 其他http code
                 else:
                     self.code = head_response.status
@@ -588,19 +588,19 @@ class Download:
         except SystemExit:
             return False
 
-        if file_response.status != const.HTTP_RETURN_CODE_SUCCEED:
+        if file_response.status != const.ResponseCode.SUCCEED:
             # URL格式不正确
-            if file_response.status == const.HTTP_RETURN_CODE_URL_INVALID:
-                self.code = const.DOWNLOAD_RETURN_CODE_URL_INVALID
+            if file_response.status == const.ResponseCode.URL_INVALID:
+                self.code = const.DownloadCode.URL_INVALID
             # 域名无法解析
-            elif file_response.status == const.HTTP_RETURN_CODE_DOMAIN_NOT_RESOLVED:
-                self.code = const.DOWNLOAD_RETURN_CODE_RETRY_MAX_COUNT
+            elif file_response.status == const.ResponseCode.DOMAIN_NOT_RESOLVED:
+                self.code = const.DownloadCode.RETRY_MAX_COUNT
             # 重定向次数过多
-            elif file_response.status == const.HTTP_RETURN_CODE_TOO_MANY_REDIRECTS:
-                self.code = const.DOWNLOAD_RETURN_CODE_RETRY_MAX_COUNT
+            elif file_response.status == const.ResponseCode.TOO_MANY_REDIRECTS:
+                self.code = const.DownloadCode.RETRY_MAX_COUNT
             # 超过重试次数
-            elif file_response.status == const.HTTP_RETURN_CODE_RETRY:
-                self.code = const.DOWNLOAD_RETURN_CODE_RETRY_MAX_COUNT
+            elif file_response.status == const.ResponseCode.RETRY:
+                self.code = const.DownloadCode.RETRY_MAX_COUNT
             # 其他http code
             else:
                 self.code = file_response.status
@@ -668,6 +668,6 @@ class Download:
                                 fd_handle.write(multipart_response.data)
                                 break
                     else:
-                        self.code = const.DOWNLOAD_RETURN_CODE_RETRY_MAX_COUNT
+                        self.code = const.DownloadCode.RETRY_MAX_COUNT
                         return False
         return True
