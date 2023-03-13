@@ -21,7 +21,7 @@ def check_login():
         return False
     index_url = "https://www.flickr.com/"
     index_response = net.request(index_url, method="GET", cookies_list=COOKIE_INFO)
-    if index_response.status == net.HTTP_RETURN_CODE_SUCCEED:
+    if index_response.status == const.ResponseCode.SUCCEED:
         return index_response.data.decode(errors="ignore").find('data-track="gnYouMainClick"') >= 0
     return False
 
@@ -35,7 +35,7 @@ def check_safe_search():
         "from": "privacy"
     }
     setting_response = net.request(setting_url, method="GET", fields=query_data, cookies_list=COOKIE_INFO, is_auto_redirect=False)
-    if setting_response.status == net.HTTP_RETURN_CODE_SUCCEED:
+    if setting_response.status == const.ResponseCode.SUCCEED:
         if pq(setting_response.data.decode(errors="ignore")).find("input[name='safe_search']:checked").val() == "2":
             return True
     return False
@@ -52,7 +52,7 @@ def get_account_index_page(account_name):
     }
     if account_index_response.status == 404:
         raise crawler.CrawlerException("账号不存在")
-    elif account_index_response.status != net.HTTP_RETURN_CODE_SUCCEED:
+    elif account_index_response.status != const.ResponseCode.SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(account_index_response.status))
     account_index_response_content = account_index_response.data.decode(errors="ignore")
     # 获取user id
@@ -140,7 +140,7 @@ def get_one_page_photo(user_id, page_count, api_key, csrf, request_id):
         "photo_info_list": [],  # 全部图片信息
         "is_over": False,  # 是否最后一页图片
     }
-    if photo_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
+    if photo_pagination_response.status != const.ResponseCode.SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(photo_pagination_response.status))
     # 获取图片信息
     for photo_info in crawler.get_json_value(photo_pagination_response.json_data, "photos", "photo", type_check=list):
@@ -189,9 +189,9 @@ class Flickr(crawler.Crawler):
 
         # 初始化参数
         sys_config = {
-            crawler_enum.SysConfigKey.DOWNLOAD_PHOTO: True,
-            crawler_enum.SysConfigKey.SET_PROXY: True,
-            crawler_enum.SysConfigKey.GET_COOKIE: ("flickr.com",),
+            const.SysConfigKey.DOWNLOAD_PHOTO: True,
+            const.SysConfigKey.SET_PROXY: True,
+            const.SysConfigKey.GET_COOKIE: ("flickr.com",),
         }
         crawler.Crawler.__init__(self, sys_config, **kwargs)
 

@@ -28,7 +28,7 @@ def init_session():
         return True
     home_url = "https://www.instagram.com/"
     home_response = net.request(home_url, method="GET")
-    if home_response.status == net.HTTP_RETURN_CODE_SUCCEED:
+    if home_response.status == const.ResponseCode.SUCCEED:
         set_cookie = net.get_cookies_from_response_header(home_response.headers)
         if "csrftoken" in set_cookie and "mid" in set_cookie:
             COOKIE_INFO["csrftoken"] = set_cookie["csrftoken"]
@@ -48,7 +48,7 @@ def check_login():
     else:
         index_url = "https://www.instagram.com/"
         index_response = net.request(index_url, method="GET", cookies_list=COOKIE_INFO)
-        if index_response.status == net.HTTP_RETURN_CODE_SUCCEED:
+        if index_response.status == const.ResponseCode.SUCCEED:
             return index_response.data.decode(errors="ignore").find('"viewerId":"') >= 0
     return False
 
@@ -66,7 +66,7 @@ def login_from_console():
                 if _do_login(email, password):
                     if IS_LOCAL_SAVE_SESSION and SESSION_DATA_PATH:
                         encrypt_string = crypto.Crypto().encrypt(tool.json_encode({"email": email, "password": password}))
-                        file.write_file(encrypt_string, SESSION_DATA_PATH, crawler_enum.WriteFileMode.REPLACE)
+                        file.write_file(encrypt_string, SESSION_DATA_PATH, const.WriteFileMode.REPLACE)
                     return True
                 return False
             elif input_str in ["n", "no"]:
@@ -79,7 +79,7 @@ def _do_login(email, password):
     login_post = {"username": email, "password": password, "next": "/"}
     header_list = {"referer": "https://www.instagram.com/", "x-csrftoken": COOKIE_INFO["csrftoken"]}
     login_response = net.request(login_url, method="POST", fields=login_post, cookies_list=COOKIE_INFO, header_list=header_list, json_decode=True)
-    if login_response.status == net.HTTP_RETURN_CODE_SUCCEED:
+    if login_response.status == const.ResponseCode.SUCCEED:
         if crawler.get_json_value(login_response.json_data, "authenticated", default_value=False, type_check=bool) is True:
             set_cookie = net.get_cookies_from_response_header(login_response.headers)
             if "sessionid" in set_cookie:
@@ -104,7 +104,7 @@ def get_account_index_page(account_name):
     }
     if account_index_response.status == 404:
         raise crawler.CrawlerException("账号不存在")
-    elif account_index_response.status != net.HTTP_RETURN_CODE_SUCCEED:
+    elif account_index_response.status != const.ResponseCode.SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(account_index_response.status))
     result["account_id"] = crawler.get_json_value(account_index_response.json_data, "data", "user", "id", type_check=int)
     return result
@@ -129,7 +129,7 @@ def get_one_page_media(account_id, cursor):
         "media_info_list": [],  # 全部媒体信息
         "next_page_cursor": "",  # 下一页媒体信息的指针
     }
-    if media_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
+    if media_pagination_response.status != const.ResponseCode.SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(media_pagination_response.status))
     response_media = crawler.get_json_value(media_pagination_response.json_data, "data", "user", "edge_owner_to_timeline_media", type_check=dict)
     media_info_list = crawler.get_json_value(response_media, "edges", type_check=list)
@@ -185,7 +185,7 @@ def get_media_page(page_id):
         "photo_url_list": [],  # 全部图片地址
         "video_url_list": [],  # 全部视频地址
     }
-    if media_response.status != net.HTTP_RETURN_CODE_SUCCEED:
+    if media_response.status != const.ResponseCode.SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(media_response.status))
     media_item_list = crawler.get_json_value(media_response.json_data, "items", type_check=list)
     if len(media_item_list) != 1:
@@ -297,12 +297,12 @@ class Instagram(crawler.Crawler):
 
         # 初始化参数
         sys_config = {
-            crawler_enum.SysConfigKey.DOWNLOAD_PHOTO: True,
-            crawler_enum.SysConfigKey.DOWNLOAD_VIDEO: True,
-            crawler_enum.SysConfigKey.SET_PROXY: True,
-            crawler_enum.SysConfigKey.GET_COOKIE: ("instagram.com",),
-            crawler_enum.SysConfigKey.APP_CONFIG: (
-                ("IS_LOCAL_SAVE_SESSION", False, crawler_enum.ConfigAnalysisMode.BOOLEAN),
+            const.SysConfigKey.DOWNLOAD_PHOTO: True,
+            const.SysConfigKey.DOWNLOAD_VIDEO: True,
+            const.SysConfigKey.SET_PROXY: True,
+            const.SysConfigKey.GET_COOKIE: ("instagram.com",),
+            const.SysConfigKey.APP_CONFIG: (
+                ("IS_LOCAL_SAVE_SESSION", False, const.ConfigAnalysisMode.BOOLEAN),
             ),
         }
         crawler.Crawler.__init__(self, sys_config, **kwargs)

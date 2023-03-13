@@ -37,7 +37,7 @@ def get_one_page_blog(account_name, target_id):
     }
     if target_id == INIT_TARGET_ID and blog_pagination_response.status == 400:
         raise crawler.CrawlerException("talk不存在")
-    elif blog_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
+    elif blog_pagination_response.status != const.ResponseCode.SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(blog_pagination_response.status))
     for blog_info in crawler.get_json_value(blog_pagination_response.json_data, "data", type_check=list):
         result_blog_info = {
@@ -74,10 +74,10 @@ class NanaGoGo(crawler.Crawler):
 
         # 初始化参数
         sys_config = {
-            crawler_enum.SysConfigKey.DOWNLOAD_PHOTO: True,
-            crawler_enum.SysConfigKey.DOWNLOAD_VIDEO: True,
-            crawler_enum.SysConfigKey.SET_PROXY: True,
-            crawler_enum.SysConfigKey.GET_COOKIE: ("7gogo.jp", "api.7gogo.jp"),
+            const.SysConfigKey.DOWNLOAD_PHOTO: True,
+            const.SysConfigKey.DOWNLOAD_VIDEO: True,
+            const.SysConfigKey.SET_PROXY: True,
+            const.SysConfigKey.GET_COOKIE: ("7gogo.jp", "api.7gogo.jp"),
         }
         crawler.Crawler.__init__(self, sys_config, **kwargs)
 

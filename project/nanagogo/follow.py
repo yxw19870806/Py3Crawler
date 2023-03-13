@@ -21,7 +21,7 @@ def follow_account(account_id):
         "X-7gogo-WebAuth": "yTRBxlzKsGnYfln9VQCx9ZQTZFERgoELVRh82k_lwDy=",
     }
     follow_response = net.request(follow_api_url, method="POST", fields=post_data, header_list=header_list, cookies_list=nanagogo.COOKIE_INFO, json_decode=True)
-    if follow_response.status != net.HTTP_RETURN_CODE_SUCCEED:
+    if follow_response.status != const.ResponseCode.SUCCEED:
         output.print_msg("关注%s失败，请求返回结果：%s，退出程序！" % (account_id, crawler.request_failre(follow_response.status)))
         tool.process_exit()
     try:

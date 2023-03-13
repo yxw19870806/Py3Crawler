@@ -45,7 +45,7 @@ def check_login():
         return False
     api_url = "https://api.bilibili.com/x/member/web/account"
     api_response = net.request(api_url, method="GET", cookies_list=COOKIE_INFO, json_decode=True)
-    if api_response.status == net.HTTP_RETURN_CODE_SUCCEED:
+    if api_response.status == const.ResponseCode.SUCCEED:
         return crawler.get_json_value(api_response.json_data, "data", "mid", type_check=int, default_value=0) != 0
     return False
 
@@ -108,7 +108,7 @@ def get_one_page_video(account_id, page_count):
     result = {
         "video_info_list": [],  # 全部视频信息
     }
-    if api_response.status != net.HTTP_RETURN_CODE_SUCCEED:
+    if api_response.status != const.ResponseCode.SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(api_response.status))
     for video_info in crawler.get_json_value(api_response.json_data, "data", "list", "vlist", type_check=list):
         result_video_info = {
@@ -139,7 +139,7 @@ def get_one_page_short_video(account_id, nex_offset):
         "video_info_list": [],  # 全部视频信息
         "next_page_offset": "",  # 下一页指针
     }
-    if api_response.status != net.HTTP_RETURN_CODE_SUCCEED:
+    if api_response.status != const.ResponseCode.SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(api_response.status))
     if crawler.get_json_value(api_response.json_data, "msg", type_check=str) != "success":
         raise crawler.CrawlerException("返回信息'msg'字段取值不正确\n" + str(api_response.json_data))
@@ -175,7 +175,7 @@ def get_one_page_album(account_id, page_count):
     result = {
         "album_id_list": [],  # 全部相簿id
     }
-    if api_response.status != net.HTTP_RETURN_CODE_SUCCEED:
+    if api_response.status != const.ResponseCode.SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(api_response.status))
 
     album_info_list = []
@@ -204,7 +204,7 @@ def get_one_page_audio(account_id, page_count):
     result = {
         "audio_info_list": [],  # 全部视频信息
     }
-    if api_response.status != net.HTTP_RETURN_CODE_SUCCEED:
+    if api_response.status != const.ResponseCode.SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(api_response.status))
     audio_info_list = []
     try:
@@ -234,7 +234,7 @@ def get_video_page(video_id):
         "video_part_info_list": [],  # 全部视频地址
         "video_title": "",  # 视频标题
     }
-    if video_play_response.status != net.HTTP_RETURN_CODE_SUCCEED:
+    if video_play_response.status != const.ResponseCode.SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(video_play_response.status))
     video_play_response_content = video_play_response.data.decode(errors="ignore")
     script_json = tool.json_decode(tool.find_sub_string(video_play_response_content, "window.__INITIAL_STATE__=", ";(function()"))
@@ -284,7 +284,7 @@ def get_video_page(video_id):
         header_list = {"Referer": "https://www.bilibili.com/video/av%s" % video_id}
         video_info_response = net.request(video_info_url, method="GET", fields=query_data, cookies_list=COOKIE_INFO, header_list=header_list,
                                           json_decode=True)
-        if video_info_response.status != net.HTTP_RETURN_CODE_SUCCEED:
+        if video_info_response.status != const.ResponseCode.SUCCEED:
             raise crawler.CrawlerException("视频信息，" + crawler.request_failre(video_info_response.status))
         try:
             video_info_list = crawler.get_json_value(video_info_response.json_data, "data", "durl", type_check=list)
@@ -321,7 +321,7 @@ def get_album_page(album_id):
     result = {
         "photo_url_list": [],  # 全部图片地址
     }
-    if api_response.status != net.HTTP_RETURN_CODE_SUCCEED:
+    if api_response.status != const.ResponseCode.SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(api_response.status))
     for photo_info in crawler.get_json_value(api_response.json_data, "data", "item", "pictures", type_check=list):
         result["photo_url_list"].append(crawler.get_json_value(photo_info, "img_src", type_check=str))
@@ -339,7 +339,7 @@ def get_audio_info_page(audio_id):
     result = {
         "audio_url": "",  # 音频地址
     }
-    if api_response.status != net.HTTP_RETURN_CODE_SUCCEED:
+    if api_response.status != const.ResponseCode.SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(api_response.status))
     result["audio_url"] = crawler.get_json_value(api_response.json_data, "data", "cdns", 0, type_check=str)
     return result
@@ -354,10 +354,10 @@ class BiliBili(crawler.Crawler):
 
         # 初始化参数
         sys_config = {
-            crawler_enum.SysConfigKey.DOWNLOAD_PHOTO: True,
-            crawler_enum.SysConfigKey.DOWNLOAD_VIDEO: True,
-            crawler_enum.SysConfigKey.DOWNLOAD_AUDIO: True,
-            crawler_enum.SysConfigKey.GET_COOKIE: ("bilibili.com",),
+            const.SysConfigKey.DOWNLOAD_PHOTO: True,
+            const.SysConfigKey.DOWNLOAD_VIDEO: True,
+            const.SysConfigKey.DOWNLOAD_AUDIO: True,
+            const.SysConfigKey.GET_COOKIE: ("bilibili.com",),
         }
         crawler.Crawler.__init__(self, sys_config, **kwargs)
 
@@ -604,11 +604,11 @@ class CrawlerThread(crawler.CrawlerThread):
             self.main_thread_check()  # 检测主线程运行状态
             download_return = net.Download(photo_url, photo_path)
             # 源文件禁止访问，增加后缀生成新的图片
-            if download_return.status == net.Download.DOWNLOAD_FAILED and download_return.code == 404:
+            if download_return.status == const.DownloadStatus.FAILED and download_return.code == 404:
                 photo_url = photo_url + "@100000w.jpg"
                 download_return = net.Download(photo_url, photo_path)
 
-            if download_return.status == net.Download.DOWNLOAD_SUCCEED:
+            if download_return.status == const.DownloadStatus.SUCCEED:
                 self.temp_path_list.append(photo_path)  # 设置临时目录
                 self.total_photo_count += 1  # 计数累加
                 self.info("%s 下载成功" % photo_description)

@@ -14,10 +14,10 @@ import time
 import threading
 import urllib.parse
 import urllib3
-from typing import Optional, List, Final
+from typing import Optional, List
 from urllib3._collections import HTTPHeaderDict
-from common import file, output, path, tool
 
+from common import const, file, net_config, output, path, tool
 
 # https://www.python.org/dev/peps/pep-0476/
 # disable urllib3 HTTPS warning
@@ -25,96 +25,30 @@ urllib3.disable_warnings()
 # disable URLError: <urlopen error [SSL: CERTIFICATE_VERIFY_FAILED] certificate verify failed (_ssl.c:590)>
 ssl._create_default_https_context = ssl._create_unverified_context
 
-SIZE_KB: Final[int] = 2 ** 10  # 1KB = 多少字节
-SIZE_MB: Final[int] = 2 ** 20  # 1MB = 多少字节
-SIZE_GB: Final[int] = 2 ** 30  # 1GB = 多少字节
-
-
-def convert_to_bytes(value, default_value: int) -> int:
-    """
-    将字符串转换为字节数
-
-    :Args:
-    - value - 待转换的字符串，例如 1 KB，2 MB，3 GB等
-    """
-    value = str(value).strip()
-    size = default_value
-    if tool.is_integer(value):
-        size = int(value)
-    else:
-        search_result = re.findall(r"^(\d+) *([a-zA-z]*)$", value)
-        if len(search_result) == 1:
-            unit = search_result[0][1]
-            if unit == "" or unit == "B":
-                size = int(search_result[0][0])
-            elif unit == "KB":
-                size = int(search_result[0][0]) * (2 ** 10)
-            elif unit == "MB":
-                size = int(search_result[0][0]) * (2 ** 20)
-            elif unit == "GB":
-                size = int(search_result[0][0]) * (2 ** 30)
-            else:
-                output.print_msg("无效的字节单位'%s'，只支持B、KB、MB、GB" % unit)
-        else:
-            output.print_msg("无效的字节数设置'%s'" % value)
-    return size
-
-
-# 读取网络相关配置
-DEFAULT_NET_CONFIG = {
-    "HTTP_CONNECTION_TIMEOUT": 10,  # 网络访问连接超时的秒数
-    "HTTP_READ_TIMEOUT": 30,  # 网络访问读取超时的秒数
-    "HTTP_REQUEST_RETRY_COUNT": 10,  # 网络访问自动重试次数
-    "DOWNLOAD_CONNECTION_TIMEOUT": 10,  # 下载文件连接超时的秒数
-    "DOWNLOAD_READ_TIMEOUT": 60,  # 下载文件读取超时的秒数
-    "DOWNLOAD_RETRY_COUNT": 10,  # 下载文件自动重试次数
-    "DOWNLOAD_MULTIPART_MIN_SIZE": "10 MB",  # 下载文件超过多少字节后开始使用分段下载
-    "DOWNLOAD_MULTIPART_BLOCK_SIZE": "1 MB",  # 分段下载中单次获取的字节数
-    "TOO_MANY_REQUESTS_WAIT_TIME": 60,  # http code 429(Too Many requests)时的等待时间
-    "SERVICE_INTERNAL_ERROR_WAIT_TIME": 30,  # http code 50X（服务器内部错误）时的等待时间
-    "HTTP_REQUEST_RETRY_WAIT_TIME": 5,  # 请求失败后重新请求的间隔时间
-    "GLOBAL_QUERY_PER_MINUTER": 1000,  # 全局每分钟请求限制
-    "SINGLE_HOST_QUERY_PER_MINUTER": 1000,  # 单域名每分钟请求限制
-}
-NET_CONFIG = tool.json_decode(file.read_file(os.path.join(os.path.dirname(__file__), "net_config.json")), {})
-for config_key in DEFAULT_NET_CONFIG:
-    if config_key not in NET_CONFIG:
-        NET_CONFIG[config_key] = DEFAULT_NET_CONFIG[config_key]
-for key in NET_CONFIG:
-    if key in ["DOWNLOAD_MULTIPART_MIN_SIZE", "DOWNLOAD_MULTIPART_BLOCK_SIZE"]:
-        NET_CONFIG[key] = convert_to_bytes(NET_CONFIG[key], DEFAULT_NET_CONFIG[key])
-
 # qps队列
-QPS = {}
+QPS: dict[int, dict[str, int]] = {}
 
 # 连接池
 HTTP_CONNECTION_POOL: Optional[urllib3.PoolManager] = None
-PROXY_HTTP_CONNECTION_POOL = None
+PROXY_HTTP_CONNECTION_POOL: Optional[urllib3.ProxyManager] = None
 # 网络访问相关阻塞/继续事件
 thread_event = threading.Event()
 thread_event.set()
 # 退出标志
-EXIT_FLAG = False
+EXIT_FLAG: bool = False
 # response header中Content-Type对应的Mime字典
-MIME_DICTIONARY = None
-# 网络访问返回值
-HTTP_RETURN_CODE_RETRY = 0
-HTTP_RETURN_CODE_URL_INVALID = -1  # 地址不符合规范（非http:// 或者 https:// 开头）
-HTTP_RETURN_CODE_JSON_DECODE_ERROR = -2  # 返回数据不是JSON格式，但返回状态是200
-HTTP_RETURN_CODE_DOMAIN_NOT_RESOLVED = -3  # 域名无法解析
-HTTP_RETURN_CODE_RESPONSE_TO_LARGE = -4  # 文件太大
-HTTP_RETURN_CODE_TOO_MANY_REDIRECTS = -5  # 重定向次数过多
-HTTP_RETURN_CODE_SUCCEED = 200
+MIME_DICTIONARY: Optional[dict] = None
 # 下载文件时是否覆盖已存在的同名文件
-DOWNLOAD_REPLACE_IF_EXIST = False
+DOWNLOAD_REPLACE_IF_EXIST: bool = False
+
+NET_CONFIG: dict[str, any] = net_config.config
 
 
 class ErrorResponse(object):
-    """
-    request()方法异常对象
-    """
-
     def __init__(self, status=-1):
+        """
+        request()方法异常对象
+        """
         self.status = status
         self.data = b""
         self.headers = {}
@@ -241,14 +175,14 @@ def request(url, method: str = "GET", fields: Optional[dict] = None, binary_data
     - read_timeout - customize read timeout seconds
     - is_random_ip - is counterfeit a request header with random ip, will replace header_list["X-Forwarded-For"] and header_list["X-Real-Ip"]
     - json_decode - is return a decoded json data when response status = 200
-        if decode failure will replace response status with HTTP_RETURN_CODE_JSON_DECODE_ERROR
+        if decode failure will replace response status with const.ResponseCode.JSON_DECODE_ERROR
     """
     url = str(url).strip()
     if not (url.startswith("http://") or url.startswith("https://")):
-        return ErrorResponse(HTTP_RETURN_CODE_URL_INVALID)
+        return ErrorResponse(const.ResponseCode.URL_INVALID)
     method = method.upper()
     if method not in ["GET", "POST", "HEAD", "PUT", "DELETE", "OPTIONS", "TRACE"]:
-        return ErrorResponse(HTTP_RETURN_CODE_URL_INVALID)
+        return ErrorResponse(const.ResponseCode.URL_INVALID)
     if HTTP_CONNECTION_POOL is None:
         init_http_connection_pool()
     connection_pool = HTTP_CONNECTION_POOL
@@ -285,7 +219,7 @@ def request(url, method: str = "GET", fields: Optional[dict] = None, binary_data
     while True:
         thread_event.wait()
         if EXIT_FLAG:
-            tool.process_exit(tool.ExitCode.NORMAL)
+            tool.process_exit(const.ExitCode.NORMAL)
 
         if is_check_qps and _qps(url):
             time.sleep(random.randint(60, 120))
@@ -301,7 +235,7 @@ def request(url, method: str = "GET", fields: Optional[dict] = None, binary_data
                 else:
                     response = connection_pool.request(method, url, body=binary_data, encode_multipart=encode_multipart, headers=header_list,
                                                        redirect=is_auto_redirect, timeout=timeout)
-            if response.status == HTTP_RETURN_CODE_SUCCEED and json_decode:
+            if response.status == const.ResponseCode.SUCCEED and json_decode:
                 try:
                     response.json_data = json.loads(response.data.decode())
                 except ValueError:
@@ -319,7 +253,7 @@ def request(url, method: str = "GET", fields: Optional[dict] = None, binary_data
                             else:
                                 is_error = False
                     if is_error:
-                        response.status = HTTP_RETURN_CODE_JSON_DECODE_ERROR
+                        response.status = const.ResponseCode.JSON_DECODE_ERROR
             elif response.status == 429:  # Too Many Requests
                 output.print_msg(url + " Too Many Requests, sleep")
                 time.sleep(NET_CONFIG["TOO_MANY_REQUESTS_WAIT_TIME"])
@@ -333,19 +267,19 @@ def request(url, method: str = "GET", fields: Optional[dict] = None, binary_data
                     return response
             return response
         except MemoryError:
-            return ErrorResponse(HTTP_RETURN_CODE_RESPONSE_TO_LARGE)
+            return ErrorResponse(const.ResponseCode.RESPONSE_TO_LARGE)
         except Exception as e:
             message = str(e)
             if isinstance(e, urllib3.exceptions.ConnectTimeoutError):
                 # 域名无法解析
                 if message.find("[Errno 11004] getaddrinfo failed") >= 0 or message.find("[Errno 11001] getaddrinfo failed") >= 0:
-                    return ErrorResponse(HTTP_RETURN_CODE_DOMAIN_NOT_RESOLVED)
+                    return ErrorResponse(const.ResponseCode.DOMAIN_NOT_RESOLVED)
                 elif message.find("[WinError 10061]") >= 0:
                     # [WinError 10061] 由于目标计算机积极拒绝，无法连接。
-                    return ErrorResponse(HTTP_RETURN_CODE_RETRY)
+                    return ErrorResponse(const.ResponseCode.RETRY)
             elif isinstance(e, urllib3.exceptions.MaxRetryError):
                 if message.find("Caused by ResponseError('too many redirects'") >= 0:
-                    return ErrorResponse(HTTP_RETURN_CODE_TOO_MANY_REDIRECTS)
+                    return ErrorResponse(const.ResponseCode.TOO_MANY_REDIRECTS)
             elif isinstance(e, urllib3.exceptions.DecodeError):
                 if message.find("'Received response with content-encoding: gzip, but failed to decode it.'") >= 0:
                     return request(url, method=method, fields=fields, binary_data=binary_data, header_list=header_list, cookies_list=cookies_list,
@@ -366,7 +300,7 @@ def request(url, method: str = "GET", fields: Optional[dict] = None, binary_data
         retry_count += 1
         if retry_count >= NET_CONFIG["HTTP_REQUEST_RETRY_COUNT"]:
             output.print_msg("无法访问页面：" + url)
-            return ErrorResponse(HTTP_RETURN_CODE_RETRY)
+            return ErrorResponse(const.ResponseCode.RETRY)
 
 
 def _qps(url: str) -> bool:
@@ -458,7 +392,7 @@ def download_from_list(file_url_list: List[str], file_path: str, replace_if_exis
         part_file_path_list.append(part_file_path)
         # 下载
         part_download_return = Download(file_url, part_file_path, replace_if_exist=replace_if_exist, **kwargs)
-        if part_download_return.status == Download.DOWNLOAD_FAILED:
+        if part_download_return.status == const.DownloadStatus.FAILED:
             break
         index += 1
     else:
@@ -493,15 +427,6 @@ def resume_request() -> None:
 
 
 class Download:
-    DOWNLOAD_SUCCEED = 1
-    DOWNLOAD_FAILED = 0
-
-    CODE_URL_INVALID = -1
-    CODE_RETRY_MAX_COUNT = -2
-    CODE_FILE_SIZE_INVALID = -3
-    CODE_PROCESS_EXIT = -10
-    CODE_FILE_CREATE_FAILED = -11
-
     def __init__(self, file_url: str, file_path: str, recheck_file_extension: bool = False, auto_multipart_download: bool = False,
                  replace_if_exist: Optional[bool] = None, **kwargs):
         """
@@ -531,13 +456,13 @@ class Download:
         # 是否开启分段下载
         self.is_multipart_download = False
         # 结果
-        self.status = self.DOWNLOAD_FAILED
+        self.status = const.DownloadStatus.FAILED
         self.code = 0
 
         self.start_download()
 
     def __bool__(self) -> bool:
-        return self.status == self.DOWNLOAD_SUCCEED
+        return self.status == const.DownloadStatus.SUCCEED
 
     def start_download(self) -> None:
         """
@@ -550,12 +475,12 @@ class Download:
         # 同名文件已经存在，直接返回
         if not self.replace_if_exist and os.path.exists(self.file_path) and os.path.getsize(self.file_path) > 0:
             output.print_msg("文件%s（%s）已存在，跳过" % (self.file_path, self.file_url))
-            self.status = self.DOWNLOAD_SUCCEED
+            self.status = const.DownloadStatus.SUCCEED
             return
 
         # 判断保存目录是否存在
         if not path.create_dir(os.path.dirname(self.file_path)):
-            self.code = self.CODE_FILE_CREATE_FAILED
+            self.code = const.DownloadCode.FILE_CREATE_FAILED
             return
 
         # 是否需要分段下载
@@ -564,7 +489,7 @@ class Download:
         # 下载
         for retry_count in range(NET_CONFIG["DOWNLOAD_RETRY_COUNT"]):
             if EXIT_FLAG:
-                self.code = self.CODE_PROCESS_EXIT
+                self.code = const.DownloadCode.PROCESS_EXIT
                 break
 
             if not self.is_multipart_download:
@@ -578,18 +503,18 @@ class Download:
 
             # 如果没有返回文件的长度，直接下载成功
             if self.content_length == 0:
-                self.status = self.DOWNLOAD_SUCCEED
+                self.status = const.DownloadStatus.SUCCEED
                 self.code = 0
                 return
 
             # 判断文件下载后的大小和response中的Content-Length是否一致
             file_size = os.path.getsize(self.file_path)
             if self.content_length == file_size:
-                self.status = self.DOWNLOAD_SUCCEED
+                self.status = const.DownloadStatus.SUCCEED
                 self.code = 0
                 return
             else:
-                self.code = self.CODE_FILE_SIZE_INVALID
+                self.code = const.DownloadCode.FILE_SIZE_INVALID
                 output.print_msg(f"本地文件%s：{self.content_length}和网络文件%s：{file_size}不一致" % (self.file_path, self.file_url))
                 time.sleep(NET_CONFIG["HTTP_REQUEST_RETRY_WAIT_TIME"])
 
@@ -604,19 +529,19 @@ class Download:
         if self.auto_multipart_download:
             head_response = request(self.file_url, method="HEAD", is_check_qps=False, **self.kwargs.copy())
             # 其他返回状态，退出
-            if head_response.status != HTTP_RETURN_CODE_SUCCEED:
+            if head_response.status != const.ResponseCode.SUCCEED:
                 # URL格式不正确
-                if head_response.status == HTTP_RETURN_CODE_URL_INVALID:
-                    self.code = self.CODE_URL_INVALID
+                if head_response.status == const.ResponseCode.URL_INVALID:
+                    self.code = const.DownloadCode.URL_INVALID
                 # 域名无法解析
-                elif head_response.status == HTTP_RETURN_CODE_DOMAIN_NOT_RESOLVED:
-                    self.code = self.CODE_RETRY_MAX_COUNT
+                elif head_response.status == const.ResponseCode.DOMAIN_NOT_RESOLVED:
+                    self.code = const.DownloadCode.RETRY_MAX_COUNT
                 # 重定向次数过多
-                elif head_response.status == HTTP_RETURN_CODE_TOO_MANY_REDIRECTS:
-                    self.code = self.CODE_RETRY_MAX_COUNT
+                elif head_response.status == const.ResponseCode.TOO_MANY_REDIRECTS:
+                    self.code = const.DownloadCode.RETRY_MAX_COUNT
                 # 超过重试次数
-                elif head_response.status == HTTP_RETURN_CODE_RETRY:
-                    self.code = self.CODE_RETRY_MAX_COUNT
+                elif head_response.status == const.ResponseCode.RETRY:
+                    self.code = const.DownloadCode.RETRY_MAX_COUNT
                 # 其他http code
                 else:
                     self.code = head_response.status
@@ -664,19 +589,19 @@ class Download:
         except SystemExit:
             return False
 
-        if file_response.status != HTTP_RETURN_CODE_SUCCEED:
+        if file_response.status != const.ResponseCode.SUCCEED:
             # URL格式不正确
-            if file_response.status == HTTP_RETURN_CODE_URL_INVALID:
-                self.code = self.CODE_URL_INVALID
+            if file_response.status == const.ResponseCode.URL_INVALID:
+                self.code = const.DownloadCode.URL_INVALID
             # 域名无法解析
-            elif file_response.status == HTTP_RETURN_CODE_DOMAIN_NOT_RESOLVED:
-                self.code = self.CODE_RETRY_MAX_COUNT
+            elif file_response.status == const.ResponseCode.DOMAIN_NOT_RESOLVED:
+                self.code = const.DownloadCode.RETRY_MAX_COUNT
             # 重定向次数过多
-            elif file_response.status == HTTP_RETURN_CODE_TOO_MANY_REDIRECTS:
-                self.code = self.CODE_RETRY_MAX_COUNT
+            elif file_response.status == const.ResponseCode.TOO_MANY_REDIRECTS:
+                self.code = const.DownloadCode.RETRY_MAX_COUNT
             # 超过重试次数
-            elif file_response.status == HTTP_RETURN_CODE_RETRY:
-                self.code = self.CODE_RETRY_MAX_COUNT
+            elif file_response.status == const.ResponseCode.RETRY:
+                self.code = const.DownloadCode.RETRY_MAX_COUNT
             # 其他http code
             else:
                 self.code = file_response.status
@@ -744,6 +669,6 @@ class Download:
                                 fd_handle.write(multipart_response.data)
                                 break
                     else:
-                        self.code = self.CODE_RETRY_MAX_COUNT
+                        self.code = const.DownloadCode.RETRY_MAX_COUNT
                         return False
         return True

@@ -6,7 +6,7 @@ http://astats.astats.nl/astats/
 email: hikaru870806@hotmail.com
 如有问题或建议请联系
 """
-from common import output, net, tool
+from common import const, net, output, tool
 
 
 # 获取指定游戏是否存在无效成就
@@ -14,7 +14,7 @@ def get_game_invalid_achievements(game_id):
     game_index_url = "http://astats.astats.nl/astats/Steam_Game_Info.php"
     query_data = {"AppID": game_id}
     game_index_response = net.request(game_index_url, method="GET", fields=query_data)
-    if game_index_response.status != net.HTTP_RETURN_CODE_SUCCEED:
+    if game_index_response.status != const.ResponseCode.SUCCEED:
         output.print_msg("游戏 %s 访问失败" % game_id)
         tool.process_exit()
     # game id 不存在

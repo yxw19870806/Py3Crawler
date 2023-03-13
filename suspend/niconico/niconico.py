@@ -22,7 +22,7 @@ def check_login():
         return False
     index_url = "https://www.nicovideo.jp/my"
     index_response = net.request(index_url, method="GET", cookies_list=COOKIE_INFO, is_auto_redirect=False)
-    if index_response.status == net.HTTP_RETURN_CODE_SUCCEED:
+    if index_response.status == const.ResponseCode.SUCCEED:
         return True
     return False
 
@@ -37,7 +37,7 @@ def get_account_mylist(account_id):
     }
     if account_mylist_response.status in [404, 500]:
         raise crawler.CrawlerException("账号不存在")
-    elif account_mylist_response.status != net.HTTP_RETURN_CODE_SUCCEED:
+    elif account_mylist_response.status != const.ResponseCode.SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(account_mylist_response.status))
     account_mylist_response_content = account_mylist_response.data.decode(errors="ignore")
     if pq(account_mylist_response_content).find(".articleBody .noListMsg").length == 1:
@@ -74,7 +74,7 @@ def get_one_page_account_video(account_id, page_count):
     }
     if video_index_response.status == 404:
         raise crawler.CrawlerException("账号不存在")
-    elif video_index_response.status != net.HTTP_RETURN_CODE_SUCCEED:
+    elif video_index_response.status != const.ResponseCode.SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(video_index_response.status))
     video_index_response_content = video_index_response.data.decode(errors="ignore")
     if pq(video_index_response_content).find(".articleBody .noListMsg").length == 1:
@@ -134,7 +134,7 @@ def get_one_page_mylist_video(list_id, page_count):
         raise crawler.CrawlerException("视频列表不存在")
     elif mylist_pagination_response.status == 403:
         raise crawler.CrawlerException("视频列表未公开")
-    elif mylist_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
+    elif mylist_pagination_response.status != const.ResponseCode.SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(mylist_pagination_response.status))
 
     for video_info in crawler.get_json_value(mylist_pagination_response.json_data, "data", "mylist", "items", type_check=list):
@@ -173,7 +173,7 @@ def get_video_info(video_id):
     elif video_play_response.status == 404:
         result["is_delete"] = True
         return result
-    elif video_play_response.status != net.HTTP_RETURN_CODE_SUCCEED:
+    elif video_play_response.status != const.ResponseCode.SUCCEED:
         raise crawler.CrawlerException("视频播放页访问失败，" + crawler.request_failre(video_play_response.status))
     video_play_response_content = video_play_response.data.decode(errors="ignore")
     script_json_html = tool.find_sub_string(video_play_response_content, 'data-api-data="', '" data-environment="')
@@ -206,9 +206,9 @@ class NicoNico(crawler.Crawler):
 
         # 初始化参数
         sys_config = {
-            crawler_enum.SysConfigKey.DOWNLOAD_VIDEO: True,
-            crawler_enum.SysConfigKey.SET_PROXY: True,
-            crawler_enum.SysConfigKey.GET_COOKIE: ("nicovideo.jp",),
+            const.SysConfigKey.DOWNLOAD_VIDEO: True,
+            const.SysConfigKey.SET_PROXY: True,
+            const.SysConfigKey.GET_COOKIE: ("nicovideo.jp",),
         }
         crawler.Crawler.__init__(self, sys_config, **kwargs)
 
@@ -302,7 +302,7 @@ class CrawlerThread(crawler.CrawlerThread):
         if video_info_response["extra_cookie"]:
             cookies_list.update(video_info_response["extra_cookie"])
         download_return = net.Download(video_info_response["video_url"], video_file_path, cookies_list=cookies_list)
-        if download_return.status == net.Download.DOWNLOAD_SUCCEED:
+        if download_return.status == const.DownloadStatus.SUCCEED:
             self.total_video_count += 1  # 计数累加
             self.info("视频%s 《%s》下载成功" % (video_info["video_id"], video_info["video_title"]))
         else:

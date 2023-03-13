@@ -27,7 +27,7 @@ def get_account_index_page(account_name):
         account_index_response = net.request(account_index_url, method="GET", is_auto_redirect=False)
     if account_index_response.status == 301 and account_index_response.getheader("Location") == "https://tuchong.com/":
         raise crawler.CrawlerException("账号不存在")
-    elif account_index_response.status != net.HTTP_RETURN_CODE_SUCCEED:
+    elif account_index_response.status != const.ResponseCode.SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(account_index_response.status))
     account_index_response_content = account_index_response.data.decode(errors="ignore")
     account_id = tool.find_sub_string(account_index_response_content, 'site_id":"', '",')
@@ -51,7 +51,7 @@ def get_one_page_album(account_id, post_time):
     result = {
         "album_info_list": [],  # 全部图片信息
     }
-    if album_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
+    if album_pagination_response.status != const.ResponseCode.SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(album_pagination_response.status))
     if crawler.get_json_value(album_pagination_response.json_data, "result", type_check=str) != "SUCCESS":
         raise crawler.CrawlerException("返回信息%s中'result'字段取值不正确" % album_pagination_response.json_data)
@@ -83,7 +83,7 @@ class TuChong(crawler.Crawler):
 
         # 初始化参数
         sys_config = {
-            crawler_enum.SysConfigKey.DOWNLOAD_PHOTO: True,
+            const.SysConfigKey.DOWNLOAD_PHOTO: True,
         }
         crawler.Crawler.__init__(self, sys_config, **kwargs)
 

@@ -28,7 +28,7 @@ def get_account_index_page(account_id):
         "dytk": "",  # 账号dytk值（请求参数）
         "signature": "",  # 加密串（请求参数）
     }
-    if account_index_response.status != net.HTTP_RETURN_CODE_SUCCEED:
+    if account_index_response.status != const.ResponseCode.SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(account_index_response.status))
     account_index_response_content = account_index_response.data.decode(errors="ignore")
     script_tac = tool.find_sub_string(account_index_response_content, "<script>tac='", "'</script>")
@@ -42,7 +42,7 @@ def get_account_index_page(account_id):
     template_html = file.read_file(TEMPLATE_HTML_PATH)
     template_html = template_html.replace("%%USER_AGENT%%", USER_AGENT).replace("%%TAC%%", script_tac).replace("%%UID%%", str(account_id))
     cache_html_path = os.path.join(CACHE_FILE_PATH, "%s.html" % account_id)
-    file.write_file(template_html, cache_html_path, crawler_enum.WriteFileMode.REPLACE)
+    file.write_file(template_html, cache_html_path, const.WriteFileMode.REPLACE)
     # 使用抖音的加密JS方法算出signature的值
     chrome_options_argument = ["user-agent=" + USER_AGENT]
     with browser.Chrome("file:///" + os.path.realpath(cache_html_path), add_argument=chrome_options_argument) as chrome:
@@ -75,7 +75,7 @@ def get_one_page_video(account_id, cursor_id, dytk, signature):
         "next_page_cursor_id": 0,  # 下一页视频指针
         "video_info_list": [],  # 全部视频信息
     }
-    if video_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
+    if video_pagination_response.status != const.ResponseCode.SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(video_pagination_response.status))
     # 判断是不是最后一页
     result["is_over"] = crawler.get_json_value(video_pagination_response.json_data, "has_more", type_check=int) == 0
@@ -103,7 +103,7 @@ class DouYin(crawler.Crawler):
         crawler.PROJECT_APP_PATH = os.path.abspath(os.path.dirname(__file__))
 
         sys_config = {
-            crawler_enum.SysConfigKey.DOWNLOAD_VIDEO: True,
+            const.SysConfigKey.DOWNLOAD_VIDEO: True,
         }
         crawler.Crawler.__init__(self, sys_config, **kwargs)
 
@@ -186,7 +186,7 @@ class CrawlerThread(crawler.CrawlerThread):
 
         file_path = os.path.join(self.main_thread.video_download_path, self.display_name, "%020d.mp4" % video_info["video_id"])
         download_return = net.Download(video_info["video_url"], file_path, auto_multipart_download=True)
-        if download_return.status == net.Download.DOWNLOAD_SUCCEED:
+        if download_return.status == const.DownloadStatus.SUCCEED:
             self.total_video_count += 1  # 计数累加
             self.info("视频%s下载成功" % video_info["video_id"])
         else:

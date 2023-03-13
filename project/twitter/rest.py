@@ -46,7 +46,7 @@ def init():
         if get_access_token(api_key, api_secret):
             # 加密保存到文件中
             if not os.path.exists(token_file_path):
-                file.write_file(crypto.Crypto().encrypt(tool.json_encode({"api_key": api_key, "api_secret": api_secret})), token_file_path, crawler_enum.WriteFileMode.REPLACE)
+                file.write_file(crypto.Crypto().encrypt(tool.json_encode({"api_key": api_key, "api_secret": api_secret})), token_file_path, const.WriteFileMode.REPLACE)
             output.print_msg("access token get succeed!")
             return True
         output.print_msg("incorrect api info, please type again!")
@@ -63,7 +63,7 @@ def get_access_token(api_key, api_secret):
         "grant_type": "client_credentials"
     }
     response = net.request(auth_url, method="POST", header_list=header_list, fields=post_data, json_decode=True)
-    if response.status == net.HTTP_RETURN_CODE_SUCCEED and crawler.check_sub_key(("token_type", "access_token"), response.json_data) and response.json_data["token_type"] == "bearer":
+    if response.status == const.ResponseCode.SUCCEED and crawler.check_sub_key(("token_type", "access_token"), response.json_data) and response.json_data["token_type"] == "bearer":
         global ACCESS_TOKEN
         ACCESS_TOKEN = response.json_data["access_token"]
         return True
@@ -80,7 +80,7 @@ def get_user_info_by_user_id(user_id):
     query_data = {"user_id": user_id}
     header_list = {"Authorization": "Bearer %s" % ACCESS_TOKEN}
     response = net.request(api_url, method="GET", fields=query_data, header_list=header_list, json_decode=True)
-    if response.status == net.HTTP_RETURN_CODE_SUCCEED:
+    if response.status == const.ResponseCode.SUCCEED:
         return response.json_data
     return {}
 
@@ -93,7 +93,7 @@ def follow_account(user_id):
         "Authorization": "Bearer %s" % ACCESS_TOKEN,
     }
     response = net.request(api_url, method="POST", header_list=header_list, json_decode=True)
-    if response.status == net.HTTP_RETURN_CODE_SUCCEED:
+    if response.status == const.ResponseCode.SUCCEED:
         pass
     return False
 

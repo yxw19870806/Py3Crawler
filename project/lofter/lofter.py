@@ -20,7 +20,7 @@ def init_session():
         "User-Agent": USER_AGENT,
     }
     index_response = net.request(index_url, method="GET", header_list=header_list, is_auto_redirect=False, is_random_ip=False)
-    if index_response.status in [net.HTTP_RETURN_CODE_SUCCEED, 302]:
+    if index_response.status in [const.ResponseCode.SUCCEED, 302]:
         COOKIE_INFO.update(net.get_cookies_from_response_header(index_response.headers))
 
 
@@ -41,7 +41,7 @@ def get_one_page_blog(account_name, page_count):
         return get_one_page_blog(account_name, page_count)
     if page_count == 1 and blog_pagination_response.status == 404:
         raise crawler.CrawlerException("账号不存在")
-    elif blog_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
+    elif blog_pagination_response.status != const.ResponseCode.SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(blog_pagination_response.status))
     # 获取全部日志地址
     blog_url_list = re.findall(r'"(https?://%s.lofter.com/post/[^"]*)"' % account_name, blog_pagination_response.data.decode(errors="ignore"))
@@ -59,7 +59,7 @@ def get_blog_page(blog_url):
     result = {
         "photo_url_list": [],  # 全部图片地址
     }
-    if blog_response.status != net.HTTP_RETURN_CODE_SUCCEED:
+    if blog_response.status != const.ResponseCode.SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(blog_response.status))
     # 获取全部图片地址
     result["photo_url_list"] = re.findall(r'bigimgsrc="([^"]*)"', blog_response.data.decode(errors="ignore"))
@@ -93,7 +93,7 @@ class Lofter(crawler.Crawler):
 
         # 初始化参数
         sys_config = {
-            crawler_enum.SysConfigKey.DOWNLOAD_PHOTO: True,
+            const.SysConfigKey.DOWNLOAD_PHOTO: True,
         }
         crawler.Crawler.__init__(self, sys_config, **kwargs)
 

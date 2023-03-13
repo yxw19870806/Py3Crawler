@@ -28,7 +28,7 @@ def get_one_page_album(account_id, since_id):
     result = {
         "album_id_list": [],  # 全部作品id
     }
-    if api_response.status != net.HTTP_RETURN_CODE_SUCCEED:
+    if api_response.status != const.ResponseCode.SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(api_response.status))
     try:
         album_info_list = crawler.get_json_value(api_response.json_data, "data", "items", type_check=list)
@@ -50,7 +50,7 @@ def get_album_page(album_id):
         "photo_url_list": [],  # 全部图片地址
         "video_id": "",  # 视频id
     }
-    if album_response.status != net.HTTP_RETURN_CODE_SUCCEED:
+    if album_response.status != const.ResponseCode.SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(album_response.status))
     album_response_content = album_response.data.decode(errors="ignore")
     script_json_html = tool.find_sub_string(album_response_content, "JSON.parse(", ");\n")
@@ -107,7 +107,7 @@ def get_album_page_by_selenium(album_id):
             raise crawler.CrawlerException("播放页匹配视频信息地址失败")
     # 获取视频信息
     video_info_response = net.request(video_info_url, method="GET", json_decode=True)
-    if video_info_response.status != net.HTTP_RETURN_CODE_SUCCEED:
+    if video_info_response.status != const.ResponseCode.SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(video_info_response.status))
     video_info_list = crawler.get_json_value(video_info_response.json_data, "data", "video_list", type_check=dict)
     max_resolution = 0
@@ -133,8 +133,8 @@ class Bcy(crawler.Crawler):
 
         # 初始化参数
         sys_config = {
-            crawler_enum.SysConfigKey.DOWNLOAD_PHOTO: True,
-            crawler_enum.SysConfigKey.DOWNLOAD_VIDEO: True,
+            const.SysConfigKey.DOWNLOAD_PHOTO: True,
+            const.SysConfigKey.DOWNLOAD_VIDEO: True,
         }
         crawler.Crawler.__init__(self, sys_config, **kwargs)
 
@@ -227,7 +227,7 @@ class CrawlerThread(crawler.CrawlerThread):
             for retry_count in range(10):
                 self.main_thread_check()  # 检测主线程运行状态
                 download_return = net.Download(photo_url, photo_path)
-                if download_return.status == net.Download.DOWNLOAD_SUCCEED:
+                if download_return.status == const.DownloadStatus.SUCCEED:
                     self.total_photo_count += 1  # 计数累加
                     self.info("%s 下载成功" % photo_description)
                 else:

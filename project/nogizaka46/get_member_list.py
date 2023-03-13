@@ -15,7 +15,7 @@ from project.nogizaka46 import nogizaka46_diary
 def get_account_from_index():
     index_url = "https://www.nogizaka46.com/s/n46/diary/MEMBER"
     index_response = net.request(index_url, method="GET")
-    if index_response.status != net.HTTP_RETURN_CODE_SUCCEED:
+    if index_response.status != const.ResponseCode.SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(index_response.status))
     index_response_content = index_response.data.decode(errors="ignore")
     member_selector_list = pq(index_response_content).find("div.ba--ml__list .ba--ml__one__a")
@@ -35,7 +35,7 @@ def get_account_from_index():
 
 def main():
     # 初始化类
-    nogizaka46diary_class = nogizaka46_diary.Nogizaka46Diary(extra_sys_config={crawler_enum.SysConfigKey.NOT_CHECK_SAVE_DATA: True})
+    nogizaka46diary_class = nogizaka46_diary.Nogizaka46Diary(extra_sys_config={const.SysConfigKey.NOT_CHECK_SAVE_DATA: True})
 
     # 存档位置
     account_list_from_api = get_account_from_index()
@@ -44,7 +44,7 @@ def main():
             if account_id not in nogizaka46diary_class.save_data:
                 nogizaka46diary_class.save_data[account_id] = [account_id, "0", account_list_from_api[account_id]]
         temp_list = [nogizaka46diary_class.save_data[key] for key in sorted(nogizaka46diary_class.save_data.keys())]
-        file.write_file(tool.list_to_string(temp_list), nogizaka46diary_class.save_data_path, crawler_enum.WriteFileMode.REPLACE)
+        file.write_file(tool.list_to_string(temp_list), nogizaka46diary_class.save_data_path, const.WriteFileMode.REPLACE)
 
 
 if __name__ == "__main__":

@@ -25,7 +25,7 @@ def check_login():
     index_response = net.request(account_index_url, method="GET", cookies_list=COOKIE_INFO, is_auto_redirect=False)
     if index_response.status == 303 and index_response.getheader("Location").startswith("https://accounts.google.com/ServiceLogin?"):
         return False
-    elif index_response.status == net.HTTP_RETURN_CODE_SUCCEED:
+    elif index_response.status == const.ResponseCode.SUCCEED:
         global IS_LOGIN
         IS_LOGIN = True
         return True
@@ -53,7 +53,7 @@ def get_one_page_video(account_id, token):
         index_response = net.request(index_url, method="GET", fields=post_data, header_list={"accept-language": "en"})
         if index_response.status == 404:
             raise crawler.CrawlerException("账号不存在")
-        elif index_response.status != net.HTTP_RETURN_CODE_SUCCEED:
+        elif index_response.status != const.ResponseCode.SUCCEED:
             raise crawler.CrawlerException(crawler.request_failre(index_response.status))
         index_response_content = index_response.data.decode(errors="ignore")
         if index_response_content.find('<button id="a11y-skip-nav" class="skip-nav"') >= 0:
@@ -111,7 +111,7 @@ def get_one_page_video(account_id, token):
             "x-youtube-client-version": "2.20221101.00.00",
         }
         video_pagination_response = net.request(query_url, method="POST", binary_data=tool.json_encode(post_data), header_list=header_list, json_decode=True)
-        if video_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
+        if video_pagination_response.status != const.ResponseCode.SUCCEED:
             raise crawler.CrawlerException(crawler.request_failre(video_pagination_response.status))
         video_info_list = crawler.get_json_value(video_pagination_response.json_data, "onResponseReceivedActions", 0, "appendContinuationItemsAction", "continuationItems", type_check=list)
     # 获取所有video id
@@ -140,7 +140,7 @@ def get_video_page(video_id):
         "video_title": "",  # 视频标题
         "video_url": "",  # 视频地址
     }
-    if video_play_response.status != net.HTTP_RETURN_CODE_SUCCEED:
+    if video_play_response.status != const.ResponseCode.SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(video_play_response.status))
     video_play_response_content = video_play_response.data.decode(errors="ignore")
 
@@ -249,7 +249,7 @@ def get_decrypt_step(js_file_url):
     # 最终的调用子加密方法的顺序
     decrypt_function_step = []
     js_file_response = net.request(js_file_url, method="GET")
-    if js_file_response.status != net.HTTP_RETURN_CODE_SUCCEED:
+    if js_file_response.status != const.ResponseCode.SUCCEED:
         raise crawler.CrawlerException("播放器JS文件 %s 访问失败，原因：%s" % (js_file_url, crawler.request_failre(js_file_response.status)))
     js_file_response_content = js_file_response.data.decode(errors="ignore")
     # 加密方法体（包含子加密方法的调用参数&顺序）
@@ -331,11 +331,11 @@ class Youtube(crawler.Crawler):
 
         # 初始化参数
         sys_config = {
-            crawler_enum.SysConfigKey.DOWNLOAD_VIDEO: True,
-            crawler_enum.SysConfigKey.SET_PROXY: True,
-            crawler_enum.SysConfigKey.GET_COOKIE: ("youtube.com",),
-            crawler_enum.SysConfigKey.APP_CONFIG: (
-                ("VIDEO_QUALITY", 6, crawler_enum.ConfigAnalysisMode.INTEGER),
+            const.SysConfigKey.DOWNLOAD_VIDEO: True,
+            const.SysConfigKey.SET_PROXY: True,
+            const.SysConfigKey.GET_COOKIE: ("youtube.com",),
+            const.SysConfigKey.APP_CONFIG: (
+                ("VIDEO_QUALITY", 6, const.ConfigAnalysisMode.INTEGER),
             ),
         }
         crawler.Crawler.__init__(self, sys_config, **kwargs)

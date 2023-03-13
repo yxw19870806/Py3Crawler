@@ -1,7 +1,7 @@
 # -*- coding:UTF-8  -*-
 import os.path
 import re
-from common import net, output, path, tool
+from common import const, net, output, path, tool
 
 item_list = {
     "helm": "头盔",
@@ -57,9 +57,9 @@ for item_path, item_position in list(item_list.items()):
         else:
             item_index_url = base_host + "/tw/item/%s/legendary.html#page=%s" % (item_path, page_count)
         item_index_response = net.request(item_index_url, method="GET")
-        if item_index_response.status == net.HTTP_RETURN_CODE_SUCCEED:
+        if item_index_response.status == const.ResponseCode.SUCCEED:
             item_index_response_content = item_index_response.data.decode("GBK", errors="ignore")
-            item_index_page = tool.find_sub_string(item_index_response_content, '<div class="cizhui-c-m', '<div class="data-options', tool.IncludeStringMode.START)
+            item_index_page = tool.find_sub_string(item_index_response_content, '<div class="cizhui-c-m', '<div class="data-options', const.IncludeStringMode.START)
             item_info_list = re.findall(r'<tr class="[\s|\S]*?</tr>', item_index_page)
             if len(item_info_list) == 0:
                 continue
@@ -71,7 +71,7 @@ for item_path, item_position in list(item_list.items()):
                 item_name = item_name.replace("'", "’")
                 item_url = base_host + item_url
                 item_response = net.request(item_url, method="GET")
-                if item_response.status == net.HTTP_RETURN_CODE_SUCCEED:
+                if item_response.status == const.ResponseCode.SUCCEED:
                     item_response_content = item_response.data.decode("GBK", errors="ignore")
                     item_detail = tool.find_sub_string(item_response_content, '<div class="content-right-bdl clearfix">', '<dl class="content-right-bdr">')
                     attribute = tool.find_sub_string(item_detail, "<!-- 主要属性-->", "<!-- 华丽丽的分割线 -->").strip()

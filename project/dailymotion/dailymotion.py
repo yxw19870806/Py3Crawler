@@ -21,7 +21,7 @@ def init_session():
     global AUTHORIZATION
     index_url = "https://www.dailymotion.com"
     index_response = net.request(index_url, method="GET")
-    if index_response.status != net.HTTP_RETURN_CODE_SUCCEED:
+    if index_response.status != const.ResponseCode.SUCCEED:
         raise crawler.CrawlerException("首页，" + crawler.request_failre(index_response.status))
     index_response_content = index_response.data.decode(errors="ignore")
     client_id_and_secret_find = re.findall(r'var r="(\w{20,})",o="(\w{40,})"', index_response_content)
@@ -35,7 +35,7 @@ def init_session():
         "traffic_segment": random.randint(100000, 999999)
     }
     oauth_response = net.request("https://graphql.api.dailymotion.com/oauth/token", method="POST", fields=post_data, json_decode=True)
-    if oauth_response.status != net.HTTP_RETURN_CODE_SUCCEED:
+    if oauth_response.status != const.ResponseCode.SUCCEED:
         raise crawler.CrawlerException("获取token页，%s\n%s" % (crawler.request_failre(oauth_response.status), str(post_data)))
     AUTHORIZATION = crawler.get_json_value(oauth_response.json_data, "access_token", type_check=str)
 
@@ -62,7 +62,7 @@ def get_one_page_video(account_id, page_count):
         "video_info_list": [],  # 全部视频信息
     }
     api_response = net.request(api_url, method="POST", binary_data=tool.json_encode(post_data), header_list=header_list, json_decode=True)
-    if api_response.status != net.HTTP_RETURN_CODE_SUCCEED:
+    if api_response.status != const.ResponseCode.SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(api_response.status))
     # 获取所有视频
     for video_info in crawler.get_json_value(api_response.json_data, "data", "channel", "channel_videos_all_videos", "edges", type_check=list):
@@ -100,7 +100,7 @@ def get_video_page(video_id):
     if video_info_response.status == 404:
         result["is_delete"] = True
         return result
-    elif video_info_response.status != net.HTTP_RETURN_CODE_SUCCEED:
+    elif video_info_response.status != const.ResponseCode.SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(video_info_response.status))
     # 获取视频标题
     result["video_title"] = crawler.get_json_value(video_info_response.json_data, "title", type_check=str)
@@ -136,9 +136,9 @@ class DailyMotion(crawler.Crawler):
 
         # 初始化参数
         sys_config = {
-            crawler_enum.SysConfigKey.DOWNLOAD_VIDEO: True,
-            crawler_enum.SysConfigKey.APP_CONFIG: (
-                ("VIDEO_QUALITY", 6, crawler_enum.ConfigAnalysisMode.INTEGER),
+            const.SysConfigKey.DOWNLOAD_VIDEO: True,
+            const.SysConfigKey.APP_CONFIG: (
+                ("VIDEO_QUALITY", 6, const.ConfigAnalysisMode.INTEGER),
             ),
         }
         crawler.Crawler.__init__(self, sys_config, **kwargs)

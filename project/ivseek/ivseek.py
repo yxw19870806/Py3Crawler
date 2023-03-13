@@ -21,7 +21,7 @@ def read_save_data(save_data_path):
     result_list = []
     if not os.path.exists(save_data_path):
         return result_list
-    for single_save_data in file.read_file(save_data_path, crawler_enum.ReadFileMode.LINE):
+    for single_save_data in file.read_file(save_data_path, const.ReadFileMode.LINE):
         single_save_data = single_save_data.replace("\xef\xbb\xbf", "").replace("\n", "").replace("\r", "")
         if len(single_save_data) == 0:
             continue
@@ -39,7 +39,7 @@ def get_index_page():
     result = {
         "max_archive_id": 0,  # 最新图集id
     }
-    if index_response.status != net.HTTP_RETURN_CODE_SUCCEED:
+    if index_response.status != const.ResponseCode.SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(index_response.status))
     index_response_content = index_response.data.decode(errors="ignore")
     archive_id_find = re.findall(r'<a class="no-deco" href="http://www.ivseek.com/archives/(\d*).html">', index_response_content)
@@ -60,7 +60,7 @@ def get_archive_page(archive_id):
     if archive_response.status == 404:
         result["is_delete"] = True
         return result
-    elif archive_response.status != net.HTTP_RETURN_CODE_SUCCEED:
+    elif archive_response.status != const.ResponseCode.SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(archive_response.status))
     archive_response_content = archive_response.data.decode(errors="ignore")
     # 获取视频地址
@@ -84,7 +84,7 @@ def get_archive_page(archive_id):
             result_video_info["video_url"] = "https://www.youtube.com/watch?v=%s" % video_id
             # 获取视频发布账号
             video_play_response = net.request(result_video_info["video_url"], method="GET", header_list={"accept-language": "en-US"})
-            if video_play_response.status != net.HTTP_RETURN_CODE_SUCCEED:
+            if video_play_response.status != const.ResponseCode.SUCCEED:
                 raise crawler.CrawlerException("视频播放页 %s，%s" % (result_video_info["video_url"], crawler.request_failre(video_play_response.status)))
             video_play_response_content = video_play_response.data.decode(errors="ignore")
             # 账号已被删除，跳过
@@ -116,7 +116,7 @@ def get_archive_page(archive_id):
                 log.info("视频%s访问异常，重试" % video_id)
                 time.sleep(60)
                 video_play_response = net.request(result_video_info["video_url"], method="GET", cookies_list=niconico.COOKIE_INFO)
-            if video_play_response.status != net.HTTP_RETURN_CODE_SUCCEED:
+            if video_play_response.status != const.ResponseCode.SUCCEED:
                 raise crawler.CrawlerException("视频播放页 %s，%s" % (result_video_info["video_url"], crawler.request_failre(video_play_response.status)))
             video_play_response_content = video_play_response.data.decode(errors="ignore")
             script_json: dict = tool.json_decode(pq(video_play_response_content).find("#js-initial-watch-data").attr("data-api-data"))
@@ -134,7 +134,7 @@ def get_archive_page(archive_id):
             result_video_info["video_url"] = "http://www.dailymotion.com/video/%s" % video_id
             # 获取视频发布账号
             video_play_response = net.request(result_video_info["video_url"], method="GET")
-            if video_play_response.status != net.HTTP_RETURN_CODE_SUCCEED:
+            if video_play_response.status != const.ResponseCode.SUCCEED:
                 raise crawler.CrawlerException("视频播放页%s，%s" % (result_video_info["video_url"], crawler.request_failre(video_play_response.status)))
             account_id = tool.find_sub_string(video_play_response.data.decode(errors="ignore"), '"screenname":"', '"')
             if account_id:
@@ -163,15 +163,15 @@ class IvSeek(crawler.Crawler):
 
         # 初始化参数
         sys_config = {
-            crawler_enum.SysConfigKey.NOT_CHECK_SAVE_DATA: True,
-            crawler_enum.SysConfigKey.NOT_DOWNLOAD: True,
-            crawler_enum.SysConfigKey.SET_PROXY: True,
+            const.SysConfigKey.NOT_CHECK_SAVE_DATA: True,
+            const.SysConfigKey.NOT_DOWNLOAD: True,
+            const.SysConfigKey.SET_PROXY: True,
         }
         crawler.Crawler.__init__(self, sys_config, **kwargs)
 
     def _main(self):
         self.save_id = 1
-        save_info_list = file.read_file(self.save_data_path, crawler_enum.ReadFileMode.LINE)
+        save_info_list = file.read_file(self.save_data_path, const.ReadFileMode.LINE)
         if len(save_info_list) > 0:
             self.save_id = int(save_info_list[-1].split("\t")[0]) + 1
 

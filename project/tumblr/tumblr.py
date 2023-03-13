@@ -50,7 +50,7 @@ def get_index_setting(account_id):
             is_https = False
             index_url = "http://%s.tumblr.com/" % account_id
             index_response = net.request(index_url, method="GET", is_auto_redirect=False)
-            if index_response.status == net.HTTP_RETURN_CODE_SUCCEED:
+            if index_response.status == const.ResponseCode.SUCCEED:
                 return is_https, is_private
             elif index_response.status != 302:
                 raise crawler.CrawlerException(crawler.request_failre(index_response.status))
@@ -67,7 +67,7 @@ def get_index_setting(account_id):
                 raise crawler.CrawlerException("账号不存在")
     elif index_response.status == 404:
         raise crawler.CrawlerException("账号不存在")
-    elif index_response.status != net.HTTP_RETURN_CODE_SUCCEED:
+    elif index_response.status != const.ResponseCode.SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(index_response.status))
     return is_https, is_private
 
@@ -91,11 +91,11 @@ def get_one_page_post(account_id, page_count, is_https):
         log.info("%s 第%s页日志异常，重试" % (account_id, page_count))
         time.sleep(5)
         return get_one_page_post(account_id, page_count, is_https)
-    # elif post_pagination_response.status in [503, 504, net.HTTP_RETURN_CODE_RETRY] and page_count > 1:
+    # elif post_pagination_response.status in [503, 504, const.ResponseCode.RETRY] and page_count > 1:
     #     # 服务器错误，跳过这页
     #     log.error("%s 第%s页日志无法访问，跳过" % (account_id, page_count))
     #     return result
-    elif post_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
+    elif post_pagination_response.status != const.ResponseCode.SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(post_pagination_response.status))
     post_pagination_response_content = post_pagination_response.data.decode(errors="ignore")
     script_json_html = tool.find_sub_string(post_pagination_response_content, '<script type="application/ld+json">', "</script>").strip()
@@ -151,7 +151,7 @@ def get_one_page_private_blog(account_id, page_count):
         log.info("%s 第%s页日志异常，重试" % (account_id, page_count))
         time.sleep(5)
         return get_one_page_private_blog(account_id, page_count)
-    elif post_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
+    elif post_pagination_response.status != const.ResponseCode.SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(post_pagination_response.status))
     if crawler.get_json_value(post_pagination_response.json_data, "meta", "status", type_check=int) != 200:
         raise crawler.CrawlerException("返回信息%s中'status'字段取值不正确" % post_pagination_response.json_data)
@@ -211,10 +211,10 @@ def get_post_page(post_url, post_id):
     if post_response.status == 404:
         result["is_delete"] = True
         return result
-    elif post_response.status != net.HTTP_RETURN_CODE_SUCCEED:
+    elif post_response.status != const.ResponseCode.SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(post_response.status))
     post_response_content = post_response.data.decode(errors="ignore")
-    post_page_head = tool.find_sub_string(post_response_content, "<head", "</head>", tool.IncludeStringMode.ALL)
+    post_page_head = tool.find_sub_string(post_response_content, "<head", "</head>", const.IncludeStringMode.ALL)
     if not post_page_head:
         raise crawler.CrawlerException("页面截取正文失败\n" + post_response_content)
     # 获取og_type（页面类型的是视频还是图片或其他）
@@ -373,7 +373,7 @@ def get_video_play_page(account_id, post_id, is_https):
         log.info("日志%s视频信息页访问异常，重试" % post_id)
         time.sleep(30)
         return get_video_play_page(account_id, post_id, is_https)
-    elif video_play_response.status != net.HTTP_RETURN_CODE_SUCCEED:
+    elif video_play_response.status != const.ResponseCode.SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(video_play_response.status))
     video_url_find = re.findall(r'<source src="(https?://%s.tumblr.com/video_file/[^"]*)" type="[^"]*"' % account_id, video_play_response_content)
     if len(video_url_find) == 1:
@@ -397,13 +397,13 @@ class Tumblr(crawler.Crawler):
 
         # 初始化参数
         sys_config = {
-            crawler_enum.SysConfigKey.DOWNLOAD_PHOTO: True,
-            crawler_enum.SysConfigKey.DOWNLOAD_VIDEO: True,
-            crawler_enum.SysConfigKey.GET_COOKIE: ("tumblr.com", "www.tumblr.com"),
-            crawler_enum.SysConfigKey.SET_PROXY: True,
-            crawler_enum.SysConfigKey.APP_CONFIG: (
-                ("USER_AGENT", "", crawler_enum.ConfigAnalysisMode.RAW),
-                ("IS_STEP_ERROR_403_AND_404", False, crawler_enum.ConfigAnalysisMode.BOOLEAN)
+            const.SysConfigKey.DOWNLOAD_PHOTO: True,
+            const.SysConfigKey.DOWNLOAD_VIDEO: True,
+            const.SysConfigKey.GET_COOKIE: ("tumblr.com", "www.tumblr.com"),
+            const.SysConfigKey.SET_PROXY: True,
+            const.SysConfigKey.APP_CONFIG: (
+                ("USER_AGENT", "", const.ConfigAnalysisMode.RAW),
+                ("IS_STEP_ERROR_403_AND_404", False, const.ConfigAnalysisMode.BOOLEAN)
             ),
         }
         crawler.Crawler.__init__(self, sys_config, **kwargs)
@@ -591,7 +591,7 @@ class CrawlerThread(crawler.CrawlerThread):
         if download_return.code == 403 and video_url.find("_r1_720") != -1:
             video_url = video_url.replace("_r1_720", "_r1")
             download_return = net.Download(video_url, video_path, auto_multipart_download=True)
-            if download_return.status == net.Download.DOWNLOAD_SUCCEED:
+            if download_return.status == const.DownloadStatus.SUCCEED:
                 self.info("%s 下载成功" % video_description)
                 return False
         if IS_STEP_ERROR_403_AND_404 and download_return.code in [403, 404]:

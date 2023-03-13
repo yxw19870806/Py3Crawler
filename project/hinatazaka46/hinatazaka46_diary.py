@@ -27,7 +27,7 @@ def get_one_page_blog(account_id, page_count):
         "blog_info_list": [],  # 全部日志信息
         "is_over": False,  # 是不是最后页日志
     }
-    if blog_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
+    if blog_pagination_response.status != const.ResponseCode.SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(blog_pagination_response.status))
     blog_pagination_response_content = blog_pagination_response.data.decode(errors="ignore")
     account_info_html = pq(blog_pagination_response_content).find(".p-blog-member__head .c-blog-member__name").html()
@@ -78,7 +78,7 @@ class Hinatazaka46Diary(crawler.Crawler):
 
         # 初始化参数
         sys_config = {
-            crawler_enum.SysConfigKey.DOWNLOAD_PHOTO: True,
+            const.SysConfigKey.DOWNLOAD_PHOTO: True,
         }
         crawler.Crawler.__init__(self, sys_config, **kwargs)
 

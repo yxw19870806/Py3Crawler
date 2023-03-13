@@ -30,7 +30,7 @@ def get_one_page_playlist(playlist_id, page_count):
         "audio_info_list": [],  # 全部音频信息
         "is_over": False,  # 是否最后一页音频
     }
-    if playlist_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
+    if playlist_pagination_response.status != const.ResponseCode.SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(playlist_pagination_response.status))
     for audio_info in crawler.get_json_value(playlist_pagination_response.json_data, "data", "musicList", type_check=list):
         result_audio_info = {
@@ -60,7 +60,7 @@ def get_audio_info_page(audio_id):
     result = {
         "audio_url": "",  # 音频地址
     }
-    if audio_info_response.status != net.HTTP_RETURN_CODE_SUCCEED:
+    if audio_info_response.status != const.ResponseCode.SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(audio_info_response.status))
     # 获取音频地址
     try:
@@ -82,8 +82,8 @@ class KuWo(crawler.Crawler):
 
         # 初始化参数
         default_sys_config = {
-            crawler_enum.SysConfigKey.NOT_CHECK_SAVE_DATA: True,
-            crawler_enum.SysConfigKey.DOWNLOAD_AUDIO: True,
+            const.SysConfigKey.NOT_CHECK_SAVE_DATA: True,
+            const.SysConfigKey.DOWNLOAD_AUDIO: True,
         }
         default_sys_config.update(sys_config)
         crawler.Crawler.__init__(self, sys_config, **kwargs)

@@ -19,7 +19,7 @@ TALK_ID_FILE_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), "inf
 # 获取account id文件
 def get_account_from_file():
     account_list = {}
-    for line in file.read_file(ACCOUNT_ID_FILE_PATH, crawler_enum.ReadFileMode.LINE):
+    for line in file.read_file(ACCOUNT_ID_FILE_PATH, const.ReadFileMode.LINE):
         split_temp = line.replace("\n", "").split("\t")
         account_list[split_temp[0]] = split_temp[1]
     return account_list
@@ -29,7 +29,7 @@ def get_account_from_file():
 def get_account_talks(account_id, account_name, talk_list):
     account_index = "https://7gogo.jp/users/%s" % account_id
     account_index_response = net.request(account_index, method="GET")
-    if account_index_response.status != net.HTTP_RETURN_CODE_SUCCEED:
+    if account_index_response.status != const.ResponseCode.SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(account_index_response.status))
     talk_list_selector = pq(account_index_response.data.decode(errors="ignore")).find(".UserTalkWrapper .UserTalk")
     for talk_index in range(talk_list_selector.length):

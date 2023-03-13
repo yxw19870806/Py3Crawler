@@ -31,7 +31,7 @@ def get_discount_game_list():
         output.print_msg("开始解析第%s页打折游戏" % page_count)
         discount_game_pagination_url = "https://store.steampowered.com/search/results?sort_by=Price_ASC&category1=996,998&os=win&specials=1&page=%s" % page_count
         discount_game_pagination_response = net.request(discount_game_pagination_url, method="GET", cookies_list=COOKIE_INFO)
-        if discount_game_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
+        if discount_game_pagination_response.status != const.ResponseCode.SUCCEED:
             raise crawler.CrawlerException("第%s页打折游戏访问失败，原因：%s" % (page_count, crawler.request_failre(discount_game_pagination_response.status)))
         discount_game_pagination_response_content = discount_game_pagination_response.data.decode(errors="ignore")
         search_result_selector = pq(discount_game_pagination_response_content).find("#search_result_container")
@@ -130,7 +130,7 @@ def get_game_store_index(game_id):
         else:
             COOKIE_INFO.update(net.get_cookies_from_response_header(game_index_response.headers))
             game_index_response = net.request(game_index_response.getheader("Location"), method="GET", cookies_list=COOKIE_INFO)
-    if game_index_response.status != net.HTTP_RETURN_CODE_SUCCEED:
+    if game_index_response.status != const.ResponseCode.SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(game_index_response.status))
     game_index_response_content = game_index_response.data.decode(errors="ignore")
     if pq(game_index_response_content).find(".agegate_birthday_selector").length > 0:
@@ -163,7 +163,7 @@ def get_self_uncompleted_account_badges(account_id):
         badges_pagination_url = "https://steamcommunity.com/profiles/%s/badges/" % account_id
         query_data = {"p": page_count}
         badges_pagination_response = net.request(badges_pagination_url, method="GET", fields=query_data, cookies_list=COOKIE_INFO)
-        if badges_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
+        if badges_pagination_response.status != const.ResponseCode.SUCCEED:
             raise crawler.CrawlerException("第%s页徽章访问失败，原因：%s" % (page_count, crawler.request_failre(badges_pagination_response.status)))
         badges_pagination_response_content = badges_pagination_response.data.decode(errors="ignore")
         # 徽章div
@@ -215,7 +215,7 @@ def get_self_uncompleted_account_badges(account_id):
 # badge_detail_url -> https://steamcommunity.com/profiles/76561198172925593/gamecards/459820/
 def get_self_account_badge_card(badge_detail_url):
     badge_detail_response = net.request(badge_detail_url, method="GET", cookies_list=COOKIE_INFO)
-    if badge_detail_response.status != net.HTTP_RETURN_CODE_SUCCEED:
+    if badge_detail_response.status != const.ResponseCode.SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(badge_detail_response.status))
     badge_detail_response_content = badge_detail_response.data.decode(errors="ignore")
     wanted_card_list = {}
@@ -266,7 +266,7 @@ def get_market_game_trade_card_price(game_id):
         "norender": "1",
     }
     market_search_response = net.request(market_search_url, method="GET", fields=query_data, cookies_list=COOKIE_INFO, json_decode=True, is_url_encode=False)
-    if market_search_response.status != net.HTTP_RETURN_CODE_SUCCEED:
+    if market_search_response.status != const.ResponseCode.SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(market_search_response.status))
     market_item_list = {}
     for item_info in crawler.get_json_value(market_search_response.json_data, "results", type_check=list):
@@ -295,7 +295,7 @@ def get_account_inventory(account_id):
         api_response = net.request(api_url, method="GET", fields=query_data, json_decode=True)
         if api_response.status == 403:
             raise crawler.CrawlerException("账号隐私设置中未公开库存详情")
-        if api_response.status != net.HTTP_RETURN_CODE_SUCCEED:
+        if api_response.status != const.ResponseCode.SUCCEED:
             raise crawler.CrawlerException(crawler.request_failre(api_response.status))
         # 物品数量
         item_count_list = {}
@@ -351,7 +351,7 @@ def get_account_badges(account_id):
         badges_pagination_url = "https://steamcommunity.com/profiles/%s/badges/" % account_id
         query_data = {"p": page_count}
         badges_pagination_response = net.request(badges_pagination_url, method="GET", fields=query_data, cookies_list=cookies_list)
-        if badges_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
+        if badges_pagination_response.status != const.ResponseCode.SUCCEED:
             raise crawler.CrawlerException("第%s页徽章访问失败，原因：%s" % (page_count, crawler.request_failre(badges_pagination_response.status)))
         badges_pagination_response_content = badges_pagination_response.data.decode(errors="ignore")
         badge_list_selector = pq(badges_pagination_response_content).find("div.badge_row")
@@ -395,7 +395,7 @@ def get_account_badges(account_id):
 def get_account_owned_app_list(user_id, is_played=False):
     game_index_url = "https://steamcommunity.com/profiles/%s/games/?tab=all" % user_id
     game_index_response = net.request(game_index_url, method="GET", read_timeout=120)
-    if game_index_response.status != net.HTTP_RETURN_CODE_SUCCEED:
+    if game_index_response.status != const.ResponseCode.SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(game_index_response.status))
     game_index_response_content = game_index_response.data.decode(errors="ignore")
     # 如果是隐私账号，会302到主页的，这里只判断页面文字就不判断状态了
@@ -429,11 +429,11 @@ class Steam(crawler.Crawler):
 
         # 初始化参数
         sys_config = {
-            crawler_enum.SysConfigKey.SET_PROXY: True,
-            crawler_enum.SysConfigKey.NOT_DOWNLOAD: True,
-            crawler_enum.SysConfigKey.NOT_CHECK_SAVE_DATA: True,
-            crawler_enum.SysConfigKey.GET_COOKIE: ("store.steampowered.com",),
-            crawler_enum.SysConfigKey.APP_CONFIG_PATH: os.path.join(crawler.PROJECT_APP_PATH, "lib", "steam.ini"),
+            const.SysConfigKey.SET_PROXY: True,
+            const.SysConfigKey.NOT_DOWNLOAD: True,
+            const.SysConfigKey.NOT_CHECK_SAVE_DATA: True,
+            const.SysConfigKey.GET_COOKIE: ("store.steampowered.com",),
+            const.SysConfigKey.APP_CONFIG_PATH: os.path.join(crawler.PROJECT_APP_PATH, "lib", "steam.ini"),
         }
         crawler.Crawler.__init__(self, sys_config, **kwargs)
 
@@ -453,7 +453,7 @@ class Steam(crawler.Crawler):
             # 检测是否登录
             login_url = "https://steamcommunity.com/actions/GetNotificationCounts"
             login_response = net.request(login_url, method="GET", cookies_list=self.cookie_value, is_auto_redirect=False)
-            if login_response.status != net.HTTP_RETURN_CODE_SUCCEED:
+            if login_response.status != const.ResponseCode.SUCCEED:
                 output.print_msg("登录返回code%s不正确" % login_response.status)
                 tool.process_exit()
             set_cookies = net.get_cookies_from_response_header(login_response.headers)
@@ -480,7 +480,7 @@ class Steam(crawler.Crawler):
                 input_str = input_str.lower()
                 if input_str in ["y", "yes"]:
                     account_id = console_account_id
-                    file.write_file(console_account_id, account_id_file_path, crawler_enum.WriteFileMode.REPLACE)
+                    file.write_file(console_account_id, account_id_file_path, const.WriteFileMode.REPLACE)
                     break
                 elif input_str in ["n", "no"]:
                     break
@@ -497,7 +497,7 @@ class Steam(crawler.Crawler):
         return apps_cache_data
 
     def save_cache_apps_info(self, apps_cache_data):
-        file.write_file(tool.json_encode(apps_cache_data), self.apps_cache_file_path, crawler_enum.WriteFileMode.REPLACE)
+        file.write_file(tool.json_encode(apps_cache_data), self.apps_cache_file_path, const.WriteFileMode.REPLACE)
 
     def load_deleted_app_list(self):
         deleted_app_list_string = file.read_file(self.deleted_app_list_path)
@@ -507,7 +507,7 @@ class Steam(crawler.Crawler):
         return deleted_app_list
 
     def save_deleted_app_list(self, deleted_app_list):
-        file.write_file(",".join(deleted_app_list), self.deleted_app_list_path, crawler_enum.WriteFileMode.REPLACE)
+        file.write_file(",".join(deleted_app_list), self.deleted_app_list_path, const.WriteFileMode.REPLACE)
 
     def load_restricted_app_list(self):
         restricted_app_list_string = file.read_file(self.restricted_app_list_path)
@@ -517,13 +517,13 @@ class Steam(crawler.Crawler):
         return restricted_app_list
 
     def save_restricted_app_list(self, restricted_app_list):
-        file.write_file(",".join(restricted_app_list), self.restricted_app_list_path, crawler_enum.WriteFileMode.REPLACE)
+        file.write_file(",".join(restricted_app_list), self.restricted_app_list_path, const.WriteFileMode.REPLACE)
 
     def load_game_dlc_list(self):
         return tool.json_decode(file.read_file(self.game_dlc_list_path), {})
 
     def save_game_dlc_list(self, game_dlc_list):
-        file.write_file(tool.json_encode(game_dlc_list), self.game_dlc_list_path, crawler_enum.WriteFileMode.REPLACE)
+        file.write_file(tool.json_encode(game_dlc_list), self.game_dlc_list_path, const.WriteFileMode.REPLACE)
 
     def format_cache_app_info(self):
         apps_cache_data = self.load_cache_apps_info()
