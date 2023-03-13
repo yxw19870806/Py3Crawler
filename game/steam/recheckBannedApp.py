@@ -5,7 +5,7 @@
 email: hikaru870806@hotmail.com
 如有问题或建议请联系
 """
-from common import crawler, output
+from common import console, crawler
 from game.steam.lib import madjoki, steam
 
 
@@ -19,9 +19,9 @@ def main():
     try:
         banned_game_list = madjoki.get_banned_game_list()
     except crawler.CrawlerException as e:
-        output.print_msg(e.http_error("已下线游戏列表"))
+        console.log(e.http_error("已下线游戏列表"))
     else:
-        output.print_msg("总共获取%s个已删除游戏" % len(banned_game_list))
+        console.log("总共获取%s个已删除游戏" % len(banned_game_list))
 
         banned_game_id_list = {}
         for game_info in banned_game_list:
@@ -32,10 +32,10 @@ def main():
                 try:
                     game_data = steam.get_game_store_index(game_id)
                 except crawler.CrawlerException as e:
-                    output.print_msg(e.http_error("游戏%s" % game_id))
+                    console.log(e.http_error("游戏%s" % game_id))
                     continue
                 if game_data["deleted"] is False:
-                    output.print_msg("游戏 %s 不在已删除列表中" % game_id)
+                    console.log("游戏 %s 不在已删除列表中" % game_id)
 
 
 if __name__ == "__main__":

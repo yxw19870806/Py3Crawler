@@ -21,7 +21,7 @@ from typing import Optional
 if platform.system() == "Windows":
     import win32crypt
 
-from common import const, crawler, file, net, output, PROJECT_LIB_PATH
+from common import const, console, crawler, file, net, PROJECT_LIB_PATH
 
 # webdriver文件路径
 CHROME_WEBDRIVER_PATH = os.path.abspath(os.path.join(PROJECT_LIB_PATH, "chromedriver.exe"))
@@ -90,7 +90,7 @@ def get_default_browser_application_path(browser_type: const.BrowserType) -> Opt
     elif browser_type == const.BrowserType.CHROME:
         return os.path.abspath(os.path.join(os.getenv("ProgramFiles"), "Google", "Chrome", "Application", "chrome.exe"))
     else:
-        output.print_msg("不支持的浏览器类型：%s" % browser_type)
+        console.log("不支持的浏览器类型：%s" % browser_type)
     return None
 
 
@@ -122,7 +122,7 @@ def get_default_browser_cookie_path(browser_type: const.BrowserType) -> Optional
     elif browser_type == const.BrowserType.TEXT:
         return os.path.abspath(os.path.join(crawler.PROJECT_APP_PATH, "info", "cookies.data"))
     else:
-        output.print_msg("不支持的浏览器类型：%s" % browser_type)
+        console.log("不支持的浏览器类型：%s" % browser_type)
     return None
 
 
@@ -138,7 +138,7 @@ def get_all_cookie_from_browser(browser_type: const.BrowserType, file_path: str)
         }
     """
     if not os.path.exists(file_path):
-        output.print_msg("cookie目录：" + file_path + " 不存在")
+        console.log("cookie目录：" + file_path + " 不存在")
         return {}
     all_cookies = {}
     if browser_type == const.BrowserType.IE:
@@ -182,13 +182,13 @@ def get_all_cookie_from_browser(browser_type: const.BrowserType, file_path: str)
                 if "os_crypt" in profile_info and "encrypted_key" in profile_info["os_crypt"]:
                     encrypted_key = profile_info["os_crypt"]["encrypted_key"]
         if not encrypted_key:
-            output.print_msg("encrypted_key获取失败")
+            console.log("encrypted_key获取失败")
             return {}
         encrypted_key = base64.b64decode(encrypted_key.encode())[5:]
         try:
             encrypted_key = win32crypt.CryptUnprotectData(encrypted_key, None, None, None, 0)[1]
         except pywintypes.error:
-            output.print_msg("encrypted_key解密失败")
+            console.log("encrypted_key解密失败")
             return {}
         cipher = Cipher(algorithms.AES(encrypted_key), None, backend=default_backend())
 
@@ -220,6 +220,6 @@ def get_all_cookie_from_browser(browser_type: const.BrowserType, file_path: str)
     elif browser_type == const.BrowserType.TEXT:
         all_cookies["DEFAULT"] = net.split_cookies_from_cookie_string(file.read_file(file_path))
     else:
-        output.print_msg("不支持的浏览器类型：%s" % browser_type)
+        console.log("不支持的浏览器类型：%s" % browser_type)
         return {}
     return all_cookies

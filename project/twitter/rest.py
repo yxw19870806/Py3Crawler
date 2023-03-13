@@ -30,15 +30,15 @@ def init():
         if crawler.check_sub_key(("api_key", "api_secret"), api_info):
             # 验证token是否有效
             if get_access_token(api_info["api_key"], api_info["api_secret"]):
-                output.print_msg("access token get succeed!")
+                console.log("access token get succeed!")
                 return True
             else:
-                output.print_msg("api info has expired")
+                console.log("api info has expired")
         else:
-            output.print_msg("decrypt api info failure")
+            console.log("decrypt api info failure")
         # token已经无效了，删除掉
         path.delete_dir_or_file(token_file_path)
-    output.print_msg("Please input api info")
+    console.log("Please input api info")
     while True:
         api_key = input("API KEY: ")
         api_secret = input("API SECRET; ")
@@ -47,9 +47,9 @@ def init():
             # 加密保存到文件中
             if not os.path.exists(token_file_path):
                 file.write_file(crypto.Crypto().encrypt(tool.json_encode({"api_key": api_key, "api_secret": api_secret})), token_file_path, const.WriteFileMode.REPLACE)
-            output.print_msg("access token get succeed!")
+            console.log("access token get succeed!")
             return True
-        output.print_msg("incorrect api info, please type again!")
+        console.log("incorrect api info, please type again!")
 
 
 def get_access_token(api_key, api_secret):

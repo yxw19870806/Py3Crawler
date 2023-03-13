@@ -15,7 +15,7 @@ import threading
 import time
 import traceback
 from typing import Any, Callable, Dict, Optional, Union, Type, Self
-from common import const, browser, file, log, net, output, path, port_listener_event, tool
+from common import console, const, browser, file, log, net, path, port_listener_event, tool
 from common import IS_EXECUTABLE, PROJECT_ROOT_PATH, PROJECT_CONFIG_PATH
 
 if platform.system() == "Windows":
@@ -52,7 +52,7 @@ class Crawler(object):
 
         # 程序启动配置
         if not isinstance(sys_config, dict):
-            output.print_msg("程序启动配置不存在，请检查代码！")
+            console.log("程序启动配置不存在，请检查代码！")
             tool.process_exit()
             return
         # 额外初始化配置（直接通过实例化中传入，可覆盖子类__init__方法传递的sys_config参数）
@@ -104,7 +104,7 @@ class Crawler(object):
 
         if not sys_not_download and (sys_download_photo or sys_download_video or sys_download_audio or sys_download_content):
             if not (self.is_download_photo or self.is_download_video or self.is_download_audio or self.is_download_content):
-                output.print_msg("所有支持的下载都没有开启，请检查配置！")
+                console.log("所有支持的下载都没有开启，请检查配置！")
                 tool.process_exit()
                 return
 
@@ -117,14 +117,14 @@ class Crawler(object):
         if not sys_not_check_save_data:
             if not os.path.exists(self.save_data_path):
                 # 存档文件不存在
-                output.print_msg("存档文件%s不存在！" % self.save_data_path)
+                console.log("存档文件%s不存在！" % self.save_data_path)
                 tool.process_exit()
                 return
             temp_file_name = tool.get_time("%m-%d_%H_%M_") + os.path.basename(self.save_data_path)
             self.temp_save_data_path = os.path.join(os.path.dirname(self.save_data_path), temp_file_name)
             if os.path.exists(self.temp_save_data_path):
                 # 临时文件已存在
-                output.print_msg("存档临时文件%s已存在！" % self.temp_save_data_path)
+                console.log("存档临时文件%s已存在！" % self.temp_save_data_path)
                 tool.process_exit()
                 return
 
@@ -242,7 +242,7 @@ class Crawler(object):
         self.total_video_count = 0
         self.total_audio_count = 0
 
-        output.print_msg("初始化完成")
+        console.log("初始化完成")
 
     def main(self) -> None:
         try:
@@ -314,7 +314,7 @@ class Crawler(object):
         net.resume_request()
 
     def stop_process(self) -> None:
-        output.print_msg("stop process")
+        console.log("stop process")
         self.process_status = False
         net.EXIT_FLAG = True
         net.resume_request()
@@ -418,7 +418,7 @@ class CrawlerThread(threading.Thread):
         - main_thread - 主线程对象
         """
         if not isinstance(main_thread, Crawler):
-            output.print_msg("下载线程参数异常")
+            console.log("下载线程参数异常")
             tool.process_exit()
         try:
             threading.Thread.__init__(self)
@@ -618,7 +618,7 @@ class CrawlerException(SystemExit):
     def __init__(self, msg: str = "", is_print: bool = True):
         SystemExit.__init__(self, 1)
         if is_print:
-            output.print_msg(msg)
+            console.log(msg)
         self.exception_message = msg
 
     @property
@@ -668,13 +668,13 @@ def analysis_config(config: dict, key: str, default_value: Any, mode: const.Conf
         value = config[key]
     else:
         if not IS_EXECUTABLE:
-            output.print_msg("配置文件config.ini中没有找到key为'" + key + "'的参数，使用程序默认设置")
+            console.log("配置文件config.ini中没有找到key为'" + key + "'的参数，使用程序默认设置")
         value = default_value
     if mode == const.ConfigAnalysisMode.INTEGER:
         if isinstance(value, int) or isinstance(value, int) or (isinstance(value, str) and value.isdigit()):
             value = int(value)
         else:
-            output.print_msg("配置文件config.ini中key为'" + key + "'的值必须是一个整数，使用程序默认设置")
+            console.log("配置文件config.ini中key为'" + key + "'的值必须是一个整数，使用程序默认设置")
             value = default_value
     elif mode == const.ConfigAnalysisMode.BOOLEAN:
         if not value or value == "0" or (isinstance(value, str) and value.lower() == "false"):
@@ -685,7 +685,7 @@ def analysis_config(config: dict, key: str, default_value: Any, mode: const.Conf
         try:
             value = float(value)
         except ValueError:
-            output.print_msg("配置文件config.ini中key为'" + key + "'的值必须是一个浮点数，使用程序默认设置")
+            console.log("配置文件config.ini中key为'" + key + "'的值必须是一个浮点数，使用程序默认设置")
             value = default_value
     elif mode == const.ConfigAnalysisMode.PATH:
         if len(value) > 2 and value.startswith(r"\\"):  # \\ 开头，程序所在目录
@@ -720,7 +720,7 @@ def read_save_data(save_data_path: str, key_index: int = 0, default_value_list: 
         single_save_list = single_save_data.split("\t")
 
         if check_duplicate_index and single_save_list[key_index] in result_list:
-            output.print_msg("存档中存在重复行%s" % single_save_list[key_index])
+            console.log("存档中存在重复行%s" % single_save_list[key_index])
             tool.process_exit()
 
         # 去除前后空格

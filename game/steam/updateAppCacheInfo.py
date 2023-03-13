@@ -19,7 +19,7 @@ def main():
     try:
         owned_game_list = steam.get_account_owned_app_list(steam_class.account_id)
     except crawler.CrawlerException as e:
-        output.print_msg(e.http_error("个人游戏主页"))
+        console.log(e.http_error("个人游戏主页"))
         raise
 
     # 已检测过的游戏列表
@@ -41,17 +41,17 @@ def main():
         if game_id in checked_apps_list:
             continue
 
-        output.print_msg("游戏: %s，剩余数量: %s" % (game_id, len(owned_game_list)))
+        console.log("游戏: %s，剩余数量: %s" % (game_id, len(owned_game_list)))
         # 获取游戏信息
         try:
             game_data = steam.get_game_store_index(game_id)
         except crawler.CrawlerException as e:
-            output.print_msg(e.http_error("游戏 %s" % game_id))
+            console.log(e.http_error("游戏 %s" % game_id))
             raise
 
         # 已删除
         if game_data["deleted"]:
-            output.print_msg("游戏 %s 已删除" % game_id)
+            console.log("游戏 %s 已删除" % game_id)
             if game_id not in deleted_app_list:
                 deleted_app_list.append(game_id)
                 # 保存数据
@@ -59,7 +59,7 @@ def main():
         else:
             # 受限制
             if game_data["restricted"]:
-                output.print_msg("游戏 %s 已受限制" % game_id)
+                console.log("游戏 %s 已受限制" % game_id)
                 if game_id not in restricted_app_list:
                     restricted_app_list.append(game_id)
                     # 保存数据
@@ -68,7 +68,7 @@ def main():
             if len(game_data["dlc_list"]) > 0:
                 is_change = False
                 for dlc_id in game_data["dlc_list"]:
-                    output.print_msg("游戏 %s，DLC %s" % (game_id, dlc_id))
+                    console.log("游戏 %s，DLC %s" % (game_id, dlc_id))
                     if dlc_id not in game_dlc_list:
                         game_dlc_list[dlc_id] = game_id
                 # 保存数据

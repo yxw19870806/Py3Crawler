@@ -29,7 +29,7 @@ def print_list(apps_cache_data, game_dlc_list, print_type=0):
         else:
             if print_type == 2 or print_type == 3:
                 continue
-        output.print_msg("https://store.steampowered.com/app/%s" % game_id)
+        console.log("https://store.steampowered.com/app/%s" % game_id)
 
 
 def main(check_game=True):
@@ -56,7 +56,7 @@ def main(check_game=True):
     try:
         played_game_list = steam.get_account_owned_app_list(steam_class.account_id, True)
     except crawler.CrawlerException as e:
-        output.print_msg(e.http_error("个人游戏主页"))
+        console.log(e.http_error("个人游戏主页"))
         raise
 
     if check_game:
@@ -67,14 +67,14 @@ def main(check_game=True):
             if game_id in checked_apps_list:
                 continue
 
-            output.print_msg("开始解析游戏 %s，剩余数量：%s" % (game_id, len(played_game_list)))
+            console.log("开始解析游戏 %s，剩余数量：%s" % (game_id, len(played_game_list)))
 
             # 获取游戏信息
             try:
                 game_data = steam.get_game_store_index(game_id)
             except crawler.CrawlerException as e:
-                output.print_msg("游戏 %s 解析失败，原因：%s" % (game_id, e.message))
-                output.print_msg(e.http_error("游戏%s" % game_id))
+                console.log("游戏 %s 解析失败，原因：%s" % (game_id, e.message))
+                console.log(e.http_error("游戏%s" % game_id))
                 continue
 
             is_change = False
@@ -99,7 +99,7 @@ def main(check_game=True):
                     try:
                         dlc_data = steam.get_game_store_index(dlc_id)
                     except crawler.CrawlerException as e:
-                        output.print_msg(e.http_error("游戏%s" % dlc_id))
+                        console.log(e.http_error("游戏%s" % dlc_id))
                         continue
 
                     if dlc_data["owned"]:

@@ -17,7 +17,7 @@ def get_banned_game_list():
     is_over = False
     page_count = 1
     while not is_over:
-        output.print_msg("开始解析第%s页删除游戏" % page_count)
+        console.log("开始解析第%s页删除游戏" % page_count)
         api_url = "https://ren.madjoki.com/SteamApps/Query"
         query_data = {
             "page": page_count,

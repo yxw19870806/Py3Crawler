@@ -7,7 +7,7 @@ email: hikaru870806@hotmail.com
 如有问题或建议请联系
 """
 import os
-from common import crawler, const, file, output, tool
+from common import console, crawler, const, file, tool
 from game.steam.lib import steam
 
 
@@ -48,17 +48,17 @@ def main():
         if game_id in checked_apps_list:
             continue
 
-        output.print_msg("游戏：%s，剩余数量：%s" % (game_id, len(game_id_list)))
+        console.log("游戏：%s，剩余数量：%s" % (game_id, len(game_id_list)))
 
         # 获取游戏信息
         try:
             game_data = steam.get_game_store_index(game_id)
         except crawler.CrawlerException as e:
-            output.print_msg(e.http_error("游戏%s" % game_id))
+            console.log(e.http_error("游戏%s" % game_id))
             continue
 
         if len(game_data["dlc_list"]) > 0:
-            output.print_msg("游戏：%s全部DLC：%s" % (game_id, game_data["dlc_list"]))
+            console.log("游戏：%s全部DLC：%s" % (game_id, game_data["dlc_list"]))
             is_change = False
             for dlc_id in game_data["dlc_list"]:
                 if dlc_id not in game_dlc_list:
@@ -70,7 +70,7 @@ def main():
 
         # 已资料受限制
         if game_data["restricted"]:
-            output.print_msg("游戏：%s已资料受限制" % game_id)
+            console.log("游戏：%s已资料受限制" % game_id)
             restricted_app_list.append(game_id)
             # 保存数据
             steam_class.save_restricted_app_list(restricted_app_list)

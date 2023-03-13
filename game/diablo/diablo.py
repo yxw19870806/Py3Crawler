@@ -1,7 +1,7 @@
 # -*- coding:UTF-8  -*-
 import os.path
 import re
-from common import const, net, output, path, tool
+from common import const, console, net, path, tool
 
 item_list = {
     "helm": "头盔",
@@ -82,12 +82,12 @@ for item_path, item_position in list(item_list.items()):
                         special_attribute = special_attribute.replace("'", "’")
                     item_introduction = tool.find_sub_string(item_detail, '<div class="item-flavor d3-color-orange serif">', "</div>").strip()
                     item_introduction = item_introduction.replace("'", "’")
-                    output.print_msg("%s %s %s %s" % (item_position, item_name, special_attribute, item_introduction))
+                    console.log("%s %s %s %s" % (item_position, item_name, special_attribute, item_introduction))
                     item_attribute_list[item_path].append([item_name, special_attribute, item_introduction])
                 else:
-                    output.print_msg("error get" + item_url)
+                    console.log("error get" + item_url)
         else:
-            output.print_msg("error get" + item_index_url)
+            console.log("error get" + item_index_url)
         pagination = tool.find_sub_string(item_index_response.data, '<ul class="ui-pagination">', "</ul>")
         if pagination:
             pagination = re.findall(r'<a href="#page=([\d]*)">', pagination)
