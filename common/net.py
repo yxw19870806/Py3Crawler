@@ -25,29 +25,28 @@ urllib3.disable_warnings()
 ssl._create_default_https_context = ssl._create_unverified_context
 
 # qps队列
-QPS = {}
+QPS: dict[int, dict[str, int]] = {}
 
 # 连接池
 HTTP_CONNECTION_POOL: Optional[urllib3.PoolManager] = None
-PROXY_HTTP_CONNECTION_POOL = None
+PROXY_HTTP_CONNECTION_POOL: Optional[urllib3.ProxyManager] = None
 # 网络访问相关阻塞/继续事件
 thread_event = threading.Event()
 thread_event.set()
 # 退出标志
-EXIT_FLAG = False
+EXIT_FLAG: bool = False
 # response header中Content-Type对应的Mime字典
-MIME_DICTIONARY = None
+MIME_DICTIONARY: Optional[dict] = None
 # 下载文件时是否覆盖已存在的同名文件
-DOWNLOAD_REPLACE_IF_EXIST = False
+DOWNLOAD_REPLACE_IF_EXIST: bool = False
 
-NET_CONFIG = net_config.config
+NET_CONFIG: dict[str, any] = net_config.config
 
 
 class ErrorResponse(object):
     """
     request()方法异常对象
     """
-
     def __init__(self, status=-1):
         self.status = status
         self.data = b""

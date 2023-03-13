@@ -7,8 +7,8 @@ __all__ = [
     "output",
     "path",
     "tool",
-    "PROJECT_ROOT_PATH",
     "PROJECT_LIB_PATH",
+    "PROJECT_ROOT_PATH",
     "PROJECT_CONFIG_PATH",
     "IS_EXECUTABLE",
 ]
