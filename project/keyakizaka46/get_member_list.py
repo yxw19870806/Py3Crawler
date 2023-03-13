@@ -17,7 +17,7 @@ def get_account_from_index():
     query_data = {"cd": "member"}
     index_response = net.request(index_url, method="GET", fields=query_data)
     account_list = {}
-    if index_response.status != net.HTTP_RETURN_CODE_SUCCEED:
+    if index_response.status != const.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(index_response.status))
     index_response_content = index_response.data.decode(errors="ignore")
     member_list_data = tool.find_sub_string(index_response_content, '<ul class="thumb">', "</ul>")

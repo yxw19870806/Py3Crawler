@@ -37,7 +37,7 @@ def get_one_page_blog(account_name, target_id):
     }
     if target_id == INIT_TARGET_ID and blog_pagination_response.status == 400:
         raise crawler.CrawlerException("talk不存在")
-    elif blog_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
+    elif blog_pagination_response.status != const.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(blog_pagination_response.status))
     for blog_info in crawler.get_json_value(blog_pagination_response.json_data, "data", type_check=list):
         result_blog_info = {

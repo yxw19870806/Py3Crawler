@@ -23,7 +23,7 @@ def get_album_index_page(album_id):
     result = {
         "audio_info_list": [],  # 全部音频信息
     }
-    if album_index_response.status != net.HTTP_RETURN_CODE_SUCCEED:
+    if album_index_response.status != const.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(album_index_response.status))
     album_index_response_content = album_index_response.data.decode("GBK", errors="ignore")
     audio_list_selector = pq(album_index_response_content).find(".play-list li")
@@ -59,9 +59,9 @@ def get_audio_info_page(audio_play_url):
         "User-Agent": USER_AGENT,
     }
     audio_play_response = net.request(audio_play_url, method="GET", header_list=header_list)
-    if audio_play_response.status == net.HTTP_RETURN_CODE_TOO_MANY_REDIRECTS:
+    if audio_play_response.status == const.HTTP_RETURN_CODE_TOO_MANY_REDIRECTS:
         return get_audio_info_page(audio_play_url)
-    elif audio_play_response.status != net.HTTP_RETURN_CODE_SUCCEED:
+    elif audio_play_response.status != const.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(audio_play_response.status))
     audio_play_response_content = audio_play_response.data.decode(errors="ignore")
     # 解析来自 http://m.tingshubao.com/player/main.js的FonHen_JieMa()方法
@@ -79,7 +79,7 @@ def get_audio_info_page(audio_play_url):
             "url": "".join(temp_list).split("&")[0]
         }
         audio_detail_response = net.request(audio_detail_url, method="GET", fields=query_data, json_decode=True)
-        if audio_detail_response.status != net.HTTP_RETURN_CODE_SUCCEED:
+        if audio_detail_response.status != const.HTTP_RETURN_CODE_SUCCEED:
             raise crawler.CrawlerException(crawler.request_failre(audio_detail_response.status))
         result["audio_url"] = crawler.get_json_value(audio_detail_response.json_data, "url", type_check=str)
     return result
@@ -158,7 +158,7 @@ class CrawlerThread(crawler.CrawlerThread):
                 self.info("%s 下载成功" % audio_description)
                 break
             else:
-                if download_return.code != net.HTTP_RETURN_CODE_TOO_MANY_REDIRECTS or retry_count >= 4:
+                if download_return.code != const.HTTP_RETURN_CODE_TOO_MANY_REDIRECTS or retry_count >= 4:
                     self.error("%s %s 下载失败，原因：%s" % (audio_description, audio_url, crawler.download_failre(download_return.code)))
                     self.check_download_failure_exit()
                 else:

@@ -15,7 +15,7 @@ from project.nogizaka46 import nogizaka46_diary
 def get_account_from_index():
     index_url = "https://www.nogizaka46.com/s/n46/diary/MEMBER"
     index_response = net.request(index_url, method="GET")
-    if index_response.status != net.HTTP_RETURN_CODE_SUCCEED:
+    if index_response.status != const.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(index_response.status))
     index_response_content = index_response.data.decode(errors="ignore")
     member_selector_list = pq(index_response_content).find("div.ba--ml__list .ba--ml__one__a")

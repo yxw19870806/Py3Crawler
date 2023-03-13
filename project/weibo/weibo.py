@@ -21,7 +21,7 @@ def check_login():
         return False
     index_url = "https://weibo.com/"
     index_response = net.request(index_url, method="GET", cookies_list=COOKIE_INFO)
-    if index_response.status == net.HTTP_RETURN_CODE_SUCCEED:
+    if index_response.status == const.HTTP_RETURN_CODE_SUCCEED:
         index_response_content = index_response.data.decode(errors="ignore")
         return index_response_content.find("$CONFIG[\'uid\']=\'") >= 0 or index_response_content.find('"uid":') >= 0
     return False
@@ -32,7 +32,7 @@ def init_session():
     login_url = "https://login.sina.com.cn/sso/login.php"
     query_data = {"url": "https://weibo.com"}
     login_response = net.request(login_url, method="GET", fields=query_data, cookies_list=COOKIE_INFO)
-    if login_response.status == net.HTTP_RETURN_CODE_SUCCEED:
+    if login_response.status == const.HTTP_RETURN_CODE_SUCCEED:
         COOKIE_INFO.update(net.get_cookies_from_response_header(login_response.headers))
         return True
     return False
@@ -62,9 +62,9 @@ def get_one_page_photo(account_id, page_count):
         "is_over": False,  # 是否最后一页图片
     }
     photo_pagination_response = net.request(photo_pagination_url, method="GET", fields=query_data, cookies_list=COOKIE_INFO, json_decode=True)
-    if photo_pagination_response.status == net.HTTP_RETURN_CODE_JSON_DECODE_ERROR and photo_pagination_response.data.find('<p class="txt M_txtb">用户不存在或者获取用户信息失败</p>'.encode()) >= 0:
+    if photo_pagination_response.status == const.HTTP_RETURN_CODE_JSON_DECODE_ERROR and photo_pagination_response.data.find('<p class="txt M_txtb">用户不存在或者获取用户信息失败</p>'.encode()) >= 0:
         raise crawler.CrawlerException("账号不存在")
-    elif photo_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
+    elif photo_pagination_response.status != const.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(photo_pagination_response.status))
     for photo_info in crawler.get_json_value(photo_pagination_response.json_data, "data", "photo_list", type_check=list):
         result_photo_info = {
@@ -111,7 +111,7 @@ def get_one_page_video(account_id, since_id, retry_count=0):
                 "Accept": "application/json, text/plain, */*",
             }
             account_info_response = net.request(account_info_url, method="GET", fields=query_data, cookies_list=COOKIE_INFO, header_list=header_list, json_decode=True)
-            if account_info_response.status == net.HTTP_RETURN_CODE_SUCCEED and crawler.get_json_value(account_info_response.json_data, "msg", type_check=str, value_check="该用户不存在(20003)"):
+            if account_info_response.status == const.HTTP_RETURN_CODE_SUCCEED and crawler.get_json_value(account_info_response.json_data, "msg", type_check=str, value_check="该用户不存在(20003)"):
                 raise crawler.CrawlerException("账号不存在")
         if retry_count < 3:
             time.sleep(1)
@@ -120,7 +120,7 @@ def get_one_page_video(account_id, since_id, retry_count=0):
             if since_id == 0:
                 result["next_page_since_id"] = -1
                 return result
-    if video_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
+    if video_pagination_response.status != const.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(video_pagination_response.status))
     # 获取视频id
     for video_info in crawler.get_json_value(video_pagination_response.json_data, "data", "list", type_check=list):
