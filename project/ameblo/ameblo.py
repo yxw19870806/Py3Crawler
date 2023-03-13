@@ -23,7 +23,7 @@ def check_login():
         return False
     account_index_url = "https://www.ameba.jp/home"
     index_response = net.request(account_index_url, method="GET", cookies_list=COOKIE_INFO, is_auto_redirect=False)
-    if index_response.status == 200:
+    if index_response.status == const.ResponseCode.SUCCEED:
         return True
     COOKIE_INFO = {}
     return False

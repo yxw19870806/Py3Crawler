@@ -6,7 +6,7 @@ http://astats.astats.nl/astats/
 email: hikaru870806@hotmail.com
 如有问题或建议请联系
 """
-from common import output, net, tool
+from common import const, net, output, tool
 
 
 # 获取指定游戏是否存在无效成就

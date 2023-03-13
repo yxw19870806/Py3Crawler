@@ -1,7 +1,7 @@
 # -*- coding:UTF-8  -*-
 import os.path
 import re
-from common import net, output, path, tool
+from common import const, net, output, path, tool
 
 item_list = {
     "helm": "头盔",
