@@ -89,7 +89,7 @@ class TikTok(crawler.Crawler):
         crawler.PROJECT_APP_PATH = os.path.abspath(os.path.dirname(__file__))
 
         sys_config = {
-            crawler_enum.SysConfigKey.DOWNLOAD_VIDEO: True,
+            const.SysConfigKey.DOWNLOAD_VIDEO: True,
         }
         crawler.Crawler.__init__(self, sys_config, **kwargs)
 

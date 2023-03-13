@@ -74,10 +74,10 @@ class NanaGoGo(crawler.Crawler):
 
         # 初始化参数
         sys_config = {
-            crawler_enum.SysConfigKey.DOWNLOAD_PHOTO: True,
-            crawler_enum.SysConfigKey.DOWNLOAD_VIDEO: True,
-            crawler_enum.SysConfigKey.SET_PROXY: True,
-            crawler_enum.SysConfigKey.GET_COOKIE: ("7gogo.jp", "api.7gogo.jp"),
+            const.SysConfigKey.DOWNLOAD_PHOTO: True,
+            const.SysConfigKey.DOWNLOAD_VIDEO: True,
+            const.SysConfigKey.SET_PROXY: True,
+            const.SysConfigKey.GET_COOKIE: ("7gogo.jp", "api.7gogo.jp"),
         }
         crawler.Crawler.__init__(self, sys_config, **kwargs)
 

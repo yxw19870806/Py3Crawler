@@ -15,8 +15,8 @@ from suspend.niconico import niconico
 
 def main():
     # 初始化类
-    youtube_class = youtube.Youtube(extra_sys_config={crawler_enum.SysConfigKey.NOT_CHECK_SAVE_DATA: True})
-    niconico_class = niconico.NicoNico(extra_sys_config={crawler_enum.SysConfigKey.NOT_CHECK_SAVE_DATA: True})
+    youtube_class = youtube.Youtube(extra_sys_config={const.SysConfigKey.NOT_CHECK_SAVE_DATA: True})
+    niconico_class = niconico.NicoNico(extra_sys_config={const.SysConfigKey.NOT_CHECK_SAVE_DATA: True})
     ivseek_class = ivseek.IvSeek()
 
     save_data_list = ivseek.read_save_data(ivseek_class.save_data_path)
@@ -49,13 +49,13 @@ def main():
             print(e.http_error("niconico账号%s的视频列表" % account_id))
             continue
         niconico_mylist_list[account_id] = account_mylist_response["list_id_list"]
-        file.write_file(tool.json_encode(niconico_mylist_list), niconico_mylist_cache_path, crawler_enum.WriteFileMode.REPLACE)
+        file.write_file(tool.json_encode(niconico_mylist_list), niconico_mylist_cache_path, const.WriteFileMode.REPLACE)
 
     # 更新youtube的存档文件
     for account_id in account_id_list["youtube"]:
         if account_id not in youtube_class.save_data:
             youtube_class.save_data[account_id] = [account_id]
-    file.write_file(tool.list_to_string(youtube_class.save_data.values()), youtube_class.save_data_path, crawler_enum.WriteFileMode.REPLACE)
+    file.write_file(tool.list_to_string(youtube_class.save_data.values()), youtube_class.save_data_path, const.WriteFileMode.REPLACE)
 
     # 更新niconico的存档文件
     for account_id in niconico_mylist_list:
@@ -63,9 +63,9 @@ def main():
             mylist_id = str(mylist_id)
             if mylist_id not in niconico_class.save_data:
                 niconico_class.save_data[mylist_id] = [mylist_id]
-    file.write_file(tool.list_to_string(niconico_class.save_data.values()), niconico_class.save_data_path, crawler_enum.WriteFileMode.REPLACE)
+    file.write_file(tool.list_to_string(niconico_class.save_data.values()), niconico_class.save_data_path, const.WriteFileMode.REPLACE)
 
-    file.write_file(tool.list_to_string(save_data_list), ivseek_class.save_data_path, crawler_enum.WriteFileMode.REPLACE)
+    file.write_file(tool.list_to_string(save_data_list), ivseek_class.save_data_path, const.WriteFileMode.REPLACE)
 
 
 if __name__ == "__main__":

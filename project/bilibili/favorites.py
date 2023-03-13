@@ -16,7 +16,7 @@ from project.bilibili import bilibili
 class BiliBiliFavorites(bilibili.BiliBili):
     def __init__(self, **kwargs):
         extra_sys_config = {
-            crawler_enum.SysConfigKey.NOT_CHECK_SAVE_DATA: True
+            const.SysConfigKey.NOT_CHECK_SAVE_DATA: True
         }
         bilibili.BiliBili.__init__(self, extra_sys_config=extra_sys_config, **kwargs)
 

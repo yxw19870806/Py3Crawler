@@ -5,11 +5,10 @@
 email: hikaru870806@hotmail.com
 如有问题或建议请联系
 """
-import logging.config
 import os
 from logging import LogRecord
 from typing import Final
-from common import tool, file
+from common import file, tool
 
 DEFAULT_LOG_CONFIG = {
     "IS_CONSOLE_DEBUG": False,

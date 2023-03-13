@@ -143,7 +143,7 @@ def main(check_game=True):
             steam_class.save_cache_apps_info(apps_cache_data)
             # 保存数据
             checked_apps_list.append(game_id)
-            file.write_file(",".join(checked_apps_list), checked_apps_file_path, crawler_enum.WriteFileMode.REPLACE)
+            file.write_file(",".join(checked_apps_list), checked_apps_file_path, const.WriteFileMode.REPLACE)
 
     # 输出
     print_list(apps_cache_data, game_dlc_list)

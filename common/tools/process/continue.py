@@ -5,8 +5,8 @@
 email: hikaru870806@hotmail.com
 如有问题或建议请联系
 """
-from common import crawler_enum
+from common import const
 from common.tools.process import process_control
 
 if __name__ == "__main__":
-    process_control.ProcessControl().send_code(crawler_enum.ProcessStatus.RUN)
+    process_control.ProcessControl().send_code(const.ProcessStatus.RUN)

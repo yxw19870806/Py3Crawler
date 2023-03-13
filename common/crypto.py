@@ -10,7 +10,6 @@ import hashlib
 import socket
 import uuid
 from typing import Optional
-
 from cryptography.fernet import Fernet, InvalidToken
 
 
