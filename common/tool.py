@@ -13,25 +13,11 @@ import re
 import string
 import sys
 import time
-from enum import unique, Enum
 from typing import Optional, Union, List, NoReturn, Any
+from common import const
 
 
-@unique
-class IncludeStringMode(Enum):
-    NONE: str = "none"  # 不包含start_string和end_string
-    START: str = "start"  # 只包含start_string
-    END: str = "end"  # 只包含end_string
-    ALL: str = "all"  # 同时包含start_string和end_string
-
-
-@unique
-class ExitCode(Enum):
-    NORMAL: int = 0
-    ERROR: int = 1
-
-
-def find_sub_string(haystack, start_string: Optional[str] = None, end_string: Optional[str] = None, include_string: IncludeStringMode = IncludeStringMode.NONE) -> str:
+def find_sub_string(haystack, start_string: Optional[str] = None, end_string: Optional[str] = None, include_string: const.IncludeStringMode = const.IncludeStringMode.NONE) -> str:
     """
     根据开始与结束的字符串，截取字符串
 
@@ -43,7 +29,7 @@ def find_sub_string(haystack, start_string: Optional[str] = None, end_string: Op
         IncludeStringMode.ALL   包含start_string和end_string
     """
     # 参数验证
-    if not isinstance(include_string, IncludeStringMode):
+    if not isinstance(include_string, const.IncludeStringMode):
         raise ValueError("invalid include_string")
     haystack = str(haystack)
     if start_string is not None:
@@ -72,9 +58,9 @@ def find_sub_string(haystack, start_string: Optional[str] = None, end_string: Op
 
     find_string = haystack[start_index:stop_index]
     # 是否需要追加开始或结束字符串
-    if start_string is not None and include_string in [IncludeStringMode.START, IncludeStringMode.ALL]:
+    if start_string is not None and include_string in [const.IncludeStringMode.START, const.IncludeStringMode.ALL]:
         find_string = start_string + find_string
-    if end_string is not None and include_string in [IncludeStringMode.END, IncludeStringMode.ALL]:
+    if end_string is not None and include_string in [const.IncludeStringMode.END, const.IncludeStringMode.ALL]:
         find_string += end_string
     return find_string
 
@@ -189,7 +175,7 @@ def string_md5(source_string: str) -> str:
     return md5_class.hexdigest()
 
 
-def process_exit(exit_code: ExitCode = ExitCode.ERROR) -> NoReturn:
+def process_exit(exit_code: const.ExitCode = const.ExitCode.ERROR) -> NoReturn:
     """
     结束进程
 
