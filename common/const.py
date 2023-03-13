@@ -125,6 +125,11 @@ class DownloadCode(Enum):
     PROCESS_EXIT: int = -10
     FILE_CREATE_FAILED: int = -11
 
+    def __eq__(self, other):
+        if not isinstance(other, int):
+            return False
+        return int(other) == self.value
+
 
 # 网络请求返回值
 @unique
@@ -136,3 +141,8 @@ class ResponseCode(Enum):
     RESPONSE_TO_LARGE = -4  # 文件太大
     TOO_MANY_REDIRECTS = -5  # 重定向次数过多
     SUCCEED = 200  # 成功
+
+    def __eq__(self, other):
+        if not isinstance(other, int):
+            return False
+        return int(other) == self.value
