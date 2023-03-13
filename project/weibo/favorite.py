@@ -25,7 +25,7 @@ def get_one_page_favorite(page_count):
         "delete_blog_id_list": [],  # 全部已删除的微博ID
         "is_over": False,  # 是否最后一页收藏
     }
-    if favorite_pagination_response.status != const.HTTP_RETURN_CODE_SUCCEED:
+    if favorite_pagination_response.status != const.ResponseCode.SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(favorite_pagination_response.status))
     favorite_pagination_content = favorite_pagination_response.data.decode(errors="ignore")
     favorite_data_html = tool.find_sub_string(favorite_pagination_content, '"ns":"pl.content.favoriteFeed.index"', '"})</script>', const.IncludeStringMode.END)
@@ -106,7 +106,7 @@ def delete_favorite(blog_id):
     }
     cookies_list = {"SUB": weibo.COOKIE_INFO["SUB"]}
     api_response = net.request(api_url, method="POST", fields=post_data, cookies_list=cookies_list, header_list=header_list, json_decode=True)
-    if api_response.status != const.HTTP_RETURN_CODE_SUCCEED:
+    if api_response.status != const.ResponseCode.SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(api_response.status))
     crawler.get_json_value(api_response.json_data, "code", type_check=int, value_check=100000)
 

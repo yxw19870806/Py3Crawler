@@ -21,7 +21,7 @@ def get_comic_index_page(comic_id):
     result = {
         "chapter_info_list": [],  # 漫画列表信息
     }
-    if index_response.status != const.HTTP_RETURN_CODE_SUCCEED:
+    if index_response.status != const.ResponseCode.SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(index_response.status))
     index_response_content = index_response.data.decode(errors="ignore")
     chapter_info_selector = pq(index_response_content).find("div.chapter")
@@ -76,7 +76,7 @@ def get_chapter_page(comic_id, chapter_id):
     result = {
         "photo_url_list": [],  # 全部漫画图片地址
     }
-    if chapter_response.status != const.HTTP_RETURN_CODE_SUCCEED:
+    if chapter_response.status != const.ResponseCode.SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(chapter_response.status))
     chapter_response_content = chapter_response.data.decode(errors="ignore")
     script_code = tool.find_sub_string(chapter_response_content, r'window["\x65\x76\x61\x6c"]', "</script>")

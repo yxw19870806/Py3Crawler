@@ -63,7 +63,7 @@ def get_access_token(api_key, api_secret):
         "grant_type": "client_credentials"
     }
     response = net.request(auth_url, method="POST", header_list=header_list, fields=post_data, json_decode=True)
-    if response.status == const.HTTP_RETURN_CODE_SUCCEED and crawler.check_sub_key(("token_type", "access_token"), response.json_data) and response.json_data["token_type"] == "bearer":
+    if response.status == const.ResponseCode.SUCCEED and crawler.check_sub_key(("token_type", "access_token"), response.json_data) and response.json_data["token_type"] == "bearer":
         global ACCESS_TOKEN
         ACCESS_TOKEN = response.json_data["access_token"]
         return True
@@ -80,7 +80,7 @@ def get_user_info_by_user_id(user_id):
     query_data = {"user_id": user_id}
     header_list = {"Authorization": "Bearer %s" % ACCESS_TOKEN}
     response = net.request(api_url, method="GET", fields=query_data, header_list=header_list, json_decode=True)
-    if response.status == const.HTTP_RETURN_CODE_SUCCEED:
+    if response.status == const.ResponseCode.SUCCEED:
         return response.json_data
     return {}
 
@@ -93,7 +93,7 @@ def follow_account(user_id):
         "Authorization": "Bearer %s" % ACCESS_TOKEN,
     }
     response = net.request(api_url, method="POST", header_list=header_list, json_decode=True)
-    if response.status == const.HTTP_RETURN_CODE_SUCCEED:
+    if response.status == const.ResponseCode.SUCCEED:
         pass
     return False
 

@@ -14,7 +14,7 @@ def get_game_invalid_achievements(game_id):
     game_index_url = "http://astats.astats.nl/astats/Steam_Game_Info.php"
     query_data = {"AppID": game_id}
     game_index_response = net.request(game_index_url, method="GET", fields=query_data)
-    if game_index_response.status != const.HTTP_RETURN_CODE_SUCCEED:
+    if game_index_response.status != const.ResponseCode.SUCCEED:
         output.print_msg("游戏 %s 访问失败" % game_id)
         tool.process_exit()
     # game id 不存在

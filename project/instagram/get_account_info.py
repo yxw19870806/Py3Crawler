@@ -19,7 +19,7 @@ def get_account_index_page(account_name):
         "account_info": "",  # 自我介绍
         "external_url": "",  # 外部链接地址
     }
-    if account_index_response.status == const.HTTP_RETURN_CODE_SUCCEED:
+    if account_index_response.status == const.ResponseCode.SUCCEED:
         account_index_response_content = account_index_response.data.decode(errors="ignore")
         # 获取账号信息
         if account_index_response_content.find('"biography": null,') >= 0:

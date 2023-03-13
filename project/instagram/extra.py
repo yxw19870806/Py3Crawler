@@ -26,7 +26,7 @@ def get_follow_by_list(account_id):
             post_data = {"q": "ig_user(%s){followed_by.after(%s,%s){nodes{username},page_info}}" % (account_id, cursor, EACH_PAGE_ACCOUNT_COUNT)}
         header_list = {"Referer": "https://www.instagram.com/", "X-CSRFToken": COOKIE_INFO["csrftoken"]}
         follow_by_pagination_response = net.request(api_url, method="POST", fields=post_data, header_list=header_list, cookies_list=COOKIE_INFO, json_decode=True)
-        if follow_by_pagination_response.status == const.HTTP_RETURN_CODE_SUCCEED:
+        if follow_by_pagination_response.status == const.ResponseCode.SUCCEED:
             for account_info in crawler.get_json_value(follow_by_pagination_response.json_data, "followed_by", "nodes", type_check=list):
                 follow_by_list.append(crawler.get_json_value(account_info, "username", type_check=str))
             if crawler.get_json_value(follow_by_pagination_response.json_data, "followed_by", "page_info", "has_next_page", type_check=bool):
@@ -50,7 +50,7 @@ def get_follow_list(account_id):
             post_data = {"q": "ig_user(%s){follows.after(%s,%s){nodes{username},page_info}}" % (account_id, cursor, EACH_PAGE_ACCOUNT_COUNT)}
         header_list = {"Referer": "https://www.instagram.com/", "X-CSRFToken": COOKIE_INFO["csrftoken"]}
         follow_pagination_response = net.request(api_url, method="POST", fields=post_data, header_list=header_list, cookies_list=COOKIE_INFO, json_decode=True)
-        if follow_pagination_response.status == const.HTTP_RETURN_CODE_SUCCEED:
+        if follow_pagination_response.status == const.ResponseCode.SUCCEED:
             for account_info in crawler.get_json_value(follow_pagination_response.json_data, "follows", "nodes", type_check=list):
                 follow_list.append(crawler.get_json_value(account_info, "username", type_check=str))
             if crawler.get_json_value(follow_pagination_response.json_data, "follows", "page_info", "has_next_page", type_check=bool):

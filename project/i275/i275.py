@@ -19,7 +19,7 @@ def get_album_index_page(album_id):
     result = {
         "audio_info_list": [],  # 全部音频信息
     }
-    if album_pagination_response.status != const.HTTP_RETURN_CODE_SUCCEED:
+    if album_pagination_response.status != const.ResponseCode.SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(album_pagination_response.status))
     album_pagination_response_content = album_pagination_response.data.decode(errors="ignore")
     audio_info_selector_list = pq(album_pagination_response_content).find("ul.play-list li")
@@ -57,7 +57,7 @@ def get_audio_info_page(album_id, audio_id):
         "Referer": "https://www.i275.com/play/%s/%s.html" % (album_id, audio_id),
     }
     audio_info_response = net.request(audio_info_url, method="GET", header_list=header_list, json_decode=True)
-    if audio_info_response.status != const.HTTP_RETURN_CODE_SUCCEED:
+    if audio_info_response.status != const.ResponseCode.SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(audio_info_response.status))
     audio_src = crawler.get_json_value(audio_info_response.json_data, "src", type_check=str)
     # 解析来自 https://www.i275.com/static/haidao/script/common.js

@@ -20,7 +20,7 @@ def get_one_page_audio(account_id, page_type, page_count):
     result = {
         "audio_info_list": [],  # 全部歌曲信息
     }
-    if audio_pagination_response.status != const.HTTP_RETURN_CODE_SUCCEED:
+    if audio_pagination_response.status != const.ResponseCode.SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(audio_pagination_response.status))
     audio_pagination_response_content = audio_pagination_response.data.decode(errors="ignore")
     if audio_pagination_response_content.find("var OwnerNickName = '';") >= 0:
@@ -50,7 +50,7 @@ def get_audio_play_page(audio_id, song_type):
         "audio_url": "",  # 歌曲地址
         "is_delete": False,  # 是否已删除
     }
-    if audio_info_response.status != const.HTTP_RETURN_CODE_SUCCEED:
+    if audio_info_response.status != const.ResponseCode.SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(audio_info_response.status))
     if crawler.get_json_value(audio_info_response.json_data, "success", type_check=bool) is False:
         if crawler.get_json_value(audio_info_response.json_data, "message", type_check=str) in ["该歌曲已下架", "歌曲不存在", "歌曲不存在或状态不正常"]:
