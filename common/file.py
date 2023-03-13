@@ -97,7 +97,6 @@ def get_file_md5(file_path: str) -> Optional[str]:
         return None
     md5_class = hashlib.md5()
     with open(file_path, "rb") as file_handle:
-        buffer_size = 2 ** 20  # 1M
-        while file_buffer := file_handle.read(buffer_size):
+        while file_buffer := file_handle.read(const.SIZE_MB):
             md5_class.update(file_buffer)
     return md5_class.hexdigest()

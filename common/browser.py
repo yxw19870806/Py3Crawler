@@ -21,10 +21,10 @@ from typing import Optional
 if platform.system() == "Windows":
     import win32crypt
 
-from common import const, crawler, file, net, output, PROJECT_ROOT_PATH
+from common import const, crawler, file, net, output, PROJECT_LIB_PATH
 
 # webdriver文件路径
-CHROME_WEBDRIVER_PATH = os.path.abspath(os.path.join(PROJECT_ROOT_PATH, "common", "chromedriver.exe"))
+CHROME_WEBDRIVER_PATH = os.path.abspath(os.path.join(PROJECT_LIB_PATH, "chromedriver.exe"))
 
 
 class Chrome:
