@@ -1,11 +1,16 @@
 # -*- coding:UTF-8  -*-
 """
-枚举类
+常量类
 @author: hikaru
 email: hikaru870806@hotmail.com
 如有问题或建议请联系
 """
 from enum import Enum, unique, EnumMeta
+from typing import Final
+
+SIZE_KB: Final[int] = 2 ** 10  # 1KB = 多少字节
+SIZE_MB: Final[int] = 2 ** 20  # 1MB = 多少字节
+SIZE_GB: Final[int] = 2 ** 30  # 1GB = 多少字节
 
 
 class CrawlerEnumMeta(EnumMeta):

@@ -14,20 +14,15 @@ import time
 import threading
 import urllib.parse
 import urllib3
-from typing import Optional, List, Final
+from typing import Optional, List
 from urllib3._collections import HTTPHeaderDict
-from common import file, output, path, tool
-
+from common import const, file, output, path, tool
 
 # https://www.python.org/dev/peps/pep-0476/
 # disable urllib3 HTTPS warning
 urllib3.disable_warnings()
 # disable URLError: <urlopen error [SSL: CERTIFICATE_VERIFY_FAILED] certificate verify failed (_ssl.c:590)>
 ssl._create_default_https_context = ssl._create_unverified_context
-
-SIZE_KB: Final[int] = 2 ** 10  # 1KB = 多少字节
-SIZE_MB: Final[int] = 2 ** 20  # 1MB = 多少字节
-SIZE_GB: Final[int] = 2 ** 30  # 1GB = 多少字节
 
 
 def convert_to_bytes(value, default_value: int) -> int:
@@ -44,15 +39,15 @@ def convert_to_bytes(value, default_value: int) -> int:
     else:
         search_result = re.findall(r"^(\d+) *([a-zA-z]*)$", value)
         if len(search_result) == 1:
-            unit = search_result[0][1]
+            unit = search_result[0][1].upper()
             if unit == "" or unit == "B":
                 size = int(search_result[0][0])
             elif unit == "KB":
-                size = int(search_result[0][0]) * (2 ** 10)
+                size = int(search_result[0][0]) * const.SIZE_KB
             elif unit == "MB":
-                size = int(search_result[0][0]) * (2 ** 20)
+                size = int(search_result[0][0]) * const.SIZE_MB
             elif unit == "GB":
-                size = int(search_result[0][0]) * (2 ** 30)
+                size = int(search_result[0][0]) * const.SIZE_GB
             else:
                 output.print_msg("无效的字节单位'%s'，只支持B、KB、MB、GB" % unit)
         else:

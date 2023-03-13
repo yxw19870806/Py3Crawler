@@ -13,10 +13,10 @@ from typing import Optional
 from common import const, file, net, output, path, tool
 
 NET_CONFIG = {
-    "DOWNLOAD_LIMIT_SIZE": 1.5 * net.SIZE_GB,  # 下载文件超过多少字节跳过不下载
-    "DOWNLOAD_MULTI_THREAD_MIN_SIZE": 50 * net.SIZE_MB,  # 下载文件超过多少字节后开始使用多线程下载
+    "DOWNLOAD_LIMIT_SIZE": 1.5 * const.SIZE_GB,  # 下载文件超过多少字节跳过不下载
+    "DOWNLOAD_MULTI_THREAD_MIN_SIZE": 50 * const.SIZE_MB,  # 下载文件超过多少字节后开始使用多线程下载
     "DOWNLOAD_MULTI_THREAD_MAX_COUNT": 10,  # 多线程下载时总线程数上限
-    "DOWNLOAD_MULTI_THREAD_BLOCK_SIZE": 10 * net.SIZE_MB,  # 多线程下载中单个线程下载的字节数
+    "DOWNLOAD_MULTI_THREAD_BLOCK_SIZE": 10 * const.SIZE_MB,  # 多线程下载中单个线程下载的字节数
 }
 
 
