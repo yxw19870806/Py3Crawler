@@ -17,7 +17,7 @@ import urllib3
 from typing import Optional, List
 from urllib3._collections import HTTPHeaderDict
 
-from common import const, file, net_config, output, path, tool
+from common import const, console, file, net_config, path, tool
 
 # https://www.python.org/dev/peps/pep-0476/
 # disable urllib3 HTTPS warning
@@ -74,7 +74,7 @@ def set_proxy(ip: str, port: str) -> None:
         return
     global PROXY_HTTP_CONNECTION_POOL
     PROXY_HTTP_CONNECTION_POOL = urllib3.ProxyManager(f"http://{ip}:{port}", retries=False)
-    output.print_msg(f"设置代理成功({ip}:{port})")
+    console.log(f"设置代理成功({ip}:{port})")
 
 
 def build_header_cookie_string(cookies_list: dict) -> str:
@@ -255,7 +255,7 @@ def request(url, method: str = "GET", fields: Optional[dict] = None, binary_data
                     if is_error:
                         response.status = const.ResponseCode.JSON_DECODE_ERROR
             elif response.status == 429:  # Too Many Requests
-                output.print_msg(url + " Too Many Requests, sleep")
+                console.log(url + " Too Many Requests, sleep")
                 time.sleep(NET_CONFIG["TOO_MANY_REQUESTS_WAIT_TIME"])
                 continue
             elif response.status in [500, 502, 503, 504] and is_auto_retry:  # 服务器临时性错误，重试
@@ -288,18 +288,18 @@ def request(url, method: str = "GET", fields: Optional[dict] = None, binary_data
                                    is_random_ip=is_random_ip, is_check_qps=is_check_qps, connection_timeout=connection_timeout,
                                    read_timeout=read_timeout)
             # import traceback
-            # output.print_msg(message)
-            # output.print_msg(traceback.format_exc())
+            # console.log(message)
+            # console.log(traceback.format_exc())
             if "Range" in header_list:
                 range_string = "range: " + header_list["Range"].replace("bytes=", "")
-                output.print_msg(url + f"[{range_string}] 访问超时，重试中")
+                console.log(url + f"[{range_string}] 访问超时，重试中")
             else:
-                output.print_msg(url + " 访问超时，重试中")
+                console.log(url + " 访问超时，重试中")
             time.sleep(NET_CONFIG["HTTP_REQUEST_RETRY_WAIT_TIME"])
 
         retry_count += 1
         if retry_count >= NET_CONFIG["HTTP_REQUEST_RETRY_COUNT"]:
-            output.print_msg("无法访问页面：" + url)
+            console.log("无法访问页面：" + url)
             return ErrorResponse(const.ResponseCode.RETRY)
 
 
@@ -413,7 +413,7 @@ def pause_request() -> None:
     Block thread when use request()
     """
     if thread_event.is_set():
-        output.print_msg("pause process")
+        console.log("pause process")
         thread_event.clear()
 
 
@@ -422,7 +422,7 @@ def resume_request() -> None:
     Resume thread
     """
     if not thread_event.is_set():
-        output.print_msg("resume process")
+        console.log("resume process")
         thread_event.set()
 
 
@@ -474,7 +474,7 @@ class Download:
 
         # 同名文件已经存在，直接返回
         if not self.replace_if_exist and os.path.exists(self.file_path) and os.path.getsize(self.file_path) > 0:
-            output.print_msg("文件%s（%s）已存在，跳过" % (self.file_path, self.file_url))
+            console.log("文件%s（%s）已存在，跳过" % (self.file_path, self.file_url))
             self.status = const.DownloadStatus.SUCCEED
             return
 
@@ -515,7 +515,7 @@ class Download:
                 return
             else:
                 self.code = const.DownloadCode.FILE_SIZE_INVALID
-                output.print_msg(f"本地文件%s：{self.content_length}和网络文件%s：{file_size}不一致" % (self.file_path, self.file_url))
+                console.log(f"本地文件%s：{self.content_length}和网络文件%s：{file_size}不一致" % (self.file_path, self.file_url))
                 time.sleep(NET_CONFIG["HTTP_REQUEST_RETRY_WAIT_TIME"])
 
         # 删除可能出现的临时文件
@@ -661,7 +661,7 @@ class Download:
                         if multipart_response.status == 206:
                             # 下载的文件和请求的文件大小不一致
                             if len(multipart_response.data) != (end_pos - start_pos + 1):
-                                output.print_msg(f"网络文件%s：range {start_pos} - {end_pos}实际下载大小 {len(multipart_response.data)} 不一致" % self.file_url)
+                                console.log(f"网络文件%s：range {start_pos} - {end_pos}实际下载大小 {len(multipart_response.data)} 不一致" % self.file_url)
                                 time.sleep(NET_CONFIG["HTTP_REQUEST_RETRY_WAIT_TIME"])
                             else:
                                 # 写入本地文件后退出

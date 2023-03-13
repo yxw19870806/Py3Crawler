@@ -6,7 +6,7 @@ https://store.steampowered.com/
 email: hikaru870806@hotmail.com
 如有问题或建议请联系
 """
-from common import output
+from common import console
 from game.steam.lib import steam
 
 
@@ -20,7 +20,7 @@ def main():
     # 已资料受限制的游戏
     restricted_app_list = steam_class.load_restricted_app_list()
 
-    output.print_msg(deleted_app_list + restricted_app_list)
+    console.log(deleted_app_list + restricted_app_list)
 
 
 if __name__ == "__main__":
