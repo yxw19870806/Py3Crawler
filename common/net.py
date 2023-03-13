@@ -16,68 +16,13 @@ import urllib.parse
 import urllib3
 from typing import Optional, List
 from urllib3._collections import HTTPHeaderDict
-from common import const, file, output, path, tool
+from common import const, file, net_config, output, path, tool
 
 # https://www.python.org/dev/peps/pep-0476/
 # disable urllib3 HTTPS warning
 urllib3.disable_warnings()
 # disable URLError: <urlopen error [SSL: CERTIFICATE_VERIFY_FAILED] certificate verify failed (_ssl.c:590)>
 ssl._create_default_https_context = ssl._create_unverified_context
-
-
-def convert_to_bytes(value, default_value: int) -> int:
-    """
-    将字符串转换为字节数
-
-    :Args:
-    - value - 待转换的字符串，例如 1 KB，2 MB，3 GB等
-    """
-    value = str(value).strip()
-    size = default_value
-    if tool.is_integer(value):
-        size = int(value)
-    else:
-        search_result = re.findall(r"^(\d+) *([a-zA-z]*)$", value)
-        if len(search_result) == 1:
-            unit = search_result[0][1].upper()
-            if unit == "" or unit == "B":
-                size = int(search_result[0][0])
-            elif unit == "KB":
-                size = int(search_result[0][0]) * const.SIZE_KB
-            elif unit == "MB":
-                size = int(search_result[0][0]) * const.SIZE_MB
-            elif unit == "GB":
-                size = int(search_result[0][0]) * const.SIZE_GB
-            else:
-                output.print_msg("无效的字节单位'%s'，只支持B、KB、MB、GB" % unit)
-        else:
-            output.print_msg("无效的字节数设置'%s'" % value)
-    return size
-
-
-# 读取网络相关配置
-DEFAULT_NET_CONFIG = {
-    "HTTP_CONNECTION_TIMEOUT": 10,  # 网络访问连接超时的秒数
-    "HTTP_READ_TIMEOUT": 30,  # 网络访问读取超时的秒数
-    "HTTP_REQUEST_RETRY_COUNT": 10,  # 网络访问自动重试次数
-    "DOWNLOAD_CONNECTION_TIMEOUT": 10,  # 下载文件连接超时的秒数
-    "DOWNLOAD_READ_TIMEOUT": 60,  # 下载文件读取超时的秒数
-    "DOWNLOAD_RETRY_COUNT": 10,  # 下载文件自动重试次数
-    "DOWNLOAD_MULTIPART_MIN_SIZE": "10 MB",  # 下载文件超过多少字节后开始使用分段下载
-    "DOWNLOAD_MULTIPART_BLOCK_SIZE": "1 MB",  # 分段下载中单次获取的字节数
-    "TOO_MANY_REQUESTS_WAIT_TIME": 60,  # http code 429(Too Many requests)时的等待时间
-    "SERVICE_INTERNAL_ERROR_WAIT_TIME": 30,  # http code 50X（服务器内部错误）时的等待时间
-    "HTTP_REQUEST_RETRY_WAIT_TIME": 5,  # 请求失败后重新请求的间隔时间
-    "GLOBAL_QUERY_PER_MINUTER": 1000,  # 全局每分钟请求限制
-    "SINGLE_HOST_QUERY_PER_MINUTER": 1000,  # 单域名每分钟请求限制
-}
-NET_CONFIG = tool.json_decode(file.read_file(os.path.join(os.path.dirname(__file__), "net_config.json")), {})
-for config_key in DEFAULT_NET_CONFIG:
-    if config_key not in NET_CONFIG:
-        NET_CONFIG[config_key] = DEFAULT_NET_CONFIG[config_key]
-for key in NET_CONFIG:
-    if key in ["DOWNLOAD_MULTIPART_MIN_SIZE", "DOWNLOAD_MULTIPART_BLOCK_SIZE"]:
-        NET_CONFIG[key] = convert_to_bytes(NET_CONFIG[key], DEFAULT_NET_CONFIG[key])
 
 # qps队列
 QPS = {}
@@ -92,9 +37,10 @@ thread_event.set()
 EXIT_FLAG = False
 # response header中Content-Type对应的Mime字典
 MIME_DICTIONARY = None
-
 # 下载文件时是否覆盖已存在的同名文件
 DOWNLOAD_REPLACE_IF_EXIST = False
+
+NET_CONFIG = net_config.config
 
 
 class ErrorResponse(object):

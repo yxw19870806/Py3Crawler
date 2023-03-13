@@ -8,6 +8,7 @@ __all__ = [
     "path",
     "tool",
     "PROJECT_ROOT_PATH",
+    "PROJECT_LIB_PATH",
     "PROJECT_CONFIG_PATH",
     "IS_EXECUTABLE",
 ]
@@ -27,7 +28,9 @@ if getattr(sys, "frozen", False):
 else:
     IS_EXECUTABLE = False
 
+# lib库目录
+PROJECT_LIB_PATH = os.path.abspath(os.path.dirname(__file__))
 # 项目根目录
-PROJECT_ROOT_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+PROJECT_ROOT_PATH = os.path.abspath(os.path.join(PROJECT_LIB_PATH, ".."))
 # 全局config.ini路径
-PROJECT_CONFIG_PATH = os.path.abspath(os.path.join(PROJECT_ROOT_PATH, "common", "config.ini"))
+PROJECT_CONFIG_PATH = os.path.abspath(os.path.join(PROJECT_LIB_PATH, "config.ini"))
