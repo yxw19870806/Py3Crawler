@@ -16,15 +16,6 @@ import time
 from enum import unique, Enum
 from typing import Optional, Union, List, NoReturn, Any
 
-# if sys.stdout.encoding != "UTF-8":
-#     raise Exception("项目编码必须是UTF-8，请在IDE中修改相关设置")
-if sys.version_info < (3,):
-    raise Exception("仅支持python3.X，请访问官网 https://www.python.org/downloads/ 安装最新的python3")
-if getattr(sys, "frozen", False):
-    IS_EXECUTABLE = True
-else:
-    IS_EXECUTABLE = False
-
 
 @unique
 class IncludeStringMode(Enum):
