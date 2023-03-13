@@ -29,7 +29,7 @@ def get_one_page_photo(account_id, page_count):
     }
     if photo_pagination_response.status == 404 and page_count == 1:
         raise crawler.CrawlerException("账号不存在")
-    elif photo_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
+    elif photo_pagination_response.status != const.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(photo_pagination_response.status))
     # 获取图片信息
     for photo_info in crawler.get_json_value(photo_pagination_response.json_data, "list", type_check=list):

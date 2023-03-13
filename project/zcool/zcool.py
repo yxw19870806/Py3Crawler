@@ -31,7 +31,7 @@ def get_one_page_album(account_name, page_count):
     }
     if page_count == 1 and album_pagination_response.status == 404:
         raise crawler.CrawlerException("账号不存在")
-    elif album_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
+    elif album_pagination_response.status != const.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(album_pagination_response.status))
     album_pagination_response_content = album_pagination_response.data.decode(errors="ignore")
     album_list_selector = pq(album_pagination_response_content).find(".work-list-box .card-box")
@@ -82,7 +82,7 @@ def get_album_page(album_id):
     result = {
         "photo_url_list": [],  # 全部图片地址
     }
-    if album_response.status != net.HTTP_RETURN_CODE_SUCCEED:
+    if album_response.status != const.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(album_response.status))
     album_response_content = album_response.data.decode(errors="ignore")
     photo_list_selector = pq(album_response_content).find(".work-show-box .reveal-work-wrap img")

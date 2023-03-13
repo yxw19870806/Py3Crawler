@@ -12,6 +12,15 @@ SIZE_KB: Final[int] = 2 ** 10  # 1KB = 多少字节
 SIZE_MB: Final[int] = 2 ** 20  # 1MB = 多少字节
 SIZE_GB: Final[int] = 2 ** 30  # 1GB = 多少字节
 
+# 网络访问返回值
+HTTP_RETURN_CODE_RETRY = 0
+HTTP_RETURN_CODE_URL_INVALID = -1  # 地址不符合规范（非http:// 或者 https:// 开头）
+HTTP_RETURN_CODE_JSON_DECODE_ERROR = -2  # 返回数据不是JSON格式，但返回状态是200
+HTTP_RETURN_CODE_DOMAIN_NOT_RESOLVED = -3  # 域名无法解析
+HTTP_RETURN_CODE_RESPONSE_TO_LARGE = -4  # 文件太大
+HTTP_RETURN_CODE_TOO_MANY_REDIRECTS = -5  # 重定向次数过多
+HTTP_RETURN_CODE_SUCCEED = 200
+
 
 class CrawlerEnumMeta(EnumMeta):
     def __getitem__(self, name):

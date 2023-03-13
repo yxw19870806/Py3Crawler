@@ -27,7 +27,7 @@ def get_banned_game_list():
             "list": "banned",
         }
         api_response = net.request(api_url, method="GET", fields=query_data, is_random_ip=False, json_decode=True)
-        if api_response.status != net.HTTP_RETURN_CODE_SUCCEED:
+        if api_response.status != const.HTTP_RETURN_CODE_SUCCEED:
             raise crawler.CrawlerException("第%s页，%s" % (page_count, crawler.request_failre(api_response.status)))
         # 获取游戏名字
         for game_info in crawler.get_json_value(api_response.json_data, "Items", type_check=list):

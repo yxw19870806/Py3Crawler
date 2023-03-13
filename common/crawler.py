@@ -882,17 +882,17 @@ def request_failre(return_code: int) -> str:
         return "页面已被删除"
     elif return_code == 403:
         return "页面没有权限访问"
-    elif return_code == net.HTTP_RETURN_CODE_RETRY:
+    elif return_code == const.HTTP_RETURN_CODE_RETRY:
         return "页面多次访问失败，可能无法访问"
-    elif return_code == net.HTTP_RETURN_CODE_URL_INVALID:
+    elif return_code == const.HTTP_RETURN_CODE_URL_INVALID:
         return "URL格式错误"
-    elif return_code == net.HTTP_RETURN_CODE_JSON_DECODE_ERROR:
+    elif return_code == const.HTTP_RETURN_CODE_JSON_DECODE_ERROR:
         return "返回信息不是一个有效的JSON格式"
-    elif return_code == net.HTTP_RETURN_CODE_DOMAIN_NOT_RESOLVED:
+    elif return_code == const.HTTP_RETURN_CODE_DOMAIN_NOT_RESOLVED:
         return "域名无法解析"
-    elif return_code == net.HTTP_RETURN_CODE_RESPONSE_TO_LARGE:
+    elif return_code == const.HTTP_RETURN_CODE_RESPONSE_TO_LARGE:
         return "返回文本过大"
-    elif return_code == net.HTTP_RETURN_CODE_TOO_MANY_REDIRECTS:
+    elif return_code == const.HTTP_RETURN_CODE_TOO_MANY_REDIRECTS:
         return "重定向次数过多"
     elif return_code > 0:
         return f"未知错误，http code {return_code}"

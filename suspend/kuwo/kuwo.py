@@ -30,7 +30,7 @@ def get_one_page_playlist(playlist_id, page_count):
         "audio_info_list": [],  # 全部音频信息
         "is_over": False,  # 是否最后一页音频
     }
-    if playlist_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
+    if playlist_pagination_response.status != const.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(playlist_pagination_response.status))
     for audio_info in crawler.get_json_value(playlist_pagination_response.json_data, "data", "musicList", type_check=list):
         result_audio_info = {
@@ -60,7 +60,7 @@ def get_audio_info_page(audio_id):
     result = {
         "audio_url": "",  # 音频地址
     }
-    if audio_info_response.status != net.HTTP_RETURN_CODE_SUCCEED:
+    if audio_info_response.status != const.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(audio_info_response.status))
     # 获取音频地址
     try:

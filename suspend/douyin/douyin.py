@@ -28,7 +28,7 @@ def get_account_index_page(account_id):
         "dytk": "",  # 账号dytk值（请求参数）
         "signature": "",  # 加密串（请求参数）
     }
-    if account_index_response.status != net.HTTP_RETURN_CODE_SUCCEED:
+    if account_index_response.status != const.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(account_index_response.status))
     account_index_response_content = account_index_response.data.decode(errors="ignore")
     script_tac = tool.find_sub_string(account_index_response_content, "<script>tac='", "'</script>")
@@ -75,7 +75,7 @@ def get_one_page_video(account_id, cursor_id, dytk, signature):
         "next_page_cursor_id": 0,  # 下一页视频指针
         "video_info_list": [],  # 全部视频信息
     }
-    if video_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
+    if video_pagination_response.status != const.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(video_pagination_response.status))
     # 判断是不是最后一页
     result["is_over"] = crawler.get_json_value(video_pagination_response.json_data, "has_more", type_check=int) == 0
