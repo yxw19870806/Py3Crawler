@@ -59,7 +59,7 @@ for item_path, item_position in list(item_list.items()):
         item_index_response = net.request(item_index_url, method="GET")
         if item_index_response.status == net.HTTP_RETURN_CODE_SUCCEED:
             item_index_response_content = item_index_response.data.decode("GBK", errors="ignore")
-            item_index_page = tool.find_sub_string(item_index_response_content, '<div class="cizhui-c-m', '<div class="data-options', tool.IncludeStringMode.START)
+            item_index_page = tool.find_sub_string(item_index_response_content, '<div class="cizhui-c-m', '<div class="data-options', const.IncludeStringMode.START)
             item_info_list = re.findall(r'<tr class="[\s|\S]*?</tr>', item_index_page)
             if len(item_info_list) == 0:
                 continue
