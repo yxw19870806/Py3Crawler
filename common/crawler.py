@@ -392,7 +392,7 @@ class Crawler(object):
         self.running_check()
         log.info("开始下载 %s %s" % (file_description, file_url))
         download_return = net.Download(file_url, file_path, **kwargs)
-        if download_return.status == net.Download.DOWNLOAD_SUCCEED:
+        if download_return.status == const.DOWNLOAD_STATUS_SUCCEED:
             if success_callback is None or success_callback(file_url, file_path, file_description, download_return):
                 log.info("%s 下载成功" % file_description)
         else:
@@ -583,7 +583,7 @@ class CrawlerThread(threading.Thread):
         self.main_thread_check()
         self.info("开始下载 %s %s" % (file_description, file_url))
         download_return = net.Download(file_url, file_path, **kwargs)
-        if download_return.status == net.Download.DOWNLOAD_SUCCEED:
+        if download_return.status == const.DOWNLOAD_STATUS_SUCCEED:
             if success_callback is None or success_callback(file_url, file_path, file_description, download_return):
                 self.info("%s 下载成功" % file_description)
         else:
@@ -857,15 +857,15 @@ def download_failre(return_code: int) -> str:
         return "源文件已被删除"
     elif return_code == 403:
         return "源文件没有权限下载"
-    elif return_code == net.Download.CODE_URL_INVALID:
+    elif return_code == const.DOWNLOAD_RETURN_CODE_URL_INVALID:
         return "源文件地址格式不正确"
-    elif return_code == net.Download.CODE_RETRY_MAX_COUNT:
+    elif return_code == const.DOWNLOAD_RETURN_CODE_RETRY_MAX_COUNT:
         return "源文件多次获取失败，可能无法访问"
-    elif return_code == net.Download.CODE_FILE_SIZE_INVALID:
+    elif return_code == const.DOWNLOAD_RETURN_CODE_FILE_SIZE_INVALID:
         return "源文件多次下载后和原始文件大小不一致，可能网络环境较差"
-    elif return_code == net.Download.CODE_PROCESS_EXIT:
+    elif return_code == const.DOWNLOAD_RETURN_CODE_PROCESS_EXIT:
         return "程序中途退出"
-    elif return_code == net.Download.CODE_FILE_CREATE_FAILED:
+    elif return_code == const.DOWNLOAD_RETURN_CODE_FILE_CREATE_FAILED:
         return "文件所在保存目录创建失败"
     elif return_code > 0:
         return f"未知错误，http code {return_code}"

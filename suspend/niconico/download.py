@@ -78,7 +78,7 @@ class NicoNicoDownload(niconico.NicoNico):
         if video_response["extra_cookie"]:
             cookies_list.update(video_response["extra_cookie"])
         download_return = net.Download(video_response["video_url"], file_path, auto_multipart_download=True, cookies_list=cookies_list)
-        if download_return.status == net.Download.DOWNLOAD_SUCCEED:
+        if download_return.status == const.DOWNLOAD_STATUS_SUCCEED:
             log.info("视频《%s》下载成功" % video_response["video_title"])
         else:
             log.error("视频《%s》下载失败，原因：%s" % (video_response["video_title"], crawler.download_failre(download_return.code)))

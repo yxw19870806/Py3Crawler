@@ -305,7 +305,7 @@ class CrawlerThread(crawler.CrawlerThread):
         photo_name = "%16d.%s" % (photo_info["photo_id"], net.get_file_extension(photo_info["photo_url"], "jpg"))
         photo_path = os.path.join(self.main_thread.photo_download_path, self.display_name, photo_name)
         download_return = net.Download(photo_info["photo_url"], photo_path, header_list={"Referer": "https://weibo.com/"})
-        if download_return.status == net.Download.DOWNLOAD_SUCCEED:
+        if download_return.status == const.DOWNLOAD_STATUS_SUCCEED:
             if check_photo_invalid(photo_path):
                 path.delete_dir_or_file(photo_path)
                 self.error("%s %s 资源已被限制，跳过" % (photo_description, photo_info["photo_url"]))
@@ -337,7 +337,7 @@ class CrawlerThread(crawler.CrawlerThread):
         video_path = os.path.join(self.main_thread.video_download_path, self.display_name, video_name)
         header_list = {"Host": urllib.parse.urlparse(video_info["video_url"])[1]}
         download_return = net.Download(video_info["video_url"], video_path, header_list=header_list, auto_multipart_download=True)
-        if download_return.status == net.Download.DOWNLOAD_SUCCEED:
+        if download_return.status == const.DOWNLOAD_STATUS_SUCCEED:
             self.total_video_count += 1  # 计数累加
             self.info("%s 下载成功" % video_description)
         else:

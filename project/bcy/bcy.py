@@ -227,7 +227,7 @@ class CrawlerThread(crawler.CrawlerThread):
             for retry_count in range(10):
                 self.main_thread_check()  # 检测主线程运行状态
                 download_return = net.Download(photo_url, photo_path)
-                if download_return.status == net.Download.DOWNLOAD_SUCCEED:
+                if download_return.status == const.DOWNLOAD_STATUS_SUCCEED:
                     self.total_photo_count += 1  # 计数累加
                     self.info("%s 下载成功" % photo_description)
                 else:
