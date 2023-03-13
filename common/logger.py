@@ -98,24 +98,28 @@ logger.addHandler(stream_handle)
 
 # 文件日志
 file_formatter = logging.Formatter(fmt="[%(asctime)s][%(levelname)s] %(message)s", datefmt="%Y-%m-%d %H:%M:%S")
+
 if DEFAULT_LOG_CONFIG["IS_WRITE_DEBUG"]:
     debug_file_handle = logging.FileHandler(LOG_DEBUG_PATH, encoding="UTF-8")
     debug_file_handle.setLevel(logging.DEBUG)
     debug_file_handle.setFormatter(file_formatter)
     debug_file_handle.addFilter(FilterDebug())
     logger.addHandler(debug_file_handle)
+
 if DEFAULT_LOG_CONFIG["IS_WRITE_INFO"]:
     info_file_handle = logging.FileHandler(LOG_INFO_PATH, encoding="UTF-8")
     info_file_handle.setLevel(logging.INFO)
     info_file_handle.setFormatter(file_formatter)
     info_file_handle.addFilter(FilterInfo())
     logger.addHandler(info_file_handle)
+
 if DEFAULT_LOG_CONFIG["IS_WRITE_WARNING"]:
     warning_file_handle = logging.FileHandler(LOG_WARNING_PATH, encoding="UTF-8")
     warning_file_handle.setLevel(logging.WARNING)
     warning_file_handle.setFormatter(file_formatter)
     warning_file_handle.addFilter(FilterWarning())
     logger.addHandler(warning_file_handle)
+
 if DEFAULT_LOG_CONFIG["IS_WRITE_ERROR"]:
     error_file_handle = logging.FileHandler(LOG_ERROR_PATH, encoding="UTF-8")
     error_file_handle.setLevel(logging.ERROR)
