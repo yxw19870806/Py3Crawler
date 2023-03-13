@@ -98,7 +98,7 @@ class QiDian(crawler.Crawler):
 
         # 初始化参数
         sys_config = {
-            crawler_enum.SysConfigKey.DOWNLOAD_CONTENT: True,
+            const.SysConfigKey.DOWNLOAD_CONTENT: True,
         }
         crawler.Crawler.__init__(self, sys_config, **kwargs)
 

@@ -136,9 +136,9 @@ class DailyMotion(crawler.Crawler):
 
         # 初始化参数
         sys_config = {
-            crawler_enum.SysConfigKey.DOWNLOAD_VIDEO: True,
-            crawler_enum.SysConfigKey.APP_CONFIG: (
-                ("VIDEO_QUALITY", 6, crawler_enum.ConfigAnalysisMode.INTEGER),
+            const.SysConfigKey.DOWNLOAD_VIDEO: True,
+            const.SysConfigKey.APP_CONFIG: (
+                ("VIDEO_QUALITY", 6, const.ConfigAnalysisMode.INTEGER),
             ),
         }
         crawler.Crawler.__init__(self, sys_config, **kwargs)
