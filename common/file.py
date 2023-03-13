@@ -13,7 +13,7 @@ from common import const, path
 BOM_SIGN: Final[str] = b"\xef\xbb\xbf".decode()
 
 
-def read_file(file_path: str, read_type: const.ReadFileMode = const.ReadFileMode.FULL) -> Union[str, list]:
+def read_file(file_path: str, read_type: const.ReadFileMode = const.ReadFileMode.FULL, encoding: str = "UTF-8") -> Union[str, list]:
     """
     读取文件
 
@@ -38,7 +38,7 @@ def read_file(file_path: str, read_type: const.ReadFileMode = const.ReadFileMode
     file_path = os.path.abspath(file_path)
     if not os.path.exists(file_path) or not os.path.isfile(file_path):
         return default_value
-    with open(file_path, "r", encoding="UTF-8") as file_handle:
+    with open(file_path, "r", encoding=encoding) as file_handle:
         if read_type == const.ReadFileMode.FULL:
             result = file_handle.read()
             if len(result) > 0:

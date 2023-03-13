@@ -302,7 +302,7 @@ class CrawlerThread(crawler.CrawlerThread):
         if video_info_response["extra_cookie"]:
             cookies_list.update(video_info_response["extra_cookie"])
         download_return = net.Download(video_info_response["video_url"], video_file_path, cookies_list=cookies_list)
-        if download_return.status == net.Download.DOWNLOAD_SUCCEED:
+        if download_return.status == const.DOWNLOAD_STATUS_SUCCEED:
             self.total_video_count += 1  # 计数累加
             self.info("视频%s 《%s》下载成功" % (video_info["video_id"], video_info["video_title"]))
         else:

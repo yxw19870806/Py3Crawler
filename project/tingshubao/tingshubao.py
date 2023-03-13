@@ -153,7 +153,7 @@ class CrawlerThread(crawler.CrawlerThread):
             audio_name = "%04d %s.%s" % (audio_info["audio_id"], audio_info["audio_title"], net.get_file_extension(audio_url))
             audio_path = os.path.join(self.main_thread.audio_download_path, self.display_name, audio_name)
             download_return = net.Download(audio_url, audio_path)
-            if download_return.status == net.Download.DOWNLOAD_SUCCEED:
+            if download_return.status == const.DOWNLOAD_STATUS_SUCCEED:
                 self.total_audio_count += 1  # 计数累加
                 self.info("%s 下载成功" % audio_description)
                 break
