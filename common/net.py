@@ -16,6 +16,7 @@ import urllib.parse
 import urllib3
 from typing import Optional, List
 from urllib3._collections import HTTPHeaderDict
+
 from common import const, file, net_config, output, path, tool
 
 # https://www.python.org/dev/peps/pep-0476/
@@ -44,10 +45,10 @@ NET_CONFIG: dict[str, any] = net_config.config
 
 
 class ErrorResponse(object):
-    """
-    request()方法异常对象
-    """
     def __init__(self, status=-1):
+        """
+        request()方法异常对象
+        """
         self.status = status
         self.data = b""
         self.headers = {}
@@ -391,7 +392,7 @@ def download_from_list(file_url_list: List[str], file_path: str, replace_if_exis
         part_file_path_list.append(part_file_path)
         # 下载
         part_download_return = Download(file_url, part_file_path, replace_if_exist=replace_if_exist, **kwargs)
-        if part_download_return.status == Download.DOWNLOAD_FAILED:
+        if part_download_return.status == const.DownloadStatus.FAILED:
             break
         index += 1
     else:

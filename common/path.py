@@ -192,6 +192,8 @@ def filter_text(text: str) -> str:
     filter_character_list = ["\t", "\n", "\r", "\b"]
     if platform.system() == "Windows":
         filter_character_list += ["\\", "/", ":", "*", "?", '"', "<", ">", "|"]
+    else:
+        filter_character_list += ["/"]
     for filter_character in filter_character_list:
         text = text.replace(filter_character, " ")  # 过滤一些windows文件名屏蔽的字符
     # 去除前后空格以及点

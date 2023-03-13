@@ -103,17 +103,17 @@ class ProcessStatus(Enum):
     STOP: int = 2  # 进程立刻停止，删除还未完成的数据
 
 
+@unique
+class ExitCode(Enum):
+    NORMAL: int = 0
+    ERROR: int = 1
+
+
 # 下载状态
 @unique
 class DownloadStatus(Enum):
     SUCCEED = 1
     FAILED = 0
-
-
-@unique
-class ExitCode(Enum):
-    NORMAL: int = 0
-    ERROR: int = 1
 
 
 # 下载返回值
