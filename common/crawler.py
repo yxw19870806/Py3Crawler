@@ -16,7 +16,7 @@ import time
 import traceback
 from typing import Any, Callable, Dict, Optional, Union
 from common import const, browser, file, log, net, output, path, port_listener_event, tool
-from common import PROJECT_ROOT_PATH, PROJECT_CONFIG_PATH
+from common import IS_EXECUTABLE, PROJECT_ROOT_PATH, PROJECT_CONFIG_PATH
 
 if platform.system() == "Windows":
     from common import keyboard_event
@@ -69,7 +69,7 @@ class Crawler(object):
         sys_not_download = const.SysConfigKey.NOT_DOWNLOAD in sys_config and sys_config[const.SysConfigKey.NOT_DOWNLOAD]
 
         # exe程序
-        if tool.IS_EXECUTABLE:
+        if IS_EXECUTABLE:
             application_path = os.path.dirname(sys.executable)
             os.chdir(application_path)
             config_path = os.path.join(os.getcwd(), "data/config.ini")
@@ -668,7 +668,7 @@ def analysis_config(config: dict, key: str, default_value: Any, mode: const.Conf
     if isinstance(config, dict) and key in config:
         value = config[key]
     else:
-        if not tool.IS_EXECUTABLE:
+        if not IS_EXECUTABLE:
             output.print_msg("配置文件config.ini中没有找到key为'" + key + "'的参数，使用程序默认设置")
         value = default_value
     if mode == const.ConfigAnalysisMode.INTEGER:
