@@ -28,10 +28,10 @@ def main():
         if single_save_list[4] == ivseek.DONE_SING:
             continue
 
-        output.print_msg("开始解析视频%s" % single_save_list[2])
+        console.log("开始解析视频%s" % single_save_list[2])
         video_id = single_save_list[2].split("/")[-1].replace("sm", "")
         if not tool.is_integer(video_id):
-            output.print_msg("视频%s截取video id失败" % single_save_list[2])
+            console.log("视频%s截取video id失败" % single_save_list[2])
             continue
 
         try:

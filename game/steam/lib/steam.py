@@ -28,7 +28,7 @@ def get_discount_game_list():
     app_id_list = []
     COOKIE_INFO.update({"Steam_Language": "schinese"})
     while True:
-        output.print_msg("开始解析第%s页打折游戏" % page_count)
+        console.log("开始解析第%s页打折游戏" % page_count)
         discount_game_pagination_url = "https://store.steampowered.com/search/results?sort_by=Price_ASC&category1=996,998&os=win&specials=1&page=%s" % page_count
         discount_game_pagination_response = net.request(discount_game_pagination_url, method="GET", cookies_list=COOKIE_INFO)
         if discount_game_pagination_response.status != const.ResponseCode.SUCCEED:
@@ -55,7 +55,7 @@ def get_discount_game_list():
                         temp_id_list = temp_id_list.split(",")
                         app_id += temp_id_list
                 else:
-                    output.print_msg("bundle_info not found\n" + game_selector.html())
+                    console.log("bundle_info not found\n" + game_selector.html())
             elif package_id is not None:
                 prime_id = package_id
                 game_type = "package"
@@ -159,7 +159,7 @@ def get_self_uncompleted_account_badges(account_id):
     badges_detail_url_list = []
     page_count = 1
     while True:
-        output.print_msg("开始解析第%s页徽章" % page_count)
+        console.log("开始解析第%s页徽章" % page_count)
         badges_pagination_url = "https://steamcommunity.com/profiles/%s/badges/" % account_id
         query_data = {"p": page_count}
         badges_pagination_response = net.request(badges_pagination_url, method="GET", fields=query_data, cookies_list=COOKIE_INFO)
@@ -284,7 +284,7 @@ def get_account_inventory(account_id):
     page_count = 1
     last_assert_id = "0"
     while True:
-        output.print_msg("开始解析%s ~ %s的库存" % (each_page_inventory_count * (page_count - 1) + 1, each_page_inventory_count * page_count))
+        console.log("开始解析%s ~ %s的库存" % (each_page_inventory_count * (page_count - 1) + 1, each_page_inventory_count * page_count))
         api_url = "https://steamcommunity.com/inventory/%s/753/6" % account_id
         query_data = {
             "l": "english",
@@ -347,7 +347,7 @@ def get_account_badges(account_id):
     badge_level_list = {}
     page_count = 1
     while True:
-        output.print_msg("开始解析第%s页徽章" % page_count)
+        console.log("开始解析第%s页徽章" % page_count)
         badges_pagination_url = "https://steamcommunity.com/profiles/%s/badges/" % account_id
         query_data = {"p": page_count}
         badges_pagination_response = net.request(badges_pagination_url, method="GET", fields=query_data, cookies_list=cookies_list)
@@ -454,7 +454,7 @@ class Steam(crawler.Crawler):
             login_url = "https://steamcommunity.com/actions/GetNotificationCounts"
             login_response = net.request(login_url, method="GET", cookies_list=self.cookie_value, is_auto_redirect=False)
             if login_response.status != const.ResponseCode.SUCCEED:
-                output.print_msg("登录返回code%s不正确" % login_response.status)
+                console.log("登录返回code%s不正确" % login_response.status)
                 tool.process_exit()
             set_cookies = net.get_cookies_from_response_header(login_response.headers)
             COOKIE_INFO.update(self.cookie_value)

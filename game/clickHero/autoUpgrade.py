@@ -6,7 +6,7 @@ email: hikaru870806@hotmail.com
 如有问题或建议请联系
 """
 import time
-from common import output, tool
+from common import console, tool
 from game.clickHero import clickerHeroes
 
 
@@ -60,10 +60,10 @@ if __name__ == "__main__":
                 # 检测宝箱，并且只要开启过一次后就不再检测
                 if not is_open_equip_box and check_relic_box():
                     is_open_equip_box = True
-                    output.print_msg("open relic box")
+                    console.log("open relic box")
 
                 if check_progression_mode():
-                    output.print_msg("enable progression mode")
+                    console.log("enable progression mode")
             # 重置计数
             count = 0
 

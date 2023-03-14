@@ -5,7 +5,7 @@
 email: hikaru870806@hotmail.com
 如有问题或建议请联系
 """
-from common import crawler, output
+from common import console, crawler
 from game.steam.lib import madjoki, steam, steamdb
 
 
@@ -21,9 +21,9 @@ def main():
     try:
         banned_game_list = madjoki.get_banned_game_list()
     except crawler.CrawlerException as e:
-        output.print_msg(e.http_error("已下线游戏列表"))
+        console.log(e.http_error("已下线游戏列表"))
     else:
-        output.print_msg("总共获取%s个已删除游戏" % len(banned_game_list))
+        console.log("总共获取%s个已删除游戏" % len(banned_game_list))
 
         for game_info in banned_game_list:
             if str(game_info["game_id"]) not in deleted_app_list:
@@ -32,10 +32,10 @@ def main():
                 try:
                     steamdb_info = steamdb.get_game_store_index(game_info["game_id"])
                 except crawler.CrawlerException as e:
-                    output.print_msg(e.http_error("游戏%s" % game_info["game_id"]))
+                    console.log(e.http_error("游戏%s" % game_info["game_id"]))
                 else:
                     deleted_app_list.append(str(game_info["game_id"]))
-                    output.print_msg("\t".join(list(map(str, [game_info["game_id"], game_info["game_name"], steamdb_info["develop_name"]]))), False)
+                    console.log("\t".join(list(map(str, [game_info["game_id"], game_info["game_name"], steamdb_info["develop_name"]]))), False)
 
         steam_class.save_deleted_app_list(deleted_app_list)
 

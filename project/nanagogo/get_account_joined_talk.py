@@ -60,7 +60,7 @@ def get_account_talks(account_id, account_name, talk_list):
                 "talk_name": talk_name,
                 "talk_description": talk_description,
             }
-        output.print_msg(account_id + ": " + talk_name + ", " + talk_description)
+        console.log(account_id + ": " + talk_name + ", " + talk_description)
 
 
 def main():
@@ -70,7 +70,7 @@ def main():
         try:
             get_account_talks(account_id, account_list[account_id], talk_list)
         except crawler.CrawlerException as e:
-            output.print_msg(e.http_error("账号%s" % account_id))
+            console.log(e.http_error("账号%s" % account_id))
     if len(talk_list) > 0:
         with open(TALK_ID_FILE_PATH, "w", encoding="UTF-8") as file_handle:
             for talk_id in talk_list:

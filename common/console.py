@@ -10,7 +10,7 @@ import time
 thread_lock = threading.Lock()
 
 
-def print_msg(msg, is_time: bool = True) -> None:
+def log(msg, is_time: bool = True) -> None:
     """
     console输出（线程安全）
     """

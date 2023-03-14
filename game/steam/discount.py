@@ -77,18 +77,18 @@ def main():
         try:
             discount_game_list = steam.get_discount_game_list()
         except crawler.CrawlerException as e:
-            output.print_msg(e.http_error("打折游戏"))
+            console.log(e.http_error("打折游戏"))
             raise
         # 将打折列表写入文件
         save_discount_list(cache_file_path, discount_game_list)
-        output.print_msg("get discount game list from website")
+        console.log("get discount game list from website")
     else:
-        output.print_msg("get discount game list from cache file")
+        console.log("get discount game list from cache file")
     # 获取自己的全部游戏列表
     try:
         owned_game_list = steam.get_account_owned_app_list(steam_class.account_id)
     except crawler.CrawlerException as e:
-        output.print_msg(e.http_error("个人游戏主页"))
+        console.log(e.http_error("个人游戏主页"))
         raise
     for discount_info in discount_game_list:
         # 获取到的价格不大于0的跳过
@@ -118,16 +118,16 @@ def main():
                         # break
                 if not is_all:
                     if discount_info["type"] == "bundle":
-                        output.print_msg("https://store.steampowered.com/bundle/%s/ , %s" % (discount_info["id"], discount_info_string), False)
+                        console.log("https://store.steampowered.com/bundle/%s/ , %s" % (discount_info["id"], discount_info_string), False)
                     else:
-                        output.print_msg("https://store.steampowered.com/sub/%s/ , %s" % (discount_info["id"], discount_info_string), False)
+                        console.log("https://store.steampowered.com/sub/%s/ , %s" % (discount_info["id"], discount_info_string), False)
             else:
                 if not INCLUDE_GAME:
                     continue
                 if SKIP_RESTRICTED_GAME and discount_info["app_id"] in restricted_app_list:
                     continue
                 if discount_info["app_id"] not in owned_game_list and discount_info["app_id"] not in game_dlc_list:
-                    output.print_msg("https://store.steampowered.com/app/%s/ , %s" % (discount_info["id"], discount_info_string), False)
+                    console.log("https://store.steampowered.com/app/%s/ , %s" % (discount_info["id"], discount_info_string), False)
 
 
 if __name__ == "__main__":

@@ -14,10 +14,11 @@ import time
 import threading
 import urllib.parse
 import urllib3
-from typing import Optional, List
+import urllib3.exceptions
+from typing import List, Optional, Union
 from urllib3._collections import HTTPHeaderDict
 
-from common import const, file, net_config, output, path, tool
+from common import const, console, file, net_config, path, tool
 
 # https://www.python.org/dev/peps/pep-0476/
 # disable urllib3 HTTPS warning
@@ -41,7 +42,7 @@ MIME_DICTIONARY: Optional[dict] = None
 # 下载文件时是否覆盖已存在的同名文件
 DOWNLOAD_REPLACE_IF_EXIST: bool = False
 
-NET_CONFIG: dict[str, any] = net_config.config
+NET_CONFIG: net_config.NetConfig = net_config.NetConfig()
 
 
 class ErrorResponse(object):
@@ -74,7 +75,7 @@ def set_proxy(ip: str, port: str) -> None:
         return
     global PROXY_HTTP_CONNECTION_POOL
     PROXY_HTTP_CONNECTION_POOL = urllib3.ProxyManager(f"http://{ip}:{port}", retries=False)
-    output.print_msg(f"设置代理成功({ip}:{port})")
+    console.log(f"设置代理成功({ip}:{port})")
 
 
 def build_header_cookie_string(cookies_list: dict) -> str:
@@ -153,9 +154,9 @@ def url_encode(url: str) -> str:
 
 def request(url, method: str = "GET", fields: Optional[dict] = None, binary_data: Optional[str] = None, header_list: Optional[dict] = None,
             cookies_list: Optional[dict] = None, encode_multipart: bool = False, json_decode: bool = False, is_auto_proxy: bool = True,
-            is_auto_redirect: bool = True, is_gzip: bool = True, is_url_encode: bool = True, is_auto_retry: bool = True, is_random_ip: bool = True,
-            is_check_qps: bool = True, connection_timeout: int = NET_CONFIG["HTTP_CONNECTION_TIMEOUT"],
-            read_timeout: int = NET_CONFIG["HTTP_READ_TIMEOUT"]):
+            is_auto_redirect: bool = True, is_gzip: bool = True, is_url_encode: bool = True, is_auto_retry: bool = True,
+            is_random_ip: bool = True, is_check_qps: bool = True, connection_timeout: int = NET_CONFIG.HTTP_CONNECTION_TIMEOUT,
+            read_timeout: int = NET_CONFIG.HTTP_READ_TIMEOUT) -> Union[urllib3.HTTPResponse, ErrorResponse]:
     """
     HTTP请求
 
@@ -255,13 +256,13 @@ def request(url, method: str = "GET", fields: Optional[dict] = None, binary_data
                     if is_error:
                         response.status = const.ResponseCode.JSON_DECODE_ERROR
             elif response.status == 429:  # Too Many Requests
-                output.print_msg(url + " Too Many Requests, sleep")
-                time.sleep(NET_CONFIG["TOO_MANY_REQUESTS_WAIT_TIME"])
+                console.log(url + " Too Many Requests, sleep")
+                time.sleep(NET_CONFIG.TOO_MANY_REQUESTS_WAIT_TIME)
                 continue
             elif response.status in [500, 502, 503, 504] and is_auto_retry:  # 服务器临时性错误，重试
-                if retry_count < NET_CONFIG["HTTP_REQUEST_RETRY_COUNT"]:
+                if retry_count < NET_CONFIG.HTTP_REQUEST_RETRY_COUNT:
                     retry_count += 1
-                    time.sleep(NET_CONFIG["SERVICE_INTERNAL_ERROR_WAIT_TIME"])
+                    time.sleep(NET_CONFIG.SERVICE_INTERNAL_ERROR_WAIT_TIME)
                     continue
                 else:
                     return response
@@ -288,18 +289,18 @@ def request(url, method: str = "GET", fields: Optional[dict] = None, binary_data
                                    is_random_ip=is_random_ip, is_check_qps=is_check_qps, connection_timeout=connection_timeout,
                                    read_timeout=read_timeout)
             # import traceback
-            # output.print_msg(message)
-            # output.print_msg(traceback.format_exc())
+            # console.log(message)
+            # console.log(traceback.format_exc())
             if "Range" in header_list:
                 range_string = "range: " + header_list["Range"].replace("bytes=", "")
-                output.print_msg(url + f"[{range_string}] 访问超时，重试中")
+                console.log(url + f"[{range_string}] 访问超时，重试中")
             else:
-                output.print_msg(url + " 访问超时，重试中")
-            time.sleep(NET_CONFIG["HTTP_REQUEST_RETRY_WAIT_TIME"])
+                console.log(url + " 访问超时，重试中")
+            time.sleep(NET_CONFIG.HTTP_REQUEST_RETRY_WAIT_TIME)
 
         retry_count += 1
-        if retry_count >= NET_CONFIG["HTTP_REQUEST_RETRY_COUNT"]:
-            output.print_msg("无法访问页面：" + url)
+        if retry_count >= NET_CONFIG.HTTP_REQUEST_RETRY_COUNT:
+            console.log("无法访问页面：" + url)
             return ErrorResponse(const.ResponseCode.RETRY)
 
 
@@ -315,14 +316,14 @@ def _qps(url: str) -> bool:
         QPS[day_minuter][host] = 0
 
     # 当前域名、当前分钟的请求数
-    if QPS[day_minuter][host] > NET_CONFIG["SINGLE_HOST_QUERY_PER_MINUTER"]:
+    if QPS[day_minuter][host] > NET_CONFIG.SINGLE_HOST_QUERY_PER_MINUTER:
         return True
 
     # 所有域名、当前分钟的请求数
     total_query = 0
     for temp_host in QPS[day_minuter]:
         total_query += QPS[day_minuter][temp_host]
-    if total_query > NET_CONFIG["GLOBAL_QUERY_PER_MINUTER"]:
+    if total_query > NET_CONFIG.GLOBAL_QUERY_PER_MINUTER:
         return True
 
     QPS[day_minuter][host] += 1
@@ -342,8 +343,8 @@ def _random_user_agent(browser_type: Optional[str] = None) -> str:
         "Windows 8.1": "Windows NT 6.3",
         "Windows 10": "Windows NT 10.0",
     }
-    firefox_version_max = 108
-    chrome_version_max = 107
+    firefox_version_max = 109
+    chrome_version_max = 111
     if browser_type is None:
         browser_type = random.choice(["firefox", "chrome"])
     if browser_type == "firefox":
@@ -413,7 +414,7 @@ def pause_request() -> None:
     Block thread when use request()
     """
     if thread_event.is_set():
-        output.print_msg("pause process")
+        console.log("pause process")
         thread_event.clear()
 
 
@@ -422,7 +423,7 @@ def resume_request() -> None:
     Resume thread
     """
     if not thread_event.is_set():
-        output.print_msg("resume process")
+        console.log("resume process")
         thread_event.set()
 
 
@@ -474,7 +475,7 @@ class Download:
 
         # 同名文件已经存在，直接返回
         if not self.replace_if_exist and os.path.exists(self.file_path) and os.path.getsize(self.file_path) > 0:
-            output.print_msg("文件%s（%s）已存在，跳过" % (self.file_path, self.file_url))
+            console.log("文件%s（%s）已存在，跳过" % (self.file_path, self.file_url))
             self.status = const.DownloadStatus.SUCCEED
             return
 
@@ -487,7 +488,7 @@ class Download:
         self.check_auto_multipart_download()
 
         # 下载
-        for retry_count in range(NET_CONFIG["DOWNLOAD_RETRY_COUNT"]):
+        for retry_count in range(NET_CONFIG.DOWNLOAD_RETRY_COUNT):
             if EXIT_FLAG:
                 self.code = const.DownloadCode.PROCESS_EXIT
                 break
@@ -515,8 +516,8 @@ class Download:
                 return
             else:
                 self.code = const.DownloadCode.FILE_SIZE_INVALID
-                output.print_msg(f"本地文件%s：{self.content_length}和网络文件%s：{file_size}不一致" % (self.file_path, self.file_url))
-                time.sleep(NET_CONFIG["HTTP_REQUEST_RETRY_WAIT_TIME"])
+                console.log(f"本地文件%s：{self.content_length}和网络文件%s：{file_size}不一致" % (self.file_path, self.file_url))
+                time.sleep(NET_CONFIG.HTTP_REQUEST_RETRY_WAIT_TIME)
 
         # 删除可能出现的临时文件
         path.delete_dir_or_file(self.file_path)
@@ -555,7 +556,7 @@ class Download:
             if content_length is not None:
                 self.content_length = int(content_length)
                 # 文件比较大，使用分段下载
-                if self.auto_multipart_download and self.content_length > NET_CONFIG["DOWNLOAD_MULTIPART_MIN_SIZE"]:
+                if self.auto_multipart_download and self.content_length > NET_CONFIG.DOWNLOAD_MULTIPART_MIN_SIZE:
                     self.is_multipart_download = True
 
     def rename_file_extension(self, response) -> None:
@@ -584,8 +585,8 @@ class Download:
         单线程下载
         """
         try:
-            file_response = request(self.file_url, method="GET", connection_timeout=NET_CONFIG["DOWNLOAD_CONNECTION_TIMEOUT"],
-                                    read_timeout=NET_CONFIG["DOWNLOAD_READ_TIMEOUT"], **self.kwargs.copy())
+            file_response = request(self.file_url, method="GET", connection_timeout=NET_CONFIG.DOWNLOAD_CONNECTION_TIMEOUT,
+                                    read_timeout=NET_CONFIG.DOWNLOAD_READ_TIMEOUT, **self.kwargs.copy())
         except SystemExit:
             return False
 
@@ -638,7 +639,7 @@ class Download:
             end_pos = -1
             while end_pos < self.content_length - 1:
                 start_pos = end_pos + 1
-                end_pos = min(self.content_length - 1, start_pos + NET_CONFIG["DOWNLOAD_MULTIPART_BLOCK_SIZE"] - 1)
+                end_pos = min(self.content_length - 1, start_pos + NET_CONFIG.DOWNLOAD_MULTIPART_BLOCK_SIZE - 1)
                 multipart_kwargs = self.kwargs.copy()
 
                 # 分段的header信息
@@ -651,18 +652,18 @@ class Download:
 
                 # 创建一个副本
                 with os.fdopen(os.dup(file_no), "rb+", -1) as fd_handle:
-                    for multipart_retry_count in range(NET_CONFIG["DOWNLOAD_RETRY_COUNT"]):
+                    for multipart_retry_count in range(NET_CONFIG.DOWNLOAD_RETRY_COUNT):
                         try:
                             multipart_response = request(self.file_url, method="GET", header_list=header_list,
-                                                         connection_timeout=NET_CONFIG["DOWNLOAD_CONNECTION_TIMEOUT"],
-                                                         read_timeout=NET_CONFIG["DOWNLOAD_READ_TIMEOUT"], **multipart_kwargs)
+                                                         connection_timeout=NET_CONFIG.DOWNLOAD_CONNECTION_TIMEOUT,
+                                                         read_timeout=NET_CONFIG.DOWNLOAD_READ_TIMEOUT, **multipart_kwargs)
                         except SystemExit:
                             return False
                         if multipart_response.status == 206:
                             # 下载的文件和请求的文件大小不一致
                             if len(multipart_response.data) != (end_pos - start_pos + 1):
-                                output.print_msg(f"网络文件%s：range {start_pos} - {end_pos}实际下载大小 {len(multipart_response.data)} 不一致" % self.file_url)
-                                time.sleep(NET_CONFIG["HTTP_REQUEST_RETRY_WAIT_TIME"])
+                                console.log(f"网络文件%s：range {start_pos} - {end_pos}实际下载大小 {len(multipart_response.data)} 不一致" % self.file_url)
+                                time.sleep(NET_CONFIG.HTTP_REQUEST_RETRY_WAIT_TIME)
                             else:
                                 # 写入本地文件后退出
                                 fd_handle.seek(start_pos)

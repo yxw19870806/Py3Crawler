@@ -58,8 +58,8 @@ def deal_one_group(group_list):
             record_file_path = file_path
     for file_path in delete_list:
         path.delete_dir_or_file(file_path)
-        output.print_msg("delete " + file_path)
-    output.print_msg("keep " + record_file_path)
+        console.log("delete " + file_path)
+    console.log("keep " + record_file_path)
 
 
 if __name__ == "__main__":

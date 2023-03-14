@@ -6,7 +6,7 @@ https://store.steampowered.com/
 email: hikaru870806@hotmail.com
 如有问题或建议请联系
 """
-from common import output, crawler
+from common import console, crawler
 from game.steam.lib import steam
 
 CHECK_EXTRA_CARD = True  # 是否检测额外的交换卡（徽章等级大于5，并且还有卡牌）
@@ -23,7 +23,7 @@ def main():
     try:
         inventory_item_list = steam.get_account_inventory(steam_class.account_id)
     except crawler.CrawlerException as e:
-        output.print_msg(e.http_error("库存"))
+        console.log(e.http_error("库存"))
         raise
     badges_list = {}
     if CHECK_EXTRA_CARD:
@@ -31,15 +31,15 @@ def main():
         try:
             badges_list = steam.get_account_badges(steam_class.account_id)
         except crawler.CrawlerException as e:
-            output.print_msg(e.http_error("账号徽章列表"))
+            console.log(e.http_error("账号徽章列表"))
             raise
     for item_id, item_info in inventory_item_list.items():
         if item_info["type"] == steam.INVENTORY_ITEM_TYPE_PROFILE_BACKGROUND:
             if CHECK_DUPLICATE_BACKGROUND and item_info["count"] > 1:
-                output.print_msg(item_info)
+                console.log(item_info)
         elif item_info["type"] == steam.INVENTORY_ITEM_TYPE_EMOTICON:
             if CHECK_DUPLICATE_EMOTICON and item_info["count"] > 1:
-                output.print_msg(item_info)
+                console.log(item_info)
         elif item_info["type"] == steam.INVENTORY_ITEM_TYPE_TRADE_CARD:
             if CHECK_EXTRA_CARD:
                 # 闪卡，跳过
@@ -51,7 +51,7 @@ def main():
                     badge_level = 0
                 # 如果剩余卡牌数量 + 当前徽章等级 > 5
                 if item_info["count"] + badge_level > steam.MAX_BADGE_LEVEL:
-                    output.print_msg(item_info)
+                    console.log(item_info)
 
 
 if __name__ == "__main__":

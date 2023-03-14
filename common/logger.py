@@ -9,7 +9,7 @@ import os
 import logging
 from logging import LogRecord
 from typing import Final
-from common import file, tool
+from common import color_format, file, tool
 
 DEFAULT_LOG_CONFIG = {
     "IS_CONSOLE_DEBUG": False,
@@ -34,11 +34,11 @@ LOG_ERROR_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), LOG_CON
 
 class ColorFormatter(logging.Formatter):
     log_colors = {
-        logging.CRITICAL: "\033[0;33m",
-        logging.ERROR: "\033[0;31m",
-        logging.WARNING: "\033[0;35m",
-        logging.INFO: "\033[0;32m",
-        logging.DEBUG: "\033[0;00m",
+        logging.CRITICAL: color_format.ColorFormat(foreground_color=color_format.ForegroundColor.LIGHT_MAGENTA),
+        logging.ERROR: color_format.ColorFormat(foreground_color=color_format.ForegroundColor.RED),
+        logging.WARNING: color_format.ColorFormat(foreground_color=color_format.ForegroundColor.CYAN),
+        logging.INFO: color_format.ColorFormat(foreground_color=color_format.ForegroundColor.GREEN),
+        logging.DEBUG: color_format.ColorFormat(foreground_color=color_format.ForegroundColor.BLUE),
     }
 
     def __init__(self):
@@ -48,7 +48,7 @@ class ColorFormatter(logging.Formatter):
         s = super().format(record)
         level_no = record.levelno
         if level_no in self.log_colors:
-            return self.log_colors[level_no] + s + "\033[0m"
+            return self.log_colors[level_no].fomat(s)
         return s
 
 
@@ -98,24 +98,28 @@ logger.addHandler(stream_handle)
 
 # 文件日志
 file_formatter = logging.Formatter(fmt="[%(asctime)s][%(levelname)s] %(message)s", datefmt="%Y-%m-%d %H:%M:%S")
+
 if DEFAULT_LOG_CONFIG["IS_WRITE_DEBUG"]:
     debug_file_handle = logging.FileHandler(LOG_DEBUG_PATH, encoding="UTF-8")
     debug_file_handle.setLevel(logging.DEBUG)
     debug_file_handle.setFormatter(file_formatter)
     debug_file_handle.addFilter(FilterDebug())
     logger.addHandler(debug_file_handle)
+
 if DEFAULT_LOG_CONFIG["IS_WRITE_INFO"]:
     info_file_handle = logging.FileHandler(LOG_INFO_PATH, encoding="UTF-8")
     info_file_handle.setLevel(logging.INFO)
     info_file_handle.setFormatter(file_formatter)
     info_file_handle.addFilter(FilterInfo())
     logger.addHandler(info_file_handle)
+
 if DEFAULT_LOG_CONFIG["IS_WRITE_WARNING"]:
     warning_file_handle = logging.FileHandler(LOG_WARNING_PATH, encoding="UTF-8")
     warning_file_handle.setLevel(logging.WARNING)
     warning_file_handle.setFormatter(file_formatter)
     warning_file_handle.addFilter(FilterWarning())
     logger.addHandler(warning_file_handle)
+
 if DEFAULT_LOG_CONFIG["IS_WRITE_ERROR"]:
     error_file_handle = logging.FileHandler(LOG_ERROR_PATH, encoding="UTF-8")
     error_file_handle.setLevel(logging.ERROR)

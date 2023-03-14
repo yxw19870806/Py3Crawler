@@ -5,7 +5,7 @@
 email: hikaru870806@hotmail.com
 如有问题或建议请联系
 """
-from enum import Enum, unique, EnumMeta
+from enum import Enum, unique, EnumMeta, IntEnum, StrEnum
 from typing import Final
 
 SIZE_KB: Final[int] = 2 ** 10  # 1KB = 多少字节
@@ -22,7 +22,7 @@ class CrawlerEnumMeta(EnumMeta):
 
 
 @unique
-class BrowserType(Enum, metaclass=CrawlerEnumMeta):
+class BrowserType(StrEnum, metaclass=CrawlerEnumMeta):
     IE: str = "ie"
     FIREFOX: str = "firefox"
     CHROME: str = "chrome"
@@ -30,66 +30,66 @@ class BrowserType(Enum, metaclass=CrawlerEnumMeta):
 
 
 @unique
-class SysConfigKey(Enum):
+class SysConfigKey(StrEnum):
     # 程序是否支持下载图片功能
-    DOWNLOAD_PHOTO = "download_photo"
+    DOWNLOAD_PHOTO: str = "download_photo"
     # 程序是否支持下载视频功能
-    DOWNLOAD_VIDEO = "download_video"
+    DOWNLOAD_VIDEO: str = "download_video"
     # 程序是否支持下载音频功能
-    DOWNLOAD_AUDIO = "download_audio"
+    DOWNLOAD_AUDIO: str = "download_audio"
     # 程序是否支持下载文本内容功能
-    DOWNLOAD_CONTENT = "download_content"
+    DOWNLOAD_CONTENT: str = "download_content"
     # 程序是否默认需要设置代理
-    SET_PROXY = "set_proxy"
+    SET_PROXY: str = "set_proxy"
     # 程序是否支持不需要存档文件就可以开始运行
-    NOT_CHECK_SAVE_DATA = "no_save_data"
+    NOT_CHECK_SAVE_DATA: str = "no_save_data"
     # 程序没有任何下载行为
-    NOT_DOWNLOAD = "no_download"
+    NOT_DOWNLOAD: str = "no_download"
     # 程序是否需要从浏览器存储的cookie中获取指定cookie的值
-    GET_COOKIE = "get_cookie"
+    GET_COOKIE: str = "get_cookie"
     # 程序额外应用配置
     # 传入参数类型为tuple，每一位参数为长度3的tuple，顺序为(配置名字，默认值，配置读取方式)，同analysis_config方法后三个参数
-    APP_CONFIG = "app_config"
+    APP_CONFIG: str = "app_config"
     # 程序默认的app配置文件路径
-    APP_CONFIG_PATH = "app_config_path"
+    APP_CONFIG_PATH: str = "app_config_path"
 
 
 @unique
-class ConfigAnalysisMode(Enum):
-    RAW = "raw"
-    INTEGER = "int"
-    BOOLEAN = "bool"
-    FLOAT = "float"
-    PATH = "path"
+class ConfigAnalysisMode(StrEnum):
+    RAW: str = "raw"
+    INTEGER: str = "int"
+    BOOLEAN: str = "bool"
+    FLOAT: str = "float"
+    PATH: str = "path"
 
 
 @unique
-class ReadFileMode(Enum):
+class ReadFileMode(StrEnum):
     FULL: str = "full"  # 读取整个文件 ，返回字符串
     LINE: str = "line"  # 按行读取，返回list
 
 
 @unique
-class WriteFileMode(Enum):
+class WriteFileMode(StrEnum):
     APPEND: str = "append"  # 追加写入文件
     REPLACE: str = "replace"  # 覆盖写入文件
 
 
 @unique
-class CreateDirMode(Enum):
+class CreateDirMode(StrEnum):
     IGNORE: str = "ignore"  # 目录存在时忽略
     DELETE: str = "delete"  # 目录存在时先删除再创建
 
 
 @unique
-class OrderType(Enum):
+class OrderType(StrEnum):
     ASC: str = "asc"  # 升序
     DESC: str = "desc"  # 降序
     DEFAULT: str = "default"  # 默认
 
 
 @unique
-class IncludeStringMode(Enum):
+class IncludeStringMode(StrEnum):
     NONE: str = "none"  # 不包含start_string和end_string
     START: str = "start"  # 只包含start_string
     END: str = "end"  # 只包含end_string
@@ -104,7 +104,7 @@ class ProcessStatus(Enum):
 
 
 @unique
-class ExitCode(Enum):
+class ExitCode(IntEnum):
     NORMAL: int = 0
     ERROR: int = 1
 
@@ -112,37 +112,27 @@ class ExitCode(Enum):
 # 下载状态
 @unique
 class DownloadStatus(Enum):
-    SUCCEED = 1
-    FAILED = 0
+    SUCCEED: int = 1
+    FAILED: int = 0
 
 
 # 下载返回值
 @unique
-class DownloadCode(Enum):
+class DownloadCode(IntEnum):
     URL_INVALID: int = -1
     RETRY_MAX_COUNT: int = -2
     FILE_SIZE_INVALID: int = -3
     PROCESS_EXIT: int = -10
     FILE_CREATE_FAILED: int = -11
 
-    def __eq__(self, other):
-        if not isinstance(other, int):
-            return False
-        return int(other) == self.value
-
 
 # 网络请求返回值
 @unique
-class ResponseCode(Enum):
-    RETRY = 0
-    URL_INVALID = -1  # 地址不符合规范（非http:// 或者 https:// 开头）
-    JSON_DECODE_ERROR = -2  # 返回数据不是JSON格式，但返回状态是200
-    DOMAIN_NOT_RESOLVED = -3  # 域名无法解析
-    RESPONSE_TO_LARGE = -4  # 文件太大
-    TOO_MANY_REDIRECTS = -5  # 重定向次数过多
-    SUCCEED = 200  # 成功
-
-    def __eq__(self, other):
-        if not isinstance(other, int):
-            return False
-        return int(other) == self.value
+class ResponseCode(IntEnum):
+    RETRY: int = 0
+    URL_INVALID: int = -1  # 地址不符合规范（非http:// 或者 https:// 开头）
+    JSON_DECODE_ERROR: int = -2  # 返回数据不是JSON格式，但返回状态是200
+    DOMAIN_NOT_RESOLVED: int = -3  # 域名无法解析
+    RESPONSE_TO_LARGE: int = -4  # 文件太大
+    TOO_MANY_REDIRECTS: int = -5  # 重定向次数过多
+    SUCCEED: int = 200  # 成功

@@ -43,7 +43,7 @@ def main():
     try:
         badges_detail_url_list = steam.get_self_uncompleted_account_badges(steam_class.account_id)
     except crawler.CrawlerException as e:
-        output.print_msg(e.http_error("个人徽章首页"))
+        console.log(e.http_error("个人徽章首页"))
         raise
 
     for badges_detail_url in badges_detail_url_list:
@@ -56,7 +56,7 @@ def main():
         try:
             wanted_card_list = steam.get_self_account_badge_card(badges_detail_url)
         except crawler.CrawlerException as e:
-            output.print_msg(e.http_error("徽章" % badges_detail_url))
+            console.log(e.http_error("徽章" % badges_detail_url))
             continue
         if len(wanted_card_list) == 0:
             # 已实际完成
@@ -65,12 +65,12 @@ def main():
             continue
         if game_id in deleted_app_list:
             continue
-        output.print_msg("game id: %s" % game_id, False)
+        console.log("game id: %s" % game_id, False)
         # 获取全部卡牌的市场售价
         try:
             market_card_list = steam.get_market_game_trade_card_price(game_id)
         except crawler.CrawlerException as e:
-            output.print_msg(e.http_error("游戏%s的市场" % game_id))
+            console.log(e.http_error("游戏%s的市场" % game_id))
             continue
 
         card_hash_name_dict = {}
@@ -104,7 +104,7 @@ def main():
         if not IS_TOTAL_CARD or (IS_TOTAL_CARD and is_total):
             if MAX_TOTAL_PRICE <= 0 or (MAX_TOTAL_PRICE > 0 and total_price <= MAX_TOTAL_PRICE):
                 for print_message in print_message_list:
-                    output.print_msg(print_message, False)
+                    console.log(print_message, False)
 
 
 if __name__ == "__main__":
