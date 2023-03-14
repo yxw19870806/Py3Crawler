@@ -184,7 +184,7 @@ def process_exit(exit_code: const.ExitCode = const.ExitCode.ERROR) -> NoReturn:
         ExitCode.NORMAL     正常结束
         ExitCode.ERROR      异常退出
     """
-    sys.exit(exit_code.value)
+    sys.exit(exit_code)
 
 
 def shutdown(delay_time: int = 30) -> None:

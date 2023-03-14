@@ -5,7 +5,7 @@
 email: hikaru870806@hotmail.com
 如有问题或建议请联系
 """
-from enum import Enum, unique, EnumMeta, IntEnum
+from enum import Enum, unique, EnumMeta, IntEnum, StrEnum
 from typing import Final
 
 SIZE_KB: Final[int] = 2 ** 10  # 1KB = 多少字节
@@ -22,7 +22,7 @@ class CrawlerEnumMeta(EnumMeta):
 
 
 @unique
-class BrowserType(Enum, metaclass=CrawlerEnumMeta):
+class BrowserType(StrEnum, metaclass=CrawlerEnumMeta):
     IE: str = "ie"
     FIREFOX: str = "firefox"
     CHROME: str = "chrome"
@@ -30,7 +30,7 @@ class BrowserType(Enum, metaclass=CrawlerEnumMeta):
 
 
 @unique
-class SysConfigKey(Enum):
+class SysConfigKey(StrEnum):
     # 程序是否支持下载图片功能
     DOWNLOAD_PHOTO: str = "download_photo"
     # 程序是否支持下载视频功能
@@ -55,7 +55,7 @@ class SysConfigKey(Enum):
 
 
 @unique
-class ConfigAnalysisMode(Enum):
+class ConfigAnalysisMode(StrEnum):
     RAW: str = "raw"
     INTEGER: str = "int"
     BOOLEAN: str = "bool"
@@ -64,32 +64,32 @@ class ConfigAnalysisMode(Enum):
 
 
 @unique
-class ReadFileMode(Enum):
+class ReadFileMode(StrEnum):
     FULL: str = "full"  # 读取整个文件 ，返回字符串
     LINE: str = "line"  # 按行读取，返回list
 
 
 @unique
-class WriteFileMode(Enum):
+class WriteFileMode(StrEnum):
     APPEND: str = "append"  # 追加写入文件
     REPLACE: str = "replace"  # 覆盖写入文件
 
 
 @unique
-class CreateDirMode(Enum):
+class CreateDirMode(StrEnum):
     IGNORE: str = "ignore"  # 目录存在时忽略
     DELETE: str = "delete"  # 目录存在时先删除再创建
 
 
 @unique
-class OrderType(Enum):
+class OrderType(StrEnum):
     ASC: str = "asc"  # 升序
     DESC: str = "desc"  # 降序
     DEFAULT: str = "default"  # 默认
 
 
 @unique
-class IncludeStringMode(Enum):
+class IncludeStringMode(StrEnum):
     NONE: str = "none"  # 不包含start_string和end_string
     START: str = "start"  # 只包含start_string
     END: str = "end"  # 只包含end_string
@@ -104,7 +104,7 @@ class ProcessStatus(Enum):
 
 
 @unique
-class ExitCode(Enum):
+class ExitCode(IntEnum):
     NORMAL: int = 0
     ERROR: int = 1
 
