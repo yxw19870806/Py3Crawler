@@ -5,7 +5,7 @@
 email: hikaru870806@hotmail.com
 如有问题或建议请联系
 """
-from enum import Enum, unique, EnumMeta
+from enum import Enum, unique, EnumMeta, IntEnum
 from typing import Final
 
 SIZE_KB: Final[int] = 2 ** 10  # 1KB = 多少字节
@@ -118,22 +118,17 @@ class DownloadStatus(Enum):
 
 # 下载返回值
 @unique
-class DownloadCode(Enum):
+class DownloadCode(IntEnum):
     URL_INVALID: int = -1
     RETRY_MAX_COUNT: int = -2
     FILE_SIZE_INVALID: int = -3
     PROCESS_EXIT: int = -10
     FILE_CREATE_FAILED: int = -11
 
-    def __eq__(self, other):
-        if not isinstance(other, int):
-            return False
-        return int(other) == self.value
-
 
 # 网络请求返回值
 @unique
-class ResponseCode(Enum):
+class ResponseCode(IntEnum):
     RETRY: int = 0
     URL_INVALID: int = -1  # 地址不符合规范（非http:// 或者 https:// 开头）
     JSON_DECODE_ERROR: int = -2  # 返回数据不是JSON格式，但返回状态是200
@@ -141,8 +136,3 @@ class ResponseCode(Enum):
     RESPONSE_TO_LARGE: int = -4  # 文件太大
     TOO_MANY_REDIRECTS: int = -5  # 重定向次数过多
     SUCCEED: int = 200  # 成功
-
-    def __eq__(self, other):
-        if not isinstance(other, int):
-            return False
-        return int(other) == self.value
