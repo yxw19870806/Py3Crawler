@@ -14,7 +14,7 @@ import time
 import threading
 import urllib.parse
 import urllib3
-from typing import Optional, List
+from typing import List, Optional, Union
 from urllib3._collections import HTTPHeaderDict
 
 from common import const, console, file, net_config, path, tool
@@ -153,9 +153,9 @@ def url_encode(url: str) -> str:
 
 def request(url, method: str = "GET", fields: Optional[dict] = None, binary_data: Optional[str] = None, header_list: Optional[dict] = None,
             cookies_list: Optional[dict] = None, encode_multipart: bool = False, json_decode: bool = False, is_auto_proxy: bool = True,
-            is_auto_redirect: bool = True, is_gzip: bool = True, is_url_encode: bool = True, is_auto_retry: bool = True, is_random_ip: bool = True,
-            is_check_qps: bool = True, connection_timeout: int = NET_CONFIG["HTTP_CONNECTION_TIMEOUT"],
-            read_timeout: int = NET_CONFIG["HTTP_READ_TIMEOUT"]):
+            is_auto_redirect: bool = True, is_gzip: bool = True, is_url_encode: bool = True, is_auto_retry: bool = True,
+            is_random_ip: bool = True, is_check_qps: bool = True, connection_timeout: int = NET_CONFIG["HTTP_CONNECTION_TIMEOUT"],
+            read_timeout: int = NET_CONFIG["HTTP_READ_TIMEOUT"]) -> Union[urllib3.HTTPResponse, ErrorResponse]:
     """
     HTTP请求
 
