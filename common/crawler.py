@@ -425,9 +425,9 @@ class CrawlerThread(threading.Thread):
             self.main_thread = main_thread
             self.thread_lock = main_thread.thread_lock
             main_thread.thread_semaphore.acquire()
-            self.single_save_data = single_save_data
         except KeyboardInterrupt:
             self.main_thread.stop_process()
+        self.single_save_data = single_save_data
         self.total_photo_count = 0
         self.total_video_count = 0
         self.total_audio_count = 0
@@ -471,18 +471,7 @@ class CrawlerThread(threading.Thread):
         for temp_path in self.temp_path_list:
             path.delete_dir_or_file(temp_path)
 
-        # 日志
-        message = "下载完毕"
-        download_result = []
-        if self.main_thread.is_download_photo:
-            download_result.append(f"图片{self.total_photo_count}张")
-        if self.main_thread.is_download_video:
-            download_result.append(f"视频{self.total_video_count}个")
-        if self.main_thread.is_download_audio:
-            download_result.append(f"音频{self.total_audio_count}个")
-        if download_result:
-            message += "，共计下载" + "，".join(download_result)
-        self.info(message)
+        self.end_message()
 
         # 唤醒主线程
         self.notify_main_thread()
@@ -561,6 +550,19 @@ class CrawlerThread(threading.Thread):
     def parse_result(self, description: str, parse_result_list: Union[list, dict]) -> None:
         self.debug("%s 解析结果：%s" % (description, parse_result_list))
         self.info("%s 解析数量：%s" % (description, len(parse_result_list)))
+
+    def end_message(self) -> None:
+        message = "下载完毕"
+        download_result = []
+        if self.main_thread.is_download_photo:
+            download_result.append(f"图片{self.total_photo_count}张")
+        if self.main_thread.is_download_video:
+            download_result.append(f"视频{self.total_video_count}个")
+        if self.main_thread.is_download_audio:
+            download_result.append(f"音频{self.total_audio_count}个")
+        if download_result:
+            message += "，共计下载" + "，".join(download_result)
+        self.info(message)
 
     def download(self, file_url: str, file_path: str, file_description: str, success_callback: Callable[[str, str, str, net.Download], bool] = None,
                  failure_callback: Callable[[str, str, str, net.Download], bool] = None, **kwargs) -> net.Download:
