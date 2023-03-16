@@ -45,11 +45,11 @@ def get_account_talks(account_id, account_name, talk_list):
         talk_name = talk_selector.find(".UserTalk__talkname").text()
         if not talk_name:
             raise crawler.CrawlerException("talk信息截取talk名字失败\n" + talk_selector.html())
-        talk_name = crawler.filter_emoji(talk_name.strip())
+        talk_name = tool.filter_emoji(talk_name.strip())
         # 获取talk描述
-        talk_description = crawler.filter_emoji(talk_selector.find(".UserTalk__description").text())
+        talk_description = talk_selector.find(".UserTalk__description").text()
         if talk_description:
-            talk_description = crawler.filter_emoji(talk_description.strip())
+            talk_description = tool.filter_emoji(talk_description.strip())
         else:
             talk_description = ""
         if talk_id in talk_list:

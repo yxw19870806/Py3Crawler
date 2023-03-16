@@ -42,7 +42,7 @@ def check_login():
     if not COOKIE_INFO["sessionid"] and SESSION_DATA_PATH:
         # 从文件中读取账号密码
         account_data = tool.json_decode(crypto.Crypto().decrypt(file.read_file(SESSION_DATA_PATH)), {})
-        if crawler.check_sub_key(("email", "password"), account_data):
+        if tool.check_dict_sub_key(("email", "password"), account_data):
             if _do_login(account_data["email"], account_data["password"]):
                 return True
     else:
