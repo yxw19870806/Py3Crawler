@@ -27,7 +27,7 @@ def init():
     # 文件存在，检查格式是否正确
     if os.path.exists(token_file_path):
         api_info = tool.json_decode(crypto.Crypto().decrypt(file.read_file(token_file_path)), [])
-        if crawler.check_sub_key(("api_key", "api_secret"), api_info):
+        if tool.check_dict_sub_key(("api_key", "api_secret"), api_info):
             # 验证token是否有效
             if get_access_token(api_info["api_key"], api_info["api_secret"]):
                 console.log("access token get succeed!")
@@ -63,7 +63,7 @@ def get_access_token(api_key, api_secret):
         "grant_type": "client_credentials"
     }
     response = net.request(auth_url, method="POST", header_list=header_list, fields=post_data, json_decode=True)
-    if response.status == const.ResponseCode.SUCCEED and crawler.check_sub_key(("token_type", "access_token"), response.json_data) and response.json_data["token_type"] == "bearer":
+    if response.status == const.ResponseCode.SUCCEED and tool.check_dict_sub_key(("token_type", "access_token"), response.json_data) and response.json_data["token_type"] == "bearer":
         global ACCESS_TOKEN
         ACCESS_TOKEN = response.json_data["access_token"]
         return True

@@ -826,31 +826,6 @@ def get_json_value(json_data, *args, **kwargs) -> Any:
     return json_data
 
 
-def check_sub_key(needles: Union[str, tuple], haystack: dict) -> bool:
-    """
-    判断类型是否为字典，并且检测是否存在指定的key
-    """
-    if not isinstance(needles, tuple):
-        needles = tuple(needles)
-    if isinstance(haystack, dict):
-        for needle in needles:
-            if needle not in haystack:
-                return False
-        return True
-    return False
-
-
-def filter_emoji(text: str) -> str:
-    """
-    替换文本中的表情符号
-    """
-    try:
-        emoji = re.compile("[\U00010000-\U0010ffff]")
-    except re.error:
-        emoji = re.compile("[\uD800-\uDBFF][\uDC00-\uDFFF]")
-    return emoji.sub("", text)
-
-
 def download_failre(return_code: int) -> str:
     """
     获取网络文件下载失败的原因
