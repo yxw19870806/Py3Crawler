@@ -175,7 +175,7 @@ def get_one_page_photo(user_id, page_count, api_key, csrf, request_id):
     if len(result["photo_info_list"]) == 0:
         raise crawler.CrawlerException("返回信息：%s获取图片信息失败" % photo_pagination_response.json_data)
     # 判断是不是最后一页
-    if page_count >= int(photo_pagination_response.json_data["photos"]["pages"]):
+    if page_count >= crawler.get_json_value(photo_pagination_response.json_data, "photos", "pages", type_check=int):
         result["is_over"] = True
     return result
 
