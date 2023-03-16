@@ -58,18 +58,16 @@ def get_audio_play_page(audio_id, song_type):
             return result
     response_data = crawler.get_json_value(audio_info_response.json_data, "data", type_check=dict)
     # 获取歌曲地址
-    if crawler.check_sub_key(("squrl",), response_data) and response_data["squrl"]:
+    if tool.check_dict_sub_key(("squrl",), response_data) and response_data["squrl"]:
         result["audio_url"] = response_data["squrl"]
-    elif crawler.check_sub_key(("lqurl",), response_data) and response_data["lqurl"]:
+    elif tool.check_dict_sub_key(("lqurl",), response_data) and response_data["lqurl"]:
         result["audio_url"] = response_data["lqurl"]
-    elif crawler.check_sub_key(("hqurl",), response_data) and response_data["hqurl"]:
+    elif tool.check_dict_sub_key(("hqurl",), response_data) and response_data["hqurl"]:
         result["audio_url"] = response_data["hqurl"]
     else:
         raise crawler.CrawlerException("歌曲信息'squrl'、'lqurl'、'hqurl'字段都不存在\n" + str(audio_info_response.json_data))
     # 获取歌曲标题
-    if not crawler.check_sub_key(("songName",), audio_info_response.json_data["data"]):
-        raise crawler.CrawlerException("歌曲信息'songName'字段不存在\n" + str(audio_info_response.json_data))
-    result["audio_title"] = audio_info_response.json_data["data"]["songName"]
+    result["audio_title"] = crawler.get_json_value(audio_info_response.json_data, "data", "songName", type_check=str)
     return result
 
 

@@ -175,6 +175,17 @@ def string_md5(source_string: str) -> str:
     return md5_class.hexdigest()
 
 
+def filter_emoji(text: str) -> str:
+    """
+    替换文本中的表情符号
+    """
+    try:
+        emoji = re.compile("[\U00010000-\U0010ffff]")
+    except re.error:
+        emoji = re.compile("[\uD800-\uDBFF][\uDC00-\uDFFF]")
+    return emoji.sub("", text)
+
+
 def process_exit(exit_code: const.ExitCode = const.ExitCode.ERROR) -> NoReturn:
     """
     结束进程
@@ -202,3 +213,17 @@ def get_time(string_format: str = "%m-%d %H:%M:%S", timestamp: Union[float, int]
     获取当前时间
     """
     return time.strftime(string_format, time.localtime(timestamp))
+
+
+def check_dict_sub_key(needles: Union[str, tuple], haystack: dict) -> bool:
+    """
+    判断类型是否为字典，并且检测是否存在指定的key
+    """
+    if not isinstance(needles, tuple):
+        needles = tuple(needles)
+    if isinstance(haystack, dict):
+        for needle in needles:
+            if needle not in haystack:
+                return False
+        return True
+    return False

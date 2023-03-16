@@ -37,12 +37,12 @@ thread_event = threading.Event()
 thread_event.set()
 # 退出标志
 EXIT_FLAG: bool = False
-# response header中Content-Type对应的Mime字典
-MIME_DICTIONARY: Optional[dict] = None
 # 下载文件时是否覆盖已存在的同名文件
 DOWNLOAD_REPLACE_IF_EXIST: bool = False
-
+# 网络请求相关配置
 NET_CONFIG: net_config.NetConfig = net_config.NetConfig()
+# response header中Content-Type对应的Mime字典
+MIME_DICTIONARY: Optional[dict[str, str]] = tool.json_decode(file.read_file(os.path.join(os.path.dirname(__file__), "mime.json")), {})
 
 
 class ErrorResponse(object):
@@ -571,13 +571,7 @@ class Download:
                 self.recheck_file_extension = False
 
                 if content_type != "octet-stream":
-                    global MIME_DICTIONARY
-                    if MIME_DICTIONARY is None:
-                        MIME_DICTIONARY = tool.json_decode(file.read_file(os.path.join(os.path.dirname(__file__), "mime.json")), {})
-                    if content_type in MIME_DICTIONARY:
-                        new_file_extension = MIME_DICTIONARY[content_type]
-                    else:
-                        new_file_extension = content_type.split("/")[-1]
+                    new_file_extension = MIME_DICTIONARY.get(content_type, content_type.split("/")[-1])
                     self.file_path = os.path.splitext(self.file_path)[0] + "." + new_file_extension
 
     def single_download(self) -> bool:
