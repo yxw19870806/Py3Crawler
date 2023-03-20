@@ -55,7 +55,7 @@ def main():
     for account_id in account_id_list["youtube"]:
         if account_id not in youtube_class.save_data:
             youtube_class.save_data[account_id] = [account_id]
-    file.write_file(tool.list_to_string(youtube_class.save_data.values()), youtube_class.save_data_path, const.WriteFileMode.REPLACE)
+    file.write_file(tool.dyadic_list_to_string(youtube_class.save_data.values()), youtube_class.save_data_path, const.WriteFileMode.REPLACE)
 
     # 更新niconico的存档文件
     for account_id in niconico_mylist_list:
@@ -63,9 +63,9 @@ def main():
             mylist_id = str(mylist_id)
             if mylist_id not in niconico_class.save_data:
                 niconico_class.save_data[mylist_id] = [mylist_id]
-    file.write_file(tool.list_to_string(niconico_class.save_data.values()), niconico_class.save_data_path, const.WriteFileMode.REPLACE)
+    file.write_file(tool.dyadic_list_to_string(niconico_class.save_data.values()), niconico_class.save_data_path, const.WriteFileMode.REPLACE)
 
-    file.write_file(tool.list_to_string(save_data_list), ivseek_class.save_data_path, const.WriteFileMode.REPLACE)
+    file.write_file(tool.dyadic_list_to_string(save_data_list), ivseek_class.save_data_path, const.WriteFileMode.REPLACE)
 
 
 if __name__ == "__main__":

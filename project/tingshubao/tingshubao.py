@@ -7,6 +7,8 @@ email: hikaru870806@hotmail.com
 如有问题或建议请联系
 """
 import os
+import time
+
 from pyquery import PyQuery as pq
 from common import *
 
@@ -146,26 +148,26 @@ class CrawlerThread(crawler.CrawlerThread):
             self.error(e.http_error(audio_description))
             raise
 
-        audio_url = audio_play_response["audio_url"]
-        self.info("开始下载 %s %s" % (audio_description, audio_url))
-
-        for retry_count in range(5):
-            audio_name = "%04d %s.%s" % (audio_info["audio_id"], audio_info["audio_title"], net.get_file_extension(audio_url))
-            audio_path = os.path.join(self.main_thread.audio_download_path, self.display_name, audio_name)
-            download_return = net.Download(audio_url, audio_path)
-            if download_return.status == const.DownloadStatus.SUCCEED:
-                self.total_audio_count += 1  # 计数累加
-                self.info("%s 下载成功" % audio_description)
-                break
-            else:
-                if download_return.code != const.ResponseCode.TOO_MANY_REDIRECTS or retry_count >= 4:
-                    self.error("%s %s 下载失败，原因：%s" % (audio_description, audio_url, crawler.download_failre(download_return.code)))
-                    self.check_download_failure_exit()
-                else:
-                    self.info("%s %s 下载失败，重试" % (audio_description, audio_url))
+        audio_name = "%04d %s.%s" % (audio_info["audio_id"], audio_info["audio_title"], net.get_file_extension(audio_play_response["audio_url"]))
+        audio_path = os.path.join(self.main_thread.audio_download_path, self.display_name, audio_name)
+        if self.download(audio_play_response["audio_url"], audio_path, audio_description, failure_callback=self.download_failure_callback):
+            self.total_audio_count += 1  # 计数累加
 
         # 音频下载完毕
         self.single_save_data[1] = str(audio_info["audio_id"])  # 设置存档记录
+
+    def download_failure_callback(self, audio_url, audio_path, audio_description, download_return: net.Download):
+        while download_return.code == const.ResponseCode.TOO_MANY_REDIRECTS and (retry_count := 1) <= 4:
+            time.sleep(3)
+            self.main_thread_check()
+            download_return = net.Download(audio_url, audio_path)
+            if download_return.status == const.DownloadStatus.SUCCEED:
+                self.info("%s 下载成功" % audio_description)
+                return False
+            else:
+                self.info("%s 访问异常，重试" % audio_description)
+            retry_count += 1
+        return True
 
     def _run(self):
         # 获取所有可下载音频

@@ -548,7 +548,7 @@ class CrawlerThread(crawler.CrawlerThread):
                 video_path = os.path.join(self.main_thread.video_download_path, self.display_name, video_name)
                 part_video_description = "视频%s《%s》第%s个视频" % (video_info["video_id"], video_info["video_title"], video_index)
                 header_list = {"Referer": "https://www.bilibili.com/video/av%s" % video_info["video_id"]}
-                if self.download(video_part_url, video_path, part_video_description, auto_multipart_download=True, header_list=header_list):
+                if self.download(video_part_url, video_path, part_video_description, is_failure_exit=False, auto_multipart_download=True, header_list=header_list):
                     self.temp_path_list.append(video_path)  # 设置临时目录
                     self.total_video_count += 1  # 计数累加
                 else:
@@ -575,7 +575,7 @@ class CrawlerThread(crawler.CrawlerThread):
         audio_type = net.get_file_extension(audio_info_response["audio_url"])
         audio_name = "%06d %s.%s" % (audio_info["audio_id"], path.filter_text(audio_info["audio_title"]), audio_type)
         audio_path = os.path.join(self.main_thread.audio_download_path, self.display_name, audio_name)
-        if self.download(audio_info_response["audio_url"], audio_path, audio_description, header_list={"Referer": "https://www.bilibili.com/"}):
+        if self.download(audio_info_response["audio_url"], audio_path, audio_description, is_failure_exit=False, header_list={"Referer": "https://www.bilibili.com/"}):
             self.total_audio_count += 1  # 计数累加
         else:
             return False
@@ -597,30 +597,30 @@ class CrawlerThread(crawler.CrawlerThread):
 
         photo_index = 1
         for photo_url in album_response["photo_url_list"]:
-            photo_description = "相簿%s第%s张图片" % (album_id, photo_index)
-            self.info("开始下载 %s %s" % (photo_description, photo_url))
             photo_name = "%09d_%02d.%s" % (album_id, photo_index, net.get_file_extension(photo_url))
             photo_path = os.path.join(self.main_thread.photo_download_path, self.display_name, photo_name)
-            self.main_thread_check()  # 检测主线程运行状态
-            download_return = net.Download(photo_url, photo_path)
-            # 源文件禁止访问，增加后缀生成新的图片
-            if download_return.status == const.DownloadStatus.FAILED and download_return.code == 404:
-                photo_url = photo_url + "@100000w.jpg"
-                download_return = net.Download(photo_url, photo_path)
-
-            if download_return.status == const.DownloadStatus.SUCCEED:
+            photo_description = "相簿%s第%s张图片" % (album_id, photo_index)
+            if self.download(photo_url, photo_path, photo_description, failure_callback=self.photo_download_failure_callback, is_failure_exit=False):
                 self.temp_path_list.append(photo_path)  # 设置临时目录
                 self.total_photo_count += 1  # 计数累加
-                self.info("%s 下载成功" % photo_description)
             else:
-                self.error("%s %s 下载失败，原因：%s" % (photo_description, photo_url, crawler.download_failre(download_return.code)))
-                if self.check_download_failure_exit(False):
-                    return False
+                return False
             photo_index += 1
 
         # 相簿内图片全部下载完毕
         self.temp_path_list = []  # 临时目录设置清除
         self.single_save_data[3] = str(album_id)  # 设置存档记录
+        return True
+
+    def photo_download_failure_callback(self, photo_url, photo_path, photo_description, download_return: net.Download):
+        # 源文件禁止访问，增加后缀生成新的图片
+        if download_return.code == 404:
+            photo_url = photo_url + "@100000w.jpg"
+            self.main_thread_check()
+            download_return = net.Download(photo_url, photo_path)
+            if download_return.status == const.DownloadStatus.SUCCEED:
+                self.info("%s 下载成功" % photo_description)
+                return False
         return True
 
     def _run(self):

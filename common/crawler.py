@@ -337,7 +337,7 @@ class Crawler(object):
         将剩余未处理的存档数据写入临时存档文件
         """
         if len(self.save_data) > 0 and self.temp_save_data_path:
-            file.write_file(tool.list_to_string(list(self.save_data.values())), self.temp_save_data_path)
+            file.write_file(tool.dyadic_list_to_string(list(self.save_data.values())), self.temp_save_data_path)
 
     def rewrite_save_file(self) -> None:
         """
@@ -347,7 +347,7 @@ class Crawler(object):
         if self.temp_save_data_path:
             save_data = read_save_data(self.temp_save_data_path, 0, [])
             temp_list = [save_data[key] for key in sorted(save_data.keys())]
-            file.write_file(tool.list_to_string(temp_list), self.save_data_path, const.WriteFileMode.REPLACE)
+            file.write_file(tool.dyadic_list_to_string(temp_list), self.save_data_path, const.WriteFileMode.REPLACE)
             path.delete_dir_or_file(self.temp_save_data_path)
 
     def end_message(self) -> None:
@@ -565,7 +565,7 @@ class CrawlerThread(threading.Thread):
         self.info(message)
 
     def download(self, file_url: str, file_path: str, file_description: str, success_callback: Callable[[str, str, str, net.Download], bool] = None,
-                 failure_callback: Callable[[str, str, str, net.Download], bool] = None, **kwargs) -> net.Download:
+                 failure_callback: Callable[[str, str, str, net.Download], bool] = None, is_failure_exit: bool = True, **kwargs) -> net.Download:
         """
         下载
 
@@ -591,7 +591,7 @@ class CrawlerThread(threading.Thread):
         else:
             if failure_callback is None or failure_callback(file_url, file_path, file_description, download_return):
                 self.error("%s %s 下载失败，原因：%s" % (file_description, file_url, download_failre(download_return.code)))
-                self.check_download_failure_exit()
+                self.check_download_failure_exit(is_failure_exit)
         return download_return
 
 

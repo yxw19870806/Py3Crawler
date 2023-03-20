@@ -590,6 +590,7 @@ class CrawlerThread(crawler.CrawlerThread):
     def video_download_failure_callback(self, video_url, video_path, video_description, download_return: net.Download):
         if download_return.code == 403 and video_url.find("_r1_720") != -1:
             video_url = video_url.replace("_r1_720", "_r1")
+            self.main_thread_check()
             download_return = net.Download(video_url, video_path, auto_multipart_download=True)
             if download_return.status == const.DownloadStatus.SUCCEED:
                 self.info("%s 下载成功" % video_description)

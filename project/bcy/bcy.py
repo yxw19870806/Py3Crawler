@@ -217,28 +217,13 @@ class CrawlerThread(crawler.CrawlerThread):
         self.temp_path_list.append(album_path)
         photo_index = 1
         for photo_url in photo_url_list:
-            photo_description = "作品%s第%s张图片" % (album_id, photo_index)
-            self.info("开始下载 %s %s" % (photo_description, photo_url))
-
             file_extension = net.get_file_extension(photo_url, "jpg")
             if file_extension == "image":
                 file_extension = "jpg"
             photo_path = os.path.join(album_path, "%03d.%s" % (photo_index, file_extension))
-            for retry_count in range(10):
-                self.main_thread_check()  # 检测主线程运行状态
-                download_return = net.Download(photo_url, photo_path)
-                if download_return.status == const.DownloadStatus.SUCCEED:
-                    self.total_photo_count += 1  # 计数累加
-                    self.info("%s 下载成功" % photo_description)
-                else:
-                    # 560报错，重新下载
-                    if download_return.code == 404 and retry_count < 4:
-                        log.info("图片 %s 访问异常，重试" % photo_url)
-                        time.sleep(5)
-                        continue
-                    self.error("%s %s 下载失败，原因：%s" % (photo_description, photo_url, crawler.download_failre(download_return.code)))
-                    self.check_download_failure_exit()
-                break
+            photo_description = "作品%s第%s张图片" % (album_id, photo_index)
+            if self.download(photo_url, photo_path, photo_description, failure_callback=self.photo_download_failure_callback):
+                self.total_photo_count += 1  # 计数累加
             photo_index += 1
 
     def crawl_video(self, album_id):
@@ -253,6 +238,19 @@ class CrawlerThread(crawler.CrawlerThread):
         video_path = os.path.join(self.main_thread.photo_download_path, self.display_name, "%s.%s" % (album_id, video_response["video_type"]))
         if self.download(video_response["video_url"], video_path, video_description):
             self.total_video_count += 1  # 计数累加
+
+    def photo_download_failure_callback(self, photo_url, photo_path, photo_description, download_return: net.Download):
+        while download_return.code == 404 and (retry_count := 1) <= 9:
+            time.sleep(3)
+            self.main_thread_check()
+            download_return = net.Download(photo_url, photo_path)
+            if download_return.status == const.DownloadStatus.SUCCEED:
+                self.info("%s 下载成功" % photo_description)
+                return False
+            else:
+                self.info("%s 访问异常，重试" % photo_description)
+            retry_count += 1
+        return True
 
     def _run(self):
         # 获取所有可下载作品
