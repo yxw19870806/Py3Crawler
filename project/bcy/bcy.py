@@ -241,8 +241,8 @@ class CrawlerThread(crawler.CrawlerThread):
 
     def photo_download_failure_callback(self, photo_url, photo_path, photo_description, download_return: net.Download):
         while download_return.code == 404 and (retry_count := 1) <= 9:
-            self.main_thread_check()
             time.sleep(3)
+            self.main_thread_check()
             download_return = net.Download(photo_url, photo_path)
             if download_return.status == const.DownloadStatus.SUCCEED:
                 self.info("%s 下载成功" % photo_description)
