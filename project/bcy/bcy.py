@@ -244,7 +244,7 @@ class CrawlerThread(crawler.CrawlerThread):
             time.sleep(3)
             self.main_thread_check()
             download_return = net.Download(photo_url, photo_path)
-            if download_return.status == const.DownloadStatus.SUCCEED:
+            if download_return:
                 self.info("%s 下载成功" % photo_description)
                 return False
             else:
