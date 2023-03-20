@@ -565,7 +565,7 @@ class CrawlerThread(threading.Thread):
         self.info(message)
 
     def download(self, file_url: str, file_path: str, file_description: str, success_callback: Callable[[str, str, str, net.Download], bool] = None,
-                 failure_callback: Callable[[str, str, str, net.Download], bool] = None, **kwargs) -> net.Download:
+                 failure_callback: Callable[[str, str, str, net.Download], bool] = None, is_failure_exit: bool = True, **kwargs) -> net.Download:
         """
         下载
 
@@ -591,7 +591,7 @@ class CrawlerThread(threading.Thread):
         else:
             if failure_callback is None or failure_callback(file_url, file_path, file_description, download_return):
                 self.error("%s %s 下载失败，原因：%s" % (file_description, file_url, download_failre(download_return.code)))
-                self.check_download_failure_exit()
+                self.check_download_failure_exit(is_failure_exit)
         return download_return
 
 

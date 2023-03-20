@@ -299,26 +299,17 @@ class CrawlerThread(crawler.CrawlerThread):
 
     # 下载图片
     def crawl_photo(self, photo_info):
-        photo_description = "图片%s" % photo_info["photo_id"]
-        self.info("开始下载 %s %s" % (photo_description, photo_info["photo_url"]))
-
         photo_name = "%16d.%s" % (photo_info["photo_id"], net.get_file_extension(photo_info["photo_url"], "jpg"))
         photo_path = os.path.join(self.main_thread.photo_download_path, self.display_name, photo_name)
-        download_return = net.Download(photo_info["photo_url"], photo_path, header_list={"Referer": "https://weibo.com/"})
-        if download_return.status == const.DownloadStatus.SUCCEED:
-            if check_photo_invalid(photo_path):
-                path.delete_dir_or_file(photo_path)
-                self.error("%s %s 资源已被限制，跳过" % (photo_description, photo_info["photo_url"]))
-            else:
+        photo_description = "图片%s" % photo_info["photo_id"]
+        download_return = self.download(photo_info["photo_url"], photo_path, photo_description, success_callback=self.photo_download_success_callback,
+                                        failure_callback=self.photo_download_failure_callback, is_failure_exit=False, header_list={"Referer": "https://weibo.com/"})
+        if download_return:
+            if not download_return.ext_is_invalid_photo:
                 self.total_photo_count += 1  # 计数累加
-                self.info("%s 下载成功" % photo_description)
         else:
-            if download_return.code == 403:
-                self.error("%s %s 资源已被限制，跳过" % (photo_description, photo_info["photo_url"]))
-            else:
-                self.error("%s %s 下载失败，原因：%s" % (photo_description, photo_info["photo_url"], crawler.download_failre(download_return.code)))
-                if self.check_download_failure_exit(False):
-                    return False
+            if not download_return.ext_is_invalid_photo:
+                return False
 
         # 图片下载完毕
         self.single_save_data[1] = str(photo_info["photo_id"])  # 设置存档记录
@@ -326,9 +317,6 @@ class CrawlerThread(crawler.CrawlerThread):
 
     # 解析单个视频
     def crawl_video(self, video_info):
-        video_description = "视频%s《%s》" % (video_info["video_id"], video_info["video_title"])
-        self.info("开始下载 %s %s" % (video_description, video_info["video_url"]))
-
         video_title = path.filter_text(video_info["video_title"])
         if video_title:
             video_name = "%s %s.mp4" % (video_info["video_id"], video_title)
@@ -336,17 +324,41 @@ class CrawlerThread(crawler.CrawlerThread):
             video_name = "%s.mp4" % video_info["video_id"]
         video_path = os.path.join(self.main_thread.video_download_path, self.display_name, video_name)
         header_list = {"Host": urllib.parse.urlparse(video_info["video_url"])[1]}
-        download_return = net.Download(video_info["video_url"], video_path, header_list=header_list, auto_multipart_download=True)
-        if download_return.status == const.DownloadStatus.SUCCEED:
+        video_description = "视频%s《%s》" % (video_info["video_id"], video_info["video_title"])
+        download_return = self.download(video_info["video_url"], video_path, video_description, failure_callback=self.video_download_failure_callback, is_failure_exit=False,
+                                        header_list=header_list, auto_multipart_download=True)
+        if download_return:
             self.total_video_count += 1  # 计数累加
-            self.info("%s 下载成功" % video_description)
         else:
-            self.error("%s %s 下载失败，原因：%s" % (video_description, video_info["video_url"], crawler.download_failre(download_return.code)))
-            if download_return.code != 404 and self.check_download_failure_exit(False):
+            if not download_return.ext_is_deleted:
                 return False
 
         # 视频下载完毕
         self.single_save_data[2] = str(video_info["video_id"])  # 设置存档记录
+        return True
+
+    def photo_download_success_callback(self, photo_url, photo_path, photo_description, download_return: net.Download):
+        if check_photo_invalid(photo_path):
+            download_return.ext_is_invalid_photo = True
+            path.delete_dir_or_file(photo_path)
+            self.error("%s %s 资源已被限制，跳过" % (photo_description, photo_url))
+            return False
+        download_return.ext_is_invalid_photo = False
+        return True
+
+    def photo_download_failure_callback(self, photo_url, photo_path, photo_description, download_return: net.Download):
+        if download_return.code == 403:
+            download_return.ext_is_invalid_photo = True
+            self.error("%s %s 资源已被限制，跳过" % (photo_description, photo_url))
+            return False
+        download_return.ext_is_invalid_photo = False
+        return True
+
+    def video_download_failure_callback(self, photo_url, photo_path, photo_description, download_return: net.Download):
+        if download_return.code == 404:
+            download_return.ext_is_deleted = True
+            return False
+        download_return.ext_is_deleted = False
         return True
 
     def _run(self):
