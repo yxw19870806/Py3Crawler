@@ -187,7 +187,7 @@ class CrawlerThread(crawler.CrawlerThread):
         photo_name = "%04d.%s" % (photo_index, net.get_file_extension(photo_info["photo_url"]))
         photo_path = os.path.join(self.main_thread.photo_download_path, self.display_name, photo_name)
         photo_description = "第%s张图片" % photo_index
-        if self.download(photo_info["photo_url"], photo_path, photo_description):
+        if self.download(photo_info["photo_url"], photo_path, photo_description, is_failure_exit=False):
             self.total_photo_count += 1  # 计数累加
         else:
             return False
