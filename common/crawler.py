@@ -337,7 +337,7 @@ class Crawler(object):
         将剩余未处理的存档数据写入临时存档文件
         """
         if len(self.save_data) > 0 and self.temp_save_data_path:
-            file.write_file(tool.list_to_string(list(self.save_data.values())), self.temp_save_data_path)
+            file.write_file(tool.dyadic_list_to_string(list(self.save_data.values())), self.temp_save_data_path)
 
     def rewrite_save_file(self) -> None:
         """
@@ -347,7 +347,7 @@ class Crawler(object):
         if self.temp_save_data_path:
             save_data = read_save_data(self.temp_save_data_path, 0, [])
             temp_list = [save_data[key] for key in sorted(save_data.keys())]
-            file.write_file(tool.list_to_string(temp_list), self.save_data_path, const.WriteFileMode.REPLACE)
+            file.write_file(tool.dyadic_list_to_string(temp_list), self.save_data_path, const.WriteFileMode.REPLACE)
             path.delete_dir_or_file(self.temp_save_data_path)
 
     def end_message(self) -> None:

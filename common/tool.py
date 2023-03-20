@@ -83,9 +83,7 @@ def json_decode(json_string: str, default_value=None) -> Any:
     """
     try:
         return json.loads(json_string)
-    except ValueError:
-        pass
-    except TypeError:
+    except json.decoder.JSONDecodeError:
         pass
     return default_value
 
@@ -96,14 +94,12 @@ def json_encode(json_obj: Union[list, dict], default_value=None) -> str:
     """
     try:
         return json.dumps(json_obj)
-    except ValueError:
-        pass
-    except TypeError:
+    except (TypeError, ValueError):
         pass
     return default_value
 
 
-def list_to_string(source_lists: List[list], first_sign: str = "\n", second_sign: str = "\t") -> str:
+def dyadic_list_to_string(source_lists: List[list], first_sign: str = "\n", second_sign: str = "\t") -> str:
     """
     按照指定连接符，合并二维列表生成字符串
 
@@ -118,7 +114,7 @@ def list_to_string(source_lists: List[list], first_sign: str = "\n", second_sign
     return first_sign.join(temp_list)
 
 
-def string_to_list(source_string: str, first_split: str = "\n", second_split: str = "\t") -> List[list]:
+def string_to_dyadic_list(source_string: str, first_split: str = "\n", second_split: str = "\t") -> List[list]:
     """
     按照指定分割符，分割字符串生成二维列表
 

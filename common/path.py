@@ -84,13 +84,14 @@ def delete_null_dir(dir_path: str) -> None:
     删除所有空的子目录
     """
     dir_path = os.path.abspath(dir_path)
-    if os.path.isdir(dir_path):
-        for file_name in os.listdir(dir_path):
-            sub_path = os.path.join(dir_path, file_name)
-            if os.path.isdir(sub_path):
-                delete_null_dir(sub_path)
-        if len(os.listdir(dir_path)) == 0:
-            os.rmdir(dir_path)
+    if not os.path.isdir(dir_path):
+        return
+    for file_name in os.listdir(dir_path):
+        sub_path = os.path.join(dir_path, file_name)
+        if os.path.isdir(sub_path):
+            delete_null_dir(sub_path)
+    if len(os.listdir(dir_path)) == 0:
+        os.rmdir(dir_path)
 
 
 def get_dir_files_name(dir_path: str, order: const.OrderType = const.OrderType.DEFAULT, recursive: bool = False, full_path: bool = False) -> List[str]:
@@ -189,7 +190,7 @@ def filter_text(text: str) -> str:
     """
     过滤字符串中的无效字符（无效的操作系统文件名）
     """
-    filter_character_list = ["\t", "\n", "\r", "\b"]
+    filter_character_list = ["\n", "\r", "\t", "\v", "\b", "\f"]
     if platform.system() == "Windows":
         filter_character_list += ["\\", "/", ":", "*", "?", '"', "<", ">", "|"]
     else:
