@@ -548,7 +548,7 @@ class CrawlerThread(crawler.CrawlerThread):
                 video_path = os.path.join(self.main_thread.video_download_path, self.display_name, video_name)
                 part_video_description = "视频%s《%s》第%s个视频" % (video_info["video_id"], video_info["video_title"], video_index)
                 header_list = {"Referer": "https://www.bilibili.com/video/av%s" % video_info["video_id"]}
-                if self.download(video_part_url, video_path, part_video_description, auto_multipart_download=True, header_list=header_list):
+                if self.download(video_part_url, video_path, part_video_description, is_failure_exit=False, auto_multipart_download=True, header_list=header_list):
                     self.temp_path_list.append(video_path)  # 设置临时目录
                     self.total_video_count += 1  # 计数累加
                 else:
@@ -575,7 +575,7 @@ class CrawlerThread(crawler.CrawlerThread):
         audio_type = net.get_file_extension(audio_info_response["audio_url"])
         audio_name = "%06d %s.%s" % (audio_info["audio_id"], path.filter_text(audio_info["audio_title"]), audio_type)
         audio_path = os.path.join(self.main_thread.audio_download_path, self.display_name, audio_name)
-        if self.download(audio_info_response["audio_url"], audio_path, audio_description, header_list={"Referer": "https://www.bilibili.com/"}):
+        if self.download(audio_info_response["audio_url"], audio_path, audio_description, is_failure_exit=False, header_list={"Referer": "https://www.bilibili.com/"}):
             self.total_audio_count += 1  # 计数累加
         else:
             return False
