@@ -9,6 +9,7 @@ email: hikaru870806@hotmail.com
 import os
 import re
 import threading
+import time
 import urllib.parse
 import xml.etree.ElementTree as ElementTree
 from common import *
@@ -381,26 +382,12 @@ class CrawlerThread(crawler.CrawlerThread):
     def crawl_photo(self, media_info):
         photo_index = 1
         for photo_url in media_info["photo_url_list"]:
-            photo_description = "推特%s第%s张图片" % (media_info["blog_id"], photo_index)
-            self.info("开始下载 %s %s" % (photo_description, photo_url))
-
             photo_name = "%019d_%02d.%s" % (media_info["blog_id"], photo_index, net.get_file_extension(photo_url))
             photo_path = os.path.join(self.main_thread.photo_download_path, self.index_key, photo_name)
-            for retry_count in range(5):
-                self.main_thread_check()  # 检测主线程运行状态
-                download_return = net.Download(photo_url, photo_path)
-                if download_return.status == const.DownloadStatus.SUCCEED:
-                    self.temp_path_list.append(photo_path)  # 设置临时目录
-                    self.total_photo_count += 1  # 计数累加
-                    self.info("%s 下载成功" % photo_description)
-                else:
-                    # 502报错，重新下载
-                    if download_return.code == 502:
-                        self.error("%s %s 下载失败，重试" % (photo_description, photo_url))
-                        continue
-                    self.error("%s %s 下载失败，原因：%s" % (photo_description, photo_url, crawler.download_failre(download_return.code)))
-                    self.check_download_failure_exit()
-                break
+            photo_description = "推特%s第%s张图片" % (media_info["blog_id"], photo_index)
+            if self.download(photo_url, photo_path, photo_description, failure_callback=self.photo_download_failure_callback):
+                self.temp_path_list.append(photo_path)  # 设置临时目录
+                self.total_photo_count += 1  # 计数累加
             photo_index += 1
 
     def crawl_video(self, media_info):
@@ -416,6 +403,19 @@ class CrawlerThread(crawler.CrawlerThread):
                 self.temp_path_list.append(video_path)  # 设置临时目录
                 self.total_video_count += 1  # 计数累加
             video_index += 1
+
+    def photo_download_failure_callback(self, photo_url, photo_path, photo_description, download_return: net.Download):
+        while download_return.code == 502 and (retry_count := 1) <= 4:
+            time.sleep(3)
+            self.main_thread_check()
+            download_return = net.Download(photo_url, photo_path)
+            if download_return:
+                self.info("%s 下载成功" % photo_description)
+                return False
+            else:
+                self.info("%s 访问异常，重试" % photo_description)
+            retry_count += 1
+        return True
 
     def _run(self):
         try:
