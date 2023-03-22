@@ -305,10 +305,10 @@ class CrawlerThread(crawler.CrawlerThread):
         download_return = self.download(photo_info["photo_url"], photo_path, photo_description, success_callback=self.photo_download_success_callback,
                                         failure_callback=self.photo_download_failure_callback, is_failure_exit=False, header_list={"Referer": "https://weibo.com/"})
         if download_return:
-            if not download_return.ext_is_invalid_photo:
+            if not download_return["is_invalid_photo"]:
                 self.total_photo_count += 1  # 计数累加
         else:
-            if not download_return.ext_is_invalid_photo:
+            if not download_return["is_invalid_photo"]:
                 return False
 
         # 图片下载完毕
@@ -330,7 +330,7 @@ class CrawlerThread(crawler.CrawlerThread):
         if download_return:
             self.total_video_count += 1  # 计数累加
         else:
-            if not download_return.ext_is_deleted:
+            if not download_return["is_deleted"]:
                 return False
 
         # 视频下载完毕
@@ -339,26 +339,26 @@ class CrawlerThread(crawler.CrawlerThread):
 
     def photo_download_success_callback(self, photo_url, photo_path, photo_description, download_return: net.Download):
         if check_photo_invalid(photo_path):
-            download_return.ext_is_invalid_photo = True
+            download_return["is_invalid_photo"] = True
             path.delete_dir_or_file(photo_path)
             self.error("%s %s 资源已被限制，跳过" % (photo_description, photo_url))
             return False
-        download_return.ext_is_invalid_photo = False
+        download_return["is_invalid_photo"] = False
         return True
 
     def photo_download_failure_callback(self, photo_url, photo_path, photo_description, download_return: net.Download):
         if download_return.code == 403:
-            download_return.ext_is_invalid_photo = True
+            download_return["is_invalid_photo"] = True
             self.error("%s %s 资源已被限制，跳过" % (photo_description, photo_url))
             return False
-        download_return.ext_is_invalid_photo = False
+        download_return["is_invalid_photo"] = False
         return True
 
     def video_download_failure_callback(self, photo_url, photo_path, photo_description, download_return: net.Download):
         if download_return.code == 404:
-            download_return.ext_is_deleted = True
+            download_return["is_deleted"] = True
             return False
-        download_return.ext_is_deleted = False
+        download_return["is_deleted"] = False
         return True
 
     def _run(self):

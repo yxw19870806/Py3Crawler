@@ -327,7 +327,7 @@ class CrawlerThread(crawler.CrawlerThread):
             photo_path = os.path.join(self.main_thread.photo_download_path, self.index_key, photo_name)
             photo_description = "日志%s第%s张图片" % (blog_id, photo_index)
             download_return = self.download(photo_url, photo_path, photo_description, success_callback=self.download_success_callback)
-            if download_return and not download_return.ext_is_invalid_photo:
+            if download_return and not download_return["is_invalid_photo"]:
                 self.temp_path_list.append(photo_path)  # 设置临时目录
                 self.total_photo_count += 1  # 计数累加
 
@@ -341,9 +341,9 @@ class CrawlerThread(crawler.CrawlerThread):
         if check_photo_invalid(photo_path):
             path.delete_dir_or_file(photo_path)
             self.info("%s %s 不符合规则，删除" % (photo_description, photo_url))
-            download_return.ext_is_invalid_photo = True
+            download_return["is_invalid_photo"] = True
             return False
-        download_return.ext_is_invalid_photo = False
+        download_return["is_invalid_photo"] = False
         return True
 
     def _run(self):
