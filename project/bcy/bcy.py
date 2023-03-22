@@ -243,7 +243,7 @@ class CrawlerThread(crawler.CrawlerThread):
         while download_return.code == 404 and (retry_count := 1) <= 9:
             time.sleep(3)
             self.main_thread_check()
-            download_return = net.Download(photo_url, photo_path)
+            download_return.update(net.Download(photo_url, photo_path))
             if download_return:
                 self.info("%s 下载成功" % photo_description)
                 return False
