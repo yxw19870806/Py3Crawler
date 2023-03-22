@@ -15,7 +15,7 @@ import threading
 import urllib.parse
 import urllib3
 import urllib3.exceptions
-from typing import List, Optional, Union, Self
+from typing import List, Optional, Union, Self, Any
 from urllib3._collections import HTTPHeaderDict
 
 from common import const, console, file, net_config, path, tool
@@ -459,6 +459,7 @@ class Download:
         # 结果
         self.status = const.DownloadStatus.FAILED
         self.code = 0
+        self.ext = {}
 
         self.start_download()
 
@@ -672,4 +673,11 @@ class Download:
         if other_download_return._file_url == self._file_url:
             self.status = other_download_return.status
             self.code = other_download_return.code
+        return self
+
+    def __getitem__(self, item: str) -> Any:
+        return self.ext.get(item, None)
+
+    def __setitem__(self, item: str, value: Any) -> Self:
+        self.ext[item] = value
         return self
