@@ -15,7 +15,7 @@ import threading
 import urllib.parse
 import urllib3
 import urllib3.exceptions
-from typing import List, Optional, Union
+from typing import List, Optional, Union, Self
 from urllib3._collections import HTTPHeaderDict
 
 from common import const, console, file, net_config, path, tool
@@ -667,3 +667,9 @@ class Download:
                         self.code = const.DownloadCode.RETRY_MAX_COUNT
                         return False
         return True
+
+    def update(self, other_download_return: Self) -> Self:
+        if other_download_return._file_url == self._file_url:
+            self.status = other_download_return.status
+            self.code = other_download_return.code
+        return self

@@ -617,7 +617,7 @@ class CrawlerThread(crawler.CrawlerThread):
         if download_return.code == 404:
             photo_url = photo_url + "@100000w.jpg"
             self.main_thread_check()
-            download_return = net.Download(photo_url, photo_path)
+            download_return.update(net.Download(photo_url, photo_path))
             if download_return:
                 self.info("%s 下载成功" % photo_description)
                 return False
