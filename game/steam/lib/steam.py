@@ -270,7 +270,9 @@ def get_market_game_trade_card_price(game_id):
         raise crawler.CrawlerException(crawler.request_failre(market_search_response.status))
     market_item_list = {}
     for item_info in crawler.get_json_value(market_search_response.json_data, "results", type_check=list):
-        market_item_list[crawler.get_json_value(item_info, "hash_name", type_check=str).split("-", 1)[1]] = crawler.get_json_value(item_info, "sell_price_text", type_check=str).replace("¥", "").strip()
+        item_name = crawler.get_json_value(item_info, "hash_name", type_check=str).split("-", 1)[1]
+        prince = crawler.get_json_value(item_info, "sell_price_text", type_check=str).replace("¥", "").strip()
+        market_item_list[item_name] = prince
     return market_item_list
 
 

@@ -9,7 +9,6 @@ import codecs
 import configparser
 import os
 import platform
-import re
 import sys
 import threading
 import time
