@@ -591,8 +591,8 @@ class CrawlerThread(crawler.CrawlerThread):
         if download_return.code == 403 and video_url.find("_r1_720") != -1:
             video_url = video_url.replace("_r1_720", "_r1")
             self.main_thread_check()
-            download_return = net.Download(video_url, video_path, auto_multipart_download=True)
-            if download_return.status == const.DownloadStatus.SUCCEED:
+            download_return.update(net.Download(video_url, video_path, auto_multipart_download=True))
+            if download_return:
                 self.info("%s 下载成功" % video_description)
                 return False
         if IS_STEP_ERROR_403_AND_404 and download_return.code in [403, 404]:

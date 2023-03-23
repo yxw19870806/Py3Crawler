@@ -160,8 +160,8 @@ class CrawlerThread(crawler.CrawlerThread):
         while download_return.code == const.ResponseCode.TOO_MANY_REDIRECTS and (retry_count := 1) <= 4:
             time.sleep(3)
             self.main_thread_check()
-            download_return = net.Download(audio_url, audio_path)
-            if download_return.status == const.DownloadStatus.SUCCEED:
+            download_return.update(net.Download(audio_url, audio_path))
+            if download_return:
                 self.info("%s 下载成功" % audio_description)
                 return False
             else:
