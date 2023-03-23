@@ -242,6 +242,8 @@ class Crawler(object):
         self.total_video_count = 0
         self.total_audio_count = 0
 
+        self.download_thead_list = []  # 下载线程
+
         console.log("初始化完成")
 
     def main(self) -> None:
@@ -401,6 +403,29 @@ class Crawler(object):
                 if self.exit_after_download_failure:
                     tool.process_exit(const.ExitCode.NORMAL)
         return download_return
+
+    def multi_thread_download(self, thread_class: Type["DownloadThread"], file_url: str, file_path: str, file_description: str, header_list: Optional[dict] = None):
+        """
+        多线程下载
+        """
+        thread = thread_class(self, file_url, file_path, file_description)
+        if header_list is not None:
+            thread.set_download_header(header_list)
+        thread.start()
+        self.download_thead_list.append(thread)
+
+    def wait_multi_thead_complete(self):
+        """
+        等待通过multi_thread_download()方法提交的多线程下载全部完成
+        """
+        is_error = False
+        for thread in self.download_thead_list:
+            thread.join()
+            if self.is_running() and not thread.get_result():
+                is_error = True
+        if is_error and self.exit_after_download_failure:
+            tool.process_exit(const.ExitCode.NORMAL)
+        self.download_thead_list = []
 
 
 class CrawlerThread(threading.Thread):
