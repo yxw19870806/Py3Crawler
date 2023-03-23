@@ -419,13 +419,13 @@ class Crawler(object):
         等待通过multi_thread_download()方法提交的多线程下载全部完成
         """
         is_error = False
-        for thread in self.download_thead_list:
+        while len(self.download_thead_list) > 0:
+            thread = self.download_thead_list.pop()
             thread.join()
             if self.is_running() and not thread.get_result():
                 is_error = True
         if is_error and self.exit_after_download_failure:
             tool.process_exit(const.ExitCode.NORMAL)
-        self.download_thead_list = []
 
 
 class CrawlerThread(threading.Thread):
