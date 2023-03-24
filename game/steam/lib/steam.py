@@ -396,21 +396,19 @@ def get_account_badges(account_id):
 # 获取指定账号的全部游戏id列表
 def get_account_owned_app_list(user_id, is_played=False):
     game_index_url = "https://steamcommunity.com/profiles/%s/games/?tab=all" % user_id
-    game_index_response = net.request(game_index_url, method="GET", read_timeout=120)
+    game_index_response = net.request(game_index_url, method="GET", cookies_list=COOKIE_INFO, read_timeout=120)
     if game_index_response.status != const.ResponseCode.SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(game_index_response.status))
     game_index_response_content = game_index_response.data.decode(errors="ignore")
     # 如果是隐私账号，会302到主页的，这里只判断页面文字就不判断状态了
-    if pq(game_index_response_content).find("div.profile_private_info").length == 1:
-        raise crawler.CrawlerException("账号隐私设置中未公开游戏详情")
-    owned_all_game_data = tool.find_sub_string(game_index_response_content, "var rgGames = ", "\n")
-    if not owned_all_game_data:
-        raise crawler.CrawlerException("页面截取游戏列表失败\n" + game_index_response_content)
-    owned_all_game_json_data = tool.json_decode(owned_all_game_data.strip().rstrip(";"))
+    games_list_string = pq(game_index_response_content).find("#gameslist_config").attr("data-profile-gameslist")
+    if not games_list_string:
+        raise crawler.CrawlerException("页面截取全部游戏信息失败")
+    owned_all_game_json_data = tool.json_decode(games_list_string)
     if owned_all_game_json_data is None:
-        raise crawler.CrawlerException("游戏列表加载失败\n" + owned_all_game_data)
+        raise crawler.CrawlerException("全部游戏信息加载失败\n%s" % games_list_string)
     app_id_list = []
-    for game_data in owned_all_game_json_data:
+    for game_data in crawler.get_json_value(owned_all_game_json_data, "rgGames", type_check=list):
         if "appid" not in game_data:
             raise crawler.CrawlerException("游戏信息%s中'appid'字段不存在" % game_data)
         # 只需要玩过的游戏
