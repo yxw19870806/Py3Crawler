@@ -10,7 +10,7 @@ import os
 import re
 from common import *
 
-USER_AGENT = net._random_user_agent()
+USER_AGENT = net.random_user_agent()
 COOKIE_INFO = {}
 
 

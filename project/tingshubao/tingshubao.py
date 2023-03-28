@@ -12,7 +12,7 @@ import time
 from pyquery import PyQuery as pq
 from common import *
 
-USER_AGENT = net._random_user_agent("chrome")
+USER_AGENT = net.random_user_agent("chrome")
 
 
 # 获取有声书首页

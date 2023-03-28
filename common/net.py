@@ -197,7 +197,7 @@ def request(url, method: str = "GET", fields: Optional[dict] = None, binary_data
 
     # 设置User-Agent
     if "User-Agent" not in header_list:
-        header_list["User-Agent"] = _random_user_agent()
+        header_list["User-Agent"] = random_user_agent()
 
     # 设置一个随机IP
     if is_random_ip:
@@ -331,7 +331,7 @@ def _qps(url: str) -> bool:
     return False
 
 
-def _random_user_agent(browser_type: Optional[str] = None) -> str:
+def random_user_agent(browser_type: Optional[str] = None) -> str:
     """
     随机获取一个user agent
         Common firefox user agent   "Mozilla/5.0 (Windows NT 6.1; WOW64; rv:46.0) Gecko/20100101 Firefox/46.0"
