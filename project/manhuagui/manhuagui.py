@@ -103,7 +103,7 @@ def get_chapter_page(comic_id, chapter_id):
     js_code += "eval" + script_code
     try:
         photo_list = execjs.compile(js_code).call("getPhotoLists")
-    except execjs._exceptions.ProgramError:
+    except execjs.ProgramError:
         raise crawler.CrawlerException("脚本执行失败\n" + js_code)
     if len(photo_list) == 0:
         raise crawler.CrawlerException("脚本执行失败\n" + js_code)

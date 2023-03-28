@@ -66,7 +66,6 @@ class Crawler(object):
         sys_not_check_save_data = const.SysConfigKey.NOT_CHECK_SAVE_DATA in sys_config and sys_config[const.SysConfigKey.NOT_CHECK_SAVE_DATA]
         sys_not_download = const.SysConfigKey.NOT_DOWNLOAD in sys_config and sys_config[const.SysConfigKey.NOT_DOWNLOAD]
 
-        # exe程序
         if IS_EXECUTABLE:
             application_path = os.path.dirname(sys.executable)
             os.chdir(application_path)

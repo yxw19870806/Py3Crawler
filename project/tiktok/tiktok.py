@@ -13,7 +13,7 @@ from common import *
 from common import browser
 
 EACH_PAGE_VIDEO_COUNT = 48
-USER_AGENT = net._random_user_agent()
+USER_AGENT = net.random_user_agent()
 
 
 # 获取账号首页

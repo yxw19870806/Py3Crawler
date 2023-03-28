@@ -227,7 +227,7 @@ def get_audio_info_page(audio_id):
     """
     try:
         audio_url = execjs.compile(js_code).call("encrypt_url", decrypt_url)
-    except execjs._exceptions.ProgramError:
+    except execjs.ProgramError:
         raise crawler.CrawlerException("url%s解密失败" % decrypt_url)
     result["audio_url"] = audio_url
 
