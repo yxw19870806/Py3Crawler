@@ -406,6 +406,7 @@ class Crawler(object):
         """
         多线程下载
         """
+        self.running_check()
         thread = thread_class(self, file_url, file_path, file_description)
         if header_list is not None:
             thread.set_download_header(header_list)
