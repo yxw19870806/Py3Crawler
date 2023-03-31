@@ -12,7 +12,7 @@ import time
 import win32api
 import win32con
 import win32gui
-from typing import Tuple, Optional
+from typing import Optional
 from common import keyboard_event
 
 CLICK_TYPE_LEFT_BUTTON = "left"
@@ -24,7 +24,7 @@ class WindowsApplication:
     thread_event = threading.Event()
     thread_event.set()
 
-    def __init__(self, window_title: str, default_windows_size: Tuple[int, int] = None):
+    def __init__(self, window_title: str, default_windows_size: Optional[tuple[int, int]] = None) -> None:
         self.window_title = window_title
         # 设置为默认窗口大小（避免坐标产生偏移）
         if default_windows_size:
@@ -52,14 +52,14 @@ class WindowsApplication:
     def window_handle(self):
         return win32gui.FindWindow(None, self.window_title)
 
-    def get_window_size(self) -> Tuple[int, int]:
+    def get_window_size(self) -> tuple[int, int]:
         """
         获取窗口大小
         """
         win_rect = win32gui.GetWindowRect(self.window_handle)
         return win_rect[2] - win_rect[0], win_rect[3] - win_rect[1]  # width, height
 
-    def get_client_size(self) -> Tuple[int, int]:
+    def get_client_size(self) -> tuple[int, int]:
         """
         获取显示大小（去除windows标题栏和边框的尺寸）
         """
@@ -131,7 +131,7 @@ class WindowsApplication:
         # key up
         win32api.PostMessage(self.window_handle, win32con.WM_KEYUP, keyboard, 0)
 
-    def get_color(self, pos_x: int, pos_y: int) -> Tuple[Optional[int], Optional[int], Optional[int]]:
+    def get_color(self, pos_x: int, pos_y: int) -> tuple[Optional[int], Optional[int], Optional[int]]:
         """
         获取窗口某个坐标的颜色（窗口必须在最顶端）
         """

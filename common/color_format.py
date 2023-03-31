@@ -59,7 +59,7 @@ class ForegroundColor(Enum):
 
 
 class ColorFormat:
-    def __init__(self, font_style: FontStyle = FontStyle.NORMAL, foreground_color: Optional[ForegroundColor] = None, backgoud_color: Optional[BackgroudColor] = None):
+    def __init__(self, font_style: FontStyle = FontStyle.NORMAL, foreground_color: Optional[ForegroundColor] = None, backgoud_color: Optional[BackgroudColor] = None) -> None:
         self.font_style = font_style
         self.foreground_color = foreground_color
         self.backgoud_color = backgoud_color
@@ -80,7 +80,7 @@ class ColorFormat:
         return color(message, font_style=self.font_style, foreground_color=self.foreground_color, backgoud_color=self.backgoud_color)
 
 
-def color(message: str, font_style: FontStyle = FontStyle.NORMAL, foreground_color: Optional[ForegroundColor] = None, backgoud_color: Optional[BackgroudColor] = None):
+def color(message: str, font_style: FontStyle = FontStyle.NORMAL, foreground_color: Optional[ForegroundColor] = None, backgoud_color: Optional[BackgroudColor] = None) -> str:
     return "\033[%s;%s%sm%s\033[0m" % (font_style.value,
                                        "" if foreground_color is None else (";" + str(foreground_color.value)),
                                        "" if backgoud_color is None else (";" + str(backgoud_color.value) + "m"),

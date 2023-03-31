@@ -22,7 +22,7 @@ class Crypto:
     """
     SALT = "#@Py3Crawl@#"
 
-    def __init__(self):
+    def __init__(self) -> None:
         # MAC + 固定字符串 + 计算机名，生成基本上唯一的加密私钥
         private_key = hex(uuid.getnode()) + self.SALT + socket.gethostname()
 

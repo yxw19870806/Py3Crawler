@@ -13,7 +13,7 @@ import sys
 import threading
 import time
 import traceback
-from typing import Any, Callable, Dict, Optional, Union, Type, Self
+from typing import Any, Callable, Optional, Union, Type, Self
 from common import console, const, browser, file, log, net, path, port_listener_event, tool
 from common import IS_EXECUTABLE, PROJECT_ROOT_PATH, PROJECT_CONFIG_PATH
 
@@ -28,7 +28,7 @@ class Crawler(object):
     crawler_thread: Optional[Type["CrawlerThread"]] = None  # 下载子线程
 
     # 程序全局变量的设置
-    def __init__(self, sys_config: Dict[const.SysConfigKey, Any], **kwargs):
+    def __init__(self, sys_config: dict[const.SysConfigKey, Any], **kwargs) -> None:
         """
         :Args:
         - sys_config
@@ -433,7 +433,7 @@ class CrawlerThread(threading.Thread):
     display_name: Optional[str] = None
     index_key: str = ""
 
-    def __init__(self, main_thread: Crawler, single_save_data: list):
+    def __init__(self, main_thread: Crawler, single_save_data: list) -> None:
         """
         多线程下载
 
@@ -620,7 +620,7 @@ class CrawlerThread(threading.Thread):
 
 
 class DownloadThread(CrawlerThread):
-    def __init__(self, main_thread: Crawler, file_url: str, file_path: str, file_description: str):
+    def __init__(self, main_thread: Crawler, file_url: str, file_path: str, file_description: str) -> None:
         CrawlerThread.__init__(self, main_thread, [])
         self.file_url: str = file_url
         self.file_path: str = file_path
@@ -641,7 +641,7 @@ class DownloadThread(CrawlerThread):
 
 
 class CrawlerException(SystemExit):
-    def __init__(self, msg: str = "", is_print: bool = True):
+    def __init__(self, msg: str = "", is_print: bool = True) -> None:
         SystemExit.__init__(self, 1)
         if is_print:
             console.log(msg)

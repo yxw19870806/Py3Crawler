@@ -15,7 +15,7 @@ import threading
 import urllib.parse
 import urllib3
 import urllib3.exceptions
-from typing import List, Optional, Union, Self, Any
+from typing import Optional, Union, Self, Any
 from urllib3._collections import HTTPHeaderDict
 
 from common import const, console, file, net_config, path, tool
@@ -46,7 +46,7 @@ MIME_DICTIONARY: Optional[dict[str, str]] = tool.json_decode(file.read_file(os.p
 
 
 class ErrorResponse(object):
-    def __init__(self, status=-1):
+    def __init__(self, status=-1) -> None:
         """
         request()方法异常对象
         """
@@ -365,7 +365,7 @@ def _random_ip_address() -> str:
     return f"{random.randint(1, 254)}.{random.randint(0, 255)}.{random.randint(0, 255)}.{random.randint(0, 255)}"
 
 
-def download_from_list(file_url_list: List[str], file_path: str, replace_if_exist: bool = False, **kwargs) -> bool:
+def download_from_list(file_url_list: list[str], file_path: str, replace_if_exist: bool = False, **kwargs) -> bool:
     """
     Visit web and save to local(multiple remote resource, single local file)
 
@@ -429,7 +429,7 @@ def resume_request() -> None:
 
 class Download:
     def __init__(self, file_url: str, file_path: str, recheck_file_extension: bool = False, auto_multipart_download: bool = False,
-                 replace_if_exist: Optional[bool] = None, **kwargs):
+                 replace_if_exist: Optional[bool] = None, **kwargs) -> None:
         """
         下载远程文件到本地
 

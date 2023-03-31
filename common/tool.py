@@ -13,11 +13,11 @@ import re
 import string
 import sys
 import time
-from typing import Optional, Union, List, NoReturn, Any
+from typing import Any, NoReturn, Optional, Union
 from common import const
 
 
-def find_sub_string(haystack, start_string: Optional[str] = None, end_string: Optional[str] = None, include_string: const.IncludeStringMode = const.IncludeStringMode.NONE) -> str:
+def find_sub_string(haystack: str, start_string: Optional[str] = None, end_string: Optional[str] = None, include_string: const.IncludeStringMode = const.IncludeStringMode.NONE) -> str:
     """
     根据开始与结束的字符串，截取字符串
 
@@ -65,7 +65,7 @@ def find_sub_string(haystack, start_string: Optional[str] = None, end_string: Op
     return find_string
 
 
-def is_integer(number) -> bool:
+def is_integer(number: Any) -> bool:
     """
     判断是不是整型，或者纯数字的字符串
     """
@@ -99,7 +99,7 @@ def json_encode(json_obj: Union[list, dict], default_value=None) -> str:
     return default_value
 
 
-def dyadic_list_to_string(source_lists: List[list], first_sign: str = "\n", second_sign: str = "\t") -> str:
+def dyadic_list_to_string(source_lists: list[list], first_sign: str = "\n", second_sign: str = "\t") -> str:
     """
     按照指定连接符，合并二维列表生成字符串
 
@@ -114,7 +114,7 @@ def dyadic_list_to_string(source_lists: List[list], first_sign: str = "\n", seco
     return first_sign.join(temp_list)
 
 
-def string_to_dyadic_list(source_string: str, first_split: str = "\n", second_split: str = "\t") -> List[list]:
+def string_to_dyadic_list(source_string: str, first_split: str = "\n", second_split: str = "\t") -> list[list]:
     """
     按照指定分割符，分割字符串生成二维列表
 
