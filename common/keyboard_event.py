@@ -7,6 +7,7 @@ email: hikaru870806@hotmail.com
 """
 import pythoncom
 import threading
+from typing import Final
 from common import console
 
 try:
@@ -18,15 +19,17 @@ except ModuleNotFoundError:
         pyHook = None
         pass
 
-SUPPORT_KEYBOARD_LIST = ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z",
-                         "0", "1", "2", "3", "4", "5", "6", "7", "8", "9",
-                         "F1", "F2", "F3", "F4", "F5", "F6", "F7", "F8", "F9", "F10", "F11", "F12",
-                         "NUMPAD0", "NUMPAD1", "NUMPAD2", "NUMPAD3", "NUMPAD4", "NUMPAD5", "NUMPAD6", "NUMPAD7", "NUMPAD8", "NUMPAD9",
-                         "INSERT", "HOME", "PRIOR", "DELETE", "END", "NEXT",
-                         "OEM_1", "OEM_2", "OEM_3", "OEM_4", "OEM_5", "OEM_6", "OEM_7",
-                         "OEM_COMMA", "OEM_PERIOD", "ADD", "SUBTRACT", "MULTIPLY", "DIVIDE", "DECIMAL"]
+SUPPORT_KEYBOARD_LIST: Final[list[str]] = [
+    "A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z",
+    "0", "1", "2", "3", "4", "5", "6", "7", "8", "9",
+    "F1", "F2", "F3", "F4", "F5", "F6", "F7", "F8", "F9", "F10", "F11", "F12",
+    "NUMPAD0", "NUMPAD1", "NUMPAD2", "NUMPAD3", "NUMPAD4", "NUMPAD5", "NUMPAD6", "NUMPAD7", "NUMPAD8", "NUMPAD9",
+    "INSERT", "HOME", "PRIOR", "DELETE", "END", "NEXT",
+    "OEM_1", "OEM_2", "OEM_3", "OEM_4", "OEM_5", "OEM_6", "OEM_7",
+    "OEM_COMMA", "OEM_PERIOD", "ADD", "SUBTRACT", "MULTIPLY", "DIVIDE", "DECIMAL"
+]
 
-SUPPORT_SUB_KEYBOARD_LIST = {
+SUPPORT_SUB_KEYBOARD_LIST: Final[dict[str, str]] = {
     "CTRL": "CONTROL",
     "SHIFT": "SHIFT",
     "ALT": "MENU",
@@ -34,7 +37,7 @@ SUPPORT_SUB_KEYBOARD_LIST = {
 
 
 class KeyboardEvent(threading.Thread):
-    key_down_list = {
+    key_down_list: Final[dict[str, bool]] = {
         "LSHIFT": False,
         "RSHIFT": False,
         "LCONTROL": False,
@@ -43,9 +46,9 @@ class KeyboardEvent(threading.Thread):
         "RMENU": False,
     }
     # 按键名 => 回调方法名
-    event_key_list = {}
+    event_key_list: dict[str, callable] = {}
 
-    def __init__(self, event_list: dict):
+    def __init__(self, event_list: dict) -> None:
         """
         键盘监听事件
 

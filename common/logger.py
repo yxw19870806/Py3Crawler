@@ -44,7 +44,7 @@ class ColorFormatter(logging.Formatter):
         logging.DEBUG: color_format.ColorFormat(foreground_color=color_format.ForegroundColor.BLUE),
     }
 
-    def __init__(self):
+    def __init__(self) -> None:
         logging.Formatter.__init__(self, fmt="[%(asctime)s]: %(message)s", datefmt="%Y-%m-%d %H:%M:%S")
 
     def format(self, record: LogRecord) -> str:
@@ -70,7 +70,7 @@ class FilterConsole(logging.Filter):
 
 
 class FilterFunc(logging.Filter):
-    def __init__(self, log_level):
+    def __init__(self, log_level: int) -> None:
         self.log_level = log_level
         super().__init__()
 

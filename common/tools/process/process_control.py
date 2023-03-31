@@ -10,7 +10,7 @@ from common import crawler, const, port_listener_event, PROJECT_CONFIG_PATH
 
 
 class ProcessControl:
-    def __init__(self):
+    def __init__(self) -> None:
         config = crawler.read_config(PROJECT_CONFIG_PATH)
         server_port = crawler.analysis_config(config, "LISTENER_PORT", 0, const.ConfigAnalysisMode.INTEGER)
         self.conn = Client((port_listener_event.SERVER_IP, server_port))

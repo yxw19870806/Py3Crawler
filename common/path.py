@@ -9,7 +9,6 @@ import os
 import platform
 import shutil
 import time
-from typing import List
 from common import const
 
 
@@ -94,7 +93,7 @@ def delete_null_dir(dir_path: str) -> None:
         os.rmdir(dir_path)
 
 
-def get_dir_files_name(dir_path: str, order: const.OrderType = const.OrderType.DEFAULT, recursive: bool = False, full_path: bool = False) -> List[str]:
+def get_dir_files_name(dir_path: str, order: const.OrderType = const.OrderType.DEFAULT, recursive: bool = False, full_path: bool = False) -> list[str]:
     """
     获取目录下的所有文件名
 
