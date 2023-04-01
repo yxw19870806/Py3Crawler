@@ -422,8 +422,6 @@ class Steam(crawler.Crawler):
     account_id = None
 
     def __init__(self, need_login=True, **kwargs):
-        global COOKIE_INFO
-
         # 设置APP目录
         crawler.PROJECT_APP_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 
@@ -449,10 +447,19 @@ class Steam(crawler.Crawler):
         # 个人账号应用缓存
         self.apps_cache_file_path = os.path.join(self.cache_data_path, "%s_apps.txt" % self.account_id)
 
-        if need_login:
+        self.need_login = need_login
+
+    def init(self):
+        global COOKIE_INFO
+
+        if self.need_login:
             # 检测是否登录
             login_url = "https://steamcommunity.com/actions/GetNotificationCounts"
-            login_response = net.request(login_url, method="GET", cookies_list=self.cookie_value, is_auto_redirect=False)
+            try:
+                login_response = net.request(login_url, method="GET", cookies_list=self.cookie_value, is_auto_redirect=False)
+            except KeyboardInterrupt:
+                tool.process_exit()
+                return
             if login_response.status != const.ResponseCode.SUCCEED:
                 console.log("登录返回code%s不正确" % login_response.status)
                 tool.process_exit()
