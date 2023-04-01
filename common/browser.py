@@ -28,7 +28,7 @@ CHROME_WEBDRIVER_PATH = os.path.abspath(os.path.join(PROJECT_LIB_PATH, "chromedr
 
 
 class Chrome:
-    def __init__(self, url: str, **kwargs):
+    def __init__(self, url: str, **kwargs) -> None:
         """
         返回selenium.webdriver.Chrome()方法创建的chrome驱动对象
 

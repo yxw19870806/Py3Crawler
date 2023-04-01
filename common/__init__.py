@@ -23,10 +23,8 @@ from common.logger import logger as log
 if sys.version_info < (3,):
     raise Exception("仅支持python3.X，请访问官网 https://www.python.org/downloads/ 安装最新的python3")
 
-if getattr(sys, "frozen", False):
-    IS_EXECUTABLE = True
-else:
-    IS_EXECUTABLE = False
+# 是否是exe程序
+IS_EXECUTABLE = getattr(sys, "frozen", False)
 
 # lib库目录
 PROJECT_LIB_PATH = os.path.abspath(os.path.dirname(__file__))

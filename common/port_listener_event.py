@@ -7,8 +7,9 @@ email: hikaru870806@hotmail.com
 """
 import threading
 from multiprocessing.connection import Listener
+from typing import Union, Optional, Final
 
-SERVER_IP = "localhost"  # 监听服务器IP
+SERVER_IP: Final[str] = "localhost"  # 监听服务器IP
 
 
 class PortListenerEvent(threading.Thread):
@@ -16,14 +17,14 @@ class PortListenerEvent(threading.Thread):
     程序运行状态控制
     """
 
-    def __init__(self, port, event_list=None):
+    def __init__(self, port: Union[str, int], event_list: Optional[callable] = None) -> None:
         threading.Thread.__init__(self)
         self.ip = SERVER_IP
         self.port = int(port)
         self.event_list = event_list
         self.listener = None
 
-    def __del__(self):
+    def __del__(self) -> None:
         if isinstance(self.listener, Listener):
             self.listener.close()
 

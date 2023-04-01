@@ -7,7 +7,7 @@ email: hikaru870806@hotmail.com
 """
 import os
 import re
-from typing import Union
+from typing import Union, Final
 
 from common import const, console, file, tool, PROJECT_LIB_PATH
 
@@ -57,15 +57,15 @@ class NetConfig:
     GLOBAL_QUERY_PER_MINUTER: int = 1000  # 全局每分钟请求限制
     SINGLE_HOST_QUERY_PER_MINUTER: int = 1000  # 单域名每分钟请求限制
 
-    CONFIG_KEYS = {
+    CONFIG_KEYS: Final[list[str]] = [
         "HTTP_CONNECTION_TIMEOUT", "HTTP_READ_TIMEOUT", "HTTP_REQUEST_RETRY_COUNT",
         "DOWNLOAD_CONNECTION_TIMEOUT", "DOWNLOAD_READ_TIMEOUT", "DOWNLOAD_RETRY_COUNT",
         "DOWNLOAD_MULTIPART_MIN_SIZE", "DOWNLOAD_MULTIPART_BLOCK_SIZE", "TOO_MANY_REQUESTS_WAIT_TIME",
         "SERVICE_INTERNAL_ERROR_WAIT_TIME", "HTTP_REQUEST_RETRY_WAIT_TIME", "GLOBAL_QUERY_PER_MINUTER",
         "SINGLE_HOST_QUERY_PER_MINUTER",
-    }
+    ]
 
-    def __init__(self):
+    def __init__(self) -> None:
         config = tool.json_decode(file.read_file(os.path.join(PROJECT_LIB_PATH, "net_config.json")), {})
         for config_key in self.CONFIG_KEYS:
             default_value = self.__getattribute__(config_key)
