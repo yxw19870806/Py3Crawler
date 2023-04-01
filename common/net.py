@@ -670,9 +670,10 @@ class Download:
         return True
 
     def update(self, other_download_return: Self) -> Self:
-        if other_download_return._file_url == self._file_url:
+        if other_download_return._file_path == self._file_path:
             self.status = other_download_return.status
             self.code = other_download_return.code
+            self._file_url = other_download_return._file_url
         return self
 
     def __getitem__(self, item: str) -> Any:
