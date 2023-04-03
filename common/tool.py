@@ -77,6 +77,13 @@ def is_integer(number: Any) -> bool:
         return not re.compile("^[-+]?[0-9]+$").match(str(number)) is None
 
 
+def is_date(date_string: str):
+    """
+    判断字符串是否是有效的日期，格式：YYYY-mm-dd
+    """
+    return re.match(r"\d{4}-\d{2}-\d{2}", date_string) is not None
+
+
 def json_decode(json_string: str, default_value=None) -> Any:
     """
     将json字符串解码为json对象
@@ -209,6 +216,10 @@ def get_time(string_format: str = "%m-%d %H:%M:%S", timestamp: Union[float, int]
     获取当前时间
     """
     return time.strftime(string_format, time.localtime(timestamp))
+
+
+def change_date_format(date_string: str, old_format: str, new_format: str = "%Y-%m-%d") -> str:
+    return time.strftime(new_format, time.strptime(date_string, old_format))
 
 
 def check_dict_sub_key(needles: Union[str, tuple], haystack: dict) -> bool:
