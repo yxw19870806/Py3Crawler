@@ -26,7 +26,7 @@ class BiliBiliDownload(bilibili.BiliBili):
 
     @staticmethod
     def get_video_id_from_console():
-        video_url = input(tool.get_time() + " 请输入bilibili视频地址：")
+        video_url = input(tool.convert_timestamp_to_formatted_time() + " 请输入bilibili视频地址：")
         lower_video_url = video_url.lower()
         video_id = None
         if lower_video_url.find("bilibili.com/video/av") > 0:

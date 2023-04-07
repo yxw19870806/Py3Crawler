@@ -481,9 +481,9 @@ class Steam(crawler.Crawler):
     def get_account_id_from_file(self, account_id_file_path):
         account_id = file.read_file(account_id_file_path)
         while not account_id:
-            console_account_id = input(tool.get_time() + " 请输入STEAM账号ID: ")
+            console_account_id = input(tool.convert_timestamp_to_formatted_time() + " 请输入STEAM账号ID: ")
             while True:
-                input_str = input(tool.get_time() + " 是否使用输入的STEAM账号ID '%s' 是Y(es) / 否N(o) ?" % console_account_id)
+                input_str = input(tool.convert_timestamp_to_formatted_time() + " 是否使用输入的STEAM账号ID '%s' 是Y(es) / 否N(o) ?" % console_account_id)
                 input_str = input_str.lower()
                 if input_str in ["y", "yes"]:
                     account_id = console_account_id

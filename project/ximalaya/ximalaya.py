@@ -178,7 +178,7 @@ def get_audio_info_page(audio_id):
     if not COOKIE_INFO:
         raise crawler.CrawlerException("非免费音频")
 
-    day = tool.get_time("%Y-%m-%d")
+    day = tool.convert_timestamp_to_formatted_time("%Y-%m-%d")
     if day not in DAILY_VIP_DOWNLOAD_COUNT:
         DAILY_VIP_DOWNLOAD_COUNT[day] = 0
     if DAILY_VIP_DOWNLOAD_COUNT[day] >= MAX_DAILY_VIP_DOWNLOAD_COUNT:
@@ -268,7 +268,7 @@ class XiMaLaYa(crawler.Crawler):
             return
 
         while True:
-            input_str = input(tool.get_time() + " 没有检测到账号登录状态，可能无法解析需要登录才能查看的音频，继续程序(C)ontinue？或者退出程序(E)xit？:")
+            input_str = input(tool.convert_timestamp_to_formatted_time() + " 没有检测到账号登录状态，可能无法解析需要登录才能查看的音频，继续程序(C)ontinue？或者退出程序(E)xit？:")
             input_str = input_str.lower()
             if input_str in ["e", "exit"]:
                 tool.process_exit()

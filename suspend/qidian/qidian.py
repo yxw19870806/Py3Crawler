@@ -54,8 +54,7 @@ def get_book_index(book_id):
         # 获取章节发布时间
         result_chapter_info["chapter_time_string"] = tool.find_sub_string(chapter_info_selector.find("a").attr("alt"), "首发时间：", " 章节字数")
         try:
-            result_chapter_info["chapter_time"] = int(time.mktime(time.strptime(result_chapter_info["chapter_time_string"], "%Y-%m-%d %H:%M:%S")))
-            result_chapter_info["chapter_time_string"] = result_chapter_info["chapter_time_string"].replace(":", "_")
+            result_chapter_info["chapter_time"] = tool.convert_formatted_time_to_timestamp(result_chapter_info["chapter_time_string"], "%Y-%m-%d %H:%M:%S")
         except ValueError:
             raise crawler.CrawlerException("日志时间%s的格式不正确" % result_chapter_info["chapter_time_string"])
         result["chapter_info_list"].insert(0, result_chapter_info)
@@ -169,7 +168,7 @@ class CrawlerThread(crawler.CrawlerThread):
             self.error("章节《%s》 %s需要vip才能解锁" % (chapter_info["chapter_title"], chapter_info["chapter_url"]))
             raise
 
-        content_file_path = os.path.join(self.main_thread.content_download_path, self.display_name, "%s %s.txt" % (chapter_info["chapter_time_string"], chapter_info["chapter_title"]))
+        content_file_path = os.path.join(self.main_thread.content_download_path, self.display_name, "%s %s.txt" % (chapter_info["chapter_time_string"].replace(":", "_"), path.filter_text(chapter_info["chapter_title"])))
         file.write_file(chapter_response["content"], content_file_path)
         self.info("章节《%s》下载成功" % chapter_info["chapter_title"])
 

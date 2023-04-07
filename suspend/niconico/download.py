@@ -25,7 +25,7 @@ class NicoNicoDownload(niconico.NicoNico):
 
     @staticmethod
     def get_video_id_from_console():
-        video_url = input(tool.get_time() + " 请输入Nico Nico视频地址：").lower()
+        video_url = input(tool.convert_timestamp_to_formatted_time() + " 请输入Nico Nico视频地址：").lower()
         video_id = None
         # http://www.nicovideo.jp/watch/sm20429274?ref=search_key_video&ss_pos=3&ss_id=361e7a4b-278e-40c1-acbb-a0c55c84005d
         if video_url.find("//www.nicovideo.jp/watch/sm") > 0:

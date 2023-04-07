@@ -62,7 +62,7 @@ class Template(crawler.Crawler):
             return
 
         while True:
-            input_str = input(tool.get_time() + " 没有检测到账号登录状态，可能无法解析只对会员开放的日志，继续程序(C)ontinue？或者退出程序(E)xit？:")
+            input_str = input(tool.convert_timestamp_to_formatted_time() + " 没有检测到账号登录状态，可能无法解析只对会员开放的日志，继续程序(C)ontinue？或者退出程序(E)xit？:")
             input_str = input_str.lower()
             if input_str in ["e", "exit"]:
                 tool.process_exit()

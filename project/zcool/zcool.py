@@ -66,10 +66,9 @@ def get_one_page_album(account_name, page_count):
         if not album_time_string:
             raise crawler.CrawlerException("作品日期信息%s截取作品发布日期失败" % album_time_text)
         try:
-            album_time = time.strptime(album_time_string, "%Y-%m-%d %H:%M:%S")
+            result_album_info["album_time"] = tool.convert_formatted_time_to_timestamp(album_time_string, "%Y-%m-%d %H:%M:%S")
         except ValueError:
             raise crawler.CrawlerException("作品发布日期%s的格式不正确" % album_time_string)
-        result_album_info["album_time"] = int(time.mktime(album_time))
         result["album_info_list"].append(result_album_info)
     result["is_over"] = album_list_selector.length == 0
     return result

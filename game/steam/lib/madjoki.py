@@ -46,7 +46,7 @@ def get_banned_game_list():
             result_game_info["game_id"] = game_id
             # 获取游戏下线时间
             game_banned_time_text = crawler.get_json_value(game_info, "BannedTime", type_check=str)
-            game_banned_time = int(time.mktime(time.strptime(game_banned_time_text, "%Y-%m-%dT%H:%M:%S+00:00")))
+            game_banned_time = tool.convert_formatted_time_to_timestamp(game_banned_time_text, "%Y-%m-%dT%H:%M:%S+00:00")
             result_game_info["game_banned_time"] = game_banned_time
             result.append(result_game_info)
         # 获取总页数

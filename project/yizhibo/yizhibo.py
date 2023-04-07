@@ -53,10 +53,9 @@ def get_photo_header(photo_url):
     if not last_modified:
         raise crawler.CrawlerException("图片header%s中'Last-Modified'字段不存在" % photo_head_response.headers)
     try:
-        last_modified_time = time.strptime(last_modified, "%a, %d %b %Y %H:%M:%S %Z")
+        result["photo_time"] = tool.convert_formatted_time_to_timestamp(last_modified, "%a, %d %b %Y %H:%M:%S %Z")
     except ValueError:
         raise crawler.CrawlerException("图片上传时间%s的格式不正确" % last_modified)
-    result["photo_time"] = int(time.mktime(last_modified_time)) - time.timezone
     return result
 
 
