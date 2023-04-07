@@ -102,7 +102,7 @@ class CrawlerThread(crawler.CrawlerThread):
 
     # 获取所有可下载相册
     def get_crawl_list(self, account_id):
-        post_time = tool.get_time("%Y-%m-%d %H:%M:%S")
+        post_time = tool.convert_timestamp_to_formatted_time("%Y-%m-%d %H:%M:%S")
         album_info_list = []
         is_over = False
         # 获取全部还未下载过需要解析的相册

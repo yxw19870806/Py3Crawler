@@ -75,7 +75,7 @@ def get_one_page_video(account_id, page_count):
         result_video_info["video_id"] = crawler.get_json_value(video_info, "node", "xid", type_check=str)
         # 获取视频上传时间
         video_time = crawler.get_json_value(video_info, "node", "createdAt", type_check=str)
-        result_video_info["video_time"] = int(time.mktime(time.strptime(video_time, "%Y-%m-%dT%H:%M:%S+00:00")))
+        result_video_info["video_time"] = tool.convert_formatted_time_to_timestamp(video_time, "%Y-%m-%dT%H:%M:%S+00:00")
         # 获取视频标题
         result_video_info["video_title"] = crawler.get_json_value(video_info, "node", "title", type_check=str)
         result["video_info_list"].append(result_video_info)

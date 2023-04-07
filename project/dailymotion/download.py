@@ -26,7 +26,7 @@ class DailyMotionDownload(dailymotion.DailyMotion):
 
     @staticmethod
     def get_video_id_from_console():
-        video_url = input(tool.get_time() + " 请输入dailymotion视频地址：").lower()
+        video_url = input(tool.convert_timestamp_to_formatted_time() + " 请输入dailymotion视频地址：").lower()
         video_id = None
         # https://www.dailymotion.com/video/x6njw4l
         if video_url.find("//www.dailymotion.com/video/") > 0:

@@ -211,13 +211,20 @@ def shutdown(delay_time: int = 30) -> None:
         os.system("halt")
 
 
-def get_time(string_format: str = "%m-%d %H:%M:%S", timestamp: Optional[Union[float, int]] = None) -> str:
+def convert_timestamp_to_formatted_time(time_format: str = "%m-%d %H:%M:%S", timestamp: Optional[Union[float, int]] = None) -> str:
     """
-    获取当前时间
+    时间戳 转换成 格式化时间
     """
     if timestamp is None:
         timestamp = time.time()
-    return time.strftime(string_format, time.localtime(timestamp))
+    return time.strftime(time_format, time.localtime(timestamp))
+
+
+def convert_formatted_time_to_timestamp(time_string: str, time_format: str = "%Y-%m-%d %H:%M:%S") -> int:
+    """
+    格式化时间 转换成 时间戳
+    """
+    return int(time.mktime(time.strptime(time_string, time_format)))
 
 
 def change_date_format(date_string: str, old_format: str, new_format: str = "%Y-%m-%d") -> str:
