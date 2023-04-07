@@ -211,10 +211,12 @@ def shutdown(delay_time: int = 30) -> None:
         os.system("halt")
 
 
-def get_time(string_format: str = "%m-%d %H:%M:%S", timestamp: Union[float, int] = time.time()) -> str:
+def get_time(string_format: str = "%m-%d %H:%M:%S", timestamp: Optional[Union[float, int]] = None) -> str:
     """
     获取当前时间
     """
+    if timestamp is None:
+        timestamp = time.time()
     return time.strftime(string_format, time.localtime(timestamp))
 
 
