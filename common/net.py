@@ -365,21 +365,21 @@ def _random_ip_address() -> str:
     return f"{random.randint(1, 254)}.{random.randint(0, 255)}.{random.randint(0, 255)}.{random.randint(0, 255)}"
 
 
-def download_from_list(file_url_list: list[str], file_path: str, replace_if_exist: bool = False, **kwargs) -> bool:
+def download_from_list(file_url_list: list[str], file_path: str, **kwargs) -> bool:
     """
     Visit web and save to local(multiple remote resource, single local file)
 
     :Args:
     - file_url_list - the list of remote resource URL which you want to save
     - file_path - the local file path which you want to save remote resource
-    - replace_if_exist - not download if file is existed
 
     :Returns:
         - status - 0 download failure, 1 download successful
         - code - failure reason
     """
     # 同名文件已经存在，直接返回
-    if not replace_if_exist and os.path.exists(file_path) and os.path.getsize(file_path) > 0:
+    if not DOWNLOAD_REPLACE_IF_EXIST and os.path.exists(file_path) and os.path.getsize(file_path) > 0:
+        console.log("文件%s（%s）已存在，跳过" % (file_path, file_url_list))
         return True
 
     index = 1
@@ -392,7 +392,7 @@ def download_from_list(file_url_list: list[str], file_path: str, replace_if_exis
             break
         part_file_path_list.append(part_file_path)
         # 下载
-        part_download_return = Download(file_url, part_file_path, replace_if_exist=replace_if_exist, **kwargs)
+        part_download_return = Download(file_url, part_file_path, **kwargs)
         if part_download_return.status == const.DownloadStatus.FAILED:
             break
         index += 1
@@ -428,8 +428,7 @@ def resume_request() -> None:
 
 
 class Download:
-    def __init__(self, file_url: str, file_path: str, recheck_file_extension: bool = False, auto_multipart_download: bool = False,
-                 replace_if_exist: Optional[bool] = None, **kwargs) -> None:
+    def __init__(self, file_url: str, file_path: str, recheck_file_extension: bool = False, auto_multipart_download: bool = False, **kwargs) -> None:
         """
         下载远程文件到本地
 
@@ -438,7 +437,6 @@ class Download:
         - file_path - the local file path which you want to save remote resource
         - recheck_file_extension - is auto rename file according to "Content-Type" in response headers
         - auto_multipart_download - "HEAD" method request to check response status and file size before download file
-        - replace_if_exist - not download if file is existed
 
         :Returns:
             - status - 0 download failure, 1 download successful
@@ -449,7 +447,6 @@ class Download:
         self._file_path = file_path
         self._recheck_file_extension = recheck_file_extension
         self._auto_multipart_download = auto_multipart_download
-        self._replace_if_exist = replace_if_exist
         self._kwargs = kwargs
 
         # 返回长度
@@ -470,12 +467,8 @@ class Download:
         """
         主体下载逻辑
         """
-        # 默认读取配置
-        if not isinstance(self._replace_if_exist, bool):
-            self._replace_if_exist = DOWNLOAD_REPLACE_IF_EXIST
-
         # 同名文件已经存在，直接返回
-        if not self._replace_if_exist and os.path.exists(self._file_path) and os.path.getsize(self._file_path) > 0:
+        if not DOWNLOAD_REPLACE_IF_EXIST and os.path.exists(self._file_path) and os.path.getsize(self._file_path) > 0:
             console.log("文件%s（%s）已存在，跳过" % (self._file_path, self._file_url))
             self.status = const.DownloadStatus.SUCCEED
             return
