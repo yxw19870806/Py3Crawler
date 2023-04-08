@@ -118,7 +118,7 @@ class Crawler(object):
                 console.log("存档文件%s不存在！" % self.save_data_path)
                 tool.process_exit()
                 return
-            temp_file_name = tool.get_time("%m-%d_%H_%M_") + os.path.basename(self.save_data_path)
+            temp_file_name = tool.convert_timestamp_to_formatted_time("%m-%d_%H_%M_") + os.path.basename(self.save_data_path)
             self.temp_save_data_path = os.path.join(os.path.dirname(self.save_data_path), temp_file_name)
             if os.path.exists(self.temp_save_data_path):
                 # 临时文件已存在

@@ -57,10 +57,10 @@ def check_login():
 def login_from_console():
     # 从命令行中输入账号密码
     while True:
-        email = input(tool.get_time() + " 请输入邮箱: ")
-        password = input(tool.get_time() + " 请输入密码: ")
+        email = input(tool.convert_timestamp_to_formatted_time() + " 请输入邮箱: ")
+        password = input(tool.convert_timestamp_to_formatted_time() + " 请输入密码: ")
         while True:
-            input_str = input(tool.get_time() + " 是否使用这些信息(Y)es或重新输入(N)o: ")
+            input_str = input(tool.convert_timestamp_to_formatted_time() + " 是否使用这些信息(Y)es或重新输入(N)o: ")
             input_str = input_str.lower()
             if input_str in ["y", "yes"]:
                 if _do_login(email, password):
@@ -328,7 +328,7 @@ class Instagram(crawler.Crawler):
             return
 
         while True:
-            input_str = input(tool.get_time() + " 没有检测到账号登录状态，手动输入账号密码登录继续(C)ontinue？或者退出程序(E)xit？:")
+            input_str = input(tool.convert_timestamp_to_formatted_time() + " 没有检测到账号登录状态，手动输入账号密码登录继续(C)ontinue？或者退出程序(E)xit？:")
             input_str = input_str.lower()
             if input_str in ["c", "yes"]:
                 if login_from_console():

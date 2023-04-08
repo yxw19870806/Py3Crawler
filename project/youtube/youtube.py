@@ -170,10 +170,9 @@ def get_video_page(video_id):
     # 获取视频时间
     video_time_string = crawler.get_json_value(script_json, "microformat", "playerMicroformatRenderer", "uploadDate", type_check=str)
     try:
-        video_time = time.strptime(video_time_string, "%Y-%m-%d")
+        result["video_time"] = tool.convert_formatted_time_to_timestamp(video_time_string, "%Y-%m-%d")
     except ValueError:
         raise crawler.CrawlerException("时间%s解析失败" % video_time_string)
-    result["video_time"] = int(time.mktime(video_time))
 
     if result["skip_reason"]:
         return result
@@ -371,7 +370,7 @@ class Youtube(crawler.Crawler):
             return
 
         while True:
-            input_str = input(tool.get_time() + " 没有检测到账号登录状态，可能无法解析受限制的视频，继续程序(C)ontinue？或者退出程序(E)xit？:")
+            input_str = input(tool.convert_timestamp_to_formatted_time() + " 没有检测到账号登录状态，可能无法解析受限制的视频，继续程序(C)ontinue？或者退出程序(E)xit？:")
             input_str = input_str.lower()
             if input_str in ["e", "exit"]:
                 tool.process_exit()
