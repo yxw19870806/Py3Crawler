@@ -30,22 +30,21 @@ def get_game_store_index(game_id):
     }
     if game_index_response.status != const.ResponseCode.SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(game_index_response.status))
-    game_index_response_content = game_index_response.data.decode(errors="ignore")
     # 获取游戏名字
-    game_name = pq(game_index_response_content).find("[itemprop='name']").text()
+    game_name = pq(game_index_response.content).find("[itemprop='name']").text()
     if not game_name:
-        raise crawler.CrawlerException("页面截取游戏名字失败\n" + game_index_response_content)
+        raise crawler.CrawlerException("页面截取游戏名字失败\n" + game_index_response.content)
     result["game_name"] = game_name
     # 获取开发者名字
-    develop_name = pq(game_index_response_content).find("span[itemprop=author]").text()
+    develop_name = pq(game_index_response.content).find("span[itemprop=author]").text()
     if not develop_name:
-        develop_name = pq(game_index_response_content).find("a[itemprop=author]").text()
+        develop_name = pq(game_index_response.content).find("a[itemprop=author]").text()
     if develop_name:
         result["develop_name"] = develop_name
     # 获取发行商名字
-    publisher_name = pq(game_index_response_content).find("span[itemprop=publisher]").text()
+    publisher_name = pq(game_index_response.content).find("span[itemprop=publisher]").text()
     if not publisher_name:
-        publisher_name = pq(game_index_response_content).find("a[itemprop=publisher]").text()
+        publisher_name = pq(game_index_response.content).find("a[itemprop=publisher]").text()
     if publisher_name:
         result["publisher_name"] = publisher_name
     if not result["develop_name"] or not result["publisher_name"]:
@@ -58,9 +57,8 @@ def get_game_store_index(game_id):
         history_api_response = net.request(history_api_url, method="GET", fields=query_data, header_list=header_list, cookies_list=COOKIE_INFO, is_random_ip=False)
         if history_api_response.status != const.ResponseCode.SUCCEED:
             raise crawler.CrawlerException("历史记录，%s" % crawler.request_failre(history_api_response.status))
-        history_response_content = history_api_response.data.decode(errors="ignore")
         if not result["develop_name"]:
-            history_info_selector_list = pq(history_response_content).find(".app-history i:contains('developer')")
+            history_info_selector_list = pq(history_api_response.content).find(".app-history i:contains('developer')")
             for history_index in range(history_info_selector_list.length):
                 history_info_selector = history_info_selector_list.eq(history_index)
                 history_type = history_info_selector.closest("li").text()
@@ -73,7 +71,7 @@ def get_game_store_index(game_id):
                             result["develop_name"] = develop_name
                             break
         if not result["publisher_name"]:
-            history_info_selector_list = pq(history_response_content).find(".app-history i:contains('publisher')")
+            history_info_selector_list = pq(history_api_response.content).find(".app-history i:contains('publisher')")
             for history_index in range(history_info_selector_list.length):
                 history_info_selector = history_info_selector_list.eq(history_index)
                 history_type = history_info_selector.closest("li").text()

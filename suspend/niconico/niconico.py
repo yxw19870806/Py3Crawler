@@ -39,9 +39,8 @@ def get_account_mylist(account_id):
         raise crawler.CrawlerException("账号不存在")
     elif account_mylist_response.status != const.ResponseCode.SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(account_mylist_response.status))
-    account_mylist_response_content = account_mylist_response.data.decode(errors="ignore")
-    if pq(account_mylist_response_content).find(".articleBody .noListMsg").length == 1:
-        message = pq(account_mylist_response_content).find(".articleBody .noListMsg .att").text()
+    if pq(account_mylist_response.content).find(".articleBody .noListMsg").length == 1:
+        message = pq(account_mylist_response.content).find(".articleBody .noListMsg .att").text()
         if message == "非公開です":
             result["is_private"] = True
             return result
@@ -49,7 +48,7 @@ def get_account_mylist(account_id):
             return result
         else:
             raise crawler.CrawlerException("未知视频列表状态: %s" % message)
-    mylist_list_selector = pq(account_mylist_response_content).find(".articleBody .outer")
+    mylist_list_selector = pq(account_mylist_response.content).find(".articleBody .outer")
     for mylist_index in range(mylist_list_selector.length):
         mylist_selector = mylist_list_selector.eq(mylist_index)
         mylist_url = mylist_selector.find(".section h4 a").attr("href")
@@ -76,15 +75,14 @@ def get_one_page_account_video(account_id, page_count):
         raise crawler.CrawlerException("账号不存在")
     elif video_index_response.status != const.ResponseCode.SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(video_index_response.status))
-    video_index_response_content = video_index_response.data.decode(errors="ignore")
-    if pq(video_index_response_content).find(".articleBody .noListMsg").length == 1:
-        message = pq(video_index_response_content).find(".articleBody .noListMsg .att").text()
+    if pq(video_index_response.content).find(".articleBody .noListMsg").length == 1:
+        message = pq(video_index_response.content).find(".articleBody .noListMsg .att").text()
         if message == "非公開です":
             result["is_private"] = True
             return result
         else:
             raise crawler.CrawlerException("未知视频列表状态: %s" % message)
-    video_list_selector = pq(video_index_response_content).find(".articleBody .outer")
+    video_list_selector = pq(video_index_response.content).find(".articleBody .outer")
     # 第一个是排序选择框，跳过
     for video_index in range(1, video_list_selector.length):
         result_video_info = {
@@ -107,7 +105,7 @@ def get_one_page_account_video(account_id, page_count):
         result_video_info["video_title"] = video_title
         result["video_info_list"].append(result_video_info)
     # 判断是不是最后页
-    if pq(video_index_response_content).find(".articleBody .pager a:last").text() != "次へ":
+    if pq(video_index_response.content).find(".articleBody .pager a:last").text() != "次へ":
         result["is_over"] = True
     return result
 
@@ -175,19 +173,18 @@ def get_video_info(video_id):
         return result
     elif video_play_response.status != const.ResponseCode.SUCCEED:
         raise crawler.CrawlerException("视频播放页访问失败，" + crawler.request_failre(video_play_response.status))
-    video_play_response_content = video_play_response.data.decode(errors="ignore")
-    script_json_html = tool.find_sub_string(video_play_response_content, 'data-api-data="', '" data-environment="')
+    script_json_html = tool.find_sub_string(video_play_response.content, 'data-api-data="', '" data-environment="')
     if not script_json_html:
         # 播放页面提示flash没有安装，重新访问
-        if pq(video_play_response_content).find("div.notify_update_flash_player").length > 0:
+        if pq(video_play_response.content).find("div.notify_update_flash_player").length > 0:
             return get_video_info(video_id)
-        if video_play_response_content.find("<p>この動画が投稿されている公開コミュニティはありません。</p>") > 0:
+        if video_play_response.content.find("<p>この動画が投稿されている公開コミュニティはありません。</p>") > 0:
             result["is_private"] = True
             return result
-        raise crawler.CrawlerException("视频信息截取失败\n" + video_play_response_content)
+        raise crawler.CrawlerException("视频信息截取失败\n" + video_play_response.content)
     script_json = tool.json_decode(html.unescape(script_json_html))
     if script_json is None:
-        raise crawler.CrawlerException("视频信息加载失败\n" + video_play_response_content)
+        raise crawler.CrawlerException("视频信息加载失败\n" + video_play_response.content)
     # 获取视频标题
     result["video_title"] = crawler.get_json_value(script_json, "video", "title", type_check=str)
     # 获取视频地址

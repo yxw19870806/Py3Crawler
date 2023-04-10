@@ -30,13 +30,12 @@ def get_account_index_page(account_id):
     }
     if account_index_response.status != const.ResponseCode.SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(account_index_response.status))
-    account_index_response_content = account_index_response.data.decode(errors="ignore")
-    script_tac = tool.find_sub_string(account_index_response_content, "<script>tac='", "'</script>")
+    script_tac = tool.find_sub_string(account_index_response.content, "<script>tac='", "'</script>")
     if not script_tac:
-        raise crawler.CrawlerException("页面截取tac参数失败\n" + account_index_response_content)
-    script_dytk = tool.find_sub_string(account_index_response_content, "dytk: '", "'")
+        raise crawler.CrawlerException("页面截取tac参数失败\n" + account_index_response.content)
+    script_dytk = tool.find_sub_string(account_index_response.content, "dytk: '", "'")
     if not script_dytk:
-        raise crawler.CrawlerException("页面截取dytk参数失败\n" + account_index_response_content)
+        raise crawler.CrawlerException("页面截取dytk参数失败\n" + account_index_response.content)
     result["dytk"] = script_dytk
     # 读取模板并替换相关参数
     template_html = file.read_file(TEMPLATE_HTML_PATH)
@@ -50,7 +49,7 @@ def get_account_index_page(account_id):
     # 删除临时模板文件
     path.delete_dir_or_file(cache_html_path)
     if not signature:
-        raise crawler.CrawlerException("signature参数计算失败\n" + account_index_response_content)
+        raise crawler.CrawlerException("signature参数计算失败\n" + account_index_response.content)
     result["signature"] = signature
     return result
 
