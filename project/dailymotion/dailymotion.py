@@ -60,7 +60,7 @@ def get_one_page_video(account_id, page_count):
         "is_over": False,  # 是否最后一页视频
         "video_info_list": [],  # 全部视频信息
     }
-    api_response = net.request(api_url, method="POST", binary_data=tool.json_encode(post_data), header_list=header_list, json_decode=True)
+    api_response = net.request(api_url, method="POST", fields=tool.json_encode(post_data), header_list=header_list, json_decode=True)
     if api_response.status != const.ResponseCode.SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(api_response.status))
     # 获取所有视频
