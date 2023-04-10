@@ -52,8 +52,9 @@ class ErrorResponse(object):
         """
         self.status = status
         self.data = b""
+        self.content = ""
         self.headers = {}
-        self.json_data = []
+        self.json_data = {}
 
 
 def init_http_connection_pool() -> None:
@@ -152,11 +153,11 @@ def url_encode(url: str) -> str:
     return urllib.parse.quote(url, safe=";/?:@&=+$,%")
 
 
-def request(url, method: str = "GET", fields: Optional[dict] = None, binary_data: Optional[str] = None, header_list: Optional[dict] = None,
-            cookies_list: Optional[dict] = None, encode_multipart: bool = False, json_decode: bool = False, is_auto_proxy: bool = True,
-            is_auto_redirect: bool = True, is_gzip: bool = True, is_url_encode: bool = True, is_auto_retry: bool = True,
-            is_random_ip: bool = True, is_check_qps: bool = True, connection_timeout: int = NET_CONFIG.HTTP_CONNECTION_TIMEOUT,
-            read_timeout: int = NET_CONFIG.HTTP_READ_TIMEOUT) -> Union[urllib3.HTTPResponse, ErrorResponse]:
+def request(url, method: str = "GET", fields: Optional[dict] = None, binary_data: Optional[str] = None, charset: str = "utf-8",
+            header_list: Optional[dict] = None, cookies_list: Optional[dict] = None, encode_multipart: bool = False,  json_decode: bool = False,
+            is_auto_proxy: bool = True, is_auto_redirect: bool = True, is_gzip: bool = True, is_url_encode: bool = True, is_auto_retry: bool = True,
+            is_random_ip: bool = True, is_check_qps: bool = True,
+            connection_timeout: int = NET_CONFIG.HTTP_CONNECTION_TIMEOUT, read_timeout: int = NET_CONFIG.HTTP_READ_TIMEOUT) -> Union[urllib3.HTTPResponse, ErrorResponse]:
     """
     HTTP请求
 
@@ -228,7 +229,7 @@ def request(url, method: str = "GET", fields: Optional[dict] = None, binary_data
 
         try:
             if method in ["DELETE", "GET", "HEAD", "OPTIONS"]:
-                response = connection_pool.request(method, url, headers=header_list, redirect=is_auto_redirect, timeout=timeout, fields=fields)
+                response = connection_pool.request(method, url, fields=fields, headers=header_list, redirect=is_auto_redirect, timeout=timeout)
             else:
                 if binary_data is None:
                     response = connection_pool.request(method, url, fields=fields, encode_multipart=encode_multipart, headers=header_list,
@@ -236,24 +237,14 @@ def request(url, method: str = "GET", fields: Optional[dict] = None, binary_data
                 else:
                     response = connection_pool.request(method, url, body=binary_data, encode_multipart=encode_multipart, headers=header_list,
                                                        redirect=is_auto_redirect, timeout=timeout)
-            if response.status == const.ResponseCode.SUCCEED and json_decode:
-                try:
-                    response.json_data = json.loads(response.data.decode())
-                except ValueError:
-                    is_error = True
-                    content_type = response.getheader("Content-Type")
-                    if content_type is not None:
-                        charset = tool.find_sub_string(content_type, "charset=", None)
-                        if charset:
-                            if charset == "gb2312":
-                                charset = "GBK"
-                            try:
-                                response.json_data = json.loads(response.data.decode(charset))
-                            except (json.decoder.JSONDecodeError, LookupError):
-                                pass
-                            else:
-                                is_error = False
-                    if is_error:
+            response.content = ""
+            response.json_data = {}
+            if response.status == const.ResponseCode.SUCCEED:
+                response.content = response.data.decode(charset, errors="ignore")
+                if json_decode:
+                    try:
+                        response.json_data = json.loads(response.content)
+                    except json.decoder.JSONDecodeError:
                         response.status = const.ResponseCode.JSON_DECODE_ERROR
             elif response.status == 429:  # Too Many Requests
                 console.log(url + " Too Many Requests, sleep")
