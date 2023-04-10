@@ -236,10 +236,9 @@ def get_video_page(video_id):
     }
     if video_play_response.status != const.ResponseCode.SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(video_play_response.status))
-    video_play_response_content = video_play_response.data.decode(errors="ignore")
-    script_json = tool.json_decode(tool.find_sub_string(video_play_response_content, "window.__INITIAL_STATE__=", ";(function()"))
+    script_json = tool.json_decode(tool.find_sub_string(video_play_response.content, "window.__INITIAL_STATE__=", ";(function()"))
     if script_json is None:
-        raise crawler.CrawlerException("页面截取视频信息失败\n" + video_play_response_content)
+        raise crawler.CrawlerException("页面截取视频信息失败\n" + video_play_response.content)
     try:
         video_part_info_list = crawler.get_json_value(script_json, "videoData", "pages", type_check=list)
         # 获取视频标题

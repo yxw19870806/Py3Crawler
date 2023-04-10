@@ -18,10 +18,9 @@ def get_account_from_index():
     account_list = {}
     if index_response.status != const.ResponseCode.SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(index_response.status))
-    index_response_content = index_response.data.decode(errors="ignore")
-    member_info_list_selector = pq(index_response_content).find(".p-blog-face__group .p-blog-face__list")
+    member_info_list_selector = pq(index_response.content).find(".p-blog-face__group .p-blog-face__list")
     if member_info_list_selector.length == 0:
-        raise crawler.CrawlerException("页面截取账号信息列表失败\n" + index_response_content)
+        raise crawler.CrawlerException("页面截取账号信息列表失败\n" + index_response.content)
     for member_index in range(member_info_list_selector.length):
         member_info_selector = member_info_list_selector.eq(member_index)
         # 获取账号id

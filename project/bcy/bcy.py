@@ -52,13 +52,12 @@ def get_album_page(album_id):
     }
     if album_response.status != const.ResponseCode.SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(album_response.status))
-    album_response_content = album_response.data.decode(errors="ignore")
-    script_json_html = tool.find_sub_string(album_response_content, "JSON.parse(", ");\n")
+    script_json_html = tool.find_sub_string(album_response.content, "JSON.parse(", ");\n")
     if not script_json_html:
-        raise crawler.CrawlerException("页面截取作品信息失败\n" + album_response_content)
+        raise crawler.CrawlerException("页面截取作品信息失败\n" + album_response.content)
     script_json = tool.json_decode(tool.json_decode(script_json_html))
     if not script_json:
-        raise crawler.CrawlerException("作品信息加载失败\n" + album_response_content)
+        raise crawler.CrawlerException("作品信息加载失败\n" + album_response.content)
     is_skip = False
     album_type = crawler.get_json_value(script_json, "detail", "post_data", "type", type_check=str)
     # 问答
@@ -82,7 +81,7 @@ def get_album_page(album_id):
     for photo_info in crawler.get_json_value(script_json, "detail", "post_data", "multi", type_check=list):
         result["photo_url_list"].append(crawler.get_json_value(photo_info, "original_path", type_check=str))
     if not is_skip and len(result["photo_url_list"]) == 0:
-        raise crawler.CrawlerException("页面匹配图片地址失败\n" + album_response_content)
+        raise crawler.CrawlerException("页面匹配图片地址失败\n" + album_response.content)
     return result
 
 

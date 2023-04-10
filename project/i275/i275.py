@@ -21,10 +21,9 @@ def get_album_index_page(album_id):
     }
     if album_pagination_response.status != const.ResponseCode.SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(album_pagination_response.status))
-    album_pagination_response_content = album_pagination_response.data.decode(errors="ignore")
-    audio_info_selector_list = pq(album_pagination_response_content).find("ul.play-list li")
+    audio_info_selector_list = pq(album_pagination_response.content).find("ul.play-list li")
     if audio_info_selector_list.length == 0:
-        raise crawler.CrawlerException("页面截取音频列表失败\n" + album_pagination_response_content)
+        raise crawler.CrawlerException("页面截取音频列表失败\n" + album_pagination_response.content)
     # 获取音频信息
     for audio_info_index in range(audio_info_selector_list.length):
         result_audio_info = {

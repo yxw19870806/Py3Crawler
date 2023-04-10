@@ -24,18 +24,17 @@ def get_photo_index_page(account_id):
     }
     if photo_index_response.status != const.ResponseCode.SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(photo_index_response.status))
-    photo_index_response_content = photo_index_response.data.decode(errors="ignore")
-    if photo_index_response_content == '<script>window.location.href="/404.html";</script>':
+    if photo_index_response.content == '<script>window.location.href="/404.html";</script>':
         raise crawler.CrawlerException("账号不存在")
     # 获取全部图片地址
-    if pq(photo_index_response_content).find(".index_all_list p").html() == "还没有照片哦":
+    if pq(photo_index_response.content).find(".index_all_list p").html() == "还没有照片哦":
         return result
-    video_list_selector = pq(photo_index_response_content).find("img.index_img_main")
+    video_list_selector = pq(photo_index_response.content).find("img.index_img_main")
     for video_index in range(video_list_selector.length):
         photo_url = video_list_selector.eq(video_index).attr("src")
         result["photo_url_list"].append(photo_url.split("@")[0])
     if len(result["photo_url_list"]) == 0:
-        raise crawler.CrawlerException("页面匹配图片地址失败\n" + photo_index_response_content)
+        raise crawler.CrawlerException("页面匹配图片地址失败\n" + photo_index_response.content)
     return result
 
 
@@ -71,16 +70,15 @@ def get_video_index_page(account_id):
     }
     if video_pagination_response.status != const.ResponseCode.SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(video_pagination_response.status))
-    video_pagination_response_content = video_pagination_response.data.decode(errors="ignore")
-    if video_pagination_response_content == '<script>window.location.href="/404.html";</script>':
+    if video_pagination_response.content == '<script>window.location.href="/404.html";</script>':
         raise crawler.CrawlerException("账号不存在")
-    if pq(video_pagination_response_content).find(".index_all_list p").html() == "还没有直播哦":
+    if pq(video_pagination_response.content).find(".index_all_list p").html() == "还没有直播哦":
         return result
-    video_list_selector = pq(video_pagination_response_content).find("div.scid")
+    video_list_selector = pq(video_pagination_response.content).find("div.scid")
     for video_index in range(video_list_selector.length):
         result["video_id_list"].append(video_list_selector.eq(video_index).html())
     if len(result["video_id_list"]) == 0:
-        raise crawler.CrawlerException("页面匹配视频id失败\n" + video_pagination_response_content)
+        raise crawler.CrawlerException("页面匹配视频id失败\n" + video_pagination_response.content)
     return result
 
 
@@ -96,21 +94,19 @@ def get_video_info_page(video_id):
     }
     if video_info_response.status != const.ResponseCode.SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(video_info_response.status))
-    video_info_response_content = video_info_response.data.decode(errors="ignore")
     # 获取视频上传时间
-    video_time = tool.find_sub_string(video_info_response_content, "starttime:", ",")
+    video_time = tool.find_sub_string(video_info_response.content, "starttime:", ",")
     if not tool.is_integer(video_time):
-        raise crawler.CrawlerException("页面截取直播开始时间失败\n" + video_info_response_content)
+        raise crawler.CrawlerException("页面截取直播开始时间失败\n" + video_info_response.content)
     result["video_time"] = int(video_time)
     # 获取视频地址所在文件地址
-    video_file_url = tool.find_sub_string(video_info_response_content, 'play_url:"', '",')
+    video_file_url = tool.find_sub_string(video_info_response.content, 'play_url:"', '",')
     video_file_response = net.request(video_file_url, method="GET")
     if video_file_response.status != const.ResponseCode.SUCCEED:
         raise crawler.CrawlerException("m3u8文件 %s，%s" % (video_file_url, crawler.request_failre(video_file_response.status)))
-    video_file_response_content = video_file_response.data.decode(errors="ignore")
-    ts_id_list = re.findall(r"(\S*.ts)", video_file_response_content)
+    ts_id_list = re.findall(r"(\S*.ts)", video_file_response.content)
     if len(ts_id_list) == 0:
-        raise crawler.CrawlerException("分集文件匹配视频地址失败\n" + video_file_response_content)
+        raise crawler.CrawlerException("分集文件匹配视频地址失败\n" + video_file_response.content)
     # http://playbackyzbold.live.weibo.com/2021101/f0b/f97/bVFjTEK9nYTEqQ6p/index.m3u8
     prefix_url = video_file_url[:video_file_url.rfind("/") + 1]
     for ts_id in ts_id_list:

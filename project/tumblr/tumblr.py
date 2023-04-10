@@ -97,8 +97,7 @@ def get_one_page_post(account_id, page_count, is_https):
     #     return result
     elif post_pagination_response.status != const.ResponseCode.SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(post_pagination_response.status))
-    post_pagination_response_content = post_pagination_response.data.decode(errors="ignore")
-    script_json_html = tool.find_sub_string(post_pagination_response_content, '<script type="application/ld+json">', "</script>").strip()
+    script_json_html = tool.find_sub_string(post_pagination_response.content, '<script type="application/ld+json">', "</script>").strip()
     if not script_json_html:
         result["is_over"] = True
         return result
@@ -213,10 +212,9 @@ def get_post_page(post_url, post_id):
         return result
     elif post_response.status != const.ResponseCode.SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(post_response.status))
-    post_response_content = post_response.data.decode(errors="ignore")
-    post_page_head = tool.find_sub_string(post_response_content, "<head", "</head>", const.IncludeStringMode.ALL)
+    post_page_head = tool.find_sub_string(post_response.content, "<head", "</head>", const.IncludeStringMode.ALL)
     if not post_page_head:
-        raise crawler.CrawlerException("页面截取正文失败\n" + post_response_content)
+        raise crawler.CrawlerException("页面截取正文失败\n" + post_response.content)
     # 获取og_type（页面类型的是视频还是图片或其他）
     og_type = tool.find_sub_string(post_page_head, '<meta property="og:type" content="', '" />')
     # 视频
@@ -227,14 +225,14 @@ def get_post_page(post_url, post_id):
         if photo_url and photo_url.find("assets.tumblr.com/images/og/fb_landscape_share.png") == -1:
             if not check_photo_url_invalid(photo_url):
                 result["photo_url_list"].append(photo_url)
-        post_selector = pq(post_response_content).find("article")
+        post_selector = pq(post_response.content).find("article")
         if post_selector.length > 1:
-            post_selector = pq(post_response_content).find("article[data-post-id='%s']" % post_id)
+            post_selector = pq(post_response.content).find("article[data-post-id='%s']" % post_id)
             if post_selector.length == 0:
-                post_selector = pq(post_response_content).find("article[id='%s']" % post_id)
+                post_selector = pq(post_response.content).find("article[id='%s']" % post_id)
         if post_selector.length <= 1:
             if post_selector.length == 0:
-                video_selector = pq(post_response_content).find("source")
+                video_selector = pq(post_response.content).find("source")
             else:
                 video_selector = post_selector.find("source")
             if video_selector.length == 1:
@@ -365,8 +363,7 @@ def get_video_play_page(account_id, post_id, is_https):
         video_play_url = video_play_response.getheader("Location")
         if video_play_url is not None:
             video_play_response = net.request(video_play_url, method="GET")
-    video_play_response_content = video_play_response.data.decode(errors="ignore")
-    if video_play_response.status == 403 and video_play_response_content.find("You do not have permission to access this page.") >= 0:
+    if video_play_response.status == 403 and video_play_response.content.find("You do not have permission to access this page.") >= 0:
         result["is_password"] = True
         return result
     elif video_play_response.status == 404:
@@ -375,7 +372,7 @@ def get_video_play_page(account_id, post_id, is_https):
         return get_video_play_page(account_id, post_id, is_https)
     elif video_play_response.status != const.ResponseCode.SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(video_play_response.status))
-    video_url_find = re.findall(r'<source src="(https?://%s.tumblr.com/video_file/[^"]*)" type="[^"]*"' % account_id, video_play_response_content)
+    video_url_find = re.findall(r'<source src="(https?://%s.tumblr.com/video_file/[^"]*)" type="[^"]*"' % account_id, video_play_response.content)
     if len(video_url_find) == 1:
         if tool.is_integer(video_url_find[0].split("/")[-1]):
             result["video_url"] = "/".join(video_url_find[0].split("/")[:-1])
@@ -384,7 +381,7 @@ def get_video_play_page(account_id, post_id, is_https):
         # 第三方视频
         pass
     else:
-        raise crawler.CrawlerException("页面截取视频地址失败\n" + video_play_response_content)
+        raise crawler.CrawlerException("页面截取视频地址失败\n" + video_play_response.content)
     return result
 
 

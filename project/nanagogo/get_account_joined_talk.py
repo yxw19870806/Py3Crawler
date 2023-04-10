@@ -31,7 +31,7 @@ def get_account_talks(account_id, account_name, talk_list):
     account_index_response = net.request(account_index, method="GET")
     if account_index_response.status != const.ResponseCode.SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(account_index_response.status))
-    talk_list_selector = pq(account_index_response.data.decode(errors="ignore")).find(".UserTalkWrapper .UserTalk")
+    talk_list_selector = pq(account_index_response.content).find(".UserTalkWrapper .UserTalk")
     for talk_index in range(talk_list_selector.length):
         talk_selector = talk_list_selector.eq(talk_index)
         # 获取talk地址

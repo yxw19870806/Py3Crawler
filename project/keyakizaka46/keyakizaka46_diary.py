@@ -29,14 +29,13 @@ def get_one_page_blog(account_id, page_count):
     }
     if blog_pagination_response.status != const.ResponseCode.SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(blog_pagination_response.status))
-    blog_pagination_response_content = blog_pagination_response.data.decode(errors="ignore")
-    account_info_html = pq(blog_pagination_response_content).find(".box-profile").html()
+    account_info_html = pq(blog_pagination_response.content).find(".box-profile").html()
     if not account_info_html or not account_info_html.strip():
         raise crawler.CrawlerException("账号不存在")
     # 日志正文部分
-    blog_list_selector = pq(blog_pagination_response_content).find(".box-main article")
+    blog_list_selector = pq(blog_pagination_response.content).find(".box-main article")
     if blog_list_selector.length == 0:
-        raise crawler.CrawlerException("页面截取日志列表失败\n" + blog_pagination_response_content)
+        raise crawler.CrawlerException("页面截取日志列表失败\n" + blog_pagination_response.content)
     for blog_index in range(blog_list_selector.length):
         result_blog_info = {
             "blog_id": 0,  # 日志id
@@ -63,9 +62,9 @@ def get_one_page_blog(account_id, page_count):
                 continue
             result_blog_info["photo_url_list"].append(photo_url)
         result["blog_info_list"].append(result_blog_info)
-    last_pagination_html = pq(blog_pagination_response_content).find(".pager li:last").text()
-    if not last_pagination_html and pq(blog_pagination_response_content).find(".pager").length > 0:
-        raise crawler.CrawlerException("页面截取下一页按钮失败\n" + blog_pagination_response_content)
+    last_pagination_html = pq(blog_pagination_response.content).find(".pager li:last").text()
+    if not last_pagination_html and pq(blog_pagination_response.content).find(".pager").length > 0:
+        raise crawler.CrawlerException("页面截取下一页按钮失败\n" + blog_pagination_response.content)
     result["is_over"] = last_pagination_html != ">"
     return result
 

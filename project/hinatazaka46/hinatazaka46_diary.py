@@ -29,14 +29,13 @@ def get_one_page_blog(account_id, page_count):
     }
     if blog_pagination_response.status != const.ResponseCode.SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(blog_pagination_response.status))
-    blog_pagination_response_content = blog_pagination_response.data.decode(errors="ignore")
-    account_info_html = pq(blog_pagination_response_content).find(".p-blog-member__head .c-blog-member__name").html()
+    account_info_html = pq(blog_pagination_response.content).find(".p-blog-member__head .c-blog-member__name").html()
     if not account_info_html or not account_info_html.strip():
         raise crawler.CrawlerException("账号不存在")
     # 日志正文部分
-    blog_list_selector = pq(blog_pagination_response_content).find(".p-blog-group .p-blog-article")
+    blog_list_selector = pq(blog_pagination_response.content).find(".p-blog-group .p-blog-article")
     if blog_list_selector.length == 0:
-        raise crawler.CrawlerException("页面截取日志列表失败\n" + blog_pagination_response_content)
+        raise crawler.CrawlerException("页面截取日志列表失败\n" + blog_pagination_response.content)
     for blog_index in range(blog_list_selector.length):
         result_blog_info = {
             "blog_id": 0,  # 日志id
@@ -63,10 +62,10 @@ def get_one_page_blog(account_id, page_count):
                 continue
             result_blog_info["photo_url_list"].append(photo_url)
         result["blog_info_list"].append(result_blog_info)
-    last_pagination_html = pq(blog_pagination_response_content).find(".p-pager--count .c-pager__item--next")
+    last_pagination_html = pq(blog_pagination_response.content).find(".p-pager--count .c-pager__item--next")
     if last_pagination_html.length != 1:
-        if pq(blog_pagination_response_content).find(".p-pager--count").length != 1:
-            raise crawler.CrawlerException("页面截取最后页按钮失败\n" + blog_pagination_response_content)
+        if pq(blog_pagination_response.content).find(".p-pager--count").length != 1:
+            raise crawler.CrawlerException("页面截取最后页按钮失败\n" + blog_pagination_response.content)
         result["is_over"] = True
     return result
 

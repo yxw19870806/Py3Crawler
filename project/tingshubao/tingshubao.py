@@ -21,14 +21,13 @@ def get_album_index_page(album_id):
     header_list = {
         "User-Agent": USER_AGENT,
     }
-    album_index_response = net.request(album_index_url, method="GET", header_list=header_list)
+    album_index_response = net.request(album_index_url, method="GET", charset="GBK", header_list=header_list)
     result = {
         "audio_info_list": [],  # 全部音频信息
     }
     if album_index_response.status != const.ResponseCode.SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(album_index_response.status))
-    album_index_response_content = album_index_response.data.decode("GBK", errors="ignore")
-    audio_list_selector = pq(album_index_response_content).find(".play-list li")
+    audio_list_selector = pq(album_index_response.content).find(".play-list li")
     for audio_index in range(audio_list_selector.length, 0, -1):
         result_audio_info = {
             "audio_id": 0,  # 音频id
@@ -65,9 +64,8 @@ def get_audio_info_page(audio_play_url):
         return get_audio_info_page(audio_play_url)
     elif audio_play_response.status != const.ResponseCode.SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(audio_play_response.status))
-    audio_play_response_content = audio_play_response.data.decode(errors="ignore")
     # 解析来自 http://m.tingshubao.com/player/main.js的FonHen_JieMa()方法
-    encrypt_string = tool.find_sub_string(audio_play_response_content, "FonHen_JieMa('", "'")
+    encrypt_string = tool.find_sub_string(audio_play_response.content, "FonHen_JieMa('", "'")
     temp_list = []
     for temp in encrypt_string.split("*")[1:]:
         temp = chr(int(temp) & 0xffff)

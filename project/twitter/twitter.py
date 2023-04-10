@@ -34,25 +34,23 @@ def check_login():
         pass
     else:
         raise crawler.CrawlerException(crawler.request_failre(index_response.status))
-    index_response_content = index_response.data.decode(errors="ignore")
     # 更新cookies
     COOKIE_INFO.update(net.get_cookies_from_response_header(index_response.headers))
-    init_js_url_find = re.findall(r'href="(https://abs.twimg.com/responsive-web/client-web-legacy/main.[^\.]*.[\w]*.js)"', index_response_content)
+    init_js_url_find = re.findall(r'href="(https://abs.twimg.com/responsive-web/client-web-legacy/main.[^\.]*.[\w]*.js)"', index_response.content)
     if len(init_js_url_find) != 1:
-        raise crawler.CrawlerException("初始化JS地址截取失败\n" + index_response_content)
+        raise crawler.CrawlerException("初始化JS地址截取失败\n" + index_response.content)
     init_js_response = net.request(init_js_url_find[0], method="GET")
     if init_js_response.status != const.ResponseCode.SUCCEED:
         raise crawler.CrawlerException("初始化JS文件，" + crawler.request_failre(init_js_response.status))
-    init_js_response_content = init_js_response.data.decode(errors="ignore")
     # 截取authorization
-    authorization_string = tool.find_sub_string(init_js_response_content, '="AAAAAAAAAA', '"')
+    authorization_string = tool.find_sub_string(init_js_response.content, '="AAAAAAAAAA', '"')
     if not authorization_string:
-        raise crawler.CrawlerException("初始化JS中截取authorization失败\n" + init_js_response_content)
+        raise crawler.CrawlerException("初始化JS中截取authorization失败\n" + init_js_response.content)
     AUTHORIZATION = "AAAAAAAAAA" + authorization_string
     # 截取query id
-    query_id_find = re.findall(r'queryId:"([\w-]*)",operationName:"UserByScreenName",operationType:"query"', init_js_response_content)
+    query_id_find = re.findall(r'queryId:"([\w-]*)",operationName:"UserByScreenName",operationType:"query"', init_js_response.content)
     if len(query_id_find) != 1:
-        raise crawler.CrawlerException("初始化JS中截取queryId失败\n" + init_js_response_content)
+        raise crawler.CrawlerException("初始化JS中截取queryId失败\n" + init_js_response.content)
     QUERY_ID = query_id_find[0]
     return IS_LOGIN
 
@@ -229,19 +227,17 @@ def get_video_play_page(tweet_id):
             return result
         elif m3u8_file_response.status != const.ResponseCode.SUCCEED:
             raise crawler.CrawlerException("m3u8文件 %s 访问失败，%s" % (file_url, crawler.request_failre(m3u8_file_response.status)))
-        m3u8_file_response_content = m3u8_file_response.data.decode(errors="ignore")
-        include_m3u8_file_list = re.findall(r"(/\S*.m3u8)", m3u8_file_response_content)
+        include_m3u8_file_list = re.findall(r"(/\S*.m3u8)", m3u8_file_response.content)
         if len(include_m3u8_file_list) > 0:
             # 生成最高分辨率视频所在的m3u8文件地址
             file_url = "%s://%s%s" % (file_url_protocol, file_url_host, include_m3u8_file_list[-1])
             m3u8_file_response = net.request(file_url, method="GET")
             if m3u8_file_response.status != const.ResponseCode.SUCCEED:
                 raise crawler.CrawlerException("最高分辨率m3u8文件 %s 访问失败，%s" % (file_url, crawler.request_failre(m3u8_file_response.status)))
-            m3u8_file_response_content = m3u8_file_response.data.decode(errors="ignore")
         # 包含分P视频文件名的m3u8文件
-        ts_url_find = re.findall(r"(/\S*.ts)", m3u8_file_response_content)
+        ts_url_find = re.findall(r"(/\S*.ts)", m3u8_file_response.content)
         if len(ts_url_find) == 0:
-            raise crawler.CrawlerException("m3u8文件%s截取视频地址失败\n%s" % (file_url, m3u8_file_response_content))
+            raise crawler.CrawlerException("m3u8文件%s截取视频地址失败\n%s" % (file_url, m3u8_file_response.content))
         result["video_url"] = []
         for ts_video_path in ts_url_find:
             result["video_url"].append("%s://%s%s" % (file_url_protocol, file_url_host, ts_video_path))
@@ -249,11 +245,10 @@ def get_video_play_page(tweet_id):
         vmap_file_response = net.request(file_url, method="GET")
         if vmap_file_response.status != const.ResponseCode.SUCCEED:
             raise crawler.CrawlerException("vmap文件 %s 访问失败，%s" % (file_url, crawler.request_failre(vmap_file_response.status)))
-        vmap_file_response_content = vmap_file_response.data.decode(errors="ignore")
-        tw_namespace = tool.find_sub_string(vmap_file_response_content, 'xmlns:tw="', '"')
+        tw_namespace = tool.find_sub_string(vmap_file_response.content, 'xmlns:tw="', '"')
         if not tw_namespace:
-            raise crawler.CrawlerException("vmap文件 %s 截取xmlns:tw命名空间失败\n%s" % (file_url, vmap_file_response_content))
-        media_file_elements = ElementTree.fromstring(vmap_file_response_content.strip()).iter("{%s}videoVariant" % tw_namespace)
+            raise crawler.CrawlerException("vmap文件 %s 截取xmlns:tw命名空间失败\n%s" % (file_url, vmap_file_response.content))
+        media_file_elements = ElementTree.fromstring(vmap_file_response.content.strip()).iter("{%s}videoVariant" % tw_namespace)
         # 获取最高bit rate的视频地址
         bit_rate_to_url = {}
         for media_file_element in media_file_elements:
@@ -263,10 +258,10 @@ def get_video_play_page(tweet_id):
                 continue
             url = media_file_element.get("url")
             if not url:
-                raise crawler.CrawlerException("视频节点解析url失败\n" + vmap_file_response_content)
+                raise crawler.CrawlerException("视频节点解析url失败\n" + vmap_file_response.content)
             bit_rate_to_url[int(bit_rate)] = urllib.parse.unquote(url)
         if len(bit_rate_to_url) == 0:
-            raise crawler.CrawlerException("vmap文件 %s 解析全部视频文件失败\n%s" % (file_url, vmap_file_response_content))
+            raise crawler.CrawlerException("vmap文件 %s 解析全部视频文件失败\n%s" % (file_url, vmap_file_response.content))
         result["video_url"] = bit_rate_to_url[max(bit_rate_to_url)]
     # 直接是视频地址
     else:  # https://api.twitter.com/1.1/videos/tweet/config/996368816174084097.json

@@ -41,14 +41,13 @@ def get_one_page_blog(account_name, page_count):
         raise crawler.CrawlerException("账号不存在")
     elif blog_pagination_response.status != const.ResponseCode.SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(blog_pagination_response.status))
-    blog_pagination_response_content = blog_pagination_response.data.decode(errors="ignore")
     # 获取日志id
-    blog_id_list = re.findall(r'data-unique-entry-id="(\d*)"', blog_pagination_response_content)
+    blog_id_list = re.findall(r'data-unique-entry-id="(\d*)"', blog_pagination_response.content)
     result["blog_id_list"] = list(map(int, blog_id_list))
     # 另一种页面格式
     if len(result["blog_id_list"]) == 0:
         # goto-risako
-        blog_list_selector = pq(blog_pagination_response_content).find("#main li a.skin-titleLink")
+        blog_list_selector = pq(blog_pagination_response.content).find("#main li a.skin-titleLink")
         for blog_url_index in range(blog_list_selector.length):
             blog_url = blog_list_selector.eq(blog_url_index).attr("href")
             blog_id = tool.find_sub_string(blog_url, "entry-", ".html")
@@ -57,33 +56,33 @@ def get_one_page_blog(account_name, page_count):
             result["blog_id_list"].append(int(blog_id))
     if len(result["blog_id_list"]) == 0:
         if page_count == 1:
-            raise crawler.CrawlerException("页面匹配日志id失败\n" + blog_pagination_response_content)
+            raise crawler.CrawlerException("页面匹配日志id失败\n" + blog_pagination_response.content)
         log.error(account_name + " 新的分页页面")
         result["is_over"] = True
         return result
     # 判断是不是最后一页
     # https://ameblo.jp/18prokonan/
-    if pq(blog_pagination_response_content).find("div.pagingArea").length > 0:
-        if pq(blog_pagination_response_content).find("div.pagingArea a.pagingNext").length == 0 and \
-                pq(blog_pagination_response_content).find("div.pagingArea a.pagingPrev").length == 0:
-            raise crawler.CrawlerException("页面截取分页信息div.pagingArea失败\n" + blog_pagination_response_content)
+    if pq(blog_pagination_response.content).find("div.pagingArea").length > 0:
+        if pq(blog_pagination_response.content).find("div.pagingArea a.pagingNext").length == 0 and \
+                pq(blog_pagination_response.content).find("div.pagingArea a.pagingPrev").length == 0:
+            raise crawler.CrawlerException("页面截取分页信息div.pagingArea失败\n" + blog_pagination_response.content)
         result["is_over"] = True
     # https://ameblo.jp/1108ayanyan/
-    elif pq(blog_pagination_response_content).find("ul.skin-paging").length > 0:
-        if pq(blog_pagination_response_content).find("ul.skin-paging a.skin-pagingNext").length == 0 and \
-                pq(blog_pagination_response_content).find("ul.skin-paging a.skin-pagingPrev").length == 0:
-            raise crawler.CrawlerException("页面截取分页信息ul.skin-paging失败\n" + blog_pagination_response_content)
+    elif pq(blog_pagination_response.content).find("ul.skin-paging").length > 0:
+        if pq(blog_pagination_response.content).find("ul.skin-paging a.skin-pagingNext").length == 0 and \
+                pq(blog_pagination_response.content).find("ul.skin-paging a.skin-pagingPrev").length == 0:
+            raise crawler.CrawlerException("页面截取分页信息ul.skin-paging失败\n" + blog_pagination_response.content)
         result["is_over"] = True
     # https://ameblo.jp/48orii48/
-    elif pq(blog_pagination_response_content).find("div.page").length > 0:
-        pagination_selector = pq(blog_pagination_response_content).find("div.page").eq(0).find("a")
+    elif pq(blog_pagination_response.content).find("div.page").length > 0:
+        pagination_selector = pq(blog_pagination_response.content).find("div.page").eq(0).find("a")
         find_page_count_list = []
         for pagination_index in range(pagination_selector.length):
             temp_page_count = tool.find_sub_string(pagination_selector.eq(pagination_index).attr("href"), "/page-", ".html")
             if tool.is_integer(temp_page_count):
                 find_page_count_list.append(int(temp_page_count))
         if len(find_page_count_list) == 0:
-            raise crawler.CrawlerException("页面截取分页信息失败\n" + blog_pagination_response_content)
+            raise crawler.CrawlerException("页面截取分页信息失败\n" + blog_pagination_response.content)
         result["is_over"] = page_count >= max(find_page_count_list)
     return result
 
@@ -101,18 +100,17 @@ def get_blog_page(account_name, blog_id):
         return result
     elif blog_response.status != const.ResponseCode.SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(blog_response.status))
-    blog_response_content = blog_response.data.decode(errors="ignore")
-    if blog_response_content.find("この記事はアメンバーさん限定です。") >= 0:
+    if blog_response.content.find("この記事はアメンバーさん限定です。") >= 0:
         raise crawler.CrawlerException("需要关注后才能访问，请在 https://profile.ameba.jp/ameba/%s，选择'アメンバー申請'" % account_name)
     # 截取日志正文部分（有多种页面模板）
     article_class_list = ["subContentsInner", "articleText", "skin-entryInner"]
     article_html_selector = None
     for article_class in article_class_list:
-        article_html_selector = pq(blog_response_content).find("." + article_class)
+        article_html_selector = pq(blog_response.content).find("." + article_class)
         if article_html_selector.length > 0:
             break
     if article_html_selector is None or article_html_selector.length == 0:
-        raise crawler.CrawlerException("页面截取正文失败\n" + blog_response_content)
+        raise crawler.CrawlerException("页面截取正文失败\n" + blog_response.content)
     # 获取图片地址
     photo_list_selector = article_html_selector.find("img")
     for photo_index in range(photo_list_selector.length):
