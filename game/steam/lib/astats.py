@@ -18,7 +18,7 @@ def get_game_invalid_achievements(game_id):
         console.log("游戏 %s 访问失败" % game_id)
         tool.process_exit()
     # game id 不存在
-    if game_index_response.data.decode(errors="ignore").find("This game cannot be found in the database.") >= 0:
+    if game_index_response.content.find("This game cannot be found in the database.") >= 0:
         return
     achievement_text = tool.find_sub_string(game_index_response.data, '<span class="GameInfoBoxRow">Achievements</span><br>', "</td>")
     # 没有成就
