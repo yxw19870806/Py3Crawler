@@ -19,10 +19,9 @@ def get_account_from_index():
     account_list = {}
     if index_response.status != const.ResponseCode.SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(index_response.status))
-    index_response_content = index_response.data.decode(errors="ignore")
-    member_list_data = tool.find_sub_string(index_response_content, '<ul class="thumb">', "</ul>")
+    member_list_data = tool.find_sub_string(index_response.content, '<ul class="thumb">', "</ul>")
     if not member_list_data:
-        raise crawler.CrawlerException("页面截取账号列表失败\n" + index_response_content)
+        raise crawler.CrawlerException("页面截取账号列表失败\n" + index_response.content)
     member_list_find = re.findall(r"<li ([\S|\s]*?)</li>", member_list_data)
     for member_info in member_list_find:
         # 获取账号id

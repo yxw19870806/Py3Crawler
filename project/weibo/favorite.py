@@ -27,11 +27,10 @@ def get_one_page_favorite(page_count):
     }
     if favorite_pagination_response.status != const.ResponseCode.SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(favorite_pagination_response.status))
-    favorite_pagination_content = favorite_pagination_response.data.decode(errors="ignore")
-    favorite_data_html = tool.find_sub_string(favorite_pagination_content, '"ns":"pl.content.favoriteFeed.index"', '"})</script>', const.IncludeStringMode.END)
+    favorite_data_html = tool.find_sub_string(favorite_pagination_response.content, '"ns":"pl.content.favoriteFeed.index"', '"})</script>', const.IncludeStringMode.END)
     favorite_data_html = tool.find_sub_string(favorite_data_html, '"html":"', '"})')
     if not favorite_data_html:
-        raise crawler.CrawlerException("页面截取收藏信息失败\n" + favorite_pagination_content)
+        raise crawler.CrawlerException("页面截取收藏信息失败\n" + favorite_pagination_response.content)
     # 替换全部转义斜杠以及没有用的换行符等
     html_data = favorite_data_html.replace(r"\\", chr(1))
     for replace_string in [r"\n", r"\r", r"\t", "\\"]:

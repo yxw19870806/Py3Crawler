@@ -23,16 +23,15 @@ def get_account_index_page(account_name):
         "account_id": 0,  # 账号id
     }
     if account_index_response.status == const.ResponseCode.SUCCEED:
-        account_index_response_content = account_index_response.data.decode(errors="ignore")
         # 获取账号id
-        account_id = tool.find_sub_string(account_index_response_content, '"profilePage_', '"')
+        account_id = tool.find_sub_string(account_index_response.content, '"profilePage_', '"')
         if not tool.is_integer(account_id):
-            raise crawler.CrawlerException("页面截取账号id失败\n" + account_index_response_content)
+            raise crawler.CrawlerException("页面截取账号id失败\n" + account_index_response.content)
         result["account_id"] = int(account_id)
         # 判断是不是已经关注
-        result["is_follow"] = tool.find_sub_string(account_index_response_content, '"followed_by_viewer": ', ",") == "true"
+        result["is_follow"] = tool.find_sub_string(account_index_response.content, '"followed_by_viewer": ', ",") == "true"
         # 判断是不是私密账号
-        result["is_private"] = tool.find_sub_string(account_index_response_content, '"is_private": ', ",") == "true"
+        result["is_private"] = tool.find_sub_string(account_index_response.content, '"is_private": ', ",") == "true"
     elif account_index_response.status == 404:
         raise crawler.CrawlerException("账号不存在")
     else:

@@ -22,12 +22,11 @@ def get_one_page_audio(account_id, page_type, page_count):
     }
     if audio_pagination_response.status != const.ResponseCode.SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(audio_pagination_response.status))
-    audio_pagination_response_content = audio_pagination_response.data.decode(errors="ignore")
-    if audio_pagination_response_content.find("var OwnerNickName = '';") >= 0:
+    if audio_pagination_response.content.find("var OwnerNickName = '';") >= 0:
         raise crawler.CrawlerException("账号不存在")
     # 获取歌曲信息
     # 单首歌曲信息的格式：[歌曲id，歌曲标题]
-    audio_info_list = re.findall(r'<a href="http://5sing.kugou.com/%s/(\d*).html" [\s|\S]*? title="([^"]*)">' % page_type, audio_pagination_response_content)
+    audio_info_list = re.findall(r'<a href="http://5sing.kugou.com/%s/(\d*).html" [\s|\S]*? title="([^"]*)">' % page_type, audio_pagination_response.content)
     for audio_info in audio_info_list:
         result_audio_info = {
             "audio_id": int(audio_info[0]),
