@@ -153,10 +153,9 @@ def url_encode(url: str) -> str:
     return urllib.parse.quote(url, safe=";/?:@&=+$,%")
 
 
-def request(url, method: str = "GET", fields: Optional[dict] = None, binary_data: Optional[str] = None, charset: str = "utf-8",
-            header_list: Optional[dict] = None, cookies_list: Optional[dict] = None, encode_multipart: bool = False,  json_decode: bool = False,
-            is_auto_proxy: bool = True, is_auto_redirect: bool = True, is_gzip: bool = True, is_url_encode: bool = True, is_auto_retry: bool = True,
-            is_random_ip: bool = True, is_check_qps: bool = True,
+def request(url, method: str = "GET", fields: Optional[Union[dict, str]] = None, charset: str = "utf-8", json_decode: bool = False, is_auto_redirect: bool = True,
+            header_list: Optional[dict] = None, cookies_list: Optional[dict] = None, encode_multipart: bool = False, is_auto_proxy: bool = True,
+            is_gzip: bool = True, is_url_encode: bool = True, is_auto_retry: bool = True, is_random_ip: bool = True, is_check_qps: bool = True,
             connection_timeout: int = NET_CONFIG.HTTP_CONNECTION_TIMEOUT, read_timeout: int = NET_CONFIG.HTTP_READ_TIMEOUT) -> Union[urllib3.HTTPResponse, ErrorResponse]:
     """
     HTTP请求
@@ -214,6 +213,10 @@ def request(url, method: str = "GET", fields: Optional[dict] = None, binary_data
     if is_gzip:
         header_list["Accept-Encoding"] = "gzip"
 
+    # 使用json提交数据
+    if isinstance(fields, str):
+        header_list["Content-Type"] = "application/json"
+
     # 超时设置
     timeout = urllib3.Timeout(connect=float(connection_timeout) if connection_timeout > 0 else None, read=read_timeout if read_timeout > 0 else None)
 
@@ -231,11 +234,11 @@ def request(url, method: str = "GET", fields: Optional[dict] = None, binary_data
             if method in ["DELETE", "GET", "HEAD", "OPTIONS"]:
                 response = connection_pool.request(method, url, fields=fields, headers=header_list, redirect=is_auto_redirect, timeout=timeout)
             else:
-                if binary_data is None:
-                    response = connection_pool.request(method, url, fields=fields, encode_multipart=encode_multipart, headers=header_list,
+                if isinstance(fields, str):
+                    response = connection_pool.request(method, url, body=fields, encode_multipart=encode_multipart, headers=header_list,
                                                        redirect=is_auto_redirect, timeout=timeout)
                 else:
-                    response = connection_pool.request(method, url, body=binary_data, encode_multipart=encode_multipart, headers=header_list,
+                    response = connection_pool.request(method, url, fields=fields, encode_multipart=encode_multipart, headers=header_list,
                                                        redirect=is_auto_redirect, timeout=timeout)
             response.content = ""
             response.json_data = {}
@@ -274,11 +277,10 @@ def request(url, method: str = "GET", fields: Optional[dict] = None, binary_data
                     return ErrorResponse(const.ResponseCode.TOO_MANY_REDIRECTS)
             elif isinstance(e, urllib3.exceptions.DecodeError):
                 if message.find("'Received response with content-encoding: gzip, but failed to decode it.'") >= 0:
-                    return request(url, method=method, fields=fields, binary_data=binary_data, header_list=header_list, cookies_list=cookies_list,
-                                   encode_multipart=encode_multipart, json_decode=json_decode, is_auto_proxy=is_auto_proxy,
-                                   is_auto_redirect=is_auto_redirect, is_gzip=False, is_url_encode=False, is_auto_retry=is_auto_retry,
-                                   is_random_ip=is_random_ip, is_check_qps=is_check_qps, connection_timeout=connection_timeout,
-                                   read_timeout=read_timeout)
+                    return request(url, method=method, fields=fields, charset=charset, json_decode=json_decode, is_auto_redirect=is_auto_redirect,
+                                   header_list=header_list, cookies_list=cookies_list, encode_multipart=encode_multipart, is_auto_proxy=is_auto_proxy,
+                                   is_gzip=False, is_url_encode=False, is_auto_retry=is_auto_retry, is_random_ip=is_random_ip, is_check_qps=is_check_qps,
+                                   connection_timeout=connection_timeout, read_timeout=read_timeout)
             # import traceback
             # console.log(message)
             # console.log(traceback.format_exc())
