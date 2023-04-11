@@ -15,7 +15,6 @@ __all__ = [
 
 import os
 import sys
-
 from common.logger import logger as log
 
 # if sys.stdout.encoding != "UTF-8":

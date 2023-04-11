@@ -17,7 +17,6 @@ import urllib3
 import urllib3.exceptions
 from typing import Optional, Union, Self, Any
 from urllib3._collections import HTTPHeaderDict
-
 from common import const, console, file, net_config, path, tool
 
 # https://www.python.org/dev/peps/pep-0476/

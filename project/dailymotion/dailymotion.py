@@ -9,7 +9,6 @@ email: hikaru870806@hotmail.com
 import os
 import random
 import re
-import time
 from common import *
 
 AUTHORIZATION = ""
