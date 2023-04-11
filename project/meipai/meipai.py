@@ -64,15 +64,14 @@ def get_video_play_page(video_id):
         return result
     elif video_play_response.status != const.ResponseCode.SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(video_play_response.status))
-    video_play_response_content = video_play_response.data.decode(errors="ignore")
-    video_url_crypt_string = pq(video_play_response_content).find("meta[property='og:video:url']").attr("content")
+    video_url_crypt_string = pq(video_play_response.content).find("meta[property='og:video:url']").attr("content")
     if not video_url_crypt_string:
-        if pq(video_play_response_content).find(".error-p").length == 1:
-            error_message = pq(video_play_response_content).find(".error-p").text()
+        if pq(video_play_response.content).find(".error-p").length == 1:
+            error_message = pq(video_play_response.content).find(".error-p").text()
             if error_message == "为建设清朗网络空间，视频正在审核中，暂时无法播放。" or error_message == "可能已被删除或网址输入错误,请再核对下吧~":
                 result["is_delete"] = True
                 return result
-        raise crawler.CrawlerException("页面截取加密视频地址失败\n" + video_play_response_content)
+        raise crawler.CrawlerException("页面截取加密视频地址失败\n" + video_play_response.content)
     video_url = decrypt_video_url(video_url_crypt_string)
     if not video_url:
         raise crawler.CrawlerException("加密视频地址 %s 解密失败" % video_url_crypt_string)

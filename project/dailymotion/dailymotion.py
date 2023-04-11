@@ -9,7 +9,6 @@ email: hikaru870806@hotmail.com
 import os
 import random
 import re
-import time
 from common import *
 
 AUTHORIZATION = ""
@@ -23,10 +22,9 @@ def init_session():
     index_response = net.request(index_url, method="GET")
     if index_response.status != const.ResponseCode.SUCCEED:
         raise crawler.CrawlerException("首页，" + crawler.request_failre(index_response.status))
-    index_response_content = index_response.data.decode(errors="ignore")
-    client_id_and_secret_find = re.findall(r'var r="(\w{20,})",o="(\w{40,})"', index_response_content)
+    client_id_and_secret_find = re.findall(r'var r="(\w{20,})",o="(\w{40,})"', index_response.content)
     if len(client_id_and_secret_find) != 1 or len(client_id_and_secret_find[0]) != 2:
-        raise crawler.CrawlerException("页面截取client_id和client_secret失败\n" + index_response_content)
+        raise crawler.CrawlerException("页面截取client_id和client_secret失败\n" + index_response.content)
     post_data = {
         "client_id": client_id_and_secret_find[0][0],
         "client_secret": client_id_and_secret_find[0][1],
@@ -61,7 +59,7 @@ def get_one_page_video(account_id, page_count):
         "is_over": False,  # 是否最后一页视频
         "video_info_list": [],  # 全部视频信息
     }
-    api_response = net.request(api_url, method="POST", binary_data=tool.json_encode(post_data), header_list=header_list, json_decode=True)
+    api_response = net.request(api_url, method="POST", fields=tool.json_encode(post_data), header_list=header_list, json_decode=True)
     if api_response.status != const.ResponseCode.SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(api_response.status))
     # 获取所有视频
@@ -107,10 +105,9 @@ def get_video_page(video_id):
     # 查找最高分辨率的视频源地址
     m3u8_file_url = crawler.get_json_value(video_info_response.json_data, "qualities", "auto", 0, "url", type_check=str)
     m3u8_file_response = net.request(m3u8_file_url, method="GET")
-    m3u8_file_response_content = m3u8_file_response.data.decode(errors="ignore")
     max_resolution = 0
     video_url = ""
-    for line in m3u8_file_response_content.split("\n"):
+    for line in m3u8_file_response.content.split("\n"):
         if not line.startswith("#EXT-X-STREAM-INF:"):
             continue
         resolution_find = re.findall(r"RESOLUTION=(\d*)x(\d*)", line)
@@ -122,7 +119,7 @@ def get_video_page(video_id):
             if not video_url:
                 raise crawler.CrawlerException("视频信息截取视频地址失败\n" + line)
     if not video_url:
-        raise crawler.CrawlerException("视频信息截取最大分辨率视频地址失败\n" + m3u8_file_response_content)
+        raise crawler.CrawlerException("视频信息截取最大分辨率视频地址失败\n" + m3u8_file_response.content)
     result["video_url"] = video_url
     return result
 

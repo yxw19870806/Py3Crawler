@@ -12,23 +12,17 @@ import time
 from pyquery import PyQuery as pq
 from common import *
 
-USER_AGENT = net.random_user_agent("chrome")
-
 
 # 获取有声书首页
 def get_album_index_page(album_id):
     album_index_url = "http://m.tingshubao.com/book/%s.html" % album_id
-    header_list = {
-        "User-Agent": USER_AGENT,
-    }
-    album_index_response = net.request(album_index_url, method="GET", header_list=header_list)
+    album_index_response = net.request(album_index_url, method="GET", charset="GBK")
     result = {
         "audio_info_list": [],  # 全部音频信息
     }
     if album_index_response.status != const.ResponseCode.SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(album_index_response.status))
-    album_index_response_content = album_index_response.data.decode("GBK", errors="ignore")
-    audio_list_selector = pq(album_index_response_content).find(".play-list li")
+    audio_list_selector = pq(album_index_response.content).find(".play-list li")
     for audio_index in range(audio_list_selector.length, 0, -1):
         result_audio_info = {
             "audio_id": 0,  # 音频id
@@ -57,17 +51,13 @@ def get_audio_info_page(audio_play_url):
     result = {
         "audio_url": "",  # 音频下载地址
     }
-    header_list = {
-        "User-Agent": USER_AGENT,
-    }
-    audio_play_response = net.request(audio_play_url, method="GET", header_list=header_list)
+    audio_play_response = net.request(audio_play_url, method="GET")
     if audio_play_response.status == const.ResponseCode.TOO_MANY_REDIRECTS:
         return get_audio_info_page(audio_play_url)
     elif audio_play_response.status != const.ResponseCode.SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(audio_play_response.status))
-    audio_play_response_content = audio_play_response.data.decode(errors="ignore")
     # 解析来自 http://m.tingshubao.com/player/main.js的FonHen_JieMa()方法
-    encrypt_string = tool.find_sub_string(audio_play_response_content, "FonHen_JieMa('", "'")
+    encrypt_string = tool.find_sub_string(audio_play_response.content, "FonHen_JieMa('", "'")
     temp_list = []
     for temp in encrypt_string.split("*")[1:]:
         temp = chr(int(temp) & 0xffff)
@@ -105,6 +95,9 @@ class TingShuBao(crawler.Crawler):
 
         # 下载线程
         self.crawler_thread = CrawlerThread
+
+    def init(self):
+        net.DEFAULT_USER_AGENT = net.random_user_agent("chrome")
 
 
 class CrawlerThread(crawler.CrawlerThread):

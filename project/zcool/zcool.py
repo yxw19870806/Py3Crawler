@@ -7,7 +7,6 @@ email: hikaru870806@hotmail.com
 如有问题或建议请联系
 """
 import os
-import time
 from pyquery import PyQuery as pq
 from common import *
 
@@ -33,8 +32,7 @@ def get_one_page_album(account_name, page_count):
         raise crawler.CrawlerException("账号不存在")
     elif album_pagination_response.status != const.ResponseCode.SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(album_pagination_response.status))
-    album_pagination_response_content = album_pagination_response.data.decode(errors="ignore")
-    album_list_selector = pq(album_pagination_response_content).find(".work-list-box .card-box")
+    album_list_selector = pq(album_pagination_response.content).find(".work-list-box .card-box")
     for album_index in range(album_list_selector.length):
         result_album_info = {
             "album_id": "",  # 作品id
@@ -83,10 +81,9 @@ def get_album_page(album_id):
     }
     if album_response.status != const.ResponseCode.SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(album_response.status))
-    album_response_content = album_response.data.decode(errors="ignore")
-    photo_list_selector = pq(album_response_content).find(".work-show-box .reveal-work-wrap img")
+    photo_list_selector = pq(album_response.content).find(".work-show-box .reveal-work-wrap img")
     if photo_list_selector.length == 0:
-        raise crawler.CrawlerException("页面截取图片列表失败\n" + album_response_content)
+        raise crawler.CrawlerException("页面截取图片列表失败\n" + album_response.content)
     for photo_index in range(photo_list_selector.length):
         result["photo_url_list"].append(photo_list_selector.eq(photo_index).attr("src"))
     return result

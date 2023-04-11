@@ -33,8 +33,7 @@ def get_discount_game_list():
         discount_game_pagination_response = net.request(discount_game_pagination_url, method="GET", cookies_list=COOKIE_INFO)
         if discount_game_pagination_response.status != const.ResponseCode.SUCCEED:
             raise crawler.CrawlerException("第%s页打折游戏访问失败，原因：%s" % (page_count, crawler.request_failre(discount_game_pagination_response.status)))
-        discount_game_pagination_response_content = discount_game_pagination_response.data.decode(errors="ignore")
-        search_result_selector = pq(discount_game_pagination_response_content).find("#search_result_container")
+        search_result_selector = pq(discount_game_pagination_response.content).find("#search_result_container")
         game_list_selector = search_result_selector.find("#search_resultsRows a")
         for game_index in range(game_list_selector.length):
             game_selector = game_list_selector.eq(game_index)
@@ -96,7 +95,7 @@ def get_discount_game_list():
         # 下一页
         pagination_html = search_result_selector.find(".search_pagination .search_pagination_right").html()
         if pagination_html is None:
-            if pq(discount_game_pagination_response_content).find("#error_box").length == 1:
+            if pq(discount_game_pagination_response.content).find("#error_box").length == 1:
                 continue
             break
         page_count_find = re.findall(r"<a [\s|\S]*?>([\d]*)</a>", pagination_html)
@@ -107,7 +106,7 @@ def get_discount_game_list():
             else:
                 break
         else:
-            raise crawler.CrawlerException("分页信息没有找到\n" + discount_game_pagination_response_content)
+            raise crawler.CrawlerException("分页信息没有找到\n" + discount_game_pagination_response.content)
     return discount_game_list
 
 
@@ -132,24 +131,23 @@ def get_game_store_index(game_id):
             game_index_response = net.request(game_index_response.getheader("Location"), method="GET", cookies_list=COOKIE_INFO)
     if game_index_response.status != const.ResponseCode.SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(game_index_response.status))
-    game_index_response_content = game_index_response.data.decode(errors="ignore")
-    if pq(game_index_response_content).find(".agegate_birthday_selector").length > 0:
+    if pq(game_index_response.content).find(".agegate_birthday_selector").length > 0:
         result["error"] = "需要检测年龄"
         return result
-    if pq(game_index_response_content).find("#error_box").length > 0:
-        result["error"] = pq(game_index_response_content).find("#error_box span").text()
+    if pq(game_index_response.content).find("#error_box").length > 0:
+        result["error"] = pq(game_index_response.content).find("#error_box span").text()
         return result
     # 所有DLC
-    dlc_list_selection = pq(game_index_response_content).find(".game_area_dlc_section a.game_area_dlc_row")
+    dlc_list_selection = pq(game_index_response.content).find(".game_area_dlc_section a.game_area_dlc_row")
     if dlc_list_selection.length > 0:
         for index in range(dlc_list_selection.length):
             result["dlc_list"].append(dlc_list_selection.eq(index).attr("data-ds-appid"))
     # 是否已拥有
-    result["owned"] = pq(game_index_response_content).find(".already_in_library").length == 1
+    result["owned"] = pq(game_index_response.content).find(".already_in_library").length == 1
     # 是否已评测
-    result["reviewed"] = result["owned"] and pq(game_index_response_content).find("#review_create").length == 0
+    result["reviewed"] = result["owned"] and pq(game_index_response.content).find("#review_create").length == 0
     # 是否已资料受限制
-    result["restricted"] = pq(game_index_response_content).find(".learning_about").length == 1
+    result["restricted"] = pq(game_index_response.content).find(".learning_about").length == 1
     return result
 
 
@@ -165,9 +163,8 @@ def get_self_uncompleted_account_badges(account_id):
         badges_pagination_response = net.request(badges_pagination_url, method="GET", fields=query_data, cookies_list=COOKIE_INFO)
         if badges_pagination_response.status != const.ResponseCode.SUCCEED:
             raise crawler.CrawlerException("第%s页徽章访问失败，原因：%s" % (page_count, crawler.request_failre(badges_pagination_response.status)))
-        badges_pagination_response_content = badges_pagination_response.data.decode(errors="ignore")
         # 徽章div
-        badges_selector = pq(badges_pagination_response_content).find(".maincontent .badges_sheet .badge_row")
+        badges_selector = pq(badges_pagination_response.content).find(".maincontent .badges_sheet .badge_row")
         for index in range(badges_selector.length):
             badge_selector = badges_selector.eq(index)
             # 闪亮徽章，跳过
@@ -201,7 +198,7 @@ def get_self_uncompleted_account_badges(account_id):
                     continue
             badges_detail_url_list.append(badge_detail_url)
         # 判断是不是还有下一页
-        next_page_selector = pq(badges_pagination_response_content).find("div.profile_paging div.pageLinks a.pagelink:last")
+        next_page_selector = pq(badges_pagination_response.content).find("div.profile_paging div.pageLinks a.pagelink:last")
         if next_page_selector.length == 0:
             break
         if page_count >= int(next_page_selector.attr("href").split("?p=")[-1]):
@@ -217,16 +214,15 @@ def get_self_account_badge_card(badge_detail_url):
     badge_detail_response = net.request(badge_detail_url, method="GET", cookies_list=COOKIE_INFO)
     if badge_detail_response.status != const.ResponseCode.SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(badge_detail_response.status))
-    badge_detail_response_content = badge_detail_response.data.decode(errors="ignore")
     wanted_card_list = {}
-    page_selector = pq(badge_detail_response_content)
+    page_selector = pq(badge_detail_response.content)
     # 徽章等级
     badge_selector = page_selector.find(".maincontent .badge_current .badge_info")
     # 有等级
     if badge_selector.find(".badge_info_description").length == 1:
         badge_level_html = badge_selector.find(".badge_info_description div").eq(1).text()
         if not badge_level_html:
-            raise crawler.CrawlerException("页面截取徽章等级信息失败\n" + badge_detail_response_content)
+            raise crawler.CrawlerException("页面截取徽章等级信息失败\n" + badge_detail_response.content)
         badge_level_find = re.findall(r"(\d*) 级,", badge_level_html)
         if len(badge_level_find) != 1:
             badge_level_find = re.findall(r"Level (\d*),", badge_level_html)
@@ -355,11 +351,10 @@ def get_account_badges(account_id):
         badges_pagination_response = net.request(badges_pagination_url, method="GET", fields=query_data, cookies_list=cookies_list)
         if badges_pagination_response.status != const.ResponseCode.SUCCEED:
             raise crawler.CrawlerException("第%s页徽章访问失败，原因：%s" % (page_count, crawler.request_failre(badges_pagination_response.status)))
-        badges_pagination_response_content = badges_pagination_response.data.decode(errors="ignore")
-        badge_list_selector = pq(badges_pagination_response_content).find("div.badge_row")
+        badge_list_selector = pq(badges_pagination_response.content).find("div.badge_row")
         if badge_list_selector.length == 0:
             # 如果是隐私账号，会302到主页的，这里只判断页面文字就不判断状态了
-            if pq(badges_pagination_response_content).find("div.profile_private_info").length == 1:
+            if pq(badges_pagination_response.content).find("div.profile_private_info").length == 1:
                 raise crawler.CrawlerException("账号隐私设置中未公开游戏详情")
         for badge_index in range(badge_list_selector.length):
             badge_selector = badge_list_selector.eq(badge_index)
@@ -376,7 +371,7 @@ def get_account_badges(account_id):
             if not tool.is_integer(game_id):
                 raise crawler.CrawlerException("徽章详情地址 %s 截取游戏id失败" % badge_detail_url)
             # 获取徽章等级
-            badge_info_text = badge_selector.find('div.badge_content div.badge_info_description div').eq(1).html()
+            badge_info_text = badge_selector.find('div.badge.content div.badge_info_description div').eq(1).html()
             if badge_info_text is None:
                 raise crawler.CrawlerException("页面截取徽章详情失败\n" + badge_selector.html())
             badge_level_find = re.findall(r"Level (\d*),", badge_info_text)
@@ -384,7 +379,7 @@ def get_account_badges(account_id):
                 raise crawler.CrawlerException("徽章详情%s中截取徽章等级失败" % badge_info_text)
             badge_level_list[game_id] = int(badge_level_find[0])
         # 判断是不是还有下一页
-        next_page_selector = pq(badges_pagination_response_content).find("div.profile_paging div.pageLinks a.pagelink:last")
+        next_page_selector = pq(badges_pagination_response.content).find("div.profile_paging div.pageLinks a.pagelink:last")
         if next_page_selector.length == 0:
             break
         if page_count >= int(next_page_selector.attr("href").split("?p=")[-1]):
@@ -399,9 +394,8 @@ def get_account_owned_app_list(user_id, is_played=False):
     game_index_response = net.request(game_index_url, method="GET", cookies_list=COOKIE_INFO, read_timeout=120)
     if game_index_response.status != const.ResponseCode.SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(game_index_response.status))
-    game_index_response_content = game_index_response.data.decode(errors="ignore")
     # 如果是隐私账号，会302到主页的，这里只判断页面文字就不判断状态了
-    games_list_string = pq(game_index_response_content).find("#gameslist_config").attr("data-profile-gameslist")
+    games_list_string = pq(game_index_response.content).find("#gameslist_config").attr("data-profile-gameslist")
     if not games_list_string:
         raise crawler.CrawlerException("页面截取全部游戏信息失败")
     owned_all_game_json_data = tool.json_decode(games_list_string)

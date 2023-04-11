@@ -22,8 +22,7 @@ def check_login():
     index_url = "https://weibo.com/"
     index_response = net.request(index_url, method="GET", cookies_list=COOKIE_INFO)
     if index_response.status == const.ResponseCode.SUCCEED:
-        index_response_content = index_response.data.decode(errors="ignore")
-        return index_response_content.find("$CONFIG[\'uid\']=\'") >= 0 or index_response_content.find('"uid":') >= 0
+        return index_response.content.find("$CONFIG[\'uid\']=\'") >= 0 or index_response.content.find('"uid":') >= 0
     return False
 
 

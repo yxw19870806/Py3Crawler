@@ -20,10 +20,9 @@ def get_comic_index_page(comic_name):
     }
     if index_response.status != const.ResponseCode.SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(index_response.status))
-    index_response_content = index_response.data.decode(errors="ignore")
-    comic_info_html = tool.find_sub_string(index_response_content, "initIntroData(", ");\n")
+    comic_info_html = tool.find_sub_string(index_response.content, "initIntroData(", ");\n")
     if not comic_info_html:
-        raise crawler.CrawlerException("漫画信息截取失败\n" + index_response_content)
+        raise crawler.CrawlerException("漫画信息截取失败\n" + index_response.content)
     comic_info_data = tool.json_decode(comic_info_html)
     if not comic_info_data:
         raise crawler.CrawlerException("漫画信息加载失败\n" + comic_info_html)
@@ -58,11 +57,10 @@ def get_chapter_page(comic_id, page_id):
     }
     if chapter_response.status != const.ResponseCode.SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(chapter_response.status))
-    chapter_response_content = chapter_response.data.decode(errors="ignore")
-    script_json_html = tool.find_sub_string(chapter_response_content, "mReader.initData(", ");")
+    script_json_html = tool.find_sub_string(chapter_response.content, "mReader.initData(", ");")
     script_json_html = script_json_html[0:script_json_html.rfind("},") + 1]
     if not script_json_html:
-        raise crawler.CrawlerException("章节信息截取失败\n" + chapter_response_content)
+        raise crawler.CrawlerException("章节信息截取失败\n" + chapter_response.content)
     script_json = tool.json_decode(script_json_html)
     if not script_json:
         raise crawler.CrawlerException("章节信息加载失败\n" + script_json_html)

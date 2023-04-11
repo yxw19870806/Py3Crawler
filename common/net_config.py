@@ -8,7 +8,6 @@ email: hikaru870806@hotmail.com
 import os
 import re
 from typing import Union, Final
-
 from common import const, console, file, tool, PROJECT_LIB_PATH
 
 

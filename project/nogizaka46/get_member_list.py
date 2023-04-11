@@ -17,10 +17,9 @@ def get_account_from_index():
     index_response = net.request(index_url, method="GET")
     if index_response.status != const.ResponseCode.SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(index_response.status))
-    index_response_content = index_response.data.decode(errors="ignore")
-    member_selector_list = pq(index_response_content).find("div.ba--ml__list .ba--ml__one__a")
+    member_selector_list = pq(index_response.content).find("div.ba--ml__list .ba--ml__one__a")
     if member_selector_list.length == 0:
-        raise crawler.CrawlerException("页面截取成员类别失败\n" + index_response_content)
+        raise crawler.CrawlerException("页面截取成员类别失败\n" + index_response.content)
     account_list = {}
     for member_index in range(member_selector_list.length):
         member_selector = member_selector_list.eq(member_index)

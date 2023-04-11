@@ -27,10 +27,9 @@ def get_one_page_blog(account_id, page_count):
         raise crawler.CrawlerException("账号不存在")
     elif blog_pagination_response.status != const.ResponseCode.SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(blog_pagination_response.status))
-    blog_pagination_response_content = blog_pagination_response.data.decode(errors="ignore")
-    blog_info_select_list = pq(blog_pagination_response_content).find(".bl--card.js-pos")
+    blog_info_select_list = pq(blog_pagination_response.content).find(".bl--card.js-pos")
     if blog_info_select_list.length == 0:
-        raise crawler.CrawlerException("页面截取日志列表失败\n" + blog_pagination_response_content)
+        raise crawler.CrawlerException("页面截取日志列表失败\n" + blog_pagination_response.content)
     for blog_info_index in range(blog_info_select_list.length):
         blog_info_select = blog_info_select_list.eq(blog_info_index)
         blog_url_path = blog_info_select.attr("href")
@@ -40,7 +39,7 @@ def get_one_page_blog(account_id, page_count):
         result["blog_id_list"].append(int(blog_id))
 
     # 判断是不是最后一页
-    paginate_selector = pq(blog_pagination_response_content).find(".bl--pg .tolast a")
+    paginate_selector = pq(blog_pagination_response.content).find(".bl--pg .tolast a")
     if paginate_selector.length == 1:
         latest_url = paginate_selector.attr("href")
         if not latest_url:
@@ -50,10 +49,10 @@ def get_one_page_blog(account_id, page_count):
             raise crawler.CrawlerException("页面截取最后一页失败\n" + paginate_selector.html())
         result["is_over"] = page_count >= int(max_page_count)
     else:
-        if pq(blog_pagination_response_content).find(".bl--pg").length == 1:
+        if pq(blog_pagination_response.content).find(".bl--pg").length == 1:
             result["is_over"] = True
         else:
-            raise crawler.CrawlerException("页面截取分页信息失败\n" + blog_pagination_response_content)
+            raise crawler.CrawlerException("页面截取分页信息失败\n" + blog_pagination_response.content)
     return result
 
 
@@ -65,10 +64,9 @@ def get_blog_page(blog_id):
     }
     if blog_response.status != const.ResponseCode.SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(blog_response.status))
-    blog_response_content = blog_response.data.decode(errors="ignore")
-    blog_html_selector = pq(blog_response_content).find(".bd--edit")
+    blog_html_selector = pq(blog_response.content).find(".bd--edit")
     if blog_html_selector.length != 1:
-        raise crawler.CrawlerException("页面截取正文失败\n" + blog_response_content)
+        raise crawler.CrawlerException("页面截取正文失败\n" + blog_response.content)
     # 获取图片地址
     photo_list_selector = blog_html_selector.find("img")
     for photo_index in range(photo_list_selector.length):

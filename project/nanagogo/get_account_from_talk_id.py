@@ -21,10 +21,9 @@ def get_member_from_talk(talk_id):
     account_list = {}
     if talk_index_response.status != const.ResponseCode.SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(talk_index_response.status))
-    talk_index_response_content = talk_index_response.data.decode(errors="ignore")
-    script_json_html = tool.find_sub_string(talk_index_response_content, "window.__DEHYDRATED_STATES__ = ", "</script>")
+    script_json_html = tool.find_sub_string(talk_index_response.content, "window.__DEHYDRATED_STATES__ = ", "</script>")
     if not script_json_html:
-        raise crawler.CrawlerException("页面截取talk信息失败\n" + talk_index_response_content)
+        raise crawler.CrawlerException("页面截取talk信息失败\n" + talk_index_response.content)
     script_json = tool.json_decode(script_json_html)
     if script_json is None:
         raise crawler.CrawlerException("talk信息加载失败\n" + script_json_html)

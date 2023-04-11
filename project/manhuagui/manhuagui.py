@@ -23,21 +23,20 @@ def get_comic_index_page(comic_id):
     }
     if index_response.status != const.ResponseCode.SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(index_response.status))
-    index_response_content = index_response.data.decode(errors="ignore")
-    chapter_info_selector = pq(index_response_content).find("div.chapter")
+    chapter_info_selector = pq(index_response.content).find("div.chapter")
     if chapter_info_selector.length != 1:
-        raise crawler.CrawlerException("页面截取漫画列表失败\n" + index_response_content)
+        raise crawler.CrawlerException("页面截取漫画列表失败\n" + index_response.content)
     group_name_selector = chapter_info_selector.find("h4")
     if group_name_selector.length == 0:
-        if pq(index_response_content).find("#__VIEWSTATE").length == 1:
-            decompress_string = pq(index_response_content).find("#__VIEWSTATE").val()
+        if pq(index_response.content).find("#__VIEWSTATE").length == 1:
+            decompress_string = pq(index_response.content).find("#__VIEWSTATE").val()
             if decompress_string:
                 decompress_html = lzstring.LZString().decompressFromBase64(decompress_string)
                 chapter_info_selector.html(decompress_html)
                 group_name_selector = chapter_info_selector.find("h4")
     group_chapter_list_selector = chapter_info_selector.find(".chapter-list")
     if group_name_selector.length != group_chapter_list_selector.length:
-        raise crawler.CrawlerException("页面截取章节数量异常\n" + index_response_content)
+        raise crawler.CrawlerException("页面截取章节数量异常\n" + index_response.content)
     for group_index in range(group_name_selector.length):
         # 　获取分组名字
         group_name = group_name_selector.eq(group_index).text().strip()
@@ -78,10 +77,9 @@ def get_chapter_page(comic_id, chapter_id):
     }
     if chapter_response.status != const.ResponseCode.SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(chapter_response.status))
-    chapter_response_content = chapter_response.data.decode(errors="ignore")
-    script_code = tool.find_sub_string(chapter_response_content, r'window["\x65\x76\x61\x6c"]', "</script>")
+    script_code = tool.find_sub_string(chapter_response.content, r'window["\x65\x76\x61\x6c"]', "</script>")
     if not script_code:
-        raise crawler.CrawlerException("页面截取脚本代码失败\n" + chapter_response_content)
+        raise crawler.CrawlerException("页面截取脚本代码失败\n" + chapter_response.content)
 
     # 使用网站的加密JS方法解密图片地址
     js_code = file.read_file(os.path.join(crawler.PROJECT_APP_PATH, "js", "lz-string.js"))
