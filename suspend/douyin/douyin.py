@@ -14,16 +14,12 @@ from selenium.webdriver.common.by import By
 EACH_PAGE_VIDEO_COUNT = 21
 CACHE_FILE_PATH = os.path.join(os.path.dirname(__file__), "cache")
 TEMPLATE_HTML_PATH = os.path.join(os.path.dirname(__file__), "html/template.html")
-USER_AGENT = net.random_user_agent()
 
 
 # 获取账号首页
 def get_account_index_page(account_id):
     account_index_url = "https://www.douyin.com/share/user/%s" % account_id
-    header_list = {
-        "User-Agent": USER_AGENT,
-    }
-    account_index_response = net.request(account_index_url, method="GET", header_list=header_list)
+    account_index_response = net.request(account_index_url, method="GET")
     result = {
         "dytk": "",  # 账号dytk值（请求参数）
         "signature": "",  # 加密串（请求参数）
@@ -39,11 +35,11 @@ def get_account_index_page(account_id):
     result["dytk"] = script_dytk
     # 读取模板并替换相关参数
     template_html = file.read_file(TEMPLATE_HTML_PATH)
-    template_html = template_html.replace("%%USER_AGENT%%", USER_AGENT).replace("%%TAC%%", script_tac).replace("%%UID%%", str(account_id))
+    template_html = template_html.replace("%%USER_AGENT%%", net.DEFAULT_USER_AGENT).replace("%%TAC%%", script_tac).replace("%%UID%%", str(account_id))
     cache_html_path = os.path.join(CACHE_FILE_PATH, "%s.html" % account_id)
     file.write_file(template_html, cache_html_path, const.WriteFileMode.REPLACE)
     # 使用抖音的加密JS方法算出signature的值
-    chrome_options_argument = ["user-agent=" + USER_AGENT]
+    chrome_options_argument = ["user-agent=" + net.DEFAULT_USER_AGENT]
     with browser.Chrome("file:///" + os.path.realpath(cache_html_path), add_argument=chrome_options_argument) as chrome:
         signature = chrome.find_element(by=By.ID, value="result").text
     # 删除临时模板文件
@@ -66,7 +62,6 @@ def get_one_page_video(account_id, cursor_id, dytk, signature):
     }
     header_list = {
         "Referer": "https://www.douyin.com/share/user/%s" % account_id,
-        "User-Agent": USER_AGENT,
     }
     video_pagination_response = net.request(api_url, method="GET", fields=query_data, header_list=header_list, json_decode=True)
     result = {
@@ -115,6 +110,9 @@ class DouYin(crawler.Crawler):
 
         # 下载线程
         self.crawler_thread = CrawlerThread
+
+    def init(self):
+        net.DEFAULT_USER_AGENT = net.random_user_agent()
 
     def done(self):
         # 删除临时缓存目录

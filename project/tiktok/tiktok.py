@@ -13,7 +13,6 @@ from common import *
 from common import browser
 
 EACH_PAGE_VIDEO_COUNT = 48
-USER_AGENT = net.random_user_agent()
 
 
 # 获取账号首页
@@ -24,7 +23,7 @@ def get_account_index_page(account_id):
     }
     desired_capabilities = DesiredCapabilities.CHROME
     desired_capabilities['loggingPrefs'] = {'performance': 'ALL'}  # 记录所有日志
-    chrome_options_argument = ["user-agent=" + USER_AGENT]
+    chrome_options_argument = ["user-agent=" + net.DEFAULT_USER_AGENT]
     with browser.Chrome(account_index_url, desired_capabilities=desired_capabilities, add_argument=chrome_options_argument) as chrome:
         for log_info in chrome.get_log("performance"):
             log_message = tool.json_decode(crawler.get_json_value(log_info, "message", type_check=str))
@@ -54,7 +53,6 @@ def get_one_page_video(account_id, cursor_id, signature):
     }
     header_list = {
         "Referer": "https://www.tiktok.com/share/user/%s" % account_id,
-        "User-Agent": USER_AGENT,
     }
     video_pagination_response = net.request(api_url, method="GET", fields=query_data, header_list=header_list, json_decode=True)
     result = {
@@ -99,6 +97,9 @@ class TikTok(crawler.Crawler):
 
         # 下载线程
         self.crawler_thread = CrawlerThread
+
+    def init(self):
+        net.DEFAULT_USER_AGENT = net.random_user_agent()
 
 
 class CrawlerThread(crawler.CrawlerThread):

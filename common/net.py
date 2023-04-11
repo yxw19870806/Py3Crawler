@@ -39,6 +39,8 @@ thread_event.set()
 EXIT_FLAG: bool = False
 # 下载文件时是否覆盖已存在的同名文件
 DOWNLOAD_REPLACE_IF_EXIST: bool = False
+# 是否使用固定的UA，如果为None，则每次都通过random_user_agent()随机一个
+DEFAULT_USER_AGENT: Optional[str] = None
 # 网络请求相关配置
 NET_CONFIG: net_config.NetConfig = net_config.NetConfig()
 # response header中Content-Type对应的Mime字典
@@ -153,7 +155,7 @@ def url_encode(url: str) -> str:
     return urllib.parse.quote(url, safe=";/?:@&=+$,%")
 
 
-def request(url, method: str = "GET", fields: Optional[Union[dict, str]] = None, charset: str = "utf-8", json_decode: bool = False, is_auto_redirect: bool = True,
+def request(url: str, method: str = "GET", fields: Optional[Union[dict, str]] = None, charset: str = "utf-8", json_decode: bool = False, is_auto_redirect: bool = True,
             header_list: Optional[dict] = None, cookies_list: Optional[dict] = None, encode_multipart: bool = False, is_auto_proxy: bool = True,
             is_gzip: bool = True, is_url_encode: bool = True, is_auto_retry: bool = True, is_random_ip: bool = True, is_check_qps: bool = True,
             connection_timeout: int = NET_CONFIG.HTTP_CONNECTION_TIMEOUT, read_timeout: int = NET_CONFIG.HTTP_READ_TIMEOUT) -> Union[urllib3.HTTPResponse, ErrorResponse]:
@@ -197,7 +199,10 @@ def request(url, method: str = "GET", fields: Optional[Union[dict, str]] = None,
 
     # 设置User-Agent
     if "User-Agent" not in header_list:
-        header_list["User-Agent"] = random_user_agent()
+        if DEFAULT_USER_AGENT is None:
+            header_list["User-Agent"] = random_user_agent()
+        else:
+            header_list["User-Agent"] = DEFAULT_USER_AGENT
 
     # 设置一个随机IP
     if is_random_ip:
