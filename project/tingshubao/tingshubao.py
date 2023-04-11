@@ -12,16 +12,11 @@ import time
 from pyquery import PyQuery as pq
 from common import *
 
-USER_AGENT = net.random_user_agent("chrome")
-
 
 # 获取有声书首页
 def get_album_index_page(album_id):
     album_index_url = "http://m.tingshubao.com/book/%s.html" % album_id
-    header_list = {
-        "User-Agent": USER_AGENT,
-    }
-    album_index_response = net.request(album_index_url, method="GET", charset="GBK", header_list=header_list)
+    album_index_response = net.request(album_index_url, method="GET", charset="GBK")
     result = {
         "audio_info_list": [],  # 全部音频信息
     }
@@ -56,10 +51,7 @@ def get_audio_info_page(audio_play_url):
     result = {
         "audio_url": "",  # 音频下载地址
     }
-    header_list = {
-        "User-Agent": USER_AGENT,
-    }
-    audio_play_response = net.request(audio_play_url, method="GET", header_list=header_list)
+    audio_play_response = net.request(audio_play_url, method="GET")
     if audio_play_response.status == const.ResponseCode.TOO_MANY_REDIRECTS:
         return get_audio_info_page(audio_play_url)
     elif audio_play_response.status != const.ResponseCode.SUCCEED:
@@ -103,6 +95,9 @@ class TingShuBao(crawler.Crawler):
 
         # 下载线程
         self.crawler_thread = CrawlerThread
+
+    def init(self):
+        net.DEFAULT_USER_AGENT = net.random_user_agent("chrome")
 
 
 class CrawlerThread(crawler.CrawlerThread):
