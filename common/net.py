@@ -38,7 +38,7 @@ thread_event.set()
 EXIT_FLAG: bool = False
 # 下载文件时是否覆盖已存在的同名文件
 DOWNLOAD_REPLACE_IF_EXIST: bool = False
-# 是否使用固定的UA，如果为None，则每次都通过random_user_agent()随机一个
+# 是否使用固定的UA，可以通过set_default_user_agent()重新随机生成
 DEFAULT_USER_AGENT: Optional[str] = None
 # 网络请求相关配置
 NET_CONFIG: net_config.NetConfig = net_config.NetConfig()
@@ -78,6 +78,13 @@ def set_proxy(ip: str, port: str) -> None:
     global PROXY_HTTP_CONNECTION_POOL
     PROXY_HTTP_CONNECTION_POOL = urllib3.ProxyManager(f"http://{ip}:{port}", retries=False)
     console.log(f"设置代理成功({ip}:{port})")
+
+
+def set_default_user_agent(browser_type: Optional[const.BrowserType] = None):
+    global DEFAULT_USER_AGENT
+    user_agent = _random_user_agent(browser_type)
+    if user_agent:
+        DEFAULT_USER_AGENT = user_agent
 
 
 def build_header_cookie_string(cookies_list: dict) -> str:
@@ -199,7 +206,7 @@ def request(url: str, method: str = "GET", fields: Optional[Union[dict, str]] = 
     # 设置User-Agent
     if "User-Agent" not in header_list:
         if DEFAULT_USER_AGENT is None:
-            header_list["User-Agent"] = random_user_agent()
+            header_list["User-Agent"] = _random_user_agent()
         else:
             header_list["User-Agent"] = DEFAULT_USER_AGENT
 
@@ -328,7 +335,7 @@ def _qps(url: str) -> bool:
     return False
 
 
-def random_user_agent(browser_type: Optional[str] = None) -> str:
+def _random_user_agent(browser_type: Optional[const.BrowserType] = None) -> str:
     """
     随机获取一个user agent
         Common firefox user agent   "Mozilla/5.0 (Windows NT 6.1; WOW64; rv:46.0) Gecko/20100101 Firefox/46.0"
@@ -343,12 +350,12 @@ def random_user_agent(browser_type: Optional[str] = None) -> str:
     firefox_version_max = 109
     chrome_version_max = 111
     if browser_type is None:
-        browser_type = random.choice(["firefox", "chrome"])
-    if browser_type == "firefox":
+        browser_type = random.choice([const.BrowserType.FIREFOX, const.BrowserType.CHROME])
+    if browser_type == const.BrowserType.FIREFOX:
         firefox_version = random.randint(firefox_version_max - 3, firefox_version_max)
         os_type = random.choice(list(windows_version_dict.values()))
         return f"Mozilla/5.0 ({os_type}; Win64; x64; rv:{firefox_version}.0) Gecko/20100101 Firefox/{firefox_version}.0"
-    elif browser_type == "chrome":
+    elif browser_type == const.BrowserType.CHROME:
         chrome_version = random.randint(chrome_version_max - 3, chrome_version_max)
         os_type = random.choice(list(windows_version_dict.values()))
         return f"Mozilla/5.0 ({os_type}; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/{chrome_version}.0.0.0 Safari/537.36"
