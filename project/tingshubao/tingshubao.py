@@ -97,7 +97,7 @@ class TingShuBao(crawler.Crawler):
         self.crawler_thread = CrawlerThread
 
     def init(self):
-        net.DEFAULT_USER_AGENT = net.set_default_user_agent(const.BrowserType.CHROME)
+        net.set_default_user_agent(const.BrowserType.CHROME)
 
 
 class CrawlerThread(crawler.CrawlerThread):

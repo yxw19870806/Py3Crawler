@@ -99,7 +99,7 @@ class TikTok(crawler.Crawler):
         self.crawler_thread = CrawlerThread
 
     def init(self):
-        net.DEFAULT_USER_AGENT = net.set_default_user_agent()
+        net.set_default_user_agent()
 
 
 class CrawlerThread(crawler.CrawlerThread):
