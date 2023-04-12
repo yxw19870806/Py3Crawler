@@ -48,7 +48,7 @@ class KeyboardEvent(threading.Thread):
     # 按键名 => 回调方法名
     event_key_list: dict[str, callable] = {}
 
-    def __init__(self, event_list: dict) -> None:
+    def __init__(self, event_list: dict[str, callable]) -> None:
         """
         键盘监听事件
 

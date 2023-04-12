@@ -49,7 +49,7 @@ class WindowsApplication:
             self.thread_event.set()
 
     @property
-    def window_handle(self):
+    def window_handle(self) -> int:
         return win32gui.FindWindow(None, self.window_title)
 
     def get_window_size(self) -> tuple[int, int]:
@@ -122,7 +122,7 @@ class WindowsApplication:
                 time.sleep(click_time)
             win32gui.SendMessage(self.window_handle, win32con.WM_RBUTTONUP, win32con.MK_RBUTTON, tmp)
 
-    def send_key(self, keyboard) -> None:
+    def send_key(self, keyboard: str) -> None:
         """
         自动向窗口发送按键指令（窗口必须在最顶端）
         """
@@ -167,7 +167,7 @@ def get_file_version(file_path: str) -> str:
     return "%d.%d.%d.%04d" % (win32api.HIWORD(ms), win32api.LOWORD(ms), win32api.HIWORD(ls), win32api.LOWORD(ls))
 
 
-def send_keyboard_event(keyboard) -> None:
+def send_keyboard_event(keyboard: str) -> None:
     """
     前台输入指定按键
     """
@@ -175,7 +175,7 @@ def send_keyboard_event(keyboard) -> None:
     win32api.keybd_event(keyboard, 0, win32con.KEYEVENTF_KEYUP, 0)
 
 
-def send_mouse_click(pos_x, pos_y, click_type: str = CLICK_TYPE_LEFT_BUTTON, click_time: int = 0) -> None:
+def send_mouse_click(pos_x: int, pos_y: int, click_type: str = CLICK_TYPE_LEFT_BUTTON, click_time: int = 0) -> None:
     """
     鼠标移动到指定坐标后点击左右键
     """
@@ -192,14 +192,14 @@ def send_mouse_click(pos_x, pos_y, click_type: str = CLICK_TYPE_LEFT_BUTTON, cli
         win32api.mouse_event(win32con.MOUSEEVENTF_RIGHTUP, 0, 0)
 
 
-def find_window_by_title(window_title: str):
+def find_window_by_title(window_title: str) -> int:
     """
     根据窗口标题寻找窗口句柄
     """
     return win32gui.FindWindow(None, window_title)
 
 
-def find_window_by_class_name(class_name: str):
+def find_window_by_class_name(class_name: str) -> int:
     """
     根据窗口类寻找窗口句柄
     """

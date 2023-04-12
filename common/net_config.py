@@ -11,7 +11,7 @@ from typing import Union, Final
 from common import const, console, file, tool, PROJECT_LIB_PATH
 
 
-def convert_to_bytes(value, default_value: int) -> int:
+def convert_to_bytes(value: Union[int, str], default_value: int) -> int:
     """
     将字符串转换为字节数
 

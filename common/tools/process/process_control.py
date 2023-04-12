@@ -15,5 +15,5 @@ class ProcessControl:
         server_port = crawler.analysis_config(config, "LISTENER_PORT", 0, const.ConfigAnalysisMode.INTEGER)
         self.conn = Client((port_listener_event.SERVER_IP, server_port))
 
-    def send_code(self, process_status):
+    def send_code(self, process_status) -> None:
         self.conn.send(int(process_status))
