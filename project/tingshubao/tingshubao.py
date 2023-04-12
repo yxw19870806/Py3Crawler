@@ -16,7 +16,7 @@ from common import *
 # 获取有声书首页
 def get_album_index_page(album_id):
     album_index_url = "http://m.tingshubao.com/book/%s.html" % album_id
-    album_index_response = net.request(album_index_url, method="GET", charset="GBK")
+    album_index_response = net.request(album_index_url, method="GET")
     result = {
         "audio_info_list": [],  # 全部音频信息
     }
@@ -97,6 +97,7 @@ class TingShuBao(crawler.Crawler):
         self.crawler_thread = CrawlerThread
 
     def init(self):
+        net.set_default_charset("GBK")
         net.set_default_user_agent(const.BrowserType.CHROME)
 
 
