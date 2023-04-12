@@ -40,8 +40,10 @@ EXIT_FLAG: bool = False
 DOWNLOAD_REPLACE_IF_EXIST: bool = False
 # 是否使用固定的UA，可以通过set_default_user_agent()重新随机生成
 DEFAULT_USER_AGENT: Optional[str] = None
+# 默认的字符集，用于decode请求response的data（当response header的Content-Type不存在时使用）
+DEFAULT_CHARSET: str = "utf-8"
 # 是否伪造代理模式的IP（通过设置header中的X-Forwarded-For和X-Real-Ip）
-FAKE_PROXY_IP = True
+FAKE_PROXY_IP: bool = True
 # 网络请求相关配置
 NET_CONFIG: net_config.NetConfig = net_config.NetConfig()
 # response header中Content-Type对应的Mime字典
@@ -92,6 +94,11 @@ def set_default_user_agent(browser_type: Optional[const.BrowserType] = None):
 def disable_fake_proxy_ip():
     global FAKE_PROXY_IP
     FAKE_PROXY_IP = False
+
+
+def set_default_charset(charset: str):
+    global DEFAULT_CHARSET
+    DEFAULT_CHARSET = charset
 
 
 def build_header_cookie_string(cookies_list: dict) -> str:
@@ -168,7 +175,7 @@ def url_encode(url: str) -> str:
     return urllib.parse.quote(url, safe=";/?:@&=+$,%")
 
 
-def request(url: str, method: str = "GET", fields: Optional[Union[dict, str]] = None, charset: str = "utf-8", json_decode: bool = False, is_auto_redirect: bool = True,
+def request(url: str, method: str = "GET", fields: Optional[Union[dict, str]] = None, json_decode: bool = False, is_auto_redirect: bool = True,
             header_list: Optional[dict] = None, cookies_list: Optional[dict] = None, encode_multipart: bool = False, is_auto_proxy: bool = True,
             is_gzip: bool = True, is_url_encode: bool = True, is_auto_retry: bool = True, is_check_qps: bool = True,
             connection_timeout: int = NET_CONFIG.HTTP_CONNECTION_TIMEOUT, read_timeout: int = NET_CONFIG.HTTP_READ_TIMEOUT) -> Union[urllib3.HTTPResponse, ErrorResponse]:
@@ -260,6 +267,15 @@ def request(url: str, method: str = "GET", fields: Optional[Union[dict, str]] = 
             response.content = ""
             response.json_data = {}
             if response.status == const.ResponseCode.SUCCEED:
+                charset = DEFAULT_CHARSET
+                content_type = response.getheader("Content-Type")
+                if content_type is not None:
+                    content_charset = tool.find_sub_string(content_type, "charset=", None)
+                    if content_charset:
+                        if content_charset == "gb2312":
+                            charset = "GBK"
+                        else:
+                            charset = content_charset
                 response.content = response.data.decode(charset, errors="ignore")
                 if json_decode:
                     try:
@@ -294,7 +310,7 @@ def request(url: str, method: str = "GET", fields: Optional[Union[dict, str]] = 
                     return ErrorResponse(const.ResponseCode.TOO_MANY_REDIRECTS)
             elif isinstance(e, urllib3.exceptions.DecodeError):
                 if message.find("'Received response with content-encoding: gzip, but failed to decode it.'") >= 0:
-                    return request(url, method=method, fields=fields, charset=charset, json_decode=json_decode, is_auto_redirect=is_auto_redirect,
+                    return request(url, method=method, fields=fields, json_decode=json_decode, is_auto_redirect=is_auto_redirect,
                                    header_list=header_list, cookies_list=cookies_list, encode_multipart=encode_multipart, is_auto_proxy=is_auto_proxy,
                                    is_gzip=False, is_url_encode=False, is_auto_retry=is_auto_retry, is_check_qps=is_check_qps,
                                    connection_timeout=connection_timeout, read_timeout=read_timeout)
