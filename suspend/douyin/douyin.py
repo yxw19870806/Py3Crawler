@@ -112,7 +112,7 @@ class DouYin(crawler.Crawler):
         self.crawler_thread = CrawlerThread
 
     def init(self):
-        net.DEFAULT_USER_AGENT = net.random_user_agent()
+        net.set_default_user_agent()
 
     def done(self):
         # 删除临时缓存目录

@@ -38,8 +38,12 @@ thread_event.set()
 EXIT_FLAG: bool = False
 # 下载文件时是否覆盖已存在的同名文件
 DOWNLOAD_REPLACE_IF_EXIST: bool = False
-# 是否使用固定的UA，如果为None，则每次都通过random_user_agent()随机一个
+# 是否使用固定的UA，可以通过set_default_user_agent()重新随机生成
 DEFAULT_USER_AGENT: Optional[str] = None
+# 默认的字符集，用于decode请求response的data（当response header的Content-Type不存在时使用）
+DEFAULT_CHARSET: str = "utf-8"
+# 是否伪造代理模式的IP（通过设置header中的X-Forwarded-For和X-Real-Ip）
+FAKE_PROXY_IP: bool = True
 # 网络请求相关配置
 NET_CONFIG: net_config.NetConfig = net_config.NetConfig()
 # response header中Content-Type对应的Mime字典
@@ -78,6 +82,23 @@ def set_proxy(ip: str, port: str) -> None:
     global PROXY_HTTP_CONNECTION_POOL
     PROXY_HTTP_CONNECTION_POOL = urllib3.ProxyManager(f"http://{ip}:{port}", retries=False)
     console.log(f"设置代理成功({ip}:{port})")
+
+
+def set_default_user_agent(browser_type: Optional[const.BrowserType] = None):
+    global DEFAULT_USER_AGENT
+    user_agent = _random_user_agent(browser_type)
+    if user_agent:
+        DEFAULT_USER_AGENT = user_agent
+
+
+def disable_fake_proxy_ip():
+    global FAKE_PROXY_IP
+    FAKE_PROXY_IP = False
+
+
+def set_default_charset(charset: str):
+    global DEFAULT_CHARSET
+    DEFAULT_CHARSET = charset
 
 
 def build_header_cookie_string(cookies_list: dict) -> str:
@@ -154,9 +175,9 @@ def url_encode(url: str) -> str:
     return urllib.parse.quote(url, safe=";/?:@&=+$,%")
 
 
-def request(url: str, method: str = "GET", fields: Optional[Union[dict, str]] = None, charset: str = "utf-8", json_decode: bool = False, is_auto_redirect: bool = True,
+def request(url: str, method: str = "GET", fields: Optional[Union[dict, str]] = None, json_decode: bool = False, is_auto_redirect: bool = True,
             header_list: Optional[dict] = None, cookies_list: Optional[dict] = None, encode_multipart: bool = False, is_auto_proxy: bool = True,
-            is_gzip: bool = True, is_url_encode: bool = True, is_auto_retry: bool = True, is_random_ip: bool = True, is_check_qps: bool = True,
+            is_gzip: bool = True, is_url_encode: bool = True, is_auto_retry: bool = True, is_check_qps: bool = True,
             connection_timeout: int = NET_CONFIG.HTTP_CONNECTION_TIMEOUT, read_timeout: int = NET_CONFIG.HTTP_READ_TIMEOUT) -> Union[urllib3.HTTPResponse, ErrorResponse]:
     """
     HTTP请求
@@ -175,7 +196,6 @@ def request(url: str, method: str = "GET", fields: Optional[Union[dict, str]] = 
     - is_auto_retry - is auto retry, when response.status in [500, 502, 503, 504]
     - connection_timeout - customize connection timeout seconds
     - read_timeout - customize read timeout seconds
-    - is_random_ip - is counterfeit a request header with random ip, will replace header_list["X-Forwarded-For"] and header_list["X-Real-Ip"]
     - json_decode - is return a decoded json data when response status = 200
         if decode failure will replace response status with const.ResponseCode.JSON_DECODE_ERROR
     """
@@ -199,12 +219,12 @@ def request(url: str, method: str = "GET", fields: Optional[Union[dict, str]] = 
     # 设置User-Agent
     if "User-Agent" not in header_list:
         if DEFAULT_USER_AGENT is None:
-            header_list["User-Agent"] = random_user_agent()
+            header_list["User-Agent"] = _random_user_agent()
         else:
             header_list["User-Agent"] = DEFAULT_USER_AGENT
 
     # 设置一个随机IP
-    if is_random_ip:
+    if FAKE_PROXY_IP:
         random_ip = _random_ip_address()
         header_list["X-Forwarded-For"] = random_ip
         header_list["X-Real-Ip"] = random_ip
@@ -218,7 +238,7 @@ def request(url: str, method: str = "GET", fields: Optional[Union[dict, str]] = 
         header_list["Accept-Encoding"] = "gzip"
 
     # 使用json提交数据
-    if isinstance(fields, str):
+    if method == "POST" and isinstance(fields, str):
         header_list["Content-Type"] = "application/json"
 
     # 超时设置
@@ -238,7 +258,7 @@ def request(url: str, method: str = "GET", fields: Optional[Union[dict, str]] = 
             if method in ["DELETE", "GET", "HEAD", "OPTIONS"]:
                 response = connection_pool.request(method, url, fields=fields, headers=header_list, redirect=is_auto_redirect, timeout=timeout)
             else:
-                if isinstance(fields, str):
+                if method == "POST" and isinstance(fields, str):
                     response = connection_pool.request(method, url, body=fields, encode_multipart=encode_multipart, headers=header_list,
                                                        redirect=is_auto_redirect, timeout=timeout)
                 else:
@@ -247,6 +267,15 @@ def request(url: str, method: str = "GET", fields: Optional[Union[dict, str]] = 
             response.content = ""
             response.json_data = {}
             if response.status == const.ResponseCode.SUCCEED:
+                charset = DEFAULT_CHARSET
+                content_type = response.getheader("Content-Type")
+                if content_type is not None:
+                    content_charset = tool.find_sub_string(content_type, "charset=", None)
+                    if content_charset:
+                        if content_charset == "gb2312":
+                            charset = "GBK"
+                        else:
+                            charset = content_charset
                 response.content = response.data.decode(charset, errors="ignore")
                 if json_decode:
                     try:
@@ -281,9 +310,9 @@ def request(url: str, method: str = "GET", fields: Optional[Union[dict, str]] = 
                     return ErrorResponse(const.ResponseCode.TOO_MANY_REDIRECTS)
             elif isinstance(e, urllib3.exceptions.DecodeError):
                 if message.find("'Received response with content-encoding: gzip, but failed to decode it.'") >= 0:
-                    return request(url, method=method, fields=fields, charset=charset, json_decode=json_decode, is_auto_redirect=is_auto_redirect,
+                    return request(url, method=method, fields=fields, json_decode=json_decode, is_auto_redirect=is_auto_redirect,
                                    header_list=header_list, cookies_list=cookies_list, encode_multipart=encode_multipart, is_auto_proxy=is_auto_proxy,
-                                   is_gzip=False, is_url_encode=False, is_auto_retry=is_auto_retry, is_random_ip=is_random_ip, is_check_qps=is_check_qps,
+                                   is_gzip=False, is_url_encode=False, is_auto_retry=is_auto_retry, is_check_qps=is_check_qps,
                                    connection_timeout=connection_timeout, read_timeout=read_timeout)
             # import traceback
             # console.log(message)
@@ -328,7 +357,7 @@ def _qps(url: str) -> bool:
     return False
 
 
-def random_user_agent(browser_type: Optional[str] = None) -> str:
+def _random_user_agent(browser_type: Optional[const.BrowserType] = None) -> str:
     """
     随机获取一个user agent
         Common firefox user agent   "Mozilla/5.0 (Windows NT 6.1; WOW64; rv:46.0) Gecko/20100101 Firefox/46.0"
@@ -343,12 +372,12 @@ def random_user_agent(browser_type: Optional[str] = None) -> str:
     firefox_version_max = 109
     chrome_version_max = 111
     if browser_type is None:
-        browser_type = random.choice(["firefox", "chrome"])
-    if browser_type == "firefox":
+        browser_type = random.choice([const.BrowserType.FIREFOX, const.BrowserType.CHROME])
+    if browser_type == const.BrowserType.FIREFOX:
         firefox_version = random.randint(firefox_version_max - 3, firefox_version_max)
         os_type = random.choice(list(windows_version_dict.values()))
         return f"Mozilla/5.0 ({os_type}; Win64; x64; rv:{firefox_version}.0) Gecko/20100101 Firefox/{firefox_version}.0"
-    elif browser_type == "chrome":
+    elif browser_type == const.BrowserType.CHROME:
         chrome_version = random.randint(chrome_version_max - 3, chrome_version_max)
         os_type = random.choice(list(windows_version_dict.values()))
         return f"Mozilla/5.0 ({os_type}; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/{chrome_version}.0.0.0 Safari/537.36"
