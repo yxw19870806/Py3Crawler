@@ -80,6 +80,8 @@ def set_proxy(ip: str, port: str) -> None:
     if not match or match.group() != ip:
         return
     global PROXY_HTTP_CONNECTION_POOL
+    if PROXY_HTTP_CONNECTION_POOL is not None:
+        return
     PROXY_HTTP_CONNECTION_POOL = urllib3.ProxyManager(f"http://{ip}:{port}", retries=False)
     console.log(f"设置代理成功({ip}:{port})")
 
