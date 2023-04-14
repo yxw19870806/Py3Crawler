@@ -63,10 +63,15 @@ def get_access_token(api_key, api_secret):
         "grant_type": "client_credentials"
     }
     response = net.request(auth_url, method="POST", header_list=header_list, fields=post_data, json_decode=True)
-    if response.status == const.ResponseCode.SUCCEED and tool.check_dict_sub_key(("token_type", "access_token"), response.json_data) and response.json_data["token_type"] == "bearer":
-        global ACCESS_TOKEN
-        ACCESS_TOKEN = response.json_data["access_token"]
-        return True
+    if response.status == const.ResponseCode.SUCCEED:
+        try:
+            crawler.get_json_value(response.json_data, "token_type", type_check=str, value_check="bearer")
+            global ACCESS_TOKEN
+            ACCESS_TOKEN = crawler.get_json_value(response.json_data, "access_token", type_check=str)
+        except crawler.CrawlerException:
+            pass
+        else:
+            return True
     return False
 
 

@@ -153,15 +153,15 @@ def get_origin_photo_url(photo_url):
         # http://stat.ameba.jp/user_images/20161220/12/akihabara48/fd/1a/j/o0768032013825427476.jpg?caw=800
         photo_url = photo_url.split("?")[0]
         temp_list = photo_url.split("/")
-        photo_name = temp_list[-1]
-        if photo_name[0] != "o":
+        photo_name, photo_extension = temp_list[-1].split(".")
+        if not photo_name.startswith("o"):
             # https://stat.ameba.jp/user_images/20110612/15/akihabara48/af/3e/j/t02200165_0800060011286009555.jpg
-            if photo_name[0] == "t" and photo_name.find("_") > 0:
-                temp_list[-1] = "o" + photo_name.split("_", 1)[1]
+            if photo_name.startswith("t") and photo_name.find("_") > 0:
+                temp_list[-1] = "o" + photo_name.split("_", 1)[1] + "." + photo_extension
                 photo_url = "/".join(temp_list)
             # https://stat.ameba.jp/user_images/4b/90/10112135346_s.jpg
-            elif photo_name.split(".")[0][-2:] == "_s":
-                temp_list[-1] = photo_name.replace("_s", "")
+            elif photo_name.endswith("_s"):
+                temp_list[-1] = photo_name[:-len("_s")] + "." + photo_extension
                 photo_url = "/".join(temp_list)
             # https://stat.ameba.jp/user_images/2a/ce/10091204420.jpg
             elif tool.is_integer(photo_name.split(".")[0]):

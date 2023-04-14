@@ -264,7 +264,7 @@ def get_post_page(post_url, post_id):
         new_photo_url_list = {}
         for photo_url in photo_url_list:
             # 头像，跳过
-            if photo_url.find("/avatar_") != -1 or photo_url[-9:] == "_75sq.gif" or photo_url[-9:] == "_75sq.jpg" or photo_url[-9:] == "_75sq.png":
+            if photo_url.find("/avatar_") != -1 or photo_url.endswith("_75sq.gif") or photo_url.endswith("_75sq.jpg") or photo_url.endswith("_75sq.png"):
                 continue
             elif len(re.findall(r"/birthday\d_", photo_url)) == 1:
                 continue
@@ -282,7 +282,7 @@ def get_post_page(post_url, post_id):
 
 
 def check_photo_url_invalid(photo_url):
-    return photo_url[-4:] == ".pnj"
+    return photo_url.endswith(".pnj")
 
 
 def analysis_photo(photo_url):
@@ -304,7 +304,7 @@ def analysis_photo(photo_url):
             resolution = int(temp_list[-1])
         # https://78.media.tumblr.com/19b0b807d374ed9e4ed22caf74cb1ec0/tumblr_mxukamH4GV1s4or9ao1_500h.jpg
         elif temp_list[-1].endswith("h") and tool.is_integer(temp_list[-1][:-len("h")]):
-            resolution = int(temp_list[-1][:-1])
+            resolution = int(temp_list[-1][:-len("h")])
         # https://78.media.tumblr.com/5c0b9f4e8ac839a628863bb5d7255938/tumblr_inline_p6ve89vOZA1uhchy5_250sq.jpg
         elif temp_list[-1].endswith("sq") and tool.is_integer(temp_list[-1][:-len("sq")]):
             photo_url = photo_url.replace("_250sq", "1280")
@@ -336,7 +336,7 @@ def analysis_photo(photo_url):
         photo_id = temp_list[0]
         resolution = int(temp_list[1])
     # http://78.media.tumblr.com/15427139_r1_500.jpg
-    elif len(temp_list) == 3 and tool.is_integer(temp_list[0]) and tool.is_integer(temp_list[-1]) and temp_list[1][0] == "r":
+    elif len(temp_list) == 3 and tool.is_integer(temp_list[0]) and tool.is_integer(temp_list[-1]) and temp_list[1].startswith("r"):
         photo_id = temp_list[0]
         resolution = int(temp_list[2])
     else:
