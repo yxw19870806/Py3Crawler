@@ -166,7 +166,8 @@ class CrawlerThread(crawler.CrawlerThread):
             self.error("章节《%s》 %s需要vip才能解锁" % (chapter_info["chapter_title"], chapter_info["chapter_url"]))
             raise
 
-        content_file_path = os.path.join(self.main_thread.content_download_path, self.display_name, "%s %s.txt" % (chapter_info["chapter_time_string"].replace(":", "_"), path.filter_text(chapter_info["chapter_title"])))
+        content_file_name = "%s %s.txt" % (chapter_info["chapter_time_string"].replace(":", "_"), path.filter_text(chapter_info["chapter_title"]))
+        content_file_path = os.path.join(self.main_thread.content_download_path, self.display_name, content_file_name)
         file.write_file(chapter_response["content"], content_file_path)
         self.info("章节《%s》下载成功" % chapter_info["chapter_title"])
 

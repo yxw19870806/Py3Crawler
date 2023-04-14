@@ -41,7 +41,7 @@ def main():
     while len(game_id_list) > 0:
         game_id = game_id_list.pop()
         game_id = str(game_id)
-        if game_id[-1:] != "0":
+        if not game_id.endswith("0"):
             continue
         if game_id in deleted_app_list or game_id in restricted_app_list:
             continue
