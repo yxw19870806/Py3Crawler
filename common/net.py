@@ -103,12 +103,12 @@ def set_default_charset(charset: str):
     DEFAULT_CHARSET = charset
 
 
-def build_header_cookie_string(cookies_list: dict) -> str:
+def build_header_cookie_string(cookies: dict) -> str:
     """
     根据cookies字典生成header中的cookie字符串
 
     :Args:
-    - cookies_list
+    - cookies
         {
             "cookie1":“value1",
             "cookie2":“value2",
@@ -118,11 +118,11 @@ def build_header_cookie_string(cookies_list: dict) -> str:
     :Returns:
         cookie1=value1; cookie2=value2
     """
-    if not cookies_list:
+    if not cookies:
         return ""
     temp_string = []
-    for cookie_name in cookies_list:
-        temp_string.append(cookie_name + "=" + cookies_list[cookie_name])
+    for cookie_name in cookies:
+        temp_string.append(cookie_name + "=" + cookies[cookie_name])
     return "; ".join(temp_string)
 
 
@@ -130,7 +130,7 @@ def split_cookies_from_cookie_string(cookie_string: str) -> dict:
     """
     根据response header中的cookie字符串分隔生成cookies字典
     """
-    cookies_list = {}
+    cookies = {}
     for single_cookie in cookie_string.split(";"):
         single_cookie = single_cookie.strip()
         if len(single_cookie) == 0:
@@ -138,8 +138,8 @@ def split_cookies_from_cookie_string(cookie_string: str) -> dict:
         if single_cookie.find("=") == -1:
             continue
         cookie_name, cookie_value = single_cookie.strip().split("=", 1)
-        cookies_list[cookie_name] = cookie_value
-    return cookies_list
+        cookies[cookie_name] = cookie_value
+    return cookies
 
 
 def get_cookies_from_response_header(response_headers: HTTPHeaderDict) -> dict:
@@ -150,11 +150,11 @@ def get_cookies_from_response_header(response_headers: HTTPHeaderDict) -> dict:
         return {}
     if "Set-Cookie" not in response_headers:
         return {}
-    cookies_list = {}
+    cookies = {}
     for cookie in response_headers.getlist("Set-Cookie"):
         cookie_name, cookie_value = cookie.split(";")[0].split("=", 1)
-        cookies_list[cookie_name] = cookie_value
-    return cookies_list
+        cookies[cookie_name] = cookie_value
+    return cookies
 
 
 def get_file_extension(file_url: str, default_file_type: str = "") -> str:
@@ -178,7 +178,7 @@ def url_encode(url: str) -> str:
 
 
 def request(url: str, method: str = "GET", fields: Optional[Union[dict, str]] = None, json_decode: bool = False, is_auto_redirect: bool = True,
-            header_list: Optional[dict] = None, cookies_list: Optional[dict] = None, encode_multipart: bool = False, is_auto_proxy: bool = True,
+            headers: Optional[dict] = None, cookies: Optional[dict] = None, encode_multipart: bool = False, is_auto_proxy: bool = True,
             is_gzip: bool = True, is_url_encode: bool = True, is_auto_retry: bool = True, is_check_qps: bool = True,
             connection_timeout: int = NET_CONFIG.HTTP_CONNECTION_TIMEOUT, read_timeout: int = NET_CONFIG.HTTP_READ_TIMEOUT) -> Union[urllib3.HTTPResponse, ErrorResponse]:
     """
@@ -190,8 +190,8 @@ def request(url: str, method: str = "GET", fields: Optional[Union[dict, str]] = 
     - fields - dictionary type of request data, will urlencode() them to string. like post data, query string, etc.
         not work with binary_data
     - binary_data - binary type of request data, not work with post_data
-    - header_list - customize header dictionary
-    - cookies_list - customize cookies dictionary, will replace header_list["Cookie"]
+    - headers - customize header dictionary
+    - cookies - customize cookies dictionary, will replace headers["Cookie"]
     - encode_multipart - see "encode_multipart" in urllib3.request_encode_body
     - is_auto_proxy - is auto use proxy when init PROXY_HTTP_CONNECTION_POOL
     - is_auto_redirect - is auto redirect, when response.status in [301, 302, 303, 307, 308]
@@ -215,33 +215,33 @@ def request(url: str, method: str = "GET", fields: Optional[Union[dict, str]] = 
     if is_url_encode:
         url = url_encode(url)
 
-    if header_list is None:
-        header_list = {}
+    if headers is None:
+        headers = {}
 
     # 设置User-Agent
-    if "User-Agent" not in header_list:
+    if "User-Agent" not in headers:
         if DEFAULT_USER_AGENT is None:
-            header_list["User-Agent"] = _random_user_agent()
+            headers["User-Agent"] = _random_user_agent()
         else:
-            header_list["User-Agent"] = DEFAULT_USER_AGENT
+            headers["User-Agent"] = DEFAULT_USER_AGENT
 
     # 设置一个随机IP
     if FAKE_PROXY_IP:
         random_ip = _random_ip_address()
-        header_list["X-Forwarded-For"] = random_ip
-        header_list["X-Real-Ip"] = random_ip
+        headers["X-Forwarded-For"] = random_ip
+        headers["X-Real-Ip"] = random_ip
 
     # 设置cookie
-    if cookies_list:
-        header_list["Cookie"] = build_header_cookie_string(cookies_list)
+    if cookies:
+        headers["Cookie"] = build_header_cookie_string(cookies)
 
     # 设置压缩格式
     if is_gzip:
-        header_list["Accept-Encoding"] = "gzip"
+        headers["Accept-Encoding"] = "gzip"
 
     # 使用json提交数据
     if method == "POST" and isinstance(fields, str):
-        header_list["Content-Type"] = "application/json"
+        headers["Content-Type"] = "application/json"
 
     # 超时设置
     timeout = urllib3.Timeout(connect=float(connection_timeout) if connection_timeout > 0 else None, read=read_timeout if read_timeout > 0 else None)
@@ -258,13 +258,13 @@ def request(url: str, method: str = "GET", fields: Optional[Union[dict, str]] = 
 
         try:
             if method in ["DELETE", "GET", "HEAD", "OPTIONS"]:
-                response = connection_pool.request(method, url, fields=fields, headers=header_list, redirect=is_auto_redirect, timeout=timeout)
+                response = connection_pool.request(method, url, fields=fields, headers=headers, redirect=is_auto_redirect, timeout=timeout)
             else:
                 if method == "POST" and isinstance(fields, str):
-                    response = connection_pool.request(method, url, body=fields, encode_multipart=encode_multipart, headers=header_list,
+                    response = connection_pool.request(method, url, body=fields, encode_multipart=encode_multipart, headers=headers,
                                                        redirect=is_auto_redirect, timeout=timeout)
                 else:
-                    response = connection_pool.request(method, url, fields=fields, encode_multipart=encode_multipart, headers=header_list,
+                    response = connection_pool.request(method, url, fields=fields, encode_multipart=encode_multipart, headers=headers,
                                                        redirect=is_auto_redirect, timeout=timeout)
             response.content = ""
             response.json_data = {}
@@ -313,14 +313,14 @@ def request(url: str, method: str = "GET", fields: Optional[Union[dict, str]] = 
             elif isinstance(e, urllib3.exceptions.DecodeError):
                 if message.find("'Received response with content-encoding: gzip, but failed to decode it.'") >= 0:
                     return request(url, method=method, fields=fields, json_decode=json_decode, is_auto_redirect=is_auto_redirect,
-                                   header_list=header_list, cookies_list=cookies_list, encode_multipart=encode_multipart, is_auto_proxy=is_auto_proxy,
+                                   headers=headers, cookies=cookies, encode_multipart=encode_multipart, is_auto_proxy=is_auto_proxy,
                                    is_gzip=False, is_url_encode=False, is_auto_retry=is_auto_retry, is_check_qps=is_check_qps,
                                    connection_timeout=connection_timeout, read_timeout=read_timeout)
             # import traceback
             # console.log(message)
             # console.log(traceback.format_exc())
-            if "Range" in header_list:
-                range_string = "range: " + header_list["Range"].replace("bytes=", "")
+            if "Range" in headers:
+                range_string = "range: " + headers["Range"].replace("bytes=", "")
                 console.log(url + f"[{range_string}] 访问超时，重试中")
             else:
                 console.log(url + " 访问超时，重试中")
@@ -659,18 +659,18 @@ class Download:
                 multipart_kwargs = self._kwargs.copy()
 
                 # 分段的header信息
-                if "header_list" in multipart_kwargs:
-                    header_list = multipart_kwargs["header_list"]
-                    del multipart_kwargs["header_list"]
+                if "headers" in multipart_kwargs:
+                    headers = multipart_kwargs["headers"]
+                    del multipart_kwargs["headers"]
                 else:
-                    header_list = {}
-                header_list["Range"] = f"bytes={start_pos}-{end_pos}"
+                    headers = {}
+                headers["Range"] = f"bytes={start_pos}-{end_pos}"
 
                 # 创建一个副本
                 with os.fdopen(os.dup(file_no), "rb+", -1) as fd_handle:
                     for multipart_retry_count in range(NET_CONFIG.DOWNLOAD_RETRY_COUNT):
                         try:
-                            multipart_response = request(self._file_url, method="GET", header_list=header_list,
+                            multipart_response = request(self._file_url, method="GET", headers=headers,
                                                          connection_timeout=NET_CONFIG.DOWNLOAD_CONNECTION_TIMEOUT,
                                                          read_timeout=NET_CONFIG.DOWNLOAD_READ_TIMEOUT, **multipart_kwargs)
                         except SystemExit:

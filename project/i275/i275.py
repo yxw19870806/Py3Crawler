@@ -52,10 +52,10 @@ def get_audio_info_page(album_id, audio_id):
         "audio_url": "",  # 音频地址
     }
     audio_info_url = "https://www.i275.com/pc/index/getchapterurl/bookId/%s/chapterId/%s.html" % (album_id, audio_id)
-    header_list = {
+    headers = {
         "Referer": "https://www.i275.com/play/%s/%s.html" % (album_id, audio_id),
     }
-    audio_info_response = net.request(audio_info_url, method="GET", header_list=header_list, json_decode=True)
+    audio_info_response = net.request(audio_info_url, method="GET", headers=headers, json_decode=True)
     if audio_info_response.status != const.ResponseCode.SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(audio_info_response.status))
     audio_src = crawler.get_json_value(audio_info_response.json_data, "src", type_check=str)

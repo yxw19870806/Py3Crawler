@@ -402,14 +402,14 @@ class Crawler(object):
                     tool.process_exit(const.ExitCode.NORMAL)
         return download_return
 
-    def multi_thread_download(self, thread_class: Type["DownloadThread"], file_url: str, file_path: str, file_description: str, header_list: Optional[dict] = None):
+    def multi_thread_download(self, thread_class: Type["DownloadThread"], file_url: str, file_path: str, file_description: str, headers: Optional[dict] = None):
         """
         多线程下载
         """
         self.running_check()
         thread = thread_class(self, file_url, file_path, file_description)
-        if header_list is not None:
-            thread.set_download_header(header_list)
+        if headers is not None:
+            thread.set_download_header(headers)
         thread.start()
         self.download_thead_list.append(thread)
 
@@ -626,17 +626,17 @@ class DownloadThread(CrawlerThread):
         self.file_path: str = file_path
         self.file_description: str = file_description
         self.result: Optional[net.Download] = None
-        self.header_list: dict = {}
+        self.headers: dict = {}
 
     def run(self) -> None:
-        self.result = self.download(self.file_url, self.file_path, self.file_description, header_list=self.header_list)
+        self.result = self.download(self.file_url, self.file_path, self.file_description, headers=self.headers)
         self.notify_main_thread()
 
     def get_result(self) -> bool:
         return bool(self.result)
 
-    def set_download_header(self, header_list: dict) -> Self:
-        self.header_list = header_list
+    def set_download_header(self, headers: dict) -> Self:
+        self.headers = headers
         return self
 
 

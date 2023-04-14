@@ -44,7 +44,7 @@ def check_login():
     if not COOKIE_INFO:
         return False
     api_url = "https://api.bilibili.com/x/member/web/account"
-    api_response = net.request(api_url, method="GET", cookies_list=COOKIE_INFO, json_decode=True)
+    api_response = net.request(api_url, method="GET", cookies=COOKIE_INFO, json_decode=True)
     if api_response.status == const.ResponseCode.SUCCEED:
         return crawler.get_json_value(api_response.json_data, "data", "mid", type_check=int, default_value=0) != 0
     return False
@@ -68,7 +68,7 @@ def get_favorites_list(favorites_id):
             "ps": EACH_PAGE_COUNT,
             "direction": "false",
         }
-        api_response = net.request(api_url, method="GET", fields=query_data, cookies_list=COOKIE_INFO, json_decode=True)
+        api_response = net.request(api_url, method="GET", fields=query_data, cookies=COOKIE_INFO, json_decode=True)
         video_info_list = []
         try:
             video_info_list = crawler.get_json_value(api_response.json_data, "data", "media_list", type_check=list)
@@ -171,7 +171,7 @@ def get_one_page_album(account_id, page_count):
         "page_size": EACH_PAGE_COUNT,
         "biz": "all",
     }
-    api_response = net.request(api_url, method="GET", fields=query_data, cookies_list=COOKIE_INFO, json_decode=True)
+    api_response = net.request(api_url, method="GET", fields=query_data, cookies=COOKIE_INFO, json_decode=True)
     result = {
         "album_id_list": [],  # 全部相簿id
     }
@@ -228,7 +228,7 @@ def get_one_page_audio(account_id, page_count):
 # 获取指定视频
 def get_video_page(video_id):
     video_play_url = "https://www.bilibili.com/video/av%s" % video_id
-    video_play_response = net.request(video_play_url, method="GET", cookies_list=COOKIE_INFO)
+    video_play_response = net.request(video_play_url, method="GET", cookies=COOKIE_INFO)
     result = {
         "is_private": False,  # 是否需要登录
         "video_part_info_list": [],  # 全部视频地址
@@ -280,8 +280,8 @@ def get_video_page(video_id):
             "qn": "116",  # 上限 高清 1080P+: 116, 高清 1080P: 80, 高清 720P: 64, 清晰 480P: 32, 流畅 360P: 16
             "otype": "json",
         }
-        header_list = {"Referer": "https://www.bilibili.com/video/av%s" % video_id}
-        video_info_response = net.request(video_info_url, method="GET", fields=query_data, cookies_list=COOKIE_INFO, header_list=header_list,
+        headers = {"Referer": "https://www.bilibili.com/video/av%s" % video_id}
+        video_info_response = net.request(video_info_url, method="GET", fields=query_data, cookies=COOKIE_INFO, headers=headers,
                                           json_decode=True)
         if video_info_response.status != const.ResponseCode.SUCCEED:
             raise crawler.CrawlerException("视频信息，" + crawler.request_failre(video_info_response.status))
@@ -546,8 +546,8 @@ class CrawlerThread(crawler.CrawlerThread):
                 video_name = "%s.%s" % (path.filter_text(video_name), net.get_file_extension(video_part_url))
                 video_path = os.path.join(self.main_thread.video_download_path, self.display_name, video_name)
                 part_video_description = "视频%s《%s》第%s个视频" % (video_info["video_id"], video_info["video_title"], video_index)
-                header_list = {"Referer": "https://www.bilibili.com/video/av%s" % video_info["video_id"]}
-                if self.download(video_part_url, video_path, part_video_description, is_failure_exit=False, auto_multipart_download=True, header_list=header_list):
+                headers = {"Referer": "https://www.bilibili.com/video/av%s" % video_info["video_id"]}
+                if self.download(video_part_url, video_path, part_video_description, is_failure_exit=False, auto_multipart_download=True, headers=headers):
                     self.temp_path_list.append(video_path)  # 设置临时目录
                     self.total_video_count += 1  # 计数累加
                 else:
@@ -574,7 +574,7 @@ class CrawlerThread(crawler.CrawlerThread):
         audio_type = net.get_file_extension(audio_info_response["audio_url"])
         audio_name = "%06d %s.%s" % (audio_info["audio_id"], path.filter_text(audio_info["audio_title"]), audio_type)
         audio_path = os.path.join(self.main_thread.audio_download_path, self.display_name, audio_name)
-        if self.download(audio_info_response["audio_url"], audio_path, audio_description, is_failure_exit=False, header_list={"Referer": "https://www.bilibili.com/"}):
+        if self.download(audio_info_response["audio_url"], audio_path, audio_description, is_failure_exit=False, headers={"Referer": "https://www.bilibili.com/"}):
             self.total_audio_count += 1  # 计数累加
         else:
             return False

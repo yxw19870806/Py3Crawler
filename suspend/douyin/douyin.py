@@ -60,10 +60,10 @@ def get_one_page_video(account_id, cursor_id, dytk, signature):
         "max_cursor": cursor_id,
         "user_id": account_id,
     }
-    header_list = {
+    headers = {
         "Referer": "https://www.douyin.com/share/user/%s" % account_id,
     }
-    video_pagination_response = net.request(api_url, method="GET", fields=query_data, header_list=header_list, json_decode=True)
+    video_pagination_response = net.request(api_url, method="GET", fields=query_data, headers=headers, json_decode=True)
     result = {
         "is_over": False,  # 是否最后一页视频
         "next_page_cursor_id": 0,  # 下一页视频指针

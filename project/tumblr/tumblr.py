@@ -26,7 +26,7 @@ def check_login():
     if not COOKIE_INFO:
         return False
     index_url = "https://www.tumblr.com/"
-    index_response = net.request(index_url, method="GET", cookies_list=COOKIE_INFO, header_list={"User-Agent": USER_AGENT}, is_auto_redirect=False)
+    index_response = net.request(index_url, method="GET", cookies=COOKIE_INFO, headers={"User-Agent": USER_AGENT}, is_auto_redirect=False)
     if index_response.status == 302 and index_response.getheader("Location") == "https://www.tumblr.com/dashboard":
         return True
     return False
@@ -62,7 +62,7 @@ def get_index_setting(account_id):
         # "Show this blog on the web" disabled
         elif redirect_url.find("//www.tumblr.com/login_required/%s" % account_id) > 0:
             is_private = True
-            index_response = net.request(redirect_url, method="GET", cookies_list=COOKIE_INFO)
+            index_response = net.request(redirect_url, method="GET", cookies=COOKIE_INFO)
             if index_response.status == 404:
                 raise crawler.CrawlerException("账号不存在")
     elif index_response.status == 404:
@@ -134,13 +134,13 @@ def get_one_page_private_blog(account_id, page_count):
         "should_bypass_tagfiltering": "false",
         "tumblelog_name_or_id": account_id,
     }
-    header_list = {
+    headers = {
         "Host": "www.tumblr.com",
         "Referer": "https://www.tumblr.com/dashboard/blog/%s/" % account_id,
         "User-Agent": USER_AGENT,
         "X-Requested-With": "XMLHttpRequest",
     }
-    post_pagination_response = net.request(post_pagination_url, method="GET", fields=query_data, header_list=header_list, cookies_list=COOKIE_INFO,
+    post_pagination_response = net.request(post_pagination_url, method="GET", fields=query_data, headers=headers, cookies=COOKIE_INFO,
                                            json_decode=True)
     result = {
         "is_over": False,  # 是不是最后一页日志

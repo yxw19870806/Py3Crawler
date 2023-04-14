@@ -15,7 +15,7 @@ COOKIE_INFO = {}
 # 检测是否已登录
 def check_login():
     api_url = "https://api.bilibili.com/x/web-interface/nav"
-    api_response = net.request(api_url, method="GET", cookies_list=COOKIE_INFO, json_decode=True)
+    api_response = net.request(api_url, method="GET", cookies=COOKIE_INFO, json_decode=True)
     if api_response.status == const.ResponseCode.SUCCEED:
         return crawler.get_json_value(api_response.json_data, "data", "isLogin", type_check=bool)
     return False
@@ -27,7 +27,7 @@ def get_comic_index_page(comic_id):
     post_data = {
         "comic_id": comic_id
     }
-    api_response = net.request(api_url, method="POST", fields=post_data, cookies_list=COOKIE_INFO, json_decode=True)
+    api_response = net.request(api_url, method="POST", fields=post_data, cookies=COOKIE_INFO, json_decode=True)
     result = {
         "comic_info_list": {},  # 漫画列表信息
     }
@@ -55,7 +55,7 @@ def get_chapter_page(ep_id):
     post_data = {
         "ep_id": ep_id
     }
-    api_response = net.request(api_url, method="POST", fields=post_data, cookies_list=COOKIE_INFO, json_decode=True)
+    api_response = net.request(api_url, method="POST", fields=post_data, cookies=COOKIE_INFO, json_decode=True)
     result = {
         "need_buy": False,  # 是否需要购买
         "photo_url_list": [],  # 全部漫画图片地址
@@ -171,7 +171,7 @@ class CrawlerThread(crawler.CrawlerThread):
         for photo_url in chapter_response["photo_url_list"]:
             photo_path = os.path.join(chapter_path, "%03d.%s" % (photo_index, net.get_file_extension(photo_url)))
             photo_description = "漫画%s 《%s》第%s张图片" % (comic_info["ep_id"], comic_info["ep_name"], photo_index)
-            if self.download(photo_url, photo_path, photo_description, header_list={"Referer": "https://m.dmzj.com/"}):
+            if self.download(photo_url, photo_path, photo_description, headers={"Referer": "https://m.dmzj.com/"}):
                 self.total_photo_count += 1  # 计数累加
             photo_index += 1
 
