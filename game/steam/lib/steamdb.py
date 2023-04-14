@@ -16,13 +16,13 @@ USER_AGENT = None
 
 def get_game_store_index(game_id):
     game_index_url = "https://steamdb.info/app/%s/" % game_id
-    header_list = {
+    headers = {
         "User-Agent": USER_AGENT,
         "Referer": "https://steamdb.info/",
     }
-    if "User-Agent" not in header_list:
+    if "User-Agent" not in headers:
         raise crawler.CrawlerException("header没有携带User-Agent")
-    game_index_response = net.request(game_index_url, method="GET", header_list=header_list, cookies_list=COOKIE_INFO, is_auto_retry=False)
+    game_index_response = net.request(game_index_url, method="GET", headers=headers, cookies=COOKIE_INFO, is_auto_retry=False)
     result = {
         "game_name": None,  # 游戏名字
         "develop_name": None,  # Developer
@@ -53,8 +53,8 @@ def get_game_store_index(game_id):
             "lastentry": "0",
             "appid": game_id,
         }
-        header_list["X-Requested-With"] = "XMLHttpRequest"
-        history_api_response = net.request(history_api_url, method="GET", fields=query_data, header_list=header_list, cookies_list=COOKIE_INFO)
+        headers["X-Requested-With"] = "XMLHttpRequest"
+        history_api_response = net.request(history_api_url, method="GET", fields=query_data, headers=headers, cookies=COOKIE_INFO)
         if history_api_response.status != const.ResponseCode.SUCCEED:
             raise crawler.CrawlerException("历史记录，%s" % crawler.request_failre(history_api_response.status))
         if not result["develop_name"]:

@@ -26,7 +26,7 @@ def check_login():
     if not COOKIE_INFO:
         return False
     api_url = "https://www.ximalaya.com/revision/main/getCurrentUser"
-    api_response = net.request(api_url, method="GET", cookies_list=COOKIE_INFO, json_decode=True)
+    api_response = net.request(api_url, method="GET", cookies=COOKIE_INFO, json_decode=True)
     if api_response.status == const.ResponseCode.SUCCEED:
         return crawler.get_json_value(api_response.json_data, "ret", type_check=int, default_value=0) == 200
     return False
@@ -89,10 +89,10 @@ def get_one_page_audio(account_id, page_count):
     }
     now = int(time.time() * 1000)
     # 加密方法解析来自 https://s1.xmcdn.com/yx/ximalaya-web-static/last/dist/scripts/b20b549ee.js
-    header_list = {
+    headers = {
         "xm-sign": "%s(%s)%s(%s)%s" % (tool.string_md5("himalaya-" + str(now)), random.randint(1, 100), now, random.randint(1, 100), now + random.randint(1, 100 * 60))
     }
-    audit_pagination_response = net.request(audio_pagination_url, method="GET", fields=query_data, header_list=header_list, json_decode=True)
+    audit_pagination_response = net.request(audio_pagination_url, method="GET", fields=query_data, headers=headers, json_decode=True)
     result = {
         "audio_info_list": [],  # 全部音频信息
         "is_over": False,  # 是否最后一页音频
@@ -190,7 +190,7 @@ def get_audio_info_page(audio_id):
         "device": "web",
         "trackId": audio_id,
     }
-    vip_audio_info_response = net.request(vip_audio_info_url, method="GET", fields=query_data, cookies_list=COOKIE_INFO, json_decode=True)
+    vip_audio_info_response = net.request(vip_audio_info_url, method="GET", fields=query_data, cookies=COOKIE_INFO, json_decode=True)
     if vip_audio_info_response.status != const.ResponseCode.SUCCEED:
         raise crawler.CrawlerException("vip音频详细信息" + crawler.request_failre(vip_audio_info_response.status))
     try:

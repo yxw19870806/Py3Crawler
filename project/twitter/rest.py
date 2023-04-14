@@ -55,14 +55,14 @@ def init():
 def get_access_token(api_key, api_secret):
     auth_url = API_HOST + "/oauth2/token"
     token = base64.b64encode(("%s:%s" % (api_key, api_secret)).encode()).decode()
-    header_list = {
+    headers = {
         "Authorization": "Basic %s" % token,
         "Content-Type": "application/x-www-form-urlencoded;charset=UTF-8",
     }
     post_data = {
         "grant_type": "client_credentials"
     }
-    response = net.request(auth_url, method="POST", header_list=header_list, fields=post_data, json_decode=True)
+    response = net.request(auth_url, method="POST", headers=headers, fields=post_data, json_decode=True)
     if response.status == const.ResponseCode.SUCCEED:
         try:
             crawler.get_json_value(response.json_data, "token_type", type_check=str, value_check="bearer")
@@ -83,8 +83,8 @@ def _get_api_url(end_point):
 def get_user_info_by_user_id(user_id):
     api_url = _get_api_url("users/show.json")
     query_data = {"user_id": user_id}
-    header_list = {"Authorization": "Bearer %s" % ACCESS_TOKEN}
-    response = net.request(api_url, method="GET", fields=query_data, header_list=header_list, json_decode=True)
+    headers = {"Authorization": "Bearer %s" % ACCESS_TOKEN}
+    response = net.request(api_url, method="GET", fields=query_data, headers=headers, json_decode=True)
     if response.status == const.ResponseCode.SUCCEED:
         return response.json_data
     return {}
@@ -94,10 +94,10 @@ def get_user_info_by_user_id(user_id):
 def follow_account(user_id):
     api_url = _get_api_url("friendships/create.json")
     api_url += "?user_id=%s" % user_id
-    header_list = {
+    headers = {
         "Authorization": "Bearer %s" % ACCESS_TOKEN,
     }
-    response = net.request(api_url, method="POST", header_list=header_list, json_decode=True)
+    response = net.request(api_url, method="POST", headers=headers, json_decode=True)
     if response.status == const.ResponseCode.SUCCEED:
         pass
     return False

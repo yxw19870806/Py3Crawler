@@ -26,8 +26,8 @@ thread_event.set()
 def check_login():
     global AUTHORIZATION, COOKIE_INFO, IS_LOGIN, QUERY_ID
     index_url = "https://twitter.com/home"
-    header_list = {"referer": "https://twitter.com"}
-    index_response = net.request(index_url, method="GET", cookies_list=COOKIE_INFO, header_list=header_list, is_auto_redirect=False)
+    headers = {"referer": "https://twitter.com"}
+    index_response = net.request(index_url, method="GET", cookies=COOKIE_INFO, headers=headers, is_auto_redirect=False)
     if index_response.status == const.ResponseCode.SUCCEED:
         IS_LOGIN = True
     elif index_response.status == 302 and index_response.getheader("Location") == "/login?redirect_after_login=%2Fhome":
@@ -61,13 +61,13 @@ def get_account_index_page(account_name):
     query_data = {
         "variables": '{"screen_name":"%s","withSafetyModeUserFields":true,"withSuperFollowsUserFields":true}' % account_name
     }
-    header_list = {
+    headers = {
         "referer": "https://twitter.com/%s" % account_name,
         "authorization": "Bearer %s" % AUTHORIZATION,
     }
     if "ct0" in COOKIE_INFO:
-        header_list["x-csrf-token"] = COOKIE_INFO["ct0"]
-    account_index_response = net.request(account_index_url, method="GET", fields=query_data, cookies_list=COOKIE_INFO, header_list=header_list, json_decode=True)
+        headers["x-csrf-token"] = COOKIE_INFO["ct0"]
+    account_index_response = net.request(account_index_url, method="GET", fields=query_data, cookies=COOKIE_INFO, headers=headers, json_decode=True)
     result = {
         "account_id": None,  # account id
     }
@@ -116,13 +116,13 @@ def get_one_page_media(account_name, account_id, cursor):
     }
     if cursor:
         query_data["cursor"] = cursor
-    header_list = {
+    headers = {
         "referer": "https://twitter.com/%s" % account_name,
         "authorization": "Bearer %s" % AUTHORIZATION,
     }
     if "ct0" in COOKIE_INFO:
-        header_list["x-csrf-token"] = COOKIE_INFO["ct0"]
-    media_pagination_response = net.request(media_pagination_url, method="GET", fields=query_data, cookies_list=COOKIE_INFO, header_list=header_list, json_decode=True)
+        headers["x-csrf-token"] = COOKIE_INFO["ct0"]
+    media_pagination_response = net.request(media_pagination_url, method="GET", fields=query_data, cookies=COOKIE_INFO, headers=headers, json_decode=True)
     result = {
         "is_over": False,  # 是否最后一页推特（没有获取到任何内容）
         "media_info_list": [],  # 全部推特信息
@@ -198,13 +198,13 @@ def get_video_play_page(tweet_id):
     thread_event.wait()
     thread_event.clear()
     video_play_url = "https://api.twitter.com/1.1/videos/tweet/config/%s.json" % tweet_id
-    header_list = {
+    headers = {
         "authorization": "Bearer %s" % AUTHORIZATION,
         "x-csrf-token": COOKIE_INFO["ct0"],
     }
     if IS_LOGIN:
-        header_list["x-twitter-auth-type"] = "OAuth2Session"
-    video_play_response = net.request(video_play_url, method="GET", cookies_list=COOKIE_INFO, header_list=header_list, json_decode=True)
+        headers["x-twitter-auth-type"] = "OAuth2Session"
+    video_play_response = net.request(video_play_url, method="GET", cookies=COOKIE_INFO, headers=headers, json_decode=True)
     result = {
         "video_url": "",  # 视频地址
     }

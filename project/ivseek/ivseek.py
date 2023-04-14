@@ -81,7 +81,7 @@ def get_archive_page(archive_id):
             video_id = video_url.split("/")[-1].split("?")[0]
             result_video_info["video_url"] = "https://www.youtube.com/watch?v=%s" % video_id
             # 获取视频发布账号
-            video_play_response = net.request(result_video_info["video_url"], method="GET", header_list={"accept-language": "en-US"})
+            video_play_response = net.request(result_video_info["video_url"], method="GET", headers={"accept-language": "en-US"})
             if video_play_response.status != const.ResponseCode.SUCCEED:
                 raise crawler.CrawlerException("视频播放页 %s，%s" % (result_video_info["video_url"], crawler.request_failre(video_play_response.status)))
             # 账号已被删除，跳过
@@ -108,11 +108,11 @@ def get_archive_page(archive_id):
                 raise crawler.CrawlerException("未知视频来源" + video_url)
             result_video_info["video_url"] = "http://www.nicovideo.jp/watch/%s" % video_id
             # 获取视频发布账号
-            video_play_response = net.request(result_video_info["video_url"], method="GET", cookies_list=niconico.COOKIE_INFO)
+            video_play_response = net.request(result_video_info["video_url"], method="GET", cookies=niconico.COOKIE_INFO)
             while video_play_response.status == 403:
                 log.info("视频%s访问异常，重试" % video_id)
                 time.sleep(60)
-                video_play_response = net.request(result_video_info["video_url"], method="GET", cookies_list=niconico.COOKIE_INFO)
+                video_play_response = net.request(result_video_info["video_url"], method="GET", cookies=niconico.COOKIE_INFO)
             if video_play_response.status != const.ResponseCode.SUCCEED:
                 raise crawler.CrawlerException("视频播放页 %s，%s" % (result_video_info["video_url"], crawler.request_failre(video_play_response.status)))
             script_json: dict = tool.json_decode(pq(video_play_response.content).find("#js-initial-watch-data").attr("data-api-data"))

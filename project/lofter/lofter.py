@@ -25,7 +25,7 @@ def get_one_page_blog(account_name, page_count):
     # https://moexia.lofter.com/?page=1
     blog_pagination_url = "https://%s.lofter.com/" % account_name
     query_data = {"page": page_count}
-    blog_pagination_response = net.request(blog_pagination_url, method="GET", fields=query_data, cookies_list=COOKIE_INFO, is_auto_redirect=False)
+    blog_pagination_response = net.request(blog_pagination_url, method="GET", fields=query_data, cookies=COOKIE_INFO, is_auto_redirect=False)
     result = {
         "blog_url_list": [],  # 全部日志地址
     }
@@ -45,7 +45,7 @@ def get_one_page_blog(account_name, page_count):
 
 # 获取日志
 def get_blog_page(blog_url):
-    blog_response = net.request(blog_url, method="GET", cookies_list=COOKIE_INFO)
+    blog_response = net.request(blog_url, method="GET", cookies=COOKIE_INFO)
     result = {
         "photo_url_list": [],  # 全部图片地址
     }
