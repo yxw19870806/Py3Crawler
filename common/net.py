@@ -178,7 +178,7 @@ def url_encode(url: str) -> str:
 
 
 def request(url: str, method: str = "GET", fields: Optional[Union[dict, str]] = None, json_decode: bool = False, is_auto_redirect: bool = True,
-            headers: Optional[dict] = None, cookies: Optional[dict] = None, encode_multipart: bool = False, is_auto_proxy: bool = True,
+            headers: Optional[dict] = None, cookies: Optional[dict] = None, encode_multipart: bool = False, is_use_proxy: bool = True,
             is_gzip: bool = True, is_url_encode: bool = True, is_auto_retry: bool = True, is_check_qps: bool = True,
             connection_timeout: int = NET_CONFIG.HTTP_CONNECTION_TIMEOUT, read_timeout: int = NET_CONFIG.HTTP_READ_TIMEOUT) -> Union[urllib3.HTTPResponse, ErrorResponse]:
     """
@@ -193,7 +193,7 @@ def request(url: str, method: str = "GET", fields: Optional[Union[dict, str]] = 
     - headers - customize header dictionary
     - cookies - customize cookies dictionary, will replace headers["Cookie"]
     - encode_multipart - see "encode_multipart" in urllib3.request_encode_body
-    - is_auto_proxy - is auto use proxy when init PROXY_HTTP_CONNECTION_POOL
+    - is_use_proxy - is use proxy when inited PROXY_HTTP_CONNECTION_POOL
     - is_auto_redirect - is auto redirect, when response.status in [301, 302, 303, 307, 308]
     - is_auto_retry - is auto retry, when response.status in [500, 502, 503, 504]
     - connection_timeout - customize connection timeout seconds
@@ -210,7 +210,7 @@ def request(url: str, method: str = "GET", fields: Optional[Union[dict, str]] = 
     if HTTP_CONNECTION_POOL is None:
         init_http_connection_pool()
     connection_pool = HTTP_CONNECTION_POOL
-    if PROXY_HTTP_CONNECTION_POOL is not None and is_auto_proxy:
+    if PROXY_HTTP_CONNECTION_POOL is not None and is_use_proxy:
         connection_pool = PROXY_HTTP_CONNECTION_POOL
     if is_url_encode:
         url = url_encode(url)
@@ -313,7 +313,7 @@ def request(url: str, method: str = "GET", fields: Optional[Union[dict, str]] = 
             elif isinstance(e, urllib3.exceptions.DecodeError):
                 if message.find("'Received response with content-encoding: gzip, but failed to decode it.'") >= 0:
                     return request(url, method=method, fields=fields, json_decode=json_decode, is_auto_redirect=is_auto_redirect,
-                                   headers=headers, cookies=cookies, encode_multipart=encode_multipart, is_auto_proxy=is_auto_proxy,
+                                   headers=headers, cookies=cookies, encode_multipart=encode_multipart, is_use_proxy=is_use_proxy,
                                    is_gzip=False, is_url_encode=False, is_auto_retry=is_auto_retry, is_check_qps=is_check_qps,
                                    connection_timeout=connection_timeout, read_timeout=read_timeout)
             # import traceback
