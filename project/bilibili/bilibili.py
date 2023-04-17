@@ -10,7 +10,7 @@ import math
 import os
 from common import *
 
-COOKIE_INFO = {}
+COOKIES = {}
 IS_LOGIN = False
 EACH_PAGE_COUNT = 30
 
@@ -41,10 +41,10 @@ def bv_id_2_av_id(bv_id):
 
 # 检测是否已登录
 def check_login():
-    if not COOKIE_INFO:
+    if not COOKIES:
         return False
     api_url = "https://api.bilibili.com/x/member/web/account"
-    api_response = net.request(api_url, method="GET", cookies=COOKIE_INFO, json_decode=True)
+    api_response = net.request(api_url, method="GET", cookies=COOKIES, json_decode=True)
     if api_response.status == const.ResponseCode.SUCCEED:
         return crawler.get_json_value(api_response.json_data, "data", "mid", type_check=int, default_value=0) != 0
     return False
@@ -68,7 +68,7 @@ def get_favorites_list(favorites_id):
             "ps": EACH_PAGE_COUNT,
             "direction": "false",
         }
-        api_response = net.request(api_url, method="GET", fields=query_data, cookies=COOKIE_INFO, json_decode=True)
+        api_response = net.request(api_url, method="GET", fields=query_data, cookies=COOKIES, json_decode=True)
         video_info_list = []
         try:
             video_info_list = crawler.get_json_value(api_response.json_data, "data", "media_list", type_check=list)
@@ -171,7 +171,7 @@ def get_one_page_album(account_id, page_count):
         "page_size": EACH_PAGE_COUNT,
         "biz": "all",
     }
-    api_response = net.request(api_url, method="GET", fields=query_data, cookies=COOKIE_INFO, json_decode=True)
+    api_response = net.request(api_url, method="GET", fields=query_data, cookies=COOKIES, json_decode=True)
     result = {
         "album_id_list": [],  # 全部相簿id
     }
@@ -228,7 +228,7 @@ def get_one_page_audio(account_id, page_count):
 # 获取指定视频
 def get_video_page(video_id):
     video_play_url = "https://www.bilibili.com/video/av%s" % video_id
-    video_play_response = net.request(video_play_url, method="GET", cookies=COOKIE_INFO)
+    video_play_response = net.request(video_play_url, method="GET", cookies=COOKIES)
     result = {
         "is_private": False,  # 是否需要登录
         "video_part_info_list": [],  # 全部视频地址
@@ -281,7 +281,7 @@ def get_video_page(video_id):
             "otype": "json",
         }
         headers = {"Referer": "https://www.bilibili.com/video/av%s" % video_id}
-        video_info_response = net.request(video_info_url, method="GET", fields=query_data, cookies=COOKIE_INFO, headers=headers,
+        video_info_response = net.request(video_info_url, method="GET", fields=query_data, cookies=COOKIES, headers=headers,
                                           json_decode=True)
         if video_info_response.status != const.ResponseCode.SUCCEED:
             raise crawler.CrawlerException("视频信息，" + crawler.request_failre(video_info_response.status))
@@ -346,7 +346,7 @@ def get_audio_info_page(audio_id):
 
 class BiliBili(crawler.Crawler):
     def __init__(self, **kwargs):
-        global COOKIE_INFO
+        global COOKIES
 
         # 设置APP目录
         crawler.PROJECT_APP_PATH = os.path.abspath(os.path.dirname(__file__))
@@ -361,7 +361,7 @@ class BiliBili(crawler.Crawler):
         crawler.Crawler.__init__(self, sys_config, **kwargs)
 
         # 设置全局变量，供子线程调用
-        COOKIE_INFO = self.cookie_value
+        COOKIES = self.cookie_value
 
         # 解析存档文件
         # account_name  last_video_id  last_audio_id  last_album_id

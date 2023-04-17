@@ -18,7 +18,7 @@ def get_one_page_favorite(page_count):
     # https://www.weibo.com/fav?page=1
     favorite_pagination_url = "https://www.weibo.com/fav"
     query_data = {"page": page_count}
-    cookies = {"SUB": weibo.COOKIE_INFO["SUB"]}
+    cookies = {"SUB": weibo.COOKIES["SUB"]}
     favorite_pagination_response = net.request(favorite_pagination_url, method="GET", fields=query_data, cookies=cookies)
     result = {
         "blog_info_list": [],  # 所有微博信息
@@ -103,7 +103,7 @@ def delete_favorite(blog_id):
         "Origin": "https://weibo.com",
         "Referer": "https://weibo.com/fav",
     }
-    cookies = {"SUB": weibo.COOKIE_INFO["SUB"]}
+    cookies = {"SUB": weibo.COOKIES["SUB"]}
     api_response = net.request(api_url, method="POST", fields=post_data, cookies=cookies, headers=headers, json_decode=True)
     if api_response.status != const.ResponseCode.SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(api_response.status))
@@ -124,7 +124,7 @@ class Favorite(crawler.Crawler):
         crawler.Crawler.__init__(self, sys_config, **kwargs)
 
         # 设置全局变量，供子线程调用
-        weibo.COOKIE_INFO.update(self.cookie_value)
+        weibo.COOKIES.update(self.cookie_value)
 
         # 检测登录状态
         if not weibo.check_login():

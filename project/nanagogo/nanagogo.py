@@ -11,7 +11,7 @@ from common import *
 
 INIT_TARGET_ID = "99999"
 EACH_PAGE_BLOG_COUNT = 30  # 每次请求获取的日志数量
-COOKIE_INFO = {}
+COOKIES = {}
 
 
 # 获取talk首页
@@ -82,7 +82,7 @@ class NanaGoGo(crawler.Crawler):
         crawler.Crawler.__init__(self, sys_config, **kwargs)
 
         # 设置全局变量，供子线程调用
-        COOKIE_INFO.update(self.cookie_value)
+        COOKIES.update(self.cookie_value)
 
         # 解析存档文件
         # account_name  last_post_id

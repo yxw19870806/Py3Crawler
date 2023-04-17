@@ -18,7 +18,7 @@ def follow_account(account_id):
         "refer_flag": "1005050001_",
     }
     headers = {"Referer": "https://weibo.com/%s/follow" % account_id}
-    cookies = {"SUB": weibo.COOKIE_INFO["SUB"]}
+    cookies = {"SUB": weibo.COOKIES["SUB"]}
     follow_response = net.request(api_url, method="POST", fields=post_data, headers=headers, cookies=cookies, json_decode=True)
     if follow_response.status != const.ResponseCode.SUCCEED:
         console.log("关注%s失败，请求返回结果：%s" % (account_id, crawler.request_failre(follow_response.status)))

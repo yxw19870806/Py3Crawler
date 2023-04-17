@@ -74,7 +74,7 @@ class NicoNicoDownload(niconico.NicoNico):
 
         # 开始下载
         log.info("\n视频标题：%s\n视频地址：%s\n下载路径：%s" % (video_response["video_title"], video_response["video_url"], file_path))
-        cookies = niconico.COOKIE_INFO
+        cookies = niconico.COOKIES
         if video_response["extra_cookie"]:
             cookies.update(video_response["extra_cookie"])
         download_return = net.Download(video_response["video_url"], file_path, auto_multipart_download=True, cookies=cookies)
