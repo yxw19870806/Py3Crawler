@@ -9,7 +9,7 @@ email: hikaru870806@hotmail.com
 from common import *
 
 EACH_PAGE_ACCOUNT_COUNT = 50  # 每次请求获取的账号数量
-COOKIE_INFO = {}
+COOKIES = {}
 
 
 # 获取指定账号的全部粉丝列表（需要cookies）
@@ -24,8 +24,8 @@ def get_follow_by_list(account_id):
             post_data = {"q": "ig_user(%s){followed_by.first(%s){nodes{username},page_info}}" % (account_id, EACH_PAGE_ACCOUNT_COUNT)}
         else:
             post_data = {"q": "ig_user(%s){followed_by.after(%s,%s){nodes{username},page_info}}" % (account_id, cursor, EACH_PAGE_ACCOUNT_COUNT)}
-        headers = {"Referer": "https://www.instagram.com/", "X-CSRFToken": COOKIE_INFO["csrftoken"]}
-        follow_by_pagination_response = net.request(api_url, method="POST", fields=post_data, headers=headers, cookies=COOKIE_INFO, json_decode=True)
+        headers = {"Referer": "https://www.instagram.com/", "X-CSRFToken": COOKIES["csrftoken"]}
+        follow_by_pagination_response = net.request(api_url, method="POST", fields=post_data, headers=headers, cookies=COOKIES, json_decode=True)
         if follow_by_pagination_response.status == const.ResponseCode.SUCCEED:
             for account_info in crawler.get_json_value(follow_by_pagination_response.json_data, "followed_by", "nodes", type_check=list):
                 follow_by_list.append(crawler.get_json_value(account_info, "username", type_check=str))
@@ -48,8 +48,8 @@ def get_follow_list(account_id):
             post_data = {"q": "ig_user(%s){follows.first(%s){nodes{username},page_info}}" % (account_id, EACH_PAGE_ACCOUNT_COUNT)}
         else:
             post_data = {"q": "ig_user(%s){follows.after(%s,%s){nodes{username},page_info}}" % (account_id, cursor, EACH_PAGE_ACCOUNT_COUNT)}
-        headers = {"Referer": "https://www.instagram.com/", "X-CSRFToken": COOKIE_INFO["csrftoken"]}
-        follow_pagination_response = net.request(api_url, method="POST", fields=post_data, headers=headers, cookies=COOKIE_INFO, json_decode=True)
+        headers = {"Referer": "https://www.instagram.com/", "X-CSRFToken": COOKIES["csrftoken"]}
+        follow_pagination_response = net.request(api_url, method="POST", fields=post_data, headers=headers, cookies=COOKIES, json_decode=True)
         if follow_pagination_response.status == const.ResponseCode.SUCCEED:
             for account_info in crawler.get_json_value(follow_pagination_response.json_data, "follows", "nodes", type_check=list):
                 follow_list.append(crawler.get_json_value(account_info, "username", type_check=str))

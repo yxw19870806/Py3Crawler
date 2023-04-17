@@ -8,8 +8,6 @@ email: hikaru870806@hotmail.com
 """
 from common import *
 
-COOKIE_INFO = {}
-
 
 def get_banned_game_list():
     result = []

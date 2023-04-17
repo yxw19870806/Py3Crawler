@@ -9,13 +9,13 @@ email: hikaru870806@hotmail.com
 import os
 from common import *
 
-COOKIE_INFO = {}
+COOKIES = {}
 
 
 # 检测是否已登录
 def check_login():
     api_url = "https://api.bilibili.com/x/web-interface/nav"
-    api_response = net.request(api_url, method="GET", cookies=COOKIE_INFO, json_decode=True)
+    api_response = net.request(api_url, method="GET", cookies=COOKIES, json_decode=True)
     if api_response.status == const.ResponseCode.SUCCEED:
         return crawler.get_json_value(api_response.json_data, "data", "isLogin", type_check=bool)
     return False
@@ -27,7 +27,7 @@ def get_comic_index_page(comic_id):
     post_data = {
         "comic_id": comic_id
     }
-    api_response = net.request(api_url, method="POST", fields=post_data, cookies=COOKIE_INFO, json_decode=True)
+    api_response = net.request(api_url, method="POST", fields=post_data, cookies=COOKIES, json_decode=True)
     result = {
         "comic_info_list": {},  # 漫画列表信息
     }
@@ -55,7 +55,7 @@ def get_chapter_page(ep_id):
     post_data = {
         "ep_id": ep_id
     }
-    api_response = net.request(api_url, method="POST", fields=post_data, cookies=COOKIE_INFO, json_decode=True)
+    api_response = net.request(api_url, method="POST", fields=post_data, cookies=COOKIES, json_decode=True)
     result = {
         "need_buy": False,  # 是否需要购买
         "photo_url_list": [],  # 全部漫画图片地址
@@ -83,7 +83,7 @@ def get_chapter_page(ep_id):
 
 class BiliBiliComic(crawler.Crawler):
     def __init__(self, **kwargs):
-        global COOKIE_INFO
+        global COOKIES
 
         # 设置APP目录
         crawler.PROJECT_APP_PATH = os.path.abspath(os.path.dirname(__file__))
@@ -96,7 +96,7 @@ class BiliBiliComic(crawler.Crawler):
         crawler.Crawler.__init__(self, sys_config, **kwargs)
 
         # 设置全局变量，供子线程调用
-        COOKIE_INFO = self.cookie_value
+        COOKIES = self.cookie_value
 
         # 解析存档文件
         # comic_id  last_comic_id (comic_name)

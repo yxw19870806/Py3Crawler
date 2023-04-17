@@ -10,7 +10,7 @@ import os
 from pyquery import PyQuery as pq
 from common import *
 
-COOKIE_INFO = {}
+COOKIES = {}
 USER_AGENT = None
 
 
@@ -22,7 +22,7 @@ def get_game_store_index(game_id):
     }
     if "User-Agent" not in headers:
         raise crawler.CrawlerException("header没有携带User-Agent")
-    game_index_response = net.request(game_index_url, method="GET", headers=headers, cookies=COOKIE_INFO, is_auto_retry=False)
+    game_index_response = net.request(game_index_url, method="GET", headers=headers, cookies=COOKIES, is_auto_retry=False)
     result = {
         "game_name": None,  # 游戏名字
         "develop_name": None,  # Developer
@@ -54,7 +54,7 @@ def get_game_store_index(game_id):
             "appid": game_id,
         }
         headers["X-Requested-With"] = "XMLHttpRequest"
-        history_api_response = net.request(history_api_url, method="GET", fields=query_data, headers=headers, cookies=COOKIE_INFO)
+        history_api_response = net.request(history_api_url, method="GET", fields=query_data, headers=headers, cookies=COOKIES)
         if history_api_response.status != const.ResponseCode.SUCCEED:
             raise crawler.CrawlerException("历史记录，%s" % crawler.request_failre(history_api_response.status))
         if not result["develop_name"]:
@@ -90,7 +90,7 @@ class SteamDb(crawler.Crawler):
     account_id = None
 
     def __init__(self, **kwargs):
-        global COOKIE_INFO, USER_AGENT
+        global COOKIES, USER_AGENT
 
         # 设置APP目录
         crawler.PROJECT_APP_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
@@ -108,7 +108,7 @@ class SteamDb(crawler.Crawler):
         }
         crawler.Crawler.__init__(self, sys_config, **kwargs)
 
-        COOKIE_INFO = self.cookie_value
+        COOKIES = self.cookie_value
         USER_AGENT = self.app_config["USER_AGENT"]
 
         net.disable_fake_proxy_ip()

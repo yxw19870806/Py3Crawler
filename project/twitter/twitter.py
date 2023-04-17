@@ -16,7 +16,7 @@ from common import *
 
 AUTHORIZATION = ""
 QUERY_ID = ""
-COOKIE_INFO = {}
+COOKIES = {}
 IS_LOGIN = False
 thread_event = threading.Event()
 thread_event.set()
@@ -24,10 +24,10 @@ thread_event.set()
 
 # 初始化session。获取authorization。并检测登录状态
 def check_login():
-    global AUTHORIZATION, COOKIE_INFO, IS_LOGIN, QUERY_ID
+    global AUTHORIZATION, COOKIES, IS_LOGIN, QUERY_ID
     index_url = "https://twitter.com/home"
     headers = {"referer": "https://twitter.com"}
-    index_response = net.request(index_url, method="GET", cookies=COOKIE_INFO, headers=headers, is_auto_redirect=False)
+    index_response = net.request(index_url, method="GET", cookies=COOKIES, headers=headers, is_auto_redirect=False)
     if index_response.status == const.ResponseCode.SUCCEED:
         IS_LOGIN = True
     elif index_response.status == 302 and index_response.getheader("Location") == "/login?redirect_after_login=%2Fhome":
@@ -35,7 +35,7 @@ def check_login():
     else:
         raise crawler.CrawlerException(crawler.request_failre(index_response.status))
     # 更新cookies
-    COOKIE_INFO.update(net.get_cookies_from_response_header(index_response.headers))
+    COOKIES.update(net.get_cookies_from_response_header(index_response.headers))
     init_js_url_find = re.findall(r'href="(https://abs.twimg.com/responsive-web/client-web-legacy/main.[^\.]*.[\w]*.js)"', index_response.content)
     if len(init_js_url_find) != 1:
         raise crawler.CrawlerException("初始化JS地址截取失败\n" + index_response.content)
@@ -65,9 +65,9 @@ def get_account_index_page(account_name):
         "referer": "https://twitter.com/%s" % account_name,
         "authorization": "Bearer %s" % AUTHORIZATION,
     }
-    if "ct0" in COOKIE_INFO:
-        headers["x-csrf-token"] = COOKIE_INFO["ct0"]
-    account_index_response = net.request(account_index_url, method="GET", fields=query_data, cookies=COOKIE_INFO, headers=headers, json_decode=True)
+    if "ct0" in COOKIES:
+        headers["x-csrf-token"] = COOKIES["ct0"]
+    account_index_response = net.request(account_index_url, method="GET", fields=query_data, cookies=COOKIES, headers=headers, json_decode=True)
     result = {
         "account_id": None,  # account id
     }
@@ -120,9 +120,9 @@ def get_one_page_media(account_name, account_id, cursor):
         "referer": "https://twitter.com/%s" % account_name,
         "authorization": "Bearer %s" % AUTHORIZATION,
     }
-    if "ct0" in COOKIE_INFO:
-        headers["x-csrf-token"] = COOKIE_INFO["ct0"]
-    media_pagination_response = net.request(media_pagination_url, method="GET", fields=query_data, cookies=COOKIE_INFO, headers=headers, json_decode=True)
+    if "ct0" in COOKIES:
+        headers["x-csrf-token"] = COOKIES["ct0"]
+    media_pagination_response = net.request(media_pagination_url, method="GET", fields=query_data, cookies=COOKIES, headers=headers, json_decode=True)
     result = {
         "is_over": False,  # 是否最后一页推特（没有获取到任何内容）
         "media_info_list": [],  # 全部推特信息
@@ -200,11 +200,11 @@ def get_video_play_page(tweet_id):
     video_play_url = "https://api.twitter.com/1.1/videos/tweet/config/%s.json" % tweet_id
     headers = {
         "authorization": "Bearer %s" % AUTHORIZATION,
-        "x-csrf-token": COOKIE_INFO["ct0"],
+        "x-csrf-token": COOKIES["ct0"],
     }
     if IS_LOGIN:
         headers["x-twitter-auth-type"] = "OAuth2Session"
-    video_play_response = net.request(video_play_url, method="GET", cookies=COOKIE_INFO, headers=headers, json_decode=True)
+    video_play_response = net.request(video_play_url, method="GET", cookies=COOKIES, headers=headers, json_decode=True)
     result = {
         "video_url": "",  # 视频地址
     }
@@ -271,7 +271,7 @@ def get_video_play_page(tweet_id):
 
 class Twitter(crawler.Crawler):
     def __init__(self, **kwargs):
-        global COOKIE_INFO
+        global COOKIES
 
         # 设置APP目录
         crawler.PROJECT_APP_PATH = os.path.abspath(os.path.dirname(__file__))
@@ -286,9 +286,9 @@ class Twitter(crawler.Crawler):
         crawler.Crawler.__init__(self, sys_config, **kwargs)
 
         # 设置全局变量，供子线程调用
-        COOKIE_INFO = self.cookie_value
-        if "_twitter_sess" not in COOKIE_INFO or "ct0" not in COOKIE_INFO:
-            COOKIE_INFO = {}
+        COOKIES = self.cookie_value
+        if "_twitter_sess" not in COOKIES or "ct0" not in COOKIES:
+            COOKIES = {}
 
         # 解析存档文件
         # account_name  account_id  last_tweet_id

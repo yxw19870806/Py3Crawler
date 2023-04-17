@@ -15,7 +15,7 @@ from common import *
 
 EACH_LOOP_MAX_PAGE_COUNT = 200  # 单次缓存多少页的日志
 EACH_PAGE_BLOG_COUNT = 100  # 每次请求获取的日志数量
-COOKIE_INFO = {}
+COOKIES = {}
 USER_AGENT = None
 IS_STEP_ERROR_403_AND_404 = False
 IS_LOGIN = False
@@ -23,10 +23,10 @@ IS_LOGIN = False
 
 # 检测登录状态
 def check_login():
-    if not COOKIE_INFO:
+    if not COOKIES:
         return False
     index_url = "https://www.tumblr.com/"
-    index_response = net.request(index_url, method="GET", cookies=COOKIE_INFO, headers={"User-Agent": USER_AGENT}, is_auto_redirect=False)
+    index_response = net.request(index_url, method="GET", cookies=COOKIES, headers={"User-Agent": USER_AGENT}, is_auto_redirect=False)
     if index_response.status == 302 and index_response.getheader("Location") == "https://www.tumblr.com/dashboard":
         return True
     return False
@@ -62,7 +62,7 @@ def get_index_setting(account_id):
         # "Show this blog on the web" disabled
         elif redirect_url.find("//www.tumblr.com/login_required/%s" % account_id) > 0:
             is_private = True
-            index_response = net.request(redirect_url, method="GET", cookies=COOKIE_INFO)
+            index_response = net.request(redirect_url, method="GET", cookies=COOKIES)
             if index_response.status == 404:
                 raise crawler.CrawlerException("账号不存在")
     elif index_response.status == 404:
@@ -140,8 +140,7 @@ def get_one_page_private_blog(account_id, page_count):
         "User-Agent": USER_AGENT,
         "X-Requested-With": "XMLHttpRequest",
     }
-    post_pagination_response = net.request(post_pagination_url, method="GET", fields=query_data, headers=headers, cookies=COOKIE_INFO,
-                                           json_decode=True)
+    post_pagination_response = net.request(post_pagination_url, method="GET", fields=query_data, headers=headers, cookies=COOKIES, json_decode=True)
     result = {
         "is_over": False,  # 是不是最后一页日志
         "post_info_list": [],  # 全部日志信息
@@ -387,7 +386,7 @@ def get_video_play_page(account_id, post_id, is_https):
 
 class Tumblr(crawler.Crawler):
     def __init__(self, **kwargs):
-        global COOKIE_INFO, IS_STEP_ERROR_403_AND_404, USER_AGENT
+        global COOKIES, IS_STEP_ERROR_403_AND_404, USER_AGENT
 
         # 设置APP目录
         crawler.PROJECT_APP_PATH = os.path.abspath(os.path.dirname(__file__))
@@ -406,7 +405,7 @@ class Tumblr(crawler.Crawler):
         crawler.Crawler.__init__(self, sys_config, **kwargs)
 
         # 设置全局变量，供子线程调用
-        COOKIE_INFO = self.cookie_value
+        COOKIES = self.cookie_value
         USER_AGENT = self.app_config["USER_AGENT"]
         IS_STEP_ERROR_403_AND_404 = self.app_config["IS_STEP_ERROR_403_AND_404"]
 

@@ -13,19 +13,19 @@ from pyquery import PyQuery as pq
 from common import *
 
 EACH_LOOP_MAX_PAGE_COUNT = 200
-COOKIE_INFO = {}
+COOKIES = {}
 
 
 # 检测登录状态
 def check_login():
-    global COOKIE_INFO
-    if not COOKIE_INFO:
+    global COOKIES
+    if not COOKIES:
         return False
     account_index_url = "https://www.ameba.jp/home"
-    index_response = net.request(account_index_url, method="GET", cookies=COOKIE_INFO, is_auto_redirect=False)
+    index_response = net.request(account_index_url, method="GET", cookies=COOKIES, is_auto_redirect=False)
     if index_response.status == const.ResponseCode.SUCCEED:
         return True
-    COOKIE_INFO = {}
+    COOKIES = {}
     return False
 
 
@@ -90,7 +90,7 @@ def get_one_page_blog(account_name, page_count):
 # 获取指定id的日志
 def get_blog_page(account_name, blog_id):
     blog_url = "https://ameblo.jp/%s/entry-%s.html" % (account_name, blog_id)
-    blog_response = net.request(blog_url, method="GET", cookies=COOKIE_INFO)
+    blog_response = net.request(blog_url, method="GET", cookies=COOKIES)
     result = {
         "photo_url_list": [],  # 全部图片地址
         "is_delete": False,  # 是否已删除
@@ -194,7 +194,7 @@ def check_photo_invalid(photo_path):
 
 class Ameblo(crawler.Crawler):
     def __init__(self, **kwargs):
-        global COOKIE_INFO
+        global COOKIES
 
         # 设置APP目录
         crawler.PROJECT_APP_PATH = os.path.abspath(os.path.dirname(__file__))
@@ -207,7 +207,7 @@ class Ameblo(crawler.Crawler):
         crawler.Crawler.__init__(self, sys_config, **kwargs)
 
         # 设置全局变量，供子线程调用
-        COOKIE_INFO = self.cookie_value
+        COOKIES = self.cookie_value
 
         # 解析存档文件
         # account_name  last_blog_id

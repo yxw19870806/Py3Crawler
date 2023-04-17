@@ -12,16 +12,16 @@ import urllib.parse
 from common import *
 
 IS_LOGIN = False
-COOKIE_INFO = {}
+COOKIES = {}
 FIRST_CHOICE_RESOLUTION = 720
 
 
 # 检测登录状态
 def check_login():
-    if not COOKIE_INFO:
+    if not COOKIES:
         return False
     account_index_url = "https://www.youtube.com/account"
-    index_response = net.request(account_index_url, method="GET", cookies=COOKIE_INFO, is_auto_redirect=False)
+    index_response = net.request(account_index_url, method="GET", cookies=COOKIES, is_auto_redirect=False)
     if index_response.status == 303 and index_response.getheader("Location").startswith("https://accounts.google.com/ServiceLogin?"):
         return False
     elif index_response.status == const.ResponseCode.SUCCEED:
@@ -128,7 +128,7 @@ def get_video_page(video_id):
     video_play_url = "https://www.youtube.com/watch"
     query_data = {"v": video_id}
     if IS_LOGIN:
-        video_play_response = net.request(video_play_url, method="GET", fields=query_data, cookies=COOKIE_INFO)
+        video_play_response = net.request(video_play_url, method="GET", fields=query_data, cookies=COOKIES)
     else:
         # 没有登录时默认使用英语
         video_play_response = net.request(video_play_url, method="GET", fields=query_data, headers={"accept-language": "en"})
@@ -319,7 +319,7 @@ def _decrypt_function3(a, b):
 
 class Youtube(crawler.Crawler):
     def __init__(self, **kwargs):
-        global COOKIE_INFO, FIRST_CHOICE_RESOLUTION, IS_LOGIN
+        global COOKIES, FIRST_CHOICE_RESOLUTION, IS_LOGIN
 
         # 设置APP目录
         crawler.PROJECT_APP_PATH = os.path.abspath(os.path.dirname(__file__))
@@ -336,7 +336,7 @@ class Youtube(crawler.Crawler):
         crawler.Crawler.__init__(self, sys_config, **kwargs)
 
         # 设置全局变量，供子线程调用
-        COOKIE_INFO = self.cookie_value
+        COOKIES = self.cookie_value
         video_quality = self.app_config["VIDEO_QUALITY"]
         if video_quality == 1:
             FIRST_CHOICE_RESOLUTION = 144
