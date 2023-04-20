@@ -442,6 +442,7 @@ class Steam(crawler.Crawler):
         self.apps_cache_file_path = os.path.join(self.cache_data_path, "%s_apps.txt" % self.account_id)
 
         self.need_login = need_login
+        self.init()
 
     def init(self):
         global COOKIES
