@@ -324,8 +324,8 @@ class CrawlerThread(crawler.CrawlerThread):
         video_path = os.path.join(self.main_thread.video_download_path, self.display_name, video_name)
         headers = {"Host": urllib.parse.urlparse(video_info["video_url"])[1]}
         video_description = "视频%s《%s》" % (video_info["video_id"], video_info["video_title"])
-        download_return = self.download(video_info["video_url"], video_path, video_description, failure_callback=self.video_download_failure_callback, is_failure_exit=False,
-                                        headers=headers, auto_multipart_download=True)
+        download_return = self.download(video_info["video_url"], video_path, video_description, headers=headers,
+                                        failure_callback=self.video_download_failure_callback, auto_multipart_download=True, is_failure_exit=False)
         if download_return:
             self.total_video_count += 1  # 计数累加
         else:

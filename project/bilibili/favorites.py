@@ -111,7 +111,7 @@ class BiliBiliFavorites(bilibili.BiliBili):
                     # 开始下载
                     log.info("\n视频标题：%s\n视频地址：%s\n下载路径：%s" % (video_play_response["video_title"], video_part_url, video_path))
                     headers = {"Referer": "https://www.bilibili.com/video/av%s" % video_info["video_id"]}
-                    self.download(video_part_url, video_path, video_description, auto_multipart_download=True, headers=headers)
+                    self.download(video_part_url, video_path, video_description, headers=headers, auto_multipart_download=True)
                     video_split_index += 1
                     video_index += 1
 

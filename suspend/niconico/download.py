@@ -77,7 +77,7 @@ class NicoNicoDownload(niconico.NicoNico):
         cookies = niconico.COOKIES
         if video_response["extra_cookie"]:
             cookies.update(video_response["extra_cookie"])
-        download_return = net.Download(video_response["video_url"], file_path, auto_multipart_download=True, cookies=cookies)
+        download_return = net.Download(video_response["video_url"], file_path, cookies=cookies, auto_multipart_download=True)
         if download_return.status == const.DownloadStatus.SUCCEED:
             log.info("视频《%s》下载成功" % video_response["video_title"])
         else:
