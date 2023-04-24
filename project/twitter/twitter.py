@@ -30,7 +30,7 @@ def check_login():
     index_response = net.request(index_url, method="GET", cookies=COOKIES, headers=headers, is_auto_redirect=False)
     if index_response.status == const.ResponseCode.SUCCEED:
         IS_LOGIN = True
-    elif index_response.status == 302 and index_response.getheader("Location") == "/login?redirect_after_login=%2Fhome":
+    elif index_response.status == 302 and index_response.headers.get("Location") == "/login?redirect_after_login=%2Fhome":
         pass
     else:
         raise crawler.CrawlerException(crawler.request_failre(index_response.status))

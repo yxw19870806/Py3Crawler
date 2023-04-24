@@ -123,12 +123,12 @@ def get_game_store_index(game_id):
         "error": "",  # 访问错误信息
     }
     if game_index_response.status == 302:
-        if game_index_response.getheader("Location") == "https://store.steampowered.com/":
+        if game_index_response.headers.get("Location") == "https://store.steampowered.com/":
             result["deleted"] = True
             return result
         else:
             COOKIES.update(net.get_cookies_from_response_header(game_index_response.headers))
-            game_index_response = net.request(game_index_response.getheader("Location"), method="GET", cookies=COOKIES)
+            game_index_response = net.request(game_index_response.headers.get("Location"), method="GET", cookies=COOKIES)
     if game_index_response.status != const.ResponseCode.SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(game_index_response.status))
     if pq(game_index_response.content).find(".agegate_birthday_selector").length > 0:

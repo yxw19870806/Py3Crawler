@@ -22,10 +22,10 @@ def get_account_index_page(account_name):
     result = {
         "account_id": 0,  # 账号id（字母账号->数字账号)
     }
-    if account_index_response.status == 302 and account_index_response.getheader("Location").startswith("https://tuchong.com/") and account_index_response.getheader("Location").endswith("/work"):
+    if account_index_response.status == 302 and account_index_response.headers.get("Location").startswith("https://tuchong.com/") and account_index_response.headers.get("Location").endswith("/work"):
         account_index_url += "/work"
         account_index_response = net.request(account_index_url, method="GET", is_auto_redirect=False)
-    if account_index_response.status == 301 and account_index_response.getheader("Location") == "https://tuchong.com/":
+    if account_index_response.status == 301 and account_index_response.headers.get("Location") == "https://tuchong.com/":
         raise crawler.CrawlerException("账号不存在")
     elif account_index_response.status != const.ResponseCode.SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(account_index_response.status))
