@@ -55,11 +55,11 @@ class ErrorResponse(object):
         """
         request()方法异常对象
         """
-        self.status = status
-        self.data = b""
-        self.content = ""
-        self.headers = {}
-        self.json_data = {}
+        self.status: int = status
+        self.data: bytes = b""
+        self.content: str = ""
+        self.headers: HTTPHeaderDict = HTTPHeaderDict()
+        self.json_data: dict = {}
 
 
 def init_http_connection_pool() -> None:
@@ -80,6 +80,8 @@ def set_proxy(ip: str, port: str) -> None:
     if not match or match.group() != ip:
         return
     global PROXY_HTTP_CONNECTION_POOL
+    if PROXY_HTTP_CONNECTION_POOL is not None:
+        return
     PROXY_HTTP_CONNECTION_POOL = urllib3.ProxyManager(f"http://{ip}:{port}", retries=False)
     console.log(f"设置代理成功({ip}:{port})")
 
@@ -101,12 +103,12 @@ def set_default_charset(charset: str):
     DEFAULT_CHARSET = charset
 
 
-def build_header_cookie_string(cookies_list: dict) -> str:
+def build_header_cookie_string(cookies: dict) -> str:
     """
     根据cookies字典生成header中的cookie字符串
 
     :Args:
-    - cookies_list
+    - cookies
         {
             "cookie1":“value1",
             "cookie2":“value2",
@@ -116,11 +118,11 @@ def build_header_cookie_string(cookies_list: dict) -> str:
     :Returns:
         cookie1=value1; cookie2=value2
     """
-    if not cookies_list:
+    if not cookies:
         return ""
     temp_string = []
-    for cookie_name in cookies_list:
-        temp_string.append(cookie_name + "=" + cookies_list[cookie_name])
+    for cookie_name in cookies:
+        temp_string.append(cookie_name + "=" + cookies[cookie_name])
     return "; ".join(temp_string)
 
 
@@ -128,7 +130,7 @@ def split_cookies_from_cookie_string(cookie_string: str) -> dict:
     """
     根据response header中的cookie字符串分隔生成cookies字典
     """
-    cookies_list = {}
+    cookies = {}
     for single_cookie in cookie_string.split(";"):
         single_cookie = single_cookie.strip()
         if len(single_cookie) == 0:
@@ -136,8 +138,8 @@ def split_cookies_from_cookie_string(cookie_string: str) -> dict:
         if single_cookie.find("=") == -1:
             continue
         cookie_name, cookie_value = single_cookie.strip().split("=", 1)
-        cookies_list[cookie_name] = cookie_value
-    return cookies_list
+        cookies[cookie_name] = cookie_value
+    return cookies
 
 
 def get_cookies_from_response_header(response_headers: HTTPHeaderDict) -> dict:
@@ -148,23 +150,53 @@ def get_cookies_from_response_header(response_headers: HTTPHeaderDict) -> dict:
         return {}
     if "Set-Cookie" not in response_headers:
         return {}
-    cookies_list = {}
+    cookies = {}
     for cookie in response_headers.getlist("Set-Cookie"):
         cookie_name, cookie_value = cookie.split(";")[0].split("=", 1)
-        cookies_list[cookie_name] = cookie_value
-    return cookies_list
+        cookies[cookie_name] = cookie_value
+    return cookies
 
 
-def get_file_extension(file_url: str, default_file_type: str = "") -> str:
+def get_url_path(url: str) -> str:
+    """
+    scheme://username:password@host.name:123/sub/path/name1.name2.extension?key=value&key2=value2#fragment
+    ->
+    /sub/path/name1.name2.extension
+    """
+    return urllib.parse.urlsplit(url).path
+
+
+def get_url_basename(url: str) -> str:
+    """
+    scheme://username:password@host.name:123/sub/path/name1.name2.extension?key=value&key2=value2#fragment
+    ->
+    name1.name2.extension
+    """
+    return os.path.basename(get_url_path(url))
+
+
+def get_file_extension(url: str, default_file_type: str = "") -> str:
     """
     获取url地址的文件类型
+        scheme://username:password@host.name:123/sub/path/name1.name2.extension?key=value&key2=value2#fragment
+        ->
+        extension
     """
-    # http://www.example.com/sub_path/file_name.file_type?parm1=value1&parm2=value2/value3
-    file_name_and_type = urllib.parse.urlparse(file_url)[2].split("/")[-1].split(".")
-    if len(file_name_and_type) == 1:
+    file_name_and_extension = get_url_basename(url).split(".")
+    if len(file_name_and_extension) == 1:
         return default_file_type
     else:
-        return file_name_and_type[-1]
+        return file_name_and_extension[-1]
+
+
+def get_file_name(url: str) -> str:
+    """
+    获取url地址的文件类型
+        scheme://username:password@host.name:123/sub/path/name1.name2.extension?key=value&key2=value2#fragment
+        ->
+        name1.name2
+    """
+    return get_url_basename(url).split(".")[0]
 
 
 def url_encode(url: str) -> str:
@@ -176,7 +208,7 @@ def url_encode(url: str) -> str:
 
 
 def request(url: str, method: str = "GET", fields: Optional[Union[dict, str]] = None, json_decode: bool = False, is_auto_redirect: bool = True,
-            header_list: Optional[dict] = None, cookies_list: Optional[dict] = None, encode_multipart: bool = False, is_auto_proxy: bool = True,
+            headers: Optional[dict] = None, cookies: Optional[dict] = None, encode_multipart: bool = False, is_use_proxy: bool = True,
             is_gzip: bool = True, is_url_encode: bool = True, is_auto_retry: bool = True, is_check_qps: bool = True,
             connection_timeout: int = NET_CONFIG.HTTP_CONNECTION_TIMEOUT, read_timeout: int = NET_CONFIG.HTTP_READ_TIMEOUT) -> Union[urllib3.HTTPResponse, ErrorResponse]:
     """
@@ -188,10 +220,10 @@ def request(url: str, method: str = "GET", fields: Optional[Union[dict, str]] = 
     - fields - dictionary type of request data, will urlencode() them to string. like post data, query string, etc.
         not work with binary_data
     - binary_data - binary type of request data, not work with post_data
-    - header_list - customize header dictionary
-    - cookies_list - customize cookies dictionary, will replace header_list["Cookie"]
+    - headers - customize header dictionary
+    - cookies - customize cookies dictionary, will replace headers["Cookie"]
     - encode_multipart - see "encode_multipart" in urllib3.request_encode_body
-    - is_auto_proxy - is auto use proxy when init PROXY_HTTP_CONNECTION_POOL
+    - is_use_proxy - is use proxy when inited PROXY_HTTP_CONNECTION_POOL
     - is_auto_redirect - is auto redirect, when response.status in [301, 302, 303, 307, 308]
     - is_auto_retry - is auto retry, when response.status in [500, 502, 503, 504]
     - connection_timeout - customize connection timeout seconds
@@ -208,38 +240,38 @@ def request(url: str, method: str = "GET", fields: Optional[Union[dict, str]] = 
     if HTTP_CONNECTION_POOL is None:
         init_http_connection_pool()
     connection_pool = HTTP_CONNECTION_POOL
-    if PROXY_HTTP_CONNECTION_POOL is not None and is_auto_proxy:
+    if PROXY_HTTP_CONNECTION_POOL is not None and is_use_proxy:
         connection_pool = PROXY_HTTP_CONNECTION_POOL
     if is_url_encode:
         url = url_encode(url)
 
-    if header_list is None:
-        header_list = {}
+    if headers is None:
+        headers = {}
 
     # 设置User-Agent
-    if "User-Agent" not in header_list:
+    if "User-Agent" not in headers:
         if DEFAULT_USER_AGENT is None:
-            header_list["User-Agent"] = _random_user_agent()
+            headers["User-Agent"] = _random_user_agent()
         else:
-            header_list["User-Agent"] = DEFAULT_USER_AGENT
+            headers["User-Agent"] = DEFAULT_USER_AGENT
 
     # 设置一个随机IP
     if FAKE_PROXY_IP:
         random_ip = _random_ip_address()
-        header_list["X-Forwarded-For"] = random_ip
-        header_list["X-Real-Ip"] = random_ip
+        headers["X-Forwarded-For"] = random_ip
+        headers["X-Real-Ip"] = random_ip
 
     # 设置cookie
-    if cookies_list:
-        header_list["Cookie"] = build_header_cookie_string(cookies_list)
+    if cookies:
+        headers["Cookie"] = build_header_cookie_string(cookies)
 
     # 设置压缩格式
     if is_gzip:
-        header_list["Accept-Encoding"] = "gzip"
+        headers["Accept-Encoding"] = "gzip"
 
     # 使用json提交数据
     if method == "POST" and isinstance(fields, str):
-        header_list["Content-Type"] = "application/json"
+        headers["Content-Type"] = "application/json"
 
     # 超时设置
     timeout = urllib3.Timeout(connect=float(connection_timeout) if connection_timeout > 0 else None, read=read_timeout if read_timeout > 0 else None)
@@ -256,13 +288,13 @@ def request(url: str, method: str = "GET", fields: Optional[Union[dict, str]] = 
 
         try:
             if method in ["DELETE", "GET", "HEAD", "OPTIONS"]:
-                response = connection_pool.request(method, url, fields=fields, headers=header_list, redirect=is_auto_redirect, timeout=timeout)
+                response = connection_pool.request(method, url, fields=fields, headers=headers, redirect=is_auto_redirect, timeout=timeout)
             else:
                 if method == "POST" and isinstance(fields, str):
-                    response = connection_pool.request(method, url, body=fields, encode_multipart=encode_multipart, headers=header_list,
+                    response = connection_pool.request(method, url, body=fields, encode_multipart=encode_multipart, headers=headers,
                                                        redirect=is_auto_redirect, timeout=timeout)
                 else:
-                    response = connection_pool.request(method, url, fields=fields, encode_multipart=encode_multipart, headers=header_list,
+                    response = connection_pool.request(method, url, fields=fields, encode_multipart=encode_multipart, headers=headers,
                                                        redirect=is_auto_redirect, timeout=timeout)
             response.content = ""
             response.json_data = {}
@@ -311,14 +343,14 @@ def request(url: str, method: str = "GET", fields: Optional[Union[dict, str]] = 
             elif isinstance(e, urllib3.exceptions.DecodeError):
                 if message.find("'Received response with content-encoding: gzip, but failed to decode it.'") >= 0:
                     return request(url, method=method, fields=fields, json_decode=json_decode, is_auto_redirect=is_auto_redirect,
-                                   header_list=header_list, cookies_list=cookies_list, encode_multipart=encode_multipart, is_auto_proxy=is_auto_proxy,
+                                   headers=headers, cookies=cookies, encode_multipart=encode_multipart, is_use_proxy=is_use_proxy,
                                    is_gzip=False, is_url_encode=False, is_auto_retry=is_auto_retry, is_check_qps=is_check_qps,
                                    connection_timeout=connection_timeout, read_timeout=read_timeout)
             # import traceback
             # console.log(message)
             # console.log(traceback.format_exc())
-            if "Range" in header_list:
-                range_string = "range: " + header_list["Range"].replace("bytes=", "")
+            if "Range" in headers:
+                range_string = "range: " + headers["Range"].replace("bytes=", "")
                 console.log(url + f"[{range_string}] 访问超时，重试中")
             else:
                 console.log(url + " 访问超时，重试中")
@@ -453,15 +485,255 @@ def resume_request() -> None:
         thread_event.set()
 
 
+class Request:
+    def __init__(self, url: str, method: str = "GET", fields: Optional[Union[dict, str]] = None, headers: Optional[dict] = None, cookies: Optional[dict] = None):
+        """
+        HTTP请求
+        :Args:
+        - url - the url which you want visit, start with "http://" or "https://"
+        - method - request method, value in ["GET", "POST", "HEAD", "PUT", "DELETE", "OPTIONS", "TRACE"]
+        - fields - dictionary type of request data, will urlencode() them to string. like post data, query string, etc.
+            not work with binary_data
+        - headers - customize header dictionary
+        - cookies - customize cookies dictionary, will replace headers["Cookie"]
+        """
+        self._url = str(url).strip()
+        self._method = str(method).upper()
+        self._fields = fields
+        self._headers = headers if isinstance(headers, dict) else {}
+        self._cookies = cookies if isinstance(cookies, dict) else {}
+        self._response: Optional[Union[urllib3.HTTPResponse, ErrorResponse]] = None
+        # is auto redirect, when response.status in [301, 302, 303, 307, 308]
+        self._is_auto_redirect = True
+        # is auto retry, when response.status in [500, 502, 503, 504]
+        self._is_auto_retry = True
+        # see "encode_multipart" in urllib3.request_encode_body
+        self._is_encode_multipart = False
+        # is use proxy when inited PROXY_HTTP_CONNECTION_POOL
+        self._is_use_proxy = True
+        # is encode url
+        self._is_url_encode = True
+        # is use gzip compression request body
+        self._is_gzip = True
+        # is check request qps
+        self._is_check_qps = False
+        # is return a decoded json data when response status = 200
+        # if decode failure will replace response status with const.ResponseCode.JSON_DECODE_ERROR
+        self._is_json_decode = False
+        # customize connection timeout seconds
+        self._connection_timeout = NET_CONFIG.HTTP_CONNECTION_TIMEOUT
+        # customize read timeout seconds
+        self._read_timeout = NET_CONFIG.HTTP_READ_TIMEOUT
+
+    def add_headers(self, key: str, value: str) -> Self:
+        self._headers[key] = value
+        return self
+
+    def set_headers(self, headers: Optional[dict] = None) -> Self:
+        self._headers = headers
+        return self
+
+    def set_cookies(self, cookies: Optional[dict] = None) -> Self:
+        self._cookies = cookies
+        return self
+
+    def enable_json_decode(self) -> Self:
+        self._is_json_decode = True
+        return self
+
+    def enable_encode_multipart(self) -> Self:
+        self._is_encode_multipart = True
+        return self
+
+    def enable_check_qps(self) -> Self:
+        self._is_check_qps = True
+        return self
+
+    def disable_auto_retry(self) -> Self:
+        self._is_auto_retry = False
+        return self
+
+    def disable_auto_redirect(self) -> Self:
+        self._is_auto_redirect = False
+        return self
+
+    def disable_url_encode(self) -> Self:
+        self._is_url_encode = False
+        return self
+
+    def set_time_out(self, connection_timeout: Optional[Union[int, float]], read_timeout: Optional[Union[int, float]]) -> Self:
+        self._connection_timeout = connection_timeout
+        self._read_timeout = read_timeout
+        return self
+
+    @property
+    def status(self):
+        if self._response is None:
+            self.start()
+        return self._response.status
+
+    @property
+    def data(self):
+        if self._response is None:
+            self.start()
+        return self._response.data
+
+    @property
+    def content(self):
+        if self._response is None:
+            self.start()
+        return self._response.content
+
+    @property
+    def headers(self):
+        if self._response is None:
+            self.start()
+        return self._response.headers
+
+    @property
+    def json_data(self):
+        if self._response is None:
+            self.start()
+        return self._response.json_data
+
+    def start(self) -> Self:
+        self._response = self._start_request()
+        return self
+
+    def _start_request(self) -> Union[urllib3.HTTPResponse, ErrorResponse]:
+        if not (self._url.startswith("http://") or self._url.startswith("https://")):
+            return ErrorResponse(const.ResponseCode.URL_INVALID)
+        if self._method not in ["GET", "POST", "HEAD", "PUT", "DELETE", "OPTIONS", "TRACE"]:
+            return ErrorResponse(const.ResponseCode.URL_INVALID)
+
+        if HTTP_CONNECTION_POOL is None:
+            init_http_connection_pool()
+        connection_pool = HTTP_CONNECTION_POOL
+        if PROXY_HTTP_CONNECTION_POOL is not None and self._is_use_proxy:
+            connection_pool = PROXY_HTTP_CONNECTION_POOL
+
+        if self._is_url_encode:
+            self._url = url_encode(self._url)
+
+        # 设置User-Agent
+        if "User-Agent" not in self._headers:
+            self._headers["User-Agent"] = DEFAULT_USER_AGENT if isinstance(DEFAULT_USER_AGENT, str) else _random_user_agent()
+
+        # 设置一个随机IP
+        if FAKE_PROXY_IP:
+            random_ip = _random_ip_address()
+            self._headers["X-Forwarded-For"] = random_ip
+            self._headers["X-Real-Ip"] = random_ip
+
+        # 设置cookie
+        if self._cookies:
+            self._headers["Cookie"] = build_header_cookie_string(self._cookies)
+
+        # 设置压缩格式
+        if self._is_gzip:
+            self._headers["Accept-Encoding"] = "gzip"
+
+        # 使用json提交数据
+        if self._method == "POST" and isinstance(self._fields, str):
+            self._headers["Content-Type"] = "application/json"
+
+        # 超时设置
+        timeout = urllib3.Timeout(connect=float(self._connection_timeout) if self._connection_timeout > 0 else None,
+                                  read=float(self._read_timeout) if self._read_timeout > 0 else None)
+
+        retry_count = 0
+        while True:
+            thread_event.wait()
+            if EXIT_FLAG:
+                tool.process_exit(const.ExitCode.NORMAL)
+
+            if self._is_check_qps and _qps(self._url):
+                time.sleep(random.randint(60, 120))
+                continue
+
+            try:
+                if self._method in ["DELETE", "GET", "HEAD", "OPTIONS"]:
+                    response = connection_pool.request(self._method, self._url, fields=self._fields, headers=self._headers, redirect=self._is_auto_redirect, timeout=timeout)
+                else:
+                    if self._method == "POST" and isinstance(self._fields, str):
+                        response = connection_pool.request(self._method, self._url, body=self._fields, encode_multipart=self._is_encode_multipart, headers=self._headers,
+                                                           redirect=self._is_auto_redirect, timeout=timeout)
+                    else:
+                        response = connection_pool.request(self._method, self._url, fields=self._fields, encode_multipart=self._is_encode_multipart, headers=self._headers,
+                                                           redirect=self._is_auto_redirect, timeout=timeout)
+                response.content = ""
+                response.json_data = {}
+                if response.status == const.ResponseCode.SUCCEED:
+                    charset = DEFAULT_CHARSET
+                    content_type = response.getheader("Content-Type")
+                    if content_type is not None:
+                        content_charset = tool.find_sub_string(content_type, "charset=", None)
+                        if content_charset:
+                            if content_charset == "gb2312":
+                                charset = "GBK"
+                            else:
+                                charset = content_charset
+                    response.content = response.data.decode(charset, errors="ignore")
+                    if self._is_json_decode:
+                        try:
+                            response.json_data = json.loads(response.content)
+                        except json.decoder.JSONDecodeError:
+                            response.status = const.ResponseCode.JSON_DECODE_ERROR
+                elif response.status == 429:  # Too Many Requests
+                    console.log(self._url + " Too Many Requests, sleep")
+                    time.sleep(NET_CONFIG.TOO_MANY_REQUESTS_WAIT_TIME)
+                    continue
+                elif response.status in [500, 502, 503, 504] and self._is_auto_retry:  # 服务器临时性错误，重试
+                    if retry_count < NET_CONFIG.HTTP_REQUEST_RETRY_COUNT:
+                        retry_count += 1
+                        time.sleep(NET_CONFIG.SERVICE_INTERNAL_ERROR_WAIT_TIME)
+                        continue
+                    else:
+                        return response
+                return response
+            except MemoryError:
+                return ErrorResponse(const.ResponseCode.RESPONSE_TO_LARGE)
+            except Exception as e:
+                message = str(e)
+                if isinstance(e, urllib3.exceptions.ConnectTimeoutError):
+                    # 域名无法解析
+                    if message.find("[Errno 11004] getaddrinfo failed") >= 0 or message.find("[Errno 11001] getaddrinfo failed") >= 0:
+                        return ErrorResponse(const.ResponseCode.DOMAIN_NOT_RESOLVED)
+                    elif message.find("[WinError 10061]") >= 0:
+                        # [WinError 10061] 由于目标计算机积极拒绝，无法连接。
+                        return ErrorResponse(const.ResponseCode.RETRY)
+                elif isinstance(e, urllib3.exceptions.MaxRetryError):
+                    if message.find("Caused by ResponseError('too many redirects'") >= 0:
+                        return ErrorResponse(const.ResponseCode.TOO_MANY_REDIRECTS)
+                elif isinstance(e, urllib3.exceptions.DecodeError):
+                    if message.find("'Received response with content-encoding: gzip, but failed to decode it.'") >= 0:
+                        self._is_url_encode = False
+                        self._is_gzip = False
+                        return self._start_request()
+                # import traceback
+                # console.log(message)
+                # console.log(traceback.format_exc())
+                if "Range" in self._headers:
+                    range_string = "range: " + self._headers["Range"].replace("bytes=", "")
+                    console.log(self._url + f"[{range_string}] 访问超时，重试中")
+                else:
+                    console.log(self._url + " 访问超时，重试中")
+                time.sleep(NET_CONFIG.HTTP_REQUEST_RETRY_WAIT_TIME)
+
+            retry_count += 1
+            if retry_count >= NET_CONFIG.HTTP_REQUEST_RETRY_COUNT:
+                console.log("无法访问页面：" + self._url)
+                return ErrorResponse(const.ResponseCode.RETRY)
+
+
 class Download:
-    def __init__(self, file_url: str, file_path: str, recheck_file_extension: bool = False, auto_multipart_download: bool = False, **kwargs) -> None:
+    def __init__(self, file_url: str, file_path: str, headers: Optional[dict] = None, cookies: Optional[dict] = None, auto_multipart_download: bool = False) -> None:
         """
         下载远程文件到本地
 
         :Args:
         - file_url - the remote resource URL which you want to save
         - file_path - the local file path which you want to save remote resource
-        - recheck_file_extension - is auto rename file according to "Content-Type" in response headers
         - auto_multipart_download - "HEAD" method request to check response status and file size before download file
 
         :Returns:
@@ -471,9 +743,11 @@ class Download:
         """
         self._file_url = file_url
         self._file_path = file_path
-        self._recheck_file_extension = recheck_file_extension
+        # is auto rename file according to "Content-Type" in response headers
+        self._recheck_file_extension = False
         self._auto_multipart_download = auto_multipart_download
-        self._kwargs = kwargs
+        self._headers = headers if isinstance(headers, dict) else {}
+        self._cookies = cookies if isinstance(cookies, dict) else {}
 
         # 返回长度
         self._content_length = 0
@@ -548,7 +822,7 @@ class Download:
         """
         # 先获取头信息
         if self._auto_multipart_download:
-            head_response = request(self._file_url, method="HEAD", is_check_qps=False, **self._kwargs.copy())
+            head_response = Request(self._file_url, method="HEAD", headers=self._headers, cookies=self._cookies).set_time_out(NET_CONFIG.DOWNLOAD_CONNECTION_TIMEOUT, NET_CONFIG.DOWNLOAD_READ_TIMEOUT)
             # 其他返回状态，退出
             if head_response.status != const.ResponseCode.SUCCEED:
                 # URL格式不正确
@@ -572,7 +846,7 @@ class Download:
             self.rename_file_extension(head_response)
 
             # 根据文件大小判断是否需要分段下载
-            content_length = head_response.getheader("Content-Length")
+            content_length = head_response.headers.get("Content-Length")
             if content_length is not None:
                 self._content_length = int(content_length)
                 # 文件比较大，使用分段下载
@@ -599,8 +873,7 @@ class Download:
         单线程下载
         """
         try:
-            file_response = request(self._file_url, method="GET", connection_timeout=NET_CONFIG.DOWNLOAD_CONNECTION_TIMEOUT,
-                                    read_timeout=NET_CONFIG.DOWNLOAD_READ_TIMEOUT, **self._kwargs.copy())
+            file_response = Request(self._file_url, method="GET", headers=self._headers, cookies=self._cookies).set_time_out(NET_CONFIG.DOWNLOAD_CONNECTION_TIMEOUT, NET_CONFIG.DOWNLOAD_READ_TIMEOUT)
         except SystemExit:
             return False
 
@@ -623,7 +896,7 @@ class Download:
             return False
 
         if self._content_length == 0:
-            content_length = file_response.getheader("Content-Length")
+            content_length = file_response.headers.get("Content-Length")
             if content_length is not None:
                 self._content_length = int(content_length)
 
@@ -654,23 +927,16 @@ class Download:
             while end_pos < self._content_length - 1:
                 start_pos = end_pos + 1
                 end_pos = min(self._content_length - 1, start_pos + NET_CONFIG.DOWNLOAD_MULTIPART_BLOCK_SIZE - 1)
-                multipart_kwargs = self._kwargs.copy()
 
                 # 分段的header信息
-                if "header_list" in multipart_kwargs:
-                    header_list = multipart_kwargs["header_list"]
-                    del multipart_kwargs["header_list"]
-                else:
-                    header_list = {}
-                header_list["Range"] = f"bytes={start_pos}-{end_pos}"
+                headers = self._headers.copy()
+                headers["Range"] = f"bytes={start_pos}-{end_pos}"
 
                 # 创建一个副本
                 with os.fdopen(os.dup(file_no), "rb+", -1) as fd_handle:
                     for multipart_retry_count in range(NET_CONFIG.DOWNLOAD_RETRY_COUNT):
                         try:
-                            multipart_response = request(self._file_url, method="GET", header_list=header_list,
-                                                         connection_timeout=NET_CONFIG.DOWNLOAD_CONNECTION_TIMEOUT,
-                                                         read_timeout=NET_CONFIG.DOWNLOAD_READ_TIMEOUT, **multipart_kwargs)
+                            multipart_response = Request(self._file_url, method="GET", headers=headers).set_time_out(NET_CONFIG.DOWNLOAD_CONNECTION_TIMEOUT, NET_CONFIG.DOWNLOAD_READ_TIMEOUT)
                         except SystemExit:
                             return False
                         if multipart_response.status == 206:

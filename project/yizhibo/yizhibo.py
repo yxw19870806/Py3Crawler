@@ -17,7 +17,7 @@ def get_photo_index_page(account_id):
     # https://www.yizhibo.com/member/personel/user_photos?memberid=334262811
     photo_index_url = "https://www.yizhibo.com/member/personel/user_photos"
     query_data = {"memberid": account_id}
-    photo_index_response = net.request(photo_index_url, method="GET", fields=query_data)
+    photo_index_response = net.Request(photo_index_url, method="GET", fields=query_data)
     result = {
         "photo_url_list": [],  # 全部图片地址
     }
@@ -39,7 +39,7 @@ def get_photo_index_page(account_id):
 
 #  获取图片的header
 def get_photo_header(photo_url):
-    photo_head_response = net.request(photo_url, method="HEAD")
+    photo_head_response = net.Request(photo_url, method="HEAD")
     result = {
         "photo_time": 0,  # 图片上传时间
     }
@@ -62,7 +62,7 @@ def get_video_index_page(account_id):
     # https://www.yizhibo.com/member/personel/user_videos?memberid=334262811
     video_pagination_url = "https://www.yizhibo.com/member/personel/user_videos"
     query_data = {"memberid": account_id}
-    video_pagination_response = net.request(video_pagination_url, method="GET", fields=query_data)
+    video_pagination_response = net.Request(video_pagination_url, method="GET", fields=query_data)
     result = {
         "is_exist": True,  # 是否存在视频
         "video_id_list": [],  # 全部视频id
@@ -86,7 +86,7 @@ def get_video_index_page(account_id):
 def get_video_info_page(video_id):
     # https://www.yizhibo.com/l/bVFjTEK9nYTEqQ6p.html
     video_info_url = "https://www.yizhibo.com/l/%s.html" % video_id
-    video_info_response = net.request(video_info_url, method="GET")
+    video_info_response = net.Request(video_info_url, method="GET")
     result = {
         "video_time": 0,  # 视频上传时间
         "video_url_list": [],  # 全部视频分集地址
@@ -100,7 +100,7 @@ def get_video_info_page(video_id):
     result["video_time"] = int(video_time)
     # 获取视频地址所在文件地址
     video_file_url = tool.find_sub_string(video_info_response.content, 'play_url:"', '",')
-    video_file_response = net.request(video_file_url, method="GET")
+    video_file_response = net.Request(video_file_url, method="GET")
     if video_file_response.status != const.ResponseCode.SUCCEED:
         raise crawler.CrawlerException("m3u8文件 %s，%s" % (video_file_url, crawler.request_failre(video_file_response.status)))
     ts_id_list = re.findall(r"(\S*.ts)", video_file_response.content)

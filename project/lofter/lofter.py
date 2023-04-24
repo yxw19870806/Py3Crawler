@@ -10,14 +10,14 @@ import os
 import re
 from common import *
 
-COOKIE_INFO = {}
+COOKIES = {}
 
 
 def init_session():
     index_url = "https://www.lofter.com"
-    index_response = net.request(index_url, method="GET", is_auto_redirect=False)
+    index_response = net.Request(index_url, method="GET").disable_auto_redirect()
     if index_response.status in [const.ResponseCode.SUCCEED, 302]:
-        COOKIE_INFO.update(net.get_cookies_from_response_header(index_response.headers))
+        COOKIES.update(net.get_cookies_from_response_header(index_response.headers))
 
 
 # 获取指定页数的全部日志
@@ -25,12 +25,12 @@ def get_one_page_blog(account_name, page_count):
     # https://moexia.lofter.com/?page=1
     blog_pagination_url = "https://%s.lofter.com/" % account_name
     query_data = {"page": page_count}
-    blog_pagination_response = net.request(blog_pagination_url, method="GET", fields=query_data, cookies_list=COOKIE_INFO, is_auto_redirect=False)
+    blog_pagination_response = net.Request(blog_pagination_url, method="GET", fields=query_data, cookies=COOKIES).disable_auto_redirect()
     result = {
         "blog_url_list": [],  # 全部日志地址
     }
     if blog_pagination_response.status == 302:
-        COOKIE_INFO.update(net.get_cookies_from_response_header(blog_pagination_response.headers))
+        COOKIES.update(net.get_cookies_from_response_header(blog_pagination_response.headers))
         return get_one_page_blog(account_name, page_count)
     if page_count == 1 and blog_pagination_response.status == 404:
         raise crawler.CrawlerException("账号不存在")
@@ -45,7 +45,7 @@ def get_one_page_blog(account_name, page_count):
 
 # 获取日志
 def get_blog_page(blog_url):
-    blog_response = net.request(blog_url, method="GET", cookies_list=COOKIE_INFO)
+    blog_response = net.Request(blog_url, method="GET", cookies=COOKIES)
     result = {
         "photo_url_list": [],  # 全部图片地址
     }

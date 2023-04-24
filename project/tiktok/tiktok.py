@@ -51,10 +51,10 @@ def get_one_page_video(account_id, cursor_id, signature):
         "minCursor": 0,
         "_signature": signature,
     }
-    header_list = {
+    headers = {
         "Referer": "https://www.tiktok.com/share/user/%s" % account_id,
     }
-    video_pagination_response = net.request(api_url, method="GET", fields=query_data, header_list=header_list, json_decode=True)
+    video_pagination_response = net.Request(api_url, method="GET", fields=query_data, headers=headers).enable_json_decode()
     result = {
         "is_over": False,  # 是否最后一页视频
         "next_page_cursor_id": 0,  # 下一页视频指针

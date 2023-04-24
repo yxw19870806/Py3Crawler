@@ -11,13 +11,13 @@ from common import *
 
 INIT_TARGET_ID = "99999"
 EACH_PAGE_BLOG_COUNT = 30  # 每次请求获取的日志数量
-COOKIE_INFO = {}
+COOKIES = {}
 
 
 # 获取talk首页
 def get_index_page(account_name):
     index_url = "https://7gogo.jp/%s" % account_name
-    index_response = net.request(index_url, method="GET")
+    index_response = net.Request(index_url, method="GET")
     if index_response.status == 404:
         raise crawler.CrawlerException("talk已被删除")
     return index_response
@@ -31,7 +31,7 @@ def get_one_page_blog(account_name, target_id):
         "limit": EACH_PAGE_BLOG_COUNT,
         "direction": "PREV",
     }
-    blog_pagination_response = net.request(blog_pagination_url, method="GET", fields=query_data, json_decode=True)
+    blog_pagination_response = net.Request(blog_pagination_url, method="GET", fields=query_data).enable_json_decode()
     result = {
         "blog_info_list": [],  # 全部日志信息
     }
@@ -82,7 +82,7 @@ class NanaGoGo(crawler.Crawler):
         crawler.Crawler.__init__(self, sys_config, **kwargs)
 
         # 设置全局变量，供子线程调用
-        COOKIE_INFO.update(self.cookie_value)
+        COOKIES.update(self.cookie_value)
 
         # 解析存档文件
         # account_name  last_post_id

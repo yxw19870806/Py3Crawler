@@ -17,7 +17,7 @@ from common import *
 def get_comic_index_page(comic_id):
     # https://www.manhuagui.com/comic/21175/
     index_url = "https://www.manhuagui.com/comic/%s/" % comic_id
-    index_response = net.request(index_url, method="GET")
+    index_response = net.Request(index_url, method="GET")
     result = {
         "chapter_info_list": [],  # 漫画列表信息
     }
@@ -71,7 +71,7 @@ def get_comic_index_page(comic_id):
 def get_chapter_page(comic_id, chapter_id):
     # https://www.manhuagui.com/comic/7580/562894.html
     chapter_url = "https://www.manhuagui.com/comic/%s/%s.html" % (comic_id, chapter_id)
-    chapter_response = net.request(chapter_url, method="GET")
+    chapter_response = net.Request(chapter_url, method="GET")
     result = {
         "photo_url_list": [],  # 全部漫画图片地址
     }
@@ -180,8 +180,8 @@ class CrawlerThread(crawler.CrawlerThread):
         for photo_url in chapter_response["photo_url_list"]:
             photo_path = os.path.join(chapter_path, "%03d.%s" % (photo_index, net.get_file_extension(photo_url)))
             photo_description = "漫画%s %s《%s》第%s张图片" % (chapter_info["chapter_id"], chapter_info["group_name"], chapter_info["chapter_name"], photo_index)
-            header_list = {"Referer": "https://www.manhuagui.com/comic/%s/%s.html" % (self.index_key, chapter_info["chapter_id"])}
-            if self.download(photo_url, photo_path, photo_description, header_list=header_list, is_auto_proxy=False):
+            headers = {"Referer": "https://www.manhuagui.com/comic/%s/%s.html" % (self.index_key, chapter_info["chapter_id"])}
+            if self.download(photo_url, photo_path, photo_description, headers=headers, is_use_proxy=False):
                 self.total_photo_count += 1  # 计数累加
             photo_index += 1
 

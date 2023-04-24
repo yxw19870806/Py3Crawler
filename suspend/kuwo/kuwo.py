@@ -25,7 +25,7 @@ def get_one_page_playlist(playlist_id, page_count):
         "httpsStatus": "1",
         "reqId": REQ_ID,
     }
-    playlist_pagination_response = net.request(playlist_pagination_url, method="GET", fields=query_data, cookies_list={"kw_token": CSRF_TOKEN}, header_list={"csrf": CSRF_TOKEN}, json_decode=True)
+    playlist_pagination_response = net.Request(playlist_pagination_url, method="GET", fields=query_data, cookies={"kw_token": CSRF_TOKEN}, headers={"csrf": CSRF_TOKEN}).enable_json_decode()
     result = {
         "audio_info_list": [],  # 全部音频信息
         "is_over": False,  # 是否最后一页音频
@@ -56,7 +56,7 @@ def get_audio_info_page(audio_id):
         "httpsStatus": "1",
         "reqId": REQ_ID,
     }
-    audio_info_response = net.request(audio_info_url, method="GET", fields=query_data, cookies_list={"kw_token": CSRF_TOKEN}, header_list={"csrf": CSRF_TOKEN}, json_decode=True)
+    audio_info_response = net.Request(audio_info_url, method="GET", fields=query_data, cookies={"kw_token": CSRF_TOKEN}, headers={"csrf": CSRF_TOKEN}).enable_json_decode()
     result = {
         "audio_url": "",  # 音频地址
     }

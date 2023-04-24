@@ -13,7 +13,7 @@ import random
 import time
 from common import *
 
-COOKIE_INFO = {}
+COOKIES = {}
 MAX_DAILY_VIP_DOWNLOAD_COUNT = 550
 DAILY_VIP_DOWNLOAD_COUNT_CACHE_FILE = ""
 DAILY_VIP_DOWNLOAD_COUNT = {}
@@ -23,10 +23,10 @@ IS_LOGIN = False
 
 # 判断是否已登录
 def check_login():
-    if not COOKIE_INFO:
+    if not COOKIES:
         return False
     api_url = "https://www.ximalaya.com/revision/main/getCurrentUser"
-    api_response = net.request(api_url, method="GET", cookies_list=COOKIE_INFO, json_decode=True)
+    api_response = net.Request(api_url, method="GET", cookies=COOKIES).enable_json_decode()
     if api_response.status == const.ResponseCode.SUCCEED:
         return crawler.get_json_value(api_response.json_data, "ret", type_check=int, default_value=0) == 200
     return False
@@ -40,7 +40,7 @@ def get_one_page_album(album_id, page_count):
         "pageNum": page_count,
         "sort": "1",
     }
-    album_pagination_response = net.request(album_pagination_url, method="GET", fields=query_data, json_decode=True)
+    album_pagination_response = net.Request(album_pagination_url, method="GET", fields=query_data).enable_json_decode()
     result = {
         "audio_info_list": [],  # 全部音频信息
         "is_over": False,  # 是否最后一页音频
@@ -89,10 +89,10 @@ def get_one_page_audio(account_id, page_count):
     }
     now = int(time.time() * 1000)
     # 加密方法解析来自 https://s1.xmcdn.com/yx/ximalaya-web-static/last/dist/scripts/b20b549ee.js
-    header_list = {
+    headers = {
         "xm-sign": "%s(%s)%s(%s)%s" % (tool.string_md5("himalaya-" + str(now)), random.randint(1, 100), now, random.randint(1, 100), now + random.randint(1, 100 * 60))
     }
-    audit_pagination_response = net.request(audio_pagination_url, method="GET", fields=query_data, header_list=header_list, json_decode=True)
+    audit_pagination_response = net.Request(audio_pagination_url, method="GET", fields=query_data, headers=headers).enable_json_decode()
     result = {
         "audio_info_list": [],  # 全部音频信息
         "is_over": False,  # 是否最后一页音频
@@ -120,7 +120,7 @@ def get_one_page_audio(account_id, page_count):
 # 获取指定id的音频播放页
 # audio_id -> 16558983
 def get_audio_info_page(audio_id):
-    global COOKIE_INFO
+    global COOKIES
     result = {
         "audio_title": "",  # 音频标题
         "audio_url": "",  # 音频地址
@@ -131,7 +131,7 @@ def get_audio_info_page(audio_id):
     query_data = {
         "trackId": audio_id,
     }
-    audio_simple_info_response = net.request(audio_simple_info_url, method="GET", fields=query_data, json_decode=True)
+    audio_simple_info_response = net.Request(audio_simple_info_url, method="GET", fields=query_data).enable_json_decode()
     if audio_simple_info_response.status != const.ResponseCode.SUCCEED:
         raise crawler.CrawlerException("音频简易信息 " + crawler.request_failre(audio_simple_info_response.status))
     return_code = crawler.get_json_value(audio_simple_info_response.json_data, "ret", type_check=int)
@@ -158,7 +158,7 @@ def get_audio_info_page(audio_id):
         "ptype": 1,
     }
     while True:
-        audio_info_response = net.request(audio_info_url, method="GET", fields=query_data, json_decode=True)
+        audio_info_response = net.Request(audio_info_url, method="GET", fields=query_data).enable_json_decode()
         if audio_info_response.status != const.ResponseCode.SUCCEED:
             raise crawler.CrawlerException("音频详细信息" + crawler.request_failre(audio_info_response.status))
         return_code = crawler.get_json_value(audio_info_response.json_data, "ret", type_check=int)
@@ -175,7 +175,7 @@ def get_audio_info_page(audio_id):
     except crawler.CrawlerException:
         crawler.get_json_value(audio_info_response.json_data, "data", "hasBuy", type_check=bool)
 
-    if not COOKIE_INFO:
+    if not COOKIES:
         raise crawler.CrawlerException("非免费音频")
 
     day = tool.convert_timestamp_to_formatted_time("%Y-%m-%d")
@@ -190,7 +190,7 @@ def get_audio_info_page(audio_id):
         "device": "web",
         "trackId": audio_id,
     }
-    vip_audio_info_response = net.request(vip_audio_info_url, method="GET", fields=query_data, cookies_list=COOKIE_INFO, json_decode=True)
+    vip_audio_info_response = net.Request(vip_audio_info_url, method="GET", fields=query_data, cookies=COOKIES).enable_json_decode()
     if vip_audio_info_response.status != const.ResponseCode.SUCCEED:
         raise crawler.CrawlerException("vip音频详细信息" + crawler.request_failre(vip_audio_info_response.status))
     try:
@@ -200,7 +200,7 @@ def get_audio_info_page(audio_id):
         if crawler.get_json_value(vip_audio_info_response.json_data, "ret", type_check=int, value_check=999, default_value=0) and \
                 crawler.get_json_value(vip_audio_info_response.json_data, "msg", type_check=str, value_check="今天操作太频繁啦，可以明天再试试哦~", default_value=""):
             # 清除cookies
-            COOKIE_INFO = {}
+            COOKIES = {}
             raise crawler.CrawlerException("达到vip每日限制")
         raise
 
@@ -238,7 +238,7 @@ class XiMaLaYa(crawler.Crawler):
     def __init__(self, sys_config=None, **kwargs):
         if sys_config is None:
             sys_config = {}
-        global COOKIE_INFO, DAILY_VIP_DOWNLOAD_COUNT, DAILY_VIP_DOWNLOAD_COUNT_CACHE_FILE
+        global COOKIES, DAILY_VIP_DOWNLOAD_COUNT, DAILY_VIP_DOWNLOAD_COUNT_CACHE_FILE
         # 设置APP目录
         crawler.PROJECT_APP_PATH = os.path.abspath(os.path.dirname(__file__))
 
@@ -252,7 +252,7 @@ class XiMaLaYa(crawler.Crawler):
         crawler.Crawler.__init__(self, default_sys_config, **kwargs)
 
         # 设置全局变量，供子线程调用
-        COOKIE_INFO = self.cookie_value
+        COOKIES = self.cookie_value
 
         DAILY_VIP_DOWNLOAD_COUNT_CACHE_FILE = os.path.join(self.cache_data_path, "daily_vip_count.data")
         DAILY_VIP_DOWNLOAD_COUNT = tool.json_decode(file.read_file(DAILY_VIP_DOWNLOAD_COUNT_CACHE_FILE))
@@ -260,7 +260,7 @@ class XiMaLaYa(crawler.Crawler):
             DAILY_VIP_DOWNLOAD_COUNT = {}
 
     def init(self):
-        global COOKIE_INFO, IS_LOGIN
+        global COOKIES, IS_LOGIN
 
         # 检测登录状态
         if check_login():
@@ -273,5 +273,5 @@ class XiMaLaYa(crawler.Crawler):
             if input_str in ["e", "exit"]:
                 tool.process_exit()
             elif input_str in ["c", "continue"]:
-                COOKIE_INFO = {}
+                COOKIES = {}
                 break

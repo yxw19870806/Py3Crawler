@@ -16,7 +16,7 @@ from common import *
 # 获取有声书首页
 def get_album_index_page(album_id):
     album_index_url = "http://m.tingshubao.com/book/%s.html" % album_id
-    album_index_response = net.request(album_index_url, method="GET")
+    album_index_response = net.Request(album_index_url, method="GET")
     result = {
         "audio_info_list": [],  # 全部音频信息
     }
@@ -51,7 +51,7 @@ def get_audio_info_page(audio_play_url):
     result = {
         "audio_url": "",  # 音频下载地址
     }
-    audio_play_response = net.request(audio_play_url, method="GET")
+    audio_play_response = net.Request(audio_play_url, method="GET")
     if audio_play_response.status == const.ResponseCode.TOO_MANY_REDIRECTS:
         return get_audio_info_page(audio_play_url)
     elif audio_play_response.status != const.ResponseCode.SUCCEED:
@@ -70,7 +70,7 @@ def get_audio_info_page(audio_play_url):
         query_data = {
             "url": "".join(temp_list).split("&")[0]
         }
-        audio_detail_response = net.request(audio_detail_url, method="GET", fields=query_data, json_decode=True)
+        audio_detail_response = net.Request(audio_detail_url, method="GET", fields=query_data).enable_json_decode()
         if audio_detail_response.status != const.ResponseCode.SUCCEED:
             raise crawler.CrawlerException(crawler.request_failre(audio_detail_response.status))
         result["audio_url"] = crawler.get_json_value(audio_detail_response.json_data, "url", type_check=str)

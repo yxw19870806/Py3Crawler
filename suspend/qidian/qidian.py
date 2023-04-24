@@ -16,7 +16,7 @@ from common import *
 def get_book_index(book_id):
     # https://book.qidian.com/info/1016397637/
     index_url = "https://book.qidian.com/info/%s/" % book_id
-    index_response = net.request(index_url, method="GET")
+    index_response = net.Request(index_url, method="GET")
     result = {
         "chapter_info_list": [],  # 章节信息列表
     }
@@ -64,7 +64,7 @@ def get_book_index(book_id):
 def get_chapter_page(chapter_url):
     # https://book.qidian.com/info/1016397637/
     # https://read.qidian.com/chapter/q2B9dFLoeqU3v1oFI-DX8Q2/yyg9pjNdd3y2uJcMpdsVgA2/
-    chapter_response = net.request(chapter_url, method="GET")
+    chapter_response = net.Request(chapter_url, method="GET")
     result = {
         "content": "",  # 文章内容
         "is_vip": False,  # 是否需要vip解锁
@@ -166,7 +166,8 @@ class CrawlerThread(crawler.CrawlerThread):
             self.error("章节《%s》 %s需要vip才能解锁" % (chapter_info["chapter_title"], chapter_info["chapter_url"]))
             raise
 
-        content_file_path = os.path.join(self.main_thread.content_download_path, self.display_name, "%s %s.txt" % (chapter_info["chapter_time_string"].replace(":", "_"), path.filter_text(chapter_info["chapter_title"])))
+        content_file_name = "%s %s.txt" % (chapter_info["chapter_time_string"].replace(":", "_"), path.filter_text(chapter_info["chapter_title"]))
+        content_file_path = os.path.join(self.main_thread.content_download_path, self.display_name, content_file_name)
         file.write_file(chapter_response["content"], content_file_path)
         self.info("章节《%s》下载成功" % chapter_info["chapter_title"])
 

@@ -12,15 +12,15 @@ from common import *
 
 EACH_PAGE_PHOTO_COUNT = 50  # 每次请求获取的图片数量
 IS_LOGIN = False
-COOKIE_INFO = {}
+COOKIES = {}
 
 
 # 检测登录状态
 def check_login():
-    if not COOKIE_INFO:
+    if not COOKIES:
         return False
     index_url = "https://www.flickr.com/"
-    index_response = net.request(index_url, method="GET", cookies_list=COOKIE_INFO)
+    index_response = net.Request(index_url, method="GET", cookies=COOKIES)
     if index_response.status == const.ResponseCode.SUCCEED:
         return index_response.content.find('data-track="gnYouMainClick"') >= 0
     return False
@@ -28,13 +28,13 @@ def check_login():
 
 # 检测安全搜索设置
 def check_safe_search():
-    if not COOKIE_INFO:
+    if not COOKIES:
         return False
     setting_url = "https://www.flickr.com/account/prefs/safesearch/"
     query_data = {
         "from": "privacy"
     }
-    setting_response = net.request(setting_url, method="GET", fields=query_data, cookies_list=COOKIE_INFO, is_auto_redirect=False)
+    setting_response = net.Request(setting_url, method="GET", fields=query_data, cookies=COOKIES).disable_auto_redirect()
     if setting_response.status == const.ResponseCode.SUCCEED:
         if pq(setting_response.content).find("input[name='safe_search']:checked").val() == "2":
             return True
@@ -44,7 +44,7 @@ def check_safe_search():
 # 获取账号相册首页
 def get_account_index_page(account_name):
     account_index_url = "https://www.flickr.com/photos/%s" % account_name
-    account_index_response = net.request(account_index_url, method="GET", cookies_list=COOKIE_INFO)
+    account_index_response = net.Request(account_index_url, method="GET", cookies=COOKIES)
     result = {
         "site_key": "",  # site key
         "user_id": "",  # user id
@@ -75,11 +75,11 @@ def get_account_index_page(account_name):
         raise crawler.CrawlerException("页面截取csrf失败\n" + account_index_response.content)
     result["csrf"] = csrf
     # 获取cookie_session
-    if IS_LOGIN and "cookie_session" not in COOKIE_INFO:
+    if IS_LOGIN and "cookie_session" not in COOKIES:
         set_cookies = net.get_cookies_from_response_header(account_index_response.headers)
         if not tool.check_dict_sub_key(("cookie_session",), set_cookies):
             raise crawler.CrawlerException("请求返回cookie：%s匹配cookie_session失败" % account_index_response.headers)
-        COOKIE_INFO.update({"cookie_session": set_cookies["cookie_session"]})
+        COOKIES.update({"cookie_session": set_cookies["cookie_session"]})
     return result
 
 
@@ -133,8 +133,8 @@ def get_one_page_photo(user_id, page_count, api_key, csrf, request_id):
         "csrf": csrf,
         "extras": "date_upload,url_c,url_f,url_h,url_k,url_l,url_m,url_n,url_o,url_q,url_s,url_sq,url_t,url_z",
     }
-    # COOKIE_INFO = {}
-    photo_pagination_response = net.request(api_url, method="GET", fields=query_data, cookies_list=COOKIE_INFO, json_decode=True)
+    # COOKIES = {}
+    photo_pagination_response = net.Request(api_url, method="GET", fields=query_data, cookies=COOKIES).enable_json_decode()
     result = {
         "photo_info_list": [],  # 全部图片信息
         "is_over": False,  # 是否最后一页图片
@@ -181,7 +181,7 @@ def get_one_page_photo(user_id, page_count, api_key, csrf, request_id):
 
 class Flickr(crawler.Crawler):
     def __init__(self, **kwargs):
-        global COOKIE_INFO
+        global COOKIES
 
         # 设置APP目录
         crawler.PROJECT_APP_PATH = os.path.abspath(os.path.dirname(__file__))
@@ -195,7 +195,7 @@ class Flickr(crawler.Crawler):
         crawler.Crawler.__init__(self, sys_config, **kwargs)
 
         # 设置全局变量，供子线程调用
-        COOKIE_INFO = self.cookie_value
+        COOKIES = self.cookie_value
 
         # 解析存档文件
         # account_id  last_photo_time
@@ -221,8 +221,8 @@ class Flickr(crawler.Crawler):
             if input_str in ["e", "exit"]:
                 tool.process_exit()
             elif input_str in ["c", "continue"]:
-                global COOKIE_INFO
-                COOKIE_INFO = {}
+                global COOKIES
+                COOKIES = {}
                 break
 
 

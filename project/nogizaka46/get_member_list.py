@@ -14,7 +14,7 @@ from project.nogizaka46 import nogizaka46_diary
 # 从页面获取全部成员账号
 def get_account_from_index():
     index_url = "https://www.nogizaka46.com/s/n46/diary/MEMBER"
-    index_response = net.request(index_url, method="GET")
+    index_response = net.Request(index_url, method="GET")
     if index_response.status != const.ResponseCode.SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(index_response.status))
     member_selector_list = pq(index_response.content).find("div.ba--ml__list .ba--ml__one__a")

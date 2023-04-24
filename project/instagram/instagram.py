@@ -14,7 +14,7 @@ from common import crypto
 IS_LOCAL_SAVE_SESSION = False
 EACH_PAGE_PHOTO_COUNT = 12  # 每次请求获取的媒体数量
 QUERY_ID = "17859156310193001"
-COOKIE_INFO = {"csrftoken": "", "mid": "", "sessionid": ""}
+COOKIES = {"csrftoken": "", "mid": "", "sessionid": ""}
 REQUEST_LIMIT_DURATION = 10  # 请求统计的分钟数量
 REQUEST_LIMIT_COUNT = 180  # 一定时间范围内的请求次数限制（API限制应该是200次/10分钟）
 REQUEST_MINTER_COUNT = {}  # 每分钟的请求次数
@@ -24,22 +24,22 @@ SESSION_DATA_PATH = ""
 # 生成session cookies
 def init_session():
     # 如果有登录信息（初始化时从浏览器中获得）
-    if COOKIE_INFO["sessionid"]:
+    if COOKIES["sessionid"]:
         return True
     home_url = "https://www.instagram.com/"
-    home_response = net.request(home_url, method="GET")
+    home_response = net.Request(home_url, method="GET")
     if home_response.status == const.ResponseCode.SUCCEED:
         set_cookie = net.get_cookies_from_response_header(home_response.headers)
         if "csrftoken" in set_cookie and "mid" in set_cookie:
-            COOKIE_INFO["csrftoken"] = set_cookie["csrftoken"]
-            COOKIE_INFO["mid"] = set_cookie["mid"]
+            COOKIES["csrftoken"] = set_cookie["csrftoken"]
+            COOKIES["mid"] = set_cookie["mid"]
             return True
     return False
 
 
 # 检测登录状态
 def check_login():
-    if not COOKIE_INFO["sessionid"] and SESSION_DATA_PATH:
+    if not COOKIES["sessionid"] and SESSION_DATA_PATH:
         # 从文件中读取账号密码
         account_data = tool.json_decode(crypto.Crypto().decrypt(file.read_file(SESSION_DATA_PATH)), {})
         if tool.check_dict_sub_key(("email", "password"), account_data):
@@ -47,7 +47,7 @@ def check_login():
                 return True
     else:
         index_url = "https://www.instagram.com/"
-        index_response = net.request(index_url, method="GET", cookies_list=COOKIE_INFO)
+        index_response = net.Request(index_url, method="GET", cookies=COOKIES)
         if index_response.status == const.ResponseCode.SUCCEED:
             return index_response.content.find('"viewerId":"') >= 0
     return False
@@ -77,13 +77,13 @@ def login_from_console():
 def _do_login(email, password):
     login_url = "https://www.instagram.com/accounts/login/ajax/"
     login_post = {"username": email, "password": password, "next": "/"}
-    header_list = {"referer": "https://www.instagram.com/", "x-csrftoken": COOKIE_INFO["csrftoken"]}
-    login_response = net.request(login_url, method="POST", fields=login_post, cookies_list=COOKIE_INFO, header_list=header_list, json_decode=True)
+    headers = {"referer": "https://www.instagram.com/", "x-csrftoken": COOKIES["csrftoken"]}
+    login_response = net.Request(login_url, method="POST", fields=login_post, cookies=COOKIES, headers=headers).enable_json_decode()
     if login_response.status == const.ResponseCode.SUCCEED:
         if crawler.get_json_value(login_response.json_data, "authenticated", default_value=False, type_check=bool) is True:
             set_cookie = net.get_cookies_from_response_header(login_response.headers)
             if "sessionid" in set_cookie:
-                COOKIE_INFO["sessionid"] = set_cookie["sessionid"]
+                COOKIES["sessionid"] = set_cookie["sessionid"]
                 return True
     return False
 
@@ -94,11 +94,11 @@ def get_account_index_page(account_name):
     query_data = {
         "username": account_name
     }
-    header_list = {
-        "X-CSRFToken": COOKIE_INFO["csrftoken"],
+    headers = {
+        "X-CSRFToken": COOKIES["csrftoken"],
         "X-IG-App-ID": "936619743392459",
     }
-    account_index_response = net.request(account_index_url, method="GET", fields=query_data, cookies_list=COOKIE_INFO, header_list=header_list, json_decode=True)
+    account_index_response = net.Request(account_index_url, method="GET", fields=query_data, cookies=COOKIES, headers=headers).enable_json_decode()
     result = {
         "account_id": 0,  # account id
     }
@@ -124,7 +124,7 @@ def get_one_page_media(account_id, cursor):
             }
         )
     }
-    media_pagination_response = net.request(api_url, method="GET", fields=query_data, cookies_list=COOKIE_INFO, json_decode=True)
+    media_pagination_response = net.Request(api_url, method="GET", fields=query_data, cookies=COOKIES).enable_json_decode()
     result = {
         "media_info_list": [],  # 全部媒体信息
         "next_page_cursor": "",  # 下一页媒体信息的指针
@@ -176,11 +176,11 @@ def get_one_page_media(account_id, cursor):
 # 获取媒体详细页
 def get_media_page(page_id):
     media_url = "https://i.instagram.com/api/v1/media/%s/info/" % page_id
-    header_list = {
-        "X-CSRFToken": COOKIE_INFO["csrftoken"],
+    headers = {
+        "X-CSRFToken": COOKIES["csrftoken"],
         "X-IG-App-ID": "936619743392459",
     }
-    media_response = net.request(media_url, method="GET", cookies_list=COOKIE_INFO, header_list=header_list, json_decode=True)
+    media_response = net.Request(media_url, method="GET", cookies=COOKIES, headers=headers).enable_json_decode()
     result = {
         "photo_url_list": [],  # 全部图片地址
         "video_url_list": [],  # 全部视频地址
@@ -290,7 +290,7 @@ def add_request_count(thread_lock):
 
 class Instagram(crawler.Crawler):
     def __init__(self, **kwargs):
-        global COOKIE_INFO, IS_LOCAL_SAVE_SESSION, SESSION_DATA_PATH
+        global COOKIES, IS_LOCAL_SAVE_SESSION, SESSION_DATA_PATH
 
         # 设置APP目录
         crawler.PROJECT_APP_PATH = os.path.abspath(os.path.dirname(__file__))
@@ -308,7 +308,7 @@ class Instagram(crawler.Crawler):
         crawler.Crawler.__init__(self, sys_config, **kwargs)
 
         # 设置全局变量，供子线程调用
-        COOKIE_INFO.update(self.cookie_value)
+        COOKIES.update(self.cookie_value)
         IS_LOCAL_SAVE_SESSION = self.app_config["IS_LOCAL_SAVE_SESSION"]
         SESSION_DATA_PATH = self.session_data_path
 

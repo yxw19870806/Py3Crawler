@@ -110,12 +110,12 @@ class BiliBiliDownload(bilibili.BiliBili):
                 else:
                     video_real_path = video_path
 
-                header_list = {"Referer": "https://www.bilibili.com/video/av%s" % video_id}
+                headers = {"Referer": "https://www.bilibili.com/video/av%s" % video_id}
                 if len(video_part_info["video_url_list"]) == 1:
                     video_description = "视频《%s》" % video_title
                 else:
                     video_description = "视频《%s》第%s段" % (video_title, video_index)
-                self.download(video_url, video_real_path, video_description, auto_multipart_download=True, header_list=header_list)
+                self.download(video_url, video_real_path, video_description, headers=headers, auto_multipart_download=True)
                 video_index += 1
 
 

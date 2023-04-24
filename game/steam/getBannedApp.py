@@ -22,23 +22,26 @@ def main():
         banned_game_list = madjoki.get_banned_game_list()
     except crawler.CrawlerException as e:
         console.log(e.http_error("已下线游戏列表"))
-    else:
-        console.log("总共获取%s个已删除游戏" % len(banned_game_list))
+        return
+    console.log("总共获取%s个已删除游戏" % len(banned_game_list))
 
-        for game_info in banned_game_list:
-            if str(game_info["game_id"]) not in deleted_app_list:
-                if str(game_info["game_id"]) in ["533120"]:
-                    continue
-                try:
-                    steamdb_info = steamdb.get_game_store_index(game_info["game_id"])
-                except crawler.CrawlerException as e:
-                    console.log(e.http_error("游戏%s" % game_info["game_id"]))
-                else:
-                    deleted_app_list.append(str(game_info["game_id"]))
-                    console.log("\t".join(list(map(str, [game_info["game_id"], game_info["game_name"], steamdb_info["develop_name"]]))), False)
+    for game_info in banned_game_list:
+        if str(game_info["game_id"]) not in deleted_app_list:
+            if str(game_info["game_id"]) in ["533120"]:
+                continue
+            try:
+                steamdb_info = steamdb.get_game_store_index(game_info["game_id"])
+            except crawler.CrawlerException as e:
+                console.log(e.http_error("游戏%s" % game_info["game_id"]))
+            else:
+                deleted_app_list.append(str(game_info["game_id"]))
+                console.log("\t".join(list(map(str, [game_info["game_id"], game_info["game_name"], steamdb_info["develop_name"]]))), False)
 
-        steam_class.save_deleted_app_list(deleted_app_list)
+    steam_class.save_deleted_app_list(deleted_app_list)
 
 
 if __name__ == "__main__":
-    main()
+    try:
+        main()
+    except KeyboardInterrupt:
+        pass

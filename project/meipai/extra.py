@@ -17,7 +17,7 @@ def get_follow_list(account_id):
     while page_count <= max_page_count:
         follow_pagination_url = "https://www.meipai.com/user/%s/friends" % account_id
         query_data = {"p": page_count}
-        follow_pagination_response = net.request(follow_pagination_url, method="GET", fields=query_data)
+        follow_pagination_response = net.Request(follow_pagination_url, method="GET", fields=query_data)
         if follow_pagination_response.status != const.ResponseCode.SUCCEED:
             return None
         follow_list_find = re.findall(r'<div class="ucard-info">([\s|\S]*?)</div>', follow_pagination_response.content)

@@ -19,7 +19,7 @@ TEMPLATE_HTML_PATH = os.path.join(os.path.dirname(__file__), "html/template.html
 # 获取账号首页
 def get_account_index_page(account_id):
     account_index_url = "https://www.douyin.com/share/user/%s" % account_id
-    account_index_response = net.request(account_index_url, method="GET")
+    account_index_response = net.Request(account_index_url, method="GET")
     result = {
         "dytk": "",  # 账号dytk值（请求参数）
         "signature": "",  # 加密串（请求参数）
@@ -60,10 +60,10 @@ def get_one_page_video(account_id, cursor_id, dytk, signature):
         "max_cursor": cursor_id,
         "user_id": account_id,
     }
-    header_list = {
+    headers = {
         "Referer": "https://www.douyin.com/share/user/%s" % account_id,
     }
-    video_pagination_response = net.request(api_url, method="GET", fields=query_data, header_list=header_list, json_decode=True)
+    video_pagination_response = net.Request(api_url, method="GET", fields=query_data, headers=headers).enable_json_decode()
     result = {
         "is_over": False,  # 是否最后一页视频
         "next_page_cursor_id": 0,  # 下一页视频指针

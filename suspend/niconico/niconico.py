@@ -12,16 +12,16 @@ import time
 from pyquery import PyQuery as pq
 from common import *
 
-COOKIE_INFO = {}
+COOKIES = {}
 EACH_PAGE_VIDEO_COUNT = 100
 
 
 # 检测登录状态
 def check_login():
-    if not COOKIE_INFO:
+    if not COOKIES:
         return False
     index_url = "https://www.nicovideo.jp/my"
-    index_response = net.request(index_url, method="GET", cookies_list=COOKIE_INFO, is_auto_redirect=False)
+    index_response = net.Request(index_url, method="GET", cookies=COOKIES).disable_auto_redirect()
     if index_response.status == const.ResponseCode.SUCCEED:
         return True
     return False
@@ -30,7 +30,7 @@ def check_login():
 # 获取指定账号下的所有视频列表
 def get_account_mylist(account_id):
     account_mylist_url = "https://www.nicovideo.jp/user/%s/mylist" % account_id
-    account_mylist_response = net.request(account_mylist_url, method="GET", is_auto_retry=False)
+    account_mylist_response = net.Request(account_mylist_url, method="GET").disable_auto_retry()
     result = {
         "list_id_list": [],  # 全部视频列表id
         "is_private": False,  # 是否未公开
@@ -65,7 +65,7 @@ def get_account_mylist(account_id):
 def get_one_page_account_video(account_id, page_count):
     video_index_url = "https://www.nicovideo.jp/user/%s/video" % account_id
     query_data = {"page": page_count}
-    video_index_response = net.request(video_index_url, method="GET", fields=query_data)
+    video_index_response = net.Request(video_index_url, method="GET", fields=query_data)
     result = {
         "video_info_list": [],  # 全部视频信息
         "is_over": False,  # 是否最后页
@@ -119,12 +119,12 @@ def get_one_page_mylist_video(list_id, page_count):
         "pageSize": EACH_PAGE_VIDEO_COUNT,
         "page": page_count,
     }
-    header_list = {
+    headers = {
         "X-Frontend-Id": "6",
         "X-Frontend-Version": "0",
         "X-Niconico-Language": "ja-jp",
     }
-    mylist_pagination_response = net.request(api_url, method="GET", fields=post_data, cookies_list=COOKIE_INFO, header_list=header_list, json_decode=True)
+    mylist_pagination_response = net.Request(api_url, method="GET", fields=post_data, cookies=COOKIES, headers=headers).enable_json_decode()
     result = {
         "video_info_list": [],  # 全部视频信息
     }
@@ -156,7 +156,7 @@ def get_one_page_mylist_video(list_id, page_count):
 # 根据视频id，获取视频的下载地址
 def get_video_info(video_id):
     video_play_url = "http://www.nicovideo.jp/watch/sm%s" % video_id
-    video_play_response = net.request(video_play_url, method="GET", cookies_list=COOKIE_INFO)
+    video_play_response = net.Request(video_play_url, method="GET", cookies=COOKIES)
     result = {
         "extra_cookie": {},  # 额外的cookie
         "is_delete": False,  # 是否已删除
@@ -196,7 +196,7 @@ def get_video_info(video_id):
 
 class NicoNico(crawler.Crawler):
     def __init__(self, **kwargs):
-        global COOKIE_INFO
+        global COOKIES
 
         # 设置APP目录
         crawler.PROJECT_APP_PATH = os.path.abspath(os.path.dirname(__file__))
@@ -210,7 +210,7 @@ class NicoNico(crawler.Crawler):
         crawler.Crawler.__init__(self, sys_config, **kwargs)
 
         # 设置全局变量，供子线程调用
-        COOKIE_INFO = self.cookie_value
+        COOKIES = self.cookie_value
 
         # 解析存档文件
         # mylist_id  last_video_id
@@ -295,10 +295,10 @@ class CrawlerThread(crawler.CrawlerThread):
 
         self.info("视频%s 《%s》 %s 开始下载" % (video_info["video_id"], video_info["video_title"], video_info_response["video_url"]))
         video_file_path = os.path.join(self.main_thread.video_download_path, self.display_name, "%08d - %s.mp4" % (video_info["video_id"], path.filter_text(video_info["video_title"])))
-        cookies_list = COOKIE_INFO
+        cookies = COOKIES
         if video_info_response["extra_cookie"]:
-            cookies_list.update(video_info_response["extra_cookie"])
-        download_return = net.Download(video_info_response["video_url"], video_file_path, cookies_list=cookies_list)
+            cookies.update(video_info_response["extra_cookie"])
+        download_return = net.Download(video_info_response["video_url"], video_file_path, cookies=cookies)
         if download_return.status == const.DownloadStatus.SUCCEED:
             self.total_video_count += 1  # 计数累加
             self.info("视频%s 《%s》下载成功" % (video_info["video_id"], video_info["video_title"]))

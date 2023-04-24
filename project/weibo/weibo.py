@@ -12,15 +12,15 @@ import urllib.parse
 from common import *
 
 EACH_PAGE_PHOTO_COUNT = 20  # 每次请求获取的图片数量
-COOKIE_INFO = {}
+COOKIES = {}
 
 
 # 检测登录状态
 def check_login():
-    if "SUB" not in COOKIE_INFO or not COOKIE_INFO["SUB"]:
+    if "SUB" not in COOKIES or not COOKIES["SUB"]:
         return False
     index_url = "https://weibo.com/"
-    index_response = net.request(index_url, method="GET", cookies_list=COOKIE_INFO)
+    index_response = net.Request(index_url, method="GET", cookies=COOKIES)
     if index_response.status == const.ResponseCode.SUCCEED:
         return index_response.content.find("$CONFIG[\'uid\']=\'") >= 0 or index_response.content.find('"uid":') >= 0
     return False
@@ -30,9 +30,9 @@ def check_login():
 def init_session():
     login_url = "https://login.sina.com.cn/sso/login.php"
     query_data = {"url": "https://weibo.com"}
-    login_response = net.request(login_url, method="GET", fields=query_data, cookies_list=COOKIE_INFO)
+    login_response = net.Request(login_url, method="GET", fields=query_data, cookies=COOKIES)
     if login_response.status == const.ResponseCode.SUCCEED:
-        COOKIE_INFO.update(net.get_cookies_from_response_header(login_response.headers))
+        COOKIES.update(net.get_cookies_from_response_header(login_response.headers))
         return True
     return False
 
@@ -60,7 +60,7 @@ def get_one_page_photo(account_id, page_count):
         "photo_info_list": [],  # 全部图片信息
         "is_over": False,  # 是否最后一页图片
     }
-    photo_pagination_response = net.request(photo_pagination_url, method="GET", fields=query_data, cookies_list=COOKIE_INFO, json_decode=True)
+    photo_pagination_response = net.Request(photo_pagination_url, method="GET", fields=query_data, cookies=COOKIES).enable_json_decode()
     if photo_pagination_response.status == const.ResponseCode.JSON_DECODE_ERROR and photo_pagination_response.data.find('<p class="txt M_txtb">用户不存在或者获取用户信息失败</p>'.encode()) >= 0:
         raise crawler.CrawlerException("账号不存在")
     elif photo_pagination_response.status != const.ResponseCode.SUCCEED:
@@ -98,7 +98,7 @@ def get_one_page_video(account_id, since_id, retry_count=0):
         "next_page_since_id": 0,  # 下一页视频指针
         "video_info_list": [],  # 全部视频地址
     }
-    video_pagination_response = net.request(video_pagination_url, method="GET", fields=query_data, cookies_list=COOKIE_INFO, json_decode=True)
+    video_pagination_response = net.Request(video_pagination_url, method="GET", fields=query_data, cookies=COOKIES).enable_json_decode()
     if video_pagination_response.status == 400:
         # 第一次失败，判断账号是否存在
         if retry_count == 1 and since_id == 0:
@@ -106,10 +106,10 @@ def get_one_page_video(account_id, since_id, retry_count=0):
             query_data = {
                 "uid": account_id
             }
-            header_list = {
+            headers = {
                 "Accept": "application/json, text/plain, */*",
             }
-            account_info_response = net.request(account_info_url, method="GET", fields=query_data, cookies_list=COOKIE_INFO, header_list=header_list, json_decode=True)
+            account_info_response = net.Request(account_info_url, method="GET", fields=query_data, cookies=COOKIES, headers=headers).enable_json_decode()
             if account_info_response.status == const.ResponseCode.SUCCEED and crawler.get_json_value(account_info_response.json_data, "msg", type_check=str, value_check="该用户不存在(20003)"):
                 raise crawler.CrawlerException("账号不存在")
         if retry_count < 3:
@@ -192,7 +192,7 @@ class Weibo(crawler.Crawler):
         crawler.Crawler.__init__(self, sys_config, **kwargs)
 
         # 设置全局变量，供子线程调用
-        COOKIE_INFO.update(self.cookie_value)
+        COOKIES.update(self.cookie_value)
 
         # 解析存档文件
         # account_id  last_photo_id  last_video_id  (account_name)
@@ -302,7 +302,7 @@ class CrawlerThread(crawler.CrawlerThread):
         photo_path = os.path.join(self.main_thread.photo_download_path, self.display_name, photo_name)
         photo_description = "图片%s" % photo_info["photo_id"]
         download_return = self.download(photo_info["photo_url"], photo_path, photo_description, success_callback=self.photo_download_success_callback,
-                                        failure_callback=self.photo_download_failure_callback, is_failure_exit=False, header_list={"Referer": "https://weibo.com/"})
+                                        failure_callback=self.photo_download_failure_callback, is_failure_exit=False, headers={"Referer": "https://weibo.com/"})
         if download_return:
             if not download_return["is_invalid_photo"]:
                 self.total_photo_count += 1  # 计数累加
@@ -322,10 +322,10 @@ class CrawlerThread(crawler.CrawlerThread):
         else:
             video_name = "%s.mp4" % video_info["video_id"]
         video_path = os.path.join(self.main_thread.video_download_path, self.display_name, video_name)
-        header_list = {"Host": urllib.parse.urlparse(video_info["video_url"])[1]}
+        headers = {"Host": urllib.parse.urlparse(video_info["video_url"])[1]}
         video_description = "视频%s《%s》" % (video_info["video_id"], video_info["video_title"])
-        download_return = self.download(video_info["video_url"], video_path, video_description, failure_callback=self.video_download_failure_callback, is_failure_exit=False,
-                                        header_list=header_list, auto_multipart_download=True)
+        download_return = self.download(video_info["video_url"], video_path, video_description, headers=headers,
+                                        failure_callback=self.video_download_failure_callback, auto_multipart_download=True, is_failure_exit=False)
         if download_return:
             self.total_video_count += 1  # 计数累加
         else:

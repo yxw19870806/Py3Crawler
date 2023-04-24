@@ -372,14 +372,17 @@ class Crawler(object):
         log.debug("%s 解析结果：%s" % (description, parse_result_list))
         log.info("%s 解析数量：%s" % (description, len(parse_result_list)))
 
-    def download(self, file_url: str, file_path: str, file_description: str, success_callback: Callable[[str, str, str, net.Download], bool] = None,
-                 failure_callback: Callable[[str, str, str, net.Download], bool] = None, **kwargs) -> net.Download:
+    def download(self, file_url: str, file_path: str, file_description: str, headers: Optional[dict] = None, cookies: Optional[dict] = None,
+                 success_callback: Callable[[str, str, str, net.Download], bool] = None, failure_callback: Callable[[str, str, str, net.Download], bool] = None,
+                 auto_multipart_download=False) -> net.Download:
         """
         下载
         :Args:
         - file_url - 远程地址
         - file_path - 本地下载路径
         - file_description - 文件描述
+        - headers - 请求的headers
+        - cookies - 请求的cookies
         - success_callback - 成功回调方法
             :Returns: 是否需要输出下载成功的日志
                 True - 需要
@@ -391,7 +394,7 @@ class Crawler(object):
         """
         self.running_check()
         log.info("开始下载 %s %s" % (file_description, file_url))
-        download_return = net.Download(file_url, file_path, **kwargs)
+        download_return = net.Download(file_url, file_path, headers=headers, cookies=cookies, auto_multipart_download=auto_multipart_download)
         if download_return.status == const.DownloadStatus.SUCCEED:
             if success_callback is None or success_callback(file_url, file_path, file_description, download_return):
                 log.info("%s 下载成功" % file_description)
@@ -402,14 +405,14 @@ class Crawler(object):
                     tool.process_exit(const.ExitCode.NORMAL)
         return download_return
 
-    def multi_thread_download(self, thread_class: Type["DownloadThread"], file_url: str, file_path: str, file_description: str, header_list: Optional[dict] = None):
+    def multi_thread_download(self, thread_class: Type["DownloadThread"], file_url: str, file_path: str, file_description: str, headers: Optional[dict] = None):
         """
         多线程下载
         """
         self.running_check()
         thread = thread_class(self, file_url, file_path, file_description)
-        if header_list is not None:
-            thread.set_download_header(header_list)
+        if headers is not None:
+            thread.set_download_header(headers)
         thread.start()
         self.download_thead_list.append(thread)
 
@@ -588,8 +591,9 @@ class CrawlerThread(threading.Thread):
             message += "，共计下载" + "，".join(download_result)
         self.info(message)
 
-    def download(self, file_url: str, file_path: str, file_description: str, success_callback: Callable[[str, str, str, net.Download], bool] = None,
-                 failure_callback: Callable[[str, str, str, net.Download], bool] = None, is_failure_exit: bool = True, **kwargs) -> net.Download:
+    def download(self, file_url: str, file_path: str, file_description: str, headers: Optional[dict] = None, cookies: Optional[dict] = None,
+                 success_callback: Callable[[str, str, str, net.Download], bool] = None, failure_callback: Callable[[str, str, str, net.Download], bool] = None,
+                 auto_multipart_download=False, is_failure_exit: bool = True) -> net.Download:
         """
         下载
 
@@ -608,7 +612,7 @@ class CrawlerThread(threading.Thread):
         """
         self.main_thread_check()
         self.info("开始下载 %s %s" % (file_description, file_url))
-        download_return = net.Download(file_url, file_path, **kwargs)
+        download_return = net.Download(file_url, file_path, headers=headers, cookies=cookies, auto_multipart_download=auto_multipart_download)
         if download_return.status == const.DownloadStatus.SUCCEED:
             if success_callback is None or success_callback(file_url, file_path, file_description, download_return):
                 self.info("%s 下载成功" % file_description)
@@ -626,17 +630,17 @@ class DownloadThread(CrawlerThread):
         self.file_path: str = file_path
         self.file_description: str = file_description
         self.result: Optional[net.Download] = None
-        self.header_list: dict = {}
+        self.headers: dict = {}
 
     def run(self) -> None:
-        self.result = self.download(self.file_url, self.file_path, self.file_description, header_list=self.header_list)
+        self.result = self.download(self.file_url, self.file_path, self.file_description, headers=self.headers)
         self.notify_main_thread()
 
     def get_result(self) -> bool:
         return bool(self.result)
 
-    def set_download_header(self, header_list: dict) -> Self:
-        self.header_list = header_list
+    def set_download_header(self, headers: dict) -> Self:
+        self.headers = headers
         return self
 
 

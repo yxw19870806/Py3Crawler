@@ -13,26 +13,26 @@ from pyquery import PyQuery as pq
 from common import *
 
 EACH_LOOP_MAX_PAGE_COUNT = 200
-COOKIE_INFO = {}
+COOKIES = {}
 
 
 # 检测登录状态
 def check_login():
-    global COOKIE_INFO
-    if not COOKIE_INFO:
+    global COOKIES
+    if not COOKIES:
         return False
     account_index_url = "https://www.ameba.jp/home"
-    index_response = net.request(account_index_url, method="GET", cookies_list=COOKIE_INFO, is_auto_redirect=False)
+    index_response = net.Request(account_index_url, method="GET", cookies=COOKIES).disable_auto_redirect()
     if index_response.status == const.ResponseCode.SUCCEED:
         return True
-    COOKIE_INFO = {}
+    COOKIES = {}
     return False
 
 
 # 获取指定页数的全部日志
 def get_one_page_blog(account_name, page_count):
     blog_pagination_url = "https://ameblo.jp/%s/page-%s.html" % (account_name, page_count)
-    blog_pagination_response = net.request(blog_pagination_url, method="GET")
+    blog_pagination_response = net.Request(blog_pagination_url, method="GET")
     result = {
         "blog_id_list": [],  # 全部日志id
         "is_over": False,  # 是否最后一页日志
@@ -90,7 +90,7 @@ def get_one_page_blog(account_name, page_count):
 # 获取指定id的日志
 def get_blog_page(account_name, blog_id):
     blog_url = "https://ameblo.jp/%s/entry-%s.html" % (account_name, blog_id)
-    blog_response = net.request(blog_url, method="GET", cookies_list=COOKIE_INFO)
+    blog_response = net.Request(blog_url, method="GET", cookies=COOKIES)
     result = {
         "photo_url_list": [],  # 全部图片地址
         "is_delete": False,  # 是否已删除
@@ -153,15 +153,15 @@ def get_origin_photo_url(photo_url):
         # http://stat.ameba.jp/user_images/20161220/12/akihabara48/fd/1a/j/o0768032013825427476.jpg?caw=800
         photo_url = photo_url.split("?")[0]
         temp_list = photo_url.split("/")
-        photo_name = temp_list[-1]
-        if photo_name[0] != "o":
+        photo_name, photo_extension = temp_list[-1].split(".")
+        if not photo_name.startswith("o"):
             # https://stat.ameba.jp/user_images/20110612/15/akihabara48/af/3e/j/t02200165_0800060011286009555.jpg
-            if photo_name[0] == "t" and photo_name.find("_") > 0:
-                temp_list[-1] = "o" + photo_name.split("_", 1)[1]
+            if photo_name.startswith("t") and photo_name.find("_") > 0:
+                temp_list[-1] = "o" + photo_name.split("_", 1)[1] + "." + photo_extension
                 photo_url = "/".join(temp_list)
             # https://stat.ameba.jp/user_images/4b/90/10112135346_s.jpg
-            elif photo_name.split(".")[0][-2:] == "_s":
-                temp_list[-1] = photo_name.replace("_s", "")
+            elif photo_name.endswith("_s"):
+                temp_list[-1] = photo_name[:-len("_s")] + "." + photo_extension
                 photo_url = "/".join(temp_list)
             # https://stat.ameba.jp/user_images/2a/ce/10091204420.jpg
             elif tool.is_integer(photo_name.split(".")[0]):
@@ -194,7 +194,7 @@ def check_photo_invalid(photo_path):
 
 class Ameblo(crawler.Crawler):
     def __init__(self, **kwargs):
-        global COOKIE_INFO
+        global COOKIES
 
         # 设置APP目录
         crawler.PROJECT_APP_PATH = os.path.abspath(os.path.dirname(__file__))
@@ -207,7 +207,7 @@ class Ameblo(crawler.Crawler):
         crawler.Crawler.__init__(self, sys_config, **kwargs)
 
         # 设置全局变量，供子线程调用
-        COOKIE_INFO = self.cookie_value
+        COOKIES = self.cookie_value
 
         # 解析存档文件
         # account_name  last_blog_id

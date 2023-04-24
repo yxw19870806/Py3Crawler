@@ -15,7 +15,7 @@ from common import *
 
 EACH_LOOP_MAX_PAGE_COUNT = 200  # 单次缓存多少页的日志
 EACH_PAGE_BLOG_COUNT = 100  # 每次请求获取的日志数量
-COOKIE_INFO = {}
+COOKIES = {}
 USER_AGENT = None
 IS_STEP_ERROR_403_AND_404 = False
 IS_LOGIN = False
@@ -23,11 +23,11 @@ IS_LOGIN = False
 
 # 检测登录状态
 def check_login():
-    if not COOKIE_INFO:
+    if not COOKIES:
         return False
     index_url = "https://www.tumblr.com/"
-    index_response = net.request(index_url, method="GET", cookies_list=COOKIE_INFO, header_list={"User-Agent": USER_AGENT}, is_auto_redirect=False)
-    if index_response.status == 302 and index_response.getheader("Location") == "https://www.tumblr.com/dashboard":
+    index_response = net.Request(index_url, method="GET", cookies=COOKIES, headers={"User-Agent": USER_AGENT}).disable_auto_redirect()
+    if index_response.status == 302 and index_response.headers.get("Location") == "https://www.tumblr.com/dashboard":
         return True
     return False
 
@@ -35,26 +35,26 @@ def check_login():
 # 获取首页，判断是否支持https以及是否启用safe-mode和"Show this blog on the web"
 def get_index_setting(account_id):
     index_url = "https://%s.tumblr.com/" % account_id
-    index_response = net.request(index_url, method="GET", is_auto_redirect=False)
+    index_response = net.Request(index_url, method="GET").disable_auto_redirect()
     is_https = True
     is_private = False
     if index_response.status == 301:
-        redirect_url = index_response.getheader("Location")
+        redirect_url = index_response.headers.get("Location")
         if redirect_url.startswith("http://"):
             is_https = False
         is_private = False
         # raise crawler.CrawlerException("此账号已重定向第三方网站")
     elif index_response.status == 302:
-        redirect_url = index_response.getheader("Location")
+        redirect_url = index_response.headers.get("Location")
         if redirect_url.startswith("http://%s.tumblr.com/" % account_id):
             is_https = False
             index_url = "http://%s.tumblr.com/" % account_id
-            index_response = net.request(index_url, method="GET", is_auto_redirect=False)
+            index_response = net.Request(index_url, method="GET").disable_auto_redirect()
             if index_response.status == const.ResponseCode.SUCCEED:
                 return is_https, is_private
             elif index_response.status != 302:
                 raise crawler.CrawlerException(crawler.request_failre(index_response.status))
-            redirect_url = index_response.getheader("Location")
+            redirect_url = index_response.headers.get("Location")
         if redirect_url.find("www.tumblr.com/safe-mode?url=") > 0:
             is_private = True
             if tool.find_sub_string(redirect_url, "?https://www.tumblr.com/safe-mode?url=").startswith("http://"):
@@ -62,7 +62,7 @@ def get_index_setting(account_id):
         # "Show this blog on the web" disabled
         elif redirect_url.find("//www.tumblr.com/login_required/%s" % account_id) > 0:
             is_private = True
-            index_response = net.request(redirect_url, method="GET", cookies_list=COOKIE_INFO)
+            index_response = net.Request(redirect_url, method="GET", cookies=COOKIES)
             if index_response.status == 404:
                 raise crawler.CrawlerException("账号不存在")
     elif index_response.status == 404:
@@ -82,7 +82,7 @@ def get_one_page_post(account_id, page_count, is_https):
         post_pagination_url = "%s://%s.tumblr.com/" % (protocol_type, account_id)
     else:
         post_pagination_url = "%s://%s.tumblr.com/page/%s" % (protocol_type, account_id, page_count)
-    post_pagination_response = net.request(post_pagination_url, method="GET")
+    post_pagination_response = net.Request(post_pagination_url, method="GET")
     result = {
         "is_over": False,  # 是否最后一页日志
         "post_info_list": [],  # 全部日志信息
@@ -134,14 +134,13 @@ def get_one_page_private_blog(account_id, page_count):
         "should_bypass_tagfiltering": "false",
         "tumblelog_name_or_id": account_id,
     }
-    header_list = {
+    headers = {
         "Host": "www.tumblr.com",
         "Referer": "https://www.tumblr.com/dashboard/blog/%s/" % account_id,
         "User-Agent": USER_AGENT,
         "X-Requested-With": "XMLHttpRequest",
     }
-    post_pagination_response = net.request(post_pagination_url, method="GET", fields=query_data, header_list=header_list, cookies_list=COOKIE_INFO,
-                                           json_decode=True)
+    post_pagination_response = net.Request(post_pagination_url, method="GET", fields=query_data, headers=headers, cookies=COOKIES).enable_json_decode()
     result = {
         "is_over": False,  # 是不是最后一页日志
         "post_info_list": [],  # 全部日志信息
@@ -200,7 +199,7 @@ def get_one_page_private_blog(account_id, page_count):
 
 # 获取日志页面
 def get_post_page(post_url, post_id):
-    post_response = net.request(post_url, method="GET")
+    post_response = net.Request(post_url, method="GET")
     result = {
         "has_video": False,  # 是不是包含视频
         "is_delete": False,  # 是否已删除
@@ -264,7 +263,7 @@ def get_post_page(post_url, post_id):
         new_photo_url_list = {}
         for photo_url in photo_url_list:
             # 头像，跳过
-            if photo_url.find("/avatar_") != -1 or photo_url[-9:] == "_75sq.gif" or photo_url[-9:] == "_75sq.jpg" or photo_url[-9:] == "_75sq.png":
+            if photo_url.find("/avatar_") != -1 or photo_url.endswith("_75sq.gif") or photo_url.endswith("_75sq.jpg") or photo_url.endswith("_75sq.png"):
                 continue
             elif len(re.findall(r"/birthday\d_", photo_url)) == 1:
                 continue
@@ -282,7 +281,7 @@ def get_post_page(post_url, post_id):
 
 
 def check_photo_url_invalid(photo_url):
-    return photo_url[-4:] == ".pnj"
+    return photo_url.endswith(".pnj")
 
 
 def analysis_photo(photo_url):
@@ -304,7 +303,7 @@ def analysis_photo(photo_url):
             resolution = int(temp_list[-1])
         # https://78.media.tumblr.com/19b0b807d374ed9e4ed22caf74cb1ec0/tumblr_mxukamH4GV1s4or9ao1_500h.jpg
         elif temp_list[-1].endswith("h") and tool.is_integer(temp_list[-1][:-len("h")]):
-            resolution = int(temp_list[-1][:-1])
+            resolution = int(temp_list[-1][:-len("h")])
         # https://78.media.tumblr.com/5c0b9f4e8ac839a628863bb5d7255938/tumblr_inline_p6ve89vOZA1uhchy5_250sq.jpg
         elif temp_list[-1].endswith("sq") and tool.is_integer(temp_list[-1][:-len("sq")]):
             photo_url = photo_url.replace("_250sq", "1280")
@@ -336,7 +335,7 @@ def analysis_photo(photo_url):
         photo_id = temp_list[0]
         resolution = int(temp_list[1])
     # http://78.media.tumblr.com/15427139_r1_500.jpg
-    elif len(temp_list) == 3 and tool.is_integer(temp_list[0]) and tool.is_integer(temp_list[-1]) and temp_list[1][0] == "r":
+    elif len(temp_list) == 3 and tool.is_integer(temp_list[0]) and tool.is_integer(temp_list[-1]) and temp_list[1].startswith("r"):
         photo_id = temp_list[0]
         resolution = int(temp_list[2])
     else:
@@ -354,15 +353,15 @@ def get_video_play_page(account_id, post_id, is_https):
     else:
         protocol_type = "http"
     video_play_url = "%s://www.tumblr.com/video/%s/%s/0" % (protocol_type, account_id, post_id)
-    video_play_response = net.request(video_play_url, method="GET", is_auto_redirect=False)
+    video_play_response = net.Request(video_play_url, method="GET").disable_auto_redirect()
     result = {
         "is_password": False,  # 是否加密
         "video_url": "",  # 视频地址
     }
     if video_play_response.status == 301:
-        video_play_url = video_play_response.getheader("Location")
+        video_play_url = video_play_response.headers.get("Location")
         if video_play_url is not None:
-            video_play_response = net.request(video_play_url, method="GET")
+            video_play_response = net.Request(video_play_url, method="GET")
     if video_play_response.status == 403 and video_play_response.content.find("You do not have permission to access this page.") >= 0:
         result["is_password"] = True
         return result
@@ -387,7 +386,7 @@ def get_video_play_page(account_id, post_id, is_https):
 
 class Tumblr(crawler.Crawler):
     def __init__(self, **kwargs):
-        global COOKIE_INFO, IS_STEP_ERROR_403_AND_404, USER_AGENT
+        global COOKIES, IS_STEP_ERROR_403_AND_404, USER_AGENT
 
         # 设置APP目录
         crawler.PROJECT_APP_PATH = os.path.abspath(os.path.dirname(__file__))
@@ -406,7 +405,7 @@ class Tumblr(crawler.Crawler):
         crawler.Crawler.__init__(self, sys_config, **kwargs)
 
         # 设置全局变量，供子线程调用
-        COOKIE_INFO = self.cookie_value
+        COOKIES = self.cookie_value
         USER_AGENT = self.app_config["USER_AGENT"]
         IS_STEP_ERROR_403_AND_404 = self.app_config["IS_STEP_ERROR_403_AND_404"]
 
