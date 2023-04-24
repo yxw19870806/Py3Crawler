@@ -567,31 +567,31 @@ class Request:
         return self
 
     @property
-    def status(self):
+    def status(self) -> int:
         if self._response is None:
             self.start()
         return self._response.status
 
     @property
-    def data(self):
+    def data(self) -> bytes:
         if self._response is None:
             self.start()
         return self._response.data
 
     @property
-    def content(self):
+    def content(self) -> str:
         if self._response is None:
             self.start()
         return self._response.content
 
     @property
-    def headers(self):
+    def headers(self) -> HTTPHeaderDict:
         if self._response is None:
             self.start()
         return self._response.headers
 
     @property
-    def json_data(self):
+    def json_data(self) -> dict:
         if self._response is None:
             self.start()
         return self._response.json_data
@@ -754,28 +754,41 @@ class Download:
         # 是否开启分段下载
         self._is_multipart_download = False
         # 结果
-        self.status = const.DownloadStatus.FAILED
-        self.code = 0
+        self._is_start = False
+        self._status = const.DownloadStatus.FAILED
+        self._code = const.DownloadCode.FILE_CREATE_FAILED
         self.ext = {}
 
-        self.start_download()
-
     def __bool__(self) -> bool:
-        return self.status == const.DownloadStatus.SUCCEED
+        return self._status == const.DownloadStatus.SUCCEED
+
+    @property
+    def status(self) -> int:
+        if not self._is_start:
+            self.start_download()
+        return self._status
+
+    @property
+    def code(self) -> int:
+        if not self._is_start:
+            self.start_download()
+        return self._code
 
     def start_download(self) -> None:
         """
         主体下载逻辑
         """
+        self._is_start = True
+
         # 同名文件已经存在，直接返回
         if not DOWNLOAD_REPLACE_IF_EXIST and os.path.exists(self._file_path) and os.path.getsize(self._file_path) > 0:
             console.log("文件%s（%s）已存在，跳过" % (self._file_path, self._file_url))
-            self.status = const.DownloadStatus.SUCCEED
+            self._status = const.DownloadStatus.SUCCEED
             return
 
         # 判断保存目录是否存在
         if not path.create_dir(os.path.dirname(self._file_path)):
-            self.code = const.DownloadCode.FILE_CREATE_FAILED
+            self._code = const.DownloadCode.FILE_CREATE_FAILED
             return
 
         # 是否需要分段下载
@@ -784,7 +797,7 @@ class Download:
         # 下载
         for retry_count in range(NET_CONFIG.DOWNLOAD_RETRY_COUNT):
             if EXIT_FLAG:
-                self.code = const.DownloadCode.PROCESS_EXIT
+                self._code = const.DownloadCode.PROCESS_EXIT
                 break
 
             if not self._is_multipart_download:
@@ -798,18 +811,18 @@ class Download:
 
             # 如果没有返回文件的长度，直接下载成功
             if self._content_length == 0:
-                self.status = const.DownloadStatus.SUCCEED
-                self.code = 0
+                self._status = const.DownloadStatus.SUCCEED
+                self._code = 0
                 return
 
             # 判断文件下载后的大小和response中的Content-Length是否一致
             file_size = os.path.getsize(self._file_path)
             if self._content_length == file_size:
-                self.status = const.DownloadStatus.SUCCEED
-                self.code = 0
+                self._status = const.DownloadStatus.SUCCEED
+                self._code = 0
                 return
             else:
-                self.code = const.DownloadCode.FILE_SIZE_INVALID
+                self._code = const.DownloadCode.FILE_SIZE_INVALID
                 console.log(f"本地文件%s：{self._content_length}和网络文件%s：{file_size}不一致" % (self._file_path, self._file_url))
                 time.sleep(NET_CONFIG.HTTP_REQUEST_RETRY_WAIT_TIME)
 
@@ -827,19 +840,19 @@ class Download:
             if head_response.status != const.ResponseCode.SUCCEED:
                 # URL格式不正确
                 if head_response.status == const.ResponseCode.URL_INVALID:
-                    self.code = const.DownloadCode.URL_INVALID
+                    self._code = const.DownloadCode.URL_INVALID
                 # 域名无法解析
                 elif head_response.status == const.ResponseCode.DOMAIN_NOT_RESOLVED:
-                    self.code = const.DownloadCode.RETRY_MAX_COUNT
+                    self._code = const.DownloadCode.RETRY_MAX_COUNT
                 # 重定向次数过多
                 elif head_response.status == const.ResponseCode.TOO_MANY_REDIRECTS:
-                    self.code = const.DownloadCode.RETRY_MAX_COUNT
+                    self._code = const.DownloadCode.RETRY_MAX_COUNT
                 # 超过重试次数
                 elif head_response.status == const.ResponseCode.RETRY:
-                    self.code = const.DownloadCode.RETRY_MAX_COUNT
+                    self._code = const.DownloadCode.RETRY_MAX_COUNT
                 # 其他http code
                 else:
-                    self.code = head_response.status
+                    self._code = head_response.status
                 return
 
             # 检测文件后缀名是否正确
@@ -880,19 +893,19 @@ class Download:
         if file_response.status != const.ResponseCode.SUCCEED:
             # URL格式不正确
             if file_response.status == const.ResponseCode.URL_INVALID:
-                self.code = const.DownloadCode.URL_INVALID
+                self._code = const.DownloadCode.URL_INVALID
             # 域名无法解析
             elif file_response.status == const.ResponseCode.DOMAIN_NOT_RESOLVED:
-                self.code = const.DownloadCode.RETRY_MAX_COUNT
+                self._code = const.DownloadCode.RETRY_MAX_COUNT
             # 重定向次数过多
             elif file_response.status == const.ResponseCode.TOO_MANY_REDIRECTS:
-                self.code = const.DownloadCode.RETRY_MAX_COUNT
+                self._code = const.DownloadCode.RETRY_MAX_COUNT
             # 超过重试次数
             elif file_response.status == const.ResponseCode.RETRY:
-                self.code = const.DownloadCode.RETRY_MAX_COUNT
+                self._code = const.DownloadCode.RETRY_MAX_COUNT
             # 其他http code
             else:
-                self.code = file_response.status
+                self._code = file_response.status
             return False
 
         if self._content_length == 0:
@@ -950,14 +963,14 @@ class Download:
                                 fd_handle.write(multipart_response.data)
                                 break
                     else:
-                        self.code = const.DownloadCode.RETRY_MAX_COUNT
+                        self._code = const.DownloadCode.RETRY_MAX_COUNT
                         return False
         return True
 
     def update(self, other_download_return: Self) -> Self:
         if other_download_return._file_path == self._file_path:
-            self.status = other_download_return.status
-            self.code = other_download_return.code
+            self._status = other_download_return.status
+            self._code = other_download_return.code
             self._file_url = other_download_return._file_url
         return self
 
