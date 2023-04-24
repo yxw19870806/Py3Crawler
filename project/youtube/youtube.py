@@ -22,7 +22,7 @@ def check_login():
         return False
     account_index_url = "https://www.youtube.com/account"
     index_response = net.request(account_index_url, method="GET", cookies=COOKIES, is_auto_redirect=False)
-    if index_response.status == 303 and index_response.getheader("Location").startswith("https://accounts.google.com/ServiceLogin?"):
+    if index_response.status == 303 and index_response.headers.get("Location").startswith("https://accounts.google.com/ServiceLogin?"):
         return False
     elif index_response.status == const.ResponseCode.SUCCEED:
         global IS_LOGIN

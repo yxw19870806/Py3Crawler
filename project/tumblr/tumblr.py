@@ -27,7 +27,7 @@ def check_login():
         return False
     index_url = "https://www.tumblr.com/"
     index_response = net.request(index_url, method="GET", cookies=COOKIES, headers={"User-Agent": USER_AGENT}, is_auto_redirect=False)
-    if index_response.status == 302 and index_response.getheader("Location") == "https://www.tumblr.com/dashboard":
+    if index_response.status == 302 and index_response.headers.get("Location") == "https://www.tumblr.com/dashboard":
         return True
     return False
 
@@ -39,13 +39,13 @@ def get_index_setting(account_id):
     is_https = True
     is_private = False
     if index_response.status == 301:
-        redirect_url = index_response.getheader("Location")
+        redirect_url = index_response.headers.get("Location")
         if redirect_url.startswith("http://"):
             is_https = False
         is_private = False
         # raise crawler.CrawlerException("此账号已重定向第三方网站")
     elif index_response.status == 302:
-        redirect_url = index_response.getheader("Location")
+        redirect_url = index_response.headers.get("Location")
         if redirect_url.startswith("http://%s.tumblr.com/" % account_id):
             is_https = False
             index_url = "http://%s.tumblr.com/" % account_id
@@ -54,7 +54,7 @@ def get_index_setting(account_id):
                 return is_https, is_private
             elif index_response.status != 302:
                 raise crawler.CrawlerException(crawler.request_failre(index_response.status))
-            redirect_url = index_response.getheader("Location")
+            redirect_url = index_response.headers.get("Location")
         if redirect_url.find("www.tumblr.com/safe-mode?url=") > 0:
             is_private = True
             if tool.find_sub_string(redirect_url, "?https://www.tumblr.com/safe-mode?url=").startswith("http://"):
@@ -359,7 +359,7 @@ def get_video_play_page(account_id, post_id, is_https):
         "video_url": "",  # 视频地址
     }
     if video_play_response.status == 301:
-        video_play_url = video_play_response.getheader("Location")
+        video_play_url = video_play_response.headers.get("Location")
         if video_play_url is not None:
             video_play_response = net.request(video_play_url, method="GET")
     if video_play_response.status == 403 and video_play_response.content.find("You do not have permission to access this page.") >= 0:
