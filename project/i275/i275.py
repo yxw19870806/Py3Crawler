@@ -15,7 +15,7 @@ from common import *
 # album_id => 1642
 def get_album_index_page(album_id):
     album_pagination_url = "https://www.i275.com/book/%s.html" % album_id
-    album_pagination_response = net.request(album_pagination_url, method="GET")
+    album_pagination_response = net.Request(album_pagination_url, method="GET")
     result = {
         "audio_info_list": [],  # 全部音频信息
     }
@@ -55,7 +55,7 @@ def get_audio_info_page(album_id, audio_id):
     headers = {
         "Referer": "https://www.i275.com/play/%s/%s.html" % (album_id, audio_id),
     }
-    audio_info_response = net.request(audio_info_url, method="GET", headers=headers, json_decode=True)
+    audio_info_response = net.Request(audio_info_url, method="GET", headers=headers).enable_json_decode()
     if audio_info_response.status != const.ResponseCode.SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(audio_info_response.status))
     audio_src = crawler.get_json_value(audio_info_response.json_data, "src", type_check=str)

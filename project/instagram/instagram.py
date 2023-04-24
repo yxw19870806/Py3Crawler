@@ -27,7 +27,7 @@ def init_session():
     if COOKIES["sessionid"]:
         return True
     home_url = "https://www.instagram.com/"
-    home_response = net.request(home_url, method="GET")
+    home_response = net.Request(home_url, method="GET")
     if home_response.status == const.ResponseCode.SUCCEED:
         set_cookie = net.get_cookies_from_response_header(home_response.headers)
         if "csrftoken" in set_cookie and "mid" in set_cookie:
@@ -47,7 +47,7 @@ def check_login():
                 return True
     else:
         index_url = "https://www.instagram.com/"
-        index_response = net.request(index_url, method="GET", cookies=COOKIES)
+        index_response = net.Request(index_url, method="GET", cookies=COOKIES)
         if index_response.status == const.ResponseCode.SUCCEED:
             return index_response.content.find('"viewerId":"') >= 0
     return False
@@ -78,7 +78,7 @@ def _do_login(email, password):
     login_url = "https://www.instagram.com/accounts/login/ajax/"
     login_post = {"username": email, "password": password, "next": "/"}
     headers = {"referer": "https://www.instagram.com/", "x-csrftoken": COOKIES["csrftoken"]}
-    login_response = net.request(login_url, method="POST", fields=login_post, cookies=COOKIES, headers=headers, json_decode=True)
+    login_response = net.Request(login_url, method="POST", fields=login_post, cookies=COOKIES, headers=headers).enable_json_decode()
     if login_response.status == const.ResponseCode.SUCCEED:
         if crawler.get_json_value(login_response.json_data, "authenticated", default_value=False, type_check=bool) is True:
             set_cookie = net.get_cookies_from_response_header(login_response.headers)
@@ -98,7 +98,7 @@ def get_account_index_page(account_name):
         "X-CSRFToken": COOKIES["csrftoken"],
         "X-IG-App-ID": "936619743392459",
     }
-    account_index_response = net.request(account_index_url, method="GET", fields=query_data, cookies=COOKIES, headers=headers, json_decode=True)
+    account_index_response = net.Request(account_index_url, method="GET", fields=query_data, cookies=COOKIES, headers=headers).enable_json_decode()
     result = {
         "account_id": 0,  # account id
     }
@@ -124,7 +124,7 @@ def get_one_page_media(account_id, cursor):
             }
         )
     }
-    media_pagination_response = net.request(api_url, method="GET", fields=query_data, cookies=COOKIES, json_decode=True)
+    media_pagination_response = net.Request(api_url, method="GET", fields=query_data, cookies=COOKIES).enable_json_decode()
     result = {
         "media_info_list": [],  # 全部媒体信息
         "next_page_cursor": "",  # 下一页媒体信息的指针
@@ -180,7 +180,7 @@ def get_media_page(page_id):
         "X-CSRFToken": COOKIES["csrftoken"],
         "X-IG-App-ID": "936619743392459",
     }
-    media_response = net.request(media_url, method="GET", cookies=COOKIES, headers=headers, json_decode=True)
+    media_response = net.Request(media_url, method="GET", cookies=COOKIES, headers=headers).enable_json_decode()
     result = {
         "photo_url_list": [],  # 全部图片地址
         "video_url_list": [],  # 全部视频地址

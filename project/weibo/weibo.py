@@ -20,7 +20,7 @@ def check_login():
     if "SUB" not in COOKIES or not COOKIES["SUB"]:
         return False
     index_url = "https://weibo.com/"
-    index_response = net.request(index_url, method="GET", cookies=COOKIES)
+    index_response = net.Request(index_url, method="GET", cookies=COOKIES)
     if index_response.status == const.ResponseCode.SUCCEED:
         return index_response.content.find("$CONFIG[\'uid\']=\'") >= 0 or index_response.content.find('"uid":') >= 0
     return False
@@ -30,7 +30,7 @@ def check_login():
 def init_session():
     login_url = "https://login.sina.com.cn/sso/login.php"
     query_data = {"url": "https://weibo.com"}
-    login_response = net.request(login_url, method="GET", fields=query_data, cookies=COOKIES)
+    login_response = net.Request(login_url, method="GET", fields=query_data, cookies=COOKIES)
     if login_response.status == const.ResponseCode.SUCCEED:
         COOKIES.update(net.get_cookies_from_response_header(login_response.headers))
         return True
@@ -60,7 +60,7 @@ def get_one_page_photo(account_id, page_count):
         "photo_info_list": [],  # 全部图片信息
         "is_over": False,  # 是否最后一页图片
     }
-    photo_pagination_response = net.request(photo_pagination_url, method="GET", fields=query_data, cookies=COOKIES, json_decode=True)
+    photo_pagination_response = net.Request(photo_pagination_url, method="GET", fields=query_data, cookies=COOKIES).enable_json_decode()
     if photo_pagination_response.status == const.ResponseCode.JSON_DECODE_ERROR and photo_pagination_response.data.find('<p class="txt M_txtb">用户不存在或者获取用户信息失败</p>'.encode()) >= 0:
         raise crawler.CrawlerException("账号不存在")
     elif photo_pagination_response.status != const.ResponseCode.SUCCEED:
@@ -98,7 +98,7 @@ def get_one_page_video(account_id, since_id, retry_count=0):
         "next_page_since_id": 0,  # 下一页视频指针
         "video_info_list": [],  # 全部视频地址
     }
-    video_pagination_response = net.request(video_pagination_url, method="GET", fields=query_data, cookies=COOKIES, json_decode=True)
+    video_pagination_response = net.Request(video_pagination_url, method="GET", fields=query_data, cookies=COOKIES).enable_json_decode()
     if video_pagination_response.status == 400:
         # 第一次失败，判断账号是否存在
         if retry_count == 1 and since_id == 0:
@@ -109,7 +109,7 @@ def get_one_page_video(account_id, since_id, retry_count=0):
             headers = {
                 "Accept": "application/json, text/plain, */*",
             }
-            account_info_response = net.request(account_info_url, method="GET", fields=query_data, cookies=COOKIES, headers=headers, json_decode=True)
+            account_info_response = net.Request(account_info_url, method="GET", fields=query_data, cookies=COOKIES, headers=headers).enable_json_decode()
             if account_info_response.status == const.ResponseCode.SUCCEED and crawler.get_json_value(account_info_response.json_data, "msg", type_check=str, value_check="该用户不存在(20003)"):
                 raise crawler.CrawlerException("账号不存在")
         if retry_count < 3:

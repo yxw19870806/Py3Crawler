@@ -17,7 +17,7 @@ COOKIES = {}
 # 获取talk首页
 def get_index_page(account_name):
     index_url = "https://7gogo.jp/%s" % account_name
-    index_response = net.request(index_url, method="GET")
+    index_response = net.Request(index_url, method="GET")
     if index_response.status == 404:
         raise crawler.CrawlerException("talk已被删除")
     return index_response
@@ -31,7 +31,7 @@ def get_one_page_blog(account_name, target_id):
         "limit": EACH_PAGE_BLOG_COUNT,
         "direction": "PREV",
     }
-    blog_pagination_response = net.request(blog_pagination_url, method="GET", fields=query_data, json_decode=True)
+    blog_pagination_response = net.Request(blog_pagination_url, method="GET", fields=query_data).enable_json_decode()
     result = {
         "blog_info_list": [],  # 全部日志信息
     }

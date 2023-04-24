@@ -28,7 +28,7 @@ def get_account_from_file():
 # 根据talk id获取全部参与者
 def get_account_talks(account_id, account_name, talk_list):
     account_index = "https://7gogo.jp/users/%s" % account_id
-    account_index_response = net.request(account_index, method="GET")
+    account_index_response = net.Request(account_index, method="GET")
     if account_index_response.status != const.ResponseCode.SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(account_index_response.status))
     talk_list_selector = pq(account_index_response.content).find(".UserTalkWrapper .UserTalk")

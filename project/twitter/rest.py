@@ -62,7 +62,7 @@ def get_access_token(api_key, api_secret):
     post_data = {
         "grant_type": "client_credentials"
     }
-    response = net.request(auth_url, method="POST", headers=headers, fields=post_data, json_decode=True)
+    response = net.Request(auth_url, method="POST", headers=headers, fields=post_data).enable_json_decode()
     if response.status == const.ResponseCode.SUCCEED:
         try:
             crawler.get_json_value(response.json_data, "token_type", type_check=str, value_check="bearer")
@@ -84,7 +84,7 @@ def get_user_info_by_user_id(user_id):
     api_url = _get_api_url("users/show.json")
     query_data = {"user_id": user_id}
     headers = {"Authorization": "Bearer %s" % ACCESS_TOKEN}
-    response = net.request(api_url, method="GET", fields=query_data, headers=headers, json_decode=True)
+    response = net.Request(api_url, method="GET", fields=query_data, headers=headers).enable_json_decode()
     if response.status == const.ResponseCode.SUCCEED:
         return response.json_data
     return {}
@@ -97,7 +97,7 @@ def follow_account(user_id):
     headers = {
         "Authorization": "Bearer %s" % ACCESS_TOKEN,
     }
-    response = net.request(api_url, method="POST", headers=headers, json_decode=True)
+    response = net.Request(api_url, method="POST", headers=headers).enable_json_decode()
     if response.status == const.ResponseCode.SUCCEED:
         pass
     return False

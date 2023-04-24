@@ -20,7 +20,7 @@ def check_login():
     if not COOKIES:
         return False
     index_url = "https://www.flickr.com/"
-    index_response = net.request(index_url, method="GET", cookies=COOKIES)
+    index_response = net.Request(index_url, method="GET", cookies=COOKIES)
     if index_response.status == const.ResponseCode.SUCCEED:
         return index_response.content.find('data-track="gnYouMainClick"') >= 0
     return False
@@ -34,7 +34,7 @@ def check_safe_search():
     query_data = {
         "from": "privacy"
     }
-    setting_response = net.request(setting_url, method="GET", fields=query_data, cookies=COOKIES, is_auto_redirect=False)
+    setting_response = net.Request(setting_url, method="GET", fields=query_data, cookies=COOKIES).disable_auto_redirect()
     if setting_response.status == const.ResponseCode.SUCCEED:
         if pq(setting_response.content).find("input[name='safe_search']:checked").val() == "2":
             return True
@@ -44,7 +44,7 @@ def check_safe_search():
 # 获取账号相册首页
 def get_account_index_page(account_name):
     account_index_url = "https://www.flickr.com/photos/%s" % account_name
-    account_index_response = net.request(account_index_url, method="GET", cookies=COOKIES)
+    account_index_response = net.Request(account_index_url, method="GET", cookies=COOKIES)
     result = {
         "site_key": "",  # site key
         "user_id": "",  # user id
@@ -134,7 +134,7 @@ def get_one_page_photo(user_id, page_count, api_key, csrf, request_id):
         "extras": "date_upload,url_c,url_f,url_h,url_k,url_l,url_m,url_n,url_o,url_q,url_s,url_sq,url_t,url_z",
     }
     # COOKIES = {}
-    photo_pagination_response = net.request(api_url, method="GET", fields=query_data, cookies=COOKIES, json_decode=True)
+    photo_pagination_response = net.Request(api_url, method="GET", fields=query_data, cookies=COOKIES).enable_json_decode()
     result = {
         "photo_info_list": [],  # 全部图片信息
         "is_over": False,  # 是否最后一页图片

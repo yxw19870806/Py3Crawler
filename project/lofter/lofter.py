@@ -15,7 +15,7 @@ COOKIES = {}
 
 def init_session():
     index_url = "https://www.lofter.com"
-    index_response = net.request(index_url, method="GET", is_auto_redirect=False)
+    index_response = net.Request(index_url, method="GET").disable_auto_redirect()
     if index_response.status in [const.ResponseCode.SUCCEED, 302]:
         COOKIES.update(net.get_cookies_from_response_header(index_response.headers))
 
@@ -25,7 +25,7 @@ def get_one_page_blog(account_name, page_count):
     # https://moexia.lofter.com/?page=1
     blog_pagination_url = "https://%s.lofter.com/" % account_name
     query_data = {"page": page_count}
-    blog_pagination_response = net.request(blog_pagination_url, method="GET", fields=query_data, cookies=COOKIES, is_auto_redirect=False)
+    blog_pagination_response = net.Request(blog_pagination_url, method="GET", fields=query_data, cookies=COOKIES).disable_auto_redirect()
     result = {
         "blog_url_list": [],  # 全部日志地址
     }
@@ -45,7 +45,7 @@ def get_one_page_blog(account_name, page_count):
 
 # 获取日志
 def get_blog_page(blog_url):
-    blog_response = net.request(blog_url, method="GET", cookies=COOKIES)
+    blog_response = net.Request(blog_url, method="GET", cookies=COOKIES)
     result = {
         "photo_url_list": [],  # 全部图片地址
     }
