@@ -21,7 +21,7 @@ def check_login():
     if not COOKIES:
         return False
     index_url = "https://www.nicovideo.jp/my"
-    index_response = net.request(index_url, method="GET", cookies=COOKIES, is_auto_redirect=False)
+    index_response = net.Request(index_url, method="GET", cookies=COOKIES).disable_auto_redirect()
     if index_response.status == const.ResponseCode.SUCCEED:
         return True
     return False
@@ -30,7 +30,7 @@ def check_login():
 # 获取指定账号下的所有视频列表
 def get_account_mylist(account_id):
     account_mylist_url = "https://www.nicovideo.jp/user/%s/mylist" % account_id
-    account_mylist_response = net.request(account_mylist_url, method="GET", is_auto_retry=False)
+    account_mylist_response = net.Request(account_mylist_url, method="GET").disable_auto_retry()
     result = {
         "list_id_list": [],  # 全部视频列表id
         "is_private": False,  # 是否未公开
@@ -65,7 +65,7 @@ def get_account_mylist(account_id):
 def get_one_page_account_video(account_id, page_count):
     video_index_url = "https://www.nicovideo.jp/user/%s/video" % account_id
     query_data = {"page": page_count}
-    video_index_response = net.request(video_index_url, method="GET", fields=query_data)
+    video_index_response = net.Request(video_index_url, method="GET", fields=query_data)
     result = {
         "video_info_list": [],  # 全部视频信息
         "is_over": False,  # 是否最后页
@@ -124,7 +124,7 @@ def get_one_page_mylist_video(list_id, page_count):
         "X-Frontend-Version": "0",
         "X-Niconico-Language": "ja-jp",
     }
-    mylist_pagination_response = net.request(api_url, method="GET", fields=post_data, cookies=COOKIES, headers=headers, json_decode=True)
+    mylist_pagination_response = net.Request(api_url, method="GET", fields=post_data, cookies=COOKIES, headers=headers).enable_json_decode()
     result = {
         "video_info_list": [],  # 全部视频信息
     }
@@ -156,7 +156,7 @@ def get_one_page_mylist_video(list_id, page_count):
 # 根据视频id，获取视频的下载地址
 def get_video_info(video_id):
     video_play_url = "http://www.nicovideo.jp/watch/sm%s" % video_id
-    video_play_response = net.request(video_play_url, method="GET", cookies=COOKIES)
+    video_play_response = net.Request(video_play_url, method="GET", cookies=COOKIES)
     result = {
         "extra_cookie": {},  # 额外的cookie
         "is_delete": False,  # 是否已删除
