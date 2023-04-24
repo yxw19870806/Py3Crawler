@@ -23,7 +23,7 @@ def get_banned_game_list():
             "apptype": "1",
             "list": "banned",
         }
-        api_response = net.request(api_url, method="GET", fields=query_data, json_decode=True)
+        api_response = net.Request(api_url, method="GET", fields=query_data).enable_json_decode()
         if api_response.status != const.ResponseCode.SUCCEED:
             raise crawler.CrawlerException("第%s页，%s" % (page_count, crawler.request_failre(api_response.status)))
         # 获取游戏名字

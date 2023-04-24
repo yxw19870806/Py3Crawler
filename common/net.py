@@ -502,7 +502,7 @@ class Request:
         self._fields = fields
         self._headers = headers if isinstance(headers, dict) else {}
         self._cookies = cookies if isinstance(cookies, dict) else {}
-        self._response: Union[urllib3.HTTPResponse, ErrorResponse] = ErrorResponse()
+        self._response: Optional[Union[urllib3.HTTPResponse, ErrorResponse]] = None
         # is auto redirect, when response.status in [301, 302, 303, 307, 308]
         self._is_auto_redirect = True
         # is auto retry, when response.status in [500, 502, 503, 504]
@@ -557,29 +557,43 @@ class Request:
         self._is_auto_redirect = False
         return self
 
-    def set_time_out(self, connection_timeout: Union[int, float], read_timeout: Union[int, float]) -> Self:
+    def disable_url_encode(self) -> Self:
+        self._is_url_encode = False
+        return self
+
+    def set_time_out(self, connection_timeout: Optional[Union[int, float]], read_timeout: Optional[Union[int, float]]) -> Self:
         self._connection_timeout = connection_timeout
         self._read_timeout = read_timeout
         return self
 
     @property
     def status(self):
+        if self._response is None:
+            self.start()
         return self._response.status
 
     @property
     def data(self):
+        if self._response is None:
+            self.start()
         return self._response.data
 
     @property
     def content(self):
+        if self._response is None:
+            self.start()
         return self._response.content
 
     @property
     def headers(self):
+        if self._response is None:
+            self.start()
         return self._response.headers
 
     @property
     def json_data(self):
+        if self._response is None:
+            self.start()
         return self._response.json_data
 
     def start(self) -> Self:
