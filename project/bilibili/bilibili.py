@@ -546,7 +546,7 @@ class CrawlerThread(crawler.CrawlerThread):
                 video_path = os.path.join(self.main_thread.video_download_path, self.display_name, video_name)
                 part_video_description = "视频%s《%s》第%s个视频" % (video_info["video_id"], video_info["video_title"], video_index)
                 headers = {"Referer": "https://www.bilibili.com/video/av%s" % video_info["video_id"]}
-                if self.download(video_part_url, video_path, part_video_description, is_failure_exit=False, auto_multipart_download=True, headers=headers):
+                if self.download(video_part_url, video_path, part_video_description, headers=headers, auto_multipart_download=True, is_failure_exit=False):
                     self.temp_path_list.append(video_path)  # 设置临时目录
                     self.total_video_count += 1  # 计数累加
                 else:

@@ -115,7 +115,7 @@ class BiliBiliDownload(bilibili.BiliBili):
                     video_description = "视频《%s》" % video_title
                 else:
                     video_description = "视频《%s》第%s段" % (video_title, video_index)
-                self.download(video_url, video_real_path, video_description, auto_multipart_download=True, headers=headers)
+                self.download(video_url, video_real_path, video_description, headers=headers, auto_multipart_download=True)
                 video_index += 1
 
 

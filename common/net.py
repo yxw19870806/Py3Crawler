@@ -727,14 +727,13 @@ class Request:
 
 
 class Download:
-    def __init__(self, file_url: str, file_path: str, recheck_file_extension: bool = False, auto_multipart_download: bool = False, **kwargs) -> None:
+    def __init__(self, file_url: str, file_path: str, headers: Optional[dict] = None, cookies: Optional[dict] = None, auto_multipart_download: bool = False) -> None:
         """
         下载远程文件到本地
 
         :Args:
         - file_url - the remote resource URL which you want to save
         - file_path - the local file path which you want to save remote resource
-        - recheck_file_extension - is auto rename file according to "Content-Type" in response headers
         - auto_multipart_download - "HEAD" method request to check response status and file size before download file
 
         :Returns:
@@ -744,9 +743,11 @@ class Download:
         """
         self._file_url = file_url
         self._file_path = file_path
-        self._recheck_file_extension = recheck_file_extension
+        # is auto rename file according to "Content-Type" in response headers
+        self._recheck_file_extension = False
         self._auto_multipart_download = auto_multipart_download
-        self._kwargs = kwargs
+        self._headers = headers if isinstance(headers, dict) else {}
+        self._cookies = cookies if isinstance(cookies, dict) else {}
 
         # 返回长度
         self._content_length = 0
@@ -821,7 +822,7 @@ class Download:
         """
         # 先获取头信息
         if self._auto_multipart_download:
-            head_response = request(self._file_url, method="HEAD", is_check_qps=False, **self._kwargs.copy())
+            head_response = Request(self._file_url, method="HEAD", headers=self._headers, cookies=self._cookies).set_time_out(NET_CONFIG.DOWNLOAD_CONNECTION_TIMEOUT, NET_CONFIG.DOWNLOAD_READ_TIMEOUT)
             # 其他返回状态，退出
             if head_response.status != const.ResponseCode.SUCCEED:
                 # URL格式不正确
@@ -845,7 +846,7 @@ class Download:
             self.rename_file_extension(head_response)
 
             # 根据文件大小判断是否需要分段下载
-            content_length = head_response.getheader("Content-Length")
+            content_length = head_response.headers.get("Content-Length")
             if content_length is not None:
                 self._content_length = int(content_length)
                 # 文件比较大，使用分段下载
@@ -872,8 +873,7 @@ class Download:
         单线程下载
         """
         try:
-            file_response = request(self._file_url, method="GET", connection_timeout=NET_CONFIG.DOWNLOAD_CONNECTION_TIMEOUT,
-                                    read_timeout=NET_CONFIG.DOWNLOAD_READ_TIMEOUT, **self._kwargs.copy())
+            file_response = Request(self._file_url, method="GET", headers=self._headers, cookies=self._cookies).set_time_out(NET_CONFIG.DOWNLOAD_CONNECTION_TIMEOUT, NET_CONFIG.DOWNLOAD_READ_TIMEOUT)
         except SystemExit:
             return False
 
@@ -896,7 +896,7 @@ class Download:
             return False
 
         if self._content_length == 0:
-            content_length = file_response.getheader("Content-Length")
+            content_length = file_response.headers.get("Content-Length")
             if content_length is not None:
                 self._content_length = int(content_length)
 
@@ -927,23 +927,16 @@ class Download:
             while end_pos < self._content_length - 1:
                 start_pos = end_pos + 1
                 end_pos = min(self._content_length - 1, start_pos + NET_CONFIG.DOWNLOAD_MULTIPART_BLOCK_SIZE - 1)
-                multipart_kwargs = self._kwargs.copy()
 
                 # 分段的header信息
-                if "headers" in multipart_kwargs:
-                    headers = multipart_kwargs["headers"]
-                    del multipart_kwargs["headers"]
-                else:
-                    headers = {}
+                headers = self._headers.copy()
                 headers["Range"] = f"bytes={start_pos}-{end_pos}"
 
                 # 创建一个副本
                 with os.fdopen(os.dup(file_no), "rb+", -1) as fd_handle:
                     for multipart_retry_count in range(NET_CONFIG.DOWNLOAD_RETRY_COUNT):
                         try:
-                            multipart_response = request(self._file_url, method="GET", headers=headers,
-                                                         connection_timeout=NET_CONFIG.DOWNLOAD_CONNECTION_TIMEOUT,
-                                                         read_timeout=NET_CONFIG.DOWNLOAD_READ_TIMEOUT, **multipart_kwargs)
+                            multipart_response = Request(self._file_url, method="GET", headers=headers).set_time_out(NET_CONFIG.DOWNLOAD_CONNECTION_TIMEOUT, NET_CONFIG.DOWNLOAD_READ_TIMEOUT)
                         except SystemExit:
                             return False
                         if multipart_response.status == 206:
