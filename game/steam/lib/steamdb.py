@@ -22,7 +22,7 @@ def get_game_store_index(game_id):
     }
     if "User-Agent" not in headers:
         raise crawler.CrawlerException("header没有携带User-Agent")
-    game_index_response = net.request(game_index_url, method="GET", headers=headers, cookies=COOKIES, is_auto_retry=False)
+    game_index_response = net.Request(game_index_url, method="GET", headers=headers, cookies=COOKIES).disable_auto_retry()
     result = {
         "game_name": None,  # 游戏名字
         "develop_name": None,  # Developer
@@ -54,7 +54,7 @@ def get_game_store_index(game_id):
             "appid": game_id,
         }
         headers["X-Requested-With"] = "XMLHttpRequest"
-        history_api_response = net.request(history_api_url, method="GET", fields=query_data, headers=headers, cookies=COOKIES)
+        history_api_response = net.Request(history_api_url, method="GET", fields=query_data, headers=headers, cookies=COOKIES)
         if history_api_response.status != const.ResponseCode.SUCCEED:
             raise crawler.CrawlerException("历史记录，%s" % crawler.request_failre(history_api_response.status))
         if not result["develop_name"]:
