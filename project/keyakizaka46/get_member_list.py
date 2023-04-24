@@ -15,7 +15,7 @@ from project.keyakizaka46 import keyakizaka46_diary
 def get_account_from_index():
     index_url = "https://www.keyakizaka46.com/s/k46o/diary/member/list"
     query_data = {"cd": "member"}
-    index_response = net.request(index_url, method="GET", fields=query_data)
+    index_response = net.Request(index_url, method="GET", fields=query_data)
     account_list = {}
     if index_response.status != const.ResponseCode.SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(index_response.status))

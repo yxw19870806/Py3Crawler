@@ -14,7 +14,7 @@ from common import *
 def get_comic_index_page(comic_name):
     # https://m.dmzj.com/info/yiquanchaoren.html
     index_url = "https://m.dmzj.com/info/%s.html" % comic_name
-    index_response = net.request(index_url, method="GET")
+    index_response = net.Request(index_url, method="GET")
     result = {
         "comic_info_list": {},  # 漫画列表信息
     }
@@ -51,7 +51,7 @@ def get_comic_index_page(comic_name):
 def get_chapter_page(comic_id, page_id):
     # https://m.dmzj.com/view/9949/19842.html
     chapter_url = "https://m.dmzj.com/view/%s/%s.html" % (comic_id, page_id)
-    chapter_response = net.request(chapter_url, method="GET")
+    chapter_response = net.Request(chapter_url, method="GET")
     result = {
         "photo_url_list": [],  # 全部漫画图片地址
     }

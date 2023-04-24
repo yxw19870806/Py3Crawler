@@ -19,7 +19,7 @@ FIRST_CHOICE_RESOLUTION = 720
 def init_session():
     global AUTHORIZATION
     index_url = "https://www.dailymotion.com"
-    index_response = net.request(index_url, method="GET")
+    index_response = net.Request(index_url, method="GET")
     if index_response.status != const.ResponseCode.SUCCEED:
         raise crawler.CrawlerException("首页，" + crawler.request_failre(index_response.status))
     client_id_and_secret_find = re.findall(r'var r="(\w{20,})",o="(\w{40,})"', index_response.content)
@@ -32,7 +32,7 @@ def init_session():
         "visitor_id": tool.generate_random_string(32, 6),
         "traffic_segment": random.randint(100000, 999999)
     }
-    oauth_response = net.request("https://graphql.api.dailymotion.com/oauth/token", method="POST", fields=post_data, json_decode=True)
+    oauth_response = net.Request("https://graphql.api.dailymotion.com/oauth/token", method="POST", fields=post_data).enable_json_decode()
     if oauth_response.status != const.ResponseCode.SUCCEED:
         raise crawler.CrawlerException("获取token页，%s\n%s" % (crawler.request_failre(oauth_response.status), str(post_data)))
     AUTHORIZATION = crawler.get_json_value(oauth_response.json_data, "access_token", type_check=str)
@@ -59,7 +59,7 @@ def get_one_page_video(account_id, page_count):
         "is_over": False,  # 是否最后一页视频
         "video_info_list": [],  # 全部视频信息
     }
-    api_response = net.request(api_url, method="POST", fields=tool.json_encode(post_data), headers=headers, json_decode=True)
+    api_response = net.Request(api_url, method="POST", fields=tool.json_encode(post_data), headers=headers).enable_json_decode()
     if api_response.status != const.ResponseCode.SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(api_response.status))
     # 获取所有视频
@@ -89,7 +89,7 @@ def get_video_page(video_id):
     # 获取视频播放页
     # https://www.dailymotion.com/player/metadata/video/x6lgrfa
     video_info_url = "https://www.dailymotion.com/player/metadata/video/%s" % video_id
-    video_info_response = net.request(video_info_url, method="GET", json_decode=True)
+    video_info_response = net.Request(video_info_url, method="GET").enable_json_decode()
     result = {
         "is_delete": False,  # 是否已删除
         "video_title": "",  # 视频标题
@@ -104,7 +104,7 @@ def get_video_page(video_id):
     result["video_title"] = crawler.get_json_value(video_info_response.json_data, "title", type_check=str)
     # 查找最高分辨率的视频源地址
     m3u8_file_url = crawler.get_json_value(video_info_response.json_data, "qualities", "auto", 0, "url", type_check=str)
-    m3u8_file_response = net.request(m3u8_file_url, method="GET")
+    m3u8_file_response = net.Request(m3u8_file_url, method="GET")
     max_resolution = 0
     video_url = ""
     for line in m3u8_file_response.content.split("\n"):

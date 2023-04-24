@@ -15,7 +15,7 @@ COOKIES = {}
 # 检测是否已登录
 def check_login():
     api_url = "https://api.bilibili.com/x/web-interface/nav"
-    api_response = net.request(api_url, method="GET", cookies=COOKIES, json_decode=True)
+    api_response = net.Request(api_url, method="GET", cookies=COOKIES).enable_json_decode()
     if api_response.status == const.ResponseCode.SUCCEED:
         return crawler.get_json_value(api_response.json_data, "data", "isLogin", type_check=bool)
     return False
@@ -27,7 +27,7 @@ def get_comic_index_page(comic_id):
     post_data = {
         "comic_id": comic_id
     }
-    api_response = net.request(api_url, method="POST", fields=post_data, cookies=COOKIES, json_decode=True)
+    api_response = net.Request(api_url, method="POST", fields=post_data, cookies=COOKIES).enable_json_decode()
     result = {
         "comic_info_list": {},  # 漫画列表信息
     }
@@ -55,7 +55,7 @@ def get_chapter_page(ep_id):
     post_data = {
         "ep_id": ep_id
     }
-    api_response = net.request(api_url, method="POST", fields=post_data, cookies=COOKIES, json_decode=True)
+    api_response = net.Request(api_url, method="POST", fields=post_data, cookies=COOKIES).enable_json_decode()
     result = {
         "need_buy": False,  # 是否需要购买
         "photo_url_list": [],  # 全部漫画图片地址
@@ -71,7 +71,7 @@ def get_chapter_page(ep_id):
     post_data = {
         "urls": tool.json_encode(image_path_list)
     }
-    token_api_response = net.request(token_api_url, method="POST", fields=post_data, json_decode=True)
+    token_api_response = net.Request(token_api_url, method="POST", fields=post_data).enable_json_decode()
     if api_response.status != const.ResponseCode.SUCCEED:
         raise crawler.CrawlerException("图片token获取，" + crawler.request_failre(api_response.status))
     for token_info in crawler.get_json_value(token_api_response.json_data, "data", type_check=list):

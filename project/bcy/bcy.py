@@ -24,7 +24,7 @@ def get_one_page_album(account_id, since_id):
         "since": since_id,
         "uid": account_id,
     }
-    api_response = net.request(api_url, method="GET", fields=query_data, json_decode=True)
+    api_response = net.Request(api_url, method="GET", fields=query_data).enable_json_decode()
     result = {
         "album_id_list": [],  # 全部作品id
     }
@@ -45,7 +45,7 @@ def get_album_page(album_id):
     # https://bcy.net/item/detail/5969608017174355726 该作品已被作者设置为只有粉丝可见
     # https://bcy.net/item/detail/6363512825238806286 该作品已被作者设置为登录后可见
     album_url = "https://bcy.net/item/detail/%s" % album_id
-    album_response = net.request(album_url, method="GET")
+    album_response = net.Request(album_url, method="GET")
     result = {
         "photo_url_list": [],  # 全部图片地址
         "video_id": "",  # 视频id
@@ -105,7 +105,7 @@ def get_album_page_by_selenium(album_id):
         else:
             raise crawler.CrawlerException("播放页匹配视频信息地址失败")
     # 获取视频信息
-    video_info_response = net.request(video_info_url, method="GET", json_decode=True)
+    video_info_response = net.Request(video_info_url, method="GET").enable_json_decode()
     if video_info_response.status != const.ResponseCode.SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(video_info_response.status))
     video_info_list = crawler.get_json_value(video_info_response.json_data, "data", "video_list", type_check=dict)
@@ -117,7 +117,7 @@ def get_album_page_by_selenium(album_id):
             encryption_video_url = crawler.get_json_value(video_info, "main_url", type_check=str)
             result["video_type"] = crawler.get_json_value(video_info, "vtype", type_check=str)
     if encryption_video_url is None:
-        raise crawler.CrawlerException("视频信息截取加密视频地址失败\n" + video_info_response.json_data)
+        raise crawler.CrawlerException("视频信息%s中截取加密视频地址失败\n" % video_info_response.json_data)
     try:
         result["video_url"] = base64.b64decode(encryption_video_url).decode(errors="ignore")
     except TypeError:

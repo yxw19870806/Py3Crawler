@@ -16,7 +16,7 @@ IS_FOLLOW_PRIVATE_ACCOUNT = False  # 是否对私密账号发出关注请求
 # 获取账号首页
 def get_account_index_page(account_name):
     account_index_url = "https://www.instagram.com/%s" % account_name
-    account_index_response = net.request(account_index_url, method="GET", cookies=instagram.COOKIES)
+    account_index_response = net.Request(account_index_url, method="GET", cookies=instagram.COOKIES)
     result = {
         "is_follow": False,  # 是否已经关注
         "is_private": False,  # 是否私密账号
@@ -43,7 +43,7 @@ def get_account_index_page(account_name):
 def follow_account(account_name, account_id):
     follow_api_url = "https://www.instagram.com/web/friendships/%s/follow/" % account_id
     headers = {"Referer": "https://www.instagram.com/", "x-csrftoken": instagram.COOKIES["csrftoken"], "X-Instagram-AJAX": 1}
-    follow_response = net.request(follow_api_url, method="POST", headers=headers, cookies=instagram.COOKIES, json_decode=True)
+    follow_response = net.Request(follow_api_url, method="POST", headers=headers, cookies=instagram.COOKIES).enable_json_decode()
     if follow_response.status == const.ResponseCode.SUCCEED:
         follow_result = crawler.get_json_value(follow_response.json_data, "result", default_value="", type_check=str)
         if follow_result == "following":

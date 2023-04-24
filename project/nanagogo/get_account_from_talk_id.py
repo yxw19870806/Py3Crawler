@@ -17,7 +17,7 @@ ACCOUNT_ID_FILE_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), "
 # 根据talk id获取全部参与者
 def get_member_from_talk(talk_id):
     talk_index_url = "https://7gogo.jp/%s" % talk_id
-    talk_index_response = net.request(talk_index_url, method="GET")
+    talk_index_response = net.Request(talk_index_url, method="GET")
     account_list = {}
     if talk_index_response.status != const.ResponseCode.SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(talk_index_response.status))

@@ -18,7 +18,7 @@ def get_one_page_blog(account_id, page_count):
     # https://www.nogizaka46.com/s/n46/diary/MEMBER/list?ima=4653&page=0&ct=264&cd=MEMBER
     blog_pagination_url = "https://www.nogizaka46.com/s/n46/diary/MEMBER/list"
     query_data = {"ct": account_id, "page": page_count - 1}
-    blog_pagination_response = net.request(blog_pagination_url, method="GET", fields=query_data)
+    blog_pagination_response = net.Request(blog_pagination_url, method="GET", fields=query_data)
     result = {
         "blog_id_list": [],  # 全部日志id
         "is_over": False,  # 是否最后一页日志
@@ -58,7 +58,7 @@ def get_one_page_blog(account_id, page_count):
 
 def get_blog_page(blog_id):
     blog_url = "https://www.nogizaka46.com/s/n46/diary/detail/%s" % blog_id
-    blog_response = net.request(blog_url, method="GET")
+    blog_response = net.Request(blog_url, method="GET")
     result = {
         "photo_info_list": [],  # 全部图片地址
     }
@@ -99,7 +99,7 @@ def check_preview_photo(photo_url, real_photo_url):
     }
     # 没有预览地址，直接返回图片原始地址
     if real_photo_url:
-        real_photo_response = net.request(real_photo_url, method="GET")
+        real_photo_response = net.Request(real_photo_url, method="GET")
         if real_photo_response.status == const.ResponseCode.SUCCEED:
             # 检测是不是已经过期删除
             temp_photo_url = tool.find_sub_string(real_photo_response.data, '<img src="', '"')

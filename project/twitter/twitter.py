@@ -27,7 +27,7 @@ def check_login():
     global AUTHORIZATION, COOKIES, IS_LOGIN, QUERY_ID
     index_url = "https://twitter.com/home"
     headers = {"referer": "https://twitter.com"}
-    index_response = net.request(index_url, method="GET", cookies=COOKIES, headers=headers, is_auto_redirect=False)
+    index_response = net.Request(index_url, method="GET", cookies=COOKIES, headers=headers).disable_auto_redirect()
     if index_response.status == const.ResponseCode.SUCCEED:
         IS_LOGIN = True
     elif index_response.status == 302 and index_response.headers.get("Location") == "/login?redirect_after_login=%2Fhome":
@@ -39,7 +39,7 @@ def check_login():
     init_js_url_find = re.findall(r'href="(https://abs.twimg.com/responsive-web/client-web-legacy/main.[^\.]*.[\w]*.js)"', index_response.content)
     if len(init_js_url_find) != 1:
         raise crawler.CrawlerException("初始化JS地址截取失败\n" + index_response.content)
-    init_js_response = net.request(init_js_url_find[0], method="GET")
+    init_js_response = net.Request(init_js_url_find[0], method="GET")
     if init_js_response.status != const.ResponseCode.SUCCEED:
         raise crawler.CrawlerException("初始化JS文件，" + crawler.request_failre(init_js_response.status))
     # 截取authorization
@@ -67,7 +67,7 @@ def get_account_index_page(account_name):
     }
     if "ct0" in COOKIES:
         headers["x-csrf-token"] = COOKIES["ct0"]
-    account_index_response = net.request(account_index_url, method="GET", fields=query_data, cookies=COOKIES, headers=headers, json_decode=True)
+    account_index_response = net.Request(account_index_url, method="GET", fields=query_data, cookies=COOKIES, headers=headers).enable_json_decode()
     result = {
         "account_id": None,  # account id
     }
@@ -122,7 +122,7 @@ def get_one_page_media(account_name, account_id, cursor):
     }
     if "ct0" in COOKIES:
         headers["x-csrf-token"] = COOKIES["ct0"]
-    media_pagination_response = net.request(media_pagination_url, method="GET", fields=query_data, cookies=COOKIES, headers=headers, json_decode=True)
+    media_pagination_response = net.Request(media_pagination_url, method="GET", fields=query_data, cookies=COOKIES, headers=headers).enable_json_decode()
     result = {
         "is_over": False,  # 是否最后一页推特（没有获取到任何内容）
         "media_info_list": [],  # 全部推特信息
@@ -204,7 +204,7 @@ def get_video_play_page(tweet_id):
     }
     if IS_LOGIN:
         headers["x-twitter-auth-type"] = "OAuth2Session"
-    video_play_response = net.request(video_play_url, method="GET", cookies=COOKIES, headers=headers, json_decode=True)
+    video_play_response = net.Request(video_play_url, method="GET", cookies=COOKIES, headers=headers).enable_json_decode()
     result = {
         "video_url": "",  # 视频地址
     }
@@ -221,7 +221,7 @@ def get_video_play_page(tweet_id):
     file_extension = net.get_file_extension(file_url)
     if file_extension == "m3u8":  # https://api.twitter.com/1.1/videos/tweet/config/996368816174084097.json
         file_url_protocol, file_url_host = urllib.parse.urlparse(file_url)[:2]
-        m3u8_file_response = net.request(file_url, method="GET")
+        m3u8_file_response = net.Request(file_url, method="GET")
         # 没有权限（可能是地域限制）或者已删除
         if m3u8_file_response.status in [403, 404]:
             return result
@@ -231,7 +231,7 @@ def get_video_play_page(tweet_id):
         if len(include_m3u8_file_list) > 0:
             # 生成最高分辨率视频所在的m3u8文件地址
             file_url = "%s://%s%s" % (file_url_protocol, file_url_host, include_m3u8_file_list[-1])
-            m3u8_file_response = net.request(file_url, method="GET")
+            m3u8_file_response = net.Request(file_url, method="GET")
             if m3u8_file_response.status != const.ResponseCode.SUCCEED:
                 raise crawler.CrawlerException("最高分辨率m3u8文件 %s 访问失败，%s" % (file_url, crawler.request_failre(m3u8_file_response.status)))
         # 包含分P视频文件名的m3u8文件
@@ -242,7 +242,7 @@ def get_video_play_page(tweet_id):
         for ts_video_path in ts_url_find:
             result["video_url"].append("%s://%s%s" % (file_url_protocol, file_url_host, ts_video_path))
     elif file_extension == "vmap":
-        vmap_file_response = net.request(file_url, method="GET")
+        vmap_file_response = net.Request(file_url, method="GET")
         if vmap_file_response.status != const.ResponseCode.SUCCEED:
             raise crawler.CrawlerException("vmap文件 %s 访问失败，%s" % (file_url, crawler.request_failre(vmap_file_response.status)))
         tw_namespace = tool.find_sub_string(vmap_file_response.content, 'xmlns:tw="', '"')

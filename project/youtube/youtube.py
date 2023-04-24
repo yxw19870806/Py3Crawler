@@ -21,7 +21,7 @@ def check_login():
     if not COOKIES:
         return False
     account_index_url = "https://www.youtube.com/account"
-    index_response = net.request(account_index_url, method="GET", cookies=COOKIES, is_auto_redirect=False)
+    index_response = net.Request(account_index_url, method="GET", cookies=COOKIES).disable_auto_redirect()
     if index_response.status == 303 and index_response.headers.get("Location").startswith("https://accounts.google.com/ServiceLogin?"):
         return False
     elif index_response.status == const.ResponseCode.SUCCEED:
@@ -49,7 +49,7 @@ def get_one_page_video(account_id, token):
             "sort": "dd",
             "view": "0",
         }
-        index_response = net.request(index_url, method="GET", fields=post_data, headers={"accept-language": "en"})
+        index_response = net.Request(index_url, method="GET", fields=post_data, headers={"accept-language": "en"})
         if index_response.status == 404:
             raise crawler.CrawlerException("账号不存在")
         elif index_response.status != const.ResponseCode.SUCCEED:
@@ -108,7 +108,7 @@ def get_one_page_video(account_id, token):
             "x-youtube-client-name": "1",
             "x-youtube-client-version": "2.20221101.00.00",
         }
-        video_pagination_response = net.request(query_url, method="POST", fields=tool.json_encode(post_data), headers=headers, json_decode=True)
+        video_pagination_response = net.Request(query_url, method="POST", fields=tool.json_encode(post_data), headers=headers).enable_json_decode()
         if video_pagination_response.status != const.ResponseCode.SUCCEED:
             raise crawler.CrawlerException(crawler.request_failre(video_pagination_response.status))
         video_info_list = crawler.get_json_value(video_pagination_response.json_data, "onResponseReceivedActions", 0, "appendContinuationItemsAction", "continuationItems", type_check=list)
@@ -128,10 +128,10 @@ def get_video_page(video_id):
     video_play_url = "https://www.youtube.com/watch"
     query_data = {"v": video_id}
     if IS_LOGIN:
-        video_play_response = net.request(video_play_url, method="GET", fields=query_data, cookies=COOKIES)
+        video_play_response = net.Request(video_play_url, method="GET", fields=query_data, cookies=COOKIES)
     else:
         # 没有登录时默认使用英语
-        video_play_response = net.request(video_play_url, method="GET", fields=query_data, headers={"accept-language": "en"})
+        video_play_response = net.Request(video_play_url, method="GET", fields=query_data, headers={"accept-language": "en"})
     result = {
         "skip_reason": "",  # 跳过原因
         "video_time": "",  # 视频上传时间
@@ -244,7 +244,7 @@ def get_video_page(video_id):
 def get_decrypt_step(js_file_url):
     # 最终的调用子加密方法的顺序
     decrypt_function_step = []
-    js_file_response = net.request(js_file_url, method="GET")
+    js_file_response = net.Request(js_file_url, method="GET")
     if js_file_response.status != const.ResponseCode.SUCCEED:
         raise crawler.CrawlerException("播放器JS文件 %s 访问失败，原因：%s" % (js_file_url, crawler.request_failre(js_file_response.status)))
     # 加密方法体（包含子加密方法的调用参数&顺序）
