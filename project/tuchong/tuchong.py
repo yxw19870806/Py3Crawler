@@ -18,13 +18,13 @@ def get_account_index_page(account_name):
         account_index_url = "https://tuchong.com/%s" % account_name
     else:
         account_index_url = "https://%s.tuchong.com" % account_name
-    account_index_response = net.Request(account_index_url, method="GET").disable_auto_redirect()
+    account_index_response = net.Request(account_index_url, method="GET").disable_redirect()
     result = {
         "account_id": 0,  # 账号id（字母账号->数字账号)
     }
     if account_index_response.status == 302 and account_index_response.headers.get("Location").startswith("https://tuchong.com/") and account_index_response.headers.get("Location").endswith("/work"):
         account_index_url += "/work"
-        account_index_response = net.Request(account_index_url, method="GET").disable_auto_redirect()
+        account_index_response = net.Request(account_index_url, method="GET").disable_redirect()
     if account_index_response.status == 301 and account_index_response.headers.get("Location") == "https://tuchong.com/":
         raise crawler.CrawlerException("账号不存在")
     elif account_index_response.status != const.ResponseCode.SUCCEED:

@@ -21,7 +21,7 @@ def check_login():
     if not COOKIES:
         return False
     index_url = "https://www.nicovideo.jp/my"
-    index_response = net.Request(index_url, method="GET", cookies=COOKIES).disable_auto_redirect()
+    index_response = net.Request(index_url, method="GET", cookies=COOKIES).disable_redirect()
     if index_response.status == const.ResponseCode.SUCCEED:
         return True
     return False

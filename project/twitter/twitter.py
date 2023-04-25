@@ -27,7 +27,7 @@ def check_login():
     global AUTHORIZATION, COOKIES, IS_LOGIN, QUERY_ID
     index_url = "https://twitter.com/home"
     headers = {"referer": "https://twitter.com"}
-    index_response = net.Request(index_url, method="GET", cookies=COOKIES, headers=headers).disable_auto_redirect()
+    index_response = net.Request(index_url, method="GET", cookies=COOKIES, headers=headers).disable_redirect()
     if index_response.status == const.ResponseCode.SUCCEED:
         IS_LOGIN = True
     elif index_response.status == 302 and index_response.headers.get("Location") == "/login?redirect_after_login=%2Fhome":
