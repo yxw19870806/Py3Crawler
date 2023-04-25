@@ -86,19 +86,19 @@ def set_proxy(ip: str, port: str) -> None:
     console.log(f"设置代理成功({ip}:{port})")
 
 
-def set_default_user_agent(browser_type: Optional[const.BrowserType] = None):
+def set_default_user_agent(browser_type: Optional[const.BrowserType] = None) -> None:
     global DEFAULT_USER_AGENT
     user_agent = _random_user_agent(browser_type)
     if user_agent:
         DEFAULT_USER_AGENT = user_agent
 
 
-def disable_fake_proxy_ip():
+def disable_fake_proxy_ip() -> None:
     global FAKE_PROXY_IP
     FAKE_PROXY_IP = False
 
 
-def set_default_charset(charset: str):
+def set_default_charset(charset: str) -> None:
     global DEFAULT_CHARSET
     DEFAULT_CHARSET = charset
 
@@ -231,6 +231,8 @@ def request(url: str, method: str = "GET", fields: Optional[Union[dict, str]] = 
     - json_decode - is return a decoded json data when response status = 200
         if decode failure will replace response status with const.ResponseCode.JSON_DECODE_ERROR
     """
+    import warnings
+    warnings.warn("net.request() is deprecated, use net.Request() replace it")
     url = str(url).strip()
     if not (url.startswith("http://") or url.startswith("https://")):
         return ErrorResponse(const.ResponseCode.URL_INVALID)
@@ -423,13 +425,15 @@ def _random_ip_address() -> str:
     return f"{random.randint(1, 254)}.{random.randint(0, 255)}.{random.randint(0, 255)}.{random.randint(0, 255)}"
 
 
-def download_from_list(file_url_list: list[str], file_path: str, **kwargs) -> bool:
+def download_from_list(file_url_list: list[str], file_path: str, headers: Optional[dict] = None, cookies: Optional[dict] = None) -> bool:
     """
     Visit web and save to local(multiple remote resource, single local file)
 
     :Args:
     - file_url_list - the list of remote resource URL which you want to save
     - file_path - the local file path which you want to save remote resource
+    - headers - customize header dictionary
+    - cookies - customize cookies dictionary, will replace headers["Cookie"]
 
     :Returns:
         - status - 0 download failure, 1 download successful
@@ -450,7 +454,7 @@ def download_from_list(file_url_list: list[str], file_path: str, **kwargs) -> bo
             break
         part_file_path_list.append(part_file_path)
         # 下载
-        part_download_return = Download(file_url, part_file_path, **kwargs)
+        part_download_return = Download(file_url, part_file_path, headers=headers, cookies=cookies)
         if part_download_return.status == const.DownloadStatus.FAILED:
             break
         index += 1
@@ -734,6 +738,8 @@ class Download:
         :Args:
         - file_url - the remote resource URL which you want to save
         - file_path - the local file path which you want to save remote resource
+        - headers - customize header dictionary
+        - cookies - customize cookies dictionary, will replace headers["Cookie"]
         - auto_multipart_download - "HEAD" method request to check response status and file size before download file
 
         :Returns:
