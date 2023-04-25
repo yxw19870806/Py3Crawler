@@ -102,7 +102,7 @@ def check_preview_photo(photo_url, real_photo_url):
         real_photo_response = net.Request(real_photo_url, method="GET")
         if real_photo_response.status == const.ResponseCode.SUCCEED:
             # 检测是不是已经过期删除
-            temp_photo_url = tool.find_sub_string(real_photo_response.data, '<img src="', '"')
+            temp_photo_url = tool.find_sub_string(real_photo_response.content, '<img src="', '"')
             if temp_photo_url != "/img/expired.gif":
                 if temp_photo_url.find("://") >= 0:
                     result["photo_url"] = temp_photo_url
