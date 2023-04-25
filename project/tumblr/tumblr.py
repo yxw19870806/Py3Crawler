@@ -26,7 +26,7 @@ def check_login():
     if not COOKIES:
         return False
     index_url = "https://www.tumblr.com/"
-    index_response = net.Request(index_url, method="GET", cookies=COOKIES, headers={"User-Agent": USER_AGENT}).disable_auto_redirect()
+    index_response = net.Request(index_url, method="GET", cookies=COOKIES, headers={"User-Agent": USER_AGENT}).disable_redirect()
     if index_response.status == 302 and index_response.headers.get("Location") == "https://www.tumblr.com/dashboard":
         return True
     return False
@@ -35,7 +35,7 @@ def check_login():
 # 获取首页，判断是否支持https以及是否启用safe-mode和"Show this blog on the web"
 def get_index_setting(account_id):
     index_url = "https://%s.tumblr.com/" % account_id
-    index_response = net.Request(index_url, method="GET").disable_auto_redirect()
+    index_response = net.Request(index_url, method="GET").disable_redirect()
     is_https = True
     is_private = False
     if index_response.status == 301:
@@ -49,7 +49,7 @@ def get_index_setting(account_id):
         if redirect_url.startswith("http://%s.tumblr.com/" % account_id):
             is_https = False
             index_url = "http://%s.tumblr.com/" % account_id
-            index_response = net.Request(index_url, method="GET").disable_auto_redirect()
+            index_response = net.Request(index_url, method="GET").disable_redirect()
             if index_response.status == const.ResponseCode.SUCCEED:
                 return is_https, is_private
             elif index_response.status != 302:
@@ -353,7 +353,7 @@ def get_video_play_page(account_id, post_id, is_https):
     else:
         protocol_type = "http"
     video_play_url = "%s://www.tumblr.com/video/%s/%s/0" % (protocol_type, account_id, post_id)
-    video_play_response = net.Request(video_play_url, method="GET").disable_auto_redirect()
+    video_play_response = net.Request(video_play_url, method="GET").disable_redirect()
     result = {
         "is_password": False,  # 是否加密
         "video_url": "",  # 视频地址

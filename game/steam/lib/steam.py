@@ -113,7 +113,7 @@ def get_discount_game_list():
 # 获取游戏商店首页
 def get_game_store_index(game_id):
     game_index_url = "https://store.steampowered.com/app/%s" % game_id
-    game_index_response = net.Request(game_index_url, method="GET", cookies=COOKIES).disable_auto_redirect()
+    game_index_response = net.Request(game_index_url, method="GET", cookies=COOKIES).disable_redirect()
     result = {
         "dlc_list": [],  # 游戏下的DLC列表
         "reviewed": False,  # 是否评测过
@@ -451,7 +451,7 @@ class Steam(crawler.Crawler):
             # 检测是否登录
             login_url = "https://steamcommunity.com/actions/GetNotificationCounts"
             try:
-                login_response = net.Request(login_url, method="GET", cookies=self.cookie_value).disable_auto_redirect()
+                login_response = net.Request(login_url, method="GET", cookies=self.cookie_value).disable_redirect()
             except KeyboardInterrupt:
                 tool.process_exit()
                 return

@@ -21,7 +21,7 @@ def check_login():
     if not COOKIES:
         return False
     account_index_url = "https://www.youtube.com/account"
-    index_response = net.Request(account_index_url, method="GET", cookies=COOKIES).disable_auto_redirect()
+    index_response = net.Request(account_index_url, method="GET", cookies=COOKIES).disable_redirect()
     if index_response.status == 303 and index_response.headers.get("Location").startswith("https://accounts.google.com/ServiceLogin?"):
         return False
     elif index_response.status == const.ResponseCode.SUCCEED:

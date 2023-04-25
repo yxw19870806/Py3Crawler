@@ -302,7 +302,7 @@ def request(url: str, method: str = "GET", fields: Optional[Union[dict, str]] = 
             response.json_data = {}
             if response.status == const.ResponseCode.SUCCEED:
                 charset = DEFAULT_CHARSET
-                content_type = response.getheader("Content-Type")
+                content_type = response.headers.get("Content-Type")
                 if content_type is not None:
                     content_charset = tool.find_sub_string(content_type, "charset=", None)
                     if content_charset:
@@ -507,23 +507,25 @@ class Request:
         self._headers = headers if isinstance(headers, dict) else {}
         self._cookies = cookies if isinstance(cookies, dict) else {}
         self._response: Optional[Union[urllib3.HTTPResponse, ErrorResponse]] = None
-        # is auto redirect, when response.status in [301, 302, 303, 307, 308]
-        self._is_auto_redirect = True
         # is auto retry, when response.status in [500, 502, 503, 504]
         self._is_auto_retry = True
+        # is check request qps
+        self._is_check_qps = False
+        # is auto decode .data and set to .content
+        self._is_decode_content = True
         # see "encode_multipart" in urllib3.request_encode_body
         self._is_encode_multipart = False
+        # is use gzip compression request body
+        self._is_gzip = True
+        # is return a decoded json data when response status = 200
+        # if decode failure will replace response status with const.ResponseCode.JSON_DECODE_ERROR
+        self._is_json_decode = False
+        # is auto redirect, when response.status in [301, 302, 303, 307, 308]
+        self._is_redirect = True
         # is use proxy when inited PROXY_HTTP_CONNECTION_POOL
         self._is_use_proxy = True
         # is encode url
         self._is_url_encode = True
-        # is use gzip compression request body
-        self._is_gzip = True
-        # is check request qps
-        self._is_check_qps = False
-        # is return a decoded json data when response status = 200
-        # if decode failure will replace response status with const.ResponseCode.JSON_DECODE_ERROR
-        self._is_json_decode = False
         # customize connection timeout seconds
         self._connection_timeout = NET_CONFIG.HTTP_CONNECTION_TIMEOUT
         # customize read timeout seconds
@@ -541,24 +543,28 @@ class Request:
         self._cookies = cookies
         return self
 
-    def enable_json_decode(self) -> Self:
-        self._is_json_decode = True
+    def enable_check_qps(self) -> Self:
+        self._is_check_qps = True
         return self
 
     def enable_encode_multipart(self) -> Self:
         self._is_encode_multipart = True
         return self
 
-    def enable_check_qps(self) -> Self:
-        self._is_check_qps = True
+    def enable_json_decode(self) -> Self:
+        self._is_json_decode = True
         return self
-
+    
     def disable_auto_retry(self) -> Self:
         self._is_auto_retry = False
         return self
 
-    def disable_auto_redirect(self) -> Self:
-        self._is_auto_redirect = False
+    def disable_decode_content(self) -> Self:
+        self._is_decode_content = False
+        return self
+
+    def disable_redirect(self) -> Self:
+        self._is_redirect = False
         return self
 
     def disable_url_encode(self) -> Self:
@@ -657,32 +663,33 @@ class Request:
 
             try:
                 if self._method in ["DELETE", "GET", "HEAD", "OPTIONS"]:
-                    response = connection_pool.request(self._method, self._url, fields=self._fields, headers=self._headers, redirect=self._is_auto_redirect, timeout=timeout)
+                    response = connection_pool.request(self._method, self._url, fields=self._fields, headers=self._headers, redirect=self._is_redirect, timeout=timeout)
                 else:
                     if self._method == "POST" and isinstance(self._fields, str):
                         response = connection_pool.request(self._method, self._url, body=self._fields, encode_multipart=self._is_encode_multipart, headers=self._headers,
-                                                           redirect=self._is_auto_redirect, timeout=timeout)
+                                                           redirect=self._is_redirect, timeout=timeout)
                     else:
                         response = connection_pool.request(self._method, self._url, fields=self._fields, encode_multipart=self._is_encode_multipart, headers=self._headers,
-                                                           redirect=self._is_auto_redirect, timeout=timeout)
+                                                           redirect=self._is_redirect, timeout=timeout)
                 response.content = ""
                 response.json_data = {}
                 if response.status == const.ResponseCode.SUCCEED:
-                    charset = DEFAULT_CHARSET
-                    content_type = response.getheader("Content-Type")
-                    if content_type is not None:
-                        content_charset = tool.find_sub_string(content_type, "charset=", None)
-                        if content_charset:
-                            if content_charset == "gb2312":
-                                charset = "GBK"
-                            else:
-                                charset = content_charset
-                    response.content = response.data.decode(charset, errors="ignore")
-                    if self._is_json_decode:
-                        try:
-                            response.json_data = json.loads(response.content)
-                        except json.decoder.JSONDecodeError:
-                            response.status = const.ResponseCode.JSON_DECODE_ERROR
+                    if self._is_decode_content:
+                        charset = DEFAULT_CHARSET
+                        content_type = response.headers.get("Content-Type")
+                        if content_type is not None:
+                            content_charset = tool.find_sub_string(content_type, "charset=", None)
+                            if content_charset:
+                                if content_charset == "gb2312":
+                                    charset = "GBK"
+                                else:
+                                    charset = content_charset
+                        response.content = response.data.decode(charset, errors="ignore")
+                        if self._is_json_decode:
+                            try:
+                                response.json_data = json.loads(response.content)
+                            except json.decoder.JSONDecodeError:
+                                response.status = const.ResponseCode.JSON_DECODE_ERROR
                 elif response.status == 429:  # Too Many Requests
                     console.log(self._url + " Too Many Requests, sleep")
                     time.sleep(NET_CONFIG.TOO_MANY_REQUESTS_WAIT_TIME)
@@ -841,7 +848,7 @@ class Download:
         """
         # 先获取头信息
         if self._auto_multipart_download:
-            head_response = Request(self._file_url, method="HEAD", headers=self._headers, cookies=self._cookies).set_time_out(NET_CONFIG.DOWNLOAD_CONNECTION_TIMEOUT, NET_CONFIG.DOWNLOAD_READ_TIMEOUT)
+            head_response = Request(self._file_url, method="HEAD", headers=self._headers, cookies=self._cookies).disable_decode_content()
             # 其他返回状态，退出
             if head_response.status != const.ResponseCode.SUCCEED:
                 # URL格式不正确
@@ -862,7 +869,7 @@ class Download:
                 return
 
             # 检测文件后缀名是否正确
-            self.rename_file_extension(head_response)
+            self.rename_file_extension(head_response.headers)
 
             # 根据文件大小判断是否需要分段下载
             content_length = head_response.headers.get("Content-Length")
@@ -872,13 +879,13 @@ class Download:
                 if self._auto_multipart_download and self._content_length > NET_CONFIG.DOWNLOAD_MULTIPART_MIN_SIZE:
                     self._is_multipart_download = True
 
-    def rename_file_extension(self, response) -> None:
+    def rename_file_extension(self, response_headers: HTTPHeaderDict) -> None:
         """
         检测文件后缀名是否正确
         """
         if self._recheck_file_extension:
             # response中的Content-Type作为文件后缀名
-            content_type = response.getheader("Content-Type")
+            content_type = response_headers.get("Content-Type")
             if content_type is not None:
                 # 重置状态，避免反复修改
                 self._recheck_file_extension = False
@@ -892,7 +899,7 @@ class Download:
         单线程下载
         """
         try:
-            file_response = Request(self._file_url, method="GET", headers=self._headers, cookies=self._cookies).set_time_out(NET_CONFIG.DOWNLOAD_CONNECTION_TIMEOUT, NET_CONFIG.DOWNLOAD_READ_TIMEOUT)
+            file_response = Request(self._file_url, method="GET", headers=self._headers, cookies=self._cookies).disable_decode_content().set_time_out(NET_CONFIG.DOWNLOAD_CONNECTION_TIMEOUT, NET_CONFIG.DOWNLOAD_READ_TIMEOUT)
         except SystemExit:
             return False
 
@@ -920,7 +927,7 @@ class Download:
                 self._content_length = int(content_length)
 
         # 检测文件后缀名是否正确
-        self.rename_file_extension(file_response)
+        self.rename_file_extension(file_response.headers)
 
         # 下载
         with open(self._file_path, "wb") as file_handle:
@@ -955,7 +962,7 @@ class Download:
                 with os.fdopen(os.dup(file_no), "rb+", -1) as fd_handle:
                     for multipart_retry_count in range(NET_CONFIG.DOWNLOAD_RETRY_COUNT):
                         try:
-                            multipart_response = Request(self._file_url, method="GET", headers=headers).set_time_out(NET_CONFIG.DOWNLOAD_CONNECTION_TIMEOUT, NET_CONFIG.DOWNLOAD_READ_TIMEOUT)
+                            multipart_response = Request(self._file_url, method="GET", headers=headers).disable_decode_content().set_time_out(NET_CONFIG.DOWNLOAD_CONNECTION_TIMEOUT, NET_CONFIG.DOWNLOAD_READ_TIMEOUT)
                         except SystemExit:
                             return False
                         if multipart_response.status == 206:
