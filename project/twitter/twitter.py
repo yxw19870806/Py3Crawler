@@ -81,7 +81,7 @@ def get_account_index_page(account_name):
         if error_message == "Suspended":
             raise crawler.CrawlerException("账号已封禁")
         else:
-            raise crawler.CrawlerException(account_index_response.data)
+            raise crawler.CrawlerException(account_index_response.content)
     result["account_id"] = str(result["account_id"])
     return result
 

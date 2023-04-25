@@ -87,7 +87,7 @@ for item_path, item_position in list(item_list.items()):
                     console.log("error get" + item_url)
         else:
             console.log("error get" + item_index_url)
-        pagination = tool.find_sub_string(item_index_response.data, '<ul class="ui-pagination">', "</ul>")
+        pagination = tool.find_sub_string(item_index_response.content, '<ul class="ui-pagination">', "</ul>")
         if pagination:
             pagination = re.findall(r'<a href="#page=([\d]*)">', pagination)
             max_page = 1
