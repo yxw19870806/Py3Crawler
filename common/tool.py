@@ -77,7 +77,7 @@ def is_integer(number: Any) -> bool:
         return not re.compile("^[-+]?[0-9]+$").match(str(number)) is None
 
 
-def is_date(date_string: str):
+def is_date(date_string: str) -> bool:
     """
     判断字符串是否是有效的日期，格式：YYYY-mm-dd
     """
