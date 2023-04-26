@@ -34,7 +34,7 @@ def check_safe_search():
     query_data = {
         "from": "privacy"
     }
-    setting_response = net.Request(setting_url, method="GET", fields=query_data, cookies=COOKIES).disable_auto_redirect()
+    setting_response = net.Request(setting_url, method="GET", fields=query_data, cookies=COOKIES).disable_redirect()
     if setting_response.status == const.ResponseCode.SUCCEED:
         if pq(setting_response.content).find("input[name='safe_search']:checked").val() == "2":
             return True
