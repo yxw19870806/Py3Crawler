@@ -561,7 +561,7 @@ class Request:
         self._is_url_encode = False
         return self
 
-    def set_time_out(self, connection_timeout: Optional[Union[int, float]], read_timeout: Optional[Union[int, float]]) -> Self:
+    def set_time_out(self, connection_timeout: Union[int, float], read_timeout: Union[int, float]) -> Self:
         self._connection_timeout = connection_timeout
         self._read_timeout = read_timeout
         return self
