@@ -86,19 +86,19 @@ def set_proxy(ip: str, port: str) -> None:
     console.log(f"设置代理成功({ip}:{port})")
 
 
-def set_default_user_agent(browser_type: Optional[const.BrowserType] = None):
+def set_default_user_agent(browser_type: Optional[const.BrowserType] = None) -> None:
     global DEFAULT_USER_AGENT
     user_agent = _random_user_agent(browser_type)
     if user_agent:
         DEFAULT_USER_AGENT = user_agent
 
 
-def disable_fake_proxy_ip():
+def disable_fake_proxy_ip() -> None:
     global FAKE_PROXY_IP
     FAKE_PROXY_IP = False
 
 
-def set_default_charset(charset: str):
+def set_default_charset(charset: str) -> None:
     global DEFAULT_CHARSET
     DEFAULT_CHARSET = charset
 
@@ -231,6 +231,8 @@ def request(url: str, method: str = "GET", fields: Optional[Union[dict, str]] = 
     - json_decode - is return a decoded json data when response status = 200
         if decode failure will replace response status with const.ResponseCode.JSON_DECODE_ERROR
     """
+    import warnings
+    warnings.warn("net.request() is deprecated, use net.Request() replace it")
     url = str(url).strip()
     if not (url.startswith("http://") or url.startswith("https://")):
         return ErrorResponse(const.ResponseCode.URL_INVALID)
@@ -300,7 +302,7 @@ def request(url: str, method: str = "GET", fields: Optional[Union[dict, str]] = 
             response.json_data = {}
             if response.status == const.ResponseCode.SUCCEED:
                 charset = DEFAULT_CHARSET
-                content_type = response.getheader("Content-Type")
+                content_type = response.headers.get("Content-Type")
                 if content_type is not None:
                     content_charset = tool.find_sub_string(content_type, "charset=", None)
                     if content_charset:
@@ -423,13 +425,15 @@ def _random_ip_address() -> str:
     return f"{random.randint(1, 254)}.{random.randint(0, 255)}.{random.randint(0, 255)}.{random.randint(0, 255)}"
 
 
-def download_from_list(file_url_list: list[str], file_path: str, **kwargs) -> bool:
+def download_from_list(file_url_list: list[str], file_path: str, headers: Optional[dict] = None, cookies: Optional[dict] = None) -> bool:
     """
     Visit web and save to local(multiple remote resource, single local file)
 
     :Args:
     - file_url_list - the list of remote resource URL which you want to save
     - file_path - the local file path which you want to save remote resource
+    - headers - customize header dictionary
+    - cookies - customize cookies dictionary, will replace headers["Cookie"]
 
     :Returns:
         - status - 0 download failure, 1 download successful
@@ -450,7 +454,7 @@ def download_from_list(file_url_list: list[str], file_path: str, **kwargs) -> bo
             break
         part_file_path_list.append(part_file_path)
         # 下载
-        part_download_return = Download(file_url, part_file_path, **kwargs)
+        part_download_return = Download(file_url, part_file_path, headers=headers, cookies=cookies)
         if part_download_return.status == const.DownloadStatus.FAILED:
             break
         index += 1
@@ -503,23 +507,25 @@ class Request:
         self._headers = headers if isinstance(headers, dict) else {}
         self._cookies = cookies if isinstance(cookies, dict) else {}
         self._response: Optional[Union[urllib3.HTTPResponse, ErrorResponse]] = None
-        # is auto redirect, when response.status in [301, 302, 303, 307, 308]
-        self._is_auto_redirect = True
         # is auto retry, when response.status in [500, 502, 503, 504]
         self._is_auto_retry = True
+        # is check request qps
+        self._is_check_qps = False
+        # is auto decode .data and set to .content
+        self._is_decode_content = True
         # see "encode_multipart" in urllib3.request_encode_body
         self._is_encode_multipart = False
+        # is use gzip compression request body
+        self._is_gzip = True
+        # is return a decoded json data when response status = 200
+        # if decode failure will replace response status with const.ResponseCode.JSON_DECODE_ERROR
+        self._is_json_decode = False
+        # is auto redirect, when response.status in [301, 302, 303, 307, 308]
+        self._is_redirect = True
         # is use proxy when inited PROXY_HTTP_CONNECTION_POOL
         self._is_use_proxy = True
         # is encode url
         self._is_url_encode = True
-        # is use gzip compression request body
-        self._is_gzip = True
-        # is check request qps
-        self._is_check_qps = False
-        # is return a decoded json data when response status = 200
-        # if decode failure will replace response status with const.ResponseCode.JSON_DECODE_ERROR
-        self._is_json_decode = False
         # customize connection timeout seconds
         self._connection_timeout = NET_CONFIG.HTTP_CONNECTION_TIMEOUT
         # customize read timeout seconds
@@ -537,24 +543,28 @@ class Request:
         self._cookies = cookies
         return self
 
-    def enable_json_decode(self) -> Self:
-        self._is_json_decode = True
+    def enable_check_qps(self) -> Self:
+        self._is_check_qps = True
         return self
 
     def enable_encode_multipart(self) -> Self:
         self._is_encode_multipart = True
         return self
 
-    def enable_check_qps(self) -> Self:
-        self._is_check_qps = True
+    def enable_json_decode(self) -> Self:
+        self._is_json_decode = True
         return self
-
+    
     def disable_auto_retry(self) -> Self:
         self._is_auto_retry = False
         return self
 
-    def disable_auto_redirect(self) -> Self:
-        self._is_auto_redirect = False
+    def disable_decode_content(self) -> Self:
+        self._is_decode_content = False
+        return self
+
+    def disable_redirect(self) -> Self:
+        self._is_redirect = False
         return self
 
     def disable_url_encode(self) -> Self:
@@ -567,31 +577,31 @@ class Request:
         return self
 
     @property
-    def status(self):
+    def status(self) -> int:
         if self._response is None:
             self.start()
         return self._response.status
 
     @property
-    def data(self):
+    def data(self) -> bytes:
         if self._response is None:
             self.start()
         return self._response.data
 
     @property
-    def content(self):
+    def content(self) -> str:
         if self._response is None:
             self.start()
         return self._response.content
 
     @property
-    def headers(self):
+    def headers(self) -> HTTPHeaderDict:
         if self._response is None:
             self.start()
         return self._response.headers
 
     @property
-    def json_data(self):
+    def json_data(self) -> dict:
         if self._response is None:
             self.start()
         return self._response.json_data
@@ -653,32 +663,33 @@ class Request:
 
             try:
                 if self._method in ["DELETE", "GET", "HEAD", "OPTIONS"]:
-                    response = connection_pool.request(self._method, self._url, fields=self._fields, headers=self._headers, redirect=self._is_auto_redirect, timeout=timeout)
+                    response = connection_pool.request(self._method, self._url, fields=self._fields, headers=self._headers, redirect=self._is_redirect, timeout=timeout)
                 else:
                     if self._method == "POST" and isinstance(self._fields, str):
                         response = connection_pool.request(self._method, self._url, body=self._fields, encode_multipart=self._is_encode_multipart, headers=self._headers,
-                                                           redirect=self._is_auto_redirect, timeout=timeout)
+                                                           redirect=self._is_redirect, timeout=timeout)
                     else:
                         response = connection_pool.request(self._method, self._url, fields=self._fields, encode_multipart=self._is_encode_multipart, headers=self._headers,
-                                                           redirect=self._is_auto_redirect, timeout=timeout)
+                                                           redirect=self._is_redirect, timeout=timeout)
                 response.content = ""
                 response.json_data = {}
                 if response.status == const.ResponseCode.SUCCEED:
-                    charset = DEFAULT_CHARSET
-                    content_type = response.getheader("Content-Type")
-                    if content_type is not None:
-                        content_charset = tool.find_sub_string(content_type, "charset=", None)
-                        if content_charset:
-                            if content_charset == "gb2312":
-                                charset = "GBK"
-                            else:
-                                charset = content_charset
-                    response.content = response.data.decode(charset, errors="ignore")
-                    if self._is_json_decode:
-                        try:
-                            response.json_data = json.loads(response.content)
-                        except json.decoder.JSONDecodeError:
-                            response.status = const.ResponseCode.JSON_DECODE_ERROR
+                    if self._is_decode_content:
+                        charset = DEFAULT_CHARSET
+                        content_type = response.headers.get("Content-Type")
+                        if content_type is not None:
+                            content_charset = tool.find_sub_string(content_type, "charset=", None)
+                            if content_charset:
+                                if content_charset == "gb2312":
+                                    charset = "GBK"
+                                else:
+                                    charset = content_charset
+                        response.content = response.data.decode(charset, errors="ignore")
+                        if self._is_json_decode:
+                            try:
+                                response.json_data = json.loads(response.content)
+                            except json.decoder.JSONDecodeError:
+                                response.status = const.ResponseCode.JSON_DECODE_ERROR
                 elif response.status == 429:  # Too Many Requests
                     console.log(self._url + " Too Many Requests, sleep")
                     time.sleep(NET_CONFIG.TOO_MANY_REQUESTS_WAIT_TIME)
@@ -734,6 +745,8 @@ class Download:
         :Args:
         - file_url - the remote resource URL which you want to save
         - file_path - the local file path which you want to save remote resource
+        - headers - customize header dictionary
+        - cookies - customize cookies dictionary, will replace headers["Cookie"]
         - auto_multipart_download - "HEAD" method request to check response status and file size before download file
 
         :Returns:
@@ -754,28 +767,41 @@ class Download:
         # 是否开启分段下载
         self._is_multipart_download = False
         # 结果
-        self.status = const.DownloadStatus.FAILED
-        self.code = 0
+        self._is_start = False
+        self._status = const.DownloadStatus.FAILED
+        self._code = const.DownloadCode.FILE_CREATE_FAILED
         self.ext = {}
 
-        self.start_download()
-
     def __bool__(self) -> bool:
-        return self.status == const.DownloadStatus.SUCCEED
+        return self._status == const.DownloadStatus.SUCCEED
+
+    @property
+    def status(self) -> int:
+        if not self._is_start:
+            self.start_download()
+        return self._status
+
+    @property
+    def code(self) -> int:
+        if not self._is_start:
+            self.start_download()
+        return self._code
 
     def start_download(self) -> None:
         """
         主体下载逻辑
         """
+        self._is_start = True
+
         # 同名文件已经存在，直接返回
         if not DOWNLOAD_REPLACE_IF_EXIST and os.path.exists(self._file_path) and os.path.getsize(self._file_path) > 0:
             console.log("文件%s（%s）已存在，跳过" % (self._file_path, self._file_url))
-            self.status = const.DownloadStatus.SUCCEED
+            self._status = const.DownloadStatus.SUCCEED
             return
 
         # 判断保存目录是否存在
         if not path.create_dir(os.path.dirname(self._file_path)):
-            self.code = const.DownloadCode.FILE_CREATE_FAILED
+            self._code = const.DownloadCode.FILE_CREATE_FAILED
             return
 
         # 是否需要分段下载
@@ -784,7 +810,7 @@ class Download:
         # 下载
         for retry_count in range(NET_CONFIG.DOWNLOAD_RETRY_COUNT):
             if EXIT_FLAG:
-                self.code = const.DownloadCode.PROCESS_EXIT
+                self._code = const.DownloadCode.PROCESS_EXIT
                 break
 
             if not self._is_multipart_download:
@@ -798,18 +824,18 @@ class Download:
 
             # 如果没有返回文件的长度，直接下载成功
             if self._content_length == 0:
-                self.status = const.DownloadStatus.SUCCEED
-                self.code = 0
+                self._status = const.DownloadStatus.SUCCEED
+                self._code = 0
                 return
 
             # 判断文件下载后的大小和response中的Content-Length是否一致
             file_size = os.path.getsize(self._file_path)
             if self._content_length == file_size:
-                self.status = const.DownloadStatus.SUCCEED
-                self.code = 0
+                self._status = const.DownloadStatus.SUCCEED
+                self._code = 0
                 return
             else:
-                self.code = const.DownloadCode.FILE_SIZE_INVALID
+                self._code = const.DownloadCode.FILE_SIZE_INVALID
                 console.log(f"本地文件%s：{self._content_length}和网络文件%s：{file_size}不一致" % (self._file_path, self._file_url))
                 time.sleep(NET_CONFIG.HTTP_REQUEST_RETRY_WAIT_TIME)
 
@@ -822,28 +848,28 @@ class Download:
         """
         # 先获取头信息
         if self._auto_multipart_download:
-            head_response = Request(self._file_url, method="HEAD", headers=self._headers, cookies=self._cookies).set_time_out(NET_CONFIG.DOWNLOAD_CONNECTION_TIMEOUT, NET_CONFIG.DOWNLOAD_READ_TIMEOUT)
+            head_response = Request(self._file_url, method="HEAD", headers=self._headers, cookies=self._cookies).disable_decode_content()
             # 其他返回状态，退出
             if head_response.status != const.ResponseCode.SUCCEED:
                 # URL格式不正确
                 if head_response.status == const.ResponseCode.URL_INVALID:
-                    self.code = const.DownloadCode.URL_INVALID
+                    self._code = const.DownloadCode.URL_INVALID
                 # 域名无法解析
                 elif head_response.status == const.ResponseCode.DOMAIN_NOT_RESOLVED:
-                    self.code = const.DownloadCode.RETRY_MAX_COUNT
+                    self._code = const.DownloadCode.RETRY_MAX_COUNT
                 # 重定向次数过多
                 elif head_response.status == const.ResponseCode.TOO_MANY_REDIRECTS:
-                    self.code = const.DownloadCode.RETRY_MAX_COUNT
+                    self._code = const.DownloadCode.RETRY_MAX_COUNT
                 # 超过重试次数
                 elif head_response.status == const.ResponseCode.RETRY:
-                    self.code = const.DownloadCode.RETRY_MAX_COUNT
+                    self._code = const.DownloadCode.RETRY_MAX_COUNT
                 # 其他http code
                 else:
-                    self.code = head_response.status
+                    self._code = head_response.status
                 return
 
             # 检测文件后缀名是否正确
-            self.rename_file_extension(head_response)
+            self.rename_file_extension(head_response.headers)
 
             # 根据文件大小判断是否需要分段下载
             content_length = head_response.headers.get("Content-Length")
@@ -853,13 +879,13 @@ class Download:
                 if self._auto_multipart_download and self._content_length > NET_CONFIG.DOWNLOAD_MULTIPART_MIN_SIZE:
                     self._is_multipart_download = True
 
-    def rename_file_extension(self, response) -> None:
+    def rename_file_extension(self, response_headers: HTTPHeaderDict) -> None:
         """
         检测文件后缀名是否正确
         """
         if self._recheck_file_extension:
             # response中的Content-Type作为文件后缀名
-            content_type = response.getheader("Content-Type")
+            content_type = response_headers.get("Content-Type")
             if content_type is not None:
                 # 重置状态，避免反复修改
                 self._recheck_file_extension = False
@@ -873,26 +899,26 @@ class Download:
         单线程下载
         """
         try:
-            file_response = Request(self._file_url, method="GET", headers=self._headers, cookies=self._cookies).set_time_out(NET_CONFIG.DOWNLOAD_CONNECTION_TIMEOUT, NET_CONFIG.DOWNLOAD_READ_TIMEOUT)
+            file_response = Request(self._file_url, method="GET", headers=self._headers, cookies=self._cookies).disable_decode_content().set_time_out(NET_CONFIG.DOWNLOAD_CONNECTION_TIMEOUT, NET_CONFIG.DOWNLOAD_READ_TIMEOUT)
         except SystemExit:
             return False
 
         if file_response.status != const.ResponseCode.SUCCEED:
             # URL格式不正确
             if file_response.status == const.ResponseCode.URL_INVALID:
-                self.code = const.DownloadCode.URL_INVALID
+                self._code = const.DownloadCode.URL_INVALID
             # 域名无法解析
             elif file_response.status == const.ResponseCode.DOMAIN_NOT_RESOLVED:
-                self.code = const.DownloadCode.RETRY_MAX_COUNT
+                self._code = const.DownloadCode.RETRY_MAX_COUNT
             # 重定向次数过多
             elif file_response.status == const.ResponseCode.TOO_MANY_REDIRECTS:
-                self.code = const.DownloadCode.RETRY_MAX_COUNT
+                self._code = const.DownloadCode.RETRY_MAX_COUNT
             # 超过重试次数
             elif file_response.status == const.ResponseCode.RETRY:
-                self.code = const.DownloadCode.RETRY_MAX_COUNT
+                self._code = const.DownloadCode.RETRY_MAX_COUNT
             # 其他http code
             else:
-                self.code = file_response.status
+                self._code = file_response.status
             return False
 
         if self._content_length == 0:
@@ -901,7 +927,7 @@ class Download:
                 self._content_length = int(content_length)
 
         # 检测文件后缀名是否正确
-        self.rename_file_extension(file_response)
+        self.rename_file_extension(file_response.headers)
 
         # 下载
         with open(self._file_path, "wb") as file_handle:
@@ -936,7 +962,7 @@ class Download:
                 with os.fdopen(os.dup(file_no), "rb+", -1) as fd_handle:
                     for multipart_retry_count in range(NET_CONFIG.DOWNLOAD_RETRY_COUNT):
                         try:
-                            multipart_response = Request(self._file_url, method="GET", headers=headers).set_time_out(NET_CONFIG.DOWNLOAD_CONNECTION_TIMEOUT, NET_CONFIG.DOWNLOAD_READ_TIMEOUT)
+                            multipart_response = Request(self._file_url, method="GET", headers=headers).disable_decode_content().set_time_out(NET_CONFIG.DOWNLOAD_CONNECTION_TIMEOUT, NET_CONFIG.DOWNLOAD_READ_TIMEOUT)
                         except SystemExit:
                             return False
                         if multipart_response.status == 206:
@@ -950,14 +976,14 @@ class Download:
                                 fd_handle.write(multipart_response.data)
                                 break
                     else:
-                        self.code = const.DownloadCode.RETRY_MAX_COUNT
+                        self._code = const.DownloadCode.RETRY_MAX_COUNT
                         return False
         return True
 
     def update(self, other_download_return: Self) -> Self:
         if other_download_return._file_path == self._file_path:
-            self.status = other_download_return.status
-            self.code = other_download_return.code
+            self._status = other_download_return.status
+            self._code = other_download_return.code
             self._file_url = other_download_return._file_url
         return self
 

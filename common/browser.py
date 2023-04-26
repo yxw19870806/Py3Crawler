@@ -68,7 +68,7 @@ class Chrome:
         self.chrome.get(self.url)
         return self.chrome
 
-    def __exit__(self, exception_type, exception_val, traceback):
+    def __exit__(self, exception_type, exception_val, traceback) -> None:
         self.chrome.quit()
 
 

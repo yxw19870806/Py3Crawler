@@ -22,7 +22,7 @@ def check_login():
     if not COOKIES:
         return False
     account_index_url = "https://www.ameba.jp/home"
-    index_response = net.Request(account_index_url, method="GET", cookies=COOKIES).disable_auto_redirect()
+    index_response = net.Request(account_index_url, method="GET", cookies=COOKIES).disable_redirect()
     if index_response.status == const.ResponseCode.SUCCEED:
         return True
     COOKIES = {}
