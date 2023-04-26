@@ -391,7 +391,7 @@ def get_account_badges(account_id):
 # 获取指定账号的全部游戏id列表
 def get_account_owned_app_list(user_id, is_played=False):
     game_index_url = "https://steamcommunity.com/profiles/%s/games/?tab=all" % user_id
-    game_index_response = net.Request(game_index_url, method="GET", cookies=COOKIES).set_time_out(None, 120)
+    game_index_response = net.Request(game_index_url, method="GET", cookies=COOKIES).set_time_out(net.NET_CONFIG.DOWNLOAD_CONNECTION_TIMEOUT, 120)
     if game_index_response.status != const.ResponseCode.SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(game_index_response.status))
     # 如果是隐私账号，会302到主页的，这里只判断页面文字就不判断状态了
