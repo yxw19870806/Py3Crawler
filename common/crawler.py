@@ -25,8 +25,6 @@ PROJECT_APP_PATH = os.getcwd()
 
 
 class Crawler(object):
-    crawler_thread: Optional[Type["CrawlerThread"]] = None  # 下载子线程
-
     # 程序全局变量的设置
     def __init__(self, sys_config: dict[const.SysConfigKey, Any], **kwargs) -> None:
         """
@@ -46,8 +44,8 @@ class Crawler(object):
             - extra_sys_config - 通过类实例化时传入的程序配置
             - extra_app_config - 通过类实例化时传入的应用配置
         """
-        self.start_time = time.time()
-        self.process_status = True  # 主进程是否在运行
+        self.start_time: float = time.time()
+        self.process_status: bool = True  # 主进程是否在运行
 
         # 程序启动配置
         if not isinstance(sys_config, dict):
@@ -87,7 +85,7 @@ class Crawler(object):
             config.update(kwargs["extra_app_config"])
 
         # 应用配置
-        self.app_config = {}
+        self.app_config: dict[str, Any] = {}
         if const.SysConfigKey.APP_CONFIG in sys_config and len(sys_config[const.SysConfigKey.APP_CONFIG]) > 0:
             for app_config_temp in sys_config[const.SysConfigKey.APP_CONFIG]:
                 if len(app_config_temp) != 3:
@@ -95,10 +93,10 @@ class Crawler(object):
                 self.app_config[app_config_temp[0]] = analysis_config(config, app_config_temp[0], app_config_temp[1], app_config_temp[2])
 
         # 是否下载
-        self.is_download_photo = analysis_config(config, "IS_DOWNLOAD_PHOTO", True, const.ConfigAnalysisMode.BOOLEAN) and sys_download_photo
-        self.is_download_video = analysis_config(config, "IS_DOWNLOAD_VIDEO", True, const.ConfigAnalysisMode.BOOLEAN) and sys_download_video
-        self.is_download_audio = analysis_config(config, "IS_DOWNLOAD_AUDIO", True, const.ConfigAnalysisMode.BOOLEAN) and sys_download_audio
-        self.is_download_content = analysis_config(config, "IS_DOWNLOAD_CONTENT", True, const.ConfigAnalysisMode.BOOLEAN) and sys_download_content
+        self.is_download_photo: bool = sys_download_photo and analysis_config(config, "IS_DOWNLOAD_PHOTO", True, const.ConfigAnalysisMode.BOOLEAN)
+        self.is_download_video: bool = sys_download_video and analysis_config(config, "IS_DOWNLOAD_VIDEO", True, const.ConfigAnalysisMode.BOOLEAN)
+        self.is_download_audio: bool = sys_download_audio and analysis_config(config, "IS_DOWNLOAD_AUDIO", True, const.ConfigAnalysisMode.BOOLEAN)
+        self.is_download_content: bool = sys_download_content and analysis_config(config, "IS_DOWNLOAD_CONTENT", True, const.ConfigAnalysisMode.BOOLEAN)
 
         if not sys_not_download and (sys_download_photo or sys_download_video or sys_download_audio or sys_download_content):
             if not (self.is_download_photo or self.is_download_video or self.is_download_audio or self.is_download_content):
@@ -110,8 +108,8 @@ class Crawler(object):
         net.DOWNLOAD_REPLACE_IF_EXIST = analysis_config(config, "IS_DOWNLOAD_REPLACE_IF_EXIST", False, const.ConfigAnalysisMode.BOOLEAN)
 
         # 存档
-        self.save_data_path = analysis_config(config, "SAVE_DATA_PATH", r"\\info/save.data", const.ConfigAnalysisMode.PATH)
-        self.temp_save_data_path = ""
+        self.save_data_path: str = analysis_config(config, "SAVE_DATA_PATH", r"\\info/save.data", const.ConfigAnalysisMode.PATH)
+        self.temp_save_data_path: str = ""
         if not sys_not_check_save_data:
             if not os.path.exists(self.save_data_path):
                 # 存档文件不存在
@@ -127,38 +125,30 @@ class Crawler(object):
                 return
 
         # cache
-        self.cache_data_path = analysis_config(config, "CACHE_DATA_PATH", r"\\cache", const.ConfigAnalysisMode.PATH)
+        self.cache_data_path: str = analysis_config(config, "CACHE_DATA_PATH", r"\\cache", const.ConfigAnalysisMode.PATH)
 
         # session
-        self.session_data_path = analysis_config(config, "SESSION_DATA_PATH", r"\\info/session.data", const.ConfigAnalysisMode.PATH)
+        self.session_data_path: str = analysis_config(config, "SESSION_DATA_PATH", r"\\info/session.data", const.ConfigAnalysisMode.PATH)
 
-        # 是否需要下载图片
+        # 图片保存目录
+        self.photo_download_path: str = ""
         if self.is_download_photo:
-            # 图片保存目录
             self.photo_download_path = analysis_config(config, "PHOTO_DOWNLOAD_PATH", r"\\photo", const.ConfigAnalysisMode.PATH)
-        else:
-            self.photo_download_path = ""
-        # 是否需要下载视频
+        # 视频保存目录
+        self.video_download_path: str = ""
         if self.is_download_video:
-            # 视频保存目录
             self.video_download_path = analysis_config(config, "VIDEO_DOWNLOAD_PATH", r"\\video", const.ConfigAnalysisMode.PATH)
-        else:
-            self.video_download_path = ""
-        # 是否需要下载音频
+        # 音频保存目录
+        self.audio_download_path: str = ""
         if self.is_download_audio:
-            # 音频保存目录
             self.audio_download_path = analysis_config(config, "AUDIO_DOWNLOAD_PATH", r"\\audio", const.ConfigAnalysisMode.PATH)
-        else:
-            self.audio_download_path = ""
-        # 是否需要下载文本内容
+        # 文本保存目录
+        self.content_download_path: str = ""
         if self.is_download_content:
-            # 音频保存目录
             self.content_download_path = analysis_config(config, "CONTENT_DOWNLOAD_PATH", r"\\content", const.ConfigAnalysisMode.PATH)
-        else:
-            self.content_download_path = ""
 
         # 是否在下载失败后退出线程的运行
-        self.exit_after_download_failure = analysis_config(config, "EXIT_AFTER_DOWNLOAD_FAILURE", r"\\content", const.ConfigAnalysisMode.BOOLEAN)
+        self.exit_after_download_failure: bool = analysis_config(config, "EXIT_AFTER_DOWNLOAD_FAILURE", r"\\content", const.ConfigAnalysisMode.BOOLEAN)
 
         # 代理
         is_proxy = analysis_config(config, "IS_PROXY", 2, const.ConfigAnalysisMode.INTEGER)
@@ -172,7 +162,7 @@ class Crawler(object):
             net.init_http_connection_pool()
 
         # cookies
-        self.cookie_value = {}
+        self.cookie_value: dict[str, str] = {}
         if sys_get_cookie:
             # 操作系统&浏览器
             browser_type = const.BrowserType[analysis_config(config, "BROWSER_TYPE", "chrome", const.ConfigAnalysisMode.RAW)]
@@ -198,9 +188,9 @@ class Crawler(object):
                             self.cookie_value.update(all_cookie_from_browser[check_domain])
 
         # 线程数
-        self.thread_count = analysis_config(config, "THREAD_COUNT", 10, const.ConfigAnalysisMode.INTEGER)
-        self.thread_lock = threading.Lock()  # 线程锁，避免操作一些全局参数
-        self.thread_semaphore = threading.Semaphore(self.thread_count)  # 线程总数信号量
+        self.thread_count: int = analysis_config(config, "THREAD_COUNT", 10, const.ConfigAnalysisMode.INTEGER)
+        self.thread_lock: threading.Lock = threading.Lock()  # 线程锁，避免操作一些全局参数
+        self.thread_semaphore: threading.Semaphore = threading.Semaphore(self.thread_count)  # 线程总数信号量
 
         # 启用线程监控是否需要暂停其他下载线程
         if analysis_config(config, "IS_PORT_LISTENER_EVENT", False, const.ConfigAnalysisMode.BOOLEAN):
@@ -235,13 +225,13 @@ class Crawler(object):
                 keyboard_control_thread.daemon = True
                 keyboard_control_thread.start()
 
-        self.save_data = {}
-        self.total_photo_count = 0
-        self.total_video_count = 0
-        self.total_audio_count = 0
+        self.save_data: dict[str, list] = {}
+        self.total_photo_count: int = 0
+        self.total_video_count: int = 0
+        self.total_audio_count: int = 0
 
-        self.download_thead_list = []  # 下载线程
-
+        self.download_thead_list: list["DownloadThread"] = []  # 下载线程
+        self.crawler_thread: Optional[Type["CrawlerThread"]] = None  # 下载子线程
         console.log("初始化完成")
 
     def main(self) -> None:
@@ -372,7 +362,7 @@ class Crawler(object):
         log.debug("%s 解析结果：%s" % (description, parse_result_list))
         log.info("%s 解析数量：%s" % (description, len(parse_result_list)))
 
-    def download(self, file_url: str, file_path: str, file_description: str, headers: Optional[dict] = None, cookies: Optional[dict] = None,
+    def download(self, file_url: str, file_path: str, file_description: str, headers: Optional[dict[str, str]] = None, cookies: Optional[dict[str, str]] = None,
                  success_callback: Callable[[str, str, str, net.Download], bool] = None, failure_callback: Callable[[str, str, str, net.Download], bool] = None,
                  auto_multipart_download=False) -> net.Download:
         """
@@ -405,7 +395,8 @@ class Crawler(object):
                     tool.process_exit(const.ExitCode.NORMAL)
         return download_return
 
-    def multi_thread_download(self, thread_class: Type["DownloadThread"], file_url: str, file_path: str, file_description: str, headers: Optional[dict] = None):
+    def multi_thread_download(self, thread_class: Type["DownloadThread"], file_url: str, file_path: str, file_description: str,
+                              headers: Optional[dict[str, str]] = None, cookies: Optional[dict[str, str]] = None):
         """
         多线程下载
         """
@@ -413,6 +404,8 @@ class Crawler(object):
         thread = thread_class(self, file_url, file_path, file_description)
         if headers is not None:
             thread.set_download_header(headers)
+        if cookies is not None:
+            thread.set_download_cookies(cookies)
         thread.start()
         self.download_thead_list.append(thread)
 
@@ -436,7 +429,7 @@ class CrawlerThread(threading.Thread):
     display_name: Optional[str] = None
     index_key: str = ""
 
-    def __init__(self, main_thread: Crawler, single_save_data: list) -> None:
+    def __init__(self, main_thread: Crawler, single_save_data: list[str]) -> None:
         """
         多线程下载
 
@@ -591,7 +584,7 @@ class CrawlerThread(threading.Thread):
             message += "，共计下载" + "，".join(download_result)
         self.info(message)
 
-    def download(self, file_url: str, file_path: str, file_description: str, headers: Optional[dict] = None, cookies: Optional[dict] = None,
+    def download(self, file_url: str, file_path: str, file_description: str, headers: Optional[dict[str, str]] = None, cookies: Optional[dict[str, str]] = None,
                  success_callback: Callable[[str, str, str, net.Download], bool] = None, failure_callback: Callable[[str, str, str, net.Download], bool] = None,
                  auto_multipart_download=False, is_failure_exit: bool = True) -> net.Download:
         """
@@ -630,17 +623,22 @@ class DownloadThread(CrawlerThread):
         self.file_path: str = file_path
         self.file_description: str = file_description
         self.result: Optional[net.Download] = None
-        self.headers: dict = {}
+        self.headers: Optional[dict[str, str]] = None
+        self.cookies: Optional[dict[str, str]] = None
 
     def run(self) -> None:
-        self.result = self.download(self.file_url, self.file_path, self.file_description, headers=self.headers)
+        self.result = self.download(self.file_url, self.file_path, self.file_description, headers=self.headers, cookies=self.cookies)
         self.notify_main_thread()
 
     def get_result(self) -> bool:
         return bool(self.result)
 
-    def set_download_header(self, headers: dict) -> Self:
+    def set_download_header(self, headers: dict[str, str]) -> Self:
         self.headers = headers
+        return self
+
+    def set_download_cookies(self, cookies: dict[str, str]) -> Self:
+        self.cookies = cookies
         return self
 
 
@@ -659,7 +657,7 @@ class CrawlerException(SystemExit):
         return "%s解析失败，原因：%s" % (target, self.message)
 
 
-def read_config(config_path: str) -> dict:
+def read_config(config_path: str) -> dict[str, str]:
     """
     读取配置文件
     """
@@ -674,7 +672,7 @@ def read_config(config_path: str) -> dict:
     return config
 
 
-def analysis_config(config: dict, key: str, default_value: Any, mode: const.ConfigAnalysisMode = const.ConfigAnalysisMode.RAW) -> Any:
+def analysis_config(config: dict[str, str], key: str, default_value: Any, mode: const.ConfigAnalysisMode = const.ConfigAnalysisMode.RAW) -> Any:
     """
     解析配置
 
@@ -728,7 +726,7 @@ def analysis_config(config: dict, key: str, default_value: Any, mode: const.Conf
     return value
 
 
-def read_save_data(save_data_path: str, key_index: int = 0, default_value_list: list = None, check_duplicate_index: bool = True) -> dict:
+def read_save_data(save_data_path: str, key_index: int = 0, default_value_list: Optional[list[str]] = None, check_duplicate_index: bool = True) -> dict[str, list]:
     """
     读取存档文件，并根据指定列生成存档字典
 

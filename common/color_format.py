@@ -60,9 +60,9 @@ class ForegroundColor(Enum):
 
 class ColorFormat:
     def __init__(self, font_style: FontStyle = FontStyle.NORMAL, foreground_color: Optional[ForegroundColor] = None, backgoud_color: Optional[BackgroudColor] = None) -> None:
-        self.font_style = font_style
-        self.foreground_color = foreground_color
-        self.backgoud_color = backgoud_color
+        self.font_style: FontStyle = font_style
+        self.foreground_color: Optional[ForegroundColor] = foreground_color
+        self.backgoud_color: Optional[BackgroudColor] = backgoud_color
 
     def set_font_style(self, font_style: FontStyle = FontStyle.NORMAL) -> Self:
         self.font_style = font_style

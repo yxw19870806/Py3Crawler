@@ -39,7 +39,7 @@ class Chrome:
         if not os.path.exists(CHROME_WEBDRIVER_PATH):
             raise crawler.CrawlerException("CHROME_WEBDRIVER_PATH: %s不存在" % CHROME_WEBDRIVER_PATH)
 
-        self.url = url
+        self.url: str = url
         # 浏览器参数
         chrome_options = webdriver.ChromeOptions()
         chrome_options.headless = False if ("headless" in kwargs and not kwargs["headless"]) else True  # 不打开浏览器
@@ -54,7 +54,7 @@ class Chrome:
 
         while True:
             try:
-                self.chrome = webdriver.Chrome(executable_path=CHROME_WEBDRIVER_PATH, options=chrome_options, desired_capabilities=desired_capabilities)
+                self.chrome: WebDriver = webdriver.Chrome(executable_path=CHROME_WEBDRIVER_PATH, options=chrome_options, desired_capabilities=desired_capabilities)
             except WebDriverException as e:
                 message = str(e)
                 if message.find("chrome not reachable") >= 0:
@@ -125,7 +125,7 @@ def get_default_browser_cookie_path(browser_type: const.BrowserType) -> Optional
     return None
 
 
-def get_all_cookie_from_browser(browser_type: const.BrowserType, file_path: str) -> dict:
+def get_all_cookie_from_browser(browser_type: const.BrowserType, file_path: str) -> dict[str, str]:
     """
     从浏览器保存的cookie文件中读取所有cookie
 
