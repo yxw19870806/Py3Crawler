@@ -86,12 +86,9 @@ class TingShuBao(crawler.Crawler):
         sys_config = {
             const.SysConfigKey.DOWNLOAD_AUDIO: True,
             const.SysConfigKey.APP_CONFIG_PATH: os.path.join(crawler.PROJECT_APP_PATH, "app.ini"),
+            const.SysConfigKey.SAVE_DATA_FORMATE: (0, ["", "0"]),  # album_id  last_audio_id
         }
         crawler.Crawler.__init__(self, sys_config, **kwargs)
-
-        # 解析存档文件
-        # album_id  last_audio_id
-        self.save_data = crawler.read_save_data(self.save_data_path, 0, ["", "0"])
 
         # 下载线程
         self.crawler_thread = CrawlerThread

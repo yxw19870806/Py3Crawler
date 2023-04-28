@@ -304,6 +304,7 @@ class Instagram(crawler.Crawler):
             const.SysConfigKey.APP_CONFIG: (
                 ("IS_LOCAL_SAVE_SESSION", False, const.ConfigAnalysisMode.BOOLEAN),
             ),
+            const.SysConfigKey.SAVE_DATA_FORMATE: (0, ["", "", "0"]),  # account_name  account_id  last_page_id
         }
         crawler.Crawler.__init__(self, sys_config, **kwargs)
 
@@ -311,10 +312,6 @@ class Instagram(crawler.Crawler):
         COOKIES.update(self.cookie_value)
         IS_LOCAL_SAVE_SESSION = self.app_config["IS_LOCAL_SAVE_SESSION"]
         SESSION_DATA_PATH = self.session_data_path
-
-        # 解析存档文件
-        # account_name  account_id  last_page_id
-        self.save_data = crawler.read_save_data(self.save_data_path, 0, ["", "", "0"])
 
         # 下载线程
         self.crawler_thread = CrawlerThread
