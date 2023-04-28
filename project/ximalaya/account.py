@@ -20,12 +20,9 @@ class XiMaLaYaAccount(ximalaya.XiMaLaYa):
         sys_config = {
             const.SysConfigKey.NOT_CHECK_SAVE_DATA: False,
             const.SysConfigKey.APP_CONFIG_PATH: os.path.join(crawler.PROJECT_APP_PATH, "account.ini"),
+            const.SysConfigKey.SAVE_DATA_FORMATE: (0, ["", "0"]),  # account_id  last_audio_id
         }
         ximalaya.XiMaLaYa.__init__(self, sys_config, **kwargs)
-
-        # 解析存档文件
-        # account_id  last_audio_id
-        self.save_data = crawler.read_save_data(self.save_data_path, 0, ["", "0"])
 
         # 下载线程
         self.crawler_thread = CrawlerThread

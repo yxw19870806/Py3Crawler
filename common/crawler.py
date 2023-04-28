@@ -110,6 +110,7 @@ class Crawler(object):
         # 存档
         self.save_data_path: str = analysis_config(config, "SAVE_DATA_PATH", r"\\info/save.data", const.ConfigAnalysisMode.PATH)
         self.temp_save_data_path: str = ""
+        self.save_data: dict[str, list] = {}
         if not sys_not_check_save_data:
             if not os.path.exists(self.save_data_path):
                 # 存档文件不存在
@@ -123,7 +124,12 @@ class Crawler(object):
                 console.log("存档临时文件%s已存在！" % self.temp_save_data_path)
                 tool.process_exit()
                 return
-
+            if const.SysConfigKey.SAVE_DATA_FORMATE in sys_config:
+                save_data_formate = sys_config[const.SysConfigKey.SAVE_DATA_FORMATE]
+                if isinstance(save_data_formate, tuple) and len(save_data_formate) == 2:
+                    self.save_data = read_save_data(self.save_data_path, save_data_formate[0], save_data_formate[1])
+                else:
+                    console.log("存档文件默认格式不正确%s" % save_data_formate)
         # cache
         self.cache_data_path: str = analysis_config(config, "CACHE_DATA_PATH", r"\\cache", const.ConfigAnalysisMode.PATH)
 
@@ -225,7 +231,6 @@ class Crawler(object):
                 keyboard_control_thread.daemon = True
                 keyboard_control_thread.start()
 
-        self.save_data: dict[str, list] = {}
         self.total_photo_count: int = 0
         self.total_video_count: int = 0
         self.total_audio_count: int = 0
@@ -757,7 +762,7 @@ def read_save_data(save_data_path: str, key_index: int = 0, default_value_list: 
         # 根据default_value_list给没给字段默认值
         index = 0
         for default_value in default_value_list:
-            # _开头表示和该数组下标的值一直，如["", "_0"] 表示第1位为空时数值和第0位一致
+            # _开头表示和该数组下标的值一致，如["", "_0"] 表示第1位为空时数值和第0位一致
             if default_value != "" and default_value[0] == "_":
                 default_value = single_save_list[int(default_value.replace("_", ""))]
             if len(single_save_list) <= index:

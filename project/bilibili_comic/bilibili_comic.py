@@ -92,15 +92,12 @@ class BiliBiliComic(crawler.Crawler):
         sys_config = {
             const.SysConfigKey.DOWNLOAD_PHOTO: True,
             const.SysConfigKey.GET_COOKIE: ("bilibili.com",),
+            const.SysConfigKey.SAVE_DATA_FORMATE: (0, ["", "0"]),  # comic_id  last_comic_id (comic_name)
         }
         crawler.Crawler.__init__(self, sys_config, **kwargs)
 
         # 设置全局变量，供子线程调用
         COOKIES = self.cookie_value
-
-        # 解析存档文件
-        # comic_id  last_comic_id (comic_name)
-        self.save_data = crawler.read_save_data(self.save_data_path, 0, ["", "0"])
 
         # 下载线程
         self.crawler_thread = CrawlerThread

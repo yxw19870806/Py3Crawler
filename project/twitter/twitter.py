@@ -282,6 +282,7 @@ class Twitter(crawler.Crawler):
             const.SysConfigKey.DOWNLOAD_VIDEO: True,
             const.SysConfigKey.SET_PROXY: True,
             const.SysConfigKey.GET_COOKIE: ("twitter.com",),
+            const.SysConfigKey.SAVE_DATA_FORMATE: (0, ["", "", "0"]),  # account_name  account_id  last_tweet_id
         }
         crawler.Crawler.__init__(self, sys_config, **kwargs)
 
@@ -289,10 +290,6 @@ class Twitter(crawler.Crawler):
         COOKIES = self.cookie_value
         if "_twitter_sess" not in COOKIES or "ct0" not in COOKIES:
             COOKIES = {}
-
-        # 解析存档文件
-        # account_name  account_id  last_tweet_id
-        self.save_data = crawler.read_save_data(self.save_data_path, 0, ["", "", "0"])
 
         # 下载线程
         self.crawler_thread = CrawlerThread
