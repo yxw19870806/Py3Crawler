@@ -121,7 +121,7 @@ def dyadic_list_to_string(source_lists: list[list], first_sign: str = "\n", seco
     return first_sign.join(temp_list)
 
 
-def string_to_dyadic_list(source_string: str, first_split: str = "\n", second_split: str = "\t") -> list[list]:
+def string_to_dyadic_list(source_string: str, first_split: str = "\n", second_split: str = "\t") -> list[list[str]]:
     """
     按照指定分割符，分割字符串生成二维列表
 
