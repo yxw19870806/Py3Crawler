@@ -98,12 +98,9 @@ class DouYin(crawler.Crawler):
 
         sys_config = {
             const.SysConfigKey.DOWNLOAD_VIDEO: True,
+            const.SysConfigKey.SAVE_DATA_FORMATE: (0, ["", "0"]),  # account_id last_video_id
         }
         crawler.Crawler.__init__(self, sys_config, **kwargs)
-
-        # 解析存档文件
-        # account_id last_video_id
-        self.save_data = crawler.read_save_data(self.save_data_path, 0, ["", "0"])
 
         # 临时文件目录
         CACHE_FILE_PATH = self.cache_data_path

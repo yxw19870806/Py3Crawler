@@ -125,7 +125,7 @@ def get_default_browser_cookie_path(browser_type: const.BrowserType) -> Optional
     return None
 
 
-def get_all_cookie_from_browser(browser_type: const.BrowserType, file_path: str) -> dict[str, str]:
+def get_all_cookie_from_browser(browser_type: const.BrowserType, file_path: str) -> dict[str, dict[str, str]]:
     """
     从浏览器保存的cookie文件中读取所有cookie
 

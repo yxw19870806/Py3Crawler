@@ -96,12 +96,9 @@ class QiDian(crawler.Crawler):
         # 初始化参数
         sys_config = {
             const.SysConfigKey.DOWNLOAD_CONTENT: True,
+            const.SysConfigKey.SAVE_DATA_FORMATE: (0, ["", "0"]),  # book_id  chapter_id
         }
         crawler.Crawler.__init__(self, sys_config, **kwargs)
-
-        # 解析存档文件
-        # book_id  chapter_id
-        self.save_data = crawler.read_save_data(self.save_data_path, 0, ["", ""])
 
         # 下载线程
         self.crawler_thread = CrawlerThread
