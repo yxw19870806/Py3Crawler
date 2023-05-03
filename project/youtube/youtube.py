@@ -332,6 +332,7 @@ class Youtube(crawler.Crawler):
             const.SysConfigKey.APP_CONFIG: (
                 ("VIDEO_QUALITY", 6, const.ConfigAnalysisMode.INTEGER),
             ),
+            const.SysConfigKey.SAVE_DATA_FORMATE: (0, ["", "", "0"]),  # account_id  video_string_id  video_number_id
         }
         crawler.Crawler.__init__(self, sys_config, **kwargs)
 
@@ -352,10 +353,6 @@ class Youtube(crawler.Crawler):
             FIRST_CHOICE_RESOLUTION = 1080
         else:
             log.error("配置文件config.ini中key为'video_quality'的值必须是一个1~6的整数，使用程序默认设置")
-
-        # 解析存档文件
-        # account_id  video_string_id  video_number_id
-        self.save_data = crawler.read_save_data(self.save_data_path, 0, ["", "", "0"])
 
         # 下载线程
         self.crawler_thread = CrawlerThread

@@ -401,6 +401,7 @@ class Tumblr(crawler.Crawler):
                 ("USER_AGENT", "", const.ConfigAnalysisMode.RAW),
                 ("IS_STEP_ERROR_403_AND_404", False, const.ConfigAnalysisMode.BOOLEAN)
             ),
+            const.SysConfigKey.SAVE_DATA_FORMATE: (0, ["", "0"]),  # account_id  last_post_id
         }
         crawler.Crawler.__init__(self, sys_config, **kwargs)
 
@@ -408,10 +409,6 @@ class Tumblr(crawler.Crawler):
         COOKIES = self.cookie_value
         USER_AGENT = self.app_config["USER_AGENT"]
         IS_STEP_ERROR_403_AND_404 = self.app_config["IS_STEP_ERROR_403_AND_404"]
-
-        # 解析存档文件
-        # account_id  last_post_id
-        self.save_data = crawler.read_save_data(self.save_data_path, 0, ["", "0"])
 
         # 下载线程
         self.crawler_thread = CrawlerThread

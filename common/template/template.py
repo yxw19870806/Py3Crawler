@@ -45,13 +45,9 @@ class Template(crawler.Crawler):
             const.SysConfigKey.DOWNLOAD_AUDIO: True,
             const.SysConfigKey.SET_PROXY: True,
             const.SysConfigKey.NOT_CHECK_SAVE_DATA: True,
+            const.SysConfigKey.SAVE_DATA_FORMATE: (0, ["", "0"]),  # account_id, blog_id
         }
         crawler.Crawler.__init__(self, sys_config, **kwargs)
-
-        # todo 存档文件格式
-        # 解析存档文件
-        # account_id, blog_id
-        self.save_data = crawler.read_save_data(self.save_data_path, 0, ["", "0"])
 
         # 下载线程
         self.crawler_thread = CrawlerThread

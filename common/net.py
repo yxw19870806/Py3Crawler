@@ -103,7 +103,7 @@ def set_default_charset(charset: str) -> None:
     DEFAULT_CHARSET = charset
 
 
-def build_header_cookie_string(cookies: dict) -> str:
+def build_header_cookie_string(cookies: dict[str, str]) -> str:
     """
     根据cookies字典生成header中的cookie字符串
 
@@ -126,7 +126,7 @@ def build_header_cookie_string(cookies: dict) -> str:
     return "; ".join(temp_string)
 
 
-def split_cookies_from_cookie_string(cookie_string: str) -> dict:
+def split_cookies_from_cookie_string(cookie_string: str) -> dict[str, str]:
     """
     根据response header中的cookie字符串分隔生成cookies字典
     """
@@ -142,7 +142,7 @@ def split_cookies_from_cookie_string(cookie_string: str) -> dict:
     return cookies
 
 
-def get_cookies_from_response_header(response_headers: HTTPHeaderDict) -> dict:
+def get_cookies_from_response_header(response_headers: HTTPHeaderDict) -> dict[str, str]:
     """
     根据response header获取Set-Cookie的值
     """
@@ -208,7 +208,7 @@ def url_encode(url: str) -> str:
 
 
 def request(url: str, method: str = "GET", fields: Optional[Union[dict, str]] = None, json_decode: bool = False, is_auto_redirect: bool = True,
-            headers: Optional[dict] = None, cookies: Optional[dict] = None, encode_multipart: bool = False, is_use_proxy: bool = True,
+            headers: Optional[dict[str, str]] = None, cookies: Optional[dict[str, str]] = None, encode_multipart: bool = False, is_use_proxy: bool = True,
             is_gzip: bool = True, is_url_encode: bool = True, is_auto_retry: bool = True, is_check_qps: bool = True,
             connection_timeout: int = NET_CONFIG.HTTP_CONNECTION_TIMEOUT, read_timeout: int = NET_CONFIG.HTTP_READ_TIMEOUT) -> Union[urllib3.HTTPResponse, ErrorResponse]:
     """
@@ -425,7 +425,7 @@ def _random_ip_address() -> str:
     return f"{random.randint(1, 254)}.{random.randint(0, 255)}.{random.randint(0, 255)}.{random.randint(0, 255)}"
 
 
-def download_from_list(file_url_list: list[str], file_path: str, headers: Optional[dict] = None, cookies: Optional[dict] = None) -> bool:
+def download_from_list(file_url_list: list[str], file_path: str, headers: Optional[dict[str, str]] = None, cookies: Optional[dict[str, str]] = None) -> bool:
     """
     Visit web and save to local(multiple remote resource, single local file)
 
@@ -490,7 +490,7 @@ def resume_request() -> None:
 
 
 class Request:
-    def __init__(self, url: str, method: str = "GET", fields: Optional[Union[dict, str]] = None, headers: Optional[dict] = None, cookies: Optional[dict] = None):
+    def __init__(self, url: str, method: str = "GET", fields: Optional[Union[dict, str]] = None, headers: Optional[dict[str, str]] = None, cookies: Optional[dict[str, str]] = None):
         """
         HTTP请求
         :Args:
@@ -535,11 +535,11 @@ class Request:
         self._headers[key] = value
         return self
 
-    def set_headers(self, headers: Optional[dict] = None) -> Self:
+    def set_headers(self, headers: Optional[dict[str, str]] = None) -> Self:
         self._headers = headers
         return self
 
-    def set_cookies(self, cookies: Optional[dict] = None) -> Self:
+    def set_cookies(self, cookies: Optional[dict[str, str]] = None) -> Self:
         self._cookies = cookies
         return self
 
@@ -554,7 +554,7 @@ class Request:
     def enable_json_decode(self) -> Self:
         self._is_json_decode = True
         return self
-    
+
     def disable_auto_retry(self) -> Self:
         self._is_auto_retry = False
         return self
@@ -738,7 +738,7 @@ class Request:
 
 
 class Download:
-    def __init__(self, file_url: str, file_path: str, headers: Optional[dict] = None, cookies: Optional[dict] = None, auto_multipart_download: bool = False) -> None:
+    def __init__(self, file_url: str, file_path: str, headers: Optional[dict[str, str]] = None, cookies: Optional[dict[str, str]] = None, auto_multipart_download: bool = False) -> None:
         """
         下载远程文件到本地
 
@@ -899,7 +899,8 @@ class Download:
         单线程下载
         """
         try:
-            file_response = Request(self._file_url, method="GET", headers=self._headers, cookies=self._cookies).disable_decode_content().set_time_out(NET_CONFIG.DOWNLOAD_CONNECTION_TIMEOUT, NET_CONFIG.DOWNLOAD_READ_TIMEOUT)
+            file_response = Request(self._file_url, method="GET", headers=self._headers, cookies=self._cookies).disable_decode_content()\
+                .set_time_out(NET_CONFIG.DOWNLOAD_CONNECTION_TIMEOUT, NET_CONFIG.DOWNLOAD_READ_TIMEOUT)
         except SystemExit:
             return False
 
@@ -962,7 +963,8 @@ class Download:
                 with os.fdopen(os.dup(file_no), "rb+", -1) as fd_handle:
                     for multipart_retry_count in range(NET_CONFIG.DOWNLOAD_RETRY_COUNT):
                         try:
-                            multipart_response = Request(self._file_url, method="GET", headers=headers).disable_decode_content().set_time_out(NET_CONFIG.DOWNLOAD_CONNECTION_TIMEOUT, NET_CONFIG.DOWNLOAD_READ_TIMEOUT)
+                            multipart_response = Request(self._file_url, method="GET", headers=headers).disable_decode_content()\
+                                .set_time_out(NET_CONFIG.DOWNLOAD_CONNECTION_TIMEOUT, NET_CONFIG.DOWNLOAD_READ_TIMEOUT)
                         except SystemExit:
                             return False
                         if multipart_response.status == 206:

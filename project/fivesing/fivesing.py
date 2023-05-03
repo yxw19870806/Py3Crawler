@@ -78,12 +78,9 @@ class FiveSing(crawler.Crawler):
         # 初始化参数
         sys_config = {
             const.SysConfigKey.DOWNLOAD_AUDIO: True,
+            const.SysConfigKey.SAVE_DATA_FORMATE: (0, ["", "0", "0"]),  # account_id  last_yc_audio_id  last_fc_audio_id
         }
         crawler.Crawler.__init__(self, sys_config, **kwargs)
-
-        # 解析存档文件
-        # account_id  last_yc_audio_id  last_fc_audio_id
-        self.save_data = crawler.read_save_data(self.save_data_path, 0, ["", "0", "0"])
 
         # 下载线程
         self.crawler_thread = CrawlerThread

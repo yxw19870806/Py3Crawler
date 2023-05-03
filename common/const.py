@@ -47,6 +47,8 @@ class SysConfigKey(StrEnum):
     NOT_DOWNLOAD: str = "no_download"
     # 程序是否需要从浏览器存储的cookie中获取指定cookie的值
     GET_COOKIE: str = "get_cookie"
+    # 存档文件的格式
+    SAVE_DATA_FORMATE: str = "save_data_format"
     # 程序额外应用配置
     # 传入参数类型为tuple，每一位参数为长度3的tuple，顺序为(配置名字，默认值，配置读取方式)，同analysis_config方法后三个参数
     APP_CONFIG: str = "app_config"
