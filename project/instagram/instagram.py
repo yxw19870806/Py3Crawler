@@ -314,7 +314,7 @@ class Instagram(crawler.Crawler):
         SESSION_DATA_PATH = self.session_data_path
 
         # 下载线程
-        self.crawler_thread = CrawlerThread
+        self.set_crawler_thread(CrawlerThread)
 
     def init(self):
         # 生成session信息

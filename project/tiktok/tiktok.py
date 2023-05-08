@@ -93,7 +93,7 @@ class TikTok(crawler.Crawler):
         crawler.Crawler.__init__(self, sys_config, **kwargs)
 
         # 下载线程
-        self.crawler_thread = CrawlerThread
+        self.set_crawler_thread(CrawlerThread)
 
     def init(self):
         net.set_default_user_agent()

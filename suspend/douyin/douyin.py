@@ -106,7 +106,7 @@ class DouYin(crawler.Crawler):
         CACHE_FILE_PATH = self.cache_data_path
 
         # 下载线程
-        self.crawler_thread = CrawlerThread
+        self.set_crawler_thread(CrawlerThread)
 
     def init(self):
         net.set_default_user_agent()

@@ -25,7 +25,7 @@ class XiMaLaYaAccount(ximalaya.XiMaLaYa):
         ximalaya.XiMaLaYa.__init__(self, sys_config, **kwargs)
 
         # 下载线程
-        self.crawler_thread = CrawlerThread
+        self.set_crawler_thread(CrawlerThread)
 
 
 class CrawlerThread(crawler.CrawlerThread):

@@ -100,7 +100,7 @@ class BiliBiliComic(crawler.Crawler):
         COOKIES = self.cookie_value
 
         # 下载线程
-        self.crawler_thread = CrawlerThread
+        self.set_crawler_thread(CrawlerThread)
 
     def init(self):
         # 检测登录状态
