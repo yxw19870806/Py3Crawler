@@ -16,7 +16,7 @@ from common import *
 EACH_LOOP_MAX_PAGE_COUNT = 200  # 单次缓存多少页的日志
 EACH_PAGE_BLOG_COUNT = 100  # 每次请求获取的日志数量
 COOKIES = {}
-USER_AGENT = None
+USER_AGENT = ""
 IS_STEP_ERROR_403_AND_404 = False
 IS_LOGIN = False
 
