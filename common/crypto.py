@@ -27,7 +27,7 @@ class Crypto:
         private_key = hex(uuid.getnode()) + self.SALT + socket.gethostname()
 
         # 任意字符串MD5后生成32位的key，然后base64
-        self.PRIVATE_KEY = base64.urlsafe_b64encode(hashlib.md5(private_key.encode()).hexdigest().encode())
+        self.PRIVATE_KEY: bytes = base64.urlsafe_b64encode(hashlib.md5(private_key.encode()).hexdigest().encode())
 
     def encrypt(self, s) -> str:
         if not isinstance(s, bytes):

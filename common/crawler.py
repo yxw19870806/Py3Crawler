@@ -16,7 +16,6 @@ import traceback
 from typing import Any, Callable, Optional, Union, Type, Self
 from common import console, const, browser, file, log, net, path, port_listener_event, tool
 from common import IS_EXECUTABLE, PROJECT_ROOT_PATH, PROJECT_CONFIG_PATH
-
 if platform.system() == "Windows":
     from common import keyboard_event
 
@@ -299,6 +298,10 @@ class Crawler(object):
         其他结束操作
         """
         pass
+
+    def set_crawler_thread(self, crawler_thread: Type["CrawlerThread"]) -> Self:
+        self.crawler_thread = crawler_thread
+        return self
 
     @staticmethod
     def pause_process() -> None:
