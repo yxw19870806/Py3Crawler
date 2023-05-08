@@ -17,13 +17,12 @@ from selenium import webdriver
 from selenium.common.exceptions import WebDriverException
 from selenium.webdriver.chrome.webdriver import WebDriver
 from typing import Optional
-
 if platform.system() == "Windows":
     import win32crypt
 from common import const, console, crawler, file, net, PROJECT_LIB_PATH
 
 # webdriver文件路径
-CHROME_WEBDRIVER_PATH = os.path.abspath(os.path.join(PROJECT_LIB_PATH, "chromedriver.exe"))
+CHROME_WEBDRIVER_PATH: str = os.path.abspath(os.path.join(PROJECT_LIB_PATH, "chromedriver.exe"))
 
 
 class Chrome:

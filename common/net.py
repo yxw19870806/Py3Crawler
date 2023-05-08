@@ -501,35 +501,35 @@ class Request:
         - headers - customize header dictionary
         - cookies - customize cookies dictionary, will replace headers["Cookie"]
         """
-        self._url = str(url).strip()
-        self._method = str(method).upper()
+        self._url: str = str(url).strip()
+        self._method: str = str(method).upper()
         self._fields = fields
-        self._headers = headers if isinstance(headers, dict) else {}
-        self._cookies = cookies if isinstance(cookies, dict) else {}
+        self._headers: dict[str, str] = headers if isinstance(headers, dict) else {}
+        self._cookies: dict[str, str] = cookies if isinstance(cookies, dict) else {}
         self._response: Optional[Union[urllib3.HTTPResponse, ErrorResponse]] = None
         # is auto retry, when response.status in [500, 502, 503, 504]
-        self._is_auto_retry = True
+        self._is_auto_retry: bool = True
         # is check request qps
-        self._is_check_qps = False
+        self._is_check_qps: bool = False
         # is auto decode .data and set to .content
-        self._is_decode_content = True
+        self._is_decode_content: bool = True
         # see "encode_multipart" in urllib3.request_encode_body
-        self._is_encode_multipart = False
+        self._is_encode_multipart: bool = False
         # is use gzip compression request body
-        self._is_gzip = True
+        self._is_gzip: bool = True
         # is return a decoded json data when response status = 200
         # if decode failure will replace response status with const.ResponseCode.JSON_DECODE_ERROR
-        self._is_json_decode = False
+        self._is_json_decode: bool = False
         # is auto redirect, when response.status in [301, 302, 303, 307, 308]
-        self._is_redirect = True
+        self._is_redirect: bool = True
         # is use proxy when inited PROXY_HTTP_CONNECTION_POOL
-        self._is_use_proxy = True
+        self._is_use_proxy: bool = True
         # is encode url
-        self._is_url_encode = True
+        self._is_url_encode: bool = True
         # customize connection timeout seconds
-        self._connection_timeout = NET_CONFIG.HTTP_CONNECTION_TIMEOUT
+        self._connection_timeout: int = NET_CONFIG.HTTP_CONNECTION_TIMEOUT
         # customize read timeout seconds
-        self._read_timeout = NET_CONFIG.HTTP_READ_TIMEOUT
+        self._read_timeout: int = NET_CONFIG.HTTP_READ_TIMEOUT
 
     def add_headers(self, key: str, value: str) -> Self:
         self._headers[key] = value
@@ -754,35 +754,35 @@ class Download:
             - code - failure reason
             - file_path - finally local file path(when recheck_file_extension is True, will rename it)
         """
-        self._file_url = file_url
-        self._file_path = file_path
+        self._file_url: str = file_url
+        self._file_path: str = file_path
         # is auto rename file according to "Content-Type" in response headers
-        self._recheck_file_extension = False
-        self._auto_multipart_download = auto_multipart_download
-        self._headers = headers if isinstance(headers, dict) else {}
-        self._cookies = cookies if isinstance(cookies, dict) else {}
+        self._recheck_file_extension: bool = False
+        self._auto_multipart_download: bool = auto_multipart_download
+        self._headers: dict[str, str] = headers if isinstance(headers, dict) else {}
+        self._cookies: dict[str, str] = cookies if isinstance(cookies, dict) else {}
 
         # 返回长度
-        self._content_length = 0
+        self._content_length: int = 0
         # 是否开启分段下载
-        self._is_multipart_download = False
+        self._is_multipart_download: bool = False
         # 结果
-        self._is_start = False
-        self._status = const.DownloadStatus.FAILED
-        self._code = const.DownloadCode.FILE_CREATE_FAILED
-        self.ext = {}
+        self._is_start: bool = False
+        self._status: const.DownloadStatus = const.DownloadStatus.FAILED
+        self._code: const.DownloadCode = const.DownloadCode.FILE_CREATE_FAILED
+        self.ext: dict[str, Any] = {}
 
     def __bool__(self) -> bool:
         return self._status == const.DownloadStatus.SUCCEED
 
     @property
-    def status(self) -> int:
+    def status(self) -> const.DownloadStatus:
         if not self._is_start:
             self.start_download()
         return self._status
 
     @property
-    def code(self) -> int:
+    def code(self) -> const.DownloadCode:
         if not self._is_start:
             self.start_download()
         return self._code
