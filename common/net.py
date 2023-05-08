@@ -207,163 +207,6 @@ def url_encode(url: str) -> str:
     return urllib.parse.quote(url, safe=";/?:@&=+$,%")
 
 
-def request(url: str, method: str = "GET", fields: Optional[Union[dict, str]] = None, json_decode: bool = False, is_auto_redirect: bool = True,
-            headers: Optional[dict[str, str]] = None, cookies: Optional[dict[str, str]] = None, encode_multipart: bool = False, is_use_proxy: bool = True,
-            is_gzip: bool = True, is_url_encode: bool = True, is_auto_retry: bool = True, is_check_qps: bool = True,
-            connection_timeout: int = NET_CONFIG.HTTP_CONNECTION_TIMEOUT, read_timeout: int = NET_CONFIG.HTTP_READ_TIMEOUT) -> Union[urllib3.HTTPResponse, ErrorResponse]:
-    """
-    HTTP请求
-
-    :Args:
-    - url - the url which you want visit, start with "http://" or "https://"
-    - method - request method, value in ["GET", "POST", "HEAD", "PUT", "DELETE", "OPTIONS", "TRACE"]
-    - fields - dictionary type of request data, will urlencode() them to string. like post data, query string, etc.
-        not work with binary_data
-    - binary_data - binary type of request data, not work with post_data
-    - headers - customize header dictionary
-    - cookies - customize cookies dictionary, will replace headers["Cookie"]
-    - encode_multipart - see "encode_multipart" in urllib3.request_encode_body
-    - is_use_proxy - is use proxy when inited PROXY_HTTP_CONNECTION_POOL
-    - is_auto_redirect - is auto redirect, when response.status in [301, 302, 303, 307, 308]
-    - is_auto_retry - is auto retry, when response.status in [500, 502, 503, 504]
-    - connection_timeout - customize connection timeout seconds
-    - read_timeout - customize read timeout seconds
-    - json_decode - is return a decoded json data when response status = 200
-        if decode failure will replace response status with const.ResponseCode.JSON_DECODE_ERROR
-    """
-    import warnings
-    warnings.warn("net.request() is deprecated, use net.Request() replace it")
-    url = str(url).strip()
-    if not (url.startswith("http://") or url.startswith("https://")):
-        return ErrorResponse(const.ResponseCode.URL_INVALID)
-    method = method.upper()
-    if method not in ["GET", "POST", "HEAD", "PUT", "DELETE", "OPTIONS", "TRACE"]:
-        return ErrorResponse(const.ResponseCode.URL_INVALID)
-    if HTTP_CONNECTION_POOL is None:
-        init_http_connection_pool()
-    connection_pool = HTTP_CONNECTION_POOL
-    if PROXY_HTTP_CONNECTION_POOL is not None and is_use_proxy:
-        connection_pool = PROXY_HTTP_CONNECTION_POOL
-    if is_url_encode:
-        url = url_encode(url)
-
-    if headers is None:
-        headers = {}
-
-    # 设置User-Agent
-    if "User-Agent" not in headers:
-        if DEFAULT_USER_AGENT is None:
-            headers["User-Agent"] = _random_user_agent()
-        else:
-            headers["User-Agent"] = DEFAULT_USER_AGENT
-
-    # 设置一个随机IP
-    if FAKE_PROXY_IP:
-        random_ip = _random_ip_address()
-        headers["X-Forwarded-For"] = random_ip
-        headers["X-Real-Ip"] = random_ip
-
-    # 设置cookie
-    if cookies:
-        headers["Cookie"] = build_header_cookie_string(cookies)
-
-    # 设置压缩格式
-    if is_gzip:
-        headers["Accept-Encoding"] = "gzip"
-
-    # 使用json提交数据
-    if method == "POST" and isinstance(fields, str):
-        headers["Content-Type"] = "application/json"
-
-    # 超时设置
-    timeout = urllib3.Timeout(connect=float(connection_timeout) if connection_timeout > 0 else None, read=read_timeout if read_timeout > 0 else None)
-
-    retry_count = 0
-    while True:
-        thread_event.wait()
-        if EXIT_FLAG:
-            tool.process_exit(const.ExitCode.NORMAL)
-
-        if is_check_qps and _qps(url):
-            time.sleep(random.randint(60, 120))
-            continue
-
-        try:
-            if method in ["DELETE", "GET", "HEAD", "OPTIONS"]:
-                response = connection_pool.request(method, url, fields=fields, headers=headers, redirect=is_auto_redirect, timeout=timeout)
-            else:
-                if method == "POST" and isinstance(fields, str):
-                    response = connection_pool.request(method, url, body=fields, encode_multipart=encode_multipart, headers=headers,
-                                                       redirect=is_auto_redirect, timeout=timeout)
-                else:
-                    response = connection_pool.request(method, url, fields=fields, encode_multipart=encode_multipart, headers=headers,
-                                                       redirect=is_auto_redirect, timeout=timeout)
-            response.content = ""
-            response.json_data = {}
-            if response.status == const.ResponseCode.SUCCEED:
-                charset = DEFAULT_CHARSET
-                content_type = response.headers.get("Content-Type")
-                if content_type is not None:
-                    content_charset = tool.find_sub_string(content_type, "charset=", None)
-                    if content_charset:
-                        if content_charset == "gb2312":
-                            charset = "GBK"
-                        else:
-                            charset = content_charset
-                response.content = response.data.decode(charset, errors="ignore")
-                if json_decode:
-                    try:
-                        response.json_data = json.loads(response.content)
-                    except json.decoder.JSONDecodeError:
-                        response.status = const.ResponseCode.JSON_DECODE_ERROR
-            elif response.status == 429:  # Too Many Requests
-                console.log(url + " Too Many Requests, sleep")
-                time.sleep(NET_CONFIG.TOO_MANY_REQUESTS_WAIT_TIME)
-                continue
-            elif response.status in [500, 502, 503, 504] and is_auto_retry:  # 服务器临时性错误，重试
-                if retry_count < NET_CONFIG.HTTP_REQUEST_RETRY_COUNT:
-                    retry_count += 1
-                    time.sleep(NET_CONFIG.SERVICE_INTERNAL_ERROR_WAIT_TIME)
-                    continue
-                else:
-                    return response
-            return response
-        except MemoryError:
-            return ErrorResponse(const.ResponseCode.RESPONSE_TO_LARGE)
-        except Exception as e:
-            message = str(e)
-            if isinstance(e, urllib3.exceptions.ConnectTimeoutError):
-                # 域名无法解析
-                if message.find("[Errno 11004] getaddrinfo failed") >= 0 or message.find("[Errno 11001] getaddrinfo failed") >= 0:
-                    return ErrorResponse(const.ResponseCode.DOMAIN_NOT_RESOLVED)
-                elif message.find("[WinError 10061]") >= 0:
-                    # [WinError 10061] 由于目标计算机积极拒绝，无法连接。
-                    return ErrorResponse(const.ResponseCode.RETRY)
-            elif isinstance(e, urllib3.exceptions.MaxRetryError):
-                if message.find("Caused by ResponseError('too many redirects'") >= 0:
-                    return ErrorResponse(const.ResponseCode.TOO_MANY_REDIRECTS)
-            elif isinstance(e, urllib3.exceptions.DecodeError):
-                if message.find("'Received response with content-encoding: gzip, but failed to decode it.'") >= 0:
-                    return request(url, method=method, fields=fields, json_decode=json_decode, is_auto_redirect=is_auto_redirect,
-                                   headers=headers, cookies=cookies, encode_multipart=encode_multipart, is_use_proxy=is_use_proxy,
-                                   is_gzip=False, is_url_encode=False, is_auto_retry=is_auto_retry, is_check_qps=is_check_qps,
-                                   connection_timeout=connection_timeout, read_timeout=read_timeout)
-            # import traceback
-            # console.log(message)
-            # console.log(traceback.format_exc())
-            if "Range" in headers:
-                range_string = "range: " + headers["Range"].replace("bytes=", "")
-                console.log(url + f"[{range_string}] 访问超时，重试中")
-            else:
-                console.log(url + " 访问超时，重试中")
-            time.sleep(NET_CONFIG.HTTP_REQUEST_RETRY_WAIT_TIME)
-
-        retry_count += 1
-        if retry_count >= NET_CONFIG.HTTP_REQUEST_RETRY_COUNT:
-            console.log("无法访问页面：" + url)
-            return ErrorResponse(const.ResponseCode.RETRY)
-
-
 def _qps(url: str) -> bool:
     # 当前分钟
     day_minuter = int(time.strftime("%Y%m%d%H%M"))
@@ -567,6 +410,10 @@ class Request:
         self._is_redirect = False
         return self
 
+    def disable_use_proxy(self) -> Self:
+        self._is_use_proxy = False
+        return self
+
     def disable_url_encode(self) -> Self:
         self._is_url_encode = False
         return self
@@ -738,7 +585,8 @@ class Request:
 
 
 class Download:
-    def __init__(self, file_url: str, file_path: str, headers: Optional[dict[str, str]] = None, cookies: Optional[dict[str, str]] = None, auto_multipart_download: bool = False) -> None:
+    def __init__(self, file_url: str, file_path: str, headers: Optional[dict[str, str]] = None, cookies: Optional[dict[str, str]] = None,
+                 auto_multipart_download: bool = False, **kwargs) -> None:
         """
         下载远程文件到本地
 
@@ -771,6 +619,7 @@ class Download:
         self._status: const.DownloadStatus = const.DownloadStatus.FAILED
         self._code: const.DownloadCode = const.DownloadCode.FILE_CREATE_FAILED
         self.ext: dict[str, Any] = {}
+        self.kwargs: dict[str, Any] = kwargs.copy()
 
     def __bool__(self) -> bool:
         return self._status == const.DownloadStatus.SUCCEED
@@ -849,6 +698,8 @@ class Download:
         # 先获取头信息
         if self._auto_multipart_download:
             head_response = Request(self._file_url, method="HEAD", headers=self._headers, cookies=self._cookies).disable_decode_content()
+            if "is_url_encode" in self.kwargs:
+                head_response.disable_url_encode()
             # 其他返回状态，退出
             if head_response.status != const.ResponseCode.SUCCEED:
                 # URL格式不正确
@@ -901,6 +752,8 @@ class Download:
         try:
             file_response = Request(self._file_url, method="GET", headers=self._headers, cookies=self._cookies).disable_decode_content()\
                 .set_time_out(NET_CONFIG.DOWNLOAD_CONNECTION_TIMEOUT, NET_CONFIG.DOWNLOAD_READ_TIMEOUT)
+            if "is_url_encode" in self.kwargs:
+                file_response.disable_url_encode()
         except SystemExit:
             return False
 
@@ -965,6 +818,8 @@ class Download:
                         try:
                             multipart_response = Request(self._file_url, method="GET", headers=headers).disable_decode_content()\
                                 .set_time_out(NET_CONFIG.DOWNLOAD_CONNECTION_TIMEOUT, NET_CONFIG.DOWNLOAD_READ_TIMEOUT)
+                            if "is_url_encode" in self.kwargs:
+                                multipart_response.disable_url_encode()
                         except SystemExit:
                             return False
                         if multipart_response.status == 206:
