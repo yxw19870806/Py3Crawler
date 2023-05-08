@@ -355,7 +355,7 @@ class Youtube(crawler.Crawler):
             log.error("配置文件config.ini中key为'video_quality'的值必须是一个1~6的整数，使用程序默认设置")
 
         # 下载线程
-        self.crawler_thread = CrawlerThread
+        self.set_crawler_thread(CrawlerThread)
 
     def init(self):
         # 检测登录状态

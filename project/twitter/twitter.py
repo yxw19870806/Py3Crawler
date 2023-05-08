@@ -292,7 +292,7 @@ class Twitter(crawler.Crawler):
             COOKIES = {}
 
         # 下载线程
-        self.crawler_thread = CrawlerThread
+        self.set_crawler_thread(CrawlerThread)
 
     def init(self):
         # 生成authorization，用于访问视频页
