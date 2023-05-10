@@ -124,11 +124,11 @@ class Crawler(object):
                 tool.process_exit()
                 return
             if const.SysConfigKey.SAVE_DATA_FORMATE in sys_config:
-                save_data_formate = sys_config[const.SysConfigKey.SAVE_DATA_FORMATE]
-                if isinstance(save_data_formate, tuple) and len(save_data_formate) == 2:
-                    self.save_data = read_save_data(self.save_data_path, save_data_formate[0], save_data_formate[1])
+                save_data_format = sys_config[const.SysConfigKey.SAVE_DATA_FORMATE]
+                if isinstance(save_data_format, tuple) and len(save_data_format) == 2:
+                    self.save_data = read_save_data(self.save_data_path, save_data_format[0], save_data_format[1])
                 else:
-                    console.log("存档文件默认格式不正确%s" % save_data_formate)
+                    console.log("存档文件默认格式不正确%s" % save_data_format)
         # cache
         self.cache_data_path: str = analysis_config(config, "CACHE_DATA_PATH", r"\\cache", const.ConfigAnalysisMode.PATH)
 
@@ -750,7 +750,7 @@ def read_save_data(save_data_path: str, key_index: int = 0, default_value_list: 
     if not os.path.exists(save_data_path):
         return result_list
     for single_save_data in file.read_file(save_data_path, const.ReadFileMode.LINE):
-        single_save_data = single_save_data.replace("\n", "").replace("\r", "")
+        single_save_data = single_save_data.strip("\n\r")
         if len(single_save_data) == 0:
             continue
         single_save_list = single_save_data.split("\t")
