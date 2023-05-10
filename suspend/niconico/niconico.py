@@ -7,6 +7,7 @@ email: hikaru870806@hotmail.com
 如有问题或建议请联系
 """
 import html
+import math
 import os
 import time
 from pyquery import PyQuery as pq
@@ -126,6 +127,7 @@ def get_one_page_mylist_video(list_id, page_count):
     }
     mylist_pagination_response = net.Request(api_url, method="GET", fields=post_data, cookies=COOKIES, headers=headers).enable_json_decode()
     result = {
+        "is_over": False,  # 是否最后一页视频
         "video_info_list": [],  # 全部视频信息
     }
     if mylist_pagination_response.status == 404:
@@ -134,7 +136,6 @@ def get_one_page_mylist_video(list_id, page_count):
         raise crawler.CrawlerException("视频列表未公开")
     elif mylist_pagination_response.status != const.ResponseCode.SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(mylist_pagination_response.status))
-
     for video_info in crawler.get_json_value(mylist_pagination_response.json_data, "data", "mylist", "items", type_check=list):
         result_video_info = {
             "video_id": 0,  # 视频id
@@ -150,6 +151,7 @@ def get_one_page_mylist_video(list_id, page_count):
         # 获取视频辩题
         result_video_info["video_title"] = crawler.get_json_value(video_info, "video", "title", type_check=str)
         result["video_info_list"].append(result_video_info)
+    result["is_over"] = page_count >= math.ceil(crawler.get_json_value(mylist_pagination_response.json_data, "data", "mylist", "totalItemCount", type_check=int) / EACH_PAGE_VIDEO_COUNT)
     return result
 
 
