@@ -13,7 +13,7 @@ NEW_SAVE_FILE_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), "ne
 def reformat_save():
     new_lines = []
     for line in file.read_file(OLD_SAVE_FILE_PATH, const.ReadFileMode.LINE):
-        temp_list = line.replace("\n", "").split("\t")
+        temp_list = line.strip("\n\r").split("\t")
         new_list = list([])
         # 新旧字段逻辑
         new_list.append(temp_list[0])

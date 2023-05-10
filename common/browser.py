@@ -104,9 +104,8 @@ def get_default_browser_cookie_path(browser_type: const.BrowserType) -> Optional
         default_browser_path = os.path.join(os.getenv("APPDATA"), "Mozilla", "Firefox", "Profiles")
         for dir_name in os.listdir(default_browser_path):
             sub_path = os.path.join(default_browser_path, dir_name)
-            if os.path.isdir(sub_path):
-                if os.path.exists(os.path.join(sub_path, "cookies.sqlite")):
-                    return os.path.abspath(sub_path)
+            if os.path.isdir(sub_path) and os.path.exists(os.path.join(sub_path, "cookies.sqlite")):
+                return os.path.abspath(sub_path)
     elif browser_type == const.BrowserType.CHROME:
         browser_data_path = _get_chrome_user_data_path()
         profile_file_path = os.path.join(browser_data_path, "Local State")
