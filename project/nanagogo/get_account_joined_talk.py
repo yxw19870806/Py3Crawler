@@ -20,7 +20,7 @@ TALK_ID_FILE_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), "inf
 def get_account_from_file():
     account_list = {}
     for line in file.read_file(ACCOUNT_ID_FILE_PATH, const.ReadFileMode.LINE):
-        split_temp = line.replace("\n", "").split("\t")
+        split_temp = line.strip("\n\r").split("\t")
         account_list[split_temp[0]] = split_temp[1]
     return account_list
 
