@@ -34,7 +34,7 @@ def get_album_index_page(album_id):
         result_audio_info["audio_title"] = audio_info_selector.find("a").attr("title")
         # 获取音频播放地址
         audio_play_url = audio_info_selector.find("a").attr("href")
-        if audio_play_url[0] == "/":
+        if audio_play_url.startswith("/"):
             audio_play_url = "http://m.tingshubao.com" + audio_play_url
         result_audio_info["audio_play_url"] = audio_play_url
         audio_id = audio_play_url.split("/")[-1].replace(".html", "").split("-")[-1]

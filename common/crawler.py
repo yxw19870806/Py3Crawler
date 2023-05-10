@@ -184,10 +184,10 @@ class Crawler(object):
             else:
                 for cookie_domain in sys_config[const.SysConfigKey.GET_COOKIE]:
                     check_domain_list = [cookie_domain]
-                    if cookie_domain[0] != ".":
-                        check_domain_list.append("." + cookie_domain)
-                    elif cookie_domain[0] == ".":
+                    if cookie_domain[0].startswith("."):
                         check_domain_list.append(cookie_domain[1:])
+                    else:
+                        check_domain_list.append("." + cookie_domain)
                     for check_domain in check_domain_list:
                         if check_domain in all_cookie_from_browser:
                             self.cookie_value.update(all_cookie_from_browser[check_domain])
@@ -766,8 +766,8 @@ def read_save_data(save_data_path: str, key_index: int = 0, default_value_list: 
         index = 0
         for default_value in default_value_list:
             # _开头表示和该数组下标的值一致，如["", "_0"] 表示第1位为空时数值和第0位一致
-            if default_value != "" and default_value[0] == "_":
-                default_value = single_save_list[int(default_value.replace("_", ""))]
+            if default_value != "" and default_value.startswith("_"):
+                default_value = single_save_list[int(tool.remove_string_prefix(default_value, "_"))]
             if len(single_save_list) <= index:
                 single_save_list.append(default_value)
             if single_save_list[index] == "":

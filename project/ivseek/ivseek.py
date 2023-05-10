@@ -22,7 +22,7 @@ def read_save_data(save_data_path):
     if not os.path.exists(save_data_path):
         return result_list
     for single_save_data in file.read_file(save_data_path, const.ReadFileMode.LINE):
-        single_save_data = single_save_data.replace("\xef\xbb\xbf", "").replace("\n", "").replace("\r", "")
+        single_save_data = tool.remove_string_prefix(single_save_data, file.BOM_SIGN).strip("\n\r")
         if len(single_save_data) == 0:
             continue
         single_save_list = single_save_data.split("\t")
