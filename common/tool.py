@@ -65,6 +65,20 @@ def find_sub_string(haystack: str, start_string: Optional[str] = None, end_strin
     return find_string
 
 
+def remove_string_prefix(haystack: str, start_string: str):
+    """
+    移除字符串的指定前缀
+    """
+    return haystack[len(start_string):] if haystack.startswith(start_string) else haystack
+
+
+def remove_string_suffix(haystack: str, end_string: str):
+    """
+    移除字符串的指定后缀
+    """
+    return haystack[:-len(end_string)] if haystack is not None and haystack.endswith(end_string) else haystack
+
+
 def is_integer(number: Any) -> bool:
     """
     判断是不是整型，或者纯数字的字符串
