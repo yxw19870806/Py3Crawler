@@ -8,6 +8,7 @@ email: hikaru870806@hotmail.com
 """
 import os
 import re
+import urllib.parse
 from pyquery import PyQuery as pq
 from common import *
 
@@ -88,6 +89,7 @@ def get_video_info_page(video_id):
     video_info_url = "https://www.yizhibo.com/l/%s.html" % video_id
     video_info_response = net.Request(video_info_url, method="GET")
     result = {
+        "m3u8_file_url": "",  # 分段文件地址
         "video_time": 0,  # 视频上传时间
         "video_url_list": [],  # 全部视频分集地址
     }
@@ -99,17 +101,18 @@ def get_video_info_page(video_id):
         raise crawler.CrawlerException("页面截取直播开始时间失败\n" + video_info_response.content)
     result["video_time"] = int(video_time)
     # 获取视频地址所在文件地址
-    video_file_url = tool.find_sub_string(video_info_response.content, 'play_url:"', '",')
-    video_file_response = net.Request(video_file_url, method="GET")
+    result["m3u8_file_url"] = tool.find_sub_string(video_info_response.content, 'play_url:"', '",')
+    if not result["m3u8_file_url"]:
+        raise crawler.CrawlerException("分集文件地址截取失败\n" + video_info_response.content)
+    video_file_response = net.Request(result["m3u8_file_url"], method="GET")
     if video_file_response.status != const.ResponseCode.SUCCEED:
-        raise crawler.CrawlerException("m3u8文件 %s，%s" % (video_file_url, crawler.request_failre(video_file_response.status)))
-    ts_id_list = re.findall(r"(\S*.ts)", video_file_response.content)
-    if len(ts_id_list) == 0:
+        raise crawler.CrawlerException("分集文件 %s，%s" % (result["m3u8_file_url"], crawler.request_failre(video_file_response.status)))
+    ts_path_list = re.findall(r"(\S*.ts)", video_file_response.content)
+    if len(ts_path_list) == 0:
         raise crawler.CrawlerException("分集文件匹配视频地址失败\n" + video_file_response.content)
     # http://playbackyzbold.live.weibo.com/2021101/f0b/f97/bVFjTEK9nYTEqQ6p/index.m3u8
-    prefix_url = video_file_url[:video_file_url.rfind("/") + 1]
-    for ts_id in ts_id_list:
-        result["video_url_list"].append(prefix_url + ts_id)
+    for ts_path in ts_path_list:
+        result["video_url_list"].append(urllib.parse.urljoin(result["m3u8_file_url"], ts_path))
     return result
 
 
@@ -224,7 +227,7 @@ class CrawlerThread(crawler.CrawlerThread):
     def crawl_video(self, video_info):
         video_index = int(self.single_save_data[1]) + 1
         video_description = "第%s个视频" % video_index
-        self.info("开始下载 %s %s" % (video_description, video_info["video_url_list"]))
+        self.info("开始下载 %s %s" % (video_description, video_info["m3u8_file_url"]))
 
         video_path = os.path.join(self.main_thread.video_download_path, self.display_name, "%04d.ts" % video_index)
         download_return = net.download_from_list(video_info["video_url_list"], video_path)
@@ -232,7 +235,7 @@ class CrawlerThread(crawler.CrawlerThread):
             self.total_video_count += 1  # 计数累加
             self.info("%s 下载成功" % video_description)
         else:
-            self.error("%s %s 下载失败" % (video_description, video_info["video_url_list"]))
+            self.error("%s %s 下载失败" % (video_description, video_info["m3u8_file_url"]))
             if self.check_download_failure_exit(False):
                 return False
 
