@@ -9,7 +9,9 @@ email: hikaru870806@hotmail.com
 import html
 import math
 import os
+import re
 import time
+import urllib.parse
 from pyquery import PyQuery as pq
 from common import *
 
@@ -160,11 +162,11 @@ def get_video_info(video_id):
     video_play_url = "http://www.nicovideo.jp/watch/sm%s" % video_id
     video_play_response = net.Request(video_play_url, method="GET", cookies=COOKIES)
     result = {
-        "extra_cookie": {},  # 额外的cookie
         "is_delete": False,  # 是否已删除
         "is_private": False,  # 是否未公开
         "video_title": "",  # 视频标题
-        "video_url": "",  # 视频地址
+        "m3u8_url": "",  # 分段文件地址
+        "video_url_list": [],  # 视频分段地址
     }
     if video_play_response.status == 403:
         log.info("视频%s访问异常，重试" % video_id)
@@ -174,7 +176,7 @@ def get_video_info(video_id):
         result["is_delete"] = True
         return result
     elif video_play_response.status != const.ResponseCode.SUCCEED:
-        raise crawler.CrawlerException("视频播放页访问失败，" + crawler.request_failre(video_play_response.status))
+        raise crawler.CrawlerException("视频播放页，" + crawler.request_failre(video_play_response.status))
     script_json_html = tool.find_sub_string(video_play_response.content, 'data-api-data="', '" data-environment="')
     if not script_json_html:
         # 播放页面提示flash没有安装，重新访问
@@ -189,10 +191,107 @@ def get_video_info(video_id):
         raise crawler.CrawlerException("视频信息加载失败\n" + video_play_response.content)
     # 获取视频标题
     result["video_title"] = crawler.get_json_value(script_json, "video", "title", type_check=str)
-    # 获取视频地址
-    result["video_url"] = crawler.get_json_value(script_json, "video", "smileInfo", "url", type_check=str)
-    # 返回的cookies
-    result["extra_cookie"] = net.get_cookies_from_response_header(video_play_response.headers)
+
+    video_resolution_2_id = {}
+    for video_info in crawler.get_json_value(script_json, "media", "delivery", "movie", "videos", type_check=list):
+        video_width = crawler.get_json_value(video_info, "metadata", "resolution", "width", type_check=int)
+        video_height = crawler.get_json_value(video_info, "metadata", "resolution", "height", type_check=int)
+        video_resolution = video_width * video_height
+        video_resolution_2_id[video_resolution] = crawler.get_json_value(video_info, "id", type_check=str)
+    if len(video_resolution_2_id) == 0:
+        raise crawler.CrawlerException("视频信息截取视频列表失败\n" + script_json)
+
+    audio_bitrate_2_id = {}
+    for audio_info in crawler.get_json_value(script_json, "media", "delivery", "movie", "audios", type_check=list):
+        audio_bitrate = crawler.get_json_value(audio_info, "metadata", "bitrate", type_check=int)
+        audio_bitrate_2_id[audio_bitrate] = crawler.get_json_value(audio_info, "id", type_check=str)
+    if len(audio_bitrate_2_id) == 0:
+        raise crawler.CrawlerException("视频信息截取音频列表失败\n" + script_json)
+
+    # 请求session，并返回下载地址
+    session_api_url = "https://api.dmc.nico/api/sessions?_format=json"
+    session_api_post_data = {
+        "session": {
+            "recipe_id": crawler.get_json_value(script_json, "media", "delivery", "movie", "session", "recipeId", type_check=str),
+            "content_id": crawler.get_json_value(script_json, "media", "delivery", "movie", "session", "contentId", type_check=str),
+            "content_type": "movie",
+            "content_src_id_sets": [
+                {
+                    "content_src_ids": [
+                        {
+                            "src_id_to_mux": {
+                                "video_src_ids": [
+                                    video_resolution_2_id[max(video_resolution_2_id)]
+                                ],
+                                "audio_src_ids": [
+                                    audio_bitrate_2_id[max(audio_bitrate_2_id)]
+                                ]
+                            }
+                        }
+                    ]
+                }
+            ],
+            "timing_constraint": "unlimited",
+            "keep_method": {
+                "heartbeat": {
+                    "lifetime": crawler.get_json_value(script_json, "media", "delivery", "movie", "session", "heartbeatLifetime", type_check=int),
+                }
+            },
+            "protocol": {
+                "name": "http",
+                "parameters": {
+                    "http_parameters": {
+                        "parameters": {
+                            "hls_parameters": {
+                                "use_well_known_port": "yes",
+                                "use_ssl": "yes",
+                                "transfer_preset": "",
+                                "segment_duration": 6000
+                            }
+                        }
+                    }
+                }
+            },
+            "content_uri": "",
+            "session_operation_auth": {
+                "session_operation_auth_by_signature": {
+                    "token": crawler.get_json_value(script_json, "media", "delivery", "movie", "session", "token", type_check=str),
+                    "signature": crawler.get_json_value(script_json, "media", "delivery", "movie", "session", "signature", type_check=str),
+                }
+            },
+            "content_auth": {
+                "auth_type": "ht2",
+                "content_key_timeout": 600000,
+                "service_id": "nicovideo",
+                "service_user_id": crawler.get_json_value(script_json, "media", "delivery", "movie", "session", "serviceUserId", type_check=str),
+            },
+            "client_info": {
+                "player_id": crawler.get_json_value(script_json, "media", "delivery", "movie", "session", "playerId", type_check=str),
+            },
+            "priority": crawler.get_json_value(script_json, "media", "delivery", "movie", "session", "priority", type_check=float),
+        }
+    }
+    session_api_response = net.Request(session_api_url, method="POST", fields=tool.json_encode(session_api_post_data)).enable_json_decode()
+    if session_api_response.status != 201:
+        raise crawler.CrawlerException("session生成，" + crawler.request_failre(session_api_response.status))
+
+    master_file_url = crawler.get_json_value(session_api_response.json_data, "data", "session", "content_uri", type_check=str)
+    master_file_response = net.Request(master_file_url, method="GET")
+    if master_file_response.status != const.ResponseCode.SUCCEED:
+        raise crawler.CrawlerException("master文件，" + crawler.request_failre(master_file_response.status))
+    m3u8_file_find = re.findall(r"(\S*.m3u8\S*)", master_file_response.content)
+    if len(m3u8_file_find) != 1:
+        raise crawler.CrawlerException("m3u8文件截取失败\n" + master_file_response.content)
+
+    result["m3u8_file_url"] = urllib.parse.urljoin(master_file_url, m3u8_file_find[0])
+    m3u8_file_response = net.Request(result["m3u8_file_url"], method="GET")
+    if m3u8_file_response.status != const.ResponseCode.SUCCEED:
+        raise crawler.CrawlerException("分集文件，" + crawler.request_failre(m3u8_file_response.status))
+    ts_path_list = re.findall(r"(\S*.ts\S*)", m3u8_file_response.content)
+    if len(ts_path_list) == 0:
+        raise crawler.CrawlerException("分集文件匹配视频地址失败\n" + m3u8_file_response.content)
+    for ts_path in ts_path_list:
+        result["video_url_list"].append(urllib.parse.urljoin(result["m3u8_file_url"], ts_path))
     return result
 
 
@@ -286,23 +385,20 @@ class CrawlerThread(crawler.CrawlerThread):
             self.error(e.http_error(video_description))
             raise
         if video_info_response["is_delete"]:
-            self.error("视频%s 《%s》已删除，跳过" % (video_info["video_id"], video_info["video_title"]))
+            self.error("%s已删除，跳过" % video_description)
             return
         if video_info_response["is_private"]:
-            self.error("视频%s 《%s》未公开，跳过" % (video_info["video_id"], video_info["video_title"]))
+            self.error("%s未公开，跳过" % video_description)
             return
 
-        self.info("视频%s 《%s》 %s 开始下载" % (video_info["video_id"], video_info["video_title"], video_info_response["video_url"]))
+        self.info("%s %s 开始下载" % (video_description, video_info_response["m3u8_file_url"]))
         video_file_path = os.path.join(self.main_thread.video_download_path, self.display_name, "%08d - %s.mp4" % (video_info["video_id"], path.filter_text(video_info["video_title"])))
-        cookies = COOKIES
-        if video_info_response["extra_cookie"]:
-            cookies.update(video_info_response["extra_cookie"])
-        download_return = net.Download(video_info_response["video_url"], video_file_path, cookies=cookies)
-        if download_return.status == const.DownloadStatus.SUCCEED:
+        download_return = net.download_from_list(video_info_response["video_url_list"], video_file_path, cookies=COOKIES)
+        if download_return:
             self.total_video_count += 1  # 计数累加
-            self.info("视频%s 《%s》下载成功" % (video_info["video_id"], video_info["video_title"]))
+            self.info("%s下载成功" % video_description)
         else:
-            self.error("视频%s 《%s》 %s 下载失败，原因：%s" % (video_info["video_id"], video_info["video_title"], video_info_response["video_url"], crawler.download_failre(download_return.code)))
+            self.error("%s %s 下载失败" % (video_description, video_info_response["m3u8_file_url"]))
             self.check_download_failure_exit()
 
         # 视频下载完毕

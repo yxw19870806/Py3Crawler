@@ -520,7 +520,7 @@ class Request:
                                                            redirect=self._is_redirect, timeout=timeout)
                 response.content = ""
                 response.json_data = {}
-                if response.status == const.ResponseCode.SUCCEED:
+                if response.status == const.ResponseCode.SUCCEED or response.status == 201:
                     if self._is_decode_content:
                         charset = DEFAULT_CHARSET
                         content_type = response.headers.get("Content-Type")
