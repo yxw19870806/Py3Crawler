@@ -302,10 +302,10 @@ def analysis_photo(photo_url):
         elif tool.is_integer(temp_list[-1]):
             resolution = int(temp_list[-1])
         # https://78.media.tumblr.com/19b0b807d374ed9e4ed22caf74cb1ec0/tumblr_mxukamH4GV1s4or9ao1_500h.jpg
-        elif temp_list[-1].endswith("h") and tool.is_integer(temp_list[-1][:-len("h")]):
-            resolution = int(temp_list[-1][:-len("h")])
+        elif temp_list[-1].endswith("h") and tool.is_integer(tool.remove_string_suffix(temp_list[-1], "h")):
+            resolution = int(tool.remove_string_suffix(temp_list[-1], "h"))
         # https://78.media.tumblr.com/5c0b9f4e8ac839a628863bb5d7255938/tumblr_inline_p6ve89vOZA1uhchy5_250sq.jpg
-        elif temp_list[-1].endswith("sq") and tool.is_integer(temp_list[-1][:-len("sq")]):
+        elif temp_list[-1].endswith("sq") and tool.is_integer(tool.remove_string_suffix(temp_list[-1], "sq")):
             photo_url = photo_url.replace("_250sq", "1280")
             resolution = 1280
         # http://78.media.tumblr.com/tumblr_m9rwkpsRwt1rr15s5.jpg

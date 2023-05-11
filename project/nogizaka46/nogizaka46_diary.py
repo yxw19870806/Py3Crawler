@@ -119,7 +119,7 @@ def check_preview_photo(photo_url, real_photo_url):
 def check_photo_invalid(photo_path):
     file_size = os.path.getsize(photo_path)
     # 文件小于1K
-    if file_size < 1024:
+    if file_size < const.SIZE_KB:
         return True
     try:
         image = Image.open(photo_path)

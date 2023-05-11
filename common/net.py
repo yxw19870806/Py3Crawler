@@ -163,7 +163,7 @@ def get_url_path(url: str) -> str:
     ->
     /sub/path/name1.name2.extension
     """
-    return urllib.parse.urlsplit(url).path
+    return urllib.parse.urlparse(url).path
 
 
 def get_url_basename(url: str) -> str:

@@ -161,7 +161,7 @@ def get_origin_photo_url(photo_url):
                 photo_url = "/".join(temp_list)
             # https://stat.ameba.jp/user_images/4b/90/10112135346_s.jpg
             elif photo_name.endswith("_s"):
-                temp_list[-1] = photo_name[:-len("_s")] + "." + photo_extension
+                temp_list[-1] = tool.remove_string_suffix(photo_name, "_s") + "." + photo_extension
                 photo_url = "/".join(temp_list)
             # https://stat.ameba.jp/user_images/2a/ce/10091204420.jpg
             elif tool.is_integer(photo_name.split(".")[0]):
@@ -177,7 +177,7 @@ def get_origin_photo_url(photo_url):
 def check_photo_invalid(photo_path):
     file_size = os.path.getsize(photo_path)
     # 文件小于1K
-    if file_size < 1024:
+    if file_size < const.SIZE_KB:
         return True
     try:
         image = Image.open(photo_path)
@@ -187,7 +187,7 @@ def check_photo_invalid(photo_path):
     if image.height <= 20 or image.width <= 20:
         return True
     # 文件小于 5K 并且 长或宽任意小于100像素的
-    if file_size < 5120 and (image.height <= 100 or image.width <= 100):
+    if file_size < 5 * const.SIZE_KB and (image.height <= 100 or image.width <= 100):
         return True
     return False
 
