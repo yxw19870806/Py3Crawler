@@ -59,7 +59,7 @@ class XiMaLaYaDownload(ximalaya.XiMaLaYa):
 
         # 选择下载目录
         log.info("请选择下载目录")
-        file_extension = net.get_file_extension(audio_response["audio_url"])
+        file_extension = net.get_url_file_ext(audio_response["audio_url"])
         options = {
             "initialdir": self.audio_download_path,
             "initialfile": "%s - %s.%s" % (audio_id, path.filter_text(audio_response["audio_title"]), file_extension),

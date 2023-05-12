@@ -135,7 +135,7 @@ class CrawlerThread(crawler.CrawlerThread):
 
         photo_index = 1
         for photo_url in blog_info["photo_url_list"]:
-            file_name = "%05d_%02d.%s" % (blog_info["blog_id"], photo_index, net.get_file_extension(photo_url))
+            file_name = "%05d_%02d.%s" % (blog_info["blog_id"], photo_index, net.get_url_file_ext(photo_url))
             photo_path = os.path.join(self.main_thread.photo_download_path, self.display_name, file_name)
             photo_description = "日志%s第%s张图片" % (blog_info["blog_id"], photo_index)
             if self.download(photo_url, photo_path, photo_description):
