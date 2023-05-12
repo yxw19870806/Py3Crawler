@@ -393,7 +393,7 @@ class CrawlerThread(crawler.CrawlerThread):
 
             photo_index = 1
             for photo_url in media_response["photo_url_list"]:
-                photo_name = "%019d_%02d.%s" % (media_info["page_id"], photo_index, net.get_file_extension(photo_url))
+                photo_name = "%019d_%02d.%s" % (media_info["page_id"], photo_index, net.get_url_file_ext(photo_url))
                 photo_path = os.path.join(self.main_thread.photo_download_path, self.index_key, photo_name)
                 photo_description = "媒体%s/%s第%s张图片" % (media_info["page_id"], media_info["page_code"], photo_index)
                 if self.download(photo_url, photo_path, photo_description):
@@ -407,7 +407,7 @@ class CrawlerThread(crawler.CrawlerThread):
 
             video_index = 1
             for video_url in media_response["video_url_list"]:
-                video_name = "%019d_%02d.%s" % (media_info["page_id"], video_index, net.get_file_extension(video_url))
+                video_name = "%019d_%02d.%s" % (media_info["page_id"], video_index, net.get_url_file_ext(video_url))
                 video_path = os.path.join(self.main_thread.video_download_path, self.index_key, video_name)
                 video_description = "媒体%s/%s第%s个视频" % (media_info["page_id"], media_info["page_code"], video_index)
                 if self.download(video_url, video_path, video_description, auto_multipart_download=True):

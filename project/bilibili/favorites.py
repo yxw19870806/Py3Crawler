@@ -105,7 +105,7 @@ class BiliBiliFavorites(bilibili.BiliBili):
                             video_name += "_" + str(video_part_index)
                     if len(video_part_info["video_url_list"]) > 1:
                         video_name += " (%s)" % video_split_index
-                    video_name = "%s.%s" % (path.filter_text(video_name), net.get_file_extension(video_part_url))
+                    video_name = "%s.%s" % (path.filter_text(video_name), net.get_url_file_ext(video_part_url))
                     video_path = os.path.join(root_dir, video_name)
 
                     # 开始下载

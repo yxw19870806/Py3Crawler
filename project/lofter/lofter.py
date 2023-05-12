@@ -162,7 +162,7 @@ class CrawlerThread(crawler.CrawlerThread):
             # 去除图片地址的参数
             photo_url = get_photo_url(photo_url)
 
-            file_name = "%09d_%02d.%s" % (blog_id, photo_index, net.get_file_extension(photo_url))
+            file_name = "%09d_%02d.%s" % (blog_id, photo_index, net.get_url_file_ext(photo_url))
             photo_path = os.path.join(self.main_thread.photo_download_path, self.index_key, file_name)
             photo_description = "日志%s(%s)第%s张图片" % (blog_id, blog_url, photo_index)
             if self.download(photo_url, photo_path, photo_description, success_callback=self.download_success_callback):

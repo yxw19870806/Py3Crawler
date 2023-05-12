@@ -285,7 +285,7 @@ def check_photo_url_invalid(photo_url):
 
 
 def analysis_photo(photo_url):
-    temp_list = net.get_file_name(photo_url).split("_")
+    temp_list = net.get_url_file_name(photo_url).split("_")
     resolution = 0
     if temp_list[0] == "tumblr":
         if temp_list[1] == "inline" and not tool.is_integer(temp_list[2]):
@@ -568,7 +568,7 @@ class CrawlerThread(crawler.CrawlerThread):
 
             photo_index = 1
             for photo_url in photo_url_list:
-                photo_name = "%012d_%02d.%s" % (post_info["post_id"], photo_index, net.get_file_extension(photo_url))
+                photo_name = "%012d_%02d.%s" % (post_info["post_id"], photo_index, net.get_url_file_ext(photo_url))
                 photo_path = os.path.join(self.main_thread.photo_download_path, self.index_key, photo_name)
                 photo_description = "日志%s(%s)第%s张图片" % (post_info["post_id"], post_info["post_url"], photo_index)
                 if self.download(photo_url, photo_path, photo_description, failure_callback=self.photo_download_failure_callback):

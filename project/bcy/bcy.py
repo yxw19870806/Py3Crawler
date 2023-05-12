@@ -213,7 +213,7 @@ class CrawlerThread(crawler.CrawlerThread):
         self.temp_path_list.append(album_path)
         photo_index = 1
         for photo_url in photo_url_list:
-            file_extension = net.get_file_extension(photo_url, "jpg")
+            file_extension = net.get_url_file_ext(photo_url, "jpg")
             if file_extension == "image":
                 file_extension = "jpg"
             photo_path = os.path.join(album_path, "%03d.%s" % (photo_index, file_extension))

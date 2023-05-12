@@ -295,7 +295,7 @@ class CrawlerThread(crawler.CrawlerThread):
 
     # 下载图片
     def crawl_photo(self, photo_info):
-        photo_name = "%16d.%s" % (photo_info["photo_id"], net.get_file_extension(photo_info["photo_url"], "jpg"))
+        photo_name = "%16d.%s" % (photo_info["photo_id"], net.get_url_file_ext(photo_info["photo_url"], "jpg"))
         photo_path = os.path.join(self.main_thread.photo_download_path, self.display_name, photo_name)
         photo_description = "图片%s" % photo_info["photo_id"]
         download_return = self.download(photo_info["photo_url"], photo_path, photo_description, success_callback=self.photo_download_success_callback,
