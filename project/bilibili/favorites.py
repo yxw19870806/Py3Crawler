@@ -29,11 +29,11 @@ class BiliBiliFavorites(bilibili.BiliBili):
         video_url = input(tool.convert_timestamp_to_formatted_time() + " 请输入bilibili收藏夹播放地址：").lower()
         favorites_id = None
         if video_url.find("//www.bilibili.com/medialist/play/ml") > 0:
-            favorites_id = tool.find_sub_string(video_url, "//www.bilibili.com/medialist/play/ml").split("?")[0].split("/")[0]
+            favorites_id = tool.remove_string_prefix(net.get_url_basename(video_url), "ml")
         elif tool.is_integer(video_url):
             favorites_id = video_url
-        elif video_url.startswith("ml") and tool.is_integer(video_url[len("ml"):]):
-            favorites_id = video_url[len("ml"):]
+        elif video_url.startswith("ml") and tool.is_integer(tool.remove_string_prefix(video_url, "ml")):
+            favorites_id = tool.remove_string_prefix(video_url, "ml")
         return favorites_id
 
     def main(self):

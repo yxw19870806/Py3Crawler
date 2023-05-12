@@ -29,7 +29,7 @@ def main():
             continue
 
         console.log("开始解析视频%s" % single_save_list[2])
-        video_id = tool.remove_string_prefix(single_save_list[2].split("/")[-1], "sm")
+        video_id = tool.remove_string_prefix(net.get_url_basename(single_save_list[2]), "sm")
         if not tool.is_integer(video_id):
             console.log("视频%s截取video id失败" % single_save_list[2])
             continue

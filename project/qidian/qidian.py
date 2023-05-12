@@ -38,7 +38,8 @@ def get_book_index(book_id):
         result_chapter_info["chapter_url"] = chapter_info_selector.find("a").attr("href")
         if result_chapter_info["chapter_url"].startswith("//"):
             result_chapter_info["chapter_url"] = "https:" + result_chapter_info["chapter_url"]
-        chapter_id = result_chapter_info["chapter_url"].rstrip("/").split("/")[-1]
+        # //vipreader.qidian.com/chapter/2597043/391650828/
+        chapter_id = net.get_url_basename(result_chapter_info["chapter_url"])
         if result_chapter_info["chapter_url"].find("//read.qidian.com") >= 0:
             pass
         elif result_chapter_info["chapter_url"].find("//vipreader.qidian.com/") >= 0:

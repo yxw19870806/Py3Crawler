@@ -40,7 +40,7 @@ class YoutubeDownload(youtube.Youtube):
                     break
         # https://youtu.be/lkHlnWFnA0c
         elif video_url.lower().find("//youtu.be/") > 0:
-            video_id = video_url.split("/")[-1].split("&")[0]
+            video_id = net.get_url_basename(video_url)
         elif re.match("[a-zA-Z0-9_]+$", video_url) is not None:
             video_id = video_url
         return video_id
