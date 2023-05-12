@@ -285,7 +285,7 @@ def check_photo_url_invalid(photo_url):
 
 
 def analysis_photo(photo_url):
-    temp_list = photo_url.split("/")[-1].split(".")[0].split("_")
+    temp_list = net.get_file_name(photo_url).split("_")
     resolution = 0
     if temp_list[0] == "tumblr":
         if temp_list[1] == "inline" and not tool.is_integer(temp_list[2]):

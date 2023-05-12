@@ -57,8 +57,9 @@ def get_blog_page(blog_url):
 
 
 # 从日志地址中解析出日志id
+# blog_url -> https://moexia.lofter.com/post/27e885_26a387c
 def get_blog_id(blog_url):
-    return int(blog_url.split("/")[-1].split("_")[-1], 16)
+    return int(net.get_url_basename(blog_url).split("_")[-1], 16)
 
 
 # 去除图片的参数

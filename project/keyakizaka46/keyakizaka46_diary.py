@@ -46,7 +46,7 @@ def get_one_page_blog(account_id, page_count):
         blog_url = blog_selector.find(".box-ttl h3 a").attr("href")
         if not blog_url:
             raise crawler.CrawlerException("日志信息截取日志地址失败\n" + blog_selector.html())
-        blog_id = blog_url.split("/")[-1].split("?")[0]
+        blog_id = net.get_url_basename(blog_url)
         if not tool.is_integer(blog_id):
             raise crawler.CrawlerException("日志地址 %s 截取日志id失败" % blog_url)
         result_blog_info["blog_id"] = int(blog_id)

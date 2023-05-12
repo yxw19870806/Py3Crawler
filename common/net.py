@@ -159,16 +159,16 @@ def get_cookies_from_response_header(response_headers: HTTPHeaderDict) -> dict[s
 
 def get_url_path(url: str) -> str:
     """
-    scheme://username:password@host.name:123/sub/path/name1.name2.extension?key=value&key2=value2#fragment
+    scheme://username:password@host.name:123/sub/path/name1.name2.extension/?key=value&key2=value2#fragment
     ->
     /sub/path/name1.name2.extension
     """
-    return urllib.parse.urlparse(url).path
+    return urllib.parse.urlparse(url).path.rstrip("/")
 
 
 def get_url_basename(url: str) -> str:
     """
-    scheme://username:password@host.name:123/sub/path/name1.name2.extension?key=value&key2=value2#fragment
+    scheme://username:password@host.name:123/sub/path/name1.name2.extension/?key=value&key2=value2#fragment
     ->
     name1.name2.extension
     """
@@ -178,7 +178,7 @@ def get_url_basename(url: str) -> str:
 def get_file_extension(url: str, default_file_type: str = "") -> str:
     """
     获取url地址的文件类型
-        scheme://username:password@host.name:123/sub/path/name1.name2.extension?key=value&key2=value2#fragment
+        scheme://username:password@host.name:123/sub/path/name1.name2.extension/?key=value&key2=value2#fragment
         ->
         extension
     """
@@ -192,7 +192,7 @@ def get_file_extension(url: str, default_file_type: str = "") -> str:
 def get_file_name(url: str) -> str:
     """
     获取url地址的文件类型
-        scheme://username:password@host.name:123/sub/path/name1.name2.extension?key=value&key2=value2#fragment
+        scheme://username:password@host.name:123/sub/path/name1.name2.extension/?key=value&key2=value2#fragment
         ->
         name1.name2
     """
