@@ -201,12 +201,11 @@ def get_video_page(video_id):
             decrypted_video_url = crawler.get_json_value(video_info, "signatureCipher", type_check=str)
             video_url = ""
             video_signature = ""
-            for sub_param in decrypted_video_url.split("&"):
-                key, value = sub_param.split("=")
-                if key == "s":
-                    video_signature = urllib.parse.unquote(value)
-                elif key == "url":
-                    video_url = urllib.parse.unquote(value)
+            for (query_key, query_value) in urllib.parse.parse_qsl(urllib.parse.urlparse(decrypted_video_url).query):
+                if query_key == "s":
+                    video_signature = urllib.parse.unquote(query_value)
+                elif query_key == "url":
+                    video_url = urllib.parse.unquote(query_value)
             # 解析JS文件，获取对应的加密方法
             if len(decrypt_function_step) == 0:
                 js_file_path = tool.find_sub_string(video_play_response.content, '<script src="/s/player/', '"')
