@@ -68,7 +68,7 @@ def get_audio_info_page(audio_play_url):
     else:
         audio_detail_url = "http://43.129.176.64/player/key.php"
         query_data = {
-            "url": "".join(temp_list).split("&")[0]
+            "url": audio_url
         }
         audio_detail_response = net.Request(audio_detail_url, method="GET", fields=query_data).enable_json_decode()
         if audio_detail_response.status != const.ResponseCode.SUCCEED:
