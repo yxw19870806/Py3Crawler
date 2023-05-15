@@ -30,9 +30,8 @@ class FiveSingDownload(fivesing.FiveSing):
         audio_id = None
         # http://5sing.kugou.com/fc/15887314.html
         if audio_url.find("//5sing.kugou.com/") > 0:
-            temp_list = audio_url.split("/")
-            audio_type = temp_list[-2]
-            audio_id = temp_list[-1].split(".")[0]
+            audio_type = net.get_url_path(audio_url).split("/")[-2]
+            audio_id = net.get_url_file_name(audio_url)
         return [audio_type, audio_id]
 
     def main(self):

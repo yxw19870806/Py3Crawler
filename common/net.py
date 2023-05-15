@@ -157,6 +157,15 @@ def get_cookies_from_response_header(response_headers: HTTPHeaderDict) -> dict[s
     return cookies
 
 
+def remove_url_query(url: str) -> str:
+    """
+    scheme://username:password@host.name:123/sub/path/name1.name2.extension/?key=value&key2=value2#fragment
+    ->
+    scheme://username:password@host.name:123/sub/path/name1.name2.extension/
+    """
+    return urllib.parse.urljoin(url, get_url_path(url))
+
+
 def get_url_path(url: str) -> str:
     """
     scheme://username:password@host.name:123/sub/path/name1.name2.extension/?key=value&key2=value2#fragment
@@ -175,6 +184,20 @@ def get_url_basename(url: str) -> str:
     return os.path.basename(get_url_path(url))
 
 
+def get_url_file_name_ext(url: str, default_file_type: str = "") -> tuple[str, str]:
+    """
+    获取url地址的文件类型
+        scheme://username:password@host.name:123/sub/path/name1.name2.extension/?key=value&key2=value2#fragment
+        ->
+        name1.name2, extension
+    """
+    split_result = get_url_basename(url).rsplit(".", 1)
+    if len(split_result) == 1:
+        return split_result[0], default_file_type
+    else:
+        return split_result[0], split_result[1]
+
+
 def get_url_file_ext(url: str, default_file_type: str = "") -> str:
     """
     获取url地址的文件类型
@@ -182,11 +205,7 @@ def get_url_file_ext(url: str, default_file_type: str = "") -> str:
         ->
         extension
     """
-    file_name_and_extension = get_url_basename(url).split(".")
-    if len(file_name_and_extension) == 1:
-        return default_file_type
-    else:
-        return file_name_and_extension[-1]
+    return get_url_file_name_ext(url, default_file_type)[1]
 
 
 def get_url_file_name(url: str) -> str:
@@ -196,7 +215,7 @@ def get_url_file_name(url: str) -> str:
         ->
         name1.name2
     """
-    return get_url_basename(url).split(".")[0]
+    return get_url_file_name_ext(url)[0]
 
 
 def url_encode(url: str) -> str:
