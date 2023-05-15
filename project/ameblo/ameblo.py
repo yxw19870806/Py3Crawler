@@ -152,9 +152,8 @@ def get_origin_photo_url(photo_url):
     if photo_url.find("//stat.ameba.jp/user_images/") != -1:
         # 最新的photo_url使用?caw=指定显示分辨率，去除
         # http://stat.ameba.jp/user_images/20161220/12/akihabara48/fd/1a/j/o0768032013825427476.jpg?caw=800
-        photo_url = urllib.parse.urljoin(photo_url, net.get_url_path(photo_url))
-        photo_name = net.get_url_file_name(photo_url)
-        photo_extension = net.get_url_file_ext(photo_url)
+        photo_url = net.remove_url_query(photo_url)
+        photo_name, photo_extension = net.get_url_file_name_ext(photo_url)
         if not photo_name.startswith("o"):
             # https://stat.ameba.jp/user_images/20110612/15/akihabara48/af/3e/j/t02200165_0800060011286009555.jpg
             if photo_name.startswith("t") and photo_name.find("_") > 0:

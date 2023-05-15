@@ -8,6 +8,8 @@ email: hikaru870806@hotmail.com
 """
 import os
 import re
+import urllib.parse
+
 from common import *
 
 COOKIES = {}
@@ -60,13 +62,6 @@ def get_blog_page(blog_url):
 # blog_url -> https://moexia.lofter.com/post/27e885_26a387c
 def get_blog_id(blog_url):
     return int(net.get_url_basename(blog_url).split("_")[-1], 16)
-
-
-# 去除图片的参数
-def get_photo_url(photo_url):
-    if photo_url.rfind("?") > photo_url.rfind("."):
-        return photo_url.split("?")[0]
-    return photo_url
 
 
 # 检测图片是不是已被屏蔽
@@ -160,7 +155,7 @@ class CrawlerThread(crawler.CrawlerThread):
         photo_index = 1
         for photo_url in blog_response["photo_url_list"]:
             # 去除图片地址的参数
-            photo_url = get_photo_url(photo_url)
+            photo_url = net.remove_url_query(photo_url)
 
             file_name = "%09d_%02d.%s" % (blog_id, photo_index, net.get_url_file_ext(photo_url))
             photo_path = os.path.join(self.main_thread.photo_download_path, self.index_key, file_name)
