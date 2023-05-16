@@ -63,6 +63,16 @@ class TestTool(unittest.TestCase):
     def test_string_to_dyadic_list(self):
         self.assertEqual([["a", "b"], ["c", "d"]], tool.string_to_dyadic_list("a\tb\nc\td"))
 
+    def test_generate_random_string(self):
+        self.assertEqual(10, len(tool.generate_random_string(10)))
+        self.assertRegex(tool.generate_random_string(100, 1), "^[a-z]{100}$")
+        self.assertRegex(tool.generate_random_string(100, 2), "^[A-Z]{100}$")
+        self.assertRegex(tool.generate_random_string(100, 4), r"^\d{100}$")
+        self.assertRegex(tool.generate_random_string(100, 3), "^[a-zA-Z]{100}$")
+        self.assertRegex(tool.generate_random_string(100, 5), r"^[\da-z]{100}$")
+        self.assertRegex(tool.generate_random_string(100, 6), r"^[\dA-Z]{100}$")
+        self.assertRegex(tool.generate_random_string(100, 7), r"^[\da-zA-Z]{100}$")
+
     def test_convert_timestamp_to_formatted_time(self):
         self.assertEqual("2020-01-01 00:00:00", tool.convert_timestamp_to_formatted_time("%Y-%m-%d %H:%M:%S", 1577808000))
 
