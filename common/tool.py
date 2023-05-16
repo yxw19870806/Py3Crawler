@@ -83,10 +83,10 @@ def is_integer(number: Any) -> bool:
     """
     判断是不是整型，或者纯数字的字符串
     """
-    if isinstance(number, int):
-        return True
-    elif isinstance(number, bool) or isinstance(number, list) or isinstance(number, dict) or number is None:
+    if isinstance(number, bool) or isinstance(number, list) or isinstance(number, dict) or number is None:
         return False
+    elif isinstance(number, int):
+        return True
     else:
         return not re.compile("^[-+]?[0-9]+$").match(str(number)) is None
 
@@ -95,7 +95,7 @@ def is_date(date_string: str) -> bool:
     """
     判断字符串是否是有效的日期，格式：YYYY-mm-dd
     """
-    return re.match(r"\d{4}-\d{2}-\d{2}", date_string) is not None
+    return re.match(r"^\d{4}-\d{2}-\d{2}$", date_string) is not None
 
 
 def json_decode(json_string: str, default_value=None) -> Any:
