@@ -367,7 +367,7 @@ def get_account_badges(account_id):
                 continue
             elif badge_detail_url.find("/gamecards/") == -1:
                 raise crawler.CrawlerException("页面截取的徽章详情地址 %s 格式不正确" % badge_detail_url)
-            game_id = net.get_url_path(badge_detail_url).split("/")[4]
+            game_id = net.get_url_path(badge_detail_url).split("/")[2]
             if not tool.is_integer(game_id):
                 raise crawler.CrawlerException("徽章详情地址 %s 截取游戏id失败" % badge_detail_url)
             # 获取徽章等级

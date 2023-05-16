@@ -339,7 +339,7 @@ def analysis_photo(photo_url):
         photo_id = temp_list[0]
         resolution = int(temp_list[2])
     else:
-        photo_id = photo_url.split("/")[-1]
+        photo_id = net.get_url_basename(photo_url)
         log.warning("未知图片地址类型2：" + photo_url)
     if len(photo_id) < 15 and not (tool.is_integer(photo_id) and int(photo_id) < 2000000000):
         log.warning("未知图片地址类型3：" + photo_url)
