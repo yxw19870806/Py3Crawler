@@ -158,6 +158,11 @@ def get_cookies_from_response_header(response_headers: HTTPHeaderDict) -> dict[s
 
 
 def get_url_query_dict(url: str) -> dict[str, str]:
+    """
+    scheme://username:password@host.name:123/sub/path/name1.name2.extension/?key=value&key2=value2#fragment
+    ->
+    {”key“: "value", "key2": "value2"}
+    """
     query_dict = {}
     for query_key, query_value in urllib.parse.parse_qsl(urllib.parse.urlparse(url).query):
         query_dict[query_key] = query_value
@@ -166,6 +171,7 @@ def get_url_query_dict(url: str) -> dict[str, str]:
 
 def remove_url_query(url: str) -> str:
     """
+    去除url地址中的query参数
     scheme://username:password@host.name:123/sub/path/name1.name2.extension/?key=value&key2=value2#fragment
     ->
     scheme://username:password@host.name:123/sub/path/name1.name2.extension
@@ -175,6 +181,7 @@ def remove_url_query(url: str) -> str:
 
 def get_url_path(url: str) -> str:
     """
+    获取url地址的path路径
     scheme://username:password@host.name:123/sub/path/name1.name2.extension/?key=value&key2=value2#fragment
     ->
     /sub/path/name1.name2.extension
@@ -184,6 +191,7 @@ def get_url_path(url: str) -> str:
 
 def split_url_path(url: str) -> list[str]:
     """
+    分割url地址的path路径
     scheme://username:password@host.name:123/sub/path/name1.name2.extension/?key=value&key2=value2#fragment
     ->
     ["sub", "path", "name1.name2.extension"]
@@ -193,6 +201,7 @@ def split_url_path(url: str) -> list[str]:
 
 def get_url_basename(url: str) -> str:
     """
+    获取url地址的basename
     scheme://username:password@host.name:123/sub/path/name1.name2.extension/?key=value&key2=value2#fragment
     ->
     name1.name2.extension
@@ -202,7 +211,7 @@ def get_url_basename(url: str) -> str:
 
 def get_url_file_name_ext(url: str, default_file_type: str = "") -> tuple[str, str]:
     """
-    获取url地址的文件类型
+    获取url地址的文件名+文件类型
         scheme://username:password@host.name:123/sub/path/name1.name2.extension/?key=value&key2=value2#fragment
         ->
         name1.name2, extension
@@ -226,7 +235,7 @@ def get_url_file_ext(url: str, default_file_type: str = "") -> str:
 
 def get_url_file_name(url: str) -> str:
     """
-    获取url地址的文件类型
+    获取url地址的文件名
         scheme://username:password@host.name:123/sub/path/name1.name2.extension/?key=value&key2=value2#fragment
         ->
         name1.name2
