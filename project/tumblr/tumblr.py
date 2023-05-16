@@ -113,7 +113,7 @@ def get_one_page_post(account_id, page_count, is_https):
         # 获取日志地址
         result_post_info["post_url"] = net.url_encode(crawler.get_json_value(post_info, "url", type_check=str))
         # 获取日志id
-        post_id = tool.find_sub_string(result_post_info["post_url"], "/post/").split("/")[0]
+        post_id = net.split_url_path(result_post_info["post_url"])[1]
         if not tool.is_integer(post_id):
             raise crawler.CrawlerException("日志地址%s截取日志id失败" % result_post_info["post_url"])
         result_post_info["post_id"] = int(post_id)
@@ -165,7 +165,7 @@ def get_one_page_private_blog(account_id, page_count):
         # 获取日志地址
         result_post_info["post_url"] = net.url_encode(crawler.get_json_value(post_info, "post_url", type_check=str))
         # 获取日志id
-        post_id = tool.find_sub_string(result_post_info["post_url"], "/post/").split("/")[0]
+        post_id = net.split_url_path(result_post_info["post_url"])[1]
         if not tool.is_integer(post_id):
             raise crawler.CrawlerException("日志地址 %s 截取日志id失败" % result_post_info["post_url"])
         result_post_info["post_id"] = int(post_id)
@@ -475,9 +475,9 @@ class CrawlerThread(crawler.CrawlerThread):
             self.start_parse(post_pagination_description)
             try:
                 if self.is_private:
-                    post_pagination_response: dict = get_one_page_private_blog(self.index_key, page_count)
+                    post_pagination_response = get_one_page_private_blog(self.index_key, page_count)
                 else:
-                    post_pagination_response: dict = get_one_page_post(self.index_key, page_count, self.is_https)
+                    post_pagination_response = get_one_page_post(self.index_key, page_count, self.is_https)
             except crawler.CrawlerException as e:
                 self.error(e.http_error(post_pagination_description))
                 raise
