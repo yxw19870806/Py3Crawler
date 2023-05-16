@@ -45,7 +45,7 @@ def get_save_data_file_count():
         return {}
     account_list = {}
     for line in file.read_file(SAVE_DATA_FILE_PATH, const.ReadFileMode.LINE):
-        temp_list = line.replace("\n", "").split("\t")
+        temp_list = line.strip("\n\r").split("\t")
         account_list[temp_list[PRIME_KEY_INDEX]] = int(temp_list[COUNT_INDEX])
     return account_list
 

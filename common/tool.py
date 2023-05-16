@@ -65,14 +65,28 @@ def find_sub_string(haystack: str, start_string: Optional[str] = None, end_strin
     return find_string
 
 
+def remove_string_prefix(haystack: str, start_string: str) -> str:
+    """
+    移除字符串的指定前缀
+    """
+    return haystack[len(start_string):] if haystack.startswith(start_string) else haystack
+
+
+def remove_string_suffix(haystack: str, end_string: str) -> str:
+    """
+    移除字符串的指定后缀
+    """
+    return haystack[:-len(end_string)] if haystack.endswith(end_string) else haystack
+
+
 def is_integer(number: Any) -> bool:
     """
     判断是不是整型，或者纯数字的字符串
     """
-    if isinstance(number, int):
-        return True
-    elif isinstance(number, bool) or isinstance(number, list) or isinstance(number, dict) or number is None:
+    if isinstance(number, bool) or isinstance(number, list) or isinstance(number, dict) or number is None:
         return False
+    elif isinstance(number, int):
+        return True
     else:
         return not re.compile("^[-+]?[0-9]+$").match(str(number)) is None
 
@@ -81,7 +95,7 @@ def is_date(date_string: str) -> bool:
     """
     判断字符串是否是有效的日期，格式：YYYY-mm-dd
     """
-    return re.match(r"\d{4}-\d{2}-\d{2}", date_string) is not None
+    return re.match(r"^\d{4}-\d{2}-\d{2}$", date_string) is not None
 
 
 def json_decode(json_string: str, default_value=None) -> Any:
@@ -95,7 +109,7 @@ def json_decode(json_string: str, default_value=None) -> Any:
     return default_value
 
 
-def json_encode(json_obj: Union[list, dict], default_value=None) -> str:
+def json_encode(json_obj: Any, default_value=None) -> str:
     """
     将json对象编码为json字符串
     """

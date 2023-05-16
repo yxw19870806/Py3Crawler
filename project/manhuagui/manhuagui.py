@@ -124,7 +124,7 @@ class ManHuaGui(crawler.Crawler):
         crawler.Crawler.__init__(self, sys_config, **kwargs)
 
         # 下载线程
-        self.crawler_thread = CrawlerThread
+        self.set_crawler_thread(CrawlerThread)
 
 
 class CrawlerThread(crawler.CrawlerThread):
@@ -175,10 +175,10 @@ class CrawlerThread(crawler.CrawlerThread):
         # 设置临时目录
         self.temp_path_list.append(chapter_path)
         for photo_url in chapter_response["photo_url_list"]:
-            photo_path = os.path.join(chapter_path, "%03d.%s" % (photo_index, net.get_file_extension(photo_url)))
+            photo_path = os.path.join(chapter_path, "%03d.%s" % (photo_index, net.get_url_file_ext(photo_url)))
             photo_description = "漫画%s %s《%s》第%s张图片" % (chapter_info["chapter_id"], chapter_info["group_name"], chapter_info["chapter_name"], photo_index)
             headers = {"Referer": "https://www.manhuagui.com/comic/%s/%s.html" % (self.index_key, chapter_info["chapter_id"])}
-            if self.download(photo_url, photo_path, photo_description, headers=headers, is_use_proxy=False):
+            if self.download(photo_url, photo_path, photo_description, headers=headers):
                 self.total_photo_count += 1  # 计数累加
             photo_index += 1
 

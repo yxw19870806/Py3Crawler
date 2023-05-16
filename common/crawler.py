@@ -16,7 +16,6 @@ import traceback
 from typing import Any, Callable, Optional, Union, Type, Self
 from common import console, const, browser, file, log, net, path, port_listener_event, tool
 from common import IS_EXECUTABLE, PROJECT_ROOT_PATH, PROJECT_CONFIG_PATH
-
 if platform.system() == "Windows":
     from common import keyboard_event
 
@@ -125,11 +124,11 @@ class Crawler(object):
                 tool.process_exit()
                 return
             if const.SysConfigKey.SAVE_DATA_FORMATE in sys_config:
-                save_data_formate = sys_config[const.SysConfigKey.SAVE_DATA_FORMATE]
-                if isinstance(save_data_formate, tuple) and len(save_data_formate) == 2:
-                    self.save_data = read_save_data(self.save_data_path, save_data_formate[0], save_data_formate[1])
+                save_data_format = sys_config[const.SysConfigKey.SAVE_DATA_FORMATE]
+                if isinstance(save_data_format, tuple) and len(save_data_format) == 2:
+                    self.save_data = read_save_data(self.save_data_path, save_data_format[0], save_data_format[1])
                 else:
-                    console.log("存档文件默认格式不正确%s" % save_data_formate)
+                    console.log("存档文件默认格式不正确%s" % save_data_format)
         # cache
         self.cache_data_path: str = analysis_config(config, "CACHE_DATA_PATH", r"\\cache", const.ConfigAnalysisMode.PATH)
 
@@ -185,10 +184,10 @@ class Crawler(object):
             else:
                 for cookie_domain in sys_config[const.SysConfigKey.GET_COOKIE]:
                     check_domain_list = [cookie_domain]
-                    if cookie_domain[0] != ".":
-                        check_domain_list.append("." + cookie_domain)
-                    elif cookie_domain[0] == ".":
+                    if cookie_domain[0].startswith("."):
                         check_domain_list.append(cookie_domain[1:])
+                    else:
+                        check_domain_list.append("." + cookie_domain)
                     for check_domain in check_domain_list:
                         if check_domain in all_cookie_from_browser:
                             self.cookie_value.update(all_cookie_from_browser[check_domain])
@@ -299,6 +298,10 @@ class Crawler(object):
         其他结束操作
         """
         pass
+
+    def set_crawler_thread(self, crawler_thread: Type["CrawlerThread"]) -> Self:
+        self.crawler_thread = crawler_thread
+        return self
 
     @staticmethod
     def pause_process() -> None:
@@ -591,7 +594,7 @@ class CrawlerThread(threading.Thread):
 
     def download(self, file_url: str, file_path: str, file_description: str, headers: Optional[dict[str, str]] = None, cookies: Optional[dict[str, str]] = None,
                  success_callback: Callable[[str, str, str, net.Download], bool] = None, failure_callback: Callable[[str, str, str, net.Download], bool] = None,
-                 auto_multipart_download=False, is_failure_exit: bool = True) -> net.Download:
+                 auto_multipart_download=False, is_failure_exit: bool = True, **kwargs) -> net.Download:
         """
         下载
 
@@ -610,7 +613,7 @@ class CrawlerThread(threading.Thread):
         """
         self.main_thread_check()
         self.info("开始下载 %s %s" % (file_description, file_url))
-        download_return = net.Download(file_url, file_path, headers=headers, cookies=cookies, auto_multipart_download=auto_multipart_download)
+        download_return = net.Download(file_url, file_path, headers=headers, cookies=cookies, auto_multipart_download=auto_multipart_download, **kwargs)
         if download_return.status == const.DownloadStatus.SUCCEED:
             if success_callback is None or success_callback(file_url, file_path, file_description, download_return):
                 self.info("%s 下载成功" % file_description)
@@ -747,7 +750,7 @@ def read_save_data(save_data_path: str, key_index: int = 0, default_value_list: 
     if not os.path.exists(save_data_path):
         return result_list
     for single_save_data in file.read_file(save_data_path, const.ReadFileMode.LINE):
-        single_save_data = single_save_data.replace("\n", "").replace("\r", "")
+        single_save_data = single_save_data.strip("\n\r")
         if len(single_save_data) == 0:
             continue
         single_save_list = single_save_data.split("\t")
@@ -763,8 +766,8 @@ def read_save_data(save_data_path: str, key_index: int = 0, default_value_list: 
         index = 0
         for default_value in default_value_list:
             # _开头表示和该数组下标的值一致，如["", "_0"] 表示第1位为空时数值和第0位一致
-            if default_value != "" and default_value[0] == "_":
-                default_value = single_save_list[int(default_value.replace("_", ""))]
+            if default_value != "" and default_value.startswith("_"):
+                default_value = single_save_list[int(tool.remove_string_prefix(default_value, "_"))]
             if len(single_save_list) <= index:
                 single_save_list.append(default_value)
             if single_save_list[index] == "":

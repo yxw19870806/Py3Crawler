@@ -28,8 +28,8 @@ class XiMaLaYaDownload(ximalaya.XiMaLaYa):
         audio_url = input(tool.convert_timestamp_to_formatted_time() + " 请输入喜马拉雅歌曲地址：").lower()
         audio_id = None
         if audio_url.find("//www.ximalaya.com/") > 0:
-            temp_list = audio_url.split("/")
-            if len(temp_list) >= 4 and tool.is_integer(temp_list[-1]) and tool.is_integer(temp_list[-2]):
+            temp_list = net.split_url_path(audio_url)
+            if len(temp_list) >= 3 and tool.is_integer(temp_list[-1]) and tool.is_integer(temp_list[-2]):
                 audio_id = temp_list[-1]
         return audio_id
 
@@ -59,7 +59,7 @@ class XiMaLaYaDownload(ximalaya.XiMaLaYa):
 
         # 选择下载目录
         log.info("请选择下载目录")
-        file_extension = net.get_file_extension(audio_response["audio_url"])
+        file_extension = net.get_url_file_ext(audio_response["audio_url"])
         options = {
             "initialdir": self.audio_download_path,
             "initialfile": "%s - %s.%s" % (audio_id, path.filter_text(audio_response["audio_title"]), file_extension),

@@ -16,7 +16,7 @@ from common import *
 EACH_LOOP_MAX_PAGE_COUNT = 200  # 单次缓存多少页的日志
 EACH_PAGE_BLOG_COUNT = 100  # 每次请求获取的日志数量
 COOKIES = {}
-USER_AGENT = None
+USER_AGENT = ""
 IS_STEP_ERROR_403_AND_404 = False
 IS_LOGIN = False
 
@@ -113,7 +113,7 @@ def get_one_page_post(account_id, page_count, is_https):
         # 获取日志地址
         result_post_info["post_url"] = net.url_encode(crawler.get_json_value(post_info, "url", type_check=str))
         # 获取日志id
-        post_id = tool.find_sub_string(result_post_info["post_url"], "/post/").split("/")[0]
+        post_id = net.split_url_path(result_post_info["post_url"])[1]
         if not tool.is_integer(post_id):
             raise crawler.CrawlerException("日志地址%s截取日志id失败" % result_post_info["post_url"])
         result_post_info["post_id"] = int(post_id)
@@ -165,7 +165,7 @@ def get_one_page_private_blog(account_id, page_count):
         # 获取日志地址
         result_post_info["post_url"] = net.url_encode(crawler.get_json_value(post_info, "post_url", type_check=str))
         # 获取日志id
-        post_id = tool.find_sub_string(result_post_info["post_url"], "/post/").split("/")[0]
+        post_id = net.split_url_path(result_post_info["post_url"])[1]
         if not tool.is_integer(post_id):
             raise crawler.CrawlerException("日志地址 %s 截取日志id失败" % result_post_info["post_url"])
         result_post_info["post_id"] = int(post_id)
@@ -285,7 +285,7 @@ def check_photo_url_invalid(photo_url):
 
 
 def analysis_photo(photo_url):
-    temp_list = photo_url.split("/")[-1].split(".")[0].split("_")
+    temp_list = net.get_url_file_name(photo_url).split("_")
     resolution = 0
     if temp_list[0] == "tumblr":
         if temp_list[1] == "inline" and not tool.is_integer(temp_list[2]):
@@ -302,10 +302,10 @@ def analysis_photo(photo_url):
         elif tool.is_integer(temp_list[-1]):
             resolution = int(temp_list[-1])
         # https://78.media.tumblr.com/19b0b807d374ed9e4ed22caf74cb1ec0/tumblr_mxukamH4GV1s4or9ao1_500h.jpg
-        elif temp_list[-1].endswith("h") and tool.is_integer(temp_list[-1][:-len("h")]):
-            resolution = int(temp_list[-1][:-len("h")])
+        elif temp_list[-1].endswith("h") and tool.is_integer(tool.remove_string_suffix(temp_list[-1], "h")):
+            resolution = int(tool.remove_string_suffix(temp_list[-1], "h"))
         # https://78.media.tumblr.com/5c0b9f4e8ac839a628863bb5d7255938/tumblr_inline_p6ve89vOZA1uhchy5_250sq.jpg
-        elif temp_list[-1].endswith("sq") and tool.is_integer(temp_list[-1][:-len("sq")]):
+        elif temp_list[-1].endswith("sq") and tool.is_integer(tool.remove_string_suffix(temp_list[-1], "sq")):
             photo_url = photo_url.replace("_250sq", "1280")
             resolution = 1280
         # http://78.media.tumblr.com/tumblr_m9rwkpsRwt1rr15s5.jpg
@@ -339,7 +339,7 @@ def analysis_photo(photo_url):
         photo_id = temp_list[0]
         resolution = int(temp_list[2])
     else:
-        photo_id = photo_url.split("/")[-1]
+        photo_id = net.get_url_basename(photo_url)
         log.warning("未知图片地址类型2：" + photo_url)
     if len(photo_id) < 15 and not (tool.is_integer(photo_id) and int(photo_id) < 2000000000):
         log.warning("未知图片地址类型3：" + photo_url)
@@ -411,7 +411,7 @@ class Tumblr(crawler.Crawler):
         IS_STEP_ERROR_403_AND_404 = self.app_config["IS_STEP_ERROR_403_AND_404"]
 
         # 下载线程
-        self.crawler_thread = CrawlerThread
+        self.set_crawler_thread(CrawlerThread)
 
     def init(self):
         global IS_LOGIN
@@ -475,9 +475,9 @@ class CrawlerThread(crawler.CrawlerThread):
             self.start_parse(post_pagination_description)
             try:
                 if self.is_private:
-                    post_pagination_response: dict = get_one_page_private_blog(self.index_key, page_count)
+                    post_pagination_response = get_one_page_private_blog(self.index_key, page_count)
                 else:
-                    post_pagination_response: dict = get_one_page_post(self.index_key, page_count, self.is_https)
+                    post_pagination_response = get_one_page_post(self.index_key, page_count, self.is_https)
             except crawler.CrawlerException as e:
                 self.error(e.http_error(post_pagination_description))
                 raise
@@ -568,7 +568,7 @@ class CrawlerThread(crawler.CrawlerThread):
 
             photo_index = 1
             for photo_url in photo_url_list:
-                photo_name = "%012d_%02d.%s" % (post_info["post_id"], photo_index, net.get_file_extension(photo_url))
+                photo_name = "%012d_%02d.%s" % (post_info["post_id"], photo_index, net.get_url_file_ext(photo_url))
                 photo_path = os.path.join(self.main_thread.photo_download_path, self.index_key, photo_name)
                 photo_description = "日志%s(%s)第%s张图片" % (post_info["post_id"], post_info["post_url"], photo_index)
                 if self.download(photo_url, photo_path, photo_description, failure_callback=self.photo_download_failure_callback):

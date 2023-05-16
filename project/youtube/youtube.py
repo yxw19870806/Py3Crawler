@@ -199,14 +199,9 @@ def get_video_page(video_id):
             video_url = crawler.get_json_value(video_info, "url", type_check=str)
         except crawler.CrawlerException:
             decrypted_video_url = crawler.get_json_value(video_info, "signatureCipher", type_check=str)
-            video_url = ""
-            video_signature = ""
-            for sub_param in decrypted_video_url.split("&"):
-                key, value = sub_param.split("=")
-                if key == "s":
-                    video_signature = urllib.parse.unquote(value)
-                elif key == "url":
-                    video_url = urllib.parse.unquote(value)
+            url_query = net.get_url_query_dict(decrypted_video_url)
+            video_signature = url_query.get("s", "")
+            video_url = urllib.parse.unquote(url_query.get("url", ""))
             # 解析JS文件，获取对应的加密方法
             if len(decrypt_function_step) == 0:
                 js_file_path = tool.find_sub_string(video_play_response.content, '<script src="/s/player/', '"')
@@ -355,7 +350,7 @@ class Youtube(crawler.Crawler):
             log.error("配置文件config.ini中key为'video_quality'的值必须是一个1~6的整数，使用程序默认设置")
 
         # 下载线程
-        self.crawler_thread = CrawlerThread
+        self.set_crawler_thread(CrawlerThread)
 
     def init(self):
         # 检测登录状态

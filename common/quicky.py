@@ -47,7 +47,7 @@ def quickly_get_save_data_path(config: Optional[dict[str, str]] = None) -> str:
     return crawler.analysis_config(config, "SAVE_DATA_PATH", r"\\info/save.data", const.ConfigAnalysisMode.PATH)
 
 
-def quickly_get_all_cookies_from_browser(config: Optional[dict[str, str]] = None) -> dict[str, str]:
+def quickly_get_all_cookies_from_browser(config: Optional[dict[str, str]] = None) -> dict[str, dict[str, str]]:
     """
     读取配置文件，读取浏览器cookies
     """
