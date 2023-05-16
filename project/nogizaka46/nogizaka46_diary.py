@@ -119,7 +119,7 @@ def check_preview_photo(photo_url, real_photo_url):
 def check_photo_invalid(photo_path):
     file_size = os.path.getsize(photo_path)
     # 文件小于1K
-    if file_size < 1024:
+    if file_size < const.SIZE_KB:
         return True
     try:
         image = Image.open(photo_path)
@@ -144,7 +144,7 @@ class Nogizaka46Diary(crawler.Crawler):
         crawler.Crawler.__init__(self, sys_config, **kwargs)
 
         # 下载线程
-        self.crawler_thread = CrawlerThread
+        self.set_crawler_thread(CrawlerThread)
 
 
 class CrawlerThread(crawler.CrawlerThread):
@@ -208,7 +208,7 @@ class CrawlerThread(crawler.CrawlerThread):
             else:
                 photo_url = photo_info["photo_url"]
 
-            photo_name = "%06d_%02d.%s" % (blog_id, photo_index, net.get_file_extension(photo_url, "jpg"))
+            photo_name = "%06d_%02d.%s" % (blog_id, photo_index, net.get_url_file_ext(photo_url, "jpg"))
             photo_path = os.path.join(self.main_thread.photo_download_path, self.display_name, photo_name)
             photo_description = "日志%s第%s张图片" % (blog_id, photo_index)
             if self.download(photo_url, photo_path, photo_description, cookies=preview_photo_response["cookies"], success_callback=self.download_success_callback):

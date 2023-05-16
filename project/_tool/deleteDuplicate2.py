@@ -42,19 +42,19 @@ def deal_one_group(group_list):
         unique_list[file_path] = 1
         record_id = int(row[1].split(".")[0])
         # 相似度
-        similarity = int(row[3].replace("%", ""))
+        similarity = int(tool.remove_string_suffix(row[3].strip(), "%"))
         if similarity < MIN_SIMILARITY:
             continue
         # 文件大小
-        file_size = row[5]
-        if file_size.find(" B") > 0:
-            file_size = float(file_size.replace(" B", "").strip())
-        elif file_size.find(" KB") > 0:
-            file_size = float(file_size.replace(" KB", "").strip()) * 1024
-        elif file_size.find(" MB") > 0:
-            file_size = float(file_size.replace(" MB", "").strip()) * 1024 * 1024
-        elif file_size.find(" GB") > 0:
-            file_size = float(file_size.replace(" GB", "").strip()) * 1024 * 1024 * 1024
+        file_size = row[5].strip()
+        if file_size.endswith(" B"):
+            file_size = float(tool.remove_string_suffix(file_size, " B"))
+        elif file_size.endswith(" KB"):
+            file_size = float(tool.remove_string_suffix(file_size, " KB")) * const.SIZE_KB
+        elif file_size.endswith(" MB"):
+            file_size = float(tool.remove_string_suffix(file_size, " MB")) * const.SIZE_MB
+        elif file_size.endswith(" GB"):
+            file_size = float(tool.remove_string_suffix(file_size, " GB")) * const.SIZE_GB
         else:
             print("unknown file_size " + file_size)
             return

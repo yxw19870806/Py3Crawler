@@ -50,7 +50,7 @@ class Template(crawler.Crawler):
         crawler.Crawler.__init__(self, sys_config, **kwargs)
 
         # 下载线程
-        self.crawler_thread = CrawlerThread
+        self.set_crawler_thread(CrawlerThread)
 
     def init(self):
         # 检测登录状态
@@ -130,7 +130,7 @@ class CrawlerThread(crawler.CrawlerThread):
 
             photo_index = 1
             for photo_url in blog_response["photo_url_list"]:
-                file_extension = net.get_file_extension(photo_url)
+                file_extension = net.get_url_file_ext(photo_url)
                 photo_file_path = os.path.join(self.main_thread.photo_download_path, self.index_key, "%04d.%s" % (photo_index, file_extension))
                 photo_file_description = "第%s张图片" % photo_index
                 if self.download(photo_url, photo_file_path, photo_file_description):
@@ -145,7 +145,7 @@ class CrawlerThread(crawler.CrawlerThread):
 
             video_index = 1
             for video_url in blog_response["video_url_list"]:
-                file_extension = net.get_file_extension(video_url)
+                file_extension = net.get_url_file_ext(video_url)
                 video_file_path = os.path.join(self.main_thread.video_download_path, self.index_key, "%04d.%s" % (video_index, file_extension))
                 video_file_description = "第%s个视频" % video_index
                 if self.download(video_url, video_file_path, video_file_description):
@@ -160,7 +160,7 @@ class CrawlerThread(crawler.CrawlerThread):
 
             audio_index = 1
             for audio_url in blog_response["audio_url_list"]:
-                file_extension = net.get_file_extension(audio_url)
+                file_extension = net.get_url_file_ext(audio_url)
                 audio_file_path = os.path.join(self.main_thread.audio_download_path, self.index_key, "%04d.%s" % (audio_index, file_extension))
                 audio_file_description = "第%s个音频" % audio_index
                 if self.download(audio_url, audio_file_path, audio_file_description):

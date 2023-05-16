@@ -46,7 +46,8 @@ def get_one_page_blog(account_id, page_count):
         blog_url = blog_selector.find(".p-button__blog_detail a").attr("href")
         if not blog_url:
             raise crawler.CrawlerException("日志信息截取日志地址失败\n" + blog_selector.html())
-        blog_id = blog_url.split("/")[-1].split("?")[0]
+        # /s/official/diary/detail/49568?ima=0000&cd=member
+        blog_id = net.get_url_basename(blog_url)
         if not tool.is_integer(blog_id):
             raise crawler.CrawlerException("日志地址 %s 截取日志id失败" % blog_url)
         result_blog_info["blog_id"] = int(blog_id)
@@ -83,7 +84,7 @@ class Hinatazaka46Diary(crawler.Crawler):
         crawler.Crawler.__init__(self, sys_config, **kwargs)
 
         # 下载线程
-        self.crawler_thread = CrawlerThread
+        self.set_crawler_thread(CrawlerThread)
 
 
 class CrawlerThread(crawler.CrawlerThread):
@@ -136,7 +137,7 @@ class CrawlerThread(crawler.CrawlerThread):
 
         photo_index = 1
         for photo_url in blog_info["photo_url_list"]:
-            photo_name = "%05d_%02d.%s" % (blog_info["blog_id"], photo_index, net.get_file_extension(photo_url))
+            photo_name = "%05d_%02d.%s" % (blog_info["blog_id"], photo_index, net.get_url_file_ext(photo_url))
             photo_path = os.path.join(self.main_thread.photo_download_path, self.display_name, photo_name)
             photo_description = "日志%s第%s张图片" % (blog_info["blog_id"], photo_index)
             if self.download(photo_url, photo_path, photo_description):
