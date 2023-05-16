@@ -182,6 +182,15 @@ def get_url_path(url: str) -> str:
     return urllib.parse.urlparse(url).path.rstrip("/")
 
 
+def split_url_path(url: str) -> list[str]:
+    """
+    scheme://username:password@host.name:123/sub/path/name1.name2.extension/?key=value&key2=value2#fragment
+    ->
+    ["sub", "path", "name1.name2.extension"]
+    """
+    return get_url_path(url).lstrip("/").split("/")
+
+
 def get_url_basename(url: str) -> str:
     """
     scheme://username:password@host.name:123/sub/path/name1.name2.extension/?key=value&key2=value2#fragment
