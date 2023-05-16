@@ -157,6 +157,13 @@ def get_cookies_from_response_header(response_headers: HTTPHeaderDict) -> dict[s
     return cookies
 
 
+def get_url_query_dict(url: str) -> dict[str, str]:
+    query_dict = {}
+    for query_key, query_value in urllib.parse.parse_qsl(urllib.parse.urlparse(url).query):
+        query_dict[query_key] = query_value
+    return query_dict
+
+
 def remove_url_query(url: str) -> str:
     """
     scheme://username:password@host.name:123/sub/path/name1.name2.extension/?key=value&key2=value2#fragment
