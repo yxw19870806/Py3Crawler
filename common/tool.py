@@ -109,7 +109,7 @@ def json_decode(json_string: str, default_value=None) -> Any:
     return default_value
 
 
-def json_encode(json_obj: Union[list, dict], default_value=None) -> str:
+def json_encode(json_obj: Any, default_value=None) -> str:
     """
     将json对象编码为json字符串
     """
