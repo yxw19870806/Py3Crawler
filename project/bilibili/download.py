@@ -30,14 +30,14 @@ class BiliBiliDownload(bilibili.BiliBili):
         lower_video_url = video_url.lower()
         video_id = None
         if lower_video_url.find("bilibili.com/video/av") > 0:
-            video_id = tool.find_sub_string(video_url, "bilibili.com/video/av").split("?")[0]
+            video_id = tool.remove_string_prefix(net.get_url_basename(video_url), "av")
         elif lower_video_url.find("bilibili.com/video/bv") > 0:
-            bv_id = tool.find_sub_string(video_url, "bilibili.com/video/").split("?")[0]
+            bv_id = net.get_url_basename(video_url)
             video_id = bilibili.bv_id_2_av_id(bv_id)
         elif tool.is_integer(lower_video_url):
             video_id = lower_video_url
-        elif lower_video_url.startswith("av") and tool.is_integer(lower_video_url[len("av"):]):
-            video_id = lower_video_url[len("av"):]
+        elif lower_video_url.startswith("av") and tool.is_integer(tool.remove_string_prefix(lower_video_url, "av")):
+            video_id = tool.remove_string_prefix(lower_video_url, "av")
         elif lower_video_url.startswith("bv"):
             video_id = bilibili.bv_id_2_av_id(video_url)
         return video_id

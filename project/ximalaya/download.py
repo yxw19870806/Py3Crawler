@@ -28,7 +28,7 @@ class XiMaLaYaDownload(ximalaya.XiMaLaYa):
         audio_url = input(tool.convert_timestamp_to_formatted_time() + " 请输入喜马拉雅歌曲地址：").lower()
         audio_id = None
         if audio_url.find("//www.ximalaya.com/") > 0:
-            temp_list = audio_url.split("/")
+            temp_list = net.get_url_path(audio_url).split("/")
             if len(temp_list) >= 4 and tool.is_integer(temp_list[-1]) and tool.is_integer(temp_list[-2]):
                 audio_id = temp_list[-1]
         return audio_id

@@ -99,7 +99,7 @@ def get_archive_page(archive_id):
         elif video_url.find(".nicovideo.jp/") >= 0:
             # https://embed.nicovideo.jp/watch/sm23008734/script?w=640&#038;h=360
             if video_url.find("embed.nicovideo.jp/watch") >= 0:
-                video_id = video_url.split("/")[-2]
+                video_id = net.get_url_path(video_url).split("/")[-2]
             # http://ext.nicovideo.jp/thumb_watch/sm21088018?w=490&#038;h=307
             # https://ext.nicovideo.jp/thumb/sm31656014
             elif video_url.find("ext.nicovideo.jp/thumb_watch/") >= 0 or video_url.find("ext.nicovideo.jp/thumb/") >= 0:
