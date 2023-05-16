@@ -8,6 +8,7 @@ email: hikaru870806@hotmail.com
 """
 import os
 import re
+import urllib.parse
 from pyquery import PyQuery as pq
 from common import *
 from project.weibo import weibo
@@ -75,9 +76,13 @@ def get_one_page_favorite(page_count):
             if len(thumb_photo_url_list) > 0:
                 photo_url_list = []
                 for photo_url in thumb_photo_url_list:
-                    temp_list = photo_url.split("/")
-                    temp_list[3] = "large"
-                    photo_url_list.append("http:" + str("/".join(temp_list)))
+                    # https://wx3.sinaimg.cn/mw2000/e212e359gy1hdzbgobbpvj20lc0sgtce.jpg
+                    # ->
+                    # https://wx3.sinaimg.cn/large/e212e359gy1hdzbgobbpvj20lc0sgtce.jpg
+                    url_split_result = net.split_url_path(photo_url)
+                    url_split_result[0] = "large"
+                    url_split_result.insert(0, "")
+                    photo_url_list.append(urllib.parse.urljoin(photo_url, "/".join(url_split_result)))
                 result_blog_info["photo_url_list"] = photo_url_list
         if len(result_blog_info["photo_url_list"]) > 0:
             result["blog_info_list"].append(result_blog_info)

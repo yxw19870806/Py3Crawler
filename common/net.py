@@ -168,7 +168,7 @@ def remove_url_query(url: str) -> str:
     """
     scheme://username:password@host.name:123/sub/path/name1.name2.extension/?key=value&key2=value2#fragment
     ->
-    scheme://username:password@host.name:123/sub/path/name1.name2.extension/
+    scheme://username:password@host.name:123/sub/path/name1.name2.extension
     """
     return urllib.parse.urljoin(url, get_url_path(url))
 
