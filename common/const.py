@@ -14,7 +14,7 @@ SIZE_GB: Final[int] = 2 ** 30  # 1GB = 多少字节
 
 
 class CrawlerEnumMeta(EnumMeta):
-    def __getitem__(self, name) -> str:
+    def __getitem__(self, name: str) -> str:
         try:
             return super().__getitem__(name.upper())
         except (TypeError, KeyError):
@@ -113,7 +113,7 @@ class ExitCode(IntEnum):
 
 # 下载状态
 @unique
-class DownloadStatus(Enum):
+class DownloadStatus(IntEnum):
     SUCCEED: int = 1
     FAILED: int = 0
 

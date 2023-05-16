@@ -77,7 +77,7 @@ class I275(crawler.Crawler):
         crawler.Crawler.__init__(self, sys_config, **kwargs)
 
         # 下载线程
-        self.crawler_thread = CrawlerThread
+        self.set_crawler_thread(CrawlerThread)
 
 
 class CrawlerThread(crawler.CrawlerThread):
@@ -123,7 +123,7 @@ class CrawlerThread(crawler.CrawlerThread):
             raise
 
         audio_url = audio_play_response["audio_url"]
-        audio_name = "%07d - %s.%s" % (audio_info["audio_id"], path.filter_text(audio_info["audio_title"]), net.get_file_extension(audio_url))
+        audio_name = "%07d - %s.%s" % (audio_info["audio_id"], path.filter_text(audio_info["audio_title"]), net.get_url_file_ext(audio_url))
         audio_path = os.path.join(self.main_thread.audio_download_path, self.display_name, audio_name)
         if self.download(audio_url, audio_path, audio_description):
             self.total_audio_count += 1  # 计数累加

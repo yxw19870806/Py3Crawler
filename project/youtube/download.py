@@ -8,6 +8,7 @@ email: hikaru870806@hotmail.com
 """
 import re
 import tkinter
+import urllib.parse
 from tkinter import filedialog
 from common import *
 from project.youtube import youtube
@@ -26,21 +27,14 @@ class YoutubeDownload(youtube.Youtube):
 
     @staticmethod
     def get_video_id_from_console():
-        video_url = input(tool.convert_timestamp_to_formatted_time() + " 请输入youtube视频地址：")
+        video_url = input(tool.convert_timestamp_to_formatted_time() + " 请输入youtube视频地址：").lower()
         video_id = None
         # https://www.youtube.com/watch?v=lkHlnWFnA0c
-        if video_url.lower().find("//www.youtube.com/") > 0:
-            query_string_list = video_url.split("?")[-1].split("&")
-            for query_string in query_string_list:
-                if query_string.find("=") == -1:
-                    continue
-                key, value = query_string.split("=", 1)
-                if key == "v":
-                    video_id = value
-                    break
+        if video_url.find("//www.youtube.com/") > 0:
+            video_id = net.get_url_query_dict(video_url).get("v", None)
         # https://youtu.be/lkHlnWFnA0c
-        elif video_url.lower().find("//youtu.be/") > 0:
-            video_id = video_url.split("/")[-1].split("&")[0]
+        elif video_url.find("//youtu.be/") > 0:
+            video_id = net.get_url_basename(video_url)
         elif re.match("[a-zA-Z0-9_]+$", video_url) is not None:
             video_id = video_url
         return video_id

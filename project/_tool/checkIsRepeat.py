@@ -13,7 +13,7 @@ NAME_COLUMN = 0
 def check_is_repeat():
     history = []
     for line in file.read_file(SAVE_FILE_PATH, const.ReadFileMode.LINE):
-        temp_list = line.replace("\n", "").split("\t")
+        temp_list = line.strip("\n\r").split("\t")
         if temp_list[NAME_COLUMN] in history:
             console.log(temp_list[NAME_COLUMN])
         else:
