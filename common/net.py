@@ -50,18 +50,6 @@ NET_CONFIG: net_config.NetConfig = net_config.NetConfig()
 MIME_DICTIONARY: Optional[dict[str, str]] = tool.json_decode(file.read_file(os.path.join(os.path.dirname(__file__), "mime.json")), {})
 
 
-class ErrorResponse(object):
-    def __init__(self, status=-1) -> None:
-        """
-        request()方法异常对象
-        """
-        self.status: int = status
-        self.data: bytes = b""
-        self.content: str = ""
-        self.headers: HTTPHeaderDict = HTTPHeaderDict()
-        self.json_data: dict = {}
-
-
 def init_http_connection_pool() -> None:
     """
     初始化连接池
@@ -218,52 +206,6 @@ def _random_ip_address() -> str:
     return f"{random.randint(1, 254)}.{random.randint(0, 255)}.{random.randint(0, 255)}.{random.randint(0, 255)}"
 
 
-def download_from_list(file_url_list: list[str], file_path: str, headers: Optional[dict[str, str]] = None, cookies: Optional[dict[str, str]] = None) -> bool:
-    """
-    Visit web and save to local(multiple remote resource, single local file)
-
-    :Args:
-    - file_url_list - the list of remote resource URL which you want to save
-    - file_path - the local file path which you want to save remote resource
-    - headers - customize header dictionary
-    - cookies - customize cookies dictionary, will replace headers["Cookie"]
-
-    :Returns:
-        - status - 0 download failure, 1 download successful
-        - code - failure reason
-    """
-    # 同名文件已经存在，直接返回
-    if not DOWNLOAD_REPLACE_IF_EXIST and os.path.exists(file_path) and os.path.getsize(file_path) > 0:
-        console.log("文件%s（%s）已存在，跳过" % (file_path, file_url_list))
-        return True
-
-    index = 1
-    part_file_path_list = []
-    is_succeed = False
-    for file_url in file_url_list:
-        # 临时文件路径
-        part_file_path = f"%s.part{index}" % file_path
-        if os.path.exists(os.path.realpath(part_file_path)):
-            break
-        part_file_path_list.append(part_file_path)
-        # 下载
-        part_download_return = Download(file_url, part_file_path, headers=headers, cookies=cookies)
-        if part_download_return.status == const.DownloadStatus.FAILED:
-            break
-        index += 1
-    else:
-        with open(file_path, "wb") as file_handle:
-            for part_file_path in part_file_path_list:
-                with open(part_file_path, "rb") as part_file_handle:
-                    file_handle.write(part_file_handle.read())
-        is_succeed = True
-    # 删除临时文件
-    for part_file_path in part_file_path_list:
-        path.delete_dir_or_file(part_file_path)
-
-    return is_succeed
-
-
 def pause_request() -> None:
     """
     Block thread when use request()
@@ -280,6 +222,18 @@ def resume_request() -> None:
     if not thread_event.is_set():
         console.log("resume process")
         thread_event.set()
+
+
+class ErrorResponse(object):
+    def __init__(self, status=-1) -> None:
+        """
+        request()方法异常对象
+        """
+        self.status: int = status
+        self.data: bytes = b""
+        self.content: str = ""
+        self.headers: HTTPHeaderDict = HTTPHeaderDict()
+        self.json_data: dict = {}
 
 
 class Request:
@@ -700,7 +654,7 @@ class Download:
         单线程下载
         """
         try:
-            file_response = Request(self._file_url, method="GET", headers=self._headers, cookies=self._cookies).disable_decode_content()\
+            file_response = Request(self._file_url, method="GET", headers=self._headers, cookies=self._cookies).disable_decode_content() \
                 .set_time_out(NET_CONFIG.DOWNLOAD_CONNECTION_TIMEOUT, NET_CONFIG.DOWNLOAD_READ_TIMEOUT)
             if "is_url_encode" in self.kwargs:
                 file_response.disable_url_encode()
@@ -766,7 +720,7 @@ class Download:
                 with os.fdopen(os.dup(file_no), "rb+", -1) as fd_handle:
                     for multipart_retry_count in range(NET_CONFIG.DOWNLOAD_RETRY_COUNT):
                         try:
-                            multipart_response = Request(self._file_url, method="GET", headers=headers).disable_decode_content()\
+                            multipart_response = Request(self._file_url, method="GET", headers=headers).disable_decode_content() \
                                 .set_time_out(NET_CONFIG.DOWNLOAD_CONNECTION_TIMEOUT, NET_CONFIG.DOWNLOAD_READ_TIMEOUT)
                             if "is_url_encode" in self.kwargs:
                                 multipart_response.disable_url_encode()
@@ -800,3 +754,49 @@ class Download:
     def __setitem__(self, item: str, value: Any) -> Self:
         self.ext[item] = value
         return self
+
+
+def download_from_list(file_url_list: list[str], file_path: str, headers: Optional[dict[str, str]] = None, cookies: Optional[dict[str, str]] = None) -> bool:
+    """
+    Visit web and save to local(multiple remote resource, single local file)
+
+    :Args:
+    - file_url_list - the list of remote resource URL which you want to save
+    - file_path - the local file path which you want to save remote resource
+    - headers - customize header dictionary
+    - cookies - customize cookies dictionary, will replace headers["Cookie"]
+
+    :Returns:
+        - status - 0 download failure, 1 download successful
+        - code - failure reason
+    """
+    # 同名文件已经存在，直接返回
+    if not DOWNLOAD_REPLACE_IF_EXIST and os.path.exists(file_path) and os.path.getsize(file_path) > 0:
+        console.log("文件%s（%s）已存在，跳过" % (file_path, file_url_list))
+        return True
+
+    index = 1
+    part_file_path_list = []
+    is_succeed = False
+    for file_url in file_url_list:
+        # 临时文件路径
+        part_file_path = f"%s.part{index}" % file_path
+        if os.path.exists(os.path.realpath(part_file_path)):
+            break
+        part_file_path_list.append(part_file_path)
+        # 下载
+        part_download_return = Download(file_url, part_file_path, headers=headers, cookies=cookies)
+        if part_download_return.status == const.DownloadStatus.FAILED:
+            break
+        index += 1
+    else:
+        with open(file_path, "wb") as file_handle:
+            for part_file_path in part_file_path_list:
+                with open(part_file_path, "rb") as part_file_handle:
+                    file_handle.write(part_file_handle.read())
+        is_succeed = True
+    # 删除临时文件
+    for part_file_path in part_file_path_list:
+        path.delete_dir_or_file(part_file_path)
+
+    return is_succeed
