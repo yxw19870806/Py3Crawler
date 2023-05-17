@@ -38,9 +38,14 @@ class TestTool(unittest.TestCase):
         self.assertFalse(tool.is_integer({"1": "2"}))
 
     def test_is_date(self):
-        self.assertTrue(tool.is_date("2000-01-01"))
-        self.assertFalse(tool.is_date("2000-01-01 00:00:00"))
-        self.assertFalse(tool.is_date("20000101"))
+        self.assertTrue(tool.is_date("2020-01-01"))
+        self.assertFalse(tool.is_date("2020-01-01 00:00:00"))
+        self.assertFalse(tool.is_date("20200101"))
+
+    def is_datetime(self):
+        self.assertFalse(tool.is_datetime("2020-01-01"))
+        self.assertTrue(tool.is_datetime("2020-01-01 00:00:00"))
+        self.assertFalse(tool.is_datetime("20200101000000"))
 
     def test_json_decode(self):
         self.assertDictEqual({"a": "b"}, tool.json_decode('{"a": "b"}'))
