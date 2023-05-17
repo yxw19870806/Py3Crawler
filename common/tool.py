@@ -98,6 +98,13 @@ def is_date(date_string: str) -> bool:
     return re.match(r"^\d{4}-\d{2}-\d{2}$", date_string) is not None
 
 
+def is_datetime(date_string: str) -> bool:
+    """
+    判断字符串是否是有效的时间，格式：YYYY-mm-dd HH:MM:SS
+    """
+    return re.match(r"^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$", date_string) is not None
+
+
 def json_decode(json_string: str, default_value=None) -> Any:
     """
     将json字符串解码为json对象
