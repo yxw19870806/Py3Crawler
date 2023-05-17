@@ -75,9 +75,9 @@ def get_chapter_page(ep_id):
     if api_response.status != const.ResponseCode.SUCCEED:
         raise crawler.CrawlerException("图片token获取，" + crawler.request_failre(api_response.status))
     for token_info in crawler.get_json_value(token_api_response.json_data, "data", type_check=list):
-        url = crawler.get_json_value(token_info, "url", type_check=str)
+        photo_url = crawler.get_json_value(token_info, "url", type_check=str)
         token = crawler.get_json_value(token_info, "token", type_check=str)
-        result["photo_url_list"].append("%s?token=%s" % (url, token))
+        result["photo_url_list"].append("%s?token=%s" % (photo_url, token))
     return result
 
 
@@ -166,7 +166,7 @@ class CrawlerThread(crawler.CrawlerThread):
         # 设置临时目录
         self.temp_path_list.append(chapter_path)
         for photo_url in chapter_response["photo_url_list"]:
-            photo_path = os.path.join(chapter_path, "%03d.%s" % (photo_index, net.get_url_file_ext(photo_url)))
+            photo_path = os.path.join(chapter_path, "%03d.%s" % (photo_index, url.get_file_ext(photo_url)))
             photo_description = "漫画%s 《%s》第%s张图片" % (comic_info["ep_id"], comic_info["ep_name"], photo_index)
             if self.download(photo_url, photo_path, photo_description, headers={"Referer": "https://m.dmzj.com/"}):
                 self.total_photo_count += 1  # 计数累加

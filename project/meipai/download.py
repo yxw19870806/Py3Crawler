@@ -29,7 +29,7 @@ class MeiPaiDownload(meipai.MeiPai):
         video_id = None
         # https://www.meipai.com/media/209045867
         if video_url.find("//www.meipai.com/media/") > 0:
-            video_id = net.get_url_basename(video_url)
+            video_id = url.get_basename(video_url)
         elif tool.is_integer(video_url):
             video_id = video_url
         return video_id

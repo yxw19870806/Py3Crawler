@@ -8,7 +8,6 @@ email: hikaru870806@hotmail.com
 """
 import re
 import tkinter
-import urllib.parse
 from tkinter import filedialog
 from common import *
 from project.youtube import youtube
@@ -31,10 +30,10 @@ class YoutubeDownload(youtube.Youtube):
         video_id = None
         # https://www.youtube.com/watch?v=lkHlnWFnA0c
         if video_url.find("//www.youtube.com/") > 0:
-            video_id = net.get_url_query_dict(video_url).get("v", None)
+            video_id = url.parse_query(video_url).get("v", None)
         # https://youtu.be/lkHlnWFnA0c
         elif video_url.find("//youtu.be/") > 0:
-            video_id = net.get_url_basename(video_url)
+            video_id = url.get_basename(video_url)
         elif re.match("[a-zA-Z0-9_]+$", video_url) is not None:
             video_id = video_url
         return video_id

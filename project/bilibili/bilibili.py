@@ -539,7 +539,7 @@ class CrawlerThread(crawler.CrawlerThread):
                         video_name += "_" + str(video_part_index)
                 if len(video_part_info["video_url_list"]) > 1:
                     video_name += " (%s)" % video_split_index
-                video_name = "%s.%s" % (path.filter_text(video_name), net.get_url_file_ext(video_part_url))
+                video_name = "%s.%s" % (path.filter_text(video_name), url.get_file_ext(video_part_url))
                 video_path = os.path.join(self.main_thread.video_download_path, self.display_name, video_name)
                 part_video_description = "视频%s《%s》第%s个视频" % (video_info["video_id"], video_info["video_title"], video_index)
                 headers = {"Referer": "https://www.bilibili.com/video/av%s" % video_info["video_id"]}
@@ -567,7 +567,7 @@ class CrawlerThread(crawler.CrawlerThread):
             self.error(e.http_error(audio_description))
             raise
 
-        audio_type = net.get_url_file_ext(audio_info_response["audio_url"])
+        audio_type = url.get_file_ext(audio_info_response["audio_url"])
         audio_name = "%06d %s.%s" % (audio_info["audio_id"], path.filter_text(audio_info["audio_title"]), audio_type)
         audio_path = os.path.join(self.main_thread.audio_download_path, self.display_name, audio_name)
         if self.download(audio_info_response["audio_url"], audio_path, audio_description, is_failure_exit=False, headers={"Referer": "https://www.bilibili.com/"}):
@@ -592,7 +592,7 @@ class CrawlerThread(crawler.CrawlerThread):
 
         photo_index = 1
         for photo_url in album_response["photo_url_list"]:
-            photo_name = "%09d_%02d.%s" % (album_id, photo_index, net.get_url_file_ext(photo_url))
+            photo_name = "%09d_%02d.%s" % (album_id, photo_index, url.get_file_ext(photo_url))
             photo_path = os.path.join(self.main_thread.photo_download_path, self.display_name, photo_name)
             photo_description = "相簿%s第%s张图片" % (album_id, photo_index)
             if self.download(photo_url, photo_path, photo_description, failure_callback=self.photo_download_failure_callback, is_failure_exit=False):

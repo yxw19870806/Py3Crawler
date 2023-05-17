@@ -218,7 +218,7 @@ def get_video_play_page(tweet_id):
         file_url = crawler.get_json_value(video_play_response.json_data, "track", "vmapUrl", default_value="", type_check=str)
         if not file_url:
             raise
-    file_extension = net.get_url_file_ext(file_url)
+    file_extension = url.get_file_ext(file_url)
     if file_extension == "m3u8":  # https://api.twitter.com/1.1/videos/tweet/config/996368816174084097.json
         file_url_protocol, file_url_host = urllib.parse.urlparse(file_url)[:2]
         m3u8_file_response = net.Request(file_url, method="GET")
@@ -256,9 +256,9 @@ def get_video_play_page(tweet_id):
             bit_rate = media_file_element.get("bit_rate")
             if not tool.is_integer(bit_rate):
                 continue
-            url = media_file_element.get("url")
-            if not url:
-                raise crawler.CrawlerException("视频节点解析url失败\n" + vmap_file_response.content)
+            video_url = media_file_element.get("url")
+            if not video_url:
+                raise crawler.CrawlerException("视频节点解析视频地址失败\n" + vmap_file_response.content)
             bit_rate_to_url[int(bit_rate)] = urllib.parse.unquote(url)
         if len(bit_rate_to_url) == 0:
             raise crawler.CrawlerException("vmap文件 %s 解析全部视频文件失败\n%s" % (file_url, vmap_file_response.content))
@@ -374,7 +374,7 @@ class CrawlerThread(crawler.CrawlerThread):
     def crawl_photo(self, media_info):
         photo_index = 1
         for photo_url in media_info["photo_url_list"]:
-            photo_name = "%019d_%02d.%s" % (media_info["blog_id"], photo_index, net.get_url_file_ext(photo_url))
+            photo_name = "%019d_%02d.%s" % (media_info["blog_id"], photo_index, url.get_file_ext(photo_url))
             photo_path = os.path.join(self.main_thread.photo_download_path, self.index_key, photo_name)
             photo_description = "推特%s第%s张图片" % (media_info["blog_id"], photo_index)
             if self.download(photo_url, photo_path, photo_description, failure_callback=self.photo_download_failure_callback):
@@ -386,9 +386,9 @@ class CrawlerThread(crawler.CrawlerThread):
         video_index = 1
         for video_url in media_info["video_url_list"]:
             if len(media_info["video_url_list"]) > 1:
-                video_file_name = "%019d_%02d.%s" % (media_info["blog_id"], video_index, net.get_url_file_ext(video_url))
+                video_file_name = "%019d_%02d.%s" % (media_info["blog_id"], video_index, url.get_file_ext(video_url))
             else:
-                video_file_name = "%019d.%s" % (media_info["blog_id"], net.get_url_file_ext(video_url))
+                video_file_name = "%019d.%s" % (media_info["blog_id"], url.get_file_ext(video_url))
             video_path = os.path.join(self.main_thread.video_download_path, self.index_key, video_file_name)
             video_description = "推特%s第%s个视频" % (media_info["blog_id"], video_index)
             if self.download(video_url, video_path, video_description, auto_multipart_download=True):

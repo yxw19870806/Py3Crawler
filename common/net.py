@@ -17,7 +17,7 @@ import urllib3
 import urllib3.exceptions
 from typing import Optional, Union, Self, Any
 from urllib3._collections import HTTPHeaderDict
-from common import const, console, file, net_config, path, tool
+from common import const, console, file, net_config, path, tool, url
 
 # https://www.python.org/dev/peps/pep-0476/
 # disable urllib3 HTTPS warning
@@ -157,108 +157,14 @@ def get_cookies_from_response_header(response_headers: HTTPHeaderDict) -> dict[s
     return cookies
 
 
-def get_url_query_dict(url: str) -> dict[str, str]:
-    """
-    scheme://username:password@host.name:123/sub/path/name1.name2.extension/?key=value&key2=value2#fragment
-    ->
-    {”key“: "value", "key2": "value2"}
-    """
-    query_dict = {}
-    for query_key, query_value in urllib.parse.parse_qsl(urllib.parse.urlparse(url).query):
-        query_dict[query_key] = query_value
-    return query_dict
-
-
-def remove_url_query(url: str) -> str:
-    """
-    去除url地址中的query参数
-    scheme://username:password@host.name:123/sub/path/name1.name2.extension/?key=value&key2=value2#fragment
-    ->
-    scheme://username:password@host.name:123/sub/path/name1.name2.extension
-    """
-    return urllib.parse.urljoin(url, get_url_path(url))
-
-
-def get_url_path(url: str) -> str:
-    """
-    获取url地址的path路径
-    scheme://username:password@host.name:123/sub/path/name1.name2.extension/?key=value&key2=value2#fragment
-    ->
-    /sub/path/name1.name2.extension
-    """
-    return urllib.parse.urlparse(url).path.rstrip("/")
-
-
-def split_url_path(url: str) -> list[str]:
-    """
-    分割url地址的path路径
-    scheme://username:password@host.name:123/sub/path/name1.name2.extension/?key=value&key2=value2#fragment
-    ->
-    ["sub", "path", "name1.name2.extension"]
-    """
-    return get_url_path(url).lstrip("/").split("/")
-
-
-def get_url_basename(url: str) -> str:
-    """
-    获取url地址的basename
-    scheme://username:password@host.name:123/sub/path/name1.name2.extension/?key=value&key2=value2#fragment
-    ->
-    name1.name2.extension
-    """
-    return os.path.basename(get_url_path(url))
-
-
-def get_url_file_name_ext(url: str, default_file_type: str = "") -> tuple[str, str]:
-    """
-    获取url地址的文件名+文件类型
-        scheme://username:password@host.name:123/sub/path/name1.name2.extension/?key=value&key2=value2#fragment
-        ->
-        name1.name2, extension
-    """
-    split_result = get_url_basename(url).rsplit(".", 1)
-    if len(split_result) == 1:
-        return split_result[0], default_file_type
-    else:
-        return split_result[0], split_result[1]
-
-
-def get_url_file_ext(url: str, default_file_type: str = "") -> str:
-    """
-    获取url地址的文件类型
-        scheme://username:password@host.name:123/sub/path/name1.name2.extension/?key=value&key2=value2#fragment
-        ->
-        extension
-    """
-    return get_url_file_name_ext(url, default_file_type)[1]
-
-
-def get_url_file_name(url: str) -> str:
-    """
-    获取url地址的文件名
-        scheme://username:password@host.name:123/sub/path/name1.name2.extension/?key=value&key2=value2#fragment
-        ->
-        name1.name2
-    """
-    return get_url_file_name_ext(url)[0]
-
-
-def url_encode(url: str) -> str:
-    """
-    url编码：百分号编码(Percent-Encoding)
-    e.g. 'https://www.example.com/测 试/' -> 'https://www.example.com/%E6%B5%8B%20%E8%AF%95/'
-    """
-    return urllib.parse.quote(url, safe=";/?:@&=+$,%")
-
-
-def _qps(url: str) -> bool:
+def _qps(requst_url: str) -> bool:
     # 当前分钟
     day_minuter = int(time.strftime("%Y%m%d%H%M"))
     if day_minuter not in QPS:
         QPS[day_minuter] = {}
 
     # host
-    host = urllib.parse.urlparse(url).netloc
+    host = urllib.parse.urlparse(requst_url).netloc
     if host not in QPS[day_minuter]:
         QPS[day_minuter][host] = 0
 
@@ -377,18 +283,18 @@ def resume_request() -> None:
 
 
 class Request:
-    def __init__(self, url: str, method: str = "GET", fields: Optional[Union[dict, str]] = None, headers: Optional[dict[str, str]] = None, cookies: Optional[dict[str, str]] = None):
+    def __init__(self, requst_url: str, method: str = "GET", fields: Optional[Union[dict, str]] = None, headers: Optional[dict[str, str]] = None, cookies: Optional[dict[str, str]] = None):
         """
         HTTP请求
         :Args:
-        - url - the url which you want visit, start with "http://" or "https://"
+        - requst_url - the url which you want visit, start with "http://" or "https://"
         - method - request method, value in ["GET", "POST", "HEAD", "PUT", "DELETE", "OPTIONS", "TRACE"]
         - fields - dictionary type of request data, will urlencode() them to string. like post data, query string, etc.
             not work with binary_data
         - headers - customize header dictionary
         - cookies - customize cookies dictionary, will replace headers["Cookie"]
         """
-        self._url: str = str(url).strip()
+        self._url: str = str(requst_url).strip()
         self._method: str = str(method).upper()
         self._fields = fields
         self._headers: dict[str, str] = headers if isinstance(headers, dict) else {}
@@ -514,7 +420,7 @@ class Request:
             connection_pool = PROXY_HTTP_CONNECTION_POOL
 
         if self._is_url_encode:
-            self._url = url_encode(self._url)
+            self._url = url.encode(self._url)
 
         # 设置User-Agent
         if "User-Agent" not in self._headers:

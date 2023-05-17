@@ -152,8 +152,8 @@ def get_origin_photo_url(photo_url):
     if photo_url.find("//stat.ameba.jp/user_images/") != -1:
         # 最新的photo_url使用?caw=指定显示分辨率，去除
         # http://stat.ameba.jp/user_images/20161220/12/akihabara48/fd/1a/j/o0768032013825427476.jpg?caw=800
-        photo_url = net.remove_url_query(photo_url)
-        photo_name, photo_extension = net.get_url_file_name_ext(photo_url)
+        photo_url = url.remove_query(photo_url)
+        photo_name, photo_extension = url.get_file_name_ext(photo_url)
         if not photo_name.startswith("o"):
             # https://stat.ameba.jp/user_images/20110612/15/akihabara48/af/3e/j/t02200165_0800060011286009555.jpg
             if photo_name.startswith("t") and photo_name.find("_") > 0:
@@ -318,7 +318,7 @@ class CrawlerThread(crawler.CrawlerThread):
                 continue
             self.duplicate_list[photo_url] = 1
 
-            photo_name = "%011d_%02d.%s" % (blog_id, photo_index, net.get_url_file_ext(photo_url, "jpg"))
+            photo_name = "%011d_%02d.%s" % (blog_id, photo_index, url.get_file_ext(photo_url, "jpg"))
             photo_path = os.path.join(self.main_thread.photo_download_path, self.index_key, photo_name)
             photo_description = "日志%s第%s张图片" % (blog_id, photo_index)
             download_return = self.download(photo_url, photo_path, photo_description, success_callback=self.download_success_callback)

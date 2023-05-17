@@ -47,7 +47,7 @@ def main():
         raise
 
     for badges_detail_url in badges_detail_url_list:
-        game_id = net.split_url_path(badges_detail_url)[3]
+        game_id = url.split_path(badges_detail_url)[3]
         # 跳过列表
         if game_id in skip_list:
             continue

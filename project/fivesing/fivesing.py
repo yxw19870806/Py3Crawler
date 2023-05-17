@@ -161,7 +161,7 @@ class CrawlerThread(crawler.CrawlerThread):
             self.error("%s 已删除" % audio_description)
             return
 
-        audio_extension = net.get_url_file_ext(audio_info_response["audio_url"])
+        audio_extension = url.get_file_ext(audio_info_response["audio_url"])
         audio_name = "%08d - %s.%s" % (audio_info["audio_id"], path.filter_text(audio_info["audio_title"]), audio_extension)
         audio_path = os.path.join(self.main_thread.audio_download_path, self.display_name, audio_type_name, audio_name)
         if self.download(audio_info_response["audio_url"], audio_path, audio_description):

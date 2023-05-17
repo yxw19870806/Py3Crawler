@@ -111,9 +111,9 @@ def get_one_page_post(account_id, page_count, is_https):
             "post_url": "",  # 日志地址
         }
         # 获取日志地址
-        result_post_info["post_url"] = net.url_encode(crawler.get_json_value(post_info, "url", type_check=str))
+        result_post_info["post_url"] = url.encode(crawler.get_json_value(post_info, "url", type_check=str))
         # 获取日志id
-        post_id = net.split_url_path(result_post_info["post_url"])[1]
+        post_id = url.split_path(result_post_info["post_url"])[1]
         if not tool.is_integer(post_id):
             raise crawler.CrawlerException("日志地址%s截取日志id失败" % result_post_info["post_url"])
         result_post_info["post_id"] = int(post_id)
@@ -163,9 +163,9 @@ def get_one_page_private_blog(account_id, page_count):
             "video_url": "",  # 视频地址
         }
         # 获取日志地址
-        result_post_info["post_url"] = net.url_encode(crawler.get_json_value(post_info, "post_url", type_check=str))
+        result_post_info["post_url"] = url.encode(crawler.get_json_value(post_info, "post_url", type_check=str))
         # 获取日志id
-        post_id = net.split_url_path(result_post_info["post_url"])[1]
+        post_id = url.split_path(result_post_info["post_url"])[1]
         if not tool.is_integer(post_id):
             raise crawler.CrawlerException("日志地址 %s 截取日志id失败" % result_post_info["post_url"])
         result_post_info["post_id"] = int(post_id)
@@ -285,7 +285,7 @@ def check_photo_url_invalid(photo_url):
 
 
 def analysis_photo(photo_url):
-    temp_list = net.get_url_file_name(photo_url).split("_")
+    temp_list = url.get_file_name(photo_url).split("_")
     resolution = 0
     if temp_list[0] == "tumblr":
         if temp_list[1] == "inline" and not tool.is_integer(temp_list[2]):
@@ -339,7 +339,7 @@ def analysis_photo(photo_url):
         photo_id = temp_list[0]
         resolution = int(temp_list[2])
     else:
-        photo_id = net.get_url_basename(photo_url)
+        photo_id = url.get_basename(photo_url)
         log.warning("未知图片地址类型2：" + photo_url)
     if len(photo_id) < 15 and not (tool.is_integer(photo_id) and int(photo_id) < 2000000000):
         log.warning("未知图片地址类型3：" + photo_url)
@@ -568,7 +568,7 @@ class CrawlerThread(crawler.CrawlerThread):
 
             photo_index = 1
             for photo_url in photo_url_list:
-                photo_name = "%012d_%02d.%s" % (post_info["post_id"], photo_index, net.get_url_file_ext(photo_url))
+                photo_name = "%012d_%02d.%s" % (post_info["post_id"], photo_index, url.get_file_ext(photo_url))
                 photo_path = os.path.join(self.main_thread.photo_download_path, self.index_key, photo_name)
                 photo_description = "日志%s(%s)第%s张图片" % (post_info["post_id"], post_info["post_url"], photo_index)
                 if self.download(photo_url, photo_path, photo_description, failure_callback=self.photo_download_failure_callback):

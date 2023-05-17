@@ -29,7 +29,7 @@ class NicoNicoDownload(niconico.NicoNico):
         video_id = None
         # http://www.nicovideo.jp/watch/sm20429274?ref=search_key_video&ss_pos=3&ss_id=361e7a4b-278e-40c1-acbb-a0c55c84005d
         if video_url.find("//www.nicovideo.jp/watch/sm") > 0:
-            video_id = tool.remove_string_suffix(net.get_url_basename(video_url), "sm")
+            video_id = tool.remove_string_suffix(url.get_basename(video_url), "sm")
         elif tool.is_integer(video_url):
             video_id = video_url
         elif video_url.startswith("sm") and tool.is_integer(tool.remove_string_suffix(video_url, "sm")):
