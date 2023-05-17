@@ -29,7 +29,7 @@ class BiliBiliFavorites(bilibili.BiliBili):
         video_url = input(tool.convert_timestamp_to_formatted_time() + " 请输入bilibili收藏夹播放地址：").lower()
         favorites_id = None
         if video_url.find("//www.bilibili.com/medialist/play/ml") > 0:
-            favorites_id = tool.remove_string_prefix(net.get_url_basename(video_url), "ml")
+            favorites_id = tool.remove_string_prefix(url.get_basename(video_url), "ml")
         elif tool.is_integer(video_url):
             favorites_id = video_url
         elif video_url.startswith("ml") and tool.is_integer(tool.remove_string_prefix(video_url, "ml")):
@@ -105,7 +105,7 @@ class BiliBiliFavorites(bilibili.BiliBili):
                             video_name += "_" + str(video_part_index)
                     if len(video_part_info["video_url_list"]) > 1:
                         video_name += " (%s)" % video_split_index
-                    video_name = "%s.%s" % (path.filter_text(video_name), net.get_url_file_ext(video_part_url))
+                    video_name = "%s.%s" % (path.filter_text(video_name), url.get_file_ext(video_part_url))
                     video_path = os.path.join(root_dir, video_name)
 
                     # 开始下载

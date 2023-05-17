@@ -7,6 +7,7 @@ __all__ = [
     "net",
     "path",
     "tool",
+    "url",
     "PROJECT_LIB_PATH",
     "PROJECT_ROOT_PATH",
     "PROJECT_CONFIG_PATH",

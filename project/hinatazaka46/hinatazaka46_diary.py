@@ -47,7 +47,7 @@ def get_one_page_blog(account_id, page_count):
         if not blog_url:
             raise crawler.CrawlerException("日志信息截取日志地址失败\n" + blog_selector.html())
         # /s/official/diary/detail/49568?ima=0000&cd=member
-        blog_id = net.get_url_basename(blog_url)
+        blog_id = url.get_basename(blog_url)
         if not tool.is_integer(blog_id):
             raise crawler.CrawlerException("日志地址 %s 截取日志id失败" % blog_url)
         result_blog_info["blog_id"] = int(blog_id)
@@ -137,7 +137,7 @@ class CrawlerThread(crawler.CrawlerThread):
 
         photo_index = 1
         for photo_url in blog_info["photo_url_list"]:
-            photo_name = "%05d_%02d.%s" % (blog_info["blog_id"], photo_index, net.get_url_file_ext(photo_url))
+            photo_name = "%05d_%02d.%s" % (blog_info["blog_id"], photo_index, url.get_file_ext(photo_url))
             photo_path = os.path.join(self.main_thread.photo_download_path, self.display_name, photo_name)
             photo_description = "日志%s第%s张图片" % (blog_info["blog_id"], photo_index)
             if self.download(photo_url, photo_path, photo_description):

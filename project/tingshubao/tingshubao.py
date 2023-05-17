@@ -37,7 +37,7 @@ def get_album_index_page(album_id):
         if audio_play_url.startswith("/"):
             audio_play_url = "http://m.tingshubao.com" + audio_play_url
         result_audio_info["audio_play_url"] = audio_play_url
-        audio_id = net.get_url_file_name(audio_play_url).split("-")[-1]
+        audio_id = url.get_file_name(audio_play_url).split("-")[-1]
         if not tool.is_integer(audio_id):
             raise crawler.CrawlerException("音频播放地址 %s 截取音频id失败" % audio_play_url)
         result_audio_info["audio_id"] = int(audio_id) + 1  # 页面是从0开始的
@@ -139,7 +139,7 @@ class CrawlerThread(crawler.CrawlerThread):
             self.error(e.http_error(audio_description))
             raise
 
-        audio_name = "%04d %s.%s" % (audio_info["audio_id"], audio_info["audio_title"], net.get_url_file_ext(audio_play_response["audio_url"]))
+        audio_name = "%04d %s.%s" % (audio_info["audio_id"], audio_info["audio_title"], url.get_file_ext(audio_play_response["audio_url"]))
         audio_path = os.path.join(self.main_thread.audio_download_path, self.display_name, audio_name)
         if self.download(audio_play_response["audio_url"], audio_path, audio_description, failure_callback=self.download_failure_callback):
             self.total_audio_count += 1  # 计数累加

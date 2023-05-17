@@ -208,7 +208,7 @@ class CrawlerThread(crawler.CrawlerThread):
             else:
                 photo_url = photo_info["photo_url"]
 
-            photo_name = "%06d_%02d.%s" % (blog_id, photo_index, net.get_url_file_ext(photo_url, "jpg"))
+            photo_name = "%06d_%02d.%s" % (blog_id, photo_index, url.get_file_ext(photo_url, "jpg"))
             photo_path = os.path.join(self.main_thread.photo_download_path, self.display_name, photo_name)
             photo_description = "日志%s第%s张图片" % (blog_id, photo_index)
             if self.download(photo_url, photo_path, photo_description, cookies=preview_photo_response["cookies"], success_callback=self.download_success_callback):

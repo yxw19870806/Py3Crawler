@@ -79,7 +79,7 @@ def get_one_page_favorite(page_count):
                     # https://wx3.sinaimg.cn/mw2000/e212e359gy1hdzbgobbpvj20lc0sgtce.jpg
                     # ->
                     # https://wx3.sinaimg.cn/large/e212e359gy1hdzbgobbpvj20lc0sgtce.jpg
-                    url_split_result = net.split_url_path(photo_url)
+                    url_split_result = url.split_path(photo_url)
                     url_split_result[0] = "large"
                     url_split_result.insert(0, "")
                     photo_url_list.append(urllib.parse.urljoin(photo_url, "/".join(url_split_result)))
@@ -173,7 +173,7 @@ class Favorite(crawler.Crawler):
                 photo_count = 1
                 photo_path = os.path.join(self.photo_download_path, blog_info["blog_id"])
                 for photo_url in blog_info["photo_url_list"]:
-                    photo_path = os.path.join(photo_path, "%s.%s" % (photo_count, net.get_url_file_ext(photo_url)))
+                    photo_path = os.path.join(photo_path, "%s.%s" % (photo_count, url.get_file_ext(photo_url)))
                     photo_description = "微博%s第%s张图片" % (blog_info["blog_id"], photo_count)
                     if self.download(photo_url, photo_path, photo_description, success_callback=self.download_success_callback):
                         self.total_photo_count += 1

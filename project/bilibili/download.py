@@ -30,9 +30,9 @@ class BiliBiliDownload(bilibili.BiliBili):
         lower_video_url = video_url.lower()
         video_id = None
         if lower_video_url.find("bilibili.com/video/av") > 0:
-            video_id = tool.remove_string_prefix(net.get_url_basename(video_url), "av")
+            video_id = tool.remove_string_prefix(url.get_basename(video_url), "av")
         elif lower_video_url.find("bilibili.com/video/bv") > 0:
-            bv_id = net.get_url_basename(video_url)
+            bv_id = url.get_basename(video_url)
             video_id = bilibili.bv_id_2_av_id(bv_id)
         elif tool.is_integer(lower_video_url):
             video_id = lower_video_url
@@ -83,7 +83,7 @@ class BiliBiliDownload(bilibili.BiliBili):
                     video_title += "_" + video_part_info["video_part_title"]
                 else:
                     video_title += "_" + str(part_index)
-            video_name = "%010d %s.%s" % (int(video_id), path.filter_text(video_title), net.get_url_file_ext(video_part_info["video_url_list"][0]))
+            video_name = "%010d %s.%s" % (int(video_id), path.filter_text(video_title), url.get_file_ext(video_part_info["video_url_list"][0]))
 
             # 选择下载目录
             log.info("请选择下载目录")
