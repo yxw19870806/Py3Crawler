@@ -119,7 +119,7 @@ class CrawlerThread(crawler.CrawlerThread):
     # 解析单个图片
     def crawl_photo(self, photo_info):
         photo_url = get_photo_url(photo_info["photo_url"])
-        photo_name = "%08d.%s" % (photo_info["photo_id"], net.get_url_file_ext(photo_url))
+        photo_name = "%08d.%s" % (photo_info["photo_id"], url.get_file_ext(photo_url))
         photo_path = os.path.join(self.main_thread.photo_download_path, self.display_name, photo_name)
         photo_description = "图片%s" % photo_info["photo_id"]
         if self.download(photo_url, photo_path, photo_description):

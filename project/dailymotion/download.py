@@ -30,7 +30,7 @@ class DailyMotionDownload(dailymotion.DailyMotion):
         video_id = None
         # https://www.dailymotion.com/video/x6njw4l
         if video_url.find("//www.dailymotion.com/video/") > 0:
-            video_id = net.get_url_basename(video_url)
+            video_id = url.get_basename(video_url)
         elif re.match("[a-zA-Z0-9]+$", video_url) is not None:
             video_id = video_url
         return video_id

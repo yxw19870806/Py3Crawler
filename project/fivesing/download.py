@@ -30,8 +30,8 @@ class FiveSingDownload(fivesing.FiveSing):
         audio_id = None
         # http://5sing.kugou.com/fc/15887314.html
         if audio_url.find("//5sing.kugou.com/") > 0:
-            audio_type = net.split_url_path(audio_url)[0]
-            audio_id = net.get_url_file_name(audio_url)
+            audio_type = url.split_path(audio_url)[0]
+            audio_id = url.get_file_name(audio_url)
         return [audio_type, audio_id]
 
     def main(self):
@@ -60,7 +60,7 @@ class FiveSingDownload(fivesing.FiveSing):
 
         # 选择下载目录
         log.info("请选择下载目录")
-        file_extension = net.get_url_file_ext(audio_response["audio_url"])
+        file_extension = url.get_file_ext(audio_response["audio_url"])
         options = {
             "initialdir": self.audio_download_path,
             "initialfile": "%08d - %s.%s" % (int(audio_id), path.filter_text(audio_response["audio_title"]), file_extension),

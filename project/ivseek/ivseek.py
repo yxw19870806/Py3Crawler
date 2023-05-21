@@ -74,11 +74,11 @@ def get_archive_page(archive_id):
         }
         # 'http://embed.share-videos.se/auto/embed/40537536?uid=6050'
         if video_url.find("//embed.share-videos.se/") >= 0:
-            video_id = net.get_url_basename(video_url)
+            video_id = url.get_basename(video_url)
             result_video_info["video_url"] = "http://share-videos.se/auto/video/%s" % video_id
         # https://www.youtube.com/embed/9GSEOmLD_zc?feature=oembed
         elif video_url.find("//www.youtube.com/") >= 0:
-            video_id = net.get_url_basename(video_url)
+            video_id = url.get_basename(video_url)
             result_video_info["video_url"] = "https://www.youtube.com/watch?v=%s" % video_id
             # 获取视频发布账号
             video_play_response = net.Request(result_video_info["video_url"], method="GET", headers={"accept-language": "en-US"})
@@ -99,11 +99,11 @@ def get_archive_page(archive_id):
         elif video_url.find(".nicovideo.jp/") >= 0:
             # https://embed.nicovideo.jp/watch/sm23008734/script?w=640&#038;h=360
             if video_url.find("embed.nicovideo.jp/watch") >= 0:
-                video_id = net.split_url_path(video_url)[1]
+                video_id = url.split_path(video_url)[1]
             # http://ext.nicovideo.jp/thumb_watch/sm21088018?w=490&#038;h=307
             # https://ext.nicovideo.jp/thumb/sm31656014
             elif video_url.find("ext.nicovideo.jp/thumb_watch/") >= 0 or video_url.find("ext.nicovideo.jp/thumb/") >= 0:
-                video_id = net.get_url_basename(video_url)
+                video_id = url.get_basename(video_url)
             else:
                 raise crawler.CrawlerException("未知视频来源" + video_url)
             result_video_info["video_url"] = "http://www.nicovideo.jp/watch/%s" % video_id
@@ -126,7 +126,7 @@ def get_archive_page(archive_id):
         # http://www.dailymotion.com/embed/video/x5oi0x
         elif video_url.find("//www.dailymotion.com/") >= 0:
             video_url = video_url.replace("http://", "https://")
-            video_id = net.get_url_basename(video_url)
+            video_id = url.get_basename(video_url)
             result_video_info["video_url"] = "http://www.dailymotion.com/video/%s" % video_id
             # 获取视频发布账号
             video_play_response = net.Request(result_video_info["video_url"], method="GET")

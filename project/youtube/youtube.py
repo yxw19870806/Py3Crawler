@@ -199,7 +199,7 @@ def get_video_page(video_id):
             video_url = crawler.get_json_value(video_info, "url", type_check=str)
         except crawler.CrawlerException:
             decrypted_video_url = crawler.get_json_value(video_info, "signatureCipher", type_check=str)
-            url_query = net.get_url_query_dict(decrypted_video_url)
+            url_query = url.parse_query(decrypted_video_url)
             video_signature = url_query.get("s", "")
             video_url = urllib.parse.unquote(url_query.get("url", ""))
             # 解析JS文件，获取对应的加密方法
