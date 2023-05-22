@@ -96,7 +96,7 @@ class CrawlerThread(crawler.CrawlerThread):
             self.start_parse(blog_pagination_description)
             try:
                 blog_pagination_response = get_one_page_blog(self.index_key, page_count)
-            except crawler.CrawlerException as e:
+            except CrawlerException as e:
                 self.error(e.http_error(blog_pagination_description))
                 raise
             self.parse_result(blog_pagination_description, blog_pagination_response["blog_id_list"])
@@ -119,7 +119,7 @@ class CrawlerThread(crawler.CrawlerThread):
         # 获取指定日志
         try:
             blog_response = get_blog_page(self.index_key, blog_id)
-        except crawler.CrawlerException as e:
+        except CrawlerException as e:
             self.error(e.http_error(blog_description))
             raise
 

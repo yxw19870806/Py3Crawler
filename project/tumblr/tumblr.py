@@ -43,7 +43,7 @@ def get_index_setting(account_id):
         if redirect_url.startswith("http://"):
             is_https = False
         is_private = False
-        # raise crawler.CrawlerException("此账号已重定向第三方网站")
+        # raise CrawlerException("此账号已重定向第三方网站")
     elif index_response.status == 302:
         redirect_url = index_response.headers.get("Location")
         if redirect_url.startswith("http://%s.tumblr.com/" % account_id):
@@ -53,7 +53,7 @@ def get_index_setting(account_id):
             if index_response.status == const.ResponseCode.SUCCEED:
                 return is_https, is_private
             elif index_response.status != 302:
-                raise crawler.CrawlerException(crawler.request_failre(index_response.status))
+                raise CrawlerException(crawler.request_failre(index_response.status))
             redirect_url = index_response.headers.get("Location")
         if redirect_url.find("www.tumblr.com/safe-mode?url=") > 0:
             is_private = True
@@ -64,11 +64,11 @@ def get_index_setting(account_id):
             is_private = True
             index_response = net.Request(redirect_url, method="GET", cookies=COOKIES)
             if index_response.status == 404:
-                raise crawler.CrawlerException("账号不存在")
+                raise CrawlerException("账号不存在")
     elif index_response.status == 404:
-        raise crawler.CrawlerException("账号不存在")
+        raise CrawlerException("账号不存在")
     elif index_response.status != const.ResponseCode.SUCCEED:
-        raise crawler.CrawlerException(crawler.request_failre(index_response.status))
+        raise CrawlerException(crawler.request_failre(index_response.status))
     return is_https, is_private
 
 
@@ -96,14 +96,14 @@ def get_one_page_post(account_id, page_count, is_https):
     #     log.error("%s 第%s页日志无法访问，跳过" % (account_id, page_count))
     #     return result
     elif post_pagination_response.status != const.ResponseCode.SUCCEED:
-        raise crawler.CrawlerException(crawler.request_failre(post_pagination_response.status))
+        raise CrawlerException(crawler.request_failre(post_pagination_response.status))
     script_json_html = tool.find_sub_string(post_pagination_response.content, '<script type="application/ld+json">', "</script>").strip()
     if not script_json_html:
         result["is_over"] = True
         return result
     script_json = tool.json_decode(script_json_html)
     if script_json is None:
-        raise crawler.CrawlerException("日志信息加载失败\n" + script_json_html)
+        raise CrawlerException("日志信息加载失败\n" + script_json_html)
     # 单条日志
     for post_info in crawler.get_json_value(script_json, "itemListElement", type_check=list):
         result_post_info = {
@@ -115,7 +115,7 @@ def get_one_page_post(account_id, page_count, is_https):
         # 获取日志id
         post_id = url.split_path(result_post_info["post_url"])[1]
         if not tool.is_integer(post_id):
-            raise crawler.CrawlerException("日志地址%s截取日志id失败" % result_post_info["post_url"])
+            raise CrawlerException("日志地址%s截取日志id失败" % result_post_info["post_url"])
         result_post_info["post_id"] = int(post_id)
         result["post_info_list"].append(result_post_info)
     return result
@@ -150,9 +150,9 @@ def get_one_page_private_blog(account_id, page_count):
         time.sleep(5)
         return get_one_page_private_blog(account_id, page_count)
     elif post_pagination_response.status != const.ResponseCode.SUCCEED:
-        raise crawler.CrawlerException(crawler.request_failre(post_pagination_response.status))
+        raise CrawlerException(crawler.request_failre(post_pagination_response.status))
     if crawler.get_json_value(post_pagination_response.json_data, "meta", "status", type_check=int) != 200:
-        raise crawler.CrawlerException("返回信息%s中'status'字段取值不正确" % post_pagination_response.json_data)
+        raise CrawlerException("返回信息%s中'status'字段取值不正确" % post_pagination_response.json_data)
     post_info_list = crawler.get_json_value(post_pagination_response.json_data, "response", "posts", type_check=list)
     for post_info in post_info_list:
         result_post_info = {
@@ -167,7 +167,7 @@ def get_one_page_private_blog(account_id, page_count):
         # 获取日志id
         post_id = url.split_path(result_post_info["post_url"])[1]
         if not tool.is_integer(post_id):
-            raise crawler.CrawlerException("日志地址 %s 截取日志id失败" % result_post_info["post_url"])
+            raise CrawlerException("日志地址 %s 截取日志id失败" % result_post_info["post_url"])
         result_post_info["post_id"] = int(post_id)
         # 视频
         if crawler.get_json_value(post_info, "type", type_check=str) == "video":
@@ -210,10 +210,10 @@ def get_post_page(post_url, post_id):
         result["is_delete"] = True
         return result
     elif post_response.status != const.ResponseCode.SUCCEED:
-        raise crawler.CrawlerException(crawler.request_failre(post_response.status))
+        raise CrawlerException(crawler.request_failre(post_response.status))
     post_page_head = tool.find_sub_string(post_response.content, "<head", "</head>", const.IncludeStringMode.ALL)
     if not post_page_head:
-        raise crawler.CrawlerException("页面截取正文失败\n" + post_response.content)
+        raise CrawlerException("页面截取正文失败\n" + post_response.content)
     # 获取og_type（页面类型的是视频还是图片或其他）
     og_type = tool.find_sub_string(post_page_head, '<meta property="og:type" content="', '" />')
     # 视频
@@ -241,10 +241,10 @@ def get_post_page(post_url, post_id):
     elif not og_type:
         script_json_html = tool.find_sub_string(post_page_head, '<script type="application/ld+json">', "</script>").strip()
         if not script_json_html:
-            raise crawler.CrawlerException("正文截取og_type失败\n" + post_page_head)
+            raise CrawlerException("正文截取og_type失败\n" + post_page_head)
         script_json = tool.json_decode(script_json_html)
         if script_json is None:
-            raise crawler.CrawlerException("页面脚本数据解析失败\n" + script_json_html)
+            raise CrawlerException("页面脚本数据解析失败\n" + script_json_html)
         image_info = crawler.get_json_value(script_json, "image", default_value=None)
         if image_info is None:
             pass
@@ -256,7 +256,7 @@ def get_post_page(post_url, post_id):
             if not check_photo_url_invalid(image_info):
                 result["photo_url_list"].append(image_info)
         else:
-            raise crawler.CrawlerException("页面脚本%s中'image'字段类型错误" % script_json)
+            raise CrawlerException("页面脚本%s中'image'字段类型错误" % script_json)
     else:
         # 获取全部图片地址
         photo_url_list = re.findall(r'"(https?://\d*[.]?media.tumblr.com/[^"]*)"', post_page_head)
@@ -370,7 +370,7 @@ def get_video_play_page(account_id, post_id, is_https):
         time.sleep(30)
         return get_video_play_page(account_id, post_id, is_https)
     elif video_play_response.status != const.ResponseCode.SUCCEED:
-        raise crawler.CrawlerException(crawler.request_failre(video_play_response.status))
+        raise CrawlerException(crawler.request_failre(video_play_response.status))
     video_url_find = re.findall(r'<source src="(https?://%s.tumblr.com/video_file/[^"]*)" type="[^"]*"' % account_id, video_play_response.content)
     if len(video_url_find) == 1:
         if tool.is_integer(video_url_find[0].split("/")[-1]):
@@ -380,7 +380,7 @@ def get_video_play_page(account_id, post_id, is_https):
         # 第三方视频
         pass
     else:
-        raise crawler.CrawlerException("页面截取视频地址失败\n" + video_play_response.content)
+        raise CrawlerException("页面截取视频地址失败\n" + video_play_response.content)
     return result
 
 
@@ -450,7 +450,7 @@ class CrawlerThread(crawler.CrawlerThread):
                     post_pagination_response: dict = get_one_page_private_blog(self.index_key, start_page_count)
                 else:
                     post_pagination_response: dict = get_one_page_post(self.index_key, start_page_count, self.is_https)
-            except crawler.CrawlerException as e:
+            except CrawlerException as e:
                 self.error(e.http_error(post_pagination_description))
                 raise
             # 这页没有任何内容，返回上一个检查节点
@@ -478,7 +478,7 @@ class CrawlerThread(crawler.CrawlerThread):
                     post_pagination_response = get_one_page_private_blog(self.index_key, page_count)
                 else:
                     post_pagination_response = get_one_page_post(self.index_key, page_count, self.is_https)
-            except crawler.CrawlerException as e:
+            except CrawlerException as e:
                 self.error(e.http_error(post_pagination_description))
                 raise
             if not self.is_private and post_pagination_response["is_over"]:
@@ -520,7 +520,7 @@ class CrawlerThread(crawler.CrawlerThread):
             # 获取日志
             try:
                 post_response = get_post_page(post_info["post_url"], post_info["post_id"])
-            except crawler.CrawlerException as e:
+            except CrawlerException as e:
                 self.error(e.http_error(post_description))
                 raise
 
@@ -540,7 +540,7 @@ class CrawlerThread(crawler.CrawlerThread):
             if video_url is None:
                 try:
                     video_play_response = get_video_play_page(self.index_key, post_info["post_id"], self.is_https)
-                except crawler.CrawlerException as e:
+                except CrawlerException as e:
                     self.error(e.http_error(post_description))
                     raise
 
@@ -602,7 +602,7 @@ class CrawlerThread(crawler.CrawlerThread):
     def _run(self):
         try:
             self.is_https, self.is_private = get_index_setting(self.index_key)
-        except crawler.CrawlerException as e:
+        except CrawlerException as e:
             self.error(e.http_error("账号设置"))
             raise
 

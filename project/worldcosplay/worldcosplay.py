@@ -28,9 +28,9 @@ def get_one_page_photo(account_id, page_count):
         "is_over": False,  # 是否最后一页图片
     }
     if photo_pagination_response.status == 404 and page_count == 1:
-        raise crawler.CrawlerException("账号不存在")
+        raise CrawlerException("账号不存在")
     elif photo_pagination_response.status != const.ResponseCode.SUCCEED:
-        raise crawler.CrawlerException(crawler.request_failre(photo_pagination_response.status))
+        raise CrawlerException(crawler.request_failre(photo_pagination_response.status))
     # 获取图片信息
     for photo_info in crawler.get_json_value(photo_pagination_response.json_data, "list", type_check=list):
         result_photo_info = {
@@ -89,7 +89,7 @@ class CrawlerThread(crawler.CrawlerThread):
             self.start_parse(photo_pagination_description)
             try:
                 photo_pagination_response = get_one_page_photo(self.index_key, page_count)
-            except crawler.CrawlerException as e:
+            except CrawlerException as e:
                 self.error(e.http_error(photo_pagination_description))
                 raise
             self.parse_result(photo_pagination_description, photo_pagination_response["photo_info_list"])

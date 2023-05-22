@@ -27,7 +27,7 @@ def main():
         # 获取游戏信息
         try:
             game_data = steam.get_game_store_index(game_id)
-        except crawler.CrawlerException as e:
+        except CrawlerException as e:
             console.log(e.http_error("游戏%s" % game_id))
             continue
         if game_data["deleted"] is False:

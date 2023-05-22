@@ -68,7 +68,7 @@ def get_access_token(api_key, api_secret):
             crawler.get_json_value(response.json_data, "token_type", type_check=str, value_check="bearer")
             global ACCESS_TOKEN
             ACCESS_TOKEN = crawler.get_json_value(response.json_data, "access_token", type_check=str)
-        except crawler.CrawlerException:
+        except CrawlerException:
             pass
         else:
             return True

@@ -50,7 +50,7 @@ class XiMaLaYaDownload(ximalaya.XiMaLaYa):
         # 获取下载地址
         try:
             audio_response = ximalaya.get_audio_info_page(audio_id)
-        except crawler.CrawlerException as e:
+        except CrawlerException as e:
             log.error(e.http_error("歌曲"))
             return
         if audio_response["is_delete"]:

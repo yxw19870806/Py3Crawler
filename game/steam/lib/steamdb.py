@@ -21,7 +21,7 @@ def get_game_store_index(game_id):
         "Referer": "https://steamdb.info/",
     }
     if "User-Agent" not in headers:
-        raise crawler.CrawlerException("header没有携带User-Agent")
+        raise CrawlerException("header没有携带User-Agent")
     game_index_response = net.Request(game_index_url, method="GET", headers=headers, cookies=COOKIES).disable_auto_retry()
     result = {
         "game_name": None,  # 游戏名字
@@ -29,11 +29,11 @@ def get_game_store_index(game_id):
         "publisher_name": None,  # Publisher
     }
     if game_index_response.status != const.ResponseCode.SUCCEED:
-        raise crawler.CrawlerException(crawler.request_failre(game_index_response.status))
+        raise CrawlerException(crawler.request_failre(game_index_response.status))
     # 获取游戏名字
     game_name = pq(game_index_response.content).find("[itemprop='name']").text()
     if not game_name:
-        raise crawler.CrawlerException("页面截取游戏名字失败\n" + game_index_response.content)
+        raise CrawlerException("页面截取游戏名字失败\n" + game_index_response.content)
     result["game_name"] = game_name
     # 获取开发者名字
     develop_name = pq(game_index_response.content).find("span[itemprop=author]").text()
@@ -56,7 +56,7 @@ def get_game_store_index(game_id):
         headers["X-Requested-With"] = "XMLHttpRequest"
         history_api_response = net.Request(history_api_url, method="GET", fields=query_data, headers=headers, cookies=COOKIES)
         if history_api_response.status != const.ResponseCode.SUCCEED:
-            raise crawler.CrawlerException("历史记录，%s" % crawler.request_failre(history_api_response.status))
+            raise CrawlerException("历史记录，%s" % crawler.request_failre(history_api_response.status))
         if not result["develop_name"]:
             history_info_selector_list = pq(history_api_response.content).find(".app-history i:contains('developer')")
             for history_index in range(history_info_selector_list.length):

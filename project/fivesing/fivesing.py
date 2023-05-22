@@ -21,9 +21,9 @@ def get_one_page_audio(account_id, page_type, page_count):
         "audio_info_list": [],  # 全部歌曲信息
     }
     if audio_pagination_response.status != const.ResponseCode.SUCCEED:
-        raise crawler.CrawlerException(crawler.request_failre(audio_pagination_response.status))
+        raise CrawlerException(crawler.request_failre(audio_pagination_response.status))
     if audio_pagination_response.content.find("var OwnerNickName = '';") >= 0:
-        raise crawler.CrawlerException("账号不存在")
+        raise CrawlerException("账号不存在")
     # 获取歌曲信息
     # 单首歌曲信息的格式：[歌曲id，歌曲标题]
     audio_info_list = re.findall(r'<a href="http://5sing.kugou.com/%s/(\d*).html" [\s|\S]*? title="([^"]*)">' % page_type, audio_pagination_response.content)
@@ -50,7 +50,7 @@ def get_audio_play_page(audio_id, song_type):
         "is_delete": False,  # 是否已删除
     }
     if audio_info_response.status != const.ResponseCode.SUCCEED:
-        raise crawler.CrawlerException(crawler.request_failre(audio_info_response.status))
+        raise CrawlerException(crawler.request_failre(audio_info_response.status))
     if crawler.get_json_value(audio_info_response.json_data, "success", type_check=bool) is False:
         if crawler.get_json_value(audio_info_response.json_data, "message", type_check=str) in ["该歌曲已下架", "歌曲不存在", "歌曲不存在或状态不正常"]:
             result["is_delete"] = True
@@ -64,7 +64,7 @@ def get_audio_play_page(audio_id, song_type):
     elif tool.check_dict_sub_key(("hqurl",), response_data) and response_data["hqurl"]:
         result["audio_url"] = response_data["hqurl"]
     else:
-        raise crawler.CrawlerException("歌曲信息'squrl'、'lqurl'、'hqurl'字段都不存在\n" + str(audio_info_response.json_data))
+        raise CrawlerException("歌曲信息'squrl'、'lqurl'、'hqurl'字段都不存在\n" + str(audio_info_response.json_data))
     # 获取歌曲标题
     result["audio_title"] = crawler.get_json_value(audio_info_response.json_data, "data", "songName", type_check=str)
     return result
@@ -117,7 +117,7 @@ class CrawlerThread(crawler.CrawlerThread):
             self.start_parse(audio_pagination_description)
             try:
                 audio_pagination_response = get_one_page_audio(self.index_key, audio_type, page_count)
-            except crawler.CrawlerException as e:
+            except CrawlerException as e:
                 self.error(e.http_error(audio_pagination_description))
                 raise
             self.parse_result(audio_pagination_description, audio_pagination_response["audio_info_list"])
@@ -154,7 +154,7 @@ class CrawlerThread(crawler.CrawlerThread):
         self.start_parse(audio_description)
         try:
             audio_info_response = get_audio_play_page(audio_info["audio_id"], audio_type)
-        except crawler.CrawlerException as e:
+        except CrawlerException as e:
             self.error(e.http_error(audio_description))
             raise
         if audio_info_response["is_delete"]:

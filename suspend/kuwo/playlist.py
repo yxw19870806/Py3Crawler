@@ -68,7 +68,7 @@ class KuWoPlaylist(kuwo.KuWo):
             self.start_parse(playlist_pagination_description)
             try:
                 playlist_pagination_response = kuwo.get_one_page_playlist(playlist_id, page_count)
-            except crawler.CrawlerException as e:
+            except CrawlerException as e:
                 log.error(e.http_error(playlist_pagination_description))
                 return
             self.parse_result(playlist_pagination_description, playlist_pagination_response["audio_info_list"])
@@ -89,7 +89,7 @@ class KuWoPlaylist(kuwo.KuWo):
             # 获取下载地址
             try:
                 audio_info_response = kuwo.get_audio_info_page(audio_info["audio_id"])
-            except crawler.CrawlerException as e:
+            except CrawlerException as e:
                 log.error(e.http_error("歌曲%s《%s》" % (audio_info["audio_id"], audio_info["audio_title"])))
                 continue
 

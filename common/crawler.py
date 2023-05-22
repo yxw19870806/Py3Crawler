@@ -650,21 +650,6 @@ class DownloadThread(CrawlerThread):
         return self
 
 
-class CrawlerException(SystemExit):
-    def __init__(self, msg: str = "", is_print: bool = True) -> None:
-        SystemExit.__init__(self, 1)
-        if is_print:
-            console.log(msg)
-        self.exception_message = msg
-
-    @property
-    def message(self) -> str:
-        return self.exception_message
-
-    def http_error(self, target: str) -> str:
-        return "%s解析失败，原因：%s" % (target, self.message)
-
-
 def read_config(config_path: str) -> dict[str, str]:
     """
     读取配置文件

@@ -33,9 +33,9 @@ def get_one_page_blog(account_name, page_count):
         COOKIES.update(net.get_cookies_from_response_header(blog_pagination_response.headers))
         return get_one_page_blog(account_name, page_count)
     if page_count == 1 and blog_pagination_response.status == 404:
-        raise crawler.CrawlerException("账号不存在")
+        raise CrawlerException("账号不存在")
     elif blog_pagination_response.status != const.ResponseCode.SUCCEED:
-        raise crawler.CrawlerException(crawler.request_failre(blog_pagination_response.status))
+        raise CrawlerException(crawler.request_failre(blog_pagination_response.status))
     # 获取全部日志地址
     blog_url_list = re.findall(r'"(https?://%s.lofter.com/post/[^"]*)"' % account_name, blog_pagination_response.content)
     # 去重排序
@@ -50,7 +50,7 @@ def get_blog_page(blog_url):
         "photo_url_list": [],  # 全部图片地址
     }
     if blog_response.status != const.ResponseCode.SUCCEED:
-        raise crawler.CrawlerException(crawler.request_failre(blog_response.status))
+        raise CrawlerException(crawler.request_failre(blog_response.status))
     # 获取全部图片地址
     result["photo_url_list"] = re.findall(r'bigimgsrc="([^"]*)"', blog_response.content)
     return result
@@ -108,7 +108,7 @@ class CrawlerThread(crawler.CrawlerThread):
             self.start_parse(blog_pagination_description)
             try:
                 blog_pagination_response = get_one_page_blog(self.index_key, page_count)
-            except crawler.CrawlerException as e:
+            except CrawlerException as e:
                 self.error(e.http_error(blog_pagination_description))
                 raise
             self.parse_result(blog_pagination_description, blog_pagination_response["blog_url_list"])
@@ -144,7 +144,7 @@ class CrawlerThread(crawler.CrawlerThread):
         self.start_parse(blog_description)
         try:
             blog_response = get_blog_page(blog_url)
-        except crawler.CrawlerException as e:
+        except CrawlerException as e:
             self.error(e.http_error(blog_description))
             raise
         self.parse_result(blog_description, blog_response["photo_url_list"])

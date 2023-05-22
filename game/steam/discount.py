@@ -75,7 +75,7 @@ def main():
         # 调用API获取打折列表
         try:
             discount_game_list = steam.get_discount_game_list()
-        except crawler.CrawlerException as e:
+        except CrawlerException as e:
             console.log(e.http_error("打折游戏"))
             raise
         # 将打折列表写入文件
@@ -86,7 +86,7 @@ def main():
     # 获取自己的全部游戏列表
     try:
         owned_game_list = steam.get_account_owned_app_list(steam_class.account_id)
-    except crawler.CrawlerException as e:
+    except CrawlerException as e:
         console.log(e.http_error("个人游戏主页"))
         raise
     for discount_info in discount_game_list:

@@ -29,10 +29,10 @@ def get_one_page_album(account_id, since_id):
         "album_id_list": [],  # 全部作品id
     }
     if api_response.status != const.ResponseCode.SUCCEED:
-        raise crawler.CrawlerException(crawler.request_failre(api_response.status))
+        raise CrawlerException(crawler.request_failre(api_response.status))
     try:
         album_info_list = crawler.get_json_value(api_response.json_data, "data", "items", type_check=list)
-    except crawler.CrawlerException:
+    except CrawlerException:
         album_info_list = crawler.get_json_value(api_response.json_data, "data", value_check={})
     for album_info in album_info_list:
         result["album_id_list"].append(crawler.get_json_value(album_info, "item_detail", "item_id", type_check=int))
@@ -51,13 +51,13 @@ def get_album_page(album_id):
         "video_id": "",  # 视频id
     }
     if album_response.status != const.ResponseCode.SUCCEED:
-        raise crawler.CrawlerException(crawler.request_failre(album_response.status))
+        raise CrawlerException(crawler.request_failre(album_response.status))
     script_json_html = tool.find_sub_string(album_response.content, "JSON.parse(", ");\n")
     if not script_json_html:
-        raise crawler.CrawlerException("页面截取作品信息失败\n" + album_response.content)
+        raise CrawlerException("页面截取作品信息失败\n" + album_response.content)
     script_json = tool.json_decode(tool.json_decode(script_json_html))
     if not script_json:
-        raise crawler.CrawlerException("作品信息加载失败\n" + album_response.content)
+        raise CrawlerException("作品信息加载失败\n" + album_response.content)
     is_skip = False
     album_type = crawler.get_json_value(script_json, "detail", "post_data", "type", type_check=str)
     # 问答
@@ -76,12 +76,12 @@ def get_album_page(album_id):
     elif album_type == "note":
         pass
     else:
-        raise crawler.CrawlerException("未知的作品类型：%s" % album_type)
+        raise CrawlerException("未知的作品类型：%s" % album_type)
     # 获取全部图片
     for photo_info in crawler.get_json_value(script_json, "detail", "post_data", "multi", type_check=list):
         result["photo_url_list"].append(crawler.get_json_value(photo_info, "original_path", type_check=str))
     if not is_skip and len(result["photo_url_list"]) == 0:
-        raise crawler.CrawlerException("页面匹配图片地址失败\n" + album_response.content)
+        raise CrawlerException("页面匹配图片地址失败\n" + album_response.content)
     return result
 
 
@@ -103,11 +103,11 @@ def get_album_page_by_selenium(album_id):
                     video_info_url = video_info_url.replace("&callback=axiosJsonpCallback1", "")
                     break
         else:
-            raise crawler.CrawlerException("播放页匹配视频信息地址失败")
+            raise CrawlerException("播放页匹配视频信息地址失败")
     # 获取视频信息
     video_info_response = net.Request(video_info_url, method="GET").enable_json_decode()
     if video_info_response.status != const.ResponseCode.SUCCEED:
-        raise crawler.CrawlerException(crawler.request_failre(video_info_response.status))
+        raise CrawlerException(crawler.request_failre(video_info_response.status))
     video_info_list = crawler.get_json_value(video_info_response.json_data, "data", "video_list", type_check=dict)
     max_resolution = 0
     encryption_video_url = None
@@ -117,11 +117,11 @@ def get_album_page_by_selenium(album_id):
             encryption_video_url = crawler.get_json_value(video_info, "main_url", type_check=str)
             result["video_type"] = crawler.get_json_value(video_info, "vtype", type_check=str)
     if encryption_video_url is None:
-        raise crawler.CrawlerException("视频信息%s中截取加密视频地址失败\n" % video_info_response.json_data)
+        raise CrawlerException("视频信息%s中截取加密视频地址失败\n" % video_info_response.json_data)
     try:
         result["video_url"] = base64.b64decode(encryption_video_url).decode(errors="ignore")
     except TypeError:
-        raise crawler.CrawlerException("歌曲加密地址%s解密失败" % encryption_video_url)
+        raise CrawlerException("歌曲加密地址%s解密失败" % encryption_video_url)
     return result
 
 
@@ -161,7 +161,7 @@ class CrawlerThread(crawler.CrawlerThread):
             self.start_parse(album_pagination_description)
             try:
                 album_pagination_response = get_one_page_album(self.index_key, page_since_id)
-            except crawler.CrawlerException as e:
+            except CrawlerException as e:
                 self.error(e.http_error(album_pagination_description))
                 raise
             self.parse_result(album_pagination_description, album_pagination_response["album_id_list"])
@@ -188,7 +188,7 @@ class CrawlerThread(crawler.CrawlerThread):
         self.start_parse(album_description)
         try:
             album_response = get_album_page(album_id)
-        except crawler.CrawlerException as e:
+        except CrawlerException as e:
             self.error(e.http_error(album_description))
             raise
 
@@ -227,7 +227,7 @@ class CrawlerThread(crawler.CrawlerThread):
         self.start_parse(video_description)
         try:
             video_response = get_album_page_by_selenium(album_id)
-        except crawler.CrawlerException as e:
+        except CrawlerException as e:
             self.error(e.http_error(video_description))
             raise
 

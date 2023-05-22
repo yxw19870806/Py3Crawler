@@ -36,7 +36,7 @@ class Chrome:
             - headless - chrome-headless模式，默认值：True
         """
         if not os.path.exists(CHROME_WEBDRIVER_PATH):
-            raise crawler.CrawlerException("CHROME_WEBDRIVER_PATH: %s不存在" % CHROME_WEBDRIVER_PATH)
+            raise CrawlerException("CHROME_WEBDRIVER_PATH: %s不存在" % CHROME_WEBDRIVER_PATH)
 
         self.url: str = url
         # 浏览器参数

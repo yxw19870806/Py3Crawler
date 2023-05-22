@@ -32,7 +32,7 @@ def get_discount_game_list():
         discount_game_pagination_url = "https://store.steampowered.com/search/results?sort_by=Price_ASC&category1=996,998&os=win&specials=1&page=%s" % page_count
         discount_game_pagination_response = net.Request(discount_game_pagination_url, method="GET", cookies=COOKIES)
         if discount_game_pagination_response.status != const.ResponseCode.SUCCEED:
-            raise crawler.CrawlerException("第%s页打折游戏访问失败，原因：%s" % (page_count, crawler.request_failre(discount_game_pagination_response.status)))
+            raise CrawlerException("第%s页打折游戏访问失败，原因：%s" % (page_count, crawler.request_failre(discount_game_pagination_response.status)))
         search_result_selector = pq(discount_game_pagination_response.content).find("#search_result_container")
         game_list_selector = search_result_selector.find("#search_resultsRows a")
         for game_index in range(game_list_selector.length):
@@ -106,7 +106,7 @@ def get_discount_game_list():
             else:
                 break
         else:
-            raise crawler.CrawlerException("分页信息没有找到\n" + discount_game_pagination_response.content)
+            raise CrawlerException("分页信息没有找到\n" + discount_game_pagination_response.content)
     return discount_game_list
 
 
@@ -130,7 +130,7 @@ def get_game_store_index(game_id):
             COOKIES.update(net.get_cookies_from_response_header(game_index_response.headers))
             game_index_response = net.Request(game_index_response.headers.get("Location"), method="GET", cookies=COOKIES)
     if game_index_response.status != const.ResponseCode.SUCCEED:
-        raise crawler.CrawlerException(crawler.request_failre(game_index_response.status))
+        raise CrawlerException(crawler.request_failre(game_index_response.status))
     if pq(game_index_response.content).find(".agegate_birthday_selector").length > 0:
         result["error"] = "需要检测年龄"
         return result
@@ -162,7 +162,7 @@ def get_self_uncompleted_account_badges(account_id):
         query_data = {"p": page_count}
         badges_pagination_response = net.Request(badges_pagination_url, method="GET", fields=query_data, cookies=COOKIES)
         if badges_pagination_response.status != const.ResponseCode.SUCCEED:
-            raise crawler.CrawlerException("第%s页徽章访问失败，原因：%s" % (page_count, crawler.request_failre(badges_pagination_response.status)))
+            raise CrawlerException("第%s页徽章访问失败，原因：%s" % (page_count, crawler.request_failre(badges_pagination_response.status)))
         # 徽章div
         badges_selector = pq(badges_pagination_response.content).find(".maincontent .badges_sheet .badge_row")
         for index in range(badges_selector.length):
@@ -173,12 +173,12 @@ def get_self_uncompleted_account_badges(account_id):
             # 获取game id
             badge_detail_url = badge_selector.find("a.badge_row_overlay").attr("href")
             if badge_detail_url is None:
-                raise crawler.CrawlerException("徽章信息截取徽章详情地址失败\n" + badge_selector.html())
+                raise CrawlerException("徽章信息截取徽章详情地址失败\n" + badge_selector.html())
             # 非游戏徽章
             if badge_detail_url.find("/badges/") >= 0:
                 continue
             elif badge_detail_url.find("/gamecards/") == -1:
-                raise crawler.CrawlerException("页面截取的徽章详情地址 %s 格式不正确" % badge_detail_url)
+                raise CrawlerException("页面截取的徽章详情地址 %s 格式不正确" % badge_detail_url)
             # 没有任何当前徽章的卡牌，并且有徽章等级
             if badge_selector.find("span.progress_info_bold").length == 0:
                 badge_level_html = badge_selector.find(".badge_info_description div").eq(1).text()
@@ -191,7 +191,7 @@ def get_self_uncompleted_account_badges(account_id):
                     if int(badge_level_find[0]) == 5:
                         continue
                 else:
-                    raise crawler.CrawlerException("徽章信息截取徽章等级失败\n" + badge_level_html)
+                    raise CrawlerException("徽章信息截取徽章等级失败\n" + badge_level_html)
             else:
                 # 还有掉落的卡牌，跳过
                 if badge_selector.find("span.progress_info_bold").html() != "无剩余卡牌掉落":
@@ -213,7 +213,7 @@ def get_self_uncompleted_account_badges(account_id):
 def get_self_account_badge_card(badge_detail_url):
     badge_detail_response = net.Request(badge_detail_url, method="GET", cookies=COOKIES)
     if badge_detail_response.status != const.ResponseCode.SUCCEED:
-        raise crawler.CrawlerException(crawler.request_failre(badge_detail_response.status))
+        raise CrawlerException(crawler.request_failre(badge_detail_response.status))
     wanted_card_list = {}
     page_selector = pq(badge_detail_response.content)
     # 徽章等级
@@ -222,14 +222,14 @@ def get_self_account_badge_card(badge_detail_url):
     if badge_selector.find(".badge_info_description").length == 1:
         badge_level_html = badge_selector.find(".badge_info_description div").eq(1).text()
         if not badge_level_html:
-            raise crawler.CrawlerException("页面截取徽章等级信息失败\n" + badge_detail_response.content)
+            raise CrawlerException("页面截取徽章等级信息失败\n" + badge_detail_response.content)
         badge_level_find = re.findall(r"(\d*) 级,", badge_level_html)
         if len(badge_level_find) != 1:
             badge_level_find = re.findall(r"Level (\d*),", badge_level_html)
         if len(badge_level_find) != 1:
-            raise crawler.CrawlerException("徽章等级信息徽章等级失败\n" + badge_level_html)
+            raise CrawlerException("徽章等级信息徽章等级失败\n" + badge_level_html)
         if not tool.is_integer(badge_level_find[0]):
-            raise crawler.CrawlerException("徽章等级类型不正确\n" + badge_level_html)
+            raise CrawlerException("徽章等级类型不正确\n" + badge_level_html)
         badge_level = int(badge_level_find[0])
     else:
         badge_level = 0
@@ -263,7 +263,7 @@ def get_market_game_trade_card_price(game_id):
     }
     market_search_response = net.Request(market_search_url, method="GET", fields=query_data, cookies=COOKIES).enable_json_decode().disable_url_encode()
     if market_search_response.status != const.ResponseCode.SUCCEED:
-        raise crawler.CrawlerException(crawler.request_failre(market_search_response.status))
+        raise CrawlerException(crawler.request_failre(market_search_response.status))
     market_item_list = {}
     for item_info in crawler.get_json_value(market_search_response.json_data, "results", type_check=list):
         item_name = crawler.get_json_value(item_info, "hash_name", type_check=str).split("-", 1)[1]
@@ -292,9 +292,9 @@ def get_account_inventory(account_id):
             query_data["start_assetid"] = last_assert_id
         api_response = net.Request(api_url, method="GET", fields=query_data).enable_json_decode()
         if api_response.status == 403:
-            raise crawler.CrawlerException("账号隐私设置中未公开库存详情")
+            raise CrawlerException("账号隐私设置中未公开库存详情")
         if api_response.status != const.ResponseCode.SUCCEED:
-            raise crawler.CrawlerException(crawler.request_failre(api_response.status))
+            raise CrawlerException(crawler.request_failre(api_response.status))
         # 物品数量
         item_count_list = {}
         for asset_info in crawler.get_json_value(api_response.json_data, "assets", type_check=list):
@@ -350,34 +350,34 @@ def get_account_badges(account_id):
         query_data = {"p": page_count}
         badges_pagination_response = net.Request(badges_pagination_url, method="GET", fields=query_data, cookies=cookies)
         if badges_pagination_response.status != const.ResponseCode.SUCCEED:
-            raise crawler.CrawlerException("第%s页徽章访问失败，原因：%s" % (page_count, crawler.request_failre(badges_pagination_response.status)))
+            raise CrawlerException("第%s页徽章访问失败，原因：%s" % (page_count, crawler.request_failre(badges_pagination_response.status)))
         badge_list_selector = pq(badges_pagination_response.content).find("div.badge_row")
         if badge_list_selector.length == 0:
             # 如果是隐私账号，会302到主页的，这里只判断页面文字就不判断状态了
             if pq(badges_pagination_response.content).find("div.profile_private_info").length == 1:
-                raise crawler.CrawlerException("账号隐私设置中未公开游戏详情")
+                raise CrawlerException("账号隐私设置中未公开游戏详情")
         for badge_index in range(badge_list_selector.length):
             badge_selector = badge_list_selector.eq(badge_index)
             # 获取game id
             badge_detail_url = badge_selector.find('a.badge_row_overlay').attr("href")
             if badge_detail_url is None:
-                raise crawler.CrawlerException("页面截取徽章详情地址失败\n" + badge_selector.html())
+                raise CrawlerException("页面截取徽章详情地址失败\n" + badge_selector.html())
             # 非游戏徽章
             if badge_detail_url.find("/badges/") >= 0:
                 continue
             elif badge_detail_url.find("/gamecards/") == -1:
-                raise crawler.CrawlerException("页面截取的徽章详情地址 %s 格式不正确" % badge_detail_url)
+                raise CrawlerException("页面截取的徽章详情地址 %s 格式不正确" % badge_detail_url)
             # https://steamcommunity.com/profiles/76561198172925593/gamecards/230410/
             game_id = url.split_path(badge_detail_url)[3]
             if not tool.is_integer(game_id):
-                raise crawler.CrawlerException("徽章详情地址 %s 截取游戏id失败" % badge_detail_url)
+                raise CrawlerException("徽章详情地址 %s 截取游戏id失败" % badge_detail_url)
             # 获取徽章等级
             badge_info_text = badge_selector.find('div.badge.content div.badge_info_description div').eq(1).html()
             if badge_info_text is None:
-                raise crawler.CrawlerException("页面截取徽章详情失败\n" + badge_selector.html())
+                raise CrawlerException("页面截取徽章详情失败\n" + badge_selector.html())
             badge_level_find = re.findall(r"Level (\d*),", badge_info_text)
             if len(badge_level_find) != 1:
-                raise crawler.CrawlerException("徽章详情%s中截取徽章等级失败" % badge_info_text)
+                raise CrawlerException("徽章详情%s中截取徽章等级失败" % badge_info_text)
             badge_level_list[game_id] = int(badge_level_find[0])
         # 判断是不是还有下一页
         next_page_selector = pq(badges_pagination_response.content).find("div.profile_paging div.pageLinks a.pagelink:last")
@@ -394,18 +394,18 @@ def get_account_owned_app_list(user_id, is_played=False):
     game_index_url = "https://steamcommunity.com/profiles/%s/games/?tab=all" % user_id
     game_index_response = net.Request(game_index_url, method="GET", cookies=COOKIES).set_time_out(net.NET_CONFIG.DOWNLOAD_CONNECTION_TIMEOUT, 120)
     if game_index_response.status != const.ResponseCode.SUCCEED:
-        raise crawler.CrawlerException(crawler.request_failre(game_index_response.status))
+        raise CrawlerException(crawler.request_failre(game_index_response.status))
     # 如果是隐私账号，会302到主页的，这里只判断页面文字就不判断状态了
     games_list_string = pq(game_index_response.content).find("#gameslist_config").attr("data-profile-gameslist")
     if not games_list_string:
-        raise crawler.CrawlerException("页面截取全部游戏信息失败")
+        raise CrawlerException("页面截取全部游戏信息失败")
     owned_all_game_json_data = tool.json_decode(games_list_string)
     if owned_all_game_json_data is None:
-        raise crawler.CrawlerException("全部游戏信息加载失败\n%s" % games_list_string)
+        raise CrawlerException("全部游戏信息加载失败\n%s" % games_list_string)
     app_id_list = []
     for game_data in crawler.get_json_value(owned_all_game_json_data, "rgGames", type_check=list):
         if "appid" not in game_data:
-            raise crawler.CrawlerException("游戏信息%s中'appid'字段不存在" % game_data)
+            raise CrawlerException("游戏信息%s中'appid'字段不存在" % game_data)
         # 只需要玩过的游戏
         if is_played and "hours_forever" not in game_data:
             continue

@@ -19,7 +19,7 @@ def get_index_page(account_name):
     index_url = "https://7gogo.jp/%s" % account_name
     index_response = net.Request(index_url, method="GET")
     if index_response.status == 404:
-        raise crawler.CrawlerException("talk已被删除")
+        raise CrawlerException("talk已被删除")
     return index_response
 
 
@@ -36,9 +36,9 @@ def get_one_page_blog(account_name, target_id):
         "blog_info_list": [],  # 全部日志信息
     }
     if target_id == INIT_TARGET_ID and blog_pagination_response.status == 400:
-        raise crawler.CrawlerException("talk不存在")
+        raise CrawlerException("talk不存在")
     elif blog_pagination_response.status != const.ResponseCode.SUCCEED:
-        raise crawler.CrawlerException(crawler.request_failre(blog_pagination_response.status))
+        raise CrawlerException(crawler.request_failre(blog_pagination_response.status))
     for blog_info in crawler.get_json_value(blog_pagination_response.json_data, "data", type_check=list):
         result_blog_info = {
             "blog_id": 0,  # 日志id
@@ -62,7 +62,7 @@ def get_one_page_blog(account_name, target_id):
             elif body_type == 8:  # video
                 result_blog_info["video_url_list"].append(crawler.get_json_value(blog_body_info, "movieUrlHq", type_check=str))
             else:
-                raise crawler.CrawlerException("日志信息%s中'bodyType'字段取值不正确" % blog_body_info)
+                raise CrawlerException("日志信息%s中'bodyType'字段取值不正确" % blog_body_info)
         result["blog_info_list"].append(result_blog_info)
     return result
 
@@ -105,7 +105,7 @@ class CrawlerThread(crawler.CrawlerThread):
             self.start_parse(blog_pagination_description)
             try:
                 blog_pagination_response = get_one_page_blog(self.index_key, target_id)
-            except crawler.CrawlerException as e:
+            except CrawlerException as e:
                 self.error(e.http_error(blog_pagination_description))
                 raise
             self.parse_result(blog_pagination_description, blog_pagination_response["blog_info_list"])
@@ -174,7 +174,7 @@ class CrawlerThread(crawler.CrawlerThread):
         # 获取首页
         try:
             get_index_page(self.index_key)
-        except crawler.CrawlerException as e:
+        except CrawlerException as e:
             self.error(e.http_error("首页"))
             raise
 

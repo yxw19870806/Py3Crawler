@@ -28,7 +28,7 @@ def follow_account(account_id):
         crawler.get_json_value(follow_response.json_data, "data", value_check=None)
         console.log("关注%s成功" % account_id)
         return True
-    except crawler.CrawlerException:
+    except CrawlerException:
         console.log("关注%s失败，请求返回：%s，退出程序！" % (account_id, follow_response.json_data))
         tool.process_exit()
     return False
