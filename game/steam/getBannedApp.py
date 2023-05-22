@@ -5,7 +5,7 @@
 email: hikaru870806@hotmail.com
 如有问题或建议请联系
 """
-from common import console, crawler
+from common import console, CrawlerException
 from game.steam.lib import madjoki, steam, steamdb
 
 

@@ -6,7 +6,7 @@ https://store.steampowered.com/
 email: hikaru870806@hotmail.com
 如有问题或建议请联系
 """
-from common import console, crawler
+from common import console, CrawlerException
 from game.steam.lib import steam
 
 CHECK_EXTRA_CARD = True  # 是否检测额外的交换卡（徽章等级大于5，并且还有卡牌）

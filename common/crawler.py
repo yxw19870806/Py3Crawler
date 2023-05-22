@@ -14,7 +14,7 @@ import threading
 import time
 import traceback
 from typing import Any, Callable, Optional, Union, Type, Self
-from common import console, const, browser, file, log, net, path, port_listener_event, tool
+from common import console, const, browser, file, log, net, path, port_listener_event, tool, CrawlerException
 from common import IS_EXECUTABLE, PROJECT_ROOT_PATH, PROJECT_CONFIG_PATH
 if platform.system() == "Windows":
     from common import keyboard_event
