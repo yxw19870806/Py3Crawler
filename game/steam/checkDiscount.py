@@ -7,7 +7,7 @@ email: hikaru870806@hotmail.com
 如有问题或建议请联系
 """
 import os
-from common import console, crawler, const, file, tool
+from common import console, const, file, tool, CrawlerException
 from game.steam.lib import steam
 
 
