@@ -145,14 +145,12 @@ class CrawlerThread(crawler.CrawlerThread):
     # 获取所有可下载图片
     def get_crawl_photo_list(self):
         index_description = "图片首页"
-
-        # 获取全部图片地址列表
+        self.start_parse(index_description)
         try:
             photo_index_response = get_photo_index_page(self.index_key)
         except CrawlerException as e:
             self.error(e.http_error(index_description))
             return []
-
         self.parse_result(index_description, photo_index_response["photo_url_list"])
 
         # 寻找这一页符合条件的图片
@@ -194,14 +192,12 @@ class CrawlerThread(crawler.CrawlerThread):
     # 获取所有可下载视频
     def get_crawl_video_list(self):
         index_description = "视频首页"
-
-        # 获取全部视频ID列表
+        self.start_parse(index_description)
         try:
             video_pagination_response = get_video_index_page(self.index_key)
         except CrawlerException as e:
             self.error(e.http_error(index_description))
             return []
-
         self.parse_result(index_description, video_pagination_response["video_id_list"])
 
         # 寻找这一页符合条件的视频

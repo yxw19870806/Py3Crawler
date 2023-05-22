@@ -165,14 +165,11 @@ class CrawlerThread(crawler.CrawlerThread):
     def crawl_album(self, album_info):
         album_description = "作品%s《%s》" % (album_info["album_id"], album_info["album_title"])
         self.start_parse(album_description)
-
-        # 获取作品
         try:
             album_response = get_album_page(album_info["album_id"])
         except CrawlerException as e:
             self.error(e.http_error(album_description))
             raise
-
         self.parse_result(album_description, album_response["photo_url_list"])
 
         photo_index = 1
