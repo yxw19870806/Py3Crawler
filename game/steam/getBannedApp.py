@@ -20,7 +20,7 @@ def main():
 
     try:
         banned_game_list = madjoki.get_banned_game_list()
-    except crawler.CrawlerException as e:
+    except CrawlerException as e:
         console.log(e.http_error("已下线游戏列表"))
         return
     console.log("总共获取%s个已删除游戏" % len(banned_game_list))
@@ -31,7 +31,7 @@ def main():
                 continue
             try:
                 steamdb_info = steamdb.get_game_store_index(game_info["game_id"])
-            except crawler.CrawlerException as e:
+            except CrawlerException as e:
                 console.log(e.http_error("游戏%s" % game_info["game_id"]))
             else:
                 deleted_app_list.append(str(game_info["game_id"]))

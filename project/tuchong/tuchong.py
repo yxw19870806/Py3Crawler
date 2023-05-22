@@ -26,14 +26,14 @@ def get_account_index_page(account_name):
         account_index_url += "/work"
         account_index_response = net.Request(account_index_url, method="GET").disable_redirect()
     if account_index_response.status == 301 and account_index_response.headers.get("Location") == "https://tuchong.com/":
-        raise crawler.CrawlerException("账号不存在")
+        raise CrawlerException("账号不存在")
     elif account_index_response.status != const.ResponseCode.SUCCEED:
-        raise crawler.CrawlerException(crawler.request_failre(account_index_response.status))
+        raise CrawlerException(crawler.request_failre(account_index_response.status))
     account_id = tool.find_sub_string(account_index_response.content, 'site_id":"', '",')
     if not account_id:
-        raise crawler.CrawlerException("页面截取site id失败\n" + account_index_response.content)
+        raise CrawlerException("页面截取site id失败\n" + account_index_response.content)
     if not tool.is_integer(account_id):
-        raise crawler.CrawlerException("site id类型不正确\n" + account_index_response.content)
+        raise CrawlerException("site id类型不正确\n" + account_index_response.content)
     result["account_id"] = int(account_id)
     return result
 
@@ -51,9 +51,9 @@ def get_one_page_album(account_id, post_time):
         "album_info_list": [],  # 全部图片信息
     }
     if album_pagination_response.status != const.ResponseCode.SUCCEED:
-        raise crawler.CrawlerException(crawler.request_failre(album_pagination_response.status))
+        raise CrawlerException(crawler.request_failre(album_pagination_response.status))
     if crawler.get_json_value(album_pagination_response.json_data, "result", type_check=str) != "SUCCESS":
-        raise crawler.CrawlerException("返回信息%s中'result'字段取值不正确" % album_pagination_response.json_data)
+        raise CrawlerException("返回信息%s中'result'字段取值不正确" % album_pagination_response.json_data)
     for album_info in crawler.get_json_value(album_pagination_response.json_data, "posts", type_check=list):
         result_photo_info = {
             "album_id": 0,  # 相册id
@@ -107,7 +107,7 @@ class CrawlerThread(crawler.CrawlerThread):
             self.start_parse(album_pagination_description)
             try:
                 album_pagination_response = get_one_page_album(account_id, post_time)
-            except crawler.CrawlerException as e:
+            except CrawlerException as e:
                 self.error(e.http_error(album_pagination_description))
                 raise
             self.parse_result(album_pagination_description, album_pagination_response["album_info_list"])
@@ -155,7 +155,7 @@ class CrawlerThread(crawler.CrawlerThread):
     def _run(self):
         try:
             account_index_response = get_account_index_page(self.index_key)
-        except crawler.CrawlerException as e:
+        except CrawlerException as e:
             self.error(e.http_error("主页"))
             raise
 

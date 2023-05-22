@@ -51,7 +51,7 @@ class FiveSingDownload(fivesing.FiveSing):
         # 获取下载地址
         try:
             audio_response = fivesing.get_audio_play_page(audio_id, audio_type)
-        except crawler.CrawlerException as e:
+        except CrawlerException as e:
             log.error(e.http_error("歌曲"))
             return
         if audio_response["is_delete"]:

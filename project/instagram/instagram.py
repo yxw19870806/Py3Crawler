@@ -103,9 +103,9 @@ def get_account_index_page(account_name):
         "account_id": 0,  # account id
     }
     if account_index_response.status == 404:
-        raise crawler.CrawlerException("账号不存在")
+        raise CrawlerException("账号不存在")
     elif account_index_response.status != const.ResponseCode.SUCCEED:
-        raise crawler.CrawlerException(crawler.request_failre(account_index_response.status))
+        raise CrawlerException(crawler.request_failre(account_index_response.status))
     result["account_id"] = crawler.get_json_value(account_index_response.json_data, "data", "user", "id", type_check=int)
     return result
 
@@ -130,17 +130,17 @@ def get_one_page_media(account_id, cursor):
         "next_page_cursor": "",  # 下一页媒体信息的指针
     }
     if media_pagination_response.status != const.ResponseCode.SUCCEED:
-        raise crawler.CrawlerException(crawler.request_failre(media_pagination_response.status))
+        raise CrawlerException(crawler.request_failre(media_pagination_response.status))
     response_media = crawler.get_json_value(media_pagination_response.json_data, "data", "user", "edge_owner_to_timeline_media", type_check=dict)
     media_info_list = crawler.get_json_value(response_media, "edges", type_check=list)
     if len(media_info_list) == 0:
         if cursor == "":
             if crawler.get_json_value(response_media, "count", type_check=int) > 0:
-                raise crawler.CrawlerException("私密账号，需要关注才能访问")
+                raise CrawlerException("私密账号，需要关注才能访问")
             else:  # 没有发布任何帖子
                 return result
         else:
-            raise crawler.CrawlerException("'edges'字段长度不正确\n" + str(media_pagination_response.json_data))
+            raise CrawlerException("'edges'字段长度不正确\n" + str(media_pagination_response.json_data))
     for media_info in media_info_list:
         result_media_info = {
             "photo_url": "",  # 图片地址
@@ -153,7 +153,7 @@ def get_one_page_media(account_id, cursor):
         media_type = crawler.get_json_value(media_info, "node", "__typename", type_check=str)
         # GraphImage 单张图片、GraphSidecar 多张图片、GraphVideo 视频
         if media_type not in ["GraphImage", "GraphSidecar", "GraphVideo"]:
-            raise crawler.CrawlerException("媒体信息：%s中'__typename'取值范围不正确" % media_info)
+            raise CrawlerException("媒体信息：%s中'__typename'取值范围不正确" % media_info)
         # 获取图片地址
         result_media_info["photo_url"] = crawler.get_json_value(media_info, "node", "display_url", type_check=str)
         # 判断是不是图片/视频组
@@ -186,10 +186,10 @@ def get_media_page(page_id):
         "video_url_list": [],  # 全部视频地址
     }
     if media_response.status != const.ResponseCode.SUCCEED:
-        raise crawler.CrawlerException(crawler.request_failre(media_response.status))
+        raise CrawlerException(crawler.request_failre(media_response.status))
     media_item_list = crawler.get_json_value(media_response.json_data, "items", type_check=list)
     if len(media_item_list) != 1:
-        raise crawler.CrawlerException("items字段长度不为1")
+        raise CrawlerException("items字段长度不为1")
     for media_item in media_item_list:
         media_type = crawler.get_json_value(media_item, "media_type", type_check=int)
         # 图片
@@ -211,7 +211,7 @@ def get_media_page(page_id):
                         photo_url = crawler.get_json_value(photo_info, "url", type_check=str)
                         max_resolution = resolution
             if not photo_url:
-                raise crawler.CrawlerException("媒体信息%s获取图片地址失败" % media_item)
+                raise CrawlerException("媒体信息%s获取图片地址失败" % media_item)
             result["photo_url_list"].append(photo_url)
         elif media_type == 2:  # 视频
             video_url = ""
@@ -224,7 +224,7 @@ def get_media_page(page_id):
                     video_url = crawler.get_json_value(video_version, "url", type_check=str)
                     max_resolution = resolution
             if not video_url:
-                raise crawler.CrawlerException("媒体信息%s获取视频地址失败" % media_item)
+                raise CrawlerException("媒体信息%s获取视频地址失败" % media_item)
             result["video_url_list"].append(video_url)
         elif media_type == 8:  # 轮播
             for carousel_media in crawler.get_json_value(media_item, "carousel_media", type_check=list):
@@ -249,7 +249,7 @@ def get_media_page(page_id):
                                 photo_url = crawler.get_json_value(photo_info, "url", type_check=str)
                                 max_resolution = resolution
                     if not photo_url:
-                        raise crawler.CrawlerException("子媒体信息%s获取图片地址失败" % carousel_media)
+                        raise CrawlerException("子媒体信息%s获取图片地址失败" % carousel_media)
                     result["photo_url_list"].append(photo_url)
                 # https://i.instagram.com/api/v1/media/1845507605951424933/info/
                 elif sub_media_type == 2:  # 视频
@@ -263,12 +263,12 @@ def get_media_page(page_id):
                             video_url = crawler.get_json_value(video_version, "url", type_check=str)
                             max_resolution = resolution
                     if not video_url:
-                        raise crawler.CrawlerException("子媒体信息%s获取视频地址失败" % carousel_media)
+                        raise CrawlerException("子媒体信息%s获取视频地址失败" % carousel_media)
                     result["video_url_list"].append(video_url)
                 else:
-                    raise crawler.CrawlerException("子媒体信息%s获取的媒体类型%s不支持" % (carousel_media, sub_media_type))
+                    raise CrawlerException("子媒体信息%s获取的媒体类型%s不支持" % (carousel_media, sub_media_type))
         else:
-            raise crawler.CrawlerException("媒体类型%s不支持" % media_type)
+            raise CrawlerException("媒体类型%s不支持" % media_type)
     return result
 
 
@@ -353,7 +353,7 @@ class CrawlerThread(crawler.CrawlerThread):
             add_request_count(self.thread_lock)  # 增加请求计数
             try:
                 media_pagination_response: dict = get_one_page_media(self.single_save_data[1], cursor)
-            except crawler.CrawlerException as e:
+            except CrawlerException as e:
                 self.error(e.http_error(media_pagination_description))
                 raise
             self.parse_result(media_pagination_description, media_pagination_response["media_info_list"])
@@ -383,7 +383,7 @@ class CrawlerThread(crawler.CrawlerThread):
         self.start_parse(media_description)
         try:
             media_response = get_media_page(media_info["page_id"])
-        except crawler.CrawlerException as e:
+        except CrawlerException as e:
             self.error(e.http_error(media_description))
             raise
 
@@ -423,7 +423,7 @@ class CrawlerThread(crawler.CrawlerThread):
         # 获取首页
         try:
             account_index_response = get_account_index_page(self.index_key)
-        except crawler.CrawlerException as e:
+        except CrawlerException as e:
             self.error(e.http_error("首页"))
             raise
 

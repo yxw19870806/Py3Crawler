@@ -24,18 +24,18 @@ def get_one_page_blog(account_id, page_count):
         "is_over": False,  # 是否最后一页日志
     }
     if blog_pagination_response.status == 404:
-        raise crawler.CrawlerException("账号不存在")
+        raise CrawlerException("账号不存在")
     elif blog_pagination_response.status != const.ResponseCode.SUCCEED:
-        raise crawler.CrawlerException(crawler.request_failre(blog_pagination_response.status))
+        raise CrawlerException(crawler.request_failre(blog_pagination_response.status))
     blog_info_select_list = pq(blog_pagination_response.content).find(".bl--card.js-pos")
     if blog_info_select_list.length == 0:
-        raise crawler.CrawlerException("页面截取日志列表失败\n" + blog_pagination_response.content)
+        raise CrawlerException("页面截取日志列表失败\n" + blog_pagination_response.content)
     for blog_info_index in range(blog_info_select_list.length):
         blog_info_select = blog_info_select_list.eq(blog_info_index)
         blog_url_path = blog_info_select.attr("href")
         blog_id = tool.find_sub_string(blog_url_path, "/s/n46/diary/detail/", "?ima=")
         if not tool.is_integer(blog_id):
-            raise crawler.CrawlerException("日志预览截取日志id失败\n" + blog_info_select.html())
+            raise CrawlerException("日志预览截取日志id失败\n" + blog_info_select.html())
         result["blog_id_list"].append(int(blog_id))
 
     # 判断是不是最后一页
@@ -43,16 +43,16 @@ def get_one_page_blog(account_id, page_count):
     if paginate_selector.length == 1:
         latest_url = paginate_selector.attr("href")
         if not latest_url:
-            raise crawler.CrawlerException("页面截取最后一页按钮失败\n" + paginate_selector.html())
+            raise CrawlerException("页面截取最后一页按钮失败\n" + paginate_selector.html())
         max_page_count = tool.find_sub_string(latest_url, "page=", "&")
         if not tool.is_integer(max_page_count):
-            raise crawler.CrawlerException("页面截取最后一页失败\n" + paginate_selector.html())
+            raise CrawlerException("页面截取最后一页失败\n" + paginate_selector.html())
         result["is_over"] = page_count >= int(max_page_count)
     else:
         if pq(blog_pagination_response.content).find(".bl--pg").length == 1:
             result["is_over"] = True
         else:
-            raise crawler.CrawlerException("页面截取分页信息失败\n" + blog_pagination_response.content)
+            raise CrawlerException("页面截取分页信息失败\n" + blog_pagination_response.content)
     return result
 
 
@@ -63,10 +63,10 @@ def get_blog_page(blog_id):
         "photo_info_list": [],  # 全部图片地址
     }
     if blog_response.status != const.ResponseCode.SUCCEED:
-        raise crawler.CrawlerException(crawler.request_failre(blog_response.status))
+        raise CrawlerException(crawler.request_failre(blog_response.status))
     blog_html_selector = pq(blog_response.content).find(".bd--edit")
     if blog_html_selector.length != 1:
-        raise crawler.CrawlerException("页面截取正文失败\n" + blog_response.content)
+        raise CrawlerException("页面截取正文失败\n" + blog_response.content)
     # 获取图片地址
     photo_list_selector = blog_html_selector.find("img")
     for photo_index in range(photo_list_selector.length):
@@ -78,7 +78,7 @@ def get_blog_page(blog_id):
         photo_selector = photo_list_selector.eq(photo_index)
         photo_url = photo_selector.attr("src")
         if not photo_url:
-            raise crawler.CrawlerException("图片地址截取失败\n" + photo_selector.html())
+            raise CrawlerException("图片地址截取失败\n" + photo_selector.html())
         if not (photo_url.startswith("https://") or photo_url.startswith("https://")):
             photo_url = "https://www.nogizaka46.com/%s" % photo_url
         result_photo_info["photo_url"] = photo_url
@@ -167,7 +167,7 @@ class CrawlerThread(crawler.CrawlerThread):
             self.start_parse(blog_pagination_description)
             try:
                 blog_pagination_response = get_one_page_blog(self.index_key, page_count)
-            except crawler.CrawlerException as e:
+            except CrawlerException as e:
                 self.error(e.http_error(blog_pagination_description))
                 raise
             self.parse_result(blog_pagination_description, blog_pagination_response["blog_id_list"])
@@ -194,7 +194,7 @@ class CrawlerThread(crawler.CrawlerThread):
         self.start_parse(blog_description)
         try:
             blog_response = get_blog_page(blog_id)
-        except crawler.CrawlerException as e:
+        except CrawlerException as e:
             self.error(e.http_error("日志%s" % blog_id))
             raise
         self.parse_result(blog_description, blog_response["photo_info_list"])

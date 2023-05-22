@@ -31,7 +31,7 @@ def get_one_page_playlist(playlist_id, page_count):
         "is_over": False,  # 是否最后一页音频
     }
     if playlist_pagination_response.status != const.ResponseCode.SUCCEED:
-        raise crawler.CrawlerException(crawler.request_failre(playlist_pagination_response.status))
+        raise CrawlerException(crawler.request_failre(playlist_pagination_response.status))
     for audio_info in crawler.get_json_value(playlist_pagination_response.json_data, "data", "musicList", type_check=list):
         result_audio_info = {
             "audio_id": 0,  # 音频id
@@ -61,14 +61,14 @@ def get_audio_info_page(audio_id):
         "audio_url": "",  # 音频地址
     }
     if audio_info_response.status != const.ResponseCode.SUCCEED:
-        raise crawler.CrawlerException(crawler.request_failre(audio_info_response.status))
+        raise CrawlerException(crawler.request_failre(audio_info_response.status))
     # 获取音频地址
     try:
         result["audio_url"] = crawler.get_json_value(audio_info_response.json_data, "data", "url", type_check=str)
-    except crawler.CrawlerException:
+    except CrawlerException:
         if crawler.get_json_value(audio_info_response.json_data, "code", type_check=int, default_value=0) == -1:
             if error_message := crawler.get_json_value(audio_info_response.json_data, "msg", type_check=str, default_value=""):
-                raise crawler.CrawlerException(error_message)
+                raise CrawlerException(error_message)
         raise
     return result
 

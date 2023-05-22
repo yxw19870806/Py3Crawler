@@ -21,10 +21,10 @@ def get_book_index(book_id):
         "chapter_info_list": [],  # 章节信息列表
     }
     if index_response.status != const.ResponseCode.SUCCEED:
-        raise crawler.CrawlerException(crawler.request_failre(index_response.status))
+        raise CrawlerException(crawler.request_failre(index_response.status))
     chapter_info_list_selector = pq(index_response.content).find(".catalog-content-wrap .cf li")
     if chapter_info_list_selector.length == 0:
-        raise crawler.CrawlerException("页面截取章节列表失败\n" + index_response.content)
+        raise CrawlerException("页面截取章节列表失败\n" + index_response.content)
     for chapter_index in range(chapter_info_list_selector.length):
         result_chapter_info = {
             "chapter_url": "",  # 章节地址
@@ -44,9 +44,9 @@ def get_book_index(book_id):
             pass
         elif result_chapter_info["chapter_url"].find("//vipreader.qidian.com/") >= 0:
             if not tool.is_integer(chapter_id):
-                raise crawler.CrawlerException("章节地址 %s 截取章节id失败" % result_chapter_info["chapter_url"])
+                raise CrawlerException("章节地址 %s 截取章节id失败" % result_chapter_info["chapter_url"])
         else:
-            raise crawler.CrawlerException("未知的章节域名: %s" % result_chapter_info["chapter_url"])
+            raise CrawlerException("未知的章节域名: %s" % result_chapter_info["chapter_url"])
         # 获取章节id
         result_chapter_info["chapter_id"] = chapter_id
         # 获取章节标题
@@ -56,7 +56,7 @@ def get_book_index(book_id):
         try:
             result_chapter_info["chapter_time"] = tool.convert_formatted_time_to_timestamp(result_chapter_info["chapter_time_string"], "%Y-%m-%d %H:%M:%S")
         except ValueError:
-            raise crawler.CrawlerException("日志时间%s的格式不正确" % result_chapter_info["chapter_time_string"])
+            raise CrawlerException("日志时间%s的格式不正确" % result_chapter_info["chapter_time_string"])
         result["chapter_info_list"].insert(0, result_chapter_info)
     return result
 
@@ -71,7 +71,7 @@ def get_chapter_page(chapter_url):
         "is_vip": False,  # 是否需要vip解锁
     }
     if chapter_response.status != const.ResponseCode.SUCCEED:
-        raise crawler.CrawlerException(crawler.request_failre(chapter_response.status))
+        raise CrawlerException(crawler.request_failre(chapter_response.status))
     # 判断是否是vip解锁
     if chapter_response.content.find("<i>这是VIP章节</i>需要订阅后才能阅读") >= 0:
         result["is_vip"] = True
@@ -81,11 +81,11 @@ def get_chapter_page(chapter_url):
         if chapter_response.content.find("<title>502 Bad Gateway</title>") >= 0:
             time.sleep(3)
             return get_chapter_page(chapter_url)
-        raise crawler.CrawlerException("页面截取文章内容失败\n" + chapter_response.content)
+        raise CrawlerException("页面截取文章内容失败\n" + chapter_response.content)
     # 文章内容
     result["content"] = chapter_info_list_selector.text().strip()
     if not result["content"]:
-        raise crawler.CrawlerException("页面截取文章为空失败\n" + chapter_response.content)
+        raise CrawlerException("页面截取文章为空失败\n" + chapter_response.content)
     return result
 
 
@@ -133,7 +133,7 @@ class CrawlerThread(crawler.CrawlerThread):
         self.start_parse(index_description)
         try:
             index_response = get_book_index(self.index_key)
-        except crawler.CrawlerException as e:
+        except CrawlerException as e:
             self.error(e.http_error(index_description))
             raise
         self.parse_result(index_description, index_response["chapter_info_list"])
@@ -156,12 +156,12 @@ class CrawlerThread(crawler.CrawlerThread):
         # 获取指定小说章节
         try:
             chapter_response = get_chapter_page(chapter_info["chapter_url"])
-        except crawler.CrawlerException as e:
+        except CrawlerException as e:
             self.error(e.http_error(chapter_description))
             raise
 
         if chapter_response["is_vip"]:
-            raise crawler.CrawlerException("%s 需要vip才能解锁" % chapter_description)
+            raise CrawlerException("%s 需要vip才能解锁" % chapter_description)
 
         content_file_name = "%s %s.txt" % (chapter_info["chapter_time_string"].replace(":", "_"), path.filter_text(chapter_info["chapter_title"]))
         content_file_path = os.path.join(self.main_thread.content_download_path, self.display_name, content_file_name)

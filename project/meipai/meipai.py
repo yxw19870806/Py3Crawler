@@ -30,7 +30,7 @@ def get_one_page_video(account_id, page_count):
         "video_info_list": [],  # 全部视频信息
     }
     if video_pagination_response.status != const.ResponseCode.SUCCEED:
-        raise crawler.CrawlerException(crawler.request_failre(video_pagination_response.status))
+        raise CrawlerException(crawler.request_failre(video_pagination_response.status))
     for media_info in crawler.get_json_value(video_pagination_response.json_data, "medias", type_check=list):
         # 历史直播，跳过
         if tool.check_dict_sub_key(("lives",), media_info):
@@ -45,7 +45,7 @@ def get_one_page_video(account_id, page_count):
         encrypted_video_url = crawler.get_json_value(media_info, "video", type_check=str)
         video_url = decrypt_video_url(encrypted_video_url)
         if video_url is None:
-            raise crawler.CrawlerException("加密视频地址 %s 解密失败" % encrypted_video_url)
+            raise CrawlerException("加密视频地址 %s 解密失败" % encrypted_video_url)
         result_video_info["video_url"] = video_url
         result["video_info_list"].append(result_video_info)
     return result
@@ -63,7 +63,7 @@ def get_video_play_page(video_id):
         result["is_delete"] = True
         return result
     elif video_play_response.status != const.ResponseCode.SUCCEED:
-        raise crawler.CrawlerException(crawler.request_failre(video_play_response.status))
+        raise CrawlerException(crawler.request_failre(video_play_response.status))
     video_url_crypt_string = pq(video_play_response.content).find("meta[property='og:video:url']").attr("content")
     if not video_url_crypt_string:
         if pq(video_play_response.content).find(".error-p").length == 1:
@@ -71,10 +71,10 @@ def get_video_play_page(video_id):
             if error_message == "为建设清朗网络空间，视频正在审核中，暂时无法播放。" or error_message == "可能已被删除或网址输入错误,请再核对下吧~":
                 result["is_delete"] = True
                 return result
-        raise crawler.CrawlerException("页面截取加密视频地址失败\n" + video_play_response.content)
+        raise CrawlerException("页面截取加密视频地址失败\n" + video_play_response.content)
     video_url = decrypt_video_url(video_url_crypt_string)
     if not video_url:
-        raise crawler.CrawlerException("加密视频地址 %s 解密失败" % video_url_crypt_string)
+        raise CrawlerException("加密视频地址 %s 解密失败" % video_url_crypt_string)
     result["video_url"] = video_url
     return result
 
@@ -152,7 +152,7 @@ class CrawlerThread(crawler.CrawlerThread):
             self.start_parse(video_pagination_description)
             try:
                 video_pagination_response = get_one_page_video(self.index_key, page_count)
-            except crawler.CrawlerException as e:
+            except CrawlerException as e:
                 self.error(e.http_error(video_pagination_description))
                 raise
             self.parse_result(video_pagination_description, video_pagination_response["video_info_list"])

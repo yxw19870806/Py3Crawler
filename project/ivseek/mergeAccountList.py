@@ -45,7 +45,7 @@ def main():
             continue
         try:
             account_mylist_response = niconico.get_account_mylist(account_id)
-        except crawler.CrawlerException as e:
+        except CrawlerException as e:
             print(e.http_error("niconico账号%s的视频列表" % account_id))
             continue
         niconico_mylist_list[account_id] = account_mylist_response["list_id_list"]

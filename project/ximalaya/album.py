@@ -49,7 +49,7 @@ class CrawlerThread(crawler.CrawlerThread):
             self.start_parse(audio_pagination_description)
             try:
                 audio_pagination_response = ximalaya.get_one_page_album(self.index_key, page_count)
-            except crawler.CrawlerException as e:
+            except CrawlerException as e:
                 self.error(e.http_error(audio_pagination_description))
                 raise
             self.parse_result(audio_pagination_description, audio_pagination_response["audio_info_list"])
@@ -82,7 +82,7 @@ class CrawlerThread(crawler.CrawlerThread):
         self.start_parse(audio_description)
         try:
             audio_play_response = ximalaya.get_audio_info_page(audio_info["audio_id"])
-        except crawler.CrawlerException as e:
+        except CrawlerException as e:
             self.error(e.http_error(audio_description))
             raise
 

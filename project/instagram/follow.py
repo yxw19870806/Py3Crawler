@@ -26,16 +26,16 @@ def get_account_index_page(account_name):
         # 获取账号id
         account_id = tool.find_sub_string(account_index_response.content, '"profilePage_', '"')
         if not tool.is_integer(account_id):
-            raise crawler.CrawlerException("页面截取账号id失败\n" + account_index_response.content)
+            raise CrawlerException("页面截取账号id失败\n" + account_index_response.content)
         result["account_id"] = int(account_id)
         # 判断是不是已经关注
         result["is_follow"] = tool.find_sub_string(account_index_response.content, '"followed_by_viewer": ', ",") == "true"
         # 判断是不是私密账号
         result["is_private"] = tool.find_sub_string(account_index_response.content, '"is_private": ', ",") == "true"
     elif account_index_response.status == 404:
-        raise crawler.CrawlerException("账号不存在")
+        raise CrawlerException("账号不存在")
     else:
-        raise crawler.CrawlerException(crawler.request_failre(account_index_response.status))
+        raise CrawlerException(crawler.request_failre(account_index_response.status))
     return result
 
 
@@ -58,10 +58,10 @@ def follow_account(account_name, account_id):
         else:
             return False
     elif follow_response.status == 403 and follow_response.data == "Please wait a few minutes before you try again.":
-        console.log(crawler.CrawlerException("关注%s失败，连续关注太多等待一会儿继续尝试" % account_name))
+        console.log(CrawlerException("关注%s失败，连续关注太多等待一会儿继续尝试" % account_name))
         tool.process_exit()
     else:
-        console.log(crawler.CrawlerException("关注%s失败，请求返回结果：%s" % (account_name, crawler.request_failre(follow_response.status))))
+        console.log(CrawlerException("关注%s失败，请求返回结果：%s" % (account_name, crawler.request_failre(follow_response.status))))
         tool.process_exit()
 
 
@@ -75,7 +75,7 @@ class InstagramFollow(instagram.Instagram):
         for account_name in sorted(self.save_data.keys()):
             try:
                 account_index_response = get_account_index_page(account_name)
-            except crawler.CrawlerException as e:
+            except CrawlerException as e:
                 log.error(e.http_error("账号%s首页" % account_name))
                 continue
 

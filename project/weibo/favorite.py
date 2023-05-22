@@ -27,11 +27,11 @@ def get_one_page_favorite(page_count):
         "is_over": False,  # 是否最后一页收藏
     }
     if favorite_pagination_response.status != const.ResponseCode.SUCCEED:
-        raise crawler.CrawlerException(crawler.request_failre(favorite_pagination_response.status))
+        raise CrawlerException(crawler.request_failre(favorite_pagination_response.status))
     favorite_data_html = tool.find_sub_string(favorite_pagination_response.content, '"ns":"pl.content.favoriteFeed.index"', '"})</script>', const.IncludeStringMode.END)
     favorite_data_html = tool.find_sub_string(favorite_data_html, '"html":"', '"})')
     if not favorite_data_html:
-        raise crawler.CrawlerException("页面截取收藏信息失败\n" + favorite_pagination_response.content)
+        raise CrawlerException("页面截取收藏信息失败\n" + favorite_pagination_response.content)
     # 替换全部转义斜杠以及没有用的换行符等
     html_data = favorite_data_html.replace(r"\\", chr(1))
     for replace_string in [r"\n", r"\r", r"\t", "\\"]:
@@ -40,9 +40,9 @@ def get_one_page_favorite(page_count):
     # 解析页面
     children_selector = pq(html_data).find("div.WB_feed").children()
     if children_selector.length == 0:
-        raise crawler.CrawlerException("匹配收藏信息失败\n" + favorite_data_html)
+        raise CrawlerException("匹配收藏信息失败\n" + favorite_data_html)
     if children_selector.length == 1:
-        raise crawler.CrawlerException("没有收藏了")
+        raise CrawlerException("没有收藏了")
     # 解析日志id和图片地址
     for i in range(children_selector.length - 1):
         result_blog_info = {
@@ -60,7 +60,7 @@ def get_one_page_favorite(page_count):
         # 解析日志id
         blog_id = feed_selector.attr("mid")
         if not tool.is_integer(blog_id):
-            raise crawler.CrawlerException("收藏信息解析微博id失败\n" + feed_selector.html())
+            raise CrawlerException("收藏信息解析微博id失败\n" + feed_selector.html())
         result_blog_info["blog_id"] = int(blog_id)
         # WB_text       微博文本
         # WB_media_wrap 微博媒体（图片）
@@ -111,7 +111,7 @@ def delete_favorite(blog_id):
     cookies = {"SUB": weibo.COOKIES["SUB"]}
     api_response = net.Request(api_url, method="POST", fields=post_data, cookies=cookies, headers=headers).enable_json_decode()
     if api_response.status != const.ResponseCode.SUCCEED:
-        raise crawler.CrawlerException(crawler.request_failre(api_response.status))
+        raise CrawlerException(crawler.request_failre(api_response.status))
     crawler.get_json_value(api_response.json_data, "code", type_check=int, value_check=100000)
 
 
@@ -148,7 +148,7 @@ class Favorite(crawler.Crawler):
             self.start_parse(favorite_pagination_description)
             try:
                 favorite_pagination_response = get_one_page_favorite(page_count)
-            except crawler.CrawlerException as e:
+            except CrawlerException as e:
                 log.error(e.http_error(favorite_pagination_description))
                 raise
             self.parse_result(favorite_pagination_description + "已删除微博", favorite_pagination_response["delete_blog_id_list"])
@@ -158,7 +158,7 @@ class Favorite(crawler.Crawler):
                 log.info("开始删除 %s" % blog_description)
                 try:
                     delete_favorite(blog_id)
-                except crawler.CrawlerException as e:
+                except CrawlerException as e:
                     log.error(e.http_error(blog_description))
                     raise
                 log.info("%s 删除成功" % blog_description)

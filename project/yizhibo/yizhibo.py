@@ -23,9 +23,9 @@ def get_photo_index_page(account_id):
         "photo_url_list": [],  # 全部图片地址
     }
     if photo_index_response.status != const.ResponseCode.SUCCEED:
-        raise crawler.CrawlerException(crawler.request_failre(photo_index_response.status))
+        raise CrawlerException(crawler.request_failre(photo_index_response.status))
     if photo_index_response.content == '<script>window.location.href="/404.html";</script>':
-        raise crawler.CrawlerException("账号不存在")
+        raise CrawlerException("账号不存在")
     # 获取全部图片地址
     if pq(photo_index_response.content).find(".index_all_list p").html() == "还没有照片哦":
         return result
@@ -34,7 +34,7 @@ def get_photo_index_page(account_id):
         photo_url = video_list_selector.eq(video_index).attr("src")
         result["photo_url_list"].append(photo_url.split("@")[0])
     if len(result["photo_url_list"]) == 0:
-        raise crawler.CrawlerException("页面匹配图片地址失败\n" + photo_index_response.content)
+        raise CrawlerException("页面匹配图片地址失败\n" + photo_index_response.content)
     return result
 
 
@@ -47,14 +47,14 @@ def get_photo_header(photo_url):
     if photo_head_response.status == 404:
         return result
     elif photo_head_response.status != const.ResponseCode.SUCCEED:
-        raise crawler.CrawlerException(crawler.request_failre(photo_head_response.status))
+        raise CrawlerException(crawler.request_failre(photo_head_response.status))
     last_modified = photo_head_response.headers.get("Last-Modified")
     if not last_modified:
-        raise crawler.CrawlerException("图片header%s中'Last-Modified'字段不存在" % photo_head_response.headers)
+        raise CrawlerException("图片header%s中'Last-Modified'字段不存在" % photo_head_response.headers)
     try:
         result["photo_time"] = tool.convert_formatted_time_to_timestamp(last_modified, "%a, %d %b %Y %H:%M:%S %Z")
     except ValueError:
-        raise crawler.CrawlerException("图片上传时间%s的格式不正确" % last_modified)
+        raise CrawlerException("图片上传时间%s的格式不正确" % last_modified)
     return result
 
 
@@ -69,16 +69,16 @@ def get_video_index_page(account_id):
         "video_id_list": [],  # 全部视频id
     }
     if video_pagination_response.status != const.ResponseCode.SUCCEED:
-        raise crawler.CrawlerException(crawler.request_failre(video_pagination_response.status))
+        raise CrawlerException(crawler.request_failre(video_pagination_response.status))
     if video_pagination_response.content == '<script>window.location.href="/404.html";</script>':
-        raise crawler.CrawlerException("账号不存在")
+        raise CrawlerException("账号不存在")
     if pq(video_pagination_response.content).find(".index_all_list p").html() == "还没有直播哦":
         return result
     video_list_selector = pq(video_pagination_response.content).find("div.scid")
     for video_index in range(video_list_selector.length):
         result["video_id_list"].append(video_list_selector.eq(video_index).html())
     if len(result["video_id_list"]) == 0:
-        raise crawler.CrawlerException("页面匹配视频id失败\n" + video_pagination_response.content)
+        raise CrawlerException("页面匹配视频id失败\n" + video_pagination_response.content)
     return result
 
 
@@ -94,22 +94,22 @@ def get_video_info_page(video_id):
         "video_url_list": [],  # 全部视频分集地址
     }
     if video_info_response.status != const.ResponseCode.SUCCEED:
-        raise crawler.CrawlerException(crawler.request_failre(video_info_response.status))
+        raise CrawlerException(crawler.request_failre(video_info_response.status))
     # 获取视频上传时间
     video_time = tool.find_sub_string(video_info_response.content, "starttime:", ",")
     if not tool.is_integer(video_time):
-        raise crawler.CrawlerException("页面截取直播开始时间失败\n" + video_info_response.content)
+        raise CrawlerException("页面截取直播开始时间失败\n" + video_info_response.content)
     result["video_time"] = int(video_time)
     # 获取视频地址所在文件地址
     result["m3u8_file_url"] = tool.find_sub_string(video_info_response.content, 'play_url:"', '",')
     if not result["m3u8_file_url"]:
-        raise crawler.CrawlerException("分集文件地址截取失败\n" + video_info_response.content)
+        raise CrawlerException("分集文件地址截取失败\n" + video_info_response.content)
     video_file_response = net.Request(result["m3u8_file_url"], method="GET")
     if video_file_response.status != const.ResponseCode.SUCCEED:
-        raise crawler.CrawlerException("分集文件 %s，%s" % (result["m3u8_file_url"], crawler.request_failre(video_file_response.status)))
+        raise CrawlerException("分集文件 %s，%s" % (result["m3u8_file_url"], crawler.request_failre(video_file_response.status)))
     ts_path_list = re.findall(r"(\S*.ts)", video_file_response.content)
     if len(ts_path_list) == 0:
-        raise crawler.CrawlerException("分集文件匹配视频地址失败\n" + video_file_response.content)
+        raise CrawlerException("分集文件匹配视频地址失败\n" + video_file_response.content)
     # http://playbackyzbold.live.weibo.com/2021101/f0b/f97/bVFjTEK9nYTEqQ6p/index.m3u8
     for ts_path in ts_path_list:
         result["video_url_list"].append(urllib.parse.urljoin(result["m3u8_file_url"], ts_path))
@@ -149,7 +149,7 @@ class CrawlerThread(crawler.CrawlerThread):
         # 获取全部图片地址列表
         try:
             photo_index_response = get_photo_index_page(self.index_key)
-        except crawler.CrawlerException as e:
+        except CrawlerException as e:
             self.error(e.http_error(index_description))
             return []
 
@@ -162,7 +162,7 @@ class CrawlerThread(crawler.CrawlerThread):
             self.start_parse(photo_description)
             try:
                 photo_head_response = get_photo_header(photo_url)
-            except crawler.CrawlerException as e:
+            except CrawlerException as e:
                 self.error(e.http_error(photo_description))
                 return []
 
@@ -198,7 +198,7 @@ class CrawlerThread(crawler.CrawlerThread):
         # 获取全部视频ID列表
         try:
             video_pagination_response = get_video_index_page(self.index_key)
-        except crawler.CrawlerException as e:
+        except CrawlerException as e:
             self.error(e.http_error(index_description))
             return []
 
@@ -211,7 +211,7 @@ class CrawlerThread(crawler.CrawlerThread):
             self.start_parse(video_description)
             try:
                 video_info_response = get_video_info_page(video_id)
-            except crawler.CrawlerException as e:
+            except CrawlerException as e:
                 self.error(e.http_error(video_description))
                 return []
 

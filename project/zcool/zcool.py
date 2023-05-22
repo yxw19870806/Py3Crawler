@@ -29,9 +29,9 @@ def get_one_page_album(account_name, page_count):
         "is_over": False,  # 是否最后页
     }
     if page_count == 1 and album_pagination_response.status == 404:
-        raise crawler.CrawlerException("账号不存在")
+        raise CrawlerException("账号不存在")
     elif album_pagination_response.status != const.ResponseCode.SUCCEED:
-        raise crawler.CrawlerException(crawler.request_failre(album_pagination_response.status))
+        raise CrawlerException(crawler.request_failre(album_pagination_response.status))
     album_list_selector = pq(album_pagination_response.content).find(".work-list-box .card-box")
     for album_index in range(album_list_selector.length):
         result_album_info = {
@@ -43,30 +43,30 @@ def get_one_page_album(account_name, page_count):
         # 获取作品id
         album_url = album_selector.find(".card-img>a").attr("href")
         if not album_url:
-            raise crawler.CrawlerException("作品信息截取作品地址失败\n" + album_selector.html())
+            raise CrawlerException("作品信息截取作品地址失败\n" + album_selector.html())
         # 文章
         if album_url.find("www.zcool.com.cn/article/") > 0:
             continue
         album_id = tool.find_sub_string(album_url, "/work/", ".html")
         if not album_id:
-            raise crawler.CrawlerException("作品地址截取作品id失败\n" + album_selector.html())
+            raise CrawlerException("作品地址截取作品id失败\n" + album_selector.html())
         result_album_info["album_id"] = album_id
         # 获取作品标题
         album_title = album_selector.find(".card-img>a").attr("title")
         if not album_title:
-            raise crawler.CrawlerException("作品信息截取作品标题失败\n" + album_selector.html())
+            raise CrawlerException("作品信息截取作品标题失败\n" + album_selector.html())
         result_album_info["album_title"] = album_title
         # 获取作品创建日期
         album_time_text = album_selector.find(".card-item>span").attr("title")
         if not album_time_text:
-            raise crawler.CrawlerException("作品信息截取作品日期信息失败\n" + album_selector.html())
+            raise CrawlerException("作品信息截取作品日期信息失败\n" + album_selector.html())
         album_time_string = tool.find_sub_string(album_time_text, "创建时间：")
         if not album_time_string:
-            raise crawler.CrawlerException("作品日期信息%s截取作品发布日期失败" % album_time_text)
+            raise CrawlerException("作品日期信息%s截取作品发布日期失败" % album_time_text)
         try:
             result_album_info["album_time"] = tool.convert_formatted_time_to_timestamp(album_time_string, "%Y-%m-%d %H:%M:%S")
         except ValueError:
-            raise crawler.CrawlerException("作品发布日期%s的格式不正确" % album_time_string)
+            raise CrawlerException("作品发布日期%s的格式不正确" % album_time_string)
         result["album_info_list"].append(result_album_info)
     result["is_over"] = album_list_selector.length == 0
     return result
@@ -80,10 +80,10 @@ def get_album_page(album_id):
         "photo_url_list": [],  # 全部图片地址
     }
     if album_response.status != const.ResponseCode.SUCCEED:
-        raise crawler.CrawlerException(crawler.request_failre(album_response.status))
+        raise CrawlerException(crawler.request_failre(album_response.status))
     photo_list_selector = pq(album_response.content).find(".work-show-box .reveal-work-wrap img")
     if photo_list_selector.length == 0:
-        raise crawler.CrawlerException("页面截取图片列表失败\n" + album_response.content)
+        raise CrawlerException("页面截取图片列表失败\n" + album_response.content)
     for photo_index in range(photo_list_selector.length):
         result["photo_url_list"].append(photo_list_selector.eq(photo_index).attr("src"))
     return result
@@ -134,7 +134,7 @@ class CrawlerThread(crawler.CrawlerThread):
             self.start_parse(album_pagination_description)
             try:
                 album_pagination_response = get_one_page_album(self.index_key, page_count)
-            except crawler.CrawlerException as e:
+            except CrawlerException as e:
                 self.error(e.http_error(album_pagination_description))
                 raise
             self.parse_result(album_pagination_description, album_pagination_response["album_info_list"])
@@ -169,7 +169,7 @@ class CrawlerThread(crawler.CrawlerThread):
         # 获取作品
         try:
             album_response = get_album_page(album_info["album_id"])
-        except crawler.CrawlerException as e:
+        except CrawlerException as e:
             self.error(e.http_error(album_description))
             raise
 

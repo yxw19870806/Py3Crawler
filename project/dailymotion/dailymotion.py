@@ -21,10 +21,10 @@ def init_session():
     index_url = "https://www.dailymotion.com"
     index_response = net.Request(index_url, method="GET")
     if index_response.status != const.ResponseCode.SUCCEED:
-        raise crawler.CrawlerException("首页，" + crawler.request_failre(index_response.status))
+        raise CrawlerException("首页，" + crawler.request_failre(index_response.status))
     client_id_and_secret_find = re.findall(r'var r="(\w{20,})",o="(\w{40,})"', index_response.content)
     if len(client_id_and_secret_find) != 1 or len(client_id_and_secret_find[0]) != 2:
-        raise crawler.CrawlerException("页面截取client_id和client_secret失败\n" + index_response.content)
+        raise CrawlerException("页面截取client_id和client_secret失败\n" + index_response.content)
     post_data = {
         "client_id": client_id_and_secret_find[0][0],
         "client_secret": client_id_and_secret_find[0][1],
@@ -34,7 +34,7 @@ def init_session():
     }
     oauth_response = net.Request("https://graphql.api.dailymotion.com/oauth/token", method="POST", fields=post_data).enable_json_decode()
     if oauth_response.status != const.ResponseCode.SUCCEED:
-        raise crawler.CrawlerException("获取token页，%s\n%s" % (crawler.request_failre(oauth_response.status), str(post_data)))
+        raise CrawlerException("获取token页，%s\n%s" % (crawler.request_failre(oauth_response.status), str(post_data)))
     AUTHORIZATION = crawler.get_json_value(oauth_response.json_data, "access_token", type_check=str)
 
 
@@ -61,7 +61,7 @@ def get_one_page_video(account_id, page_count):
     }
     api_response = net.Request(api_url, method="POST", fields=tool.json_encode(post_data), headers=headers).enable_json_decode()
     if api_response.status != const.ResponseCode.SUCCEED:
-        raise crawler.CrawlerException(crawler.request_failre(api_response.status))
+        raise CrawlerException(crawler.request_failre(api_response.status))
     # 获取所有视频
     for video_info in crawler.get_json_value(api_response.json_data, "data", "channel", "channel_videos_all_videos", "edges", type_check=list):
         result_video_info = {
@@ -99,7 +99,7 @@ def get_video_page(video_id):
         result["is_delete"] = True
         return result
     elif video_info_response.status != const.ResponseCode.SUCCEED:
-        raise crawler.CrawlerException(crawler.request_failre(video_info_response.status))
+        raise CrawlerException(crawler.request_failre(video_info_response.status))
     # 获取视频标题
     result["video_title"] = crawler.get_json_value(video_info_response.json_data, "title", type_check=str)
     # 查找最高分辨率的视频源地址
@@ -112,14 +112,14 @@ def get_video_page(video_id):
             continue
         resolution_find = re.findall(r"RESOLUTION=(\d*)x(\d*)", line)
         if len(resolution_find) != 1 or len(resolution_find[0]) != 2:
-            raise crawler.CrawlerException("视频信息截取分辨率失败\n" + line)
+            raise CrawlerException("视频信息截取分辨率失败\n" + line)
         resolution = int(resolution_find[0][0]) * int(resolution_find[0][1])
         if resolution > max_resolution:
             video_url = tool.find_sub_string(line, 'PROGRESSIVE-URI="', '"')
             if not video_url:
-                raise crawler.CrawlerException("视频信息截取视频地址失败\n" + line)
+                raise CrawlerException("视频信息截取视频地址失败\n" + line)
     if not video_url:
-        raise crawler.CrawlerException("视频信息截取最大分辨率视频地址失败\n" + m3u8_file_response.content)
+        raise CrawlerException("视频信息截取最大分辨率视频地址失败\n" + m3u8_file_response.content)
     result["video_url"] = video_url
     return result
 
@@ -165,7 +165,7 @@ class DailyMotion(crawler.Crawler):
         # 生成authorization，用于访问视频页
         try:
             init_session()
-        except crawler.CrawlerException as e:
+        except CrawlerException as e:
             log.error(e.http_error("生成authorization"))
             raise
 
@@ -186,7 +186,7 @@ class CrawlerThread(crawler.CrawlerThread):
             self.start_parse(blog_pagination_description)
             try:
                 blog_pagination_response = get_one_page_video(self.index_key, page_count)
-            except crawler.CrawlerException as e:
+            except CrawlerException as e:
                 self.error(e.http_error(blog_pagination_description))
                 raise
             self.parse_result(blog_pagination_description, blog_pagination_response["video_info_list"])
@@ -212,7 +212,7 @@ class CrawlerThread(crawler.CrawlerThread):
         self.start_parse(video_description)
         try:
             video_response = get_video_page(video_info["video_id"])
-        except crawler.CrawlerException as e:
+        except CrawlerException as e:
             self.error(e.http_error(video_description))
             raise
 

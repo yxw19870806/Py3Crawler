@@ -51,34 +51,34 @@ def get_account_index_page(account_name):
         "csrf": "",  # csrf
     }
     if account_index_response.status == 404:
-        raise crawler.CrawlerException("账号不存在")
+        raise CrawlerException("账号不存在")
     elif account_index_response.status != const.ResponseCode.SUCCEED:
-        raise crawler.CrawlerException(crawler.request_failre(account_index_response.status))
+        raise CrawlerException(crawler.request_failre(account_index_response.status))
     # 获取user id
     user_id = tool.find_sub_string(tool.find_sub_string(account_index_response.content, "Y.ClientApp.init(", "},\n"), '"nsid":"', '"')
     if not user_id:
-        raise crawler.CrawlerException("页面截取nsid失败\n" + account_index_response.content)
+        raise CrawlerException("页面截取nsid失败\n" + account_index_response.content)
     if user_id.find("@N") == -1:
-        raise crawler.CrawlerException("页面截取的nsid格式不正确\n" + account_index_response.content)
+        raise CrawlerException("页面截取的nsid格式不正确\n" + account_index_response.content)
     result["user_id"] = user_id
     # 获取site key
     site_key = tool.find_sub_string(account_index_response.content, 'root.YUI_config.flickr.api.site_key = "', '"')
     if not site_key:
-        raise crawler.CrawlerException("页面截取site key失败\n" + account_index_response.content)
+        raise CrawlerException("页面截取site key失败\n" + account_index_response.content)
     result["site_key"] = site_key
     # 获取CSRF
     root_auth = tool.find_sub_string(account_index_response.content, "root.auth = ", "};")
     if not site_key:
-        raise crawler.CrawlerException("页面截取root.auth失败\n" + account_index_response.content)
+        raise CrawlerException("页面截取root.auth失败\n" + account_index_response.content)
     csrf = tool.find_sub_string(root_auth, '"csrf":"', '",')
     if IS_LOGIN and not csrf:
-        raise crawler.CrawlerException("页面截取csrf失败\n" + account_index_response.content)
+        raise CrawlerException("页面截取csrf失败\n" + account_index_response.content)
     result["csrf"] = csrf
     # 获取cookie_session
     if IS_LOGIN and "cookie_session" not in COOKIES:
         set_cookies = net.get_cookies_from_response_header(account_index_response.headers)
         if not tool.check_dict_sub_key(("cookie_session",), set_cookies):
-            raise crawler.CrawlerException("请求返回cookie：%s匹配cookie_session失败" % account_index_response.headers)
+            raise CrawlerException("请求返回cookie：%s匹配cookie_session失败" % account_index_response.headers)
         COOKIES.update({"cookie_session": set_cookies["cookie_session"]})
     return result
 
@@ -140,7 +140,7 @@ def get_one_page_photo(user_id, page_count, api_key, csrf, request_id):
         "is_over": False,  # 是否最后一页图片
     }
     if photo_pagination_response.status != const.ResponseCode.SUCCEED:
-        raise crawler.CrawlerException(crawler.request_failre(photo_pagination_response.status))
+        raise CrawlerException(crawler.request_failre(photo_pagination_response.status))
     # 获取图片信息
     for photo_info in crawler.get_json_value(photo_pagination_response.json_data, "photos", "photo", type_check=list):
         result_photo_info = {
@@ -163,16 +163,16 @@ def get_one_page_photo(user_id, page_count, api_key, csrf, request_id):
                     max_resolution = resolution
                     max_resolution_photo_type = photo_type
         if not max_resolution_photo_type:
-            raise crawler.CrawlerException("图片信息：%s匹配最高分辨率的图片尺寸失败" % photo_info)
+            raise CrawlerException("图片信息：%s匹配最高分辨率的图片尺寸失败" % photo_info)
         if tool.check_dict_sub_key(("url_" + max_resolution_photo_type + "_cdn",), photo_info):
             result_photo_info["photo_url"] = photo_info["url_" + max_resolution_photo_type + "_cdn"]
         elif tool.check_dict_sub_key(("url_" + max_resolution_photo_type,), photo_info):
             result_photo_info["photo_url"] = photo_info["url_" + max_resolution_photo_type]
         else:
-            raise crawler.CrawlerException("图片信息：%s中'url_%s_cdn'或者'url_%s_cdn'字段不存在" % (photo_info, max_resolution_photo_type, max_resolution_photo_type))
+            raise CrawlerException("图片信息：%s中'url_%s_cdn'或者'url_%s_cdn'字段不存在" % (photo_info, max_resolution_photo_type, max_resolution_photo_type))
         result["photo_info_list"].append(result_photo_info)
     if len(result["photo_info_list"]) == 0:
-        raise crawler.CrawlerException("返回信息：%s获取图片信息失败" % photo_pagination_response.json_data)
+        raise CrawlerException("返回信息：%s获取图片信息失败" % photo_pagination_response.json_data)
     # 判断是不是最后一页
     if page_count >= crawler.get_json_value(photo_pagination_response.json_data, "photos", "pages", type_check=int):
         result["is_over"] = True
@@ -241,7 +241,7 @@ class CrawlerThread(crawler.CrawlerThread):
             self.start_parse(photo_pagination_description)
             try:
                 photo_pagination_response = get_one_page_photo(user_id, page_count, site_key, csrf, self.request_id)
-            except crawler.CrawlerException as e:
+            except CrawlerException as e:
                 self.error(e.http_error(photo_pagination_description))
                 raise
             self.parse_result(photo_pagination_description, photo_pagination_response["photo_info_list"])
@@ -284,7 +284,7 @@ class CrawlerThread(crawler.CrawlerThread):
         self.start_parse(index_description)
         try:
             account_index_response = get_account_index_page(self.index_key)
-        except crawler.CrawlerException as e:
+        except CrawlerException as e:
             self.error(e.http_error(index_description))
             raise
 

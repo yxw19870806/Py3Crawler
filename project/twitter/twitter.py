@@ -33,24 +33,24 @@ def check_login():
     elif index_response.status == 302 and index_response.headers.get("Location") == "/login?redirect_after_login=%2Fhome":
         pass
     else:
-        raise crawler.CrawlerException(crawler.request_failre(index_response.status))
+        raise CrawlerException(crawler.request_failre(index_response.status))
     # 更新cookies
     COOKIES.update(net.get_cookies_from_response_header(index_response.headers))
     init_js_url_find = re.findall(r'href="(https://abs.twimg.com/responsive-web/client-web-legacy/main.[^\.]*.[\w]*.js)"', index_response.content)
     if len(init_js_url_find) != 1:
-        raise crawler.CrawlerException("初始化JS地址截取失败\n" + index_response.content)
+        raise CrawlerException("初始化JS地址截取失败\n" + index_response.content)
     init_js_response = net.Request(init_js_url_find[0], method="GET")
     if init_js_response.status != const.ResponseCode.SUCCEED:
-        raise crawler.CrawlerException("初始化JS文件，" + crawler.request_failre(init_js_response.status))
+        raise CrawlerException("初始化JS文件，" + crawler.request_failre(init_js_response.status))
     # 截取authorization
     authorization_string = tool.find_sub_string(init_js_response.content, '="AAAAAAAAAA', '"')
     if not authorization_string:
-        raise crawler.CrawlerException("初始化JS中截取authorization失败\n" + init_js_response.content)
+        raise CrawlerException("初始化JS中截取authorization失败\n" + init_js_response.content)
     AUTHORIZATION = "AAAAAAAAAA" + authorization_string
     # 截取query id
     query_id_find = re.findall(r'queryId:"([\w-]*)",operationName:"UserByScreenName",operationType:"query"', init_js_response.content)
     if len(query_id_find) != 1:
-        raise crawler.CrawlerException("初始化JS中截取queryId失败\n" + init_js_response.content)
+        raise CrawlerException("初始化JS中截取queryId失败\n" + init_js_response.content)
     QUERY_ID = query_id_find[0]
     return IS_LOGIN
 
@@ -72,16 +72,16 @@ def get_account_index_page(account_name):
         "account_id": None,  # account id
     }
     if account_index_response.status != const.ResponseCode.SUCCEED:
-        raise crawler.CrawlerException(crawler.request_failre(account_index_response.status))
+        raise CrawlerException(crawler.request_failre(account_index_response.status))
     result["account_id"] = crawler.get_json_value(account_index_response.json_data, "data", "user", "result", "rest_id", type_check=str, default_value=0)
     if result["account_id"] == 0:
         if crawler.get_json_value(account_index_response.json_data, "data", type_check=dict) is {}:
-            raise crawler.CrawlerException("账号不存在")
+            raise CrawlerException("账号不存在")
         error_message = crawler.get_json_value(account_index_response.json_data, "data", "user", "result", "reason", type_check=str, default_value="")
         if error_message == "Suspended":
-            raise crawler.CrawlerException("账号已封禁")
+            raise CrawlerException("账号已封禁")
         else:
-            raise crawler.CrawlerException(account_index_response.content)
+            raise CrawlerException(account_index_response.content)
     result["account_id"] = str(result["account_id"])
     return result
 
@@ -129,7 +129,7 @@ def get_one_page_media(account_name, account_id, cursor):
         "next_page_cursor": None  # 下一页指针
     }
     if media_pagination_response.status != const.ResponseCode.SUCCEED:
-        raise crawler.CrawlerException(crawler.request_failre(media_pagination_response.status))
+        raise CrawlerException(crawler.request_failre(media_pagination_response.status))
     tweet_list = crawler.get_json_value(media_pagination_response.json_data, "globalObjects", "tweets", type_check=dict)
     for tweet_id in sorted(tweet_list.keys(), reverse=True):
         result_media_info = {
@@ -161,7 +161,7 @@ def get_one_page_media(account_name, account_id, cursor):
                         max_bit_rate = bit_rate
                         video_url = crawler.get_json_value(video_info, "url", type_check=str)
                 if not video_url:
-                    raise crawler.CrawlerException("媒体信息%s中获取视频地址失败" % media_info)
+                    raise CrawlerException("媒体信息%s中获取视频地址失败" % media_info)
                 result_media_info["video_url_list"].append(video_url)
             # animated gif
             elif media_type == "animated_gif":
@@ -175,17 +175,17 @@ def get_one_page_media(account_name, account_id, cursor):
                         max_bit_rate = bit_rate
                         video_url = crawler.get_json_value(video_info, "url", type_check=str)
                 if not video_url:
-                    raise crawler.CrawlerException("媒体信息%s中获取视频地址失败" % media_info)
+                    raise CrawlerException("媒体信息%s中获取视频地址失败" % media_info)
                 result_media_info["video_url_list"].append(video_url)
             else:
-                raise crawler.CrawlerException("未知media类型：%s" % media_info)
+                raise CrawlerException("未知media类型：%s" % media_info)
         result["media_info_list"].append(result_media_info)
     # 判断是不是还有下一页
     for page_info in crawler.get_json_value(media_pagination_response.json_data, "timeline", "instructions", 0, "addEntries", "entries", type_check=list):
         if crawler.get_json_value(page_info, "content", "operation", "cursor", "cursorType", type_check=str, default_value="") == "Bottom":
             result["next_page_cursor"] = crawler.get_json_value(page_info, "content", "operation", "cursor", "value", type_check=str)
     if result["next_page_cursor"] is None:
-        raise crawler.CrawlerException("返回信息%s中获取下一页cursor获取失败" % media_pagination_response.json_data)
+        raise CrawlerException("返回信息%s中获取下一页cursor获取失败" % media_pagination_response.json_data)
     else:
         # 和当前cursor一致表示到底了
         if cursor == result["next_page_cursor"]:
@@ -210,11 +210,11 @@ def get_video_play_page(tweet_id):
     }
     thread_event.set()
     if video_play_response.status != const.ResponseCode.SUCCEED:
-        raise crawler.CrawlerException(crawler.request_failre(video_play_response.status))
+        raise CrawlerException(crawler.request_failre(video_play_response.status))
     # 获取m3u8或视频文件
     try:
         file_url = crawler.get_json_value(video_play_response.json_data, "track", "playbackUrl", type_check=str)
-    except crawler.CrawlerException:
+    except CrawlerException:
         file_url = crawler.get_json_value(video_play_response.json_data, "track", "vmapUrl", default_value="", type_check=str)
         if not file_url:
             raise
@@ -226,28 +226,28 @@ def get_video_play_page(tweet_id):
         if m3u8_file_response.status in [403, 404]:
             return result
         elif m3u8_file_response.status != const.ResponseCode.SUCCEED:
-            raise crawler.CrawlerException("m3u8文件 %s 访问失败，%s" % (file_url, crawler.request_failre(m3u8_file_response.status)))
+            raise CrawlerException("m3u8文件 %s 访问失败，%s" % (file_url, crawler.request_failre(m3u8_file_response.status)))
         include_m3u8_file_list = re.findall(r"(/\S*.m3u8)", m3u8_file_response.content)
         if len(include_m3u8_file_list) > 0:
             # 生成最高分辨率视频所在的m3u8文件地址
             file_url = "%s://%s%s" % (file_url_protocol, file_url_host, include_m3u8_file_list[-1])
             m3u8_file_response = net.Request(file_url, method="GET")
             if m3u8_file_response.status != const.ResponseCode.SUCCEED:
-                raise crawler.CrawlerException("最高分辨率m3u8文件 %s 访问失败，%s" % (file_url, crawler.request_failre(m3u8_file_response.status)))
+                raise CrawlerException("最高分辨率m3u8文件 %s 访问失败，%s" % (file_url, crawler.request_failre(m3u8_file_response.status)))
         # 包含分P视频文件名的m3u8文件
         ts_url_find = re.findall(r"(/\S*.ts)", m3u8_file_response.content)
         if len(ts_url_find) == 0:
-            raise crawler.CrawlerException("m3u8文件%s截取视频地址失败\n%s" % (file_url, m3u8_file_response.content))
+            raise CrawlerException("m3u8文件%s截取视频地址失败\n%s" % (file_url, m3u8_file_response.content))
         result["video_url"] = []
         for ts_video_path in ts_url_find:
             result["video_url"].append("%s://%s%s" % (file_url_protocol, file_url_host, ts_video_path))
     elif file_extension == "vmap":
         vmap_file_response = net.Request(file_url, method="GET")
         if vmap_file_response.status != const.ResponseCode.SUCCEED:
-            raise crawler.CrawlerException("vmap文件 %s 访问失败，%s" % (file_url, crawler.request_failre(vmap_file_response.status)))
+            raise CrawlerException("vmap文件 %s 访问失败，%s" % (file_url, crawler.request_failre(vmap_file_response.status)))
         tw_namespace = tool.find_sub_string(vmap_file_response.content, 'xmlns:tw="', '"')
         if not tw_namespace:
-            raise crawler.CrawlerException("vmap文件 %s 截取xmlns:tw命名空间失败\n%s" % (file_url, vmap_file_response.content))
+            raise CrawlerException("vmap文件 %s 截取xmlns:tw命名空间失败\n%s" % (file_url, vmap_file_response.content))
         media_file_elements = ElementTree.fromstring(vmap_file_response.content.strip()).iter("{%s}videoVariant" % tw_namespace)
         # 获取最高bit rate的视频地址
         bit_rate_to_url = {}
@@ -258,10 +258,10 @@ def get_video_play_page(tweet_id):
                 continue
             video_url = media_file_element.get("url")
             if not video_url:
-                raise crawler.CrawlerException("视频节点解析视频地址失败\n" + vmap_file_response.content)
+                raise CrawlerException("视频节点解析视频地址失败\n" + vmap_file_response.content)
             bit_rate_to_url[int(bit_rate)] = urllib.parse.unquote(url)
         if len(bit_rate_to_url) == 0:
-            raise crawler.CrawlerException("vmap文件 %s 解析全部视频文件失败\n%s" % (file_url, vmap_file_response.content))
+            raise CrawlerException("vmap文件 %s 解析全部视频文件失败\n%s" % (file_url, vmap_file_response.content))
         result["video_url"] = bit_rate_to_url[max(bit_rate_to_url)]
     # 直接是视频地址
     else:  # https://api.twitter.com/1.1/videos/tweet/config/996368816174084097.json
@@ -299,7 +299,7 @@ class Twitter(crawler.Crawler):
         try:
             if check_login():
                 return
-        except crawler.CrawlerException as e:
+        except CrawlerException as e:
             log.error(e.http_error("生成authorization"))
             tool.process_exit()
 
@@ -328,7 +328,7 @@ class CrawlerThread(crawler.CrawlerThread):
             self.start_parse(media_pagination_description)
             try:
                 media_pagination_response = get_one_page_media(self.index_key, self.single_save_data[1], cursor)
-            except crawler.CrawlerException as e:
+            except CrawlerException as e:
                 self.error(e.http_error(media_pagination_description))
                 raise
             self.parse_result(media_pagination_description, media_pagination_response["media_info_list"])
@@ -412,7 +412,7 @@ class CrawlerThread(crawler.CrawlerThread):
     def _run(self):
         try:
             account_index_response = get_account_index_page(self.index_key)
-        except crawler.CrawlerException as e:
+        except CrawlerException as e:
             self.error(e.http_error("首页"))
             raise
 

@@ -26,7 +26,7 @@ def get_account_index_page(account_name):
         else:
             account_info = tool.find_sub_string(account_index_response.content, '"biography": "', '"')
             if not account_info:
-                raise crawler.CrawlerException("页面截取账号信息失败\n" + account_index_response.content)
+                raise CrawlerException("页面截取账号信息失败\n" + account_index_response.content)
             account_info = account_info.replace(r"\n", "").replace("'", chr(1))
             result["account_info"] = eval("u'%s'" % account_info).replace(chr(1), "'")
         # 获取外部链接地址
@@ -35,9 +35,9 @@ def get_account_index_page(account_name):
         else:
             result["external_url"] = tool.find_sub_string(account_index_response.content, '"external_url": "', '"')
     elif account_index_response.status == 404:
-        raise crawler.CrawlerException("账号不存在")
+        raise CrawlerException("账号不存在")
     else:
-        raise crawler.CrawlerException(crawler.request_failre(account_index_response.status))
+        raise CrawlerException(crawler.request_failre(account_index_response.status))
     return result
 
 
@@ -49,7 +49,7 @@ def main():
     for account in sorted(instagram_class.save_data.keys()):
         try:
             account_index_response = get_account_index_page(account)
-        except crawler.CrawlerException as e:
+        except CrawlerException as e:
             console.log(e.http_error("账号%s首页" % account))
             continue
         file.write_file("%s\t%s\t%s" % (account, account_index_response["account_info"], account_index_response["external_url"]), result_file_path)

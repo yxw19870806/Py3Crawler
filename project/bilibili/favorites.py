@@ -53,7 +53,7 @@ class BiliBiliFavorites(bilibili.BiliBili):
         # 访问视频播放页
         try:
             favorites_response = bilibili.get_favorites_list(favorites_id)
-        except crawler.CrawlerException as e:
+        except CrawlerException as e:
             log.error(e.http_error("收藏列表"))
             return
 
@@ -84,7 +84,7 @@ class BiliBiliFavorites(bilibili.BiliBili):
                 continue
             try:
                 video_play_response = bilibili.get_video_page(video_info["video_id"])
-            except crawler.CrawlerException as e:
+            except CrawlerException as e:
                 log.error(e.http_error(video_description))
                 continue
             if video_play_response["is_private"]:

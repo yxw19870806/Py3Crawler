@@ -62,9 +62,9 @@ def get_one_page_photo(account_id, page_count):
     }
     photo_pagination_response = net.Request(photo_pagination_url, method="GET", fields=query_data, cookies=COOKIES).enable_json_decode()
     if photo_pagination_response.status == const.ResponseCode.JSON_DECODE_ERROR and photo_pagination_response.data.find('<p class="txt M_txtb">用户不存在或者获取用户信息失败</p>'.encode()) >= 0:
-        raise crawler.CrawlerException("账号不存在")
+        raise CrawlerException("账号不存在")
     elif photo_pagination_response.status != const.ResponseCode.SUCCEED:
-        raise crawler.CrawlerException(crawler.request_failre(photo_pagination_response.status))
+        raise CrawlerException(crawler.request_failre(photo_pagination_response.status))
     for photo_info in crawler.get_json_value(photo_pagination_response.json_data, "data", "photo_list", type_check=list):
         result_photo_info = {
             "photo_id": 0,  # 图片id
@@ -111,7 +111,7 @@ def get_one_page_video(account_id, since_id, retry_count=0):
             }
             account_info_response = net.Request(account_info_url, method="GET", fields=query_data, cookies=COOKIES, headers=headers).enable_json_decode()
             if account_info_response.status == const.ResponseCode.SUCCEED and crawler.get_json_value(account_info_response.json_data, "msg", type_check=str, value_check="该用户不存在(20003)"):
-                raise crawler.CrawlerException("账号不存在")
+                raise CrawlerException("账号不存在")
         if retry_count < 3:
             time.sleep(1)
             return get_one_page_video(account_id, since_id, retry_count + 1)
@@ -120,7 +120,7 @@ def get_one_page_video(account_id, since_id, retry_count=0):
                 result["next_page_since_id"] = -1
                 return result
     if video_pagination_response.status != const.ResponseCode.SUCCEED:
-        raise crawler.CrawlerException(crawler.request_failre(video_pagination_response.status))
+        raise CrawlerException(crawler.request_failre(video_pagination_response.status))
     # 获取视频id
     for video_info in crawler.get_json_value(video_pagination_response.json_data, "data", "list", type_check=list):
         result_video_info_list = {
@@ -132,7 +132,7 @@ def get_one_page_video(account_id, since_id, retry_count=0):
         result_video_info_list["video_id"] = crawler.get_json_value(video_info, "id", type_check=int)
         try:
             page_type = crawler.get_json_value(video_info, "page_info", "type", type_check=int)
-        except crawler.CrawlerException:
+        except CrawlerException:
             if crawler.get_json_value(video_info, "text", type_check=str).find("根据博主设置，此内容无法访问") >= 0:
                 continue
             raise
@@ -141,7 +141,7 @@ def get_one_page_video(account_id, since_id, retry_count=0):
             result_video_info_list["video_title"] = crawler.get_json_value(video_info, "page_info", "media_info", "video_title", type_check=str, default_value="")
             try:
                 video_detail_info_list = crawler.get_json_value(video_info, "page_info", "media_info", "playback_list", type_check=list)
-            except crawler.CrawlerException:
+            except CrawlerException:
                 video_url = crawler.get_json_value(video_info, "page_info", "media_info", "stream_url_hd", type_check=str)
                 if not video_url:
                     raise
@@ -152,7 +152,7 @@ def get_one_page_video(account_id, since_id, retry_count=0):
             result_video_info_list["video_title"] = crawler.get_json_value(video_info, "page_info", "page_desc", type_check=str)
             video_detail_info_list = crawler.get_json_value(video_info, "page_info", "slide_cover", "playback_list", type_check=list)
         else:
-            raise crawler.CrawlerException("未知信息类型%s" % page_type)
+            raise CrawlerException("未知信息类型%s" % page_type)
         # 获取视频地址
         max_resolution = 0
         video_url = ""
@@ -168,9 +168,9 @@ def get_one_page_video(account_id, since_id, retry_count=0):
             elif video_type == 3:  # 图片
                 continue
             else:
-                raise crawler.CrawlerException("未知视频类型%s" % video_type)
+                raise CrawlerException("未知视频类型%s" % video_type)
         if not video_url:
-            raise crawler.CrawlerException("媒体信息%s获取最大分辨率视频地址失败" % video_info)
+            raise CrawlerException("媒体信息%s获取最大分辨率视频地址失败" % video_info)
         result_video_info_list["video_url"] = video_url
         result["video_info_list"].append(result_video_info_list)
     # 获取下一页视频的指针
@@ -232,7 +232,7 @@ class CrawlerThread(crawler.CrawlerThread):
             self.start_parse(photo_pagination_description)
             try:
                 photo_pagination_response = get_one_page_photo(self.index_key, page_count)
-            except crawler.CrawlerException as e:
+            except CrawlerException as e:
                 self.error(e.http_error(photo_pagination_description))
                 raise
             self.parse_result(photo_pagination_description, photo_pagination_response["photo_info_list"])
@@ -270,7 +270,7 @@ class CrawlerThread(crawler.CrawlerThread):
             self.start_parse(video_pagination_description)
             try:
                 video_pagination_response: dict = get_one_page_video(self.index_key, since_id)
-            except crawler.CrawlerException as e:
+            except CrawlerException as e:
                 self.error(e.http_error(video_pagination_description))
                 raise
             self.parse_result(video_pagination_description, video_pagination_response["video_info_list"])

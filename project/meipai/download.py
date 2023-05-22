@@ -52,7 +52,7 @@ class MeiPaiDownload(meipai.MeiPai):
         # 获取下载地址
         try:
             video_response = meipai.get_video_play_page(video_id)
-        except crawler.CrawlerException as e:
+        except CrawlerException as e:
             log.error(e.http_error(video_description))
             return
         if video_response["is_delete"]:

@@ -17,23 +17,23 @@ def get_account_from_index():
     index_response = net.Request(index_url, method="GET")
     account_list = {}
     if index_response.status != const.ResponseCode.SUCCEED:
-        raise crawler.CrawlerException(crawler.request_failre(index_response.status))
+        raise CrawlerException(crawler.request_failre(index_response.status))
     member_info_list_selector = pq(index_response.content).find(".p-blog-face__group .p-blog-face__list")
     if member_info_list_selector.length == 0:
-        raise crawler.CrawlerException("页面截取账号信息列表失败\n" + index_response.content)
+        raise CrawlerException("页面截取账号信息列表失败\n" + index_response.content)
     for member_index in range(member_info_list_selector.length):
         member_info_selector = member_info_list_selector.eq(member_index)
         # 获取账号id
         blog_url_path = member_info_selector.attr("href")
         if not blog_url_path:
-            raise crawler.CrawlerException("账号信息截取blog地址失败\n" + member_info_selector.html())
+            raise CrawlerException("账号信息截取blog地址失败\n" + member_info_selector.html())
         account_id = tool.find_sub_string(blog_url_path, "&ct=")
         if not tool.is_integer(account_id):
-            raise crawler.CrawlerException("blog地址%s截取account id失败" % blog_url_path)
+            raise CrawlerException("blog地址%s截取account id失败" % blog_url_path)
         # 获取成员名字
         account_name = member_info_selector.find(".c-blog-face__name").html()
         if not account_name:
-            raise crawler.CrawlerException("账号信息截取成员名字失败\n" + member_info_selector.html())
+            raise CrawlerException("账号信息截取成员名字失败\n" + member_info_selector.html())
         account_list[account_id] = account_name.strip().replace(" ", "")
     return account_list
 

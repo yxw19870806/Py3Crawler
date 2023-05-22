@@ -36,7 +36,7 @@ def main():
 
         try:
             video_info_response = niconico.get_video_info(video_id)
-        except crawler.CrawlerException as e:
+        except CrawlerException as e:
             log.error(e.http_error("视频%s" % single_save_list[2]))
             continue
 
