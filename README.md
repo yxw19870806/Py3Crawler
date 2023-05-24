@@ -88,23 +88,26 @@ Visual Studio Installer安装完毕后，勾选"桌面应用和移动应用"标�
 
 ### Code Structure  
 
-1. /common，公共类<br>
-   * /common/crawler.py 爬虫父类，多线程爬取父类，异常类<br>
-   * /common/browser.py 浏览器类，获取操作系统中安装的浏览器目录以及保存的cookies<br>
-   * /common/console.py 控制台输出类，线程安全<br>
-   * /common/const.py 常量类<br>
-   * /common/crypto.py 加密解密类，使用基于本计算机信息（MAC+计算机名）的私钥对隐私信息进行AES128加密（如输入的账号、密码）<br>
-   * /common/file.py 文件操作类，读、写文件，计算文件MD5值<br>
-   * /common/keyboard_event.py 键盘监听事件类，可以通过指定快捷键暂停/重启/立刻结束爬虫（默认在下一次网络请求时阻塞线程）<br>
-   * /common/logger.py 日志类，封装自logging<br>
-   * /common/net.py 网络通信类（基于urllib3），网页访问、资源下载等<br>
-   * /common/path.py 操作系统路径相关类，创建/删除目录，移动/复制文件或文件夹等操作<br>
-   * /common/port_listener_event.py 端口监听类，可以通过向指定端口发送请求暂停/重启/立刻结束爬虫（默认在下一次网络请求时阻塞线程）<br>
-   * /common/tool.py 其他一些公共方法类，如字符串截取，字符串和列表的转化等
-   * /common/log_config.json 日志类的配置文件
-   * /common/net_config.json 网络通信类的配置文件
-2. /install，项目依赖的一些扩展包的安装文件（使用pip install）
-3. /project，爬虫项目
+1. [/common](common)，公共类<br>
+   * [/common/crawler.py](common%2Fcrawler.py) 爬虫父类，多线程爬取父类，异常类<br>
+   * [/common/browser.py](common%2Fbrowser.py) 浏览器，获取操作系统中安装的浏览器目录以及保存的cookies；模拟浏览器渲染效果<br>
+   * [/common/color_format.py](common%2Fcolor_format.py) 格式化输出内容<br>
+   * [/common/console.py](common%2Fconsole.py) 控制台输出，线程安全<br>
+   * [/common/const.py](common%2Fconst.py) 常量<br>
+   * [/common/crypto.py](common%2Fcrypto.py) 加密解密类，使用基于本计算机信息（MAC+计算机名）的私钥对隐私信息进行AES128加密（如输入的账号、密码）<br>
+   * [/common/file.py](common%2Ffile.py) 文件操作，读、写文件，计算文件MD5值<br>
+   * [/common/keyboard_event.py](common%2Fkeyboard_event.py) 键盘监听事件，可以通过指定快捷键暂停/重启/立刻结束爬虫（默认在下一次网络请求时阻塞线程）<br>
+   * [/common/logger.py](common%2Flogger.py) 日志，封装自logging<br>
+   * [/common/net.py](common%2Fnet.py) 网络通信（基于urllib3），网页访问、资源下载等<br>
+   * [/common/net_config.py](common%2Fnet_config.py) 网络通信配置类<br>
+   * [/common/path.py](common%2Fpath.py) 操作系统路径相关，创建/删除目录，移动/复制文件或文件夹等操作<br>
+   * [/common/port_listener_event.py](common%2Fport_listener_event.py) 端口监听类，可以通过向指定端口发送请求暂停/重启/立刻结束爬虫（默认在下一次网络请求时阻塞线程）<br>
+   * [/common/tool.py](common%2Ftool.py) 其他一些公共方法，如字符串截取，字符串和列表的转化等
+   * [/common/url.py](common%2Furl.py) 处理URL，如获取文件名，解析query参数等
+   * [/common/log_config.json](common%2Flog_config.json) 日志类的配置文件
+   * [/common/net_config.json](common%2Fnet_config.json) 网络通信类的配置文件
+2. [/install](install)，项目依赖的一些扩展包的安装文件（使用pip install）
+3. [/project](project)，爬虫项目
 
 ### Known Issue
 
