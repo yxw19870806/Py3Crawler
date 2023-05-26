@@ -52,7 +52,7 @@ class DailyMotionDownload(dailymotion.DailyMotion):
         # 获取下载地址
         try:
             video_response = dailymotion.get_video_page(video_id)
-        except crawler.CrawlerException as e:
+        except CrawlerException as e:
             log.error(e.http_error("视频"))
             return
         if video_response["is_delete"]:

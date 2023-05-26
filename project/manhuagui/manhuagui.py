@@ -22,10 +22,10 @@ def get_comic_index_page(comic_id):
         "chapter_info_list": [],  # 漫画列表信息
     }
     if index_response.status != const.ResponseCode.SUCCEED:
-        raise crawler.CrawlerException(crawler.request_failre(index_response.status))
+        raise CrawlerException(crawler.request_failre(index_response.status))
     chapter_info_selector = pq(index_response.content).find("div.chapter")
     if chapter_info_selector.length != 1:
-        raise crawler.CrawlerException("页面截取漫画列表失败\n" + index_response.content)
+        raise CrawlerException("页面截取漫画列表失败\n" + index_response.content)
     group_name_selector = chapter_info_selector.find("h4")
     if group_name_selector.length == 0:
         if pq(index_response.content).find("#__VIEWSTATE").length == 1:
@@ -36,15 +36,15 @@ def get_comic_index_page(comic_id):
                 group_name_selector = chapter_info_selector.find("h4")
     group_chapter_list_selector = chapter_info_selector.find(".chapter-list")
     if group_name_selector.length != group_chapter_list_selector.length:
-        raise crawler.CrawlerException("页面截取章节数量异常\n" + index_response.content)
+        raise CrawlerException("页面截取章节数量异常\n" + index_response.content)
     for group_index in range(group_name_selector.length):
         # 　获取分组名字
         group_name = group_name_selector.eq(group_index).text().strip()
         if not group_name:
-            raise crawler.CrawlerException("章节信息截取章节名失败\n" + group_name_selector.eq(group_index).html())
+            raise CrawlerException("章节信息截取章节名失败\n" + group_name_selector.eq(group_index).html())
         chapter_list_selector = group_chapter_list_selector.eq(group_index).find("li")
         if chapter_list_selector.length == 0:
-            raise crawler.CrawlerException("章节信息截取章节内容失败\n" + group_chapter_list_selector.eq(group_index).html())
+            raise CrawlerException("章节信息截取章节内容失败\n" + group_chapter_list_selector.eq(group_index).html())
         for page_index in range(chapter_list_selector.length):
             result_comic_info = {
                 "chapter_id": 0,  # 章节id
@@ -56,12 +56,12 @@ def get_comic_index_page(comic_id):
             chapter_url = chapter_selector.find("a").attr("href")
             chapter_id = tool.find_sub_string(chapter_url, "/comic/%s/" % comic_id, ".html")
             if not tool.is_integer(chapter_id):
-                raise crawler.CrawlerException("页面地址 %s 截取页面id失败" % chapter_url)
+                raise CrawlerException("页面地址 %s 截取页面id失败" % chapter_url)
             result_comic_info["chapter_id"] = int(chapter_id)
             # 获取章节名称
             chapter_name = chapter_selector.find("a").attr("title")
             if not chapter_name:
-                raise crawler.CrawlerException("页面地址 %s 截取章节名失败" % chapter_url)
+                raise CrawlerException("页面地址 %s 截取章节名失败" % chapter_url)
             result_comic_info["chapter_name"] = chapter_name.strip()
             result["chapter_info_list"].append(result_comic_info)
     return result
@@ -76,10 +76,10 @@ def get_chapter_page(comic_id, chapter_id):
         "photo_url_list": [],  # 全部漫画图片地址
     }
     if chapter_response.status != const.ResponseCode.SUCCEED:
-        raise crawler.CrawlerException(crawler.request_failre(chapter_response.status))
+        raise CrawlerException(crawler.request_failre(chapter_response.status))
     script_code = tool.find_sub_string(chapter_response.content, r'window["\x65\x76\x61\x6c"]', "</script>")
     if not script_code:
-        raise crawler.CrawlerException("页面截取脚本代码失败\n" + chapter_response.content)
+        raise CrawlerException("页面截取脚本代码失败\n" + chapter_response.content)
 
     # 使用网站的加密JS方法解密图片地址
     js_code = file.read_file(os.path.join(crawler.PROJECT_APP_PATH, "js", "lz-string.js"))
@@ -102,9 +102,9 @@ def get_chapter_page(comic_id, chapter_id):
     try:
         photo_list = execjs.compile(js_code).call("getPhotoLists")
     except execjs.ProgramError:
-        raise crawler.CrawlerException("脚本执行失败\n" + js_code)
+        raise CrawlerException("脚本执行失败\n" + js_code)
     if len(photo_list) == 0:
-        raise crawler.CrawlerException("脚本执行失败\n" + js_code)
+        raise CrawlerException("脚本执行失败\n" + js_code)
     for photo_url in photo_list:
         result["photo_url_list"].append("https://i.hamreus.com" + photo_url)
 
@@ -144,7 +144,7 @@ class CrawlerThread(crawler.CrawlerThread):
         self.start_parse(index_description)
         try:
             blog_pagination_response = get_comic_index_page(self.index_key)
-        except crawler.CrawlerException as e:
+        except CrawlerException as e:
             self.error(e.http_error(index_description))
             raise
         self.parse_result(index_description, blog_pagination_response["chapter_info_list"])
@@ -163,7 +163,7 @@ class CrawlerThread(crawler.CrawlerThread):
         self.start_parse(comic_description)
         try:
             chapter_response = get_chapter_page(self.index_key, chapter_info["chapter_id"])
-        except crawler.CrawlerException as e:
+        except CrawlerException as e:
             self.error(e.http_error(comic_description))
             raise
         self.parse_result(comic_description, chapter_response["photo_url_list"])

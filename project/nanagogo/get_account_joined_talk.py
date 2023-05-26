@@ -30,21 +30,21 @@ def get_account_talks(account_id, account_name, talk_list):
     account_index = "https://7gogo.jp/users/%s" % account_id
     account_index_response = net.Request(account_index, method="GET")
     if account_index_response.status != const.ResponseCode.SUCCEED:
-        raise crawler.CrawlerException(crawler.request_failre(account_index_response.status))
+        raise CrawlerException(crawler.request_failre(account_index_response.status))
     talk_list_selector = pq(account_index_response.content).find(".UserTalkWrapper .UserTalk")
     for talk_index in range(talk_list_selector.length):
         talk_selector = talk_list_selector.eq(talk_index)
         # 获取talk地址
         talk_url_path = talk_selector.attr("href")
         if not talk_url_path:
-            raise crawler.CrawlerException("talk信息截取talk地址失败\n" + talk_selector.html())
+            raise CrawlerException("talk信息截取talk地址失败\n" + talk_selector.html())
         talk_id = talk_url_path.replace("/", "")
         if not talk_id:
-            raise crawler.CrawlerException("talk地址%s截取talk id失败" % talk_url_path)
+            raise CrawlerException("talk地址%s截取talk id失败" % talk_url_path)
         # 获取talk名字
         talk_name = talk_selector.find(".UserTalk__talkname").text()
         if not talk_name:
-            raise crawler.CrawlerException("talk信息截取talk名字失败\n" + talk_selector.html())
+            raise CrawlerException("talk信息截取talk名字失败\n" + talk_selector.html())
         talk_name = tool.filter_emoji(talk_name.strip())
         # 获取talk描述
         talk_description = talk_selector.find(".UserTalk__description").text()
@@ -69,7 +69,7 @@ def main():
     for account_id in account_list:
         try:
             get_account_talks(account_id, account_list[account_id], talk_list)
-        except crawler.CrawlerException as e:
+        except CrawlerException as e:
             console.log(e.http_error("账号%s" % account_id))
     if len(talk_list) > 0:
         with open(TALK_ID_FILE_PATH, "w", encoding="UTF-8") as file_handle:

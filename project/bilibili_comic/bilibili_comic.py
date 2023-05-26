@@ -32,7 +32,7 @@ def get_comic_index_page(comic_id):
         "comic_info_list": {},  # 漫画列表信息
     }
     if api_response.status != const.ResponseCode.SUCCEED:
-        raise crawler.CrawlerException(crawler.request_failre(api_response.status))
+        raise CrawlerException(crawler.request_failre(api_response.status))
     for ep_info in crawler.get_json_value(api_response.json_data, "data", "ep_list", type_check=list):
         result_comic_info = {
             "ep_id": 0,  # 章节id
@@ -61,9 +61,9 @@ def get_chapter_page(ep_id):
         "photo_url_list": [],  # 全部漫画图片地址
     }
     if api_response.status != const.ResponseCode.SUCCEED:
-        raise crawler.CrawlerException(crawler.request_failre(api_response.status))
+        raise CrawlerException(crawler.request_failre(api_response.status))
     if crawler.get_json_value(api_response.json_data, "code", type_check=int) == 1:
-        raise crawler.CrawlerException("需要购买")
+        raise CrawlerException("需要购买")
     image_path_list = []
     for image_info in crawler.get_json_value(api_response.json_data, "data", "images", type_check=list):
         image_path_list.append(crawler.get_json_value(image_info, "path", type_check=str))
@@ -73,7 +73,7 @@ def get_chapter_page(ep_id):
     }
     token_api_response = net.Request(token_api_url, method="POST", fields=post_data).enable_json_decode()
     if api_response.status != const.ResponseCode.SUCCEED:
-        raise crawler.CrawlerException("图片token获取，" + crawler.request_failre(api_response.status))
+        raise CrawlerException("图片token获取，" + crawler.request_failre(api_response.status))
     for token_info in crawler.get_json_value(token_api_response.json_data, "data", type_check=list):
         photo_url = crawler.get_json_value(token_info, "url", type_check=str)
         token = crawler.get_json_value(token_info, "token", type_check=str)
@@ -133,7 +133,7 @@ class CrawlerThread(crawler.CrawlerThread):
         self.start_parse(index_description)
         try:
             blog_pagination_response = get_comic_index_page(self.index_key)
-        except crawler.CrawlerException as e:
+        except CrawlerException as e:
             self.error(e.http_error(index_description))
             raise
         self.parse_result(index_description, blog_pagination_response["comic_info_list"])
@@ -154,7 +154,7 @@ class CrawlerThread(crawler.CrawlerThread):
         self.start_parse(comic_description)
         try:
             chapter_response = get_chapter_page(comic_info["ep_id"])
-        except crawler.CrawlerException as e:
+        except CrawlerException as e:
             self.error(e.http_error(comic_description))
             raise
         self.parse_result(comic_description, chapter_response["photo_url_list"])

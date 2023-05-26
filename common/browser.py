@@ -19,7 +19,7 @@ from selenium.webdriver.chrome.webdriver import WebDriver
 from typing import Optional
 if platform.system() == "Windows":
     import win32crypt
-from common import const, console, crawler, file, net, PROJECT_LIB_PATH
+from common import const, console, crawler, file, net, PROJECT_LIB_PATH, CrawlerException
 
 # webdriver文件路径
 CHROME_WEBDRIVER_PATH: str = os.path.abspath(os.path.join(PROJECT_LIB_PATH, "chromedriver.exe"))
@@ -36,7 +36,7 @@ class Chrome:
             - headless - chrome-headless模式，默认值：True
         """
         if not os.path.exists(CHROME_WEBDRIVER_PATH):
-            raise crawler.CrawlerException("CHROME_WEBDRIVER_PATH: %s不存在" % CHROME_WEBDRIVER_PATH)
+            raise CrawlerException("CHROME_WEBDRIVER_PATH: %s不存在" % CHROME_WEBDRIVER_PATH)
 
         self.url: str = url
         # 浏览器参数

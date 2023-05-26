@@ -21,7 +21,7 @@ def get_album_index_page(album_id):
         "audio_info_list": [],  # 全部音频信息
     }
     if album_index_response.status != const.ResponseCode.SUCCEED:
-        raise crawler.CrawlerException(crawler.request_failre(album_index_response.status))
+        raise CrawlerException(crawler.request_failre(album_index_response.status))
     audio_list_selector = pq(album_index_response.content).find(".play-list li")
     for audio_index in range(audio_list_selector.length, 0, -1):
         result_audio_info = {
@@ -39,7 +39,7 @@ def get_album_index_page(album_id):
         result_audio_info["audio_play_url"] = audio_play_url
         audio_id = url.get_file_name(audio_play_url).split("-")[-1]
         if not tool.is_integer(audio_id):
-            raise crawler.CrawlerException("音频播放地址 %s 截取音频id失败" % audio_play_url)
+            raise CrawlerException("音频播放地址 %s 截取音频id失败" % audio_play_url)
         result_audio_info["audio_id"] = int(audio_id) + 1  # 页面是从0开始的
         result["audio_info_list"].append(result_audio_info)
     return result
@@ -55,7 +55,7 @@ def get_audio_info_page(audio_play_url):
     if audio_play_response.status == const.ResponseCode.TOO_MANY_REDIRECTS:
         return get_audio_info_page(audio_play_url)
     elif audio_play_response.status != const.ResponseCode.SUCCEED:
-        raise crawler.CrawlerException(crawler.request_failre(audio_play_response.status))
+        raise CrawlerException(crawler.request_failre(audio_play_response.status))
     # 解析来自 http://m.tingshubao.com/player/main.js的FonHen_JieMa()方法
     encrypt_string = tool.find_sub_string(audio_play_response.content, "FonHen_JieMa('", "'")
     temp_list = []
@@ -72,7 +72,7 @@ def get_audio_info_page(audio_play_url):
         }
         audio_detail_response = net.Request(audio_detail_url, method="GET", fields=query_data).enable_json_decode()
         if audio_detail_response.status != const.ResponseCode.SUCCEED:
-            raise crawler.CrawlerException(crawler.request_failre(audio_detail_response.status))
+            raise CrawlerException(crawler.request_failre(audio_detail_response.status))
         result["audio_url"] = crawler.get_json_value(audio_detail_response.json_data, "url", type_check=str)
     return result
 
@@ -115,7 +115,7 @@ class CrawlerThread(crawler.CrawlerThread):
         self.start_parse(index_description)
         try:
             album_index_response = get_album_index_page(self.index_key)
-        except crawler.CrawlerException as e:
+        except CrawlerException as e:
             self.error(e.http_error(index_description))
             raise
         self.parse_result(index_description, album_index_response["audio_info_list"])
@@ -135,7 +135,7 @@ class CrawlerThread(crawler.CrawlerThread):
         self.start_parse(audio_description)
         try:
             audio_play_response = get_audio_info_page(audio_info["audio_play_url"])
-        except crawler.CrawlerException as e:
+        except CrawlerException as e:
             self.error(e.http_error(audio_description))
             raise
 

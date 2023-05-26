@@ -20,13 +20,13 @@ def get_member_from_talk(talk_id):
     talk_index_response = net.Request(talk_index_url, method="GET")
     account_list = {}
     if talk_index_response.status != const.ResponseCode.SUCCEED:
-        raise crawler.CrawlerException(crawler.request_failre(talk_index_response.status))
+        raise CrawlerException(crawler.request_failre(talk_index_response.status))
     script_json_html = tool.find_sub_string(talk_index_response.content, "window.__DEHYDRATED_STATES__ = ", "</script>")
     if not script_json_html:
-        raise crawler.CrawlerException("页面截取talk信息失败\n" + talk_index_response.content)
+        raise CrawlerException("页面截取talk信息失败\n" + talk_index_response.content)
     script_json = tool.json_decode(script_json_html)
     if script_json is None:
-        raise crawler.CrawlerException("talk信息加载失败\n" + script_json_html)
+        raise CrawlerException("talk信息加载失败\n" + script_json_html)
     for member_info in crawler.get_json_value(script_json, "page:talk:service:entity:talkMembers", "members", type_check=list):
         account_id = crawler.get_json_value(member_info, "userId", type_check=str)
         account_name = crawler.get_json_value(member_info, "name", type_check=str).replace(" ", "")
@@ -43,7 +43,7 @@ def main():
     for talk_id in nanagogo_class.save_data:
         try:
             member_list = get_member_from_talk(talk_id)
-        except crawler.CrawlerException as e:
+        except CrawlerException as e:
             console.log(e.http_error("talk %s" % talk_id))
             continue
         for account_id in member_list:

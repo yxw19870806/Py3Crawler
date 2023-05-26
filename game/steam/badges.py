@@ -42,7 +42,7 @@ def main():
     # 获取全部没有收到恒宇卡牌掉落且还可以升级的徽章
     try:
         badges_detail_url_list = steam.get_self_uncompleted_account_badges(steam_class.account_id)
-    except crawler.CrawlerException as e:
+    except CrawlerException as e:
         console.log(e.http_error("个人徽章首页"))
         raise
 
@@ -55,7 +55,7 @@ def main():
         # 查询徽章剩余的卡牌以及数量
         try:
             wanted_card_list = steam.get_self_account_badge_card(badges_detail_url)
-        except crawler.CrawlerException as e:
+        except CrawlerException as e:
             console.log(e.http_error("徽章" % badges_detail_url))
             continue
         if len(wanted_card_list) == 0:
@@ -69,7 +69,7 @@ def main():
         # 获取全部卡牌的市场售价
         try:
             market_card_list = steam.get_market_game_trade_card_price(game_id)
-        except crawler.CrawlerException as e:
+        except CrawlerException as e:
             console.log(e.http_error("游戏%s的市场" % game_id))
             continue
 

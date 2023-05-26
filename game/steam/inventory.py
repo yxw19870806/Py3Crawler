@@ -6,7 +6,7 @@ https://store.steampowered.com/
 email: hikaru870806@hotmail.com
 如有问题或建议请联系
 """
-from common import console, crawler
+from common import console, CrawlerException
 from game.steam.lib import steam
 
 CHECK_EXTRA_CARD = True  # 是否检测额外的交换卡（徽章等级大于5，并且还有卡牌）
@@ -22,7 +22,7 @@ def main():
     # 获取所有库存
     try:
         inventory_item_list = steam.get_account_inventory(steam_class.account_id)
-    except crawler.CrawlerException as e:
+    except CrawlerException as e:
         console.log(e.http_error("库存"))
         raise
     badges_list = {}
@@ -30,7 +30,7 @@ def main():
         # 获取徽章等级
         try:
             badges_list = steam.get_account_badges(steam_class.account_id)
-        except crawler.CrawlerException as e:
+        except CrawlerException as e:
             console.log(e.http_error("账号徽章列表"))
             raise
     for item_id, item_info in inventory_item_list.items():

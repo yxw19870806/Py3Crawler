@@ -7,7 +7,7 @@ email: hikaru870806@hotmail.com
 如有问题或建议请联系
 """
 import os
-from common import console, crawler, const, file, tool
+from common import console, const, file, tool, CrawlerException
 from game.steam.lib import steam
 
 
@@ -53,7 +53,7 @@ def main():
         # 获取游戏信息
         try:
             game_data = steam.get_game_store_index(game_id)
-        except crawler.CrawlerException as e:
+        except CrawlerException as e:
             console.log(e.http_error("游戏%s" % game_id))
             continue
 

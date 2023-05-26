@@ -55,7 +55,7 @@ def main(check_game=True):
     # 获取自己的全部玩过的游戏列表
     try:
         played_game_list = steam.get_account_owned_app_list(steam_class.account_id, True)
-    except crawler.CrawlerException as e:
+    except CrawlerException as e:
         console.log(e.http_error("个人游戏主页"))
         raise
 
@@ -72,7 +72,7 @@ def main(check_game=True):
             # 获取游戏信息
             try:
                 game_data = steam.get_game_store_index(game_id)
-            except crawler.CrawlerException as e:
+            except CrawlerException as e:
                 console.log("游戏 %s 解析失败，原因：%s" % (game_id, e.message))
                 console.log(e.http_error("游戏%s" % game_id))
                 continue
@@ -98,7 +98,7 @@ def main(check_game=True):
                     # 获取DLC信息
                     try:
                         dlc_data = steam.get_game_store_index(dlc_id)
-                    except crawler.CrawlerException as e:
+                    except CrawlerException as e:
                         console.log(e.http_error("游戏%s" % dlc_id))
                         continue
 

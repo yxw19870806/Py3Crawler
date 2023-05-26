@@ -25,7 +25,7 @@ def follow_account(account_id):
         tool.process_exit()
     try:
         return_code = crawler.get_json_value(follow_response.json_data, "code", type_check=int)
-    except crawler.CrawlerException():
+    except CrawlerException():
         console.log("关注%s失败，返回内容：%s，退出程序！" % (account_id, follow_response.json_data))
         tool.process_exit()
     else:

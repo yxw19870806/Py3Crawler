@@ -14,7 +14,7 @@ import threading
 import time
 import traceback
 from typing import Any, Callable, Optional, Union, Type, Self
-from common import console, const, browser, file, log, net, path, port_listener_event, tool
+from common import console, const, browser, file, log, net, path, port_listener_event, tool, CrawlerException
 from common import IS_EXECUTABLE, PROJECT_ROOT_PATH, PROJECT_CONFIG_PATH
 if platform.system() == "Windows":
     from common import keyboard_event
@@ -648,21 +648,6 @@ class DownloadThread(CrawlerThread):
     def set_download_cookies(self, cookies: dict[str, str]) -> Self:
         self.cookies = cookies
         return self
-
-
-class CrawlerException(SystemExit):
-    def __init__(self, msg: str = "", is_print: bool = True) -> None:
-        SystemExit.__init__(self, 1)
-        if is_print:
-            console.log(msg)
-        self.exception_message = msg
-
-    @property
-    def message(self) -> str:
-        return self.exception_message
-
-    def http_error(self, target: str) -> str:
-        return "%s解析失败，原因：%s" % (target, self.message)
 
 
 def read_config(config_path: str) -> dict[str, str]:

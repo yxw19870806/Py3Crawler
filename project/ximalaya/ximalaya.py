@@ -46,14 +46,14 @@ def get_one_page_album(album_id, page_count):
         "is_over": False,  # 是否最后一页音频
     }
     if album_pagination_response.status != const.ResponseCode.SUCCEED:
-        raise crawler.CrawlerException(crawler.request_failre(album_pagination_response.status))
+        raise CrawlerException(crawler.request_failre(album_pagination_response.status))
     # 获取音频信息
     try:
         audio_info_list = crawler.get_json_value(album_pagination_response.json_data, "data", "tracks", type_check=list)
-    except crawler.CrawlerException:
+    except CrawlerException:
         error_message = crawler.get_json_value(album_pagination_response.json_data, "msg", type_check=str, default_value="")
         if error_message == "该专辑[id:%s]已被删除~" % album_id or error_message == "该专辑[id:%s]已下架~" % album_id:
-            raise crawler.CrawlerException("专辑已被删除")
+            raise CrawlerException("专辑已被删除")
         elif error_message == "该专辑不存在~" and page_count > 1:
             time.sleep(3)
             return get_one_page_album(album_id, page_count)
@@ -98,7 +98,7 @@ def get_one_page_audio(account_id, page_count):
         "is_over": False,  # 是否最后一页音频
     }
     if audit_pagination_response.status != const.ResponseCode.SUCCEED:
-        raise crawler.CrawlerException(crawler.request_failre(audit_pagination_response.status))
+        raise CrawlerException(crawler.request_failre(audit_pagination_response.status))
     # 获取音频信息
     for audio_info in crawler.get_json_value(audit_pagination_response.json_data, "data", "trackList", type_check=list):
         result_audio_info = {
@@ -133,7 +133,7 @@ def get_audio_info_page(audio_id):
     }
     audio_simple_info_response = net.Request(audio_simple_info_url, method="GET", fields=query_data).enable_json_decode()
     if audio_simple_info_response.status != const.ResponseCode.SUCCEED:
-        raise crawler.CrawlerException("音频简易信息 " + crawler.request_failre(audio_simple_info_response.status))
+        raise CrawlerException("音频简易信息 " + crawler.request_failre(audio_simple_info_response.status))
     return_code = crawler.get_json_value(audio_simple_info_response.json_data, "ret", type_check=int)
     if return_code == 200:
         pass
@@ -144,7 +144,7 @@ def get_audio_info_page(audio_id):
         time.sleep(3)
         return get_audio_info_page(audio_id)
     else:
-        raise crawler.CrawlerException("音频简易信息%s中'ret'返回值不正确" % audio_simple_info_response.json_data)
+        raise CrawlerException("音频简易信息%s中'ret'返回值不正确" % audio_simple_info_response.json_data)
     # 获取音频标题
     result["audio_title"] = crawler.get_json_value(audio_simple_info_response.json_data, "data", "trackInfo", "title", type_check=str)
     # 判断是否是视频
@@ -160,29 +160,29 @@ def get_audio_info_page(audio_id):
     while True:
         audio_info_response = net.Request(audio_info_url, method="GET", fields=query_data).enable_json_decode()
         if audio_info_response.status != const.ResponseCode.SUCCEED:
-            raise crawler.CrawlerException("音频详细信息" + crawler.request_failre(audio_info_response.status))
+            raise CrawlerException("音频详细信息" + crawler.request_failre(audio_info_response.status))
         return_code = crawler.get_json_value(audio_info_response.json_data, "ret", type_check=int)
         if return_code == 200:
             break
         elif return_code == 500:
             time.sleep(3)
         else:
-            raise crawler.CrawlerException("音频详细信息" + crawler.request_failre(audio_info_response.status))
+            raise CrawlerException("音频详细信息" + crawler.request_failre(audio_info_response.status))
     # 获取音频地址
     try:
         result["audio_url"] = crawler.get_json_value(audio_info_response.json_data, "data", "src", type_check=str)
         return result
-    except crawler.CrawlerException:
+    except CrawlerException:
         crawler.get_json_value(audio_info_response.json_data, "data", "hasBuy", type_check=bool)
 
     if not COOKIES:
-        raise crawler.CrawlerException("非免费音频")
+        raise CrawlerException("非免费音频")
 
     day = tool.convert_timestamp_to_formatted_time("%Y-%m-%d")
     if day not in DAILY_VIP_DOWNLOAD_COUNT:
         DAILY_VIP_DOWNLOAD_COUNT[day] = 0
     if DAILY_VIP_DOWNLOAD_COUNT[day] >= MAX_DAILY_VIP_DOWNLOAD_COUNT:
-        raise crawler.CrawlerException("当日免费下载次数已达到限制")
+        raise CrawlerException("当日免费下载次数已达到限制")
 
     # 需要购买或者vip才能解锁的音频
     vip_audio_info_url = "https://mobile.ximalaya.com/mobile-playpage/track/v3/baseInfo/%s" % int(time.time() * 1000)
@@ -192,16 +192,16 @@ def get_audio_info_page(audio_id):
     }
     vip_audio_info_response = net.Request(vip_audio_info_url, method="GET", fields=query_data, cookies=COOKIES).enable_json_decode()
     if vip_audio_info_response.status != const.ResponseCode.SUCCEED:
-        raise crawler.CrawlerException("vip音频详细信息" + crawler.request_failre(vip_audio_info_response.status))
+        raise CrawlerException("vip音频详细信息" + crawler.request_failre(vip_audio_info_response.status))
     try:
         decrypt_url = crawler.get_json_value(vip_audio_info_response.json_data, "trackInfo", "playUrlList", 0, "url", type_check=str)
-    except crawler.CrawlerException:
+    except CrawlerException:
         # 达到每日限制
         if crawler.get_json_value(vip_audio_info_response.json_data, "ret", type_check=int, value_check=999, default_value=0) and \
                 crawler.get_json_value(vip_audio_info_response.json_data, "msg", type_check=str, value_check="今天操作太频繁啦，可以明天再试试哦~", default_value=""):
             # 清除cookies
             COOKIES = {}
-            raise crawler.CrawlerException("达到vip每日限制")
+            raise CrawlerException("达到vip每日限制")
         raise
 
     # 保存每日vip下载计数
@@ -228,7 +228,7 @@ def get_audio_info_page(audio_id):
     try:
         audio_url = execjs.compile(js_code).call("encrypt_url", decrypt_url)
     except execjs.ProgramError:
-        raise crawler.CrawlerException("url%s解密失败" % decrypt_url)
+        raise CrawlerException("url%s解密失败" % decrypt_url)
     result["audio_url"] = audio_url
 
     return result

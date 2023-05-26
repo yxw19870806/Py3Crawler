@@ -39,9 +39,9 @@ def get_account_mylist(account_id):
         "is_private": False,  # 是否未公开
     }
     if account_mylist_response.status in [404, 500]:
-        raise crawler.CrawlerException("账号不存在")
+        raise CrawlerException("账号不存在")
     elif account_mylist_response.status != const.ResponseCode.SUCCEED:
-        raise crawler.CrawlerException(crawler.request_failre(account_mylist_response.status))
+        raise CrawlerException(crawler.request_failre(account_mylist_response.status))
     if pq(account_mylist_response.content).find(".articleBody .noListMsg").length == 1:
         message = pq(account_mylist_response.content).find(".articleBody .noListMsg .att").text()
         if message == "非公開です":
@@ -50,16 +50,16 @@ def get_account_mylist(account_id):
         elif message == "公開マイリストはありません":
             return result
         else:
-            raise crawler.CrawlerException("未知视频列表状态: %s" % message)
+            raise CrawlerException("未知视频列表状态: %s" % message)
     mylist_list_selector = pq(account_mylist_response.content).find(".articleBody .outer")
     for mylist_index in range(mylist_list_selector.length):
         mylist_selector = mylist_list_selector.eq(mylist_index)
         mylist_url = mylist_selector.find(".section h4 a").attr("href")
         if mylist_url is None:
-            raise crawler.CrawlerException("视频列表信息截取视频列表地址失败\n" + mylist_selector.html())
+            raise CrawlerException("视频列表信息截取视频列表地址失败\n" + mylist_selector.html())
         list_id = tool.find_sub_string(mylist_url, "mylist/")
         if not tool.is_integer(list_id):
-            raise crawler.CrawlerException("视频列表地址截取视频列表id失败\n" + mylist_selector.html())
+            raise CrawlerException("视频列表地址截取视频列表id失败\n" + mylist_selector.html())
         result["list_id_list"].append(int(list_id))
     return result
 
@@ -75,16 +75,16 @@ def get_one_page_account_video(account_id, page_count):
         "is_private": False,  # 是否未公开
     }
     if video_index_response.status == 404:
-        raise crawler.CrawlerException("账号不存在")
+        raise CrawlerException("账号不存在")
     elif video_index_response.status != const.ResponseCode.SUCCEED:
-        raise crawler.CrawlerException(crawler.request_failre(video_index_response.status))
+        raise CrawlerException(crawler.request_failre(video_index_response.status))
     if pq(video_index_response.content).find(".articleBody .noListMsg").length == 1:
         message = pq(video_index_response.content).find(".articleBody .noListMsg .att").text()
         if message == "非公開です":
             result["is_private"] = True
             return result
         else:
-            raise crawler.CrawlerException("未知视频列表状态: %s" % message)
+            raise CrawlerException("未知视频列表状态: %s" % message)
     video_list_selector = pq(video_index_response.content).find(".articleBody .outer")
     # 第一个是排序选择框，跳过
     for video_index in range(1, video_list_selector.length):
@@ -96,15 +96,15 @@ def get_one_page_account_video(account_id, page_count):
         # 获取视频id
         video_url = video_selector.find(".section h5 a").attr("href")
         if not video_url:
-            raise crawler.CrawlerException("视频信息截取视频地址失败\n" + video_selector.html())
+            raise CrawlerException("视频信息截取视频地址失败\n" + video_selector.html())
         video_id = tool.find_sub_string(video_url, "watch/sm", "?")
         if not tool.is_integer(video_id):
-            raise crawler.CrawlerException("视频地址截取视频id失败\n" + video_selector.html())
+            raise CrawlerException("视频地址截取视频id失败\n" + video_selector.html())
         result_video_info["video_id"] = int(video_id)
         # 获取视频标题
         video_title = video_selector.find(".section h5 a").text()
         if not video_title:
-            raise crawler.CrawlerException("视频信息截取视频标题失败\n" + video_selector.html())
+            raise CrawlerException("视频信息截取视频标题失败\n" + video_selector.html())
         result_video_info["video_title"] = video_title
         result["video_info_list"].append(result_video_info)
     # 判断是不是最后页
@@ -133,11 +133,11 @@ def get_one_page_mylist_video(list_id, page_count):
         "video_info_list": [],  # 全部视频信息
     }
     if mylist_pagination_response.status == 404:
-        raise crawler.CrawlerException("视频列表不存在")
+        raise CrawlerException("视频列表不存在")
     elif mylist_pagination_response.status == 403:
-        raise crawler.CrawlerException("视频列表未公开")
+        raise CrawlerException("视频列表未公开")
     elif mylist_pagination_response.status != const.ResponseCode.SUCCEED:
-        raise crawler.CrawlerException(crawler.request_failre(mylist_pagination_response.status))
+        raise CrawlerException(crawler.request_failre(mylist_pagination_response.status))
     for video_info in crawler.get_json_value(mylist_pagination_response.json_data, "data", "mylist", "items", type_check=list):
         result_video_info = {
             "video_id": 0,  # 视频id
@@ -148,7 +148,7 @@ def get_one_page_mylist_video(list_id, page_count):
         # 获取视频id
         video_id = crawler.get_json_value(video_info, "video", "id", type_check=str).replace("sm", "")
         if not tool.is_integer(video_id):
-            raise crawler.CrawlerException("视频信息%s中'watchId'字段类型不正确" % video_info)
+            raise CrawlerException("视频信息%s中'watchId'字段类型不正确" % video_info)
         result_video_info["video_id"] = int(video_id)
         # 获取视频辩题
         result_video_info["video_title"] = crawler.get_json_value(video_info, "video", "title", type_check=str)
@@ -176,7 +176,7 @@ def get_video_info(video_id):
         result["is_delete"] = True
         return result
     elif video_play_response.status != const.ResponseCode.SUCCEED:
-        raise crawler.CrawlerException("视频播放页，" + crawler.request_failre(video_play_response.status))
+        raise CrawlerException("视频播放页，" + crawler.request_failre(video_play_response.status))
     script_json_html = tool.find_sub_string(video_play_response.content, 'data-api-data="', '" data-environment="')
     if not script_json_html:
         # 播放页面提示flash没有安装，重新访问
@@ -185,10 +185,10 @@ def get_video_info(video_id):
         if video_play_response.content.find("<p>この動画が投稿されている公開コミュニティはありません。</p>") > 0:
             result["is_private"] = True
             return result
-        raise crawler.CrawlerException("视频信息截取失败\n" + video_play_response.content)
+        raise CrawlerException("视频信息截取失败\n" + video_play_response.content)
     script_json = tool.json_decode(html.unescape(script_json_html))
     if script_json is None:
-        raise crawler.CrawlerException("视频信息加载失败\n" + video_play_response.content)
+        raise CrawlerException("视频信息加载失败\n" + video_play_response.content)
     # 获取视频标题
     result["video_title"] = crawler.get_json_value(script_json, "video", "title", type_check=str)
 
@@ -199,14 +199,14 @@ def get_video_info(video_id):
         video_resolution = video_width * video_height
         video_resolution_2_id[video_resolution] = crawler.get_json_value(video_info, "id", type_check=str)
     if len(video_resolution_2_id) == 0:
-        raise crawler.CrawlerException("视频信息截取视频列表失败\n" + script_json)
+        raise CrawlerException("视频信息截取视频列表失败\n" + script_json)
 
     audio_bitrate_2_id = {}
     for audio_info in crawler.get_json_value(script_json, "media", "delivery", "movie", "audios", type_check=list):
         audio_bitrate = crawler.get_json_value(audio_info, "metadata", "bitrate", type_check=int)
         audio_bitrate_2_id[audio_bitrate] = crawler.get_json_value(audio_info, "id", type_check=str)
     if len(audio_bitrate_2_id) == 0:
-        raise crawler.CrawlerException("视频信息截取音频列表失败\n" + script_json)
+        raise CrawlerException("视频信息截取音频列表失败\n" + script_json)
 
     # 请求session，并返回下载地址
     session_api_url = "https://api.dmc.nico/api/sessions?_format=json"
@@ -273,23 +273,23 @@ def get_video_info(video_id):
     }
     session_api_response = net.Request(session_api_url, method="POST", fields=tool.json_encode(session_api_post_data)).enable_json_decode()
     if session_api_response.status != 201:
-        raise crawler.CrawlerException("session生成，" + crawler.request_failre(session_api_response.status))
+        raise CrawlerException("session生成，" + crawler.request_failre(session_api_response.status))
 
     master_file_url = crawler.get_json_value(session_api_response.json_data, "data", "session", "content_uri", type_check=str)
     master_file_response = net.Request(master_file_url, method="GET")
     if master_file_response.status != const.ResponseCode.SUCCEED:
-        raise crawler.CrawlerException("master文件，" + crawler.request_failre(master_file_response.status))
+        raise CrawlerException("master文件，" + crawler.request_failre(master_file_response.status))
     m3u8_file_find = re.findall(r"(\S*.m3u8\S*)", master_file_response.content)
     if len(m3u8_file_find) != 1:
-        raise crawler.CrawlerException("m3u8文件截取失败\n" + master_file_response.content)
+        raise CrawlerException("m3u8文件截取失败\n" + master_file_response.content)
 
     result["m3u8_file_url"] = urllib.parse.urljoin(master_file_url, m3u8_file_find[0])
     m3u8_file_response = net.Request(result["m3u8_file_url"], method="GET")
     if m3u8_file_response.status != const.ResponseCode.SUCCEED:
-        raise crawler.CrawlerException("分集文件 %s，%s" % (result["m3u8_file_url"], crawler.request_failre(m3u8_file_response.status)))
+        raise CrawlerException("分集文件 %s，%s" % (result["m3u8_file_url"], crawler.request_failre(m3u8_file_response.status)))
     ts_path_list = re.findall(r"(\S*.ts\S*)", m3u8_file_response.content)
     if len(ts_path_list) == 0:
-        raise crawler.CrawlerException("分集文件匹配视频地址失败\n" + m3u8_file_response.content)
+        raise CrawlerException("分集文件匹配视频地址失败\n" + m3u8_file_response.content)
     for ts_path in ts_path_list:
         result["video_url_list"].append(urllib.parse.urljoin(result["m3u8_file_url"], ts_path))
     return result
@@ -354,7 +354,7 @@ class CrawlerThread(crawler.CrawlerThread):
             self.start_parse(mylist_pagination_description)
             try:
                 mylist_pagination_response = get_one_page_mylist_video(self.index_key, page_count)
-            except crawler.CrawlerException as e:
+            except CrawlerException as e:
                 self.error(e.http_error(mylist_pagination_description))
                 raise
             self.parse_result(mylist_pagination_description, mylist_pagination_response["video_info_list"])
@@ -381,7 +381,7 @@ class CrawlerThread(crawler.CrawlerThread):
         self.start_parse(video_description)
         try:
             video_info_response = get_video_info(video_info["video_id"])
-        except crawler.CrawlerException as e:
+        except CrawlerException as e:
             self.error(e.http_error(video_description))
             raise
         if video_info_response["is_delete"]:

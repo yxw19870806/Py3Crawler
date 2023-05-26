@@ -20,10 +20,10 @@ def get_album_index_page(album_id):
         "audio_info_list": [],  # 全部音频信息
     }
     if album_pagination_response.status != const.ResponseCode.SUCCEED:
-        raise crawler.CrawlerException(crawler.request_failre(album_pagination_response.status))
+        raise CrawlerException(crawler.request_failre(album_pagination_response.status))
     audio_info_selector_list = pq(album_pagination_response.content).find("ul.play-list li")
     if audio_info_selector_list.length == 0:
-        raise crawler.CrawlerException("页面截取音频列表失败\n" + album_pagination_response.content)
+        raise CrawlerException("页面截取音频列表失败\n" + album_pagination_response.content)
     # 获取音频信息
     for audio_info_index in range(audio_info_selector_list.length):
         result_audio_info = {
@@ -34,7 +34,7 @@ def get_album_index_page(album_id):
         # 获取音频id
         audio_id = tool.find_sub_string(audio_info_selector.find("a").attr("href"), "/play/%s/" % album_id, ".html")
         if not tool.is_integer(audio_id):
-            raise crawler.CrawlerException("音频信息截取音频id失败\n" + audio_info_selector.html())
+            raise CrawlerException("音频信息截取音频id失败\n" + audio_info_selector.html())
         result_audio_info["audio_id"] = int(audio_id)
         # 获取音频标题
         result_audio_info["audio_title"] = audio_info_selector.find("a").text()
@@ -57,7 +57,7 @@ def get_audio_info_page(album_id, audio_id):
     }
     audio_info_response = net.Request(audio_info_url, method="GET", headers=headers).enable_json_decode()
     if audio_info_response.status != const.ResponseCode.SUCCEED:
-        raise crawler.CrawlerException(crawler.request_failre(audio_info_response.status))
+        raise CrawlerException(crawler.request_failre(audio_info_response.status))
     audio_src = crawler.get_json_value(audio_info_response.json_data, "src", type_check=str)
     # 解析来自 https://www.i275.com/static/haidao/script/common.js
     result["audio_url"] = "".join(map(chr, map(int, audio_src.split("*"))))
@@ -97,7 +97,7 @@ class CrawlerThread(crawler.CrawlerThread):
         self.start_parse(index_description)
         try:
             audit_pagination_response = get_album_index_page(self.index_key)
-        except crawler.CrawlerException as e:
+        except CrawlerException as e:
             self.error(e.http_error(index_description))
             raise
         self.parse_result(index_description, audit_pagination_response["audio_info_list"])
@@ -118,7 +118,7 @@ class CrawlerThread(crawler.CrawlerThread):
         self.start_parse(audio_description)
         try:
             audio_play_response = get_audio_info_page(self.index_key, audio_info["audio_id"])
-        except crawler.CrawlerException as e:
+        except CrawlerException as e:
             self.error(e.http_error(audio_description))
             raise
 

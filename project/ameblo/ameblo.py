@@ -39,9 +39,9 @@ def get_one_page_blog(account_name, page_count):
         "is_over": False,  # 是否最后一页日志
     }
     if blog_pagination_response.status == 404:
-        raise crawler.CrawlerException("账号不存在")
+        raise CrawlerException("账号不存在")
     elif blog_pagination_response.status != const.ResponseCode.SUCCEED:
-        raise crawler.CrawlerException(crawler.request_failre(blog_pagination_response.status))
+        raise CrawlerException(crawler.request_failre(blog_pagination_response.status))
     # 获取日志id
     blog_id_list = re.findall(r'data-unique-entry-id="(\d*)"', blog_pagination_response.content)
     result["blog_id_list"] = list(map(int, blog_id_list))
@@ -53,11 +53,11 @@ def get_one_page_blog(account_name, page_count):
             blog_url = blog_list_selector.eq(blog_url_index).attr("href")
             blog_id = tool.find_sub_string(blog_url, "entry-", ".html")
             if not tool.is_integer(blog_id):
-                raise crawler.CrawlerException("日志地址%s截取日志id失败" % blog_url)
+                raise CrawlerException("日志地址%s截取日志id失败" % blog_url)
             result["blog_id_list"].append(int(blog_id))
     if len(result["blog_id_list"]) == 0:
         if page_count == 1:
-            raise crawler.CrawlerException("页面匹配日志id失败\n" + blog_pagination_response.content)
+            raise CrawlerException("页面匹配日志id失败\n" + blog_pagination_response.content)
         log.error(account_name + " 新的分页页面")
         result["is_over"] = True
         return result
@@ -66,13 +66,13 @@ def get_one_page_blog(account_name, page_count):
     if pq(blog_pagination_response.content).find("div.pagingArea").length > 0:
         if pq(blog_pagination_response.content).find("div.pagingArea a.pagingNext").length == 0 and \
                 pq(blog_pagination_response.content).find("div.pagingArea a.pagingPrev").length == 0:
-            raise crawler.CrawlerException("页面截取分页信息div.pagingArea失败\n" + blog_pagination_response.content)
+            raise CrawlerException("页面截取分页信息div.pagingArea失败\n" + blog_pagination_response.content)
         result["is_over"] = True
     # https://ameblo.jp/1108ayanyan/
     elif pq(blog_pagination_response.content).find("ul.skin-paging").length > 0:
         if pq(blog_pagination_response.content).find("ul.skin-paging a.skin-pagingNext").length == 0 and \
                 pq(blog_pagination_response.content).find("ul.skin-paging a.skin-pagingPrev").length == 0:
-            raise crawler.CrawlerException("页面截取分页信息ul.skin-paging失败\n" + blog_pagination_response.content)
+            raise CrawlerException("页面截取分页信息ul.skin-paging失败\n" + blog_pagination_response.content)
         result["is_over"] = True
     # https://ameblo.jp/48orii48/
     elif pq(blog_pagination_response.content).find("div.page").length > 0:
@@ -83,7 +83,7 @@ def get_one_page_blog(account_name, page_count):
             if tool.is_integer(temp_page_count):
                 find_page_count_list.append(int(temp_page_count))
         if len(find_page_count_list) == 0:
-            raise crawler.CrawlerException("页面截取分页信息失败\n" + blog_pagination_response.content)
+            raise CrawlerException("页面截取分页信息失败\n" + blog_pagination_response.content)
         result["is_over"] = page_count >= max(find_page_count_list)
     return result
 
@@ -100,9 +100,9 @@ def get_blog_page(account_name, blog_id):
         result["is_delete"] = True
         return result
     elif blog_response.status != const.ResponseCode.SUCCEED:
-        raise crawler.CrawlerException(crawler.request_failre(blog_response.status))
+        raise CrawlerException(crawler.request_failre(blog_response.status))
     if blog_response.content.find("この記事はアメンバーさん限定です。") >= 0:
-        raise crawler.CrawlerException("需要关注后才能访问，请在 https://profile.ameba.jp/ameba/%s，选择'アメンバー申請'" % account_name)
+        raise CrawlerException("需要关注后才能访问，请在 https://profile.ameba.jp/ameba/%s，选择'アメンバー申請'" % account_name)
     # 截取日志正文部分（有多种页面模板）
     article_class_list = ["subContentsInner", "articleText", "skin-entryInner"]
     article_html_selector = None
@@ -111,7 +111,7 @@ def get_blog_page(account_name, blog_id):
         if article_html_selector.length > 0:
             break
     if article_html_selector is None or article_html_selector.length == 0:
-        raise crawler.CrawlerException("页面截取正文失败\n" + blog_response.content)
+        raise CrawlerException("页面截取正文失败\n" + blog_response.content)
     # 获取图片地址
     photo_list_selector = article_html_selector.find("img")
     for photo_index in range(photo_list_selector.length):
@@ -246,7 +246,7 @@ class CrawlerThread(crawler.CrawlerThread):
             self.start_parse(blog_pagination_description)
             try:
                 blog_pagination_response = get_one_page_blog(self.index_key, start_page_count)
-            except crawler.CrawlerException as e:
+            except CrawlerException as e:
                 self.error(e.http_error(blog_pagination_description))
                 raise
             # 这页没有任何内容，返回上一个检查节点
@@ -270,7 +270,7 @@ class CrawlerThread(crawler.CrawlerThread):
             self.start_parse(blog_pagination_description)
             try:
                 blog_pagination_response = get_one_page_blog(self.index_key, page_count)
-            except crawler.CrawlerException as e:
+            except CrawlerException as e:
                 self.error(e.http_error(blog_pagination_description))
                 raise
             self.parse_result(blog_pagination_description, blog_pagination_response["blog_id_list"])
@@ -300,7 +300,7 @@ class CrawlerThread(crawler.CrawlerThread):
         self.start_parse(album_description)
         try:
             blog_response = get_blog_page(self.index_key, blog_id)
-        except crawler.CrawlerException as e:
+        except CrawlerException as e:
             self.error(e.http_error(album_description))
             raise
         # 日志只对关注者可见

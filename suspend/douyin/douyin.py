@@ -25,13 +25,13 @@ def get_account_index_page(account_id):
         "signature": "",  # 加密串（请求参数）
     }
     if account_index_response.status != const.ResponseCode.SUCCEED:
-        raise crawler.CrawlerException(crawler.request_failre(account_index_response.status))
+        raise CrawlerException(crawler.request_failre(account_index_response.status))
     script_tac = tool.find_sub_string(account_index_response.content, "<script>tac='", "'</script>")
     if not script_tac:
-        raise crawler.CrawlerException("页面截取tac参数失败\n" + account_index_response.content)
+        raise CrawlerException("页面截取tac参数失败\n" + account_index_response.content)
     script_dytk = tool.find_sub_string(account_index_response.content, "dytk: '", "'")
     if not script_dytk:
-        raise crawler.CrawlerException("页面截取dytk参数失败\n" + account_index_response.content)
+        raise CrawlerException("页面截取dytk参数失败\n" + account_index_response.content)
     result["dytk"] = script_dytk
     # 读取模板并替换相关参数
     template_html = file.read_file(TEMPLATE_HTML_PATH)
@@ -45,7 +45,7 @@ def get_account_index_page(account_id):
     # 删除临时模板文件
     path.delete_dir_or_file(cache_html_path)
     if not signature:
-        raise crawler.CrawlerException("signature参数计算失败\n" + account_index_response.content)
+        raise CrawlerException("signature参数计算失败\n" + account_index_response.content)
     result["signature"] = signature
     return result
 
@@ -70,7 +70,7 @@ def get_one_page_video(account_id, cursor_id, dytk, signature):
         "video_info_list": [],  # 全部视频信息
     }
     if video_pagination_response.status != const.ResponseCode.SUCCEED:
-        raise crawler.CrawlerException(crawler.request_failre(video_pagination_response.status))
+        raise CrawlerException(crawler.request_failre(video_pagination_response.status))
     # 判断是不是最后一页
     result["is_over"] = crawler.get_json_value(video_pagination_response.json_data, "has_more", type_check=int) == 0
     # 判断是不是最后一页
@@ -140,7 +140,7 @@ class CrawlerThread(crawler.CrawlerThread):
         # 获取指定一页的视频信息
         try:
             account_index_response = get_account_index_page(self.index_key)
-        except crawler.CrawlerException as e:
+        except CrawlerException as e:
             self.error(e.http_error("账号首页"))
             raise
 
@@ -153,7 +153,7 @@ class CrawlerThread(crawler.CrawlerThread):
             self.start_parse(video_pagination_description)
             try:
                 video_pagination_response = get_one_page_video(self.index_key, cursor_id, account_index_response["dytk"], account_index_response["signature"])
-            except crawler.CrawlerException as e:
+            except CrawlerException as e:
                 self.error(e.http_error(video_pagination_description))
                 raise
             self.parse_result(video_pagination_description, video_pagination_response["video_info_list"])

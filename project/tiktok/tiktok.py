@@ -32,11 +32,11 @@ def get_account_index_page(account_id):
                 if video_info_url.find("//www.tiktok.com/share/item/list?") > 0:
                     break
         else:
-            raise crawler.CrawlerException("账号首页匹配视频信息地址失败")
+            raise CrawlerException("账号首页匹配视频信息地址失败")
     video_info_param = urllib.parse.parse_qs(urllib.parse.urlparse(video_info_url)[4])
     result["signature"] = crawler.get_json_value(video_info_param, "_signature", 0, type_check=str, default_value="")
     if not result["signature"]:
-        raise crawler.CrawlerException("视频信息地址匹配视频加密串失败")
+        raise CrawlerException("视频信息地址匹配视频加密串失败")
     return result
 
 
@@ -61,7 +61,7 @@ def get_one_page_video(account_id, cursor_id, signature):
         "video_info_list": [],  # 全部视频信息
     }
     if video_pagination_response.status != const.ResponseCode.SUCCEED:
-        raise crawler.CrawlerException(crawler.request_failre(video_pagination_response.status))
+        raise CrawlerException(crawler.request_failre(video_pagination_response.status))
     # 判断是不是最后一页
     result["is_over"] = crawler.get_json_value(video_pagination_response.json_data, "body", "hasMore", type_check=bool) is True
     # 判断是不是最后一页
@@ -113,7 +113,7 @@ class CrawlerThread(crawler.CrawlerThread):
         # 获取指定一页的视频信息
         try:
             account_index_response = get_account_index_page(self.index_key)
-        except crawler.CrawlerException as e:
+        except CrawlerException as e:
             self.error(e.http_error("账号首页"))
             raise
 
@@ -126,7 +126,7 @@ class CrawlerThread(crawler.CrawlerThread):
             self.start_parse(video_pagination_description)
             try:
                 video_pagination_response = get_one_page_video(self.index_key, cursor_id, account_index_response["signature"])
-            except crawler.CrawlerException as e:
+            except CrawlerException as e:
                 self.error(e.http_error(video_pagination_description))
                 raise
             self.parse_result(video_pagination_description, video_pagination_response["video_info_list"])

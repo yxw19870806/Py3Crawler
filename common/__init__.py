@@ -12,11 +12,13 @@ __all__ = [
     "PROJECT_ROOT_PATH",
     "PROJECT_CONFIG_PATH",
     "IS_EXECUTABLE",
+    "CrawlerException",
 ]
 
 import os
 import sys
 from common.logger import logger as log
+from common import console
 
 # if sys.stdout.encoding != "UTF-8":
 #     raise Exception("项目编码必须是UTF-8，请在IDE中修改相关设置")
@@ -32,3 +34,18 @@ PROJECT_LIB_PATH = os.path.abspath(os.path.dirname(__file__))
 PROJECT_ROOT_PATH = os.path.abspath(os.path.join(PROJECT_LIB_PATH, ".."))
 # 全局config.ini路径
 PROJECT_CONFIG_PATH = os.path.abspath(os.path.join(PROJECT_LIB_PATH, "config.ini"))
+
+
+class CrawlerException(SystemExit):
+    def __init__(self, msg: str = "", is_print: bool = True) -> None:
+        SystemExit.__init__(self, 1)
+        if is_print:
+            console.log(msg)
+        self.exception_message = msg
+
+    @property
+    def message(self) -> str:
+        return self.exception_message
+
+    def http_error(self, target: str) -> str:
+        return "%s解析失败，原因：%s" % (target, self.message)
