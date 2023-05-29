@@ -495,7 +495,7 @@ class Download:
         下载远程文件到本地
 
         :Args:
-        - file_url - the remote resource URL which you want to save
+        - file_url - the remote resource URL which you want to download
         - file_path - the local file path which you want to save remote resource
         - headers - customize header dictionary
         - cookies - customize cookies dictionary, will replace headers["Cookie"]
@@ -800,3 +800,109 @@ def download_from_list(file_url_list: list[str], file_path: str, headers: Option
         path.delete_dir_or_file(part_file_path)
 
     return is_succeed
+
+
+class DownloadHls:
+    def __init__(self, playlist_url: str, file_path: str, headers: Optional[dict[str, str]] = None, cookies: Optional[dict[str, str]] = None, **kwargs) -> None:
+        """
+        下载HTTP Live Streaming协议的远程文件到本地
+
+        :Args:
+        - playlist_url - the remote playlist file URL which you want to download
+        - file_path - the local file path which you want to save remote resource
+        - headers - customize header dictionary
+        - cookies - customize cookies dictionary, will replace headers["Cookie"]
+
+        :Returns:
+            - status - 0 download failure, 1 download successful
+            - code - failure reason
+            - file_path - finally local file path(when recheck_file_extension is True, will rename it)
+        """
+        self._playlist_url: str = playlist_url
+        self._file_path: str = file_path
+        self._headers: dict[str, str] = headers if isinstance(headers, dict) else {}
+        self._cookies: dict[str, str] = cookies if isinstance(cookies, dict) else {}
+
+        # 结果
+        self._is_start: bool = False
+        self._status: const.DownloadStatus = const.DownloadStatus.FAILED
+        self._code: const.DownloadCode = const.DownloadCode.FILE_CREATE_FAILED
+        self.ext: dict[str, Any] = {}
+        self.kwargs: dict[str, Any] = kwargs.copy()
+
+    def __bool__(self) -> bool:
+        return self.status == const.DownloadStatus.SUCCEED
+
+    @property
+    def status(self) -> const.DownloadStatus:
+        if not self._is_start:
+            self.start_download()
+        return self._status
+
+    @property
+    def code(self) -> const.DownloadCode:
+        if not self._is_start:
+            self.start_download()
+        return self._code
+
+    def start_download(self) -> None:
+        """
+        主体下载逻辑
+        """
+        self._is_start = True
+
+        # 同名文件已经存在，直接返回
+        if not DOWNLOAD_REPLACE_IF_EXIST and os.path.exists(self._file_path) and os.path.getsize(self._file_path) > 0:
+            console.log("文件%s（%s）已存在，跳过" % (self._file_path, self._playlist_url))
+            self._status = const.DownloadStatus.SUCCEED
+            return
+
+        playlist_response = Request(self._playlist_url, method="GET")
+        if playlist_response.status != const.ResponseCode.SUCCEED:
+            self._code = const.DownloadCode.PLAYLIST_VISIT_FAILED
+            return
+
+        part_file_url_list = []
+        for file_line in playlist_response.content.split("\n"):
+            file_line = file_line.strip()
+            if not file_line or file_line.startswith("#"):
+                continue
+            part_file_url_list.append(urllib.parse.urljoin(self._playlist_url, file_line))
+        if len(part_file_url_list) == 0:
+            self._code = const.DownloadCode.PLAYLIST_VISIT_FAILED
+            return
+
+        index = 1
+        part_file_path_list = []
+        is_succeed = False
+        for part_file_url in part_file_url_list:
+            if EXIT_FLAG:
+                self._code = const.DownloadCode.PROCESS_EXIT
+                break
+
+            # 临时文件路径
+            part_file_path = f"%s.part{index}" % self._file_path
+            if os.path.exists(os.path.realpath(part_file_path)):
+                path.delete_dir_or_file(part_file_path)
+            part_file_path_list.append(part_file_path)
+
+            # 下载
+            part_download_return = Download(part_file_url, part_file_path, headers=self._headers, cookies=self._cookies)
+            if part_download_return.status == const.DownloadStatus.FAILED:
+                break
+            index += 1
+        else:
+            with open(self._file_path, "wb") as file_handle:
+                for part_file_path in part_file_path_list:
+                    with open(part_file_path, "rb") as part_file_handle:
+                        file_handle.write(part_file_handle.read())
+            is_succeed = True
+        # 删除临时文件
+        for part_file_path in part_file_path_list:
+            path.delete_dir_or_file(part_file_path)
+
+        if is_succeed:
+            self._status = const.DownloadStatus.SUCCEED
+            self._code = 0
+        else:
+            self._code = const.DownloadCode.PART_FILE_DOWNLOAD_FAILED
