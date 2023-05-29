@@ -225,7 +225,7 @@ def resume_request() -> None:
 
 
 class ErrorResponse(object):
-    def __init__(self, status=-1) -> None:
+    def __init__(self, status: int = 0) -> None:
         """
         request()方法异常对象
         """
@@ -329,36 +329,31 @@ class Request:
 
     @property
     def status(self) -> int:
-        if self._response is None:
-            self.start()
-        return self._response.status
+        return self.start_request()._response.status
 
     @property
     def data(self) -> bytes:
-        if self._response is None:
-            self.start()
-        return self._response.data
+        return self.start_request()._response.data
 
     @property
     def content(self) -> str:
-        if self._response is None:
-            self.start()
-        return self._response.content
+        return self.start_request()._response.content
 
     @property
     def headers(self) -> HTTPHeaderDict:
-        if self._response is None:
-            self.start()
-        return self._response.headers
+        return self.start_request()._response.headers
 
     @property
     def json_data(self) -> dict:
-        if self._response is None:
-            self.start()
-        return self._response.json_data
+        return self.start_request()._response.json_data
 
-    def start(self) -> Self:
-        self._response = self._start_request()
+    def start_request(self) -> Self:
+        if self._response is None:
+            try:
+                self._response = self._start_request()
+            except KeyboardInterrupt:
+                self._response = ErrorResponse()
+                pass
         return self
 
     def _start_request(self) -> Union[urllib3.HTTPResponse, ErrorResponse]:
@@ -526,21 +521,25 @@ class Download:
         self.kwargs: dict[str, Any] = kwargs.copy()
 
     def __bool__(self) -> bool:
-        return self._status == const.DownloadStatus.SUCCEED
+        return self.status == const.DownloadStatus.SUCCEED
 
     @property
     def status(self) -> const.DownloadStatus:
-        if not self._is_start:
-            self.start_download()
-        return self._status
+        return self.start_download()._status
 
     @property
     def code(self) -> const.DownloadCode:
-        if not self._is_start:
-            self.start_download()
-        return self._code
+        return self.start_download()._code
 
-    def start_download(self) -> None:
+    def start_download(self) -> Self:
+        if not self._is_start:
+            try:
+                self._start_download()
+            except KeyboardInterrupt:
+                tool.process_exit(const.ExitCode.NORMAL)
+        return self
+
+    def _start_download(self) -> None:
         """
         主体下载逻辑
         """
@@ -835,17 +834,21 @@ class DownloadHls:
 
     @property
     def status(self) -> const.DownloadStatus:
-        if not self._is_start:
-            self.start_download()
-        return self._status
+        return self.start_download()._status
 
     @property
     def code(self) -> const.DownloadCode:
-        if not self._is_start:
-            self.start_download()
-        return self._code
+        return self.start_download()._code
 
-    def start_download(self) -> None:
+    def start_download(self) -> Self:
+        if not self._is_start:
+            try:
+                self._start_download()
+            except KeyboardInterrupt:
+                tool.process_exit(const.ExitCode.NORMAL)
+        return self
+
+    def _start_download(self) -> None:
         """
         主体下载逻辑
         """
@@ -857,7 +860,7 @@ class DownloadHls:
             self._status = const.DownloadStatus.SUCCEED
             return
 
-        playlist_response = Request(self._playlist_url, method="GET")
+        playlist_response = Request(self._playlist_url, method="GET", cookies=self._cookies, headers=self._headers)
         if playlist_response.status != const.ResponseCode.SUCCEED:
             self._code = const.DownloadCode.PLAYLIST_VISIT_FAILED
             return
