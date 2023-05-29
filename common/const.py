@@ -126,6 +126,8 @@ class DownloadCode(IntEnum):
     FILE_SIZE_INVALID: int = -3
     PROCESS_EXIT: int = -10
     FILE_CREATE_FAILED: int = -11
+    PLAYLIST_VISIT_FAILED: int = -20
+    PART_FILE_DOWNLOAD_FAILED: int = -21
 
 
 # 网络请求返回值
