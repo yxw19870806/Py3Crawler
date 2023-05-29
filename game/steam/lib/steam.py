@@ -32,7 +32,7 @@ def get_discount_game_list():
         discount_game_pagination_url = "https://store.steampowered.com/search/results?sort_by=Price_ASC&category1=996,998&os=win&specials=1&page=%s" % page_count
         discount_game_pagination_response = net.Request(discount_game_pagination_url, method="GET", cookies=COOKIES)
         if discount_game_pagination_response.status != const.ResponseCode.SUCCEED:
-            raise CrawlerException("第%s页打折游戏访问失败，原因：%s" % (page_count, crawler.request_failre(discount_game_pagination_response.status)))
+            raise CrawlerException("第%s页打折游戏，%s" % (page_count, crawler.request_failre(discount_game_pagination_response.status)))
         search_result_selector = pq(discount_game_pagination_response.content).find("#search_result_container")
         game_list_selector = search_result_selector.find("#search_resultsRows a")
         for game_index in range(game_list_selector.length):
@@ -162,7 +162,7 @@ def get_self_uncompleted_account_badges(account_id):
         query_data = {"p": page_count}
         badges_pagination_response = net.Request(badges_pagination_url, method="GET", fields=query_data, cookies=COOKIES)
         if badges_pagination_response.status != const.ResponseCode.SUCCEED:
-            raise CrawlerException("第%s页徽章访问失败，原因：%s" % (page_count, crawler.request_failre(badges_pagination_response.status)))
+            raise CrawlerException("第%s页徽章，%s" % (page_count, crawler.request_failre(badges_pagination_response.status)))
         # 徽章div
         badges_selector = pq(badges_pagination_response.content).find(".maincontent .badges_sheet .badge_row")
         for index in range(badges_selector.length):
@@ -350,7 +350,7 @@ def get_account_badges(account_id):
         query_data = {"p": page_count}
         badges_pagination_response = net.Request(badges_pagination_url, method="GET", fields=query_data, cookies=cookies)
         if badges_pagination_response.status != const.ResponseCode.SUCCEED:
-            raise CrawlerException("第%s页徽章访问失败，原因：%s" % (page_count, crawler.request_failre(badges_pagination_response.status)))
+            raise CrawlerException("第%s页徽章，%s" % (page_count, crawler.request_failre(badges_pagination_response.status)))
         badge_list_selector = pq(badges_pagination_response.content).find("div.badge_row")
         if badge_list_selector.length == 0:
             # 如果是隐私账号，会302到主页的，这里只判断页面文字就不判断状态了
