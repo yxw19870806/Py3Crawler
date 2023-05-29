@@ -892,6 +892,8 @@ class DownloadHls:
             # 下载
             part_download_return = Download(part_file_url, part_file_path, headers=self._headers, cookies=self._cookies)
             if part_download_return.status == const.DownloadStatus.FAILED:
+                if part_download_return.code == const.DownloadCode.PROCESS_EXIT:
+                    self._code = const.DownloadCode.PROCESS_EXIT
                 break
             index += 1
         else:
