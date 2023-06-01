@@ -44,11 +44,11 @@ def main():
         try:
             member_list = get_member_from_talk(talk_id)
         except CrawlerException as e:
-            console.log(e.http_error("talk %s" % talk_id))
+            log.info(e.http_error("talk %s" % talk_id))
             continue
         for account_id in member_list:
             if account_id not in account_list:
-                console.log("%s %s" % (account_id, member_list[account_id]))
+                log.info("%s %s" % (account_id, member_list[account_id]))
                 file.write_file("%s\t%s" % (account_id, member_list[account_id]), ACCOUNT_ID_FILE_PATH)
                 account_list.append(account_id)
 
