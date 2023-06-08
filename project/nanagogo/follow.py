@@ -22,14 +22,14 @@ def follow_account(account_id):
     }
     follow_response = net.Request(follow_api_url, method="POST", fields=post_data, headers=headers, cookies=nanagogo.COOKIES).enable_json_decode()
     if follow_response.status != const.ResponseCode.SUCCEED:
-        console.log("关注%s失败，请求返回结果：%s，退出程序！" % (account_id, crawler.request_failre(follow_response.status)))
+        log.info("关注%s失败，请求返回结果：%s，退出程序！" % (account_id, crawler.request_failre(follow_response.status)))
         tool.process_exit()
     try:
         crawler.get_json_value(follow_response.json_data, "data", value_check=None)
-        console.log("关注%s成功" % account_id)
+        log.info("关注%s成功" % account_id)
         return True
     except CrawlerException:
-        console.log("关注%s失败，请求返回：%s，退出程序！" % (account_id, follow_response.json_data))
+        log.info("关注%s失败，请求返回：%s，退出程序！" % (account_id, follow_response.json_data))
         tool.process_exit()
     return False
 
@@ -45,7 +45,7 @@ class NanaGoGoFollow(nanagogo.NanaGoGo):
                 count += 1
             time.sleep(0.1)
 
-        console.log("关注完成，成功关注了%s个账号" % count)
+        log.info("关注完成，成功关注了%s个账号" % count)
 
 
 if __name__ == "__main__":
