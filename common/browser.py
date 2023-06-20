@@ -188,8 +188,10 @@ def get_all_cookie_from_browser(browser_type: const.BrowserType, file_path: str)
             console.log("encrypted_key解密失败")
             return {}
         cipher = Cipher(algorithms.AES(encrypted_key), None, backend=default_backend())
-
-        con = sqlite3.connect(os.path.join(file_path, "Network", "Cookies"))
+        try:
+            con = sqlite3.connect(os.path.join(file_path, "Network", "Cookies"))
+        except sqlite3.OperationalError:
+            raise CrawlerException("浏览器cookies读取失败，请关闭浏览器后重试")
         cur = con.cursor()
         cur.execute("SELECT host_key, path, name, value, encrypted_value FROM cookies")
         for cookie_info in cur.fetchall():
