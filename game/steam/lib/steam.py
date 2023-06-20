@@ -450,18 +450,23 @@ class Steam(crawler.Crawler):
 
         if self.need_login:
             # 检测是否登录
-            login_url = "https://steamcommunity.com/actions/GetNotificationCounts"
+            login_url = "https://store.steampowered.com/"
             try:
                 login_response = net.Request(login_url, method="GET", cookies=self.cookie_value).disable_redirect()
             except KeyboardInterrupt:
                 tool.process_exit()
                 return
+            if login_response.status == 302:
+                self.cookie_value.update(net.get_cookies_from_response_header(login_response.headers))
+                login_response = net.Request(login_url, method="GET", cookies=self.cookie_value)
             if login_response.status != const.ResponseCode.SUCCEED:
                 console.log("登录返回code%s不正确" % login_response.status)
                 tool.process_exit()
-            set_cookies = net.get_cookies_from_response_header(login_response.headers)
-            COOKIES.update(self.cookie_value)
-            COOKIES.update(set_cookies)
+            if pq(login_response.content).find("#account_pulldown").length != 1:
+                console.log("未检测到登录状态")
+                tool.process_exit()
+            self.cookie_value.update(net.get_cookies_from_response_header(login_response.headers))
+            COOKIES = self.cookie_value
             # 强制使用英文
             COOKIES["Steam_Language"] = "english"
             # 年龄
