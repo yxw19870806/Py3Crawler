@@ -8,14 +8,18 @@ email: hikaru870806@hotmail.com
 """
 import math
 import os
+import time
 from common import *
 
 COOKIES = {}
 IS_LOGIN = False
 EACH_PAGE_COUNT = 30
+SECRET_KEY = ""
 
 string_table = "fZodR9XQDSUm21yCkr6zBqiveYah8bt4xsWpHnJE7jL5VG3guMTKNPAwcF"
 id_index = [11, 10, 3, 8, 4, 6]
+secret_key_index_list = [46, 47, 18, 2, 53, 8, 23, 32, 15, 50, 10, 31, 58, 3, 45, 35, 27, 43, 5, 49, 33, 9, 42, 19, 29, 28, 14, 39, 12, 38, 41, 13,
+                         37, 48, 7, 16, 24, 55, 40, 61, 26, 17, 0, 1, 60, 51, 30, 4, 22, 25, 54, 21, 56, 59, 6, 63, 57, 62, 11, 36, 20, 34, 44, 52]
 xor = 177451812
 add = 8728348608
 
@@ -39,6 +43,16 @@ def bv_id_2_av_id(bv_id):
     return result - add ^ xor
 
 
+def calc_w_rid(query_data: dict):
+    sign_string = []
+    query_data["wts"] = int(time.time())
+    for key in sorted(query_data.keys()):
+        sign_string.append("%s=%s" % (key, query_data[key]))
+    if not SECRET_KEY:
+        generate_sign_secret()
+    query_data["w_rid"] = tool.string_md5("&".join(sign_string) + SECRET_KEY)
+
+
 # 检测是否已登录
 def check_login():
     if not COOKIES:
@@ -48,6 +62,23 @@ def check_login():
     if api_response.status == const.ResponseCode.SUCCEED:
         return crawler.get_json_value(api_response.json_data, "data", "mid", type_check=int, default_value=0) != 0
     return False
+
+
+def generate_sign_secret():
+    api_url = "https://api.bilibili.com/x/web-interface/nav"
+    api_response = net.Request(api_url, method="GET", cookies=COOKIES).enable_json_decode()
+    if api_response.status != const.ResponseCode.SUCCEED:
+        raise CrawlerException("sign_secret，" + crawler.request_failre(api_response.status))
+    img_key = url.get_file_name(crawler.get_json_value(api_response.json_data, "data", "wbi_img", "img_url", type_check=str))
+    sub_key = url.get_file_name(crawler.get_json_value(api_response.json_data, "data", "wbi_img", "sub_url", type_check=str))
+    sign_string = img_key + sub_key
+    key_index_list = [46, 47, 18, 2, 53, 8, 23, 32, 15, 50, 10, 31, 58, 3, 45, 35, 27, 43, 5, 49, 33, 9, 42, 19, 29, 28, 14, 39, 12, 38, 41, 13,
+                      37, 48, 7, 16, 24, 55, 40, 61, 26, 17, 0, 1, 60, 51, 30, 4, 22, 25, 54, 21, 56, 59, 6, 63, 57, 62, 11, 36, 20, 34, 44, 52]
+    signed_string = []
+    for key_index in key_index_list:
+        signed_string.append(sign_string[key_index])
+    global SECRET_KEY
+    SECRET_KEY = "".join(signed_string)[:32]
 
 
 def get_favorites_list(favorites_id):
@@ -103,7 +134,9 @@ def get_one_page_video(account_id, page_count):
         "pn": page_count,
         "ps": EACH_PAGE_COUNT,
         "tid": "0",
+        "platform": "web",
     }
+    calc_w_rid(query_data)
     api_response = net.Request(api_url, method="GET", fields=query_data).enable_json_decode()
     result = {
         "video_info_list": [],  # 全部视频信息
