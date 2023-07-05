@@ -8,6 +8,7 @@ email: hikaru870806@hotmail.com
 """
 import math
 import os
+import time
 from common import *
 
 COOKIES = {}
@@ -37,6 +38,15 @@ def bv_id_2_av_id(bv_id):
     for i in range(6):
         result += string_table.find(bv_id[id_index[i]]) * 58 ** i
     return result - add ^ xor
+
+
+def calc_w_rid(query_data: dict):
+    sign_string = []
+    query_data["wts"] = int(time.time())
+    for key in sorted(query_data.keys()):
+        sign_string.append("%s=%s" % (key, query_data[key]))
+    secret_key = "fd321650684e288313858b0a782c4288"
+    query_data["w_rid"] = tool.string_md5("&".join(sign_string) + secret_key)
 
 
 # 检测是否已登录
@@ -103,7 +113,9 @@ def get_one_page_video(account_id, page_count):
         "pn": page_count,
         "ps": EACH_PAGE_COUNT,
         "tid": "0",
+        "platform": "web",
     }
+    calc_w_rid(query_data)
     api_response = net.Request(api_url, method="GET", fields=query_data).enable_json_decode()
     result = {
         "video_info_list": [],  # 全部视频信息
