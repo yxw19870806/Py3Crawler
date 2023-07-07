@@ -348,7 +348,7 @@ def get_album_page(album_id):
     query_data = {
         "doc_id": album_id,
     }
-    api_response = net.Request(api_url, method="GET", fields=query_data).enable_json_decode()
+    api_response = net.Request(api_url, method="GET", fields=query_data, cookies=COOKIES).enable_json_decode()
     result = {
         "photo_url_list": [],  # 全部图片地址
     }
