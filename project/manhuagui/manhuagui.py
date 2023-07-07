@@ -6,6 +6,13 @@ https://www.manhuagui.com/
 email: hikaru870806@hotmail.com
 如有问题或建议请联系
 """
+import subprocess
+from functools import partial
+
+# execjs.compile() will raise exception when js code include none-unicode character
+# UnicodeDecodeError: 'gbk' codec can't decode byte 0xac in position 33: illegal multibyte sequence
+subprocess.Popen = partial(subprocess.Popen, encoding="utf-8")
+
 import execjs
 import lzstring
 import os
