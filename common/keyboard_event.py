@@ -8,7 +8,7 @@ email: hikaru870806@hotmail.com
 import pythoncom
 import threading
 from typing import Final
-from common import console
+from common import log
 
 try:
     import PyHook3 as pyHook
@@ -113,7 +113,7 @@ class KeyboardEvent(threading.Thread):
         try:
             hook_manager = pyHook.HookManager()
         except NameError:
-            console.log("PyHook安装失败，键盘监听功能失效")
+            log.error("PyHook安装失败，键盘监听功能失效")
             pass
         else:
             hook_manager.KeyDown = self.on_keyboard_down
