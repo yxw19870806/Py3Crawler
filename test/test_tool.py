@@ -70,12 +70,19 @@ class TestTool(unittest.TestCase):
 
     def test_generate_random_string(self):
         self.assertEqual(10, len(tool.generate_random_string(10)))
+        # 小写字母
         self.assertRegex(tool.generate_random_string(100, 1), "^[a-z]{100}$")
+        # 大写字母
         self.assertRegex(tool.generate_random_string(100, 2), "^[A-Z]{100}$")
+        # 数字
         self.assertRegex(tool.generate_random_string(100, 4), r"^\d{100}$")
+        # 大、小写字母
         self.assertRegex(tool.generate_random_string(100, 3), "^[a-zA-Z]{100}$")
+        # 数字+小写字母
         self.assertRegex(tool.generate_random_string(100, 5), r"^[\da-z]{100}$")
+        # 数字+大写字母
         self.assertRegex(tool.generate_random_string(100, 6), r"^[\dA-Z]{100}$")
+        # 数字+大、小写字母
         self.assertRegex(tool.generate_random_string(100, 7), r"^[\da-zA-Z]{100}$")
 
     def test_convert_timestamp_to_formatted_time(self):
@@ -89,6 +96,7 @@ class TestTool(unittest.TestCase):
 
     def test_check_dict_sub_key(self):
         self.assertTrue(tool.check_dict_sub_key("a", {"a": 1}))
+        self.assertFalse(tool.check_dict_sub_key("a", {"b": {"a": 1}}))
         self.assertFalse(tool.check_dict_sub_key("b", {"a": 1}))
         self.assertTrue(tool.check_dict_sub_key(("a", "b"), {"a": 1, "b": 1}))
         self.assertFalse(tool.check_dict_sub_key(("a", "b"), {"a": 1}))
