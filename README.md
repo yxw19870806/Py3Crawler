@@ -1,4 +1,4 @@
-Python Crawler（auto download from website）
+Python3 Crawler
 =====
 
 ### Required
@@ -18,8 +18,6 @@ Python Crawler（auto download from website）
   support proxy<br>
 * 支持绑定键盘事件（快捷键），如暂停/启动程序运行<br>
   support bind keyboard events, e.g. pause or restart process<br>
-* 支持本地端口监听，根据收到的请求内容暂停/启动程序运行<br>
-  support local port listener, according to the received content to pause or restart process<br>
 * 支持从本地浏览器中读取cookies并携带访问限制的网站<br>
   read cookies from your local browser<br>
 * 页面访问支持多种参数：<br>
@@ -36,25 +34,18 @@ Python Crawler（auto download from website）
       set whether auto redirect(http code 301, 302, 303, 307, 308) <br>
 
 ### Install
-
-* 如果已安装Visual C++ 生成工具和swig（并将swig的安装路径加入系统变量中，否则会提示无法找到swig.exe），请运行install/install.bat<br>
-  If you have installed Visual C++ Build Tools and swig for windows (and add swig's install path to your environment
-  variables), you can run install/install.bat <br>
-
-> 如何安装Visual C++ 生成工具
->> 访问[微软官方Visual Studio下载页面](https://visualstudio.microsoft.com/downloads/)<br>
+* 安装Visual C++ 生成工具 <br>
+> 访问[微软官方Visual Studio下载页面](https://visualstudio.microsoft.com/downloads/)<br>
 选择"用于 Visual Studio 的工具" - "Visual Studio 2022 生成工具"下载<br>
 运行下载的exe引导文件、开始安装Visual Studio Installer<br>
 Visual Studio Installer安装完毕后，勾选"桌面应用和移动应用"标签下的"使用C++的桌面开发"和"通用windows平台生成工具"并安装<br>
 
-> 如何安装swig
->> 访问[swig官网下载页面](http://www.swig.org/download.html)<br>
+* 安装swig，并将swig的安装路径加入系统变量中，否则会提示无法找到swig.exe
+> 访问[swig官网下载页面](http://www.swig.org/download.html)<br>
 选择swigwin-X.X.XX（版本号，如swigwin-4.1.1）下载，不要下载源码swig-X.X.XX（如swig-4.1.1）<br>
-解压下载的压缩文件到任意目录，并将该目录添加到系统环境变量中（如 D:\swig-4.1.1）
+解压下载的压缩文件到任意目录（如 D:\swig-4.1.1），并将该目录添加到系统环境变量中
 
-* (不推荐) 如果未安装Visual C++ 生成工具和swig，请运行install/install.bat<br>
-  (Don't suggest) If you haven't installed Visual C++ Build Tools and swig for windows, you can run
-  install/install_whl.bat<br>
+* 运行 [/install/install.bat](install/install.bat)<br>
 
 ### Support website / App
 
@@ -89,30 +80,22 @@ Visual Studio Installer安装完毕后，勾选"桌面应用和移动应用"标�
 ### Code Structure  
 
 1. [/common](common)，公共类<br>
-   * [/common/crawler.py](common%2Fcrawler.py) 爬虫父类，多线程爬取父类，异常类<br>
-   * [/common/browser.py](common%2Fbrowser.py) 浏览器，获取操作系统中安装的浏览器目录以及保存的cookies；模拟浏览器渲染效果<br>
-   * [/common/color_format.py](common%2Fcolor_format.py) 格式化输出内容<br>
-   * [/common/console.py](common%2Fconsole.py) 控制台输出，线程安全<br>
-   * [/common/const.py](common%2Fconst.py) 常量<br>
-   * [/common/crypto.py](common%2Fcrypto.py) 加密解密类，使用基于本计算机信息（MAC+计算机名）的私钥对隐私信息进行AES128加密（如输入的账号、密码）<br>
-   * [/common/file.py](common%2Ffile.py) 文件操作，读、写文件，计算文件MD5值<br>
-   * [/common/keyboard_event.py](common%2Fkeyboard_event.py) 键盘监听事件，可以通过指定快捷键暂停/重启/立刻结束爬虫（默认在下一次网络请求时阻塞线程）<br>
-   * [/common/logger.py](common%2Flogger.py) 日志，封装自logging<br>
-   * [/common/net.py](common%2Fnet.py) 网络通信（基于urllib3），网页访问、资源下载等<br>
-   * [/common/net_config.py](common%2Fnet_config.py) 网络通信配置类<br>
-   * [/common/path.py](common%2Fpath.py) 操作系统路径相关，创建/删除目录，移动/复制文件或文件夹等操作<br>
-   * [/common/port_listener_event.py](common%2Fport_listener_event.py) 端口监听类，可以通过向指定端口发送请求暂停/重启/立刻结束爬虫（默认在下一次网络请求时阻塞线程）<br>
-   * [/common/tool.py](common%2Ftool.py) 其他一些公共方法，如字符串截取，字符串和列表的转化等
-   * [/common/url.py](common%2Furl.py) 处理URL，如获取文件名，解析query参数等
-   * [/common/log_config.json](common%2Flog_config.json) 日志类的配置文件
-   * [/common/net_config.json](common%2Fnet_config.json) 网络通信类的配置文件
+   * [/common/crawler.py](common/crawler.py) 爬虫父类，多线程爬取父类，异常类<br>
+   * [/common/browser.py](common/browser.py) 浏览器，获取操作系统中安装的浏览器目录以及保存的cookies；模拟浏览器渲染效果<br>
+   * [/common/color_format.py](common/color_format.py) 格式化输出内容<br>
+   * [/common/console.py](common/console.py) 控制台输出，线程安全<br>
+   * [/common/const.py](common/const.py) 常量<br>
+   * [/common/crypto.py](common/crypto.py) 加密解密类，使用基于本计算机信息（MAC+计算机名）的私钥对隐私信息进行AES128加密（如输入的账号、密码）<br>
+   * [/common/file.py](common/file.py) 用来处理文件读、写的常用方法，计算文件MD5值<br>
+   * [/common/keyboard_event.py](common/keyboard_event.py) 键盘监听事件，可以通过指定快捷键暂停/重启/立刻结束爬虫（默认在下一次网络请求时阻塞线程）<br>
+   * [/common/logger.py](common/logger.py) 日志，封装自logging<br>
+   * [/common/net.py](common/net.py) 网络通信（基于urllib3），网页访问、资源下载等<br>
+   * [/common/net_config.py](common/net_config.py) 网络通信配置类<br>
+   * [/common/path.py](common/path.py) 用来处理操作系统路径相关的常用方法，创建/删除目录，移动/复制文件或文件夹等操作<br>
+   * [/common/port_listener_event.py](common/port_listener_event.py) 端口监听类，可以通过向指定端口发送请求暂停/重启/立刻结束爬虫（默认在下一次网络请求时阻塞线程）<br>
+   * [/common/tool.py](common/tool.py) 其他一些常用方法，如字符串截取，字符串和列表的转化等
+   * [/common/url.py](common/url.py) 用来处理URL的常用方法，如获取文件名，解析query参数等
+   * [/common/log_config.json](common/log_config.json) 日志类的配置文件
+   * [/common/net_config.json](common/net_config.json) 网络通信类的配置文件
 2. [/install](install)，项目依赖的一些扩展包的安装文件（使用pip install）
 3. [/project](project)，爬虫项目
-
-### Known Issue
-
-* **install/install_whl.bat** 中使用的PyHook（用于在windows中监听鼠标、键盘事件）在python3下有兼容性问题<br>
-  如果前台激活了存在非ascii字符的窗口，会抛出异常（类似于 TypeError: KeyboardSwitch() missing 8 required positional arguments: 'msg', '
-  vk_code', 'scan_code', 'ascii', 'flags', 'time', 'hwnd', and 'win_name'）、甚至导致进程退出<br>
-  如遇到该问题，可安装Visual C++ 生成工具和swig后使用**install/install.bat**中的PyHook3替换；或者在config.ini中禁用键盘事件监听功能
-* 一些较大文件会自动开启多线程下载，有小几率可能无法检测因网络原因导致的部分分段下载失败，可在/common/net_config.json中将ENABLE_MULTI_THREAD_DOWNLOAD设置为False
