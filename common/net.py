@@ -17,7 +17,7 @@ import urllib3
 import urllib3.exceptions
 from typing import Optional, Union, Self, Any
 from urllib3._collections import HTTPHeaderDict
-from common import const, console, file, net_config, path, tool, url
+from common import const, file, log, net_config, path, tool, url
 
 # https://www.python.org/dev/peps/pep-0476/
 # disable urllib3 HTTPS warning
@@ -71,7 +71,7 @@ def set_proxy(ip: str, port: str) -> None:
     if PROXY_HTTP_CONNECTION_POOL is not None:
         return
     PROXY_HTTP_CONNECTION_POOL = urllib3.ProxyManager(f"http://{ip}:{port}", retries=False)
-    console.log(f"设置代理成功({ip}:{port})")
+    log.info(f"设置代理成功({ip}:{port})")
 
 
 def set_default_user_agent(browser_type: Optional[const.BrowserType] = None) -> None:
@@ -211,7 +211,7 @@ def pause_request() -> None:
     Block thread when use request()
     """
     if thread_event.is_set():
-        console.log("pause process")
+        log.info("pause process")
         thread_event.clear()
 
 
@@ -220,7 +220,7 @@ def resume_request() -> None:
     Resume thread
     """
     if not thread_event.is_set():
-        console.log("resume process")
+        log.info("resume process")
         thread_event.set()
 
 
@@ -437,7 +437,7 @@ class Request:
                             except json.decoder.JSONDecodeError:
                                 response.status = const.ResponseCode.JSON_DECODE_ERROR
                 elif response.status == 429:  # Too Many Requests
-                    console.log(self._url + " Too Many Requests, sleep")
+                    log.warning(self._url + " Too Many Requests, sleep")
                     time.sleep(NET_CONFIG.TOO_MANY_REQUESTS_WAIT_TIME)
                     continue
                 elif response.status in [500, 502, 503, 504] and self._is_auto_retry:  # 服务器临时性错误，重试
@@ -468,18 +468,18 @@ class Request:
                         self._is_gzip = False
                         return self._start_request()
                 # import traceback
-                # console.log(message)
-                # console.log(traceback.format_exc())
+                # log.error(message)
+                # log.error(traceback.format_exc())
                 if "Range" in self._headers:
                     range_string = "range: " + self._headers["Range"].replace("bytes=", "")
-                    console.log(self._url + f"[{range_string}] 访问超时，重试中")
+                    log.warning(self._url + f"[{range_string}] 访问超时，重试中")
                 else:
-                    console.log(self._url + " 访问超时，重试中")
+                    log.warning(self._url + " 访问超时，重试中")
                 time.sleep(NET_CONFIG.HTTP_REQUEST_RETRY_WAIT_TIME)
 
             retry_count += 1
             if retry_count >= NET_CONFIG.HTTP_REQUEST_RETRY_COUNT:
-                console.log("无法访问页面：" + self._url)
+                log.warning("无法访问页面：" + self._url)
                 return ErrorResponse(const.ResponseCode.RETRY)
 
 
@@ -547,7 +547,7 @@ class Download:
 
         # 同名文件已经存在，直接返回
         if not DOWNLOAD_REPLACE_IF_EXIST and os.path.exists(self._file_path) and os.path.getsize(self._file_path) > 0:
-            console.log("文件%s（%s）已存在，跳过" % (self._file_path, self._file_url))
+            log.warning("文件%s（%s）已存在，跳过" % (self._file_path, self._file_url))
             self._status = const.DownloadStatus.SUCCEED
             return
 
@@ -588,7 +588,7 @@ class Download:
                 return
             else:
                 self._code = const.DownloadCode.FILE_SIZE_INVALID
-                console.log(f"本地文件%s：{self._content_length}和网络文件%s：{file_size}不一致" % (self._file_path, self._file_url))
+                log.warning(f"本地文件%s：{self._content_length}和网络文件%s：{file_size}不一致" % (self._file_path, self._file_url))
                 time.sleep(NET_CONFIG.HTTP_REQUEST_RETRY_WAIT_TIME)
 
         # 删除可能出现的临时文件
@@ -728,7 +728,7 @@ class Download:
                         if multipart_response.status == 206:
                             # 下载的文件和请求的文件大小不一致
                             if len(multipart_response.data) != (end_pos - start_pos + 1):
-                                console.log(f"网络文件%s：range {start_pos} - {end_pos}实际下载大小 {len(multipart_response.data)} 不一致" % self._file_url)
+                                log.warning(f"网络文件%s：range {start_pos} - {end_pos}实际下载大小 {len(multipart_response.data)} 不一致" % self._file_url)
                                 time.sleep(NET_CONFIG.HTTP_REQUEST_RETRY_WAIT_TIME)
                             else:
                                 # 写入本地文件后退出
@@ -771,7 +771,7 @@ def download_from_list(file_url_list: list[str], file_path: str, headers: Option
     """
     # 同名文件已经存在，直接返回
     if not DOWNLOAD_REPLACE_IF_EXIST and os.path.exists(file_path) and os.path.getsize(file_path) > 0:
-        console.log("文件%s（%s）已存在，跳过" % (file_path, file_url_list))
+        log.warning("文件%s（%s）已存在，跳过" % (file_path, file_url_list))
         return True
 
     index = 1
@@ -856,7 +856,7 @@ class DownloadHls:
 
         # 同名文件已经存在，直接返回
         if not DOWNLOAD_REPLACE_IF_EXIST and os.path.exists(self._file_path) and os.path.getsize(self._file_path) > 0:
-            console.log("文件%s（%s）已存在，跳过" % (self._file_path, self._playlist_url))
+            log.warning("文件%s（%s）已存在，跳过" % (self._file_path, self._playlist_url))
             self._status = const.DownloadStatus.SUCCEED
             return
 
@@ -885,11 +885,10 @@ class DownloadHls:
 
             # 临时文件路径
             part_file_path = f"%s.part{index}" % self._file_path
-            if os.path.exists(os.path.realpath(part_file_path)):
-                path.delete_dir_or_file(part_file_path)
             part_file_path_list.append(part_file_path)
 
             # 下载
+            log.info("HLS: %s [%s/%s]" % (self._playlist_url, len(part_file_path_list), len(part_file_url_list)))
             part_download_return = Download(part_file_url, part_file_path, headers=self._headers, cookies=self._cookies)
             if part_download_return.status == const.DownloadStatus.FAILED:
                 if part_download_return.code == const.DownloadCode.PROCESS_EXIT:

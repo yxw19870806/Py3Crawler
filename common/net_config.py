@@ -8,7 +8,7 @@ email: hikaru870806@hotmail.com
 import os
 import re
 from typing import Union, Final
-from common import const, console, file, tool, PROJECT_LIB_PATH
+from common import const, file, log, tool, PROJECT_LIB_PATH
 
 
 def convert_to_bytes(value: Union[int, str], default_value: int) -> int:
@@ -35,9 +35,9 @@ def convert_to_bytes(value: Union[int, str], default_value: int) -> int:
             elif unit == "GB":
                 size = int(search_result[0][0]) * const.SIZE_GB
             else:
-                console.log("无效的字节单位'%s'，只支持B、KB、MB、GB" % unit)
+                log.error("无效的字节单位'%s'，只支持B、KB、MB、GB" % unit)
         else:
-            console.log("无效的字节数设置'%s'" % value)
+            log.error("无效的字节数设置'%s'" % value)
     return size
 
 
