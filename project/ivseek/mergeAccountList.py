@@ -49,7 +49,7 @@ def main():
             print(e.http_error("niconico账号%s的视频列表" % account_id))
             continue
         niconico_mylist_list[account_id] = account_mylist_response["list_id_list"]
-        file.write_file(tool.json_encode(niconico_mylist_list), niconico_mylist_cache_path, const.WriteFileMode.REPLACE)
+        file.write_json_file(niconico_mylist_list, niconico_mylist_cache_path)
 
     # 更新youtube的存档文件
     for account_id in account_id_list["youtube"]:
