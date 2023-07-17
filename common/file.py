@@ -7,8 +7,8 @@ email: hikaru870806@hotmail.com
 """
 import hashlib
 import os
-from typing import Union, Optional, Final
-from common import const, path
+from typing import Any, Final, Optional, Union
+from common import const, path, tool
 
 BOM_SIGN: Final[str] = b"\xef\xbb\xbf".decode()
 
@@ -84,6 +84,10 @@ def write_file(msg: str, file_path: str, write_type: const.WriteFileMode = const
     with open(file_path, open_type, encoding=encoding) as file_handle:
         file_handle.write(msg + "\n")
     return True
+
+
+def write_json_file(json_object: Any, file_path: str, encoding: str = "UTF-8") -> bool:
+    return write_file(tool.json_encode(json_object), file_path, const.WriteFileMode.REPLACE, encoding)
 
 
 def get_file_md5(file_path: str) -> Optional[str]:
