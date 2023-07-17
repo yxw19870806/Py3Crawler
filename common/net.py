@@ -47,7 +47,7 @@ FAKE_PROXY_IP: bool = True
 # 网络请求相关配置
 NET_CONFIG: net_config.NetConfig = net_config.NetConfig()
 # response header中Content-Type对应的Mime字典
-MIME_DICTIONARY: Optional[dict[str, str]] = tool.json_decode(file.read_file(os.path.join(os.path.dirname(__file__), "mime.json")), {})
+MIME_DICTIONARY: Optional[dict[str, str]] = file.read_json_file(os.path.join(os.path.dirname(__file__), "mime.json"), {})
 
 
 def init_http_connection_pool() -> None:

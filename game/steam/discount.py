@@ -40,7 +40,7 @@ def load_discount_list(cache_file_path):
             return discount_game_list
         elif input_str in ["e", "exit"]:
             tool.process_exit()
-    discount_game_list = tool.json_decode(file.read_file(cache_file_path), discount_game_list)
+    discount_game_list = file.read_json_file(cache_file_path, discount_game_list)
     return discount_game_list
 
 

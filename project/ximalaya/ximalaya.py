@@ -255,7 +255,7 @@ class XiMaLaYa(crawler.Crawler):
         COOKIES = self.cookie_value
 
         DAILY_VIP_DOWNLOAD_COUNT_CACHE_FILE = os.path.join(self.cache_data_path, "daily_vip_count.data")
-        DAILY_VIP_DOWNLOAD_COUNT = tool.json_decode(file.read_file(DAILY_VIP_DOWNLOAD_COUNT_CACHE_FILE))
+        DAILY_VIP_DOWNLOAD_COUNT = file.read_json_file(DAILY_VIP_DOWNLOAD_COUNT_CACHE_FILE, {})
         if not isinstance(DAILY_VIP_DOWNLOAD_COUNT, dict):
             DAILY_VIP_DOWNLOAD_COUNT = {}
 

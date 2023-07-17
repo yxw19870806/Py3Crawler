@@ -65,7 +65,7 @@ class NetConfig:
     ]
 
     def __init__(self) -> None:
-        config = tool.json_decode(file.read_file(os.path.join(PROJECT_LIB_PATH, "net_config.json")), {})
+        config = file.read_json_file(os.path.join(PROJECT_LIB_PATH, "net_config.json"), {})
         for config_key in self.CONFIG_KEYS:
             default_value = self.__getattribute__(config_key)
             config_value = default_value if (config_key not in config) else config[config_key]
