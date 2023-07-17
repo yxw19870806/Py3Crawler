@@ -37,7 +37,7 @@ def main():
 
     # 获取niconico账号下的所有视频列表
     niconico_mylist_cache_path = os.path.join(ivseek_class.cache_data_path, "niconico_mylist.json")
-    niconico_mylist_list = tool.json_decode(file.read_file(niconico_mylist_cache_path), {})
+    niconico_mylist_list = file.read_json_file(niconico_mylist_cache_path, {})
     for account_id in account_id_list["niconico"]:
         if account_id in niconico_mylist_list:
             continue

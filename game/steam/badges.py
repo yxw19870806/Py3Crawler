@@ -37,7 +37,7 @@ def main():
     # 已设置跳过的游戏
     skip_list = []
     if os.path.exists(skip_list_file_path):
-        skip_list = tool.json_decode(file.read_file(skip_list_file_path), [])
+        skip_list = file.read_json_file(skip_list_file_path, [])
 
     # 获取全部没有收到恒宇卡牌掉落且还可以升级的徽章
     try:
