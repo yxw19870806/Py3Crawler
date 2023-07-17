@@ -505,7 +505,7 @@ class Steam(crawler.Crawler):
         return apps_cache_data
 
     def save_cache_apps_info(self, apps_cache_data):
-        file.write_file(tool.json_encode(apps_cache_data), self.apps_cache_file_path, const.WriteFileMode.REPLACE)
+        file.write_json_file(apps_cache_data, self.apps_cache_file_path)
 
     def load_deleted_app_list(self):
         deleted_app_list_string = file.read_file(self.deleted_app_list_path)
@@ -531,7 +531,7 @@ class Steam(crawler.Crawler):
         return tool.json_decode(file.read_file(self.game_dlc_list_path), {})
 
     def save_game_dlc_list(self, game_dlc_list):
-        file.write_file(tool.json_encode(game_dlc_list), self.game_dlc_list_path, const.WriteFileMode.REPLACE)
+        file.write_json_file(game_dlc_list, self.game_dlc_list_path)
 
     def format_cache_app_info(self):
         apps_cache_data = self.load_cache_apps_info()

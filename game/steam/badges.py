@@ -61,7 +61,7 @@ def main():
         if len(wanted_card_list) == 0:
             # 已实际完成
             skip_list.append(game_id)
-            file.write_file(tool.json_encode(skip_list), skip_list_file_path, const.WriteFileMode.REPLACE)
+            file.write_json_file(skip_list, skip_list_file_path)
             continue
         if game_id in deleted_app_list:
             continue
