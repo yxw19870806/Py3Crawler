@@ -78,11 +78,7 @@ def write_file(msg: str, file_path: str, write_type: const.WriteFileMode = const
     file_path = os.path.abspath(file_path)
     if not path.create_dir(os.path.dirname(file_path)):
         return False
-    if write_type == const.WriteFileMode.APPEND:
-        open_type = "a"
-    else:
-        open_type = "w"
-    with open(file_path, open_type, encoding=encoding) as file_handle:
+    with open(file_path, "a" if write_type == const.WriteFileMode.APPEND else "w", encoding=encoding) as file_handle:
         file_handle.write(msg + "\n")
     return True
 
