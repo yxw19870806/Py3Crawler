@@ -6,7 +6,6 @@ https://store.steampowered.com/
 email: hikaru870806@hotmail.com
 如有问题或建议请联系
 """
-import os
 from common import *
 from game.steam.lib import steam
 
@@ -23,8 +22,8 @@ def main():
         raise
 
     # 已检测过的游戏列表
-    checked_apps_file_path = os.path.join(steam_class.cache_data_path, "checked.txt")
-    checked_apps_string = file.read_file(checked_apps_file_path)
+    app_checked_cache = steam_class.new_cache("checked.txt", const.FileType.Text)
+    checked_apps_string = app_checked_cache.read().strip()
     if checked_apps_string:
         checked_apps_list = checked_apps_string.split(",")
     else:
@@ -76,7 +75,7 @@ def main():
                     steam_class.save_game_dlc_list(game_dlc_list)
 
         checked_apps_list.append(game_id)
-        file.write_file(",".join(checked_apps_list), checked_apps_file_path, const.WriteFileMode.REPLACE)
+        app_checked_cache.write(",".join(checked_apps_list))
 
 
 if __name__ == "__main__":

@@ -6,7 +6,6 @@ https://store.steampowered.com/
 email: hikaru870806@hotmail.com
 如有问题或建议请联系
 """
-import os
 from common import console, const, file, tool, CrawlerException
 from game.steam.lib import steam
 
@@ -16,17 +15,20 @@ def main():
     steam_class = steam.Steam(need_login=True)
 
     # 所有打折游戏
-    discount_game_file_path = os.path.abspath(os.path.join(steam_class.cache_data_path, "discount.txt"))
-    discount_game_list = file.read_json_file(discount_game_file_path, [])
+    discount_cache = steam_class.new_cache("discount.txt", const.FileType.JSON)
+    discount_game_list = discount_cache.read()
+    if not isinstance(discount_game_list, list):
+        discount_game_list = []
     game_id_list = []
     for game_info in discount_game_list:
         if game_info["type"] == "game":
             game_id_list.append(game_info["app_id"])
         else:
             game_id_list += game_info["app_id"]
+
     # 已检测过的游戏列表
-    checked_apps_file_path = os.path.join(steam_class.cache_data_path, "discount_checked.txt")
-    checked_apps_string = file.read_file(checked_apps_file_path)
+    discount_checked_app_cache = steam_class.new_cache("discount_checked.txt", const.FileType.Text)
+    checked_apps_string = discount_checked_app_cache.read().strip()
     if checked_apps_string:
         checked_apps_list = checked_apps_string.split(",")
     else:
@@ -77,7 +79,7 @@ def main():
 
         # 增加检测标记
         checked_apps_list.append(game_id)
-        file.write_file(",".join(checked_apps_list), checked_apps_file_path, const.WriteFileMode.REPLACE)
+        discount_checked_app_cache.write(",".join(checked_apps_list))
 
 
 if __name__ == "__main__":

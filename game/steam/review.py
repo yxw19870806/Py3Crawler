@@ -39,8 +39,8 @@ def main(check_game=True):
     # 历史记录
     apps_cache_data = steam_class.load_cache_apps_info()
     # 已检测过的游戏列表
-    checked_apps_file_path = os.path.join(steam_class.cache_data_path, "review_checked.txt")
-    checked_apps_string = file.read_file(checked_apps_file_path)
+    review_checked_app_cache = steam_class.new_cache("review_checked.txt", const.FileType.Text)
+    checked_apps_string = review_checked_app_cache.read().strip()
     if checked_apps_string:
         checked_apps_list = checked_apps_string.split(",")
     else:
@@ -143,7 +143,7 @@ def main(check_game=True):
             steam_class.save_cache_apps_info(apps_cache_data)
             # 保存数据
             checked_apps_list.append(game_id)
-            file.write_file(",".join(checked_apps_list), checked_apps_file_path, const.WriteFileMode.REPLACE)
+            review_checked_app_cache.write(",".join(checked_apps_list))
 
     # 输出
     print_list(apps_cache_data, game_dlc_list)
