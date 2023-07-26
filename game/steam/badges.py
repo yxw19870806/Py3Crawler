@@ -30,14 +30,14 @@ def main():
 
     # 获取登录状态
     steam_class = steam.Steam(need_login=True)
-    skip_list_file_path = os.path.join(steam_class.cache_data_path, "badges_skip.txt")
+    badges_skip_cache = steam_class.new_cache("badges_skip.txt", const.FileType.JSON)
 
     # 已删除的游戏
     deleted_app_list = steam_class.load_deleted_app_list()
     # 已设置跳过的游戏
-    skip_list = []
-    if os.path.exists(skip_list_file_path):
-        skip_list = file.read_json_file(skip_list_file_path, [])
+    skip_list = badges_skip_cache.read()
+    if not isinstance(skip_list, list):
+        skip_list = []
 
     # 获取全部没有收到恒宇卡牌掉落且还可以升级的徽章
     try:
@@ -61,7 +61,7 @@ def main():
         if len(wanted_card_list) == 0:
             # 已实际完成
             skip_list.append(game_id)
-            file.write_json_file(skip_list, skip_list_file_path)
+            badges_skip_cache.write(skip_list)
             continue
         if game_id in deleted_app_list:
             continue
