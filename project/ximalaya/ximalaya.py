@@ -207,7 +207,8 @@ def get_audio_info_page(audio_id):
 
     # 保存每日vip下载计数
     DAILY_VIP_DOWNLOAD_COUNT[day] += 1
-    DAILY_VIP_DOWNLOAD_COUNT_CACHE.write(DAILY_VIP_DOWNLOAD_COUNT)
+    if DAILY_VIP_DOWNLOAD_COUNT_CACHE:
+        DAILY_VIP_DOWNLOAD_COUNT_CACHE.write(DAILY_VIP_DOWNLOAD_COUNT)
 
     # 使用喜马拉雅的加密JS方法解密url地址
     js_code = file.read_file(os.path.join(crawler.PROJECT_APP_PATH, "js", "aes.js"))
