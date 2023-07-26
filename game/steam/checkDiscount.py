@@ -6,7 +6,7 @@ https://store.steampowered.com/
 email: hikaru870806@hotmail.com
 如有问题或建议请联系
 """
-from common import console, const, file, tool, CrawlerException
+from common import console, const, CrawlerException
 from game.steam.lib import steam
 
 
