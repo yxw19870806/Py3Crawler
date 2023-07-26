@@ -36,8 +36,10 @@ def main():
             continue
 
     # 获取niconico账号下的所有视频列表
-    niconico_mylist_cache_path = os.path.join(ivseek_class.cache_data_path, "niconico_mylist.json")
-    niconico_mylist_list = file.read_json_file(niconico_mylist_cache_path, {})
+    niconico_mylist_cache = ivseek_class.new_cache("niconico_mylist.json", const.FileType.JSON)
+    niconico_mylist_list = niconico_mylist_cache.read()
+    if isinstance(niconico_mylist_list, dict):
+        niconico_mylist_list = {}
     for account_id in account_id_list["niconico"]:
         if account_id in niconico_mylist_list:
             continue
@@ -49,7 +51,7 @@ def main():
             print(e.http_error("niconico账号%s的视频列表" % account_id))
             continue
         niconico_mylist_list[account_id] = account_mylist_response["list_id_list"]
-        file.write_json_file(niconico_mylist_list, niconico_mylist_cache_path)
+        niconico_mylist_cache.write(niconico_mylist_list)
 
     # 更新youtube的存档文件
     for account_id in account_id_list["youtube"]:
