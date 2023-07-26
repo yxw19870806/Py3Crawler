@@ -22,7 +22,7 @@ def main():
         raise
 
     # 已检测过的游戏列表
-    app_checked_cache = steam_class.new_cache("checked.txt", const.FileType.Text)
+    app_checked_cache = steam_class.new_cache("checked.txt", const.FileType.TEXT)
     checked_apps_string = app_checked_cache.read().strip()
     if checked_apps_string:
         checked_apps_list = checked_apps_string.split(",")

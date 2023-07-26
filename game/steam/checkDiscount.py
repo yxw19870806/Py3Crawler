@@ -27,7 +27,7 @@ def main():
             game_id_list += game_info["app_id"]
 
     # 已检测过的游戏列表
-    discount_checked_app_cache = steam_class.new_cache("discount_checked.txt", const.FileType.Text)
+    discount_checked_app_cache = steam_class.new_cache("discount_checked.txt", const.FileType.TEXT)
     checked_apps_string = discount_checked_app_cache.read().strip()
     if checked_apps_string:
         checked_apps_list = checked_apps_string.split(",")

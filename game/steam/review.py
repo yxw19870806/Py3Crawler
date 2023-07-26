@@ -39,7 +39,7 @@ def main(check_game=True):
     # 历史记录
     user_review_cache_data = steam_class.load_user_review_data()
     # 已检测过的游戏列表
-    review_checked_app_cache = steam_class.new_cache("review_checked.txt", const.FileType.Text)
+    review_checked_app_cache = steam_class.new_cache("review_checked.txt", const.FileType.TEXT)
     checked_apps_string = review_checked_app_cache.read().strip()
     if checked_apps_string:
         checked_apps_list = checked_apps_string.split(",")
