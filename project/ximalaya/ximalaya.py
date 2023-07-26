@@ -11,11 +11,12 @@ import math
 import os
 import random
 import time
+from typing import Optional
 from common import *
 
 COOKIES = {}
 MAX_DAILY_VIP_DOWNLOAD_COUNT = 600
-DAILY_VIP_DOWNLOAD_COUNT_CACHE_FILE = ""
+DAILY_VIP_DOWNLOAD_COUNT_CACHE: Optional[crawler.CrawlerCache] = None
 DAILY_VIP_DOWNLOAD_COUNT = {}
 EACH_PAGE_AUDIO_COUNT = 30  # 每次请求获取的视频数量
 IS_LOGIN = False
@@ -206,7 +207,7 @@ def get_audio_info_page(audio_id):
 
     # 保存每日vip下载计数
     DAILY_VIP_DOWNLOAD_COUNT[day] += 1
-    file.write_json_file(DAILY_VIP_DOWNLOAD_COUNT, DAILY_VIP_DOWNLOAD_COUNT_CACHE_FILE)
+    DAILY_VIP_DOWNLOAD_COUNT_CACHE.write(DAILY_VIP_DOWNLOAD_COUNT)
 
     # 使用喜马拉雅的加密JS方法解密url地址
     js_code = file.read_file(os.path.join(crawler.PROJECT_APP_PATH, "js", "aes.js"))
@@ -238,7 +239,7 @@ class XiMaLaYa(crawler.Crawler):
     def __init__(self, sys_config=None, **kwargs):
         if sys_config is None:
             sys_config = {}
-        global COOKIES, DAILY_VIP_DOWNLOAD_COUNT, DAILY_VIP_DOWNLOAD_COUNT_CACHE_FILE
+        global COOKIES, DAILY_VIP_DOWNLOAD_COUNT, DAILY_VIP_DOWNLOAD_COUNT_CACHE
         # 设置APP目录
         crawler.PROJECT_APP_PATH = os.path.abspath(os.path.dirname(__file__))
 
@@ -254,8 +255,8 @@ class XiMaLaYa(crawler.Crawler):
         # 设置全局变量，供子线程调用
         COOKIES = self.cookie_value
 
-        DAILY_VIP_DOWNLOAD_COUNT_CACHE_FILE = os.path.join(self.cache_data_path, "daily_vip_count.data")
-        DAILY_VIP_DOWNLOAD_COUNT = file.read_json_file(DAILY_VIP_DOWNLOAD_COUNT_CACHE_FILE, {})
+        DAILY_VIP_DOWNLOAD_COUNT_CACHE = self.new_cache("daily_vip_count.json", const.FileType.JSON)
+        DAILY_VIP_DOWNLOAD_COUNT = DAILY_VIP_DOWNLOAD_COUNT_CACHE.read()
         if not isinstance(DAILY_VIP_DOWNLOAD_COUNT, dict):
             DAILY_VIP_DOWNLOAD_COUNT = {}
 
