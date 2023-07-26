@@ -439,8 +439,8 @@ class Steam(crawler.Crawler):
         self.restricted_app_list_path = os.path.join(self.data_path, "restricted_app.txt")
         # 游戏的DLC列表
         self.game_dlc_list_path = os.path.join(self.data_path, "game_dlc_list.txt")
-        # 个人账号应用缓存
-        self.apps_cache_file_path = os.path.join(self.cache_data_path, "%s_apps.txt" % self.account_id)
+        # 个人评测信息缓存
+        self.user_review_cache = self.new_cache("%s_review.txt" % self.account_id, const.FileType.JSON)
 
         self.need_login = need_login
         self.init()
@@ -494,18 +494,17 @@ class Steam(crawler.Crawler):
                     break
         return account_id
 
-    def load_cache_apps_info(self):
-        apps_cache_data = {
+    def load_user_review_data(self):
+        default_user_review_cache_data = {
             "can_review_lists": [],
             "review_list": [],
         }
-        if not os.path.exists(self.apps_cache_file_path):
-            return apps_cache_data
-        apps_cache_data = file.read_json_file(self.apps_cache_file_path, apps_cache_data)
-        return apps_cache_data
-
-    def save_cache_apps_info(self, apps_cache_data):
-        file.write_json_file(apps_cache_data, self.apps_cache_file_path)
+        if not os.path.exists(self.user_review_cache.cache_path):
+            return default_user_review_cache_data
+        user_review_cache_data = self.user_review_cache.read()
+        if not tool.check_dict_sub_key(("can_review_lists", "review_list"), user_review_cache_data):
+            user_review_cache_data = default_user_review_cache_data
+        return user_review_cache_data
 
     def load_deleted_app_list(self):
         deleted_app_list_string = file.read_file(self.deleted_app_list_path)
@@ -534,8 +533,8 @@ class Steam(crawler.Crawler):
         file.write_json_file(game_dlc_list, self.game_dlc_list_path)
 
     def format_cache_app_info(self):
-        apps_cache_data = self.load_cache_apps_info()
-        if len(apps_cache_data) == 0:
+        user_review_cache_data = self.load_user_review_data()
+        if len(user_review_cache_data) == 0:
             return
         deleted_app_list = self.load_deleted_app_list()
         restricted_app_list = self.load_restricted_app_list()
@@ -549,11 +548,11 @@ class Steam(crawler.Crawler):
             if game_id in restricted_app_list:
                 restricted_app_list.remove(game_id)
         # 排序去重
-        apps_cache_data["can_review_lists"] = sorted(list(set(apps_cache_data["can_review_lists"])))
-        apps_cache_data["review_list"] = sorted(list(set(apps_cache_data["review_list"])))
+        user_review_cache_data["can_review_lists"] = sorted(list(set(user_review_cache_data["can_review_lists"])))
+        user_review_cache_data["review_list"] = sorted(list(set(user_review_cache_data["review_list"])))
         deleted_app_list = sorted(list(set(deleted_app_list)))
         restricted_app_list = sorted(list(set(restricted_app_list)))
         # 保存新的数据
-        self.save_cache_apps_info(apps_cache_data)
+        self.user_review_cache.write(user_review_cache_data)
         self.save_deleted_app_list(deleted_app_list)
         self.save_restricted_app_list(restricted_app_list)
