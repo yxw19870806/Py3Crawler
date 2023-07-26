@@ -66,6 +66,13 @@ class ConfigAnalysisMode(StrEnum):
 
 
 @unique
+class FileType(StrEnum):
+    Text: str = "text"
+    JSON: str = "json"
+    LINES: str = "lines"
+
+
+@unique
 class ReadFileMode(StrEnum):
     FULL: str = "full"  # 读取整个文件 ，返回字符串
     LINE: str = "line"  # 按行读取，返回list

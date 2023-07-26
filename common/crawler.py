@@ -23,6 +23,40 @@ if platform.system() == "Windows":
 PROJECT_APP_PATH = os.getcwd()
 
 
+class CrawlerCache():
+    def __init__(self, file_path: str, cache_type: const.FileType) -> None:
+        if not isinstance(cache_type, const.FileType):
+            raise ValueError("invalid cache_type")
+        self.cache_path = file_path
+        self.cache_type = cache_type
+
+    def read(self) -> Any:
+        if self.cache_type == const.FileType.LINES:
+            file.read_file(self.cache_path, const.ReadFileMode.LINE)
+        elif self.cache_type == const.FileType.JSON:
+            file.read_json_file(self.cache_path)
+        else:
+            file.read_file(self.cache_path, const.ReadFileMode.FULL)
+
+    def write(self, msg: Any) -> bool:
+        if self.cache_type == const.FileType.LINES:
+            if isinstance(msg, list):
+                raise ValueError("invalid type of msg with cache_type = %s" % const.FileType.LINES)
+            return file.write_file("\n".join(msg), self.cache_path, const.WriteFileMode.REPLACE)
+        elif self.cache_type == const.FileType.JSON:
+            return file.write_json_file(msg, self.cache_path)
+        else:
+            return file.write_file(msg, self.cache_path, const.WriteFileMode.REPLACE)
+
+    def append(self, msg: str) -> bool:
+        if self.cache_type != const.FileType.LINES:
+            raise ValueError("can't append msg with cache_type != %s" % const.FileType.LINES)
+        return file.write_file(msg, self.cache_path, const.WriteFileMode.APPEND)
+
+    def clear(self) -> bool:
+        return path.delete_dir_or_file(self.cache_path)
+
+
 class Crawler(object):
     # 程序全局变量的设置
     def __init__(self, sys_config: dict[const.SysConfigKey, Any], **kwargs) -> None:
@@ -394,7 +428,7 @@ class Crawler(object):
         return download_return
 
     def multi_thread_download(self, thread_class: Type["DownloadThread"], file_url: str, file_path: str, file_description: str,
-                              headers: Optional[dict[str, str]] = None, cookies: Optional[dict[str, str]] = None):
+                              headers: Optional[dict[str, str]] = None, cookies: Optional[dict[str, str]] = None) -> None:
         """
         多线程下载
         """
@@ -407,7 +441,7 @@ class Crawler(object):
         thread.start()
         self.download_thead_list.append(thread)
 
-    def wait_multi_thead_complete(self):
+    def wait_multi_thead_complete(self) -> None:
         """
         等待通过multi_thread_download()方法提交的多线程下载全部完成
         """
@@ -419,6 +453,10 @@ class Crawler(object):
                 is_error = True
         if is_error and self.exit_after_download_failure:
             tool.process_exit(const.ExitCode.NORMAL)
+
+    def new_cache(self, file_name: str, cache_type: const.FileType) -> CrawlerCache:
+        cache_path = os.path.join(self.cache_data_path, file_name)
+        return CrawlerCache(cache_path, cache_type)
 
 
 class CrawlerThread(threading.Thread):
