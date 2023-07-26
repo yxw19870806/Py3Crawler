@@ -70,6 +70,7 @@ class FileType(StrEnum):
     TEXT: str = "text"
     JSON: str = "json"
     LINES: str = "lines"
+    COMMA_DELIMITED: str = "comma"
 
 
 @unique
