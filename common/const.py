@@ -67,7 +67,7 @@ class ConfigAnalysisMode(StrEnum):
 
 @unique
 class FileType(StrEnum):
-    Text: str = "text"
+    TEXT: str = "text"
     JSON: str = "json"
     LINES: str = "lines"
 
