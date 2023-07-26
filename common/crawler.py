@@ -32,25 +32,33 @@ class CrawlerCache():
 
     def read(self) -> Any:
         if self.cache_type == const.FileType.LINES:
-            file.read_file(self.cache_path, const.ReadFileMode.LINE)
+            return file.read_file(self.cache_path, const.ReadFileMode.LINE)
         elif self.cache_type == const.FileType.JSON:
-            file.read_json_file(self.cache_path)
+            return file.read_json_file(self.cache_path)
         else:
-            file.read_file(self.cache_path, const.ReadFileMode.FULL)
+            file_string = file.read_file(self.cache_path, const.ReadFileMode.FULL).strip()
+            if self.cache_type == const.FileType.COMMA_DELIMITED:
+                return file_string.split(",")
+            else:
+                return file_string
 
     def write(self, msg: Any) -> bool:
-        if self.cache_type == const.FileType.LINES:
-            if isinstance(msg, list):
-                raise ValueError("invalid type of msg with cache_type = %s" % const.FileType.LINES)
-            return file.write_file("\n".join(msg), self.cache_path, const.WriteFileMode.REPLACE)
-        elif self.cache_type == const.FileType.JSON:
+        if self.cache_type == const.FileType.JSON:
             return file.write_json_file(msg, self.cache_path)
         else:
-            return file.write_file(msg, self.cache_path, const.WriteFileMode.REPLACE)
+            if self.cache_type in [const.FileType.LINES, const.FileType.COMMA_DELIMITED] and not isinstance(msg, list):
+                raise ValueError("type of msg must is list when cache_type = %s" % self.cache_type)
+            if self.cache_type == const.FileType.LINES:
+                write_string = "\n".join(msg)
+            elif self.cache_type == const.FileType.COMMA_DELIMITED:
+                write_string = ",".join(msg)
+            else:
+                write_string = str(msg)
+            return file.write_file(write_string, self.cache_path, const.WriteFileMode.REPLACE)
 
     def append(self, msg: str) -> bool:
         if self.cache_type != const.FileType.LINES:
-            raise ValueError("can't append msg with cache_type != %s" % const.FileType.LINES)
+            raise ValueError("can't append msg when cache_type != %s" % const.FileType.LINES)
         return file.write_file(msg, self.cache_path, const.WriteFileMode.APPEND)
 
     def clear(self) -> bool:
