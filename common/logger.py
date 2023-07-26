@@ -9,7 +9,7 @@ import os
 import logging
 from logging import LogRecord
 from typing import Any, Final
-from common import color_format, file, tool
+from common import color_format, file
 
 DEFAULT_LOG_CONFIG: Final[dict[str, Any]] = {
     "IS_CONSOLE_DEBUG": False,

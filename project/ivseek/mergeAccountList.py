@@ -6,7 +6,6 @@ http://www.ivseek.com/
 email: hikaru870806@hotmail.com
 如有问题或建议请联系
 """
-import os
 from common import *
 from project.ivseek import ivseek
 from project.youtube import youtube

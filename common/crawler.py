@@ -23,7 +23,7 @@ if platform.system() == "Windows":
 PROJECT_APP_PATH = os.getcwd()
 
 
-class CrawlerCache():
+class CrawlerCache:
     def __init__(self, file_path: str, cache_type: const.FileType) -> None:
         if not isinstance(cache_type, const.FileType):
             raise ValueError("invalid cache_type")
