@@ -38,12 +38,8 @@ def main(check_game=True):
     # 历史记录
     user_review_cache_data = steam_class.load_user_review_data()
     # 已检测过的游戏列表
-    review_checked_app_cache = steam_class.new_cache("review_checked.txt", const.FileType.TEXT)
-    checked_apps_string = review_checked_app_cache.read().strip()
-    if checked_apps_string:
-        checked_apps_list = checked_apps_string.split(",")
-    else:
-        checked_apps_list = []
+    review_checked_app_cache = steam_class.new_cache("review_checked.txt", const.FileType.COMMA_DELIMITED)
+    checked_apps_list = review_checked_app_cache.read()
     # 已删除的游戏
     deleted_app_list = steam_class.deleted_app_list_cache.read()
     # 已资料受限制的游戏

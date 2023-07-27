@@ -22,12 +22,8 @@ def main():
         raise
 
     # 已检测过的游戏列表
-    app_checked_cache = steam_class.new_cache("checked.txt", const.FileType.TEXT)
-    checked_apps_string = app_checked_cache.read().strip()
-    if checked_apps_string:
-        checked_apps_list = checked_apps_string.split(",")
-    else:
-        checked_apps_list = []
+    app_checked_cache = steam_class.new_cache("checked.txt", const.FileType.COMMA_DELIMITED)
+    checked_apps_list = app_checked_cache.read()
     # 已删除的游戏
     deleted_app_list = steam_class.deleted_app_list_cache.read()
     # 已资料受限制的游戏
