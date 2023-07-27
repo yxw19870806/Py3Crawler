@@ -29,11 +29,11 @@ def main():
     else:
         checked_apps_list = []
     # 已删除的游戏
-    deleted_app_list = steam_class.load_deleted_app_list()
+    deleted_app_list = steam_class.deleted_app_list_cache.read()
     # 已资料受限制的游戏
-    restricted_app_list = steam_class.load_restricted_app_list()
+    restricted_app_list = steam_class.restricted_app_list_cache.read()
     # 游戏的DLC列表
-    game_dlc_list = steam_class.load_game_dlc_list()
+    game_dlc_list = steam_class.game_dlc_list_cache.read()
 
     while len(owned_game_list) > 0:
         game_id = owned_game_list.pop()
@@ -54,7 +54,7 @@ def main():
             if game_id not in deleted_app_list:
                 deleted_app_list.append(game_id)
                 # 保存数据
-                steam_class.save_deleted_app_list(deleted_app_list)
+                steam_class.deleted_app_list_cache.write(deleted_app_list)
         else:
             # 受限制
             if game_data["restricted"]:
@@ -62,7 +62,7 @@ def main():
                 if game_id not in restricted_app_list:
                     restricted_app_list.append(game_id)
                     # 保存数据
-                    steam_class.save_restricted_app_list(restricted_app_list)
+                    steam_class.restricted_app_list_cache.write(restricted_app_list)
             # 所有的DLC
             if len(game_data["dlc_list"]) > 0:
                 is_change = False
@@ -72,7 +72,7 @@ def main():
                         game_dlc_list[dlc_id] = game_id
                 # 保存数据
                 if is_change:
-                    steam_class.save_game_dlc_list(game_dlc_list)
+                    steam_class.game_dlc_list_cache.write(game_dlc_list)
 
         checked_apps_list.append(game_id)
         app_checked_cache.write(",".join(checked_apps_list))

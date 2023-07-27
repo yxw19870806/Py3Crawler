@@ -14,7 +14,7 @@ def main():
     steam_class = steam.Steam(need_login=False)
 
     # 已删除的游戏
-    restricted_app_list = steam_class.load_restricted_app_list()
+    restricted_app_list = steam_class.restricted_app_list_cache.read()
 
     console.log("总共获取%s个已受限游戏" % len(restricted_app_list))
 
@@ -38,10 +38,10 @@ def main():
             result_game_ids.append(game_id)
 
     console.log(result_game_ids)
-    restricted_app_list = steam_class.load_restricted_app_list()
+    restricted_app_list = steam_class.restricted_app_list_cache.read()
     for game_id in result_game_ids:
         restricted_app_list.remove(game_id)
-    steam_class.save_restricted_app_list(restricted_app_list)
+    steam_class.restricted_app_list_cache.write(restricted_app_list)
 
 
 if __name__ == "__main__":

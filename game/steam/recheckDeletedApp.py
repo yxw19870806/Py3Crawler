@@ -14,7 +14,7 @@ def main():
     steam_class = steam.Steam(need_login=False)
 
     # 已删除的游戏
-    deleted_app_list = steam_class.load_deleted_app_list()
+    deleted_app_list = steam_class.deleted_app_list_cache.read()
 
     console.log("总共获取%s个已删除游戏" % len(deleted_app_list))
 

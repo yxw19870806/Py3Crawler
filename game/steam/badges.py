@@ -33,7 +33,7 @@ def main():
     badges_skip_cache = steam_class.new_cache("badges_skip.txt", const.FileType.JSON)
 
     # 已删除的游戏
-    deleted_app_list = steam_class.load_deleted_app_list()
+    deleted_app_list = steam_class.deleted_app_list_cache.read()
     # 已设置跳过的游戏
     skip_list = badges_skip_cache.read()
     if not isinstance(skip_list, list):

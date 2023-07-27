@@ -16,9 +16,9 @@ def main():
     steam_class.format_cache_app_info()
 
     # 已删除的游戏
-    deleted_app_list = steam_class.load_deleted_app_list()
+    deleted_app_list = steam_class.deleted_app_list_cache.read()
     # 已资料受限制的游戏
-    restricted_app_list = steam_class.load_restricted_app_list()
+    restricted_app_list = steam_class.restricted_app_list_cache.read()
 
     console.log(deleted_app_list + restricted_app_list)
 

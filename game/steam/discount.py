@@ -61,9 +61,9 @@ def main():
     # 缓存的打折信息
     discount_cache = steam_class.new_cache("discount.txt", const.FileType.JSON)
     # 已资料受限制的游戏
-    restricted_app_list = steam_class.load_restricted_app_list()
+    restricted_app_list = steam_class.restricted_app_list_cache.read()
     # 游戏的DLC列表
-    game_dlc_list = steam_class.load_game_dlc_list()
+    game_dlc_list = steam_class.game_dlc_list_cache.read()
 
     # 从文件里获取打折列表
     discount_game_list = load_discount_list(discount_cache)

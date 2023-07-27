@@ -14,7 +14,7 @@ def main():
     steam_class = steam.Steam(need_login=False)
 
     # 已删除的游戏
-    deleted_app_list = steam_class.load_deleted_app_list()
+    deleted_app_list = steam_class.deleted_app_list_cache.read()
 
     try:
         banned_game_list = madjoki.get_banned_game_list()
