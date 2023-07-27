@@ -425,9 +425,10 @@ class Steam(crawler.Crawler):
             const.SysConfigKey.SET_PROXY: True,
             const.SysConfigKey.NOT_DOWNLOAD: True,
             const.SysConfigKey.NOT_CHECK_SAVE_DATA: True,
-            const.SysConfigKey.GET_COOKIE: ("store.steampowered.com",),
             const.SysConfigKey.APP_CONFIG_PATH: os.path.join(crawler.PROJECT_APP_PATH, "lib", "steam.ini"),
         }
+        if need_login:
+            sys_config[const.SysConfigKey.GET_COOKIE] = ("store.steampowered.com",)
         crawler.Crawler.__init__(self, sys_config, **kwargs)
 
         self.data_path = os.path.abspath(os.path.join(crawler.PROJECT_APP_PATH, "data"))
