@@ -34,11 +34,11 @@ def main():
     else:
         checked_apps_list = []
     # 已删除的游戏
-    deleted_app_list = steam_class.load_deleted_app_list()
+    deleted_app_list = steam_class.deleted_app_list_cache.read()
     # 已资料受限制的游戏
-    restricted_app_list = steam_class.load_restricted_app_list()
+    restricted_app_list = steam_class.restricted_app_list_cache.read()
     # 游戏的DLC列表
-    game_dlc_list = steam_class.load_game_dlc_list()
+    game_dlc_list = steam_class.game_dlc_list_cache.read()
 
     while len(game_id_list) > 0:
         game_id = game_id_list.pop()
@@ -68,14 +68,14 @@ def main():
                     game_dlc_list[dlc_id] = game_id
             # 保存数据
             if is_change:
-                steam_class.save_game_dlc_list(game_dlc_list)
+                steam_class.game_dlc_list_cache.write(game_dlc_list)
 
         # 已资料受限制
         if game_data["restricted"]:
             console.log("游戏：%s已资料受限制" % game_id)
             restricted_app_list.append(game_id)
             # 保存数据
-            steam_class.save_restricted_app_list(restricted_app_list)
+            steam_class.restricted_app_list_cache.write(restricted_app_list)
 
         # 增加检测标记
         checked_apps_list.append(game_id)

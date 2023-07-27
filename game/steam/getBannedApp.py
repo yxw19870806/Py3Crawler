@@ -16,7 +16,7 @@ def main():
     steamdb.SteamDb()
 
     # 已删除的游戏
-    deleted_app_list = steam_class.load_deleted_app_list()
+    deleted_app_list = steam_class.deleted_app_list_cache.read()
 
     try:
         banned_game_list = madjoki.get_banned_game_list()
@@ -37,7 +37,7 @@ def main():
                 deleted_app_list.append(str(game_info["game_id"]))
                 console.log("\t".join(list(map(str, [game_info["game_id"], game_info["game_name"], steamdb_info["develop_name"]]))), False)
 
-    steam_class.save_deleted_app_list(deleted_app_list)
+    steam_class.deleted_app_list_cache.write(deleted_app_list)
 
 
 if __name__ == "__main__":
