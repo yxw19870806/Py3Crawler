@@ -3,12 +3,13 @@
 log/
 *-*_*_*_save.data
 *cookies.data
-*/*/cache/
+project/*/cache/
 project/*/info/session
 project/*/audio/
+project/*/content/
 project/*/photo/
 project/*/video/
-game/steam/data/*
+game/steam/cache/*
 deprecation/
 gallery/
 video/
