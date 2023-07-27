@@ -433,7 +433,8 @@ class Steam(crawler.Crawler):
 
         self.data_path = os.path.abspath(os.path.join(crawler.PROJECT_APP_PATH, "data"))
         # 获取account id
-        self.account_id = self.get_account_id_from_file(os.path.join(self.data_path, "account.data"))
+        self.account_id_cache = self.new_cache("account.data", const.FileType.TEXT)
+        self.account_id = self.get_account_id_from_cache()
         # 已删除的游戏app id
         self.deleted_app_list_cache = self.new_cache("deleted_app.txt", const.FileType.COMMA_DELIMITED)
         # 个人资料受限的游戏app id
@@ -480,8 +481,8 @@ class Steam(crawler.Crawler):
             COOKIES["birthtime"] = "1"
 
     # 从文件中读取account id，如果不存在提示输入
-    def get_account_id_from_file(self, account_id_file_path):
-        account_id = file.read_file(account_id_file_path)
+    def get_account_id_from_cache(self):
+        account_id = self.account_id_cache.read()
         while not account_id:
             console_account_id = input(tool.convert_timestamp_to_formatted_time() + " 请输入STEAM账号ID: ")
             while True:
@@ -489,7 +490,7 @@ class Steam(crawler.Crawler):
                 input_str = input_str.lower()
                 if input_str in ["y", "yes"]:
                     account_id = console_account_id
-                    file.write_file(console_account_id, account_id_file_path, const.WriteFileMode.REPLACE)
+                    self.account_id_cache.write(account_id)
                     break
                 elif input_str in ["n", "no"]:
                     break
