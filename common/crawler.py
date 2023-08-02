@@ -23,6 +23,52 @@ if platform.system() == "Windows":
 PROJECT_APP_PATH = os.getcwd()
 
 
+class CrawlerSaveData:
+    def __init__(self, save_data_path: str, save_data_format: None) -> None:
+        self._save_data_path: str = save_data_path
+        if not os.path.exists(self._save_data_path):
+            raise CrawlerException("存档文件%s不存在！" % self._save_data_path, True)
+        temp_file_name = tool.convert_timestamp_to_formatted_time("%m-%d_%H_%M_") + os.path.basename(self._save_data_path)
+        self._temp_save_data_path: str = os.path.join(os.path.dirname(self._save_data_path), temp_file_name)
+        if os.path.exists(self._temp_save_data_path):
+            raise CrawlerException("存档临时文件%s已存在！" % self._temp_save_data_path, True)
+        self._save_data: dict[str, list] = {}
+        if save_data_format is not None:
+            if isinstance(save_data_format, tuple) and len(save_data_format) == 2:
+                self._save_data = read_save_data(self._save_data_path, save_data_format[0], save_data_format[1])
+            else:
+                raise CrawlerException("存档文件默认格式不正确%s" % save_data_format, True)
+        self.thread_lock: threading.Lock = threading.Lock()  # 线程锁，避免同时读写存档文件
+
+    def keys(self):
+        return self._save_data.keys()
+
+    def get(self, key):
+        return self._save_data[key]
+
+    def save(self, key, data):
+        # 从待执行的记录里删除
+        self._save_data.pop(key)
+
+        # 写入临时存档
+        if data and self._temp_save_data_path:
+            with self.thread_lock:
+                file.write_file("\t".join(data), self._temp_save_data_path)
+
+    def done(self):
+        # 将剩余未处理的存档数据写入临时存档文件
+        if len(self._save_data) > 0 and self._temp_save_data_path:
+            file.write_file(tool.dyadic_list_to_string(list(self._save_data.values())), self._temp_save_data_path)
+
+        # 将临时存档文件按照主键排序后写入原始存档文件
+        # 只支持一行一条记录，每条记录格式相同的存档文件
+        if self._temp_save_data_path:
+            save_data = read_save_data(self._temp_save_data_path, 0, [])
+            temp_list = [save_data[key] for key in sorted(save_data.keys())]
+            file.write_file(tool.dyadic_list_to_string(temp_list), self._save_data_path, const.WriteFileMode.REPLACE)
+            path.delete_dir_or_file(self._temp_save_data_path)
+
+
 class CrawlerCache:
     def __init__(self, file_path: str, cache_type: const.FileType) -> None:
         if not isinstance(cache_type, const.FileType):
@@ -146,21 +192,10 @@ class Crawler(object):
 
         # 存档
         self.save_data_path: str = analysis_config(config, "SAVE_DATA_PATH", r"\\info/save.data", const.ConfigAnalysisMode.PATH)
-        self.temp_save_data_path: str = ""
-        self.save_data: dict[str, list] = {}
+        self.save_data: Optional[CrawlerSaveData] = None
         if not sys_not_check_save_data:
-            if not os.path.exists(self.save_data_path):
-                raise CrawlerException("存档文件%s不存在！" % self.save_data_path, True)
-            temp_file_name = tool.convert_timestamp_to_formatted_time("%m-%d_%H_%M_") + os.path.basename(self.save_data_path)
-            self.temp_save_data_path = os.path.join(os.path.dirname(self.save_data_path), temp_file_name)
-            if os.path.exists(self.temp_save_data_path):
-                raise CrawlerException("存档临时文件%s已存在！" % self.temp_save_data_path, True)
-            if const.SysConfigKey.SAVE_DATA_FORMATE in sys_config:
-                save_data_format = sys_config[const.SysConfigKey.SAVE_DATA_FORMATE]
-                if isinstance(save_data_format, tuple) and len(save_data_format) == 2:
-                    self.save_data = read_save_data(self.save_data_path, save_data_format[0], save_data_format[1])
-                else:
-                    log.warning("存档文件默认格式不正确%s" % save_data_format)
+            self.save_data = CrawlerSaveData(self.save_data_path, sys_config.get(const.SysConfigKey.SAVE_DATA_FORMATE, None))
+
         # cache
         self.cache_data_path: str = analysis_config(config, "CACHE_DATA_PATH", r"\\cache", const.ConfigAnalysisMode.PATH)
 
@@ -287,11 +322,8 @@ class Crawler(object):
             log.error("未知异常")
             log.error(str(e) + "\n" + traceback.format_exc())
 
-        # 未完成的数据保存
-        self.write_remaining_save_data()
-
-        # 重新排序保存存档文件
-        self.rewrite_save_file()
+        # 保存剩余未完成的数据，并重新排序保存存档文件
+        self.complete_save_data()
 
         # 其他结束操作
         self.done()
@@ -309,7 +341,7 @@ class Crawler(object):
                     break
 
                 # 开始下载
-                thread = self.crawler_thread(self, self.save_data[index_key])
+                thread = self.crawler_thread(self, self.save_data.get(index_key))
                 thread.start()
                 thread_list.append(thread)
 
@@ -362,23 +394,8 @@ class Crawler(object):
         if not self.is_running():
             tool.process_exit(const.ExitCode.NORMAL)
 
-    def write_remaining_save_data(self) -> None:
-        """
-        将剩余未处理的存档数据写入临时存档文件
-        """
-        if len(self.save_data) > 0 and self.temp_save_data_path:
-            file.write_file(tool.dyadic_list_to_string(list(self.save_data.values())), self.temp_save_data_path)
-
-    def rewrite_save_file(self) -> None:
-        """
-        将临时存档文件按照主键排序后写入原始存档文件
-        只支持一行一条记录，每条记录格式相同的存档文件
-        """
-        if self.temp_save_data_path:
-            save_data = read_save_data(self.temp_save_data_path, 0, [])
-            temp_list = [save_data[key] for key in sorted(save_data.keys())]
-            file.write_file(tool.dyadic_list_to_string(temp_list), self.save_data_path, const.WriteFileMode.REPLACE)
-            path.delete_dir_or_file(self.temp_save_data_path)
+    def complete_save_data(self) -> None:
+        self.save_data.done()
 
     def end_message(self) -> None:
         message = f"全部下载完毕，耗时{self.get_run_time()}秒"
@@ -513,14 +530,9 @@ class CrawlerThread(threading.Thread):
             self.error("未知异常")
             self.error(str(e) + "\n" + traceback.format_exc(), False)
 
-        # 从住线程中移除主键对应的信息
+        # 更新存档
         if self.index_key:
-            self.main_thread.save_data.pop(self.index_key)
-
-        # 写入存档
-        if self.single_save_data and self.main_thread.temp_save_data_path:
-            with self.thread_lock:
-                file.write_file("\t".join(self.single_save_data), self.main_thread.temp_save_data_path)
+            self.main_thread.save_data.save(self.index_key, self.single_save_data)
 
         # 主线程计数累加
         if self.main_thread.is_download_photo:
