@@ -196,7 +196,7 @@ class IvSeek(crawler.Crawler):
                 log.info("视频%s《%s》: %s" % (archive_id, archive_response["video_title"], video_info["video_url"]))
                 file.write_file("%s\t%s\t%s\t%s\t" % (archive_id, archive_response["video_title"], video_info["video_url"], video_info["account_id"]), self.save_data_path)
 
-    def rewrite_save_file(self):
+    def complete_save_data(self):
         pass
 
 
