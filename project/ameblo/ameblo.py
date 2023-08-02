@@ -67,13 +67,13 @@ def get_one_page_blog(account_name, page_count):
         if pq(blog_pagination_response.content).find("div.pagingArea a.pagingNext").length == 0 and \
                 pq(blog_pagination_response.content).find("div.pagingArea a.pagingPrev").length == 0:
             raise CrawlerException("页面截取分页信息div.pagingArea失败\n" + blog_pagination_response.content)
-        result["is_over"] = True
+        result["is_over"] = pq(blog_pagination_response.content).find("div.pagingArea a.pagingNext").length == 0
     # https://ameblo.jp/1108ayanyan/
     elif pq(blog_pagination_response.content).find("ul.skin-paging").length > 0:
         if pq(blog_pagination_response.content).find("ul.skin-paging a.skin-pagingNext").length == 0 and \
                 pq(blog_pagination_response.content).find("ul.skin-paging a.skin-pagingPrev").length == 0:
             raise CrawlerException("页面截取分页信息ul.skin-paging失败\n" + blog_pagination_response.content)
-        result["is_over"] = True
+        result["is_over"] = pq(blog_pagination_response.content).find("ul.skin-paging a.skin-pagingNext").length == 0
     # https://ameblo.jp/48orii48/
     elif pq(blog_pagination_response.content).find("div.page").length > 0:
         pagination_selector = pq(blog_pagination_response.content).find("div.page").eq(0).find("a")
