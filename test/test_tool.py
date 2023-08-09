@@ -98,8 +98,8 @@ class TestTool(unittest.TestCase):
         self.assertTrue(tool.check_dict_sub_key("a", {"a": 1}))
         self.assertFalse(tool.check_dict_sub_key("a", {"b": {"a": 1}}))
         self.assertFalse(tool.check_dict_sub_key("b", {"a": 1}))
-        self.assertTrue(tool.check_dict_sub_key(("a", "b"), {"a": 1, "b": 1}))
-        self.assertFalse(tool.check_dict_sub_key(("a", "b"), {"a": 1}))
+        self.assertTrue(tool.check_dict_sub_key(["a", "b"], {"a": 1, "b": 1}))
+        self.assertFalse(tool.check_dict_sub_key(["a", "b"], {"a": 1}))
 
 
 if __name__ == '__main__':

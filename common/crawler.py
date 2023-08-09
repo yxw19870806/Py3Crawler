@@ -150,14 +150,14 @@ class Crawler(object):
         # 额外初始化配置（直接通过实例化中传入，可覆盖子类__init__方法传递的sys_config参数）
         if "extra_sys_config" in kwargs and isinstance(kwargs["extra_sys_config"], dict):
             sys_config.update(kwargs["extra_sys_config"])
-        sys_download_photo = const.SysConfigKey.DOWNLOAD_PHOTO in sys_config and sys_config[const.SysConfigKey.DOWNLOAD_PHOTO]
-        sys_download_video = const.SysConfigKey.DOWNLOAD_VIDEO in sys_config and sys_config[const.SysConfigKey.DOWNLOAD_VIDEO]
-        sys_download_audio = const.SysConfigKey.DOWNLOAD_AUDIO in sys_config and sys_config[const.SysConfigKey.DOWNLOAD_AUDIO]
-        sys_download_content = const.SysConfigKey.DOWNLOAD_CONTENT in sys_config and sys_config[const.SysConfigKey.DOWNLOAD_CONTENT]
-        sys_set_proxy = const.SysConfigKey.SET_PROXY in sys_config and sys_config[const.SysConfigKey.SET_PROXY]
-        sys_get_cookie = const.SysConfigKey.GET_COOKIE in sys_config and sys_config[const.SysConfigKey.GET_COOKIE]
-        sys_not_check_save_data = const.SysConfigKey.NOT_CHECK_SAVE_DATA in sys_config and sys_config[const.SysConfigKey.NOT_CHECK_SAVE_DATA]
-        sys_not_download = const.SysConfigKey.NOT_DOWNLOAD in sys_config and sys_config[const.SysConfigKey.NOT_DOWNLOAD]
+        sys_download_photo = sys_config.get(const.SysConfigKey.DOWNLOAD_PHOTO, False)
+        sys_download_video = sys_config.get(const.SysConfigKey.DOWNLOAD_VIDEO, False)
+        sys_download_audio = sys_config.get(const.SysConfigKey.DOWNLOAD_AUDIO, False)
+        sys_download_content = sys_config.get(const.SysConfigKey.DOWNLOAD_CONTENT, False)
+        sys_set_proxy = sys_config.get(const.SysConfigKey.SET_PROXY, False)
+        sys_get_cookie = sys_config.get(const.SysConfigKey.GET_COOKIE, set())
+        sys_not_check_save_data = sys_config.get(const.SysConfigKey.NOT_CHECK_SAVE_DATA, False)
+        sys_not_download = sys_config.get(const.SysConfigKey.NOT_DOWNLOAD, False)
 
         if IS_EXECUTABLE:
             application_path = os.path.dirname(sys.executable)
@@ -169,10 +169,7 @@ class Crawler(object):
         # 程序配置
         config = read_config(config_path)
         # 应用配置
-        if const.SysConfigKey.APP_CONFIG_PATH in sys_config:
-            app_config_path = sys_config[const.SysConfigKey.APP_CONFIG_PATH]
-        else:
-            app_config_path = os.path.abspath(os.path.join(PROJECT_APP_PATH, "app.ini"))
+        app_config_path = sys_config.get(const.SysConfigKey.APP_CONFIG_PATH, os.path.abspath(os.path.join(PROJECT_APP_PATH, "app.ini")))
         if os.path.exists(app_config_path):
             config.update(read_config(app_config_path))
         # 额外应用配置（直接通过实例化中传入，可覆盖配置文件中参数）
@@ -181,11 +178,10 @@ class Crawler(object):
 
         # 应用配置
         self.app_config: dict[str, Any] = {}
-        if const.SysConfigKey.APP_CONFIG in sys_config and len(sys_config[const.SysConfigKey.APP_CONFIG]) > 0:
-            for app_config_temp in sys_config[const.SysConfigKey.APP_CONFIG]:
-                if len(app_config_temp) != 3:
-                    continue
-                self.app_config[app_config_temp[0]] = analysis_config(config, app_config_temp[0], app_config_temp[1], app_config_temp[2])
+        for app_config_temp in sys_config.get(const.SysConfigKey.APP_CONFIG, set()):
+            if len(app_config_temp) != 3:
+                continue
+            self.app_config[app_config_temp[0]] = analysis_config(config, app_config_temp[0], app_config_temp[1], app_config_temp[2])
 
         # 是否下载
         self.is_download_photo: bool = sys_download_photo and analysis_config(config, "IS_DOWNLOAD_PHOTO", True, const.ConfigAnalysisMode.BOOLEAN)
@@ -259,7 +255,7 @@ class Crawler(object):
                 if "DEFAULT" in all_cookie_from_browser:
                     self.cookie_value.update(all_cookie_from_browser["DEFAULT"])
             else:
-                for cookie_domain in sys_config[const.SysConfigKey.GET_COOKIE]:
+                for cookie_domain in sys_get_cookie:
                     check_domain_list = [cookie_domain]
                     if cookie_domain[0].startswith("."):
                         check_domain_list.append(cookie_domain[1:])

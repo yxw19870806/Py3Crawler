@@ -188,7 +188,7 @@ def get_one_page_private_blog(account_id, page_count):
             if video_url is not None:
                 result_post_info["video_url"] = video_url
         # 图片
-        elif tool.check_dict_sub_key(("photos",), post_info):
+        elif tool.check_dict_sub_key(["photos"], post_info):
             for photo_info in crawler.get_json_value(post_info, "photos", type_check=list):
                 result_post_info["photo_url_list"].append(crawler.get_json_value(photo_info, "original_size", "url", type_check=str))
         result["post_info_list"].append(result_post_info)
