@@ -504,7 +504,7 @@ class Steam(crawler.Crawler):
         if not os.path.exists(self.user_review_cache.cache_path):
             return default_user_review_cache_data
         user_review_cache_data = self.user_review_cache.read()
-        if not tool.check_dict_sub_key(("can_review_lists", "review_list"), user_review_cache_data):
+        if not tool.check_dict_sub_key(["can_review_lists", "review_list"], user_review_cache_data):
             user_review_cache_data = default_user_review_cache_data
         return user_review_cache_data
 

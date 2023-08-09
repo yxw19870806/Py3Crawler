@@ -114,7 +114,7 @@ def get_one_page_video(account_id, token):
         video_info_list = crawler.get_json_value(video_pagination_response.json_data, "onResponseReceivedActions", 0, "appendContinuationItemsAction", "continuationItems", type_check=list)
     # 获取所有video id
     for video_info in video_info_list:
-        if not tool.check_dict_sub_key(("continuationItemRenderer",), video_info):
+        if not tool.check_dict_sub_key(["continuationItemRenderer"], video_info):
             result["video_id_list"].append(crawler.get_json_value(video_info, "richItemRenderer", "content", "videoRenderer", "videoId", type_check=str))
         else:
             # 获取下一页token

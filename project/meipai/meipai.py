@@ -33,7 +33,7 @@ def get_one_page_video(account_id, page_count):
         raise CrawlerException(crawler.request_failre(video_pagination_response.status))
     for media_info in crawler.get_json_value(video_pagination_response.json_data, "medias", type_check=list):
         # 历史直播，跳过
-        if tool.check_dict_sub_key(("lives",), media_info):
+        if tool.check_dict_sub_key(["lives"], media_info):
             continue
         result_video_info = {
             "video_id": 0,  # 视频id

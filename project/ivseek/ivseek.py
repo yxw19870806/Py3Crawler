@@ -116,10 +116,10 @@ def get_archive_page(archive_id):
             if video_play_response.status != const.ResponseCode.SUCCEED:
                 raise CrawlerException("视频播放页 %s，%s" % (result_video_info["video_url"], crawler.request_failre(video_play_response.status)))
             script_json: dict = tool.json_decode(pq(video_play_response.content).find("#js-initial-watch-data").attr("data-api-data"))
-            if not script_json or not tool.check_dict_sub_key(("owner",), script_json):
+            if not script_json or not tool.check_dict_sub_key(["owner"], script_json):
                 raise CrawlerException("视频播放页 %s 截取视频信息失败，%s" % (result_video_info["video_url"], crawler.request_failre(video_play_response.status)))
             if script_json["owner"]:
-                if tool.check_dict_sub_key(("id",), script_json["owner"]):
+                if tool.check_dict_sub_key(["id"], script_json["owner"]):
                     result_video_info["account_id"] = script_json["owner"]["id"]
                 else:
                     log.warning("视频 %s 发布账号截取失败\n%s" % (result_video_info["video_url"], video_play_response.content))

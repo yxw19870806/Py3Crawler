@@ -27,7 +27,7 @@ def init():
     # 文件存在，检查格式是否正确
     if os.path.exists(token_file_path):
         api_info = tool.json_decode(crypto.Crypto().decrypt(file.read_file(token_file_path)), [])
-        if tool.check_dict_sub_key(("api_key", "api_secret"), api_info):
+        if tool.check_dict_sub_key(["api_key", "api_secret"], api_info):
             # 验证token是否有效
             if get_access_token(api_info["api_key"], api_info["api_secret"]):
                 console.log("access token get succeed!")

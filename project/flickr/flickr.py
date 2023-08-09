@@ -77,7 +77,7 @@ def get_account_index_page(account_name):
     # 获取cookie_session
     if IS_LOGIN and "cookie_session" not in COOKIES:
         set_cookies = net.get_cookies_from_response_header(account_index_response.headers)
-        if not tool.check_dict_sub_key(("cookie_session",), set_cookies):
+        if not tool.check_dict_sub_key(["cookie_session"], set_cookies):
             raise CrawlerException("请求返回cookie：%s匹配cookie_session失败" % account_index_response.headers)
         COOKIES.update({"cookie_session": set_cookies["cookie_session"]})
     return result
@@ -157,16 +157,16 @@ def get_one_page_photo(user_id, page_count, api_key, csrf, request_id):
         max_resolution_photo_type = ""
         # 可获取图片尺寸中最大的那张
         for photo_type in ["c", "f", "h", "k", "l", "m", "n", "o", "q", "s", "sq", "t", "z"]:
-            if tool.check_dict_sub_key(("width_" + photo_type, "height_" + photo_type), photo_info):
+            if tool.check_dict_sub_key(["width_" + photo_type, "height_" + photo_type], photo_info):
                 resolution = int(photo_info["width_" + photo_type]) * int(photo_info["height_" + photo_type])
                 if resolution > max_resolution:
                     max_resolution = resolution
                     max_resolution_photo_type = photo_type
         if not max_resolution_photo_type:
             raise CrawlerException("图片信息：%s匹配最高分辨率的图片尺寸失败" % photo_info)
-        if tool.check_dict_sub_key(("url_" + max_resolution_photo_type + "_cdn",), photo_info):
+        if tool.check_dict_sub_key(["url_" + max_resolution_photo_type + "_cdn"], photo_info):
             result_photo_info["photo_url"] = photo_info["url_" + max_resolution_photo_type + "_cdn"]
-        elif tool.check_dict_sub_key(("url_" + max_resolution_photo_type,), photo_info):
+        elif tool.check_dict_sub_key(["url_" + max_resolution_photo_type], photo_info):
             result_photo_info["photo_url"] = photo_info["url_" + max_resolution_photo_type]
         else:
             raise CrawlerException("图片信息：%s中'url_%s_cdn'或者'url_%s_cdn'字段不存在" % (photo_info, max_resolution_photo_type, max_resolution_photo_type))
