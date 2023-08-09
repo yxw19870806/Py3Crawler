@@ -38,77 +38,87 @@ class CrawlerSaveData:
                 self._save_data = read_save_data(self._save_data_path, save_data_format[0], save_data_format[1])
             else:
                 raise CrawlerException("存档文件默认格式不正确%s" % save_data_format, True)
-        self.thread_lock: threading.Lock = threading.Lock()  # 线程锁，避免同时读写存档文件
+        self._thread_lock: threading.Lock = threading.Lock()  # 线程锁，避免同时读写存档文件
+        self._complete_save_data: dict[str, list] = {}
 
     def keys(self):
         return self._save_data.keys()
 
-    def get(self, key):
+    def get(self, key: str) -> list:
         return self._save_data[key]
 
-    def save(self, key, data):
+    def update(self, key: str, data: list):
+        self._save_data[key] = data
+
+    def save(self, key: str, data: list):
         # 从待执行的记录里删除
         self._save_data.pop(key)
+        self._complete_save_data[key] = data
 
         # 写入临时存档
-        if data and self._temp_save_data_path:
-            with self.thread_lock:
+        if data:
+            with self._thread_lock:
                 file.write_file("\t".join(data), self._temp_save_data_path)
 
     def done(self):
         # 将剩余未处理的存档数据写入临时存档文件
-        if len(self._save_data) > 0 and self._temp_save_data_path:
+        if len(self._save_data) > 0:
             file.write_file(tool.dyadic_list_to_string(list(self._save_data.values())), self._temp_save_data_path)
+            self._complete_save_data.update(self._save_data)
+            self._save_data = {}
 
         # 将临时存档文件按照主键排序后写入原始存档文件
         # 只支持一行一条记录，每条记录格式相同的存档文件
-        if self._temp_save_data_path:
-            save_data = read_save_data(self._temp_save_data_path, 0, [])
-            temp_list = [save_data[key] for key in sorted(save_data.keys())]
-            file.write_file(tool.dyadic_list_to_string(temp_list), self._save_data_path, const.WriteFileMode.REPLACE)
-            path.delete_dir_or_file(self._temp_save_data_path)
+        save_data = read_save_data(self._temp_save_data_path, 0, [])
+        temp_list = [save_data[key] for key in sorted(save_data.keys())]
+        file.write_file(tool.dyadic_list_to_string(temp_list), self._save_data_path, const.WriteFileMode.REPLACE)
+        path.delete_dir_or_file(self._temp_save_data_path)
 
 
 class CrawlerCache:
     def __init__(self, file_path: str, cache_type: const.FileType) -> None:
         if not isinstance(cache_type, const.FileType):
             raise ValueError("invalid cache_type")
-        self.cache_path = file_path
-        self.cache_type = cache_type
+        self._cache_path = file_path
+        self._cache_type = cache_type
 
     def read(self) -> Any:
-        if self.cache_type == const.FileType.LINES:
-            return file.read_file(self.cache_path, const.ReadFileMode.LINE)
-        elif self.cache_type == const.FileType.JSON:
-            return file.read_json_file(self.cache_path)
+        if self._cache_type == const.FileType.LINES:
+            return file.read_file(self._cache_path, const.ReadFileMode.LINE)
+        elif self._cache_type == const.FileType.JSON:
+            return file.read_json_file(self._cache_path)
         else:
-            file_string = file.read_file(self.cache_path, const.ReadFileMode.FULL).strip()
-            if self.cache_type == const.FileType.COMMA_DELIMITED:
+            file_string = file.read_file(self._cache_path, const.ReadFileMode.FULL).strip()
+            if self._cache_type == const.FileType.COMMA_DELIMITED:
                 return file_string.split(",")
             else:
                 return file_string
 
     def write(self, msg: Any) -> bool:
-        if self.cache_type == const.FileType.JSON:
-            return file.write_json_file(msg, self.cache_path)
+        if self._cache_type == const.FileType.JSON:
+            return file.write_json_file(msg, self._cache_path)
         else:
-            if self.cache_type in [const.FileType.LINES, const.FileType.COMMA_DELIMITED] and not isinstance(msg, list):
-                raise ValueError("type of msg must is list when cache_type = %s" % self.cache_type)
-            if self.cache_type == const.FileType.LINES:
+            if self._cache_type in [const.FileType.LINES, const.FileType.COMMA_DELIMITED] and not isinstance(msg, list):
+                raise ValueError("type of msg must is list when cache_type = %s" % self._cache_type)
+            if self._cache_type == const.FileType.LINES:
                 write_string = "\n".join(msg)
-            elif self.cache_type == const.FileType.COMMA_DELIMITED:
+            elif self._cache_type == const.FileType.COMMA_DELIMITED:
                 write_string = ",".join(msg)
             else:
                 write_string = str(msg)
-            return file.write_file(write_string, self.cache_path, const.WriteFileMode.REPLACE)
+            return file.write_file(write_string, self._cache_path, const.WriteFileMode.REPLACE)
 
     def append(self, msg: str) -> bool:
-        if self.cache_type != const.FileType.LINES:
+        if self._cache_type != const.FileType.LINES:
             raise ValueError("can't append msg when cache_type != %s" % const.FileType.LINES)
-        return file.write_file(msg, self.cache_path, const.WriteFileMode.APPEND)
+        return file.write_file(msg, self._cache_path, const.WriteFileMode.APPEND)
 
     def clear(self) -> bool:
-        return path.delete_dir_or_file(self.cache_path)
+        return path.delete_dir_or_file(self._cache_path)
+
+    @property
+    def cache_path(self):
+        return self._cache_path
 
 
 class Crawler(object):
