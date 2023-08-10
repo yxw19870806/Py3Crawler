@@ -327,7 +327,7 @@ class Youtube(crawler.Crawler):
             const.SysConfigKey.APP_CONFIG: (
                 ("VIDEO_QUALITY", 6, const.ConfigAnalysisMode.INTEGER),
             ),
-            const.SysConfigKey.SAVE_DATA_FORMATE: (0, ["", "", "0"]),  # account_id  video_string_id  video_number_id
+            const.SysConfigKey.SAVE_DATA_FORMATE: (0, ["", "", "0"]),  # account_id  last_video_string_id  last_video_number_id
         }
         crawler.Crawler.__init__(self, sys_config, **kwargs)
 

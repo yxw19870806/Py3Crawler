@@ -40,7 +40,7 @@ class CrawlerSaveData:
             else:
                 raise CrawlerException("存档文件默认格式不正确%s" % save_data_format, True)
         self._thread_lock: threading.Lock = threading.Lock()  # 线程锁，避免同时读写存档文件
-        self._complete_save_data: dict[str, list] = {}
+        self._completed_save_data: dict[str, list] = {}
 
     def keys(self):
         return self._save_data.keys()
@@ -54,7 +54,7 @@ class CrawlerSaveData:
     def save(self, key: str, data: list) -> None:
         # 从待执行的记录里删除
         self._save_data.pop(key)
-        self._complete_save_data[key] = data
+        self._completed_save_data[key] = data
 
         # 写入临时存档
         if data:
@@ -65,7 +65,7 @@ class CrawlerSaveData:
         # 将剩余未处理的存档数据写入临时存档文件
         if len(self._save_data) > 0:
             file.write_file(tool.dyadic_list_to_string(list(self._save_data.values())), self._temp_save_data_path)
-            self._complete_save_data.update(self._save_data)
+            self._completed_save_data.update(self._save_data)
             self._save_data = {}
 
         # 将临时存档文件按照主键排序后写入原始存档文件
