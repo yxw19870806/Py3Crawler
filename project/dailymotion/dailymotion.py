@@ -137,7 +137,7 @@ class DailyMotion(crawler.Crawler):
             const.SysConfigKey.APP_CONFIG: (
                 ("VIDEO_QUALITY", 6, const.ConfigAnalysisMode.INTEGER),
             ),
-            const.SysConfigKey.SAVE_DATA_FORMATE: (0, ["", "0"]),  # account_id  video_time
+            const.SysConfigKey.SAVE_DATA_FORMATE: (0, ["", "0"]),  # account_id  last_video_time
         }
         crawler.Crawler.__init__(self, sys_config, **kwargs)
 

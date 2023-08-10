@@ -125,7 +125,7 @@ class YiZhiBo(crawler.Crawler):
         sys_config = {
             const.SysConfigKey.DOWNLOAD_PHOTO: True,
             const.SysConfigKey.DOWNLOAD_VIDEO: True,
-            const.SysConfigKey.SAVE_DATA_FORMATE: (0, ["", "0", "0", "0", "0"]),  # account_id  video_count  last_video_time  photo_count  last_photo_time(account_name)
+            const.SysConfigKey.SAVE_DATA_FORMATE: (0, ["", "0", "0", "0", "0"]),  # account_id  video_count  last_video_time  photo_count  last_photo_time  (account_name)
         }
         crawler.Crawler.__init__(self, sys_config, **kwargs)
 
