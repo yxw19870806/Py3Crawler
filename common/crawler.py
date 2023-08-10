@@ -505,8 +505,8 @@ class CrawlerThread(threading.Thread):
         多线程下载
 
         :Args:
-        - single_save_data - 线程用到的数据
         - main_thread - 主线程对象
+        - single_save_data - 线程用到的数据
         """
         if not isinstance(main_thread, Crawler):
             raise CrawlerException("下载线程参数异常", True)
@@ -551,6 +551,8 @@ class CrawlerThread(threading.Thread):
             self.main_thread.total_video_count += self.total_video_count
         if self.main_thread.is_download_audio:
             self.main_thread.total_audio_count += self.total_audio_count
+        if self.main_thread.is_download_content:
+            self.main_thread.total_content_count += self.total_content_count
 
         # 清理临时文件（未完整下载的内容）
         for temp_path in self.temp_path_list:
