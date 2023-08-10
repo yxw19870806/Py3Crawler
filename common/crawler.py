@@ -24,7 +24,7 @@ PROJECT_APP_PATH = os.getcwd()
 
 
 class CrawlerSaveData:
-    def __init__(self, save_data_path: str, save_data_format: None) -> None:
+    def __init__(self, save_data_path: str, save_data_format: Optional[tuple[int, list[str]]] = None) -> None:
         self._save_data_path: str = save_data_path
         if not os.path.exists(self._save_data_path):
             raise CrawlerException("存档文件%s不存在！" % self._save_data_path, True)
@@ -34,7 +34,8 @@ class CrawlerSaveData:
             raise CrawlerException("存档临时文件%s已存在！" % self._temp_save_data_path, True)
         self._save_data: dict[str, list] = {}
         if save_data_format is not None:
-            if isinstance(save_data_format, tuple) and len(save_data_format) == 2:
+            if isinstance(save_data_format, tuple) and len(save_data_format) == 2 and \
+                    tool.is_integer(save_data_format[0]) and isinstance(save_data_format[1], list):
                 self._save_data = read_save_data(self._save_data_path, save_data_format[0], save_data_format[1])
             else:
                 raise CrawlerException("存档文件默认格式不正确%s" % save_data_format, True)
@@ -47,10 +48,10 @@ class CrawlerSaveData:
     def get(self, key: str) -> list:
         return self._save_data[key]
 
-    def update(self, key: str, data: list):
+    def update(self, key: str, data: list) -> None:
         self._save_data[key] = data
 
-    def save(self, key: str, data: list):
+    def save(self, key: str, data: list) -> None:
         # 从待执行的记录里删除
         self._save_data.pop(key)
         self._complete_save_data[key] = data
@@ -60,7 +61,7 @@ class CrawlerSaveData:
             with self._thread_lock:
                 file.write_file("\t".join(data), self._temp_save_data_path)
 
-    def done(self):
+    def done(self) -> None:
         # 将剩余未处理的存档数据写入临时存档文件
         if len(self._save_data) > 0:
             file.write_file(tool.dyadic_list_to_string(list(self._save_data.values())), self._temp_save_data_path)
@@ -117,7 +118,7 @@ class CrawlerCache:
         return path.delete_dir_or_file(self._cache_path)
 
     @property
-    def cache_path(self):
+    def cache_path(self) -> str:
         return self._cache_path
 
 
@@ -306,6 +307,7 @@ class Crawler(object):
         self.total_photo_count: int = 0
         self.total_video_count: int = 0
         self.total_audio_count: int = 0
+        self.total_content_count: int = 0
 
         self.download_thead_list: list["DownloadThread"] = []  # 下载线程
         self.crawler_thread: Optional[Type["CrawlerThread"]] = None  # 下载子线程
@@ -412,6 +414,8 @@ class Crawler(object):
             download_result.append(f"视频{self.total_video_count}个")
         if self.is_download_audio:
             download_result.append(f"音频{self.total_audio_count}个")
+        if self.is_download_content:
+            download_result.append(f"文本{self.total_content_count}个")
         if download_result:
             message += "，共计下载" + "，".join(download_result)
         log.info(message)
@@ -641,6 +645,8 @@ class CrawlerThread(threading.Thread):
             download_result.append(f"视频{self.total_video_count}个")
         if self.main_thread.is_download_audio:
             download_result.append(f"音频{self.total_audio_count}个")
+        if self.main_thread.is_download_content:
+            download_result.append(f"文本{self.total_content_count}个")
         if download_result:
             message += "，共计下载" + "，".join(download_result)
         self.info(message)
