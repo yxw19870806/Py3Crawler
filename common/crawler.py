@@ -23,6 +23,36 @@ if platform.system() == "Windows":
 PROJECT_APP_PATH = os.getcwd()
 
 
+class CrawlerSingleValueSaveData:
+    def __init__(self, save_data_path: str, type_check: Optional[str] = None) -> None:
+        self._save_data_path: str = save_data_path
+        self._save_data: str = ""
+        if os.path.exists(self._save_data_path):
+            self._save_data = file.read_file(self._save_data_path).strip()
+            if type_check is not None:
+                type_check_error = False
+                if type_check == "int":
+                    type_check_error = not tool.is_integer(self._save_data)
+                elif type_check == "date":
+                    type_check_error = not tool.is_date(self._save_data)
+                elif type_check == "datetime":
+                    type_check_error = not tool.is_datetime(self._save_data)
+                if type_check_error:
+                    raise CrawlerException("存档内数据格式不正确", True)
+
+    def value(self) -> str:
+        return self._save_data
+
+    def update(self, data: str) -> None:
+        self._save_data = data
+
+    def incr(self, step: int) -> None:
+        self._save_data = str(int(self._save_data) + step)
+
+    def save(self) -> None:
+        file.write_file(self._save_data, self._save_data_path, const.WriteFileMode.REPLACE)
+
+
 class CrawlerSaveData:
     def __init__(self, save_data_path: str, save_data_format: Optional[tuple[int, list[str]]] = None) -> None:
         self._save_data_path: str = save_data_path
