@@ -53,6 +53,45 @@ class CrawlerSingleValueSaveData:
         file.write_file(self._save_data, self._save_data_path, const.WriteFileMode.REPLACE)
 
 
+class CrawlerMultiValueSaveData:
+    def __init__(self, save_data_path: str, type_check_list: Optional[list[str]] = None) -> None:
+        self._save_data_path: str = save_data_path
+        if not isinstance(type_check_list, list):
+            raise CrawlerException("类型检测参数错误", True)
+        self._save_data: list[str] = []
+        if os.path.exists(self._save_data_path):
+            file_save_data = file.read_file(self._save_data_path).strip()
+            self._save_data = file_save_data.split("\t")
+        for index in range(len(type_check_list)):
+            type_check = type_check_list[index]
+            if len(self._save_data) > index:
+                self._save_data[index] = self._save_data[index].strip()
+                type_check_error = False
+                if type_check == "int":
+                    type_check_error = not tool.is_integer(self._save_data[index])
+                elif type_check == "date":
+                    type_check_error = not tool.is_date(self._save_data[index])
+                elif type_check == "datetime":
+                    type_check_error = not tool.is_datetime(self._save_data[index])
+                if type_check_error:
+                    raise CrawlerException("存档内数据格式不正确", True)
+            else:
+                defalut_value = "" if type_check != "int" else "0"
+                self._save_data.append(defalut_value)
+
+    def get(self, index: int) -> str:
+        return self._save_data[index]
+
+    def set(self, index: int, data: str) -> None:
+        self._save_data[index] = data
+
+    def update(self, data: list[str]) -> None:
+        self._save_data = data
+
+    def save(self) -> None:
+        file.write_file("\t".join(self._save_data), self._save_data_path, const.WriteFileMode.REPLACE)
+
+
 class CrawlerSaveData:
     def __init__(self, save_data_path: str, save_data_format: Optional[tuple[int, list[str]]] = None) -> None:
         self._save_data_path: str = save_data_path
