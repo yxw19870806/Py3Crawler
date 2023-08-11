@@ -27,11 +27,15 @@ class CrawlerSingleValueSaveData:
     def __init__(self, save_data_path: str, type_check: Optional[str] = None) -> None:
         self._save_data_path: str = save_data_path
         self._save_data: str = ""
+        if type_check == "int":
+            self._save_data = "0"
+        elif type_check == "int_1":
+            self._save_data = "1"
         if os.path.exists(self._save_data_path):
             self._save_data = file.read_file(self._save_data_path).strip()
             if type_check is not None:
                 type_check_error = False
-                if type_check == "int":
+                if type_check == "int" or type_check == "int_1":
                     type_check_error = not tool.is_integer(self._save_data)
                 elif type_check == "date":
                     type_check_error = not tool.is_date(self._save_data)
@@ -67,7 +71,7 @@ class CrawlerMultiValueSaveData:
             if len(self._save_data) > index:
                 self._save_data[index] = self._save_data[index].strip()
                 type_check_error = False
-                if type_check == "int":
+                if type_check == "int" or type_check == "int_1":
                     type_check_error = not tool.is_integer(self._save_data[index])
                 elif type_check == "date":
                     type_check_error = not tool.is_date(self._save_data[index])
@@ -76,7 +80,11 @@ class CrawlerMultiValueSaveData:
                 if type_check_error:
                     raise CrawlerException("存档内数据格式不正确", True)
             else:
-                defalut_value = "" if type_check != "int" else "0"
+                defalut_value = ""
+                if type_check == "int":
+                    defalut_value = "0"
+                elif type_check == "int_1":
+                    defalut_value = "1"
                 self._save_data.append(defalut_value)
 
     def get(self, index: int) -> str:
