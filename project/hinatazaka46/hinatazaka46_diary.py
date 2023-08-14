@@ -49,7 +49,7 @@ def get_one_page_blog(account_id, page_count):
         # /s/official/diary/detail/49568?ima=0000&cd=member
         blog_id = url.get_basename(blog_url)
         if not tool.is_integer(blog_id):
-            raise CrawlerException("日志地址 %s 截取日志id失败" % blog_url)
+            raise CrawlerException(f"日志地址 {blog_url} 截取日志id失败")
         result_blog_info["blog_id"] = int(blog_id)
         # 获取图片地址
         photo_list_selector = pq(blog_selector).find("img")
@@ -103,7 +103,7 @@ class CrawlerThread(crawler.CrawlerThread):
         is_over = False
         # 获取全部还未下载过需要解析的日志
         while not is_over:
-            blog_pagination_description = "第%s页日志" % page_count
+            blog_pagination_description = f"第{page_count}页日志"
             self.start_parse(blog_pagination_description)
             try:
                 blog_pagination_response = get_one_page_blog(self.index_key, page_count)
@@ -131,15 +131,15 @@ class CrawlerThread(crawler.CrawlerThread):
 
     # 解析单个日志
     def crawl_blog(self, blog_info):
-        blog_description = "日志%s" % blog_info["blog_id"]
+        blog_description = f"日志{blog_info['blog_id']}"
         self.start_parse(blog_description)
         self.parse_result(blog_description, blog_info["photo_url_list"])
 
         photo_index = 1
         for photo_url in blog_info["photo_url_list"]:
-            photo_name = "%05d_%02d.%s" % (blog_info["blog_id"], photo_index, url.get_file_ext(photo_url))
+            photo_name = f"%05d_%02d.{url.get_file_ext(photo_url)}" % (blog_info["blog_id"], photo_index)
             photo_path = os.path.join(self.main_thread.photo_download_path, self.display_name, photo_name)
-            photo_description = "日志%s第%s张图片" % (blog_info["blog_id"], photo_index)
+            photo_description = f"日志{blog_info['blog_id']}第{photo_index}张图片"
             if self.download(photo_url, photo_path, photo_description):
                 self.temp_path_list.append(photo_path)  # 设置临时目录
                 self.total_photo_count += 1  # 计数累加
@@ -152,7 +152,7 @@ class CrawlerThread(crawler.CrawlerThread):
     def _run(self):
         # 获取所有可下载日志
         blog_info_list = self.get_crawl_list()
-        self.info("需要下载的全部日志解析完毕，共%s个" % len(blog_info_list))
+        self.info(f"需要下载的全部日志解析完毕，共{len(blog_info_list)}个")
 
         # 从最早的日志开始下载
         while len(blog_info_list) > 0:

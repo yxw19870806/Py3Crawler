@@ -13,7 +13,7 @@ from common import *
 # 获取指定一页的图集
 def get_comic_index_page(comic_name):
     # https://m.dmzj.com/info/yiquanchaoren.html
-    index_url = "https://m.dmzj.com/info/%s.html" % comic_name
+    index_url = f"https://m.dmzj.com/info/{comic_name}.html"
     index_response = net.Request(index_url, method="GET")
     result = {
         "comic_info_list": {},  # 漫画列表信息
@@ -50,7 +50,7 @@ def get_comic_index_page(comic_name):
 # 获取漫画指定章节
 def get_chapter_page(comic_id, page_id):
     # https://m.dmzj.com/view/9949/19842.html
-    chapter_url = "https://m.dmzj.com/view/%s/%s.html" % (comic_id, page_id)
+    chapter_url = f"https://m.dmzj.com/view/{comic_id}/{page_id}.html"
     chapter_response = net.Request(chapter_url, method="GET")
     result = {
         "photo_url_list": [],  # 全部漫画图片地址
@@ -120,7 +120,7 @@ class CrawlerThread(crawler.CrawlerThread):
 
     # 解析单章节漫画
     def crawl_comic(self, comic_info):
-        comic_description = "漫画%s %s《%s》" % (comic_info["page_id"], comic_info["version_name"], comic_info["chapter_name"])
+        comic_description = f"漫画{comic_info['page_id']} {comic_info['version_name']}《{comic_info['chapter_name']}》"
         self.start_parse(comic_description)
         try:
             chapter_response = get_chapter_page(comic_info["comic_id"], comic_info["page_id"])
@@ -136,8 +136,8 @@ class CrawlerThread(crawler.CrawlerThread):
         # 设置临时目录
         self.temp_path_list.append(chapter_path)
         for photo_url in chapter_response["photo_url_list"]:
-            photo_path = os.path.join(chapter_path, "%03d.%s" % (photo_index, url.get_file_ext(photo_url)))
-            photo_description = "漫画%s %s《%s》第%s张图片" % (comic_info["page_id"], comic_info["version_name"], comic_info["chapter_name"], photo_index)
+            photo_path = os.path.join(chapter_path, f"%03d.{url.get_file_ext(photo_url)}" % photo_index)
+            photo_description = f"漫画{comic_info['page_id']} {comic_info['version_name']}《{comic_info['chapter_name']}》第{photo_index}张图片"
             if self.download(photo_url, photo_path, photo_description, headers={"Referer": "https://m.dmzj.com/"}):
                 self.total_photo_count += 1  # 计数累加
             photo_index += 1
@@ -149,7 +149,7 @@ class CrawlerThread(crawler.CrawlerThread):
     def _run(self):
         # 获取所有可下载章节
         comic_info_list = self.get_crawl_list()
-        self.info("需要下载的全部漫画解析完毕，共%s个" % len(comic_info_list))
+        self.info(f"需要下载的全部漫画解析完毕，共{len(comic_info_list)}个")
 
         # 从最早的章节开始下载
         while len(comic_info_list) > 0:

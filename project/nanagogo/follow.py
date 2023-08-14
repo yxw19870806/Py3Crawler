@@ -13,7 +13,7 @@ from project.nanagogo import nanagogo
 
 # 关注指定账号
 def follow_account(account_id):
-    follow_api_url = "https://api.7gogo.jp/web/v2/follow/users/%s" % account_id
+    follow_api_url = f"https://api.7gogo.jp/web/v2/follow/users/{account_id}"
     post_data = {
         "userId": account_id,
     }
@@ -22,14 +22,14 @@ def follow_account(account_id):
     }
     follow_response = net.Request(follow_api_url, method="POST", fields=post_data, headers=headers, cookies=nanagogo.COOKIES).enable_json_decode()
     if follow_response.status != const.ResponseCode.SUCCEED:
-        console.log("关注%s失败，请求返回结果：%s，退出程序！" % (account_id, crawler.request_failre(follow_response.status)))
+        console.log(f"关注{account_id}失败，请求返回结果：{crawler.request_failre(follow_response.status)}，退出程序！")
         tool.process_exit()
     try:
         crawler.get_json_value(follow_response.json_data, "data", value_check=None)
-        console.log("关注%s成功" % account_id)
+        console.log(f"关注{account_id}成功")
         return True
     except CrawlerException:
-        console.log("关注%s失败，请求返回：%s，退出程序！" % (account_id, follow_response.json_data))
+        console.log(f"关注{account_id}失败，请求返回：{follow_response.json_data}，退出程序！")
         tool.process_exit()
     return False
 
@@ -45,7 +45,7 @@ class NanaGoGoFollow(nanagogo.NanaGoGo):
                 count += 1
             time.sleep(0.1)
 
-        console.log("关注完成，成功关注了%s个账号" % count)
+        console.log(f"关注完成，成功关注了{count}个账号")
 
 
 if __name__ == "__main__":

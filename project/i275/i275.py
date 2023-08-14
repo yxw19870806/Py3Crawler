@@ -14,7 +14,7 @@ from common import *
 # 获取指定页数的全部音频信息
 # album_id => 1642
 def get_album_index_page(album_id):
-    album_pagination_url = "https://www.i275.com/book/%s.html" % album_id
+    album_pagination_url = f"https://www.i275.com/book/{album_id}.html"
     album_pagination_response = net.Request(album_pagination_url, method="GET")
     result = {
         "audio_info_list": [],  # 全部音频信息
@@ -32,7 +32,7 @@ def get_album_index_page(album_id):
         }
         audio_info_selector = audio_info_selector_list.eq(audio_info_index)
         # 获取音频id
-        audio_id = tool.find_sub_string(audio_info_selector.find("a").attr("href"), "/play/%s/" % album_id, ".html")
+        audio_id = tool.find_sub_string(audio_info_selector.find("a").attr("href"), f"/play/{album_id}/", ".html")
         if not tool.is_integer(audio_id):
             raise CrawlerException("音频信息截取音频id失败\n" + audio_info_selector.html())
         result_audio_info["audio_id"] = int(audio_id)
@@ -51,9 +51,9 @@ def get_audio_info_page(album_id, audio_id):
     result = {
         "audio_url": "",  # 音频地址
     }
-    audio_info_url = "https://www.i275.com/pc/index/getchapterurl/bookId/%s/chapterId/%s.html" % (album_id, audio_id)
+    audio_info_url = f"https://www.i275.com/pc/index/getchapterurl/bookId/{album_id}/chapterId/{audio_id}.html"
     headers = {
-        "Referer": "https://www.i275.com/play/%s/%s.html" % (album_id, audio_id),
+        "Referer": f"https://www.i275.com/play/{album_id}/{audio_id}.html",
     }
     audio_info_response = net.Request(audio_info_url, method="GET", headers=headers).enable_json_decode()
     if audio_info_response.status != const.ResponseCode.SUCCEED:
@@ -114,7 +114,7 @@ class CrawlerThread(crawler.CrawlerThread):
 
     # 解析单首音频
     def crawl_audio(self, audio_info):
-        audio_description = "%s《%s》" % (audio_info["audio_id"], audio_info["audio_title"])
+        audio_description = f"{audio_info['audio_id']}《{audio_info['audio_title']}》"
         self.start_parse(audio_description)
         try:
             audio_play_response = get_audio_info_page(self.index_key, audio_info["audio_id"])
@@ -134,7 +134,7 @@ class CrawlerThread(crawler.CrawlerThread):
     def _run(self):
         # 获取所有可下载音频
         audio_info_list = self.get_crawl_list()
-        self.info("需要下载的全部音频解析完毕，共%s个" % len(audio_info_list))
+        self.info(f"需要下载的全部音频解析完毕，共{len(audio_info_list)}个")
 
         # 从最早的媒体开始下载
         while len(audio_info_list) > 0:
