@@ -62,7 +62,7 @@ class XiMaLaYaDownload(ximalaya.XiMaLaYa):
         file_extension = url.get_file_ext(audio_response["audio_url"])
         options = {
             "initialdir": self.audio_download_path,
-            "initialfile": "%s - %s.%s" % (audio_id, path.filter_text(audio_response["audio_title"]), file_extension),
+            "initialfile": "%s - %s.%s" % (audio_id, audio_response["audio_title"], file_extension),
             "filetypes": [(file_extension, "." + file_extension)],
             "parent": self.gui,
         }

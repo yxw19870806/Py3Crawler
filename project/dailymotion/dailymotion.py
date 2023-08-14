@@ -216,7 +216,7 @@ class CrawlerThread(crawler.CrawlerThread):
             self.error(e.http_error(video_description))
             raise
 
-        video_name = "%s - %s.mp4" % (video_info["video_id"], path.filter_text(video_info["video_title"]))
+        video_name = "%s - %s.mp4" % (video_info["video_id"], video_info["video_title"])
         video_path = os.path.join(self.main_thread.video_download_path, self.index_key, video_name)
         if self.download(video_response["video_url"], video_path, video_description, auto_multipart_download=True, is_url_encode=False):
             self.total_video_count += 1  # 计数累加

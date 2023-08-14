@@ -313,7 +313,7 @@ class CrawlerThread(crawler.CrawlerThread):
 
     # 解析单个视频
     def crawl_video(self, video_info):
-        video_title = path.filter_text(video_info["video_title"])
+        video_title = video_info["video_title"]
         if video_title:
             video_name = "%s %s.mp4" % (video_info["video_id"], video_title)
         else:

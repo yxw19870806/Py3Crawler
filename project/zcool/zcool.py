@@ -173,7 +173,7 @@ class CrawlerThread(crawler.CrawlerThread):
         self.parse_result(album_description, album_response["photo_url_list"])
 
         photo_index = 1
-        album_name = "%s %s" % (album_info["album_id"], path.filter_text(album_info["album_title"]))
+        album_name = "%s %s" % (album_info["album_id"], album_info["album_title"])
         album_path = os.path.join(self.main_thread.photo_download_path, self.index_key, album_name)
         self.temp_path_list.append(album_path)
         for photo_url in album_response["photo_url_list"]:

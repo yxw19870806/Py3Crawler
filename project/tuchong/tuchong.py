@@ -135,7 +135,7 @@ class CrawlerThread(crawler.CrawlerThread):
 
         photo_index = 1
         # 过滤标题中不支持的字符
-        album_title = path.filter_text(album_info["album_title"])
+        album_title = album_info["album_title"]
         if album_title:
             post_path = os.path.join(self.main_thread.photo_download_path, self.index_key, "%08d %s" % (album_info["album_id"], album_title))
         else:

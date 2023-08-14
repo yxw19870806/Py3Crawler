@@ -93,7 +93,7 @@ class KuWoPlaylist(kuwo.KuWo):
                 log.error(e.http_error("歌曲%s《%s》" % (audio_info["audio_id"], audio_info["audio_title"])))
                 continue
 
-            file_path = os.path.join(dir_path, "%s - %s.%s" % (audio_info["audio_id"], path.filter_text(audio_info["audio_title"]), url.get_file_ext(audio_info_response["audio_url"])))
+            file_path = os.path.join(dir_path, "%s - %s.%s" % (audio_info["audio_id"], audio_info["audio_title"], url.get_file_ext(audio_info_response["audio_url"])))
             if os.path.exists(file_path):
                 continue
 
