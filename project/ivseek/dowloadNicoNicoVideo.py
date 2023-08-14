@@ -43,7 +43,7 @@ def main():
         if video_info_response["is_delete"]:
             continue
 
-        video_name = "%08d - %s.mp4" % (int(video_id), path.filter_text(video_info_response["video_title"]))
+        video_name = "%08d - %s.mp4" % (int(video_id), video_info_response["video_title"])
         video_path = os.path.join(NICONICO_VIDEO_DOWNLOAD_PATH, video_name)
         cookies = niconico.COOKIES
         if video_info_response["extra_cookie"]:

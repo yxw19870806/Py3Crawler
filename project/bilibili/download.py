@@ -83,7 +83,7 @@ class BiliBiliDownload(bilibili.BiliBili):
                     video_title += "_" + video_part_info["video_part_title"]
                 else:
                     video_title += "_" + str(part_index)
-            video_name = "%010d %s.%s" % (int(video_id), path.filter_text(video_title), url.get_file_ext(video_part_info["video_url_list"][0]))
+            video_name = "%010d %s.%s" % (int(video_id), video_title, url.get_file_ext(video_part_info["video_url_list"][0]))
 
             # 选择下载目录
             log.info("请选择下载目录")

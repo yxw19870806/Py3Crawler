@@ -392,7 +392,7 @@ class CrawlerThread(crawler.CrawlerThread):
             return
 
         self.info("开始下载 %s %s" % (video_description, video_info_response["m3u8_file_url"]))
-        video_file_path = os.path.join(self.main_thread.video_download_path, self.display_name, "%08d - %s.mp4" % (video_info["video_id"], path.filter_text(video_info["video_title"])))
+        video_file_path = os.path.join(self.main_thread.video_download_path, self.display_name, "%08d - %s.mp4" % (video_info["video_id"], video_info["video_title"]))
         download_return = net.download_from_list(video_info_response["video_url_list"], video_file_path, cookies=COOKIES)
         if download_return:
             self.total_video_count += 1  # 计数累加
