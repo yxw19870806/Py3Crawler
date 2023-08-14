@@ -49,7 +49,7 @@ def get_index_page():
 
 
 def get_archive_page(archive_id):
-    archive_url = "http://www.ivseek.com/archives/%s.html" % archive_id
+    archive_url = f"http://www.ivseek.com/archives/{archive_id}.html"
     archive_response = net.Request(archive_url, method="GET")
     result = {
         "is_delete": "",  # 是否已删除
@@ -75,15 +75,15 @@ def get_archive_page(archive_id):
         # 'http://embed.share-videos.se/auto/embed/40537536?uid=6050'
         if video_url.find("//embed.share-videos.se/") >= 0:
             video_id = url.get_basename(video_url)
-            result_video_info["video_url"] = "http://share-videos.se/auto/video/%s" % video_id
+            result_video_info["video_url"] = f"http://share-videos.se/auto/video/{video_id}"
         # https://www.youtube.com/embed/9GSEOmLD_zc?feature=oembed
         elif video_url.find("//www.youtube.com/") >= 0:
             video_id = url.get_basename(video_url)
-            result_video_info["video_url"] = "https://www.youtube.com/watch?v=%s" % video_id
+            result_video_info["video_url"] = f"https://www.youtube.com/watch?v={video_id}"
             # 获取视频发布账号
             video_play_response = net.Request(result_video_info["video_url"], method="GET", headers={"accept-language": "en-US"})
             if video_play_response.status != const.ResponseCode.SUCCEED:
-                raise CrawlerException("视频播放页 %s，%s" % (result_video_info["video_url"], crawler.request_failre(video_play_response.status)))
+                raise CrawlerException(f"视频播放页 {result_video_info['video_url']}，{crawler.request_failre(video_play_response.status)}")
             # 账号已被删除，跳过
             if video_play_response.content.find('"reason":"This video is no longer available because the YouTube account associated with this video has been terminated."') >= 0:
                 continue
@@ -95,7 +95,7 @@ def get_archive_page(archive_id):
             if account_id:
                 result_video_info["account_id"] = account_id
             else:
-                log.warning("视频 %s 发布账号截取失败\n%s" % (result_video_info["video_url"], video_play_response.content))
+                log.warning(f"视频 {result_video_info['video_url']} 发布账号截取失败\n{video_play_response.content}")
         elif video_url.find(".nicovideo.jp/") >= 0:
             # https://embed.nicovideo.jp/watch/sm23008734/script?w=640&#038;h=360
             if video_url.find("embed.nicovideo.jp/watch") >= 0:
@@ -106,32 +106,32 @@ def get_archive_page(archive_id):
                 video_id = url.get_basename(video_url)
             else:
                 raise CrawlerException("未知视频来源" + video_url)
-            result_video_info["video_url"] = "http://www.nicovideo.jp/watch/%s" % video_id
+            result_video_info["video_url"] = f"http://www.nicovideo.jp/watch/{video_id}"
             # 获取视频发布账号
             video_play_response = net.Request(result_video_info["video_url"], method="GET", cookies=niconico.COOKIES)
             while video_play_response.status == 403:
-                log.info("视频%s访问异常，重试" % video_id)
+                log.info(f"视频{video_id}访问异常，重试")
                 time.sleep(60)
                 video_play_response = net.Request(result_video_info["video_url"], method="GET", cookies=niconico.COOKIES)
             if video_play_response.status != const.ResponseCode.SUCCEED:
-                raise CrawlerException("视频播放页 %s，%s" % (result_video_info["video_url"], crawler.request_failre(video_play_response.status)))
+                raise CrawlerException(f"视频播放页 {result_video_info['video_url']}，{crawler.request_failre(video_play_response.status)}")
             script_json: dict = tool.json_decode(pq(video_play_response.content).find("#js-initial-watch-data").attr("data-api-data"))
             if not script_json or not tool.check_dict_sub_key(["owner"], script_json):
-                raise CrawlerException("视频播放页 %s 截取视频信息失败，%s" % (result_video_info["video_url"], crawler.request_failre(video_play_response.status)))
+                raise CrawlerException(f"视频播放页 {result_video_info['video_url']} 截取视频信息失败，{crawler.request_failre(video_play_response.status)}")
             if script_json["owner"]:
                 if tool.check_dict_sub_key(["id"], script_json["owner"]):
                     result_video_info["account_id"] = script_json["owner"]["id"]
                 else:
-                    log.warning("视频 %s 发布账号截取失败\n%s" % (result_video_info["video_url"], video_play_response.content))
+                    log.warning(f"视频 {result_video_info['video_url']} 发布账号截取失败\n{video_play_response.content}")
         # http://www.dailymotion.com/embed/video/x5oi0x
         elif video_url.find("//www.dailymotion.com/") >= 0:
             video_url = video_url.replace("http://", "https://")
             video_id = url.get_basename(video_url)
-            result_video_info["video_url"] = "http://www.dailymotion.com/video/%s" % video_id
+            result_video_info["video_url"] = f"http://www.dailymotion.com/video/{video_id}"
             # 获取视频发布账号
             video_play_response = net.Request(result_video_info["video_url"], method="GET")
             if video_play_response.status != const.ResponseCode.SUCCEED:
-                raise CrawlerException("视频播放页%s，%s" % (result_video_info["video_url"], crawler.request_failre(video_play_response.status)))
+                raise CrawlerException(f"视频播放页{result_video_info['video_url']}，{crawler.request_failre(video_play_response.status)}")
             account_id = tool.find_sub_string(video_play_response.content, '"screenname":"', '"')
             if account_id:
                 result_video_info["account_id"] = account_id
@@ -178,10 +178,10 @@ class IvSeek(crawler.Crawler):
             log.error(e.http_error("首页"))
             raise
 
-        log.info("最新视频id：%s" % index_response["max_archive_id"])
+        log.info(f"最新视频id：{index_response['max_archive_id']}")
 
         for archive_id in range(self.save_id, index_response["max_archive_id"]):
-            archive_description = "视频%s" % archive_id
+            archive_description = f"视频{archive_id}"
             self.start_parse(archive_description)
             try:
                 archive_response = get_archive_page(archive_id)
@@ -193,8 +193,8 @@ class IvSeek(crawler.Crawler):
             self.parse_result(archive_description, archive_response["video_info_list"])
 
             for video_info in archive_response["video_info_list"]:
-                log.info("视频%s《%s》: %s" % (archive_id, archive_response["video_title"], video_info["video_url"]))
-                file.write_file("%s\t%s\t%s\t%s\t" % (archive_id, archive_response["video_title"], video_info["video_url"], video_info["account_id"]), self.save_data_path)
+                log.info(f"视频{archive_id}《{archive_response['video_title']}》: {video_info['video_url']}")
+                file.write_file("\t".join([archive_id, archive_response["video_title"], video_info["video_url"], video_info["account_id"]]), self.save_data_path)
 
     def complete_save_data(self):
         pass

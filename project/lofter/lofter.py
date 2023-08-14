@@ -23,7 +23,7 @@ def init_session():
 # 获取指定页数的全部日志
 def get_one_page_blog(account_name, page_count):
     # https://moexia.lofter.com/?page=1
-    blog_pagination_url = "https://%s.lofter.com/" % account_name
+    blog_pagination_url = f"https://{account_name}.lofter.com/"
     query_data = {"page": page_count}
     blog_pagination_response = net.Request(blog_pagination_url, method="GET", fields=query_data, cookies=COOKIES).disable_redirect()
     result = {
@@ -104,7 +104,7 @@ class CrawlerThread(crawler.CrawlerThread):
         is_over = False
         # 获取全部还未下载过需要解析的日志
         while not is_over:
-            blog_pagination_description = "第%s页日志" % page_count
+            blog_pagination_description = f"第{page_count}页日志"
             self.start_parse(blog_pagination_description)
             try:
                 blog_pagination_response = get_one_page_blog(self.index_key, page_count)
@@ -140,7 +140,7 @@ class CrawlerThread(crawler.CrawlerThread):
 
     # 解析单个日志
     def crawl_blog(self, blog_url):
-        blog_description = "日志%s" % blog_url
+        blog_description = f"日志{blog_url}"
         self.start_parse(blog_description)
         try:
             blog_response = get_blog_page(blog_url)
@@ -155,9 +155,9 @@ class CrawlerThread(crawler.CrawlerThread):
             # 去除图片地址的参数
             photo_url = url.remove_query(photo_url)
 
-            file_name = "%09d_%02d.%s" % (blog_id, photo_index, url.get_file_ext(photo_url))
+            file_name = f"%09d_%02d.{url.get_file_ext(photo_url)}" % (blog_id, photo_index)
             photo_path = os.path.join(self.main_thread.photo_download_path, self.index_key, file_name)
-            photo_description = "日志%s(%s)第%s张图片" % (blog_id, blog_url, photo_index)
+            photo_description = f"日志{blog_id}({blog_url})第{photo_index}张图片"
             if self.download(photo_url, photo_path, photo_description, success_callback=self.download_success_callback):
                 self.temp_path_list.append(photo_path)  # 设置临时目录
                 self.total_photo_count += 1  # 计数累加
@@ -170,14 +170,14 @@ class CrawlerThread(crawler.CrawlerThread):
     def download_success_callback(self, photo_url, photo_path, photo_description, download_return):
         if check_photo_invalid(photo_path):
             path.delete_dir_or_file(photo_path)
-            self.error("%s %s 已被屏蔽，删除" % (photo_description, photo_url))
+            self.error(f"{photo_description} {photo_url} 已被屏蔽，删除")
             return False
         return True
 
     def _run(self):
         # 获取所有可下载日志
         blog_url_list = self.get_crawl_list()
-        self.info("需要下载的全部日志解析完毕，共%s个" % len(blog_url_list))
+        self.info(f"需要下载的全部日志解析完毕，共{len(blog_url_list)}个")
 
         # 从最早的日志开始下载
         while len(blog_url_list) > 0:

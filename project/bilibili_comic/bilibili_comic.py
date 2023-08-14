@@ -77,7 +77,7 @@ def get_chapter_page(ep_id):
     for token_info in crawler.get_json_value(token_api_response.json_data, "data", type_check=list):
         photo_url = crawler.get_json_value(token_info, "url", type_check=str)
         token = crawler.get_json_value(token_info, "token", type_check=str)
-        result["photo_url_list"].append("%s?token=%s" % (photo_url, token))
+        result["photo_url_list"].append(f"{photo_url}?token={token}")
     return result
 
 
@@ -150,7 +150,7 @@ class CrawlerThread(crawler.CrawlerThread):
         return comic_info_list
 
     def crawl_comic(self, comic_info):
-        comic_description = "漫画%s 《%s》" % (comic_info["ep_id"], comic_info["ep_name"])
+        comic_description = f"漫画{comic_info['ep_id']} 《{comic_info['ep_name']}》"
         self.start_parse(comic_description)
         try:
             chapter_response = get_chapter_page(comic_info["ep_id"])
@@ -166,8 +166,8 @@ class CrawlerThread(crawler.CrawlerThread):
         # 设置临时目录
         self.temp_path_list.append(chapter_path)
         for photo_url in chapter_response["photo_url_list"]:
-            photo_path = os.path.join(chapter_path, "%03d.%s" % (photo_index, url.get_file_ext(photo_url)))
-            photo_description = "漫画%s 《%s》第%s张图片" % (comic_info["ep_id"], comic_info["ep_name"], photo_index)
+            photo_path = os.path.join(chapter_path, f"%03d.{url.get_file_ext(photo_url)}" % photo_index)
+            photo_description = f"漫画{comic_info['ep_id']} 《{comic_info['ep_name']}》第{photo_index}张图片"
             if self.download(photo_url, photo_path, photo_description, headers={"Referer": "https://m.dmzj.com/"}):
                 self.total_photo_count += 1  # 计数累加
             photo_index += 1
@@ -179,7 +179,7 @@ class CrawlerThread(crawler.CrawlerThread):
     def _run(self):
         # 获取所有可下载章节
         comic_info_list = self.get_crawl_list()
-        self.info("需要下载的全部漫画解析完毕，共%s个" % len(comic_info_list))
+        self.info(f"需要下载的全部漫画解析完毕，共{len(comic_info_list)}个")
 
         # 从最早的章节开始下载
         while len(comic_info_list) > 0:

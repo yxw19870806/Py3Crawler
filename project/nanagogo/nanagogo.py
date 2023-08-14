@@ -16,7 +16,7 @@ COOKIES = {}
 
 # 获取talk首页
 def get_index_page(account_name):
-    index_url = "https://7gogo.jp/%s" % account_name
+    index_url = f"https://7gogo.jp/{account_name}"
     index_response = net.Request(index_url, method="GET")
     if index_response.status == 404:
         raise CrawlerException("talk已被删除")
@@ -25,7 +25,7 @@ def get_index_page(account_name):
 
 # 获取指定页数的全部日志信息
 def get_one_page_blog(account_name, target_id):
-    blog_pagination_url = "https://api.7gogo.jp/web/v2/talks/%s/images" % account_name
+    blog_pagination_url = f"https://api.7gogo.jp/web/v2/talks/{account_name}/images"
     query_data = {
         "targetId": target_id,
         "limit": EACH_PAGE_BLOG_COUNT,
@@ -62,7 +62,7 @@ def get_one_page_blog(account_name, target_id):
             elif body_type == 8:  # video
                 result_blog_info["video_url_list"].append(crawler.get_json_value(blog_body_info, "movieUrlHq", type_check=str))
             else:
-                raise CrawlerException("日志信息%s中'bodyType'字段取值不正确" % blog_body_info)
+                raise CrawlerException(f"日志信息{blog_body_info}中'bodyType'字段取值不正确")
         result["blog_info_list"].append(result_blog_info)
     return result
 
@@ -101,7 +101,7 @@ class CrawlerThread(crawler.CrawlerThread):
         is_over = False
         # 获取全部还未下载过需要解析的日志
         while not is_over:
-            blog_pagination_description = "target：%s后一页日志" % target_id
+            blog_pagination_description = f"target：{target_id}后一页日志"
             self.start_parse(blog_pagination_description)
             try:
                 blog_pagination_response = get_one_page_blog(self.index_key, target_id)
@@ -129,7 +129,7 @@ class CrawlerThread(crawler.CrawlerThread):
 
     # 解析单个日志
     def crawl_blog(self, blog_info):
-        blog_description = "日志%s" % blog_info["blog_id"]
+        blog_description = f"日志{blog_info['blog_id']}"
         self.start_parse(blog_description)
 
         # 图片下载
@@ -145,26 +145,26 @@ class CrawlerThread(crawler.CrawlerThread):
         self.single_save_data[1] = str(blog_info["blog_id"])
 
     def crawl_photo(self, blog_info):
-        self.parse_result("日志%s图片" % blog_info["blog_id"], blog_info["photo_url_list"])
+        self.parse_result(f"日志{blog_info['blog_id']}图片", blog_info["photo_url_list"])
 
         photo_index = 1
         for photo_url in blog_info["photo_url_list"]:
-            photo_name = "%05d_%02d.%s" % (blog_info["blog_id"], photo_index, url.get_file_ext(photo_url))
+            photo_name = f"%05d_%02d.{url.get_file_ext(photo_url)}" % (blog_info["blog_id"], photo_index)
             photo_path = os.path.join(self.main_thread.photo_download_path, self.index_key, photo_name)
-            photo_description = "日志%s第%s张图片" % (blog_info["blog_id"], photo_index)
+            photo_description = f"日志{blog_info['blog_id']}第{photo_index}张图片"
             if self.download(photo_url, photo_path, photo_description):
                 self.temp_path_list.append(photo_path)  # 设置临时目录
                 self.total_photo_count += 1  # 计数累加
             photo_index += 1
 
     def crawl_video(self, blog_info):
-        self.parse_result("日志%s视频" % blog_info["blog_id"], blog_info["video_url_list"])
+        self.parse_result(f"日志{blog_info['blog_id']}视频", blog_info["video_url_list"])
 
         video_index = 1
         for video_url in blog_info["video_url_list"]:
-            video_name = "%05d_%02d.%s" % (blog_info["blog_id"], video_index, url.get_file_ext(video_url))
+            video_name = f"%05d_%02d.{url.get_file_ext(video_url)}" % (blog_info["blog_id"], video_index)
             video_path = os.path.join(self.main_thread.video_download_path, self.index_key, video_name)
-            video_description = "日志%s第%s个视频" % (blog_info["blog_id"], video_index)
+            video_description = f"日志{blog_info['blog_id']}第{video_index}个视频"
             if self.download(video_url, video_path, video_description):
                 self.temp_path_list.append(video_path)  # 设置临时目录
                 self.total_video_count += 1  # 计数累加
@@ -180,7 +180,7 @@ class CrawlerThread(crawler.CrawlerThread):
 
         # 获取所有可下载日志
         blog_info_list = self.get_crawl_list()
-        self.info("需要下载的全部日志解析完毕，共%s个" % len(blog_info_list))
+        self.info(f"需要下载的全部日志解析完毕，共{len(blog_info_list)}个")
 
         # 从最早的日志开始下载
         while len(blog_info_list) > 0:

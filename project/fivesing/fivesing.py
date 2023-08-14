@@ -15,7 +15,7 @@ from common import *
 # page_type 页面类型：yc - 原唱、fc - 翻唱
 def get_one_page_audio(account_id, page_type, page_count):
     # http://5sing.kugou.com/inory/yc/1.html
-    audio_pagination_url = "http://5sing.kugou.com/%s/%s/%s.html" % (account_id, page_type, page_count)
+    audio_pagination_url = f"http://5sing.kugou.com/{account_id}/{page_type}/{page_count}.html"
     audio_pagination_response = net.Request(audio_pagination_url, method="GET")
     result = {
         "audio_info_list": [],  # 全部歌曲信息
@@ -113,7 +113,7 @@ class CrawlerThread(crawler.CrawlerThread):
         is_over = False
         # 获取全部还未下载过需要解析的歌曲
         while not is_over:
-            audio_pagination_description = "第%s页%s歌曲" % (page_count, audio_type_name)
+            audio_pagination_description = f"第{page_count}页{audio_type_name}歌曲"
             self.start_parse(audio_pagination_description)
             try:
                 audio_pagination_response = get_one_page_audio(self.index_key, audio_type, page_count)
@@ -150,7 +150,7 @@ class CrawlerThread(crawler.CrawlerThread):
     def crawl_audio(self, audio_type, audio_info):
         audio_type_name = self.audio_type_name_dict[audio_type]
 
-        audio_description = "%s歌曲%s《%s》" % (audio_type_name, audio_info["audio_id"], audio_info["audio_title"])
+        audio_description = f"{audio_type_name}歌曲{audio_info['audio_id']}《{audio_info['audio_title']}》"
         self.start_parse(audio_description)
         try:
             audio_info_response = get_audio_play_page(audio_info["audio_id"], audio_type)
@@ -158,7 +158,7 @@ class CrawlerThread(crawler.CrawlerThread):
             self.error(e.http_error(audio_description))
             raise
         if audio_info_response["is_delete"]:
-            self.error("%s 已删除" % audio_description)
+            self.error(f"{audio_description} 已删除")
             return
 
         audio_extension = url.get_file_ext(audio_info_response["audio_url"])
@@ -174,7 +174,7 @@ class CrawlerThread(crawler.CrawlerThread):
         for audio_type in list(self.audio_type_to_index_dict.keys()):
             # 获取所有可下载歌曲
             audio_info_list = self.get_crawl_list(audio_type)
-            self.info("需要下载的全部%s歌曲解析完毕，共%s首" % (self.audio_type_name_dict[audio_type], len(audio_info_list)))
+            self.info(f"需要下载的全部{self.audio_type_name_dict[audio_type]}歌曲解析完毕，共{len(audio_info_list)}首")
 
             # 从最早的歌曲开始下载
             while len(audio_info_list) > 0:

@@ -72,9 +72,9 @@ class FiveSingDownload(fivesing.FiveSing):
             return
 
         # 开始下载
-        log.info("\n歌曲标题：%s\n歌曲地址：%s\n下载路径：%s" % (audio_response["audio_title"], audio_response["audio_url"], audio_path))
+        log.info(f"\n歌曲标题：{audio_response['audio_title']}\n歌曲地址：{audio_response['audio_url']}\n下载路径：{audio_path}")
 
-        audio_description = "歌曲《%s》" % audio_response["audio_title"]
+        audio_description = f"歌曲《{audio_response['audio_title']}》"
         self.download(audio_response["audio_url"], audio_path, audio_description)
 
 
