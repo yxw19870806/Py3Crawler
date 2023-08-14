@@ -104,15 +104,6 @@ def get_video_info_page(video_id):
     result["m3u8_file_url"] = tool.find_sub_string(video_info_response.content, 'play_url:"', '",')
     if not result["m3u8_file_url"]:
         raise CrawlerException("分集文件地址截取失败\n" + video_info_response.content)
-    video_file_response = net.Request(result["m3u8_file_url"], method="GET")
-    if video_file_response.status != const.ResponseCode.SUCCEED:
-        raise CrawlerException("分集文件 %s，%s" % (result["m3u8_file_url"], crawler.request_failre(video_file_response.status)))
-    ts_path_list = re.findall(r"(\S*.ts)", video_file_response.content)
-    if len(ts_path_list) == 0:
-        raise CrawlerException("分集文件匹配视频地址失败\n" + video_file_response.content)
-    # http://playbackyzbold.live.weibo.com/2021101/f0b/f97/bVFjTEK9nYTEqQ6p/index.m3u8
-    for ts_path in ts_path_list:
-        result["video_url_list"].append(urllib.parse.urljoin(result["m3u8_file_url"], ts_path))
     return result
 
 
@@ -226,8 +217,8 @@ class CrawlerThread(crawler.CrawlerThread):
         self.info("开始下载 %s %s" % (video_description, video_info["m3u8_file_url"]))
 
         video_path = os.path.join(self.main_thread.video_download_path, self.display_name, "%04d.ts" % video_index)
-        download_return = net.download_from_list(video_info["video_url_list"], video_path)
-        if download_return:
+        download_return = net.DownloadHls(video_info["m3u8_file_url"], video_path)
+        if download_return.status == const.DownloadStatus.SUCCEED:
             self.total_video_count += 1  # 计数累加
             self.info("%s 下载成功" % video_description)
         else:
