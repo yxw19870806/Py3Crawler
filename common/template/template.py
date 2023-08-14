@@ -77,7 +77,7 @@ class CrawlerThread(crawler.CrawlerThread):
     def _run(self):
         # 获取所有可下载日志
         blog_id_list = self.get_crawl_list()
-        self.parse_result("全部日志", blog_id_list)
+        self.info(f"需要下载的全部日志解析完毕，共{len(blog_id_list)}个")
 
         # 从最早的日志开始下载
         while len(blog_id_list) > 0:
