@@ -48,4 +48,4 @@ class CrawlerException(SystemExit):
         return self.exception_message
 
     def http_error(self, target: str) -> str:
-        return "%s解析失败，原因：%s" % (target, self.message)
+        return f"{target}解析失败，原因：{self.message}"

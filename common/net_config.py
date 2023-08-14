@@ -35,9 +35,9 @@ def convert_to_bytes(value: Union[int, str], default_value: int) -> int:
             elif unit == "GB":
                 size = int(search_result[0][0]) * const.SIZE_GB
             else:
-                log.error("无效的字节单位'%s'，只支持B、KB、MB、GB" % unit)
+                log.error(f"无效的字节单位'{unit}'，只支持B、KB、MB、GB")
         else:
-            log.error("无效的字节数设置'%s'" % value)
+            log.error(f"无效的字节数设置'{value}'")
     return size
 
 

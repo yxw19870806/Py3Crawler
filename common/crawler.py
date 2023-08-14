@@ -34,7 +34,7 @@ class CrawlerSingleValueSaveData:
             if tool.is_integer(default_value):
                 self._save_data = default_value
             else:
-                raise CrawlerException("无效的type_check：%s" % type_check, True)
+                raise CrawlerException(f"无效的type_check：{type_check}", True)
         if os.path.exists(self._save_data_path):
             self._save_data = file.read_file(self._save_data_path).strip()
             if type_check is not None:
@@ -112,18 +112,18 @@ class CrawlerSaveData:
     def __init__(self, save_data_path: str, save_data_format: Optional[tuple[int, list[str]]] = None) -> None:
         self._save_data_path: str = save_data_path
         if not os.path.exists(self._save_data_path):
-            raise CrawlerException("存档文件%s不存在！" % self._save_data_path, True)
+            raise CrawlerException(f"存档文件 {self._save_data_path} 不存在！", True)
         temp_file_name = tool.convert_timestamp_to_formatted_time("%m-%d_%H_%M_") + os.path.basename(self._save_data_path)
         self._temp_save_data_path: str = os.path.join(os.path.dirname(self._save_data_path), temp_file_name)
         if os.path.exists(self._temp_save_data_path):
-            raise CrawlerException("存档临时文件%s已存在！" % self._temp_save_data_path, True)
+            raise CrawlerException(f"存档临时文件 {self._temp_save_data_path} 已存在！", True)
         self._save_data: dict[str, list] = {}
         if save_data_format is not None:
             if isinstance(save_data_format, tuple) and len(save_data_format) == 2 and \
                     tool.is_integer(save_data_format[0]) and isinstance(save_data_format[1], list):
                 self._save_data = read_save_data(self._save_data_path, save_data_format[0], save_data_format[1])
             else:
-                raise CrawlerException("存档文件默认格式不正确%s" % save_data_format, True)
+                raise CrawlerException(f"存档文件默认格式 {save_data_format} 不正确", True)
         self._thread_lock: threading.Lock = threading.Lock()  # 线程锁，避免同时读写存档文件
         self._completed_save_data: dict[str, list] = {}
 
@@ -185,7 +185,7 @@ class CrawlerCache:
             return file.write_json_file(msg, self._cache_path)
         else:
             if self._cache_type in [const.FileType.LINES, const.FileType.COMMA_DELIMITED] and not isinstance(msg, list):
-                raise ValueError("type of msg must is list when cache_type = %s" % self._cache_type)
+                raise ValueError(f"type of msg must is list when cache_type = {self._cache_type}")
             if self._cache_type == const.FileType.LINES:
                 write_string = "\n".join(msg)
             elif self._cache_type == const.FileType.COMMA_DELIMITED:
@@ -196,7 +196,7 @@ class CrawlerCache:
 
     def append(self, msg: str) -> bool:
         if self._cache_type != const.FileType.LINES:
-            raise ValueError("can't append msg when cache_type != %s" % const.FileType.LINES)
+            raise ValueError(f"can't append msg when cache_type != {const.FileType.LINES}")
         return file.write_file(msg, self._cache_path, const.WriteFileMode.APPEND)
 
     def clear(self) -> bool:
@@ -511,8 +511,8 @@ class Crawler(object):
 
     @staticmethod
     def parse_result(description: str, parse_result_list: Union[list, dict]) -> None:
-        log.debug("%s 解析结果：%s" % (description, parse_result_list))
-        log.info("%s 解析数量：%s" % (description, len(parse_result_list)))
+        log.debug(f"{description} 解析结果：{parse_result_list}")
+        log.info(f"{description} 解析数量：{len(parse_result_list)}")
 
     def download(self, file_url: str, file_path: str, file_description: str, headers: Optional[dict[str, str]] = None, cookies: Optional[dict[str, str]] = None,
                  success_callback: Callable[[str, str, str, net.Download], bool] = None, failure_callback: Callable[[str, str, str, net.Download], bool] = None,
@@ -535,14 +535,14 @@ class Crawler(object):
                 False - 不需要
         """
         self.running_check()
-        log.info("开始下载 %s %s" % (file_description, file_url))
+        log.info(f"开始下载 {file_description} {file_url}")
         download_return = net.Download(file_url, file_path, headers=headers, cookies=cookies, auto_multipart_download=auto_multipart_download)
         if download_return.status == const.DownloadStatus.SUCCEED:
             if success_callback is None or success_callback(file_url, file_path, file_description, download_return):
-                log.info("%s 下载成功" % file_description)
+                log.info(f"{file_description} 下载成功")
         else:
             if failure_callback is None or failure_callback(file_url, file_path, file_description, download_return):
-                log.error("%s %s 下载失败，原因：%s" % (file_description, file_url, download_failre(download_return.code)))
+                log.error(f"{file_description} 下载失败，原因：{download_failre(download_return.code)}")
                 if self.exit_after_download_failure:
                     tool.process_exit(const.ExitCode.NORMAL)
         return download_return
@@ -720,8 +720,8 @@ class CrawlerThread(threading.Thread):
         self.info("开始解析 " + description)
 
     def parse_result(self, description: str, parse_result_list: Union[list, dict]) -> None:
-        self.debug("%s 解析结果：%s" % (description, parse_result_list))
-        self.info("%s 解析数量：%s" % (description, len(parse_result_list)))
+        self.debug(f"{description} 解析结果：{parse_result_list}")
+        self.info(f"{description} 解析数量：{len(parse_result_list)}")
 
     def end_message(self) -> None:
         message = "下载完毕"
@@ -758,14 +758,14 @@ class CrawlerThread(threading.Thread):
                 False - 不需要
         """
         self.main_thread_check()
-        self.info("开始下载 %s %s" % (file_description, file_url))
+        self.info(f"开始下载 {file_description} {file_url}")
         download_return = net.Download(file_url, file_path, headers=headers, cookies=cookies, auto_multipart_download=auto_multipart_download, **kwargs)
         if download_return.status == const.DownloadStatus.SUCCEED:
             if success_callback is None or success_callback(file_url, file_path, file_description, download_return):
-                self.info("%s 下载成功" % file_description)
+                self.info(f"{file_description} 下载成功")
         else:
             if failure_callback is None or failure_callback(file_url, file_path, file_description, download_return):
-                self.error("%s %s 下载失败，原因：%s" % (file_description, file_url, download_failre(download_return.code)))
+                self.error(f"{file_description} {file_url} 下载失败，原因：{download_failre(download_return.code)}")
                 self.check_download_failure_exit(is_failure_exit)
         return download_return
 
@@ -887,7 +887,7 @@ def read_save_data(save_data_path: str, key_index: int = 0, default_value_list: 
         single_save_list = single_save_data.split("\t")
 
         if check_duplicate_index and single_save_list[key_index] in result_list:
-            raise CrawlerException("存档中存在重复行%s" % single_save_list[key_index], True)
+            raise CrawlerException(f"存档中存在重复行 {key_index} / {single_save_list[key_index]}", True)
 
         # 去除前后空格
         single_save_list = [value.strip() for value in single_save_list]
@@ -930,16 +930,16 @@ def get_json_value(json_data, *args, **kwargs) -> Any:
     for arg in args:
         if isinstance(arg, str):
             if not isinstance(json_data, dict):
-                exception_string = "'%s'字段不是字典\n%s" % (last_arg, original_data)
+                exception_string = f"'{last_arg}'字段不是字典\n{original_data}"
             elif arg not in json_data:
-                exception_string = "'%s'字段不存在\n%s" % (arg, original_data)
+                exception_string = f"'{arg}'字段不存在\n{original_data}"
         elif isinstance(arg, int):
             if not isinstance(json_data, list):
-                exception_string = "'%s'字段不是列表\n%s" % (last_arg, original_data)
+                exception_string = f"'{last_arg}'字段不是列表\n{original_data}"
             elif len(json_data) <= arg:
-                exception_string = "'%s'字段长度不正确\n%s" % (last_arg, original_data)
+                exception_string = f"'{last_arg}'字段长度不正确\n{original_data}"
         else:
-            exception_string = "arg: %s类型不正确" % arg
+            exception_string = f"arg: {arg}类型不正确"
         if exception_string:
             break
         last_arg = arg
@@ -966,9 +966,9 @@ def get_json_value(json_data, *args, **kwargs) -> Any:
         elif type_check is dict or type_check is list or type_check is bool:  # 标准数据类型
             type_error = type(json_data) is not type_check
         else:
-            exception_string = "type_check: %s类型不正确" % kwargs['type_check']
+            exception_string = f"type_check: {kwargs['type_check']}类型不正确"
         if type_error:
-            exception_string = "'%s'字段类型不正确\n%s" % (last_arg, original_data)
+            exception_string = f"'{last_arg}'字段类型不正确\n{original_data}"
 
     # 检测结果数值
     if not exception_string and "value_check" in kwargs:
@@ -980,7 +980,7 @@ def get_json_value(json_data, *args, **kwargs) -> Any:
             if not (json_data == kwargs["value_check"]):
                 value_error = True
         if value_error:
-            exception_string = "'%s'字段取值不正确\n%s" % (last_arg, original_data)
+            exception_string = f"'{last_arg}'字段取值不正确\n{original_data}"
 
     if exception_string:
         if "default_value" in kwargs:

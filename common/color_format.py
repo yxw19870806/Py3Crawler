@@ -81,7 +81,6 @@ class ColorFormat:
 
 
 def color(message: str, font_style: FontStyle = FontStyle.NORMAL, foreground_color: Optional[ForegroundColor] = None, backgoud_color: Optional[BackgroudColor] = None) -> str:
-    return "\033[%s;%s%sm%s\033[0m" % (font_style.value,
-                                       "" if foreground_color is None else (";" + str(foreground_color.value)),
-                                       "" if backgoud_color is None else (";" + str(backgoud_color.value) + "m"),
-                                       message)
+    foreground_style = "" if foreground_color is None else (";" + str(foreground_color.value))
+    backgoud_style = "" if backgoud_color is None else (";" + str(backgoud_color.value) + "m")
+    return f"\033[{font_style.value};{foreground_style}{backgoud_style}m{message}\033[0m"
