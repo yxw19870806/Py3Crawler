@@ -224,6 +224,19 @@ def resume_request() -> None:
         thread_event.set()
 
 
+def format_path(file_path: str) -> str:
+    """
+        获取完整路径，并去除无效的文件名字符
+    """
+    file_path = os.path.realpath(file_path)
+    file_dir, file_name_and_ext = os.path.split(file_path)
+    split_result = file_name_and_ext.rsplit(".", 1)
+    new_file_name_and_ext = path.filter_text(split_result[0])
+    if len(split_result) == 2:
+        new_file_name_and_ext += f".{split_result[1]}"
+    return os.path.join(file_dir, new_file_name_and_ext)
+
+
 class ErrorResponse(object):
     def __init__(self, status: int = 0) -> None:
         """
@@ -502,7 +515,7 @@ class Download:
             - file_path - finally local file path(when recheck_file_extension is True, will rename it)
         """
         self._file_url: str = file_url
-        self._file_path: str = file_path
+        self._file_path: str = format_path(file_path)
         # is auto rename file according to "Content-Type" in response headers
         self._recheck_file_extension: bool = False
         self._auto_multipart_download: bool = auto_multipart_download
@@ -818,7 +831,7 @@ class DownloadHls:
             - file_path - finally local file path(when recheck_file_extension is True, will rename it)
         """
         self._playlist_url: str = playlist_url
-        self._file_path: str = file_path
+        self._file_path: str = format_path(file_path)
         self._headers: dict[str, str] = headers if isinstance(headers, dict) else {}
         self._cookies: dict[str, str] = cookies if isinstance(cookies, dict) else {}
 
