@@ -77,12 +77,14 @@ class CrawlerMultiValueSaveData:
             if len(self._save_data) > index:
                 self._save_data[index] = self._save_data[index].strip()
                 type_check_error = False
-                if type_check == "int" or type_check == "int_1":
+                if type_check == "int" or (type_check.startswith("int_") and tool.is_integer(tool.remove_string_prefix(type_check, "int_"))):
                     type_check_error = not tool.is_integer(self._save_data[index])
                 elif type_check == "date":
                     type_check_error = not tool.is_date(self._save_data[index])
                 elif type_check == "datetime":
                     type_check_error = not tool.is_datetime(self._save_data[index])
+                elif type_check == "url":
+                    type_check_error = not (self._save_data[index].startswith("http://") or self._save_data[index].startswith("https://"))
                 if type_check_error:
                     raise CrawlerException("存档内数据格式不正确", True)
             else:
