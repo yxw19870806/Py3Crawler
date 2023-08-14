@@ -29,18 +29,24 @@ class CrawlerSingleValueSaveData:
         self._save_data: str = ""
         if type_check == "int":
             self._save_data = "0"
-        elif type_check == "int_1":
-            self._save_data = "1"
+        elif type_check.startswith("int_"):
+            default_value = tool.remove_string_prefix(type_check, "int_")
+            if tool.is_integer(default_value):
+                self._save_data = default_value
+            else:
+                raise CrawlerException("无效的type_check：%s" % type_check, True)
         if os.path.exists(self._save_data_path):
             self._save_data = file.read_file(self._save_data_path).strip()
             if type_check is not None:
                 type_check_error = False
-                if type_check == "int" or type_check == "int_1":
+                if type_check == "int" or (type_check.startswith("int_") and tool.is_integer(tool.remove_string_prefix(type_check, "int_"))):
                     type_check_error = not tool.is_integer(self._save_data)
                 elif type_check == "date":
                     type_check_error = not tool.is_date(self._save_data)
                 elif type_check == "datetime":
                     type_check_error = not tool.is_datetime(self._save_data)
+                elif type_check == "url":
+                    type_check_error = not (self._save_data.startswith("http://") or self._save_data.startswith("https://"))
                 if type_check_error:
                     raise CrawlerException("存档内数据格式不正确", True)
 
