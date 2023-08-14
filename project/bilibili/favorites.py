@@ -78,8 +78,8 @@ class BiliBiliFavorites(bilibili.BiliBili):
         while len(favorites_response["video_info_list"]) > 0:
             video_info = favorites_response["video_info_list"].pop()
 
-            video_description = "视频%s 《%s》" % (video_info["video_id"], video_info["video_title"])
-            self.start_parse(video_description + ", 剩余%s个视频" % len(favorites_response["video_info_list"]))
+            video_description = f"视频{video_info['video_id']} 《{video_info['video_title']}》"
+            self.start_parse(f"{video_description}, 剩余{len(favorites_response['video_info_list'])}个视频")
             if video_info["video_id"] in exist_list:
                 continue
             try:
@@ -88,7 +88,7 @@ class BiliBiliFavorites(bilibili.BiliBili):
                 log.error(e.http_error(video_description))
                 continue
             if video_play_response["is_private"]:
-                log.info("%s 需要登录才能访问，跳过" % video_description)
+                log.info(f"{video_description} 需要登录才能访问，跳过")
                 continue
             self.parse_result(video_description, video_play_response["video_part_info_list"])
 
@@ -104,13 +104,13 @@ class BiliBiliFavorites(bilibili.BiliBili):
                         else:
                             video_name += "_" + str(video_part_index)
                     if len(video_part_info["video_url_list"]) > 1:
-                        video_name += " (%s)" % video_split_index
-                    video_name = "%s.%s" % (path.filter_text(video_name), url.get_file_ext(video_part_url))
+                        video_name += f" ({video_split_index})"
+                    video_name = f"{path.filter_text(video_name)}.{url.get_file_ext(video_part_url)}"
                     video_path = os.path.join(root_dir, video_name)
 
                     # 开始下载
-                    log.info("\n视频标题：%s\n视频地址：%s\n下载路径：%s" % (video_play_response["video_title"], video_part_url, video_path))
-                    headers = {"Referer": "https://www.bilibili.com/video/av%s" % video_info["video_id"]}
+                    log.info(f"\n视频标题：{video_play_response['video_title']}\n视频地址：{video_part_url}\n下载路径：{video_path}")
+                    headers = {"Referer": f"https://www.bilibili.com/video/av{video_info['video_id']}"}
                     self.download(video_part_url, video_path, video_description, headers=headers, auto_multipart_download=True)
                     video_split_index += 1
                     video_index += 1
