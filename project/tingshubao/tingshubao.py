@@ -15,7 +15,7 @@ from common import *
 
 # 获取有声书首页
 def get_album_index_page(album_id):
-    album_index_url = "http://m.tingshubao.com/book/%s.html" % album_id
+    album_index_url = f"http://m.tingshubao.com/book/{album_id}.html"
     album_index_response = net.Request(album_index_url, method="GET")
     result = {
         "audio_info_list": [],  # 全部音频信息
@@ -39,7 +39,7 @@ def get_album_index_page(album_id):
         result_audio_info["audio_play_url"] = audio_play_url
         audio_id = url.get_file_name(audio_play_url).split("-")[-1]
         if not tool.is_integer(audio_id):
-            raise CrawlerException("音频播放地址 %s 截取音频id失败" % audio_play_url)
+            raise CrawlerException(f"音频播放地址 {audio_play_url} 截取音频id失败")
         result_audio_info["audio_id"] = int(audio_id) + 1  # 页面是从0开始的
         result["audio_info_list"].append(result_audio_info)
     return result
@@ -131,7 +131,7 @@ class CrawlerThread(crawler.CrawlerThread):
 
     # 解析单首音频
     def crawl_audio(self, audio_info):
-        audio_description = "音频%s" % audio_info["audio_id"]
+        audio_description = f"音频{audio_info['audio_id']}"
         self.start_parse(audio_description)
         try:
             audio_play_response = get_audio_info_page(audio_info["audio_play_url"])
@@ -153,17 +153,17 @@ class CrawlerThread(crawler.CrawlerThread):
             self.main_thread_check()
             download_return.update(net.Download(audio_url, audio_path))
             if download_return:
-                self.info("%s 下载成功" % audio_description)
+                self.info(f"{audio_description}s 下载成功")
                 return False
             else:
-                self.info("%s 访问异常，重试" % audio_description)
+                self.info(f"{audio_description} 访问异常，重试")
             retry_count += 1
         return True
 
     def _run(self):
         # 获取所有可下载音频
         audio_info_list = self.get_crawl_list()
-        self.info("需要下载的全部音频解析完毕，共%s个" % len(audio_info_list))
+        self.info(f"需要下载的全部音频解析完毕，共{len(audio_info_list)}个")
 
         # 从最早的媒体开始下载
         while len(audio_info_list) > 0:
