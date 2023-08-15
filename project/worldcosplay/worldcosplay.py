@@ -85,7 +85,7 @@ class CrawlerThread(crawler.CrawlerThread):
         photo_info_list = []
         is_over = False
         while not is_over:
-            photo_pagination_description = "第%s页图片" % page_count
+            photo_pagination_description = f"第{page_count}页图片"
             self.start_parse(photo_pagination_description)
             try:
                 photo_pagination_response = get_one_page_photo(self.index_key, page_count)
@@ -119,9 +119,9 @@ class CrawlerThread(crawler.CrawlerThread):
     # 解析单个图片
     def crawl_photo(self, photo_info):
         photo_url = get_photo_url(photo_info["photo_url"])
-        photo_name = "%08d.%s" % (photo_info["photo_id"], url.get_file_ext(photo_url))
+        photo_name = f"%08d.{url.get_file_ext(photo_url)}" % photo_info["photo_id"]
         photo_path = os.path.join(self.main_thread.photo_download_path, self.display_name, photo_name)
-        photo_description = "图片%s" % photo_info["photo_id"]
+        photo_description = f"图片{photo_info['photo_id']}"
         if self.download(photo_url, photo_path, photo_description):
             self.total_photo_count += 1  # 计数累加
 
@@ -131,7 +131,7 @@ class CrawlerThread(crawler.CrawlerThread):
     def _run(self):
         # 获取所有可下载图片
         photo_info_list = self.get_crawl_list()
-        self.info("需要下载的全部图片解析完毕，共%s个" % len(photo_info_list))
+        self.info(f"需要下载的全部图片解析完毕，共{len(photo_info_list)}个")
 
         # 从最早的图片开始下载
         while len(photo_info_list) > 0:

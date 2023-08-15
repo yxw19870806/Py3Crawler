@@ -54,9 +54,9 @@ def init():
 
 def get_access_token(api_key, api_secret):
     auth_url = API_HOST + "/oauth2/token"
-    token = base64.b64encode(("%s:%s" % (api_key, api_secret)).encode()).decode()
+    token = base64.b64encode(f"{api_key}:{api_secret}".encode()).decode()
     headers = {
-        "Authorization": "Basic %s" % token,
+        "Authorization": f"Basic {token}",
         "Content-Type": "application/x-www-form-urlencoded;charset=UTF-8",
     }
     post_data = {
@@ -76,14 +76,14 @@ def get_access_token(api_key, api_secret):
 
 
 def _get_api_url(end_point):
-    return "%s/%s/%s" % (API_HOST, API_VERSION, end_point)
+    return f"{API_HOST}/{API_VERSION}/{end_point}"
 
 
 # 根据user_id获取用户信息
 def get_user_info_by_user_id(user_id):
     api_url = _get_api_url("users/show.json")
     query_data = {"user_id": user_id}
-    headers = {"Authorization": "Bearer %s" % ACCESS_TOKEN}
+    headers = {"Authorization": f"Bearer {ACCESS_TOKEN}"}
     response = net.Request(api_url, method="GET", fields=query_data, headers=headers).enable_json_decode()
     if response.status == const.ResponseCode.SUCCEED:
         return response.json_data
@@ -93,9 +93,9 @@ def get_user_info_by_user_id(user_id):
 # 关注指定用户
 def follow_account(user_id):
     api_url = _get_api_url("friendships/create.json")
-    api_url += "?user_id=%s" % user_id
+    api_url += f"?user_id={user_id}"
     headers = {
-        "Authorization": "Bearer %s" % ACCESS_TOKEN,
+        "Authorization": f"Bearer {ACCESS_TOKEN}",
     }
     response = net.Request(api_url, method="POST", headers=headers).enable_json_decode()
     if response.status == const.ResponseCode.SUCCEED:

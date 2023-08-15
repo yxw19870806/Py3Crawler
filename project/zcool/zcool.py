@@ -15,9 +15,9 @@ from common import *
 def get_one_page_album(account_name, page_count):
     # https://www.zcool.com.cn/u/17050872?myCate=0&sort=8&p=2
     if tool.is_integer(account_name):
-        album_pagination_url = "https://www.zcool.com.cn/u/%s" % account_name
+        album_pagination_url = f"https://www.zcool.com.cn/u/{account_name}"
     else:
-        album_pagination_url = "https://%s.zcool.com.cn/" % account_name
+        album_pagination_url = f"https://{account_name}.zcool.com.cn/"
     query_data = {
         "myCate": "0",
         "sort": "8",  # 按时间倒叙
@@ -62,11 +62,11 @@ def get_one_page_album(account_name, page_count):
             raise CrawlerException("作品信息截取作品日期信息失败\n" + album_selector.html())
         album_time_string = tool.find_sub_string(album_time_text, "创建时间：")
         if not album_time_string:
-            raise CrawlerException("作品日期信息%s截取作品发布日期失败" % album_time_text)
+            raise CrawlerException(f"作品日期信息{album_time_text}截取作品发布日期失败")
         try:
             result_album_info["album_time"] = tool.convert_formatted_time_to_timestamp(album_time_string, "%Y-%m-%d %H:%M:%S")
         except ValueError:
-            raise CrawlerException("作品发布日期%s的格式不正确" % album_time_string)
+            raise CrawlerException(f"作品发布日期{album_time_string}的格式不正确")
         result["album_info_list"].append(result_album_info)
     result["is_over"] = album_list_selector.length == 0
     return result
@@ -74,7 +74,7 @@ def get_one_page_album(account_name, page_count):
 
 # 获取作品
 def get_album_page(album_id):
-    album_url = "https://www.zcool.com.cn/work/%s.html" % album_id
+    album_url = f"https://www.zcool.com.cn/work/{album_id}.html"
     album_response = net.Request(album_url, method="GET")
     result = {
         "photo_url_list": [],  # 全部图片地址
@@ -130,7 +130,7 @@ class CrawlerThread(crawler.CrawlerThread):
         is_over = False
         # 获取全部还未下载过需要解析的作品
         while not is_over:
-            album_pagination_description = "第%s页作品" % page_count
+            album_pagination_description = f"第{page_count}页作品"
             self.start_parse(album_pagination_description)
             try:
                 album_pagination_response = get_one_page_album(self.index_key, page_count)
@@ -163,7 +163,7 @@ class CrawlerThread(crawler.CrawlerThread):
 
     # 解析单个作品
     def crawl_album(self, album_info):
-        album_description = "作品%s《%s》" % (album_info["album_id"], album_info["album_title"])
+        album_description = f"作品{album_info['album_id']}《{album_info['album_title']}》"
         self.start_parse(album_description)
         try:
             album_response = get_album_page(album_info["album_id"])
@@ -173,13 +173,13 @@ class CrawlerThread(crawler.CrawlerThread):
         self.parse_result(album_description, album_response["photo_url_list"])
 
         photo_index = 1
-        album_name = "%s %s" % (album_info["album_id"], album_info["album_title"])
+        album_name = f"{album_info['album_id']} {album_info['album_title']}"
         album_path = os.path.join(self.main_thread.photo_download_path, self.index_key, album_name)
         self.temp_path_list.append(album_path)
         for photo_url in album_response["photo_url_list"]:
             photo_url = get_photo_url(photo_url)
             photo_path = os.path.join(album_path, "%02d.%s" % (photo_index, url.get_file_ext(photo_url)))
-            photo_description = "作品%s《%s》第%s张图片" % (album_info["album_id"], album_info["album_title"], photo_index)
+            photo_description = f"作品{album_info['album_id']}《{album_info['album_title']}》第{photo_index}张图片"
             if self.download(photo_url, photo_path, photo_description):
                 self.total_photo_count += 1  # 计数累加
             photo_index += 1
@@ -191,7 +191,7 @@ class CrawlerThread(crawler.CrawlerThread):
     def _run(self):
         # 获取所有可下载作品
         album_info_list = self.get_crawl_list()
-        self.info("需要下载的全部作品解析完毕，共%s个" % len(album_info_list))
+        self.info(f"需要下载的全部作品解析完毕，共{len(album_info_list)}个")
 
         # 从最早的作品开始下载
         while len(album_info_list) > 0:

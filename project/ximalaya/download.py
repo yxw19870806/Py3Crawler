@@ -62,7 +62,7 @@ class XiMaLaYaDownload(ximalaya.XiMaLaYa):
         file_extension = url.get_file_ext(audio_response["audio_url"])
         options = {
             "initialdir": self.audio_download_path,
-            "initialfile": "%s - %s.%s" % (audio_id, audio_response["audio_title"], file_extension),
+            "initialfile": f"{audio_id} - {audio_response['audio_title']}.{file_extension}",
             "filetypes": [(file_extension, "." + file_extension)],
             "parent": self.gui,
         }
@@ -71,8 +71,8 @@ class XiMaLaYaDownload(ximalaya.XiMaLaYa):
             return
 
         # 开始下载
-        log.info("\n歌曲标题：%s\n歌曲地址：%s\n下载路径：%s" % (audio_response["audio_title"], audio_response["audio_url"], audio_path))
-        audio_description = "歌曲《%s》" % audio_response["audio_title"]
+        log.info(f"\n歌曲标题：{audio_response['audio_title']}\n歌曲地址：{audio_response['audio_url']}\n下载路径：{audio_path}")
+        audio_description = f"歌曲《{audio_response['audio_title']}》"
         self.download(audio_response["audio_url"], audio_path, audio_description)
 
 

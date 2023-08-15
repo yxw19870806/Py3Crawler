@@ -53,7 +53,7 @@ def get_one_page_album(album_id, page_count):
         audio_info_list = crawler.get_json_value(album_pagination_response.json_data, "data", "tracks", type_check=list)
     except CrawlerException:
         error_message = crawler.get_json_value(album_pagination_response.json_data, "msg", type_check=str, default_value="")
-        if error_message == "该专辑[id:%s]已被删除~" % album_id or error_message == "该专辑[id:%s]已下架~" % album_id:
+        if error_message == f"该专辑[id:{album_id}]已被删除~" or error_message == f"该专辑[id:{album_id}]已下架~":
             raise CrawlerException("专辑已被删除")
         elif error_message == "该专辑不存在~" and page_count > 1:
             time.sleep(3)
@@ -145,7 +145,7 @@ def get_audio_info_page(audio_id):
         time.sleep(3)
         return get_audio_info_page(audio_id)
     else:
-        raise CrawlerException("音频简易信息%s中'ret'返回值不正确" % audio_simple_info_response.json_data)
+        raise CrawlerException(f"音频简易信息 {audio_simple_info_response.json_data} 中'ret'返回值不正确")
     # 获取音频标题
     result["audio_title"] = crawler.get_json_value(audio_simple_info_response.json_data, "data", "trackInfo", "title", type_check=str)
     # 判断是否是视频
@@ -186,7 +186,7 @@ def get_audio_info_page(audio_id):
         raise CrawlerException("当日免费下载次数已达到限制")
 
     # 需要购买或者vip才能解锁的音频
-    vip_audio_info_url = "https://mobile.ximalaya.com/mobile-playpage/track/v3/baseInfo/%s" % int(time.time() * 1000)
+    vip_audio_info_url = f"https://mobile.ximalaya.com/mobile-playpage/track/v3/baseInfo/{int(time.time() * 1000)}"
     query_data = {
         "device": "web",
         "trackId": audio_id,
@@ -230,7 +230,7 @@ def get_audio_info_page(audio_id):
     try:
         audio_url = execjs.compile(js_code).call("encrypt_url", decrypt_url)
     except execjs.ProgramError:
-        raise CrawlerException("url%s解密失败" % decrypt_url)
+        raise CrawlerException(f"url {decrypt_url}解密失败")
     result["audio_url"] = audio_url
 
     return result

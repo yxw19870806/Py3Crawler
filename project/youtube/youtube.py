@@ -42,9 +42,9 @@ def get_one_page_video(account_id, token):
     if token == "":
         # todo 更好的分辨方法
         if len(account_id) == 24:
-            index_url = "https://www.youtube.com/channel/%s/videos" % account_id
+            index_url = f"https://www.youtube.com/channel/{account_id}/videos"
         else:
-            index_url = "https://www.youtube.com/user/%s/videos" % account_id
+            index_url = f"https://www.youtube.com/user/{account_id}/videos"
         post_data = {
             "sort": "dd",
             "view": "0",
@@ -55,7 +55,7 @@ def get_one_page_video(account_id, token):
         elif index_response.status != const.ResponseCode.SUCCEED:
             raise CrawlerException(crawler.request_failre(index_response.status))
         if index_response.content.find('<button id="a11y-skip-nav" class="skip-nav"') >= 0:
-            log.info("首页 %s 访问出现跳转，再次访问" % index_url)
+            log.info(f"首页 {index_url} 访问出现跳转，再次访问")
             return get_one_page_video(account_id, token)
         # 截取初始化数据
         script_json_html = tool.find_sub_string(index_response.content, 'var ytInitialData = ', ";</script>").strip()
@@ -72,7 +72,7 @@ def get_one_page_video(account_id, token):
             if reason == "This channel does not exist.":
                 raise CrawlerException("账号不存在")
             elif reason:
-                raise CrawlerException("账号无法访问，原因：%s" % reason)
+                raise CrawlerException(f"账号无法访问，原因：{reason}")
             else:
                 raise
         # 获取频道标签
@@ -169,7 +169,7 @@ def get_video_page(video_id):
     try:
         result["video_time"] = tool.convert_formatted_time_to_timestamp(video_time_string, "%Y-%m-%d")
     except ValueError:
-        raise CrawlerException("时间%s解析失败" % video_time_string)
+        raise CrawlerException(f"时间 {video_time_string}解析失败")
 
     if result["skip_reason"]:
         return result
@@ -207,13 +207,13 @@ def get_video_page(video_id):
                 js_file_path = tool.find_sub_string(video_play_response.content, '<script src="/s/player/', '"')
                 if not js_file_path:
                     raise CrawlerException("播放器JS文件地址截取失败\n" + video_play_response.content)
-                decrypt_function_step = get_decrypt_step("https://www.youtube.com/s/player/%s" % js_file_path)
+                decrypt_function_step = get_decrypt_step(f"https://www.youtube.com/s/player/{js_file_path}")
             signature = decrypt_signature(decrypt_function_step, video_signature)
             video_url += "&sig=" + signature
         resolution_to_url[video_resolution] = video_url
 
     if len(resolution_to_url) == 0:
-        raise CrawlerException("返回信息%s中视频地址解析错误" % script_json)
+        raise CrawlerException(f"返回信息 {script_json} 中视频地址解析错误")
     # 优先使用配置中的分辨率
     if FIRST_CHOICE_RESOLUTION in resolution_to_url:
         result["video_url"] = resolution_to_url[FIRST_CHOICE_RESOLUTION]
@@ -241,12 +241,12 @@ def get_decrypt_step(js_file_url):
     decrypt_function_step = []
     js_file_response = net.Request(js_file_url, method="GET")
     if js_file_response.status != const.ResponseCode.SUCCEED:
-        raise CrawlerException("播放器JS文件 %s 访问失败，原因：%s" % (js_file_url, crawler.request_failre(js_file_response.status)))
+        raise CrawlerException(f"播放器JS文件 {js_file_url} 访问失败，原因：{crawler.request_failre(js_file_response.status)}")
     # 加密方法体（包含子加密方法的调用参数&顺序）
     # jC.av(a,2);jC.TI(a,1);jC.xB(a,31);jC.TI(a,2);jC.av(a,67);jC.av(a,41);jC.xB(a,44);jC.av(a,46);jC.TI(a,2);
     main_function_body = tool.find_sub_string(js_file_response.content, 'function(a){a=a.split("");', 'return a.join("")};')
     if not main_function_body:
-        raise CrawlerException("播放器JS文件 %s，加密方法体截取失败" % js_file_url)
+        raise CrawlerException(f"播放器JS文件 {js_file_url}，加密方法体截取失败")
     # 子加密方法所在的变量名字
     decrypt_function_var = None
     for sub_decrypt_step in main_function_body.split(";"):
@@ -256,11 +256,11 @@ def get_decrypt_step(js_file_url):
         # (加密方法所在变量名，加密方法名，加密方法参数)
         sub_decrypt_step_find = re.findall(r"([\w$_]*)\.(\w*)\(a,(\d*)\)", sub_decrypt_step)
         if len(sub_decrypt_step_find) != 1:
-            raise CrawlerException("播放器JS文件 %s，加密步骤匹配失败\n%s" % (js_file_url, sub_decrypt_step))
+            raise CrawlerException(f"播放器JS文件 {js_file_url}，加密步骤匹配失败\n{sub_decrypt_step}")
         if decrypt_function_var is None:
             decrypt_function_var = sub_decrypt_step_find[0][0]
         elif decrypt_function_var != sub_decrypt_step_find[0][0]:
-            raise CrawlerException("播放器JS文件 %s，加密子方法所在变量不一致\n%s" % (js_file_url, main_function_body))
+            raise CrawlerException(f"播放器JS文件 {js_file_url}，加密子方法所在变量不一致\n{main_function_body}")
         decrypt_function_step.append([sub_decrypt_step_find[0][1], sub_decrypt_step_find[0][2]])  # 方法名，参数
     # 子加密方法所在的变量内容
     # TI:function(a,b){a.splice(0,b)},
@@ -268,11 +268,11 @@ def get_decrypt_step(js_file_url):
     # xB:function(a){a.reverse()}
     decrypt_function_var_body = tool.find_sub_string(js_file_response.content, "var %s={" % decrypt_function_var, "};")
     if not main_function_body:
-        raise CrawlerException("播放器JS文件 %s，加密子方法截取失败" % js_file_url)
+        raise CrawlerException(f"播放器JS文件 {js_file_url}，加密子方法截取失败")
     # 所有子加密方法具体内容
     decrypt_function_body_list = decrypt_function_var_body.split(",\n")
     if len(decrypt_function_body_list) != 3:
-        raise CrawlerException("播放器JS文件 %s，加密子方法已更新\n%s" % (js_file_url, decrypt_function_var_body))
+        raise CrawlerException(f"播放器JS文件 {js_file_url}，加密子方法已更新\n{decrypt_function_var_body}")
     # JS文件里的方法名对应爬虫里的方法
     js_function_to_local_function = {}
     for decrypt_function_body in decrypt_function_body_list:
@@ -387,7 +387,7 @@ class CrawlerThread(crawler.CrawlerThread):
         is_over = False
         # 获取全部还未下载过需要解析的相册
         while not is_over:
-            video_pagination_description = "token：%s后一页视频" % token
+            video_pagination_description = f"token：{token}后一页视频"
             self.start_parse(video_pagination_description)
             try:
                 video_pagination_response = get_one_page_video(self.index_key, token)
@@ -397,7 +397,7 @@ class CrawlerThread(crawler.CrawlerThread):
             self.parse_result(video_pagination_description, video_pagination_response["video_id_list"])
 
             if len(self.single_save_data) < 4:
-                self.info("频道名：%s" % video_pagination_response["channel_name"])
+                self.info(f"频道名：{video_pagination_response['channel_name']}")
                 self.display_name = video_pagination_response["channel_name"]
                 self.single_save_data.append(self.display_name)
 
@@ -422,7 +422,7 @@ class CrawlerThread(crawler.CrawlerThread):
 
     # 解析单个视频
     def crawl_video(self, video_id, is_last):
-        video_description = "视频%s" % video_id
+        video_description = f"视频{video_id}"
         self.start_parse(video_description)
         try:
             video_response = get_video_page(video_id)
@@ -433,23 +433,23 @@ class CrawlerThread(crawler.CrawlerThread):
         # 如果解析需要下载的视频时没有找到上次的记录，表示存档所在的视频已被删除，则判断数字id
         if not self.is_find:
             if video_response["video_time"] < int(self.single_save_data[2]):
-                self.info("%s 跳过" % video_description)
+                self.info(f"{video_description} 跳过")
                 # 如果最后一个视频仍然没有找到，重新设置存档
                 if is_last:
                     self.single_save_data[1] = video_id  # 设置存档记录
                     self.single_save_data[2] = str(video_response["video_time"])  # 设置存档记录
                 return
             elif video_response["video_time"] == int(self.single_save_data[2]):
-                self.error("%s 与存档视频发布日期一致，无法过滤，再次下载" % video_description)
+                self.error(f"{video_description} 与存档视频发布日期一致，无法过滤，再次下载")
             else:
                 self.is_find = True
 
         if video_response["skip_reason"]:
-            self.error("%s 已跳过，原因：%s" % (video_description, video_response["skip_reason"]))
+            self.error(f"{video_description} 已跳过，原因：{video_response['skip_reason']}")
         else:
-            video_name = "%s - %s.mp4" % (video_id, video_response["video_title"])
+            video_name = f"{video_id} - {video_response['video_title']}.mp4"
             video_path = os.path.join(self.main_thread.video_download_path, self.display_name, video_name)
-            video_description = "视频%s《%s》" % (video_id, video_response["video_title"])
+            video_description = f"视频{video_id}《{video_response['video_title']}》"
             if self.download(video_response["video_url"], video_path, video_description, auto_multipart_download=True):
                 self.total_video_count += 1  # 计数累加
 
@@ -460,7 +460,7 @@ class CrawlerThread(crawler.CrawlerThread):
     def _run(self):
         # 获取所有可下载视频
         video_id_list = self.get_crawl_list()
-        self.info("需要下载的全部视频解析完毕，共%s个" % len(video_id_list))
+        self.info(f"需要下载的全部视频解析完毕，共{len(video_id_list)}个")
         if not self.is_find:
             self.info("存档所在视频已删除，需要在下载时进行过滤")
 

@@ -152,7 +152,7 @@ def get_one_page_video(account_id, since_id, retry_count=0):
             result_video_info_list["video_title"] = crawler.get_json_value(video_info, "page_info", "page_desc", type_check=str)
             video_detail_info_list = crawler.get_json_value(video_info, "page_info", "slide_cover", "playback_list", type_check=list)
         else:
-            raise CrawlerException("未知信息类型%s" % page_type)
+            raise CrawlerException(f"未知信息类型{page_type}")
         # 获取视频地址
         max_resolution = 0
         video_url = ""
@@ -168,9 +168,9 @@ def get_one_page_video(account_id, since_id, retry_count=0):
             elif video_type == 3:  # 图片
                 continue
             else:
-                raise CrawlerException("未知视频类型%s" % video_type)
+                raise CrawlerException(f"未知视频类型{video_type}")
         if not video_url:
-            raise CrawlerException("媒体信息%s获取最大分辨率视频地址失败" % video_info)
+            raise CrawlerException(f"媒体信息{video_info}获取最大分辨率视频地址失败")
         result_video_info_list["video_url"] = video_url
         result["video_info_list"].append(result_video_info_list)
     # 获取下一页视频的指针
@@ -228,7 +228,7 @@ class CrawlerThread(crawler.CrawlerThread):
         is_over = False
         # 获取全部还未下载过需要解析的图片
         while not is_over:
-            photo_pagination_description = "第%s页图片" % page_count
+            photo_pagination_description = f"第{page_count}页图片"
             self.start_parse(photo_pagination_description)
             try:
                 photo_pagination_response = get_one_page_photo(self.index_key, page_count)
@@ -266,7 +266,7 @@ class CrawlerThread(crawler.CrawlerThread):
         is_over = False
         # 获取全部还未下载过需要解析的视频
         while not is_over:
-            video_pagination_description = "since_id：%s后一页视频" % since_id
+            video_pagination_description = f"since_id：{since_id}后一页视频"
             self.start_parse(video_pagination_description)
             try:
                 video_pagination_response: dict = get_one_page_video(self.index_key, since_id)
@@ -295,9 +295,9 @@ class CrawlerThread(crawler.CrawlerThread):
 
     # 下载图片
     def crawl_photo(self, photo_info):
-        photo_name = "%16d.%s" % (photo_info["photo_id"], url.get_file_ext(photo_info["photo_url"], "jpg"))
+        photo_name = f"%16d.{url.get_file_ext(photo_info['photo_url'], 'jpg')}" % photo_info["photo_id"]
         photo_path = os.path.join(self.main_thread.photo_download_path, self.display_name, photo_name)
-        photo_description = "图片%s" % photo_info["photo_id"]
+        photo_description = f"图片{photo_info['photo_id']}"
         download_return = self.download(photo_info["photo_url"], photo_path, photo_description, success_callback=self.photo_download_success_callback,
                                         failure_callback=self.photo_download_failure_callback, is_failure_exit=False, headers={"Referer": "https://weibo.com/"})
         if download_return:
@@ -313,14 +313,10 @@ class CrawlerThread(crawler.CrawlerThread):
 
     # 解析单个视频
     def crawl_video(self, video_info):
-        video_title = video_info["video_title"]
-        if video_title:
-            video_name = "%s %s.mp4" % (video_info["video_id"], video_title)
-        else:
-            video_name = "%s.mp4" % video_info["video_id"]
+        video_name = "%s %s.mp4" % (video_info["video_id"], video_info["video_title"])
         video_path = os.path.join(self.main_thread.video_download_path, self.display_name, video_name)
         headers = {"Host": urllib.parse.urlparse(video_info["video_url"])[1]}
-        video_description = "视频%s《%s》" % (video_info["video_id"], video_info["video_title"])
+        video_description = f"视频{video_info['video_id']}《{video_info['video_title']}》"
         download_return = self.download(video_info["video_url"], video_path, video_description, headers=headers,
                                         failure_callback=self.video_download_failure_callback, auto_multipart_download=True, is_failure_exit=False)
         if download_return:
@@ -337,7 +333,7 @@ class CrawlerThread(crawler.CrawlerThread):
         if check_photo_invalid(photo_path):
             download_return["is_invalid_photo"] = True
             path.delete_dir_or_file(photo_path)
-            self.error("%s %s 资源已被限制，跳过" % (photo_description, photo_url))
+            self.error(f"{photo_description} {photo_url} 资源已被限制，跳过")
             return False
         download_return["is_invalid_photo"] = False
         return True
@@ -345,7 +341,7 @@ class CrawlerThread(crawler.CrawlerThread):
     def photo_download_failure_callback(self, photo_url, photo_path, photo_description, download_return: net.Download):
         if download_return.code == 403:
             download_return["is_invalid_photo"] = True
-            self.error("%s %s 资源已被限制，跳过" % (photo_description, photo_url))
+            self.error(f"{photo_description} {photo_url} 资源已被限制，跳过")
             return False
         download_return["is_invalid_photo"] = False
         return True
@@ -362,7 +358,7 @@ class CrawlerThread(crawler.CrawlerThread):
         if self.main_thread.is_download_photo:
             # 获取所有可下载图片
             photo_info_list = self.get_crawl_photo_list()
-            self.info("需要下载的全部图片解析完毕，共%s张" % len(photo_info_list))
+            self.info(f"需要下载的全部图片解析完毕，共{len(photo_info_list)}张")
 
             # 从最早的图片开始下载
             while len(photo_info_list) > 0:
@@ -373,7 +369,7 @@ class CrawlerThread(crawler.CrawlerThread):
         if self.main_thread.is_download_video:
             # 获取所有可下载视频
             video_info_list = self.get_crawl_video_list()
-            self.info("需要下载的全部视频片解析完毕，共%s个" % len(video_info_list))
+            self.info(f"需要下载的全部视频片解析完毕，共{len(video_info_list)}个")
 
             # 从最早的视频开始下载
             while len(video_info_list) > 0:
