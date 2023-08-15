@@ -313,7 +313,7 @@ class CrawlerThread(crawler.CrawlerThread):
 
     # 解析单个视频
     def crawl_video(self, video_info):
-        video_name = "%s %s.mp4" % (video_info["video_id"], video_info["video_title"])
+        video_name = f"{video_info['video_id']} {video_info['video_title']}.mp4"
         video_path = os.path.join(self.main_thread.video_download_path, self.display_name, video_name)
         headers = {"Host": urllib.parse.urlparse(video_info["video_url"])[1]}
         video_description = f"视频{video_info['video_id']}《{video_info['video_title']}》"

@@ -167,7 +167,7 @@ class CrawlerThread(crawler.CrawlerThread):
     def crawl_photo(self, photo_info):
         photo_index = int(self.single_save_data[3]) + 1
 
-        photo_name = "%04d.%s" % (photo_index, url.get_file_ext(photo_info["photo_url"]))
+        photo_name = f"%04d.{url.get_file_ext(photo_info['photo_url'])}" % photo_index
         photo_path = os.path.join(self.main_thread.photo_download_path, self.display_name, photo_name)
         photo_description = f"第{photo_index}张图片"
         if self.download(photo_info["photo_url"], photo_path, photo_description, is_failure_exit=False):

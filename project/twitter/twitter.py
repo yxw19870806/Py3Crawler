@@ -374,7 +374,7 @@ class CrawlerThread(crawler.CrawlerThread):
     def crawl_photo(self, media_info):
         photo_index = 1
         for photo_url in media_info["photo_url_list"]:
-            photo_name = "%019d_%02d.%s" % (media_info["blog_id"], photo_index, url.get_file_ext(photo_url))
+            photo_name = f"%019d_%02d.{url.get_file_ext(photo_url)}" % (media_info["blog_id"], photo_index)
             photo_path = os.path.join(self.main_thread.photo_download_path, self.index_key, photo_name)
             photo_description = f"推特{media_info['blog_id']}第{photo_index}张图片"
             if self.download(photo_url, photo_path, photo_description, failure_callback=self.photo_download_failure_callback):
@@ -386,9 +386,9 @@ class CrawlerThread(crawler.CrawlerThread):
         video_index = 1
         for video_url in media_info["video_url_list"]:
             if len(media_info["video_url_list"]) > 1:
-                video_file_name = "%019d_%02d.%s" % (media_info["blog_id"], video_index, url.get_file_ext(video_url))
+                video_file_name = f"%019d_%02d.{url.get_file_ext(video_url)}" % (media_info["blog_id"], video_index)
             else:
-                video_file_name = "%019d.%s" % (media_info["blog_id"], url.get_file_ext(video_url))
+                video_file_name = f"%019d.{url.get_file_ext(video_url)}" % media_info["blog_id"]
             video_path = os.path.join(self.main_thread.video_download_path, self.index_key, video_file_name)
             video_description = f"推特{media_info['blog_id']}第{video_index}个视频"
             if self.download(video_url, video_path, video_description, auto_multipart_download=True):
