@@ -601,7 +601,7 @@ class CrawlerThread(crawler.CrawlerThread):
             raise
 
         audio_type = url.get_file_ext(audio_info_response["audio_url"])
-        audio_name = "%06d %s.%s" % (audio_info["audio_id"], audio_info["audio_title"], audio_type)
+        audio_name = f"%06d %s.{audio_type}" % (audio_info["audio_id"], audio_info["audio_title"])
         audio_path = os.path.join(self.main_thread.audio_download_path, self.display_name, audio_name)
         if self.download(audio_info_response["audio_url"], audio_path, audio_description, is_failure_exit=False, headers={"Referer": "https://www.bilibili.com/"}):
             self.total_audio_count += 1  # 计数累加

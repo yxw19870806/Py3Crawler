@@ -63,7 +63,7 @@ class FiveSingDownload(fivesing.FiveSing):
         file_extension = url.get_file_ext(audio_response["audio_url"])
         options = {
             "initialdir": self.audio_download_path,
-            "initialfile": "%08d - %s.%s" % (int(audio_id), audio_response["audio_title"], file_extension),
+            "initialfile": f"%08d - %s.{file_extension}" % (int(audio_id), audio_response["audio_title"]),
             "filetypes": [(file_extension, "." + file_extension)],
             "parent": self.gui,
         }
