@@ -46,17 +46,17 @@ def main():
         if game_id in checked_apps_list:
             continue
 
-        console.log("游戏：%s，剩余数量：%s" % (game_id, len(game_id_list)))
+        console.log(f"游戏{game_id}，剩余数量：{len(game_id_list)}")
 
         # 获取游戏信息
         try:
             game_data = steam.get_game_store_index(game_id)
         except CrawlerException as e:
-            console.log(e.http_error("游戏%s" % game_id))
+            console.log(e.http_error(f"游戏{game_id}"))
             continue
 
         if len(game_data["dlc_list"]) > 0:
-            console.log("游戏：%s全部DLC：%s" % (game_id, game_data["dlc_list"]))
+            console.log(f"游戏{game_id}全部DLC：{game_data['dlc_list']}")
             is_change = False
             for dlc_id in game_data["dlc_list"]:
                 if dlc_id not in game_dlc_list:
@@ -68,7 +68,7 @@ def main():
 
         # 已资料受限制
         if game_data["restricted"]:
-            console.log("游戏：%s已资料受限制" % game_id)
+            console.log(f"游戏{game_id}已资料受限制")
             restricted_app_list.append(game_id)
             # 保存数据
             steam_class.restricted_app_list_cache.write(restricted_app_list)

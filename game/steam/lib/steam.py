@@ -28,11 +28,11 @@ def get_discount_game_list():
     app_id_list = []
     COOKIES.update({"Steam_Language": "schinese"})
     while True:
-        console.log("开始解析第%s页打折游戏" % page_count)
-        discount_game_pagination_url = "https://store.steampowered.com/search/results?sort_by=Price_ASC&category1=996,998&os=win&specials=1&page=%s" % page_count
+        console.log(f"开始解析第{page_count}页打折游戏")
+        discount_game_pagination_url = f"https://store.steampowered.com/search/results?sort_by=Price_ASC&category1=996,998&os=win&specials=1&page={page_count}"
         discount_game_pagination_response = net.Request(discount_game_pagination_url, method="GET", cookies=COOKIES)
         if discount_game_pagination_response.status != const.ResponseCode.SUCCEED:
-            raise CrawlerException("第%s页打折游戏，%s" % (page_count, crawler.request_failre(discount_game_pagination_response.status)))
+            raise CrawlerException(f"第{page_count}页打折游戏，{crawler.request_failre(discount_game_pagination_response.status)}")
         search_result_selector = pq(discount_game_pagination_response.content).find("#search_result_container")
         game_list_selector = search_result_selector.find("#search_resultsRows a")
         for game_index in range(game_list_selector.length):
@@ -112,7 +112,7 @@ def get_discount_game_list():
 
 # 获取游戏商店首页
 def get_game_store_index(game_id):
-    game_index_url = "https://store.steampowered.com/app/%s" % game_id
+    game_index_url = f"https://store.steampowered.com/app/{game_id}"
     game_index_response = net.Request(game_index_url, method="GET", cookies=COOKIES).disable_redirect()
     result = {
         "dlc_list": [],  # 游戏下的DLC列表
@@ -157,12 +157,12 @@ def get_self_uncompleted_account_badges(account_id):
     badges_detail_url_list = []
     page_count = 1
     while True:
-        console.log("开始解析第%s页徽章" % page_count)
-        badges_pagination_url = "https://steamcommunity.com/profiles/%s/badges/" % account_id
+        console.log(f"开始解析第{page_count}页徽章")
+        badges_pagination_url = f"https://steamcommunity.com/profiles/{account_id}/badges/"
         query_data = {"p": page_count}
         badges_pagination_response = net.Request(badges_pagination_url, method="GET", fields=query_data, cookies=COOKIES)
         if badges_pagination_response.status != const.ResponseCode.SUCCEED:
-            raise CrawlerException("第%s页徽章，%s" % (page_count, crawler.request_failre(badges_pagination_response.status)))
+            raise CrawlerException(f"第{page_count}页徽章，{crawler.request_failre(badges_pagination_response.status)}")
         # 徽章div
         badges_selector = pq(badges_pagination_response.content).find(".maincontent .badges_sheet .badge_row")
         for index in range(badges_selector.length):
@@ -178,7 +178,7 @@ def get_self_uncompleted_account_badges(account_id):
             if badge_detail_url.find("/badges/") >= 0:
                 continue
             elif badge_detail_url.find("/gamecards/") == -1:
-                raise CrawlerException("页面截取的徽章详情地址 %s 格式不正确" % badge_detail_url)
+                raise CrawlerException(f"页面截取的徽章详情地址 {badge_detail_url} 格式不正确")
             # 没有任何当前徽章的卡牌，并且有徽章等级
             if badge_selector.find("span.progress_info_bold").length == 0:
                 badge_level_html = badge_selector.find(".badge_info_description div").eq(1).text()
@@ -257,7 +257,7 @@ def get_market_game_trade_card_price(game_id):
         "query": "",
         "count": "20",
         "appid": "753",
-        "category_753_Game[0]": "tag_app_%s" % game_id,
+        "category_753_Game[0]": f"tag_app_{game_id}",
         "category_753_cardborder[0]": "tag_cardborder_0",
         "norender": "1",
     }
@@ -282,8 +282,8 @@ def get_account_inventory(account_id):
     page_count = 1
     last_assert_id = "0"
     while True:
-        console.log("开始解析%s ~ %s的库存" % (each_page_inventory_count * (page_count - 1) + 1, each_page_inventory_count * page_count))
-        api_url = "https://steamcommunity.com/inventory/%s/753/6" % account_id
+        console.log(f"开始解析{each_page_inventory_count * (page_count - 1) + 1} ~ {each_page_inventory_count * page_count}的库存")
+        api_url = f"https://steamcommunity.com/inventory/{account_id}/753/6"
         query_data = {
             "l": "english",
             "count": each_page_inventory_count,
@@ -345,12 +345,12 @@ def get_account_badges(account_id):
     badge_level_list = {}
     page_count = 1
     while True:
-        console.log("开始解析第%s页徽章" % page_count)
-        badges_pagination_url = "https://steamcommunity.com/profiles/%s/badges/" % account_id
+        console.log(f"开始解析第{page_count}页徽章")
+        badges_pagination_url = f"https://steamcommunity.com/profiles/{account_id}/badges/"
         query_data = {"p": page_count}
         badges_pagination_response = net.Request(badges_pagination_url, method="GET", fields=query_data, cookies=cookies)
         if badges_pagination_response.status != const.ResponseCode.SUCCEED:
-            raise CrawlerException("第%s页徽章，%s" % (page_count, crawler.request_failre(badges_pagination_response.status)))
+            raise CrawlerException(f"第{page_count}页徽章，{crawler.request_failre(badges_pagination_response.status)}")
         badge_list_selector = pq(badges_pagination_response.content).find("div.badge_row")
         if badge_list_selector.length == 0:
             # 如果是隐私账号，会302到主页的，这里只判断页面文字就不判断状态了
@@ -366,18 +366,18 @@ def get_account_badges(account_id):
             if badge_detail_url.find("/badges/") >= 0:
                 continue
             elif badge_detail_url.find("/gamecards/") == -1:
-                raise CrawlerException("页面截取的徽章详情地址 %s 格式不正确" % badge_detail_url)
+                raise CrawlerException(f"页面截取的徽章详情地址 {badge_detail_url} 格式不正确")
             # https://steamcommunity.com/profiles/76561198172925593/gamecards/230410/
             game_id = url.split_path(badge_detail_url)[3]
             if not tool.is_integer(game_id):
-                raise CrawlerException("徽章详情地址 %s 截取游戏id失败" % badge_detail_url)
+                raise CrawlerException(f"徽章详情地址 {badge_detail_url} 截取游戏id失败")
             # 获取徽章等级
             badge_info_text = badge_selector.find('div.badge.content div.badge_info_description div').eq(1).html()
             if badge_info_text is None:
                 raise CrawlerException("页面截取徽章详情失败\n" + badge_selector.html())
             badge_level_find = re.findall(r"Level (\d*),", badge_info_text)
             if len(badge_level_find) != 1:
-                raise CrawlerException("徽章详情%s中截取徽章等级失败" % badge_info_text)
+                raise CrawlerException(f"徽章详情'{badge_info_text}'中截取徽章等级失败")
             badge_level_list[game_id] = int(badge_level_find[0])
         # 判断是不是还有下一页
         next_page_selector = pq(badges_pagination_response.content).find("div.profile_paging div.pageLinks a.pagelink:last")
@@ -391,7 +391,7 @@ def get_account_badges(account_id):
 
 # 获取指定账号的全部游戏id列表
 def get_account_owned_app_list(user_id, is_played=False):
-    game_index_url = "https://steamcommunity.com/profiles/%s/games/?tab=all" % user_id
+    game_index_url = f"https://steamcommunity.com/profiles/{user_id}/games/?tab=all"
     game_index_response = net.Request(game_index_url, method="GET", cookies=COOKIES).set_time_out(net.NET_CONFIG.DOWNLOAD_CONNECTION_TIMEOUT, 120)
     if game_index_response.status != const.ResponseCode.SUCCEED:
         raise CrawlerException(crawler.request_failre(game_index_response.status))
@@ -401,11 +401,11 @@ def get_account_owned_app_list(user_id, is_played=False):
         raise CrawlerException("页面截取全部游戏信息失败")
     owned_all_game_json_data = tool.json_decode(games_list_string)
     if owned_all_game_json_data is None:
-        raise CrawlerException("全部游戏信息加载失败\n%s" % games_list_string)
+        raise CrawlerException(f"全部游戏信息加载失败\n{games_list_string}")
     app_id_list = []
     for game_data in crawler.get_json_value(owned_all_game_json_data, "rgGames", type_check=list):
         if "appid" not in game_data:
-            raise CrawlerException("游戏信息%s中'appid'字段不存在" % game_data)
+            raise CrawlerException(f"游戏信息{game_data}中'appid'字段不存在")
         # 只需要玩过的游戏
         if is_played and "hours_forever" not in game_data:
             continue
@@ -442,7 +442,7 @@ class Steam(crawler.Crawler):
         # 游戏的DLC列表
         self.game_dlc_list_cache = self.new_cache("game_dlc_list.txt", const.FileType.JSON)
         # 个人评测信息缓存
-        self.user_review_cache = self.new_cache("%s_review.txt" % self.account_id, const.FileType.JSON)
+        self.user_review_cache = self.new_cache(f"{self.account_id}_review.txt", const.FileType.JSON)
 
         self.need_login = need_login
         self.init()
@@ -462,7 +462,7 @@ class Steam(crawler.Crawler):
                 self.cookie_value.update(net.get_cookies_from_response_header(login_response.headers))
                 login_response = net.Request(login_url, method="GET", cookies=self.cookie_value)
             if login_response.status != const.ResponseCode.SUCCEED:
-                console.log("登录返回code%s不正确" % login_response.status)
+                console.log(f"登录返回code {login_response.status}不正确")
                 tool.process_exit()
             if pq(login_response.content).find("#account_pulldown").length != 1:
                 console.log("未检测到登录状态")
@@ -486,7 +486,7 @@ class Steam(crawler.Crawler):
         while not account_id:
             console_account_id = input(tool.convert_timestamp_to_formatted_time() + " 请输入STEAM账号ID: ")
             while True:
-                input_str = input(tool.convert_timestamp_to_formatted_time() + " 是否使用输入的STEAM账号ID '%s' 是Y(es) / 否N(o) ?" % console_account_id)
+                input_str = input(f"{tool.convert_timestamp_to_formatted_time()} 是否使用输入的STEAM账号ID '{console_account_id}' 是Y(es) / 否N(o) ?")
                 input_str = input_str.lower()
                 if input_str in ["y", "yes"]:
                     account_id = console_account_id

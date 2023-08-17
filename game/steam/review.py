@@ -28,7 +28,7 @@ def print_list(user_review_cache_data, game_dlc_list, print_type=0):
         else:
             if print_type == 2 or print_type == 3:
                 continue
-        console.log("https://store.steampowered.com/app/%s" % game_id)
+        console.log(f"https://store.steampowered.com/app/{game_id}")
 
 
 def main(check_game=True):
@@ -62,14 +62,14 @@ def main(check_game=True):
             if game_id in checked_apps_list:
                 continue
 
-            console.log("开始解析游戏 %s，剩余数量：%s" % (game_id, len(played_game_list)))
+            console.log(f"开始解析游戏{game_id}，剩余数量：{len(played_game_list)}")
 
             # 获取游戏信息
             try:
                 game_data = steam.get_game_store_index(game_id)
             except CrawlerException as e:
-                console.log("游戏 %s 解析失败，原因：%s" % (game_id, e.message))
-                console.log(e.http_error("游戏%s" % game_id))
+                console.log(f"游戏{game_id}解析失败，原因：{e.message}")
+                console.log(e.http_error(f"游戏{game_id}"))
                 continue
 
             is_change = False
@@ -94,7 +94,7 @@ def main(check_game=True):
                     try:
                         dlc_data = steam.get_game_store_index(dlc_id)
                     except CrawlerException as e:
-                        console.log(e.http_error("游戏%s" % dlc_id))
+                        console.log(e.http_error(f"游戏{dlc_id}"))
                         continue
 
                     if dlc_data["owned"]:

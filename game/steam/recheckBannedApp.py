@@ -21,7 +21,7 @@ def main():
     except CrawlerException as e:
         console.log(e.http_error("已下线游戏列表"))
     else:
-        console.log("总共获取%s个已删除游戏" % len(banned_game_list))
+        console.log(f"总共获取{len(banned_game_list)}个已删除游戏")
 
         banned_game_id_list = {}
         for game_info in banned_game_list:
@@ -32,10 +32,10 @@ def main():
                 try:
                     game_data = steam.get_game_store_index(game_id)
                 except CrawlerException as e:
-                    console.log(e.http_error("游戏%s" % game_id))
+                    console.log(e.http_error(f"游戏{game_id}"))
                     continue
                 if game_data["deleted"] is False:
-                    console.log("游戏 %s 不在已删除列表中" % game_id)
+                    console.log(f"游戏{game_id}不在已删除列表中")
 
 
 if __name__ == "__main__":

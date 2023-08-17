@@ -27,7 +27,7 @@ def load_discount_list(discount_cache: crawler.CrawlerCache):
         return default_discount_game_list
     cache_time = tool.convert_timestamp_to_formatted_time("%Y-%m-%d %H:%M", os.path.getmtime(discount_cache.cache_path))
     while True:
-        input_str = input(tool.convert_timestamp_to_formatted_time() + " 缓存文件时间：%s，是否使用？使用缓存数据(Y)es，删除缓存数据并重新获取(N)o，退出程序(E)xit：" % cache_time)
+        input_str = input(f"{tool.convert_timestamp_to_formatted_time()} 缓存文件时间：{cache_time}，是否使用？使用缓存数据(Y)es，删除缓存数据并重新获取(N)o，退出程序(E)xit：")
         input_str = input_str.lower()
         if input_str in ["y", "yes"]:
             break
@@ -113,16 +113,16 @@ def main():
                         # break
                 if not is_all:
                     if discount_info["type"] == "bundle":
-                        console.log("https://store.steampowered.com/bundle/%s/ , %s" % (discount_info["id"], discount_info_string), False)
+                        console.log(f"https://store.steampowered.com/bundle/{discount_info['id']}/ , {discount_info_string}", False)
                     else:
-                        console.log("https://store.steampowered.com/sub/%s/ , %s" % (discount_info["id"], discount_info_string), False)
+                        console.log(f"https://store.steampowered.com/sub/{discount_info['id']}/ , {discount_info_string}", False)
             else:
                 if not INCLUDE_GAME:
                     continue
                 if SKIP_RESTRICTED_GAME and discount_info["app_id"] in restricted_app_list:
                     continue
                 if discount_info["app_id"] not in owned_game_list and discount_info["app_id"] not in game_dlc_list:
-                    console.log("https://store.steampowered.com/app/%s/ , %s" % (discount_info["id"], discount_info_string), False)
+                    console.log(f"https://store.steampowered.com/app/{discount_info['id']}/ , {discount_info_string}", False)
 
 
 if __name__ == "__main__":
