@@ -15,7 +15,7 @@ USER_AGENT = None
 
 
 def get_game_store_index(game_id):
-    game_index_url = "https://steamdb.info/app/%s/" % game_id
+    game_index_url = f"https://steamdb.info/app/{game_id}/"
     headers = {
         "User-Agent": USER_AGENT,
         "Referer": "https://steamdb.info/",
@@ -56,7 +56,7 @@ def get_game_store_index(game_id):
         headers["X-Requested-With"] = "XMLHttpRequest"
         history_api_response = net.Request(history_api_url, method="GET", fields=query_data, headers=headers, cookies=COOKIES)
         if history_api_response.status != const.ResponseCode.SUCCEED:
-            raise CrawlerException("历史记录，%s" % crawler.request_failre(history_api_response.status))
+            raise CrawlerException(f"历史记录，{crawler.request_failre(history_api_response.status)}")
         if not result["develop_name"]:
             history_info_selector_list = pq(history_api_response.content).find(".app-history i:contains('developer')")
             for history_index in range(history_info_selector_list.length):

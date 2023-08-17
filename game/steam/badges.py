@@ -65,12 +65,12 @@ def main():
             continue
         if game_id in deleted_app_list:
             continue
-        console.log("game id: %s" % game_id, False)
+        console.log(f"游戏{game_id}", False)
         # 获取全部卡牌的市场售价
         try:
             market_card_list = steam.get_market_game_trade_card_price(game_id)
         except CrawlerException as e:
-            console.log(e.http_error("游戏%s的市场" % game_id))
+            console.log(e.http_error(f"游戏{game_id}的市场"))
             continue
 
         card_hash_name_dict = {}
@@ -91,14 +91,14 @@ def main():
                 card_price = float(market_card_list[card_hash_name])
                 total_price += card_price
                 if MIN_CARD_PRICE < card_price <= MAX_CARD_PRICE:
-                    market_link = "https://steamcommunity.com/market/listings/753/%s-%s" % (game_id, urllib.parse.quote(card_hash_name))
-                    message = "card: %s, wanted %s, min price: %s, link: %s" % (card_name, wanted_card_list[card_name], card_price, market_link)
+                    market_link = f"https://steamcommunity.com/market/listings/753/{game_id}-{urllib.parse.quote(card_hash_name)}"
+                    message = f"card: {card_name}, wanted {wanted_card_list[card_name]}, min price: {card_price}, link: {market_link}"
                     print_message_list.append(message)
                 else:
                     is_total = False
             else:
-                market_link = "https://steamcommunity.com/market/listings/753/%s-%s" % (game_id, urllib.parse.quote(card_hash_name))
-                message = "card: %s, wanted %s, not found price in market, link: %s" % (card_name, wanted_card_list[card_hash_name], market_link)
+                market_link = f"https://steamcommunity.com/market/listings/753/{game_id}-{urllib.parse.quote(card_hash_name)}"
+                message = f"card: {card_name}, wanted {wanted_card_list[card_hash_name]}, not found price in market, link: {market_link}"
                 print_message_list.append(message)
 
         if not IS_TOTAL_CARD or (IS_TOTAL_CARD and is_total):
