@@ -249,15 +249,15 @@ def convert_formatted_time_to_timestamp(time_string: str, time_format: str = "%Y
 
 
 def change_date_format(date_string: str, old_format: str, new_format: str = "%Y-%m-%d") -> str:
-    return time.strftime(new_format, time.strptime(date_string, old_format))
+    return time.strftime(new_format, time.strptime(date_string, old_format)) if old_format != new_format else date_string
 
 
-def check_dict_sub_key(needles: Union[str, tuple], haystack: dict) -> bool:
+def check_dict_sub_key(needles: Union[str, list], haystack: dict) -> bool:
     """
     判断类型是否为字典，并且检测是否存在指定的key
     """
-    if not isinstance(needles, tuple):
-        needles = tuple(needles)
+    if not isinstance(needles, list):
+        needles = list(needles)
     if isinstance(haystack, dict):
         for needle in needles:
             if needle not in haystack:

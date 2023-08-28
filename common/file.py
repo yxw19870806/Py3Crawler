@@ -6,8 +6,9 @@ email: hikaru870806@hotmail.com
 如有问题或建议请联系
 """
 import hashlib
+import json
 import os
-from typing import Union, Optional, Final
+from typing import Any, Final, Optional, Union
 from common import const, path
 
 BOM_SIGN: Final[str] = b"\xef\xbb\xbf".decode()
@@ -77,13 +78,23 @@ def write_file(msg: str, file_path: str, write_type: const.WriteFileMode = const
     file_path = os.path.abspath(file_path)
     if not path.create_dir(os.path.dirname(file_path)):
         return False
-    if write_type == const.WriteFileMode.APPEND:
-        open_type = "a"
-    else:
-        open_type = "w"
-    with open(file_path, open_type, encoding=encoding) as file_handle:
+    with open(file_path, "a" if write_type == const.WriteFileMode.APPEND else "w", encoding=encoding) as file_handle:
         file_handle.write(msg + "\n")
     return True
+
+
+def read_json_file(file_path: str, default_value=None, encoding: str = "UTF-8") -> Any:
+    try:
+        return json.loads(read_file(file_path, const.ReadFileMode.FULL, encoding))
+    except (TypeError, ValueError):
+        return default_value
+
+
+def write_json_file(json_object: Any, file_path: str, encoding: str = "UTF-8") -> bool:
+    try:
+        return write_file(json.dumps(json_object), file_path, const.WriteFileMode.REPLACE, encoding)
+    except (TypeError, ValueError):
+        return False
 
 
 def get_file_md5(file_path: str) -> Optional[str]:

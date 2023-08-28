@@ -27,7 +27,7 @@ def get_account_from_file():
 
 # 根据talk id获取全部参与者
 def get_account_talks(account_id, account_name, talk_list):
-    account_index = "https://7gogo.jp/users/%s" % account_id
+    account_index = f"https://7gogo.jp/users/{account_id}"
     account_index_response = net.Request(account_index, method="GET")
     if account_index_response.status != const.ResponseCode.SUCCEED:
         raise CrawlerException(crawler.request_failre(account_index_response.status))
@@ -40,7 +40,7 @@ def get_account_talks(account_id, account_name, talk_list):
             raise CrawlerException("talk信息截取talk地址失败\n" + talk_selector.html())
         talk_id = talk_url_path.replace("/", "")
         if not talk_id:
-            raise CrawlerException("talk地址%s截取talk id失败" % talk_url_path)
+            raise CrawlerException(f"talk地址 {talk_url_path} 截取talk id失败")
         # 获取talk名字
         talk_name = talk_selector.find(".UserTalk__talkname").text()
         if not talk_name:
@@ -60,7 +60,7 @@ def get_account_talks(account_id, account_name, talk_list):
                 "talk_name": talk_name,
                 "talk_description": talk_description,
             }
-        log.info(account_id + ": " + talk_name + ", " + talk_description)
+        console.log(account_id + ": " + talk_name + ", " + talk_description)
 
 
 def main():
@@ -70,12 +70,12 @@ def main():
         try:
             get_account_talks(account_id, account_list[account_id], talk_list)
         except CrawlerException as e:
-            log.info(e.http_error("账号%s" % account_id))
+            console.log(e.http_error(f"账号{account_id}"))
     if len(talk_list) > 0:
         with open(TALK_ID_FILE_PATH, "w", encoding="UTF-8") as file_handle:
             for talk_id in talk_list:
                 account_list = " & ".join(talk_list[talk_id]["account_list"])
-                file_handle.write("%s\t%s\t%s\t%s" % (talk_id, talk_list[talk_id]["talk_name"], talk_list[talk_id]["talk_description"], account_list))
+                file_handle.write("\t".join([talk_id, talk_list[talk_id]["talk_name"], talk_list[talk_id]["talk_description"], account_list]))
 
 
 if __name__ == "__main__":

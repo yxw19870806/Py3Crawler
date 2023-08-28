@@ -15,9 +15,9 @@ EACH_PAGE_PHOTO_COUNT = 20  # 每次请求获取的图片数量
 # 获取账号首页
 def get_account_index_page(account_name):
     if tool.is_integer(account_name):
-        account_index_url = "https://tuchong.com/%s" % account_name
+        account_index_url = f"https://tuchong.com/{account_name}"
     else:
-        account_index_url = "https://%s.tuchong.com" % account_name
+        account_index_url = f"https://{account_name}.tuchong.com"
     account_index_response = net.Request(account_index_url, method="GET").disable_redirect()
     result = {
         "account_id": 0,  # 账号id（字母账号->数字账号)
@@ -44,7 +44,7 @@ def get_account_index_page(account_name):
 # post_time -> 2016-11-11 11:11:11
 def get_one_page_album(account_id, post_time):
     # https://deer-vision.tuchong.com/rest/sites/1186455/posts/2016-11-11%2011:11:11?limit=20
-    album_pagination_url = "https://www.tuchong.com/rest/sites/%s/posts/%s" % (account_id, post_time)
+    album_pagination_url = f"https://www.tuchong.com/rest/sites/{account_id}/posts/{post_time}"
     query_data = {"limit": EACH_PAGE_PHOTO_COUNT}
     album_pagination_response = net.Request(album_pagination_url, method="GET", fields=query_data).enable_json_decode()
     result = {
@@ -53,7 +53,7 @@ def get_one_page_album(account_id, post_time):
     if album_pagination_response.status != const.ResponseCode.SUCCEED:
         raise CrawlerException(crawler.request_failre(album_pagination_response.status))
     if crawler.get_json_value(album_pagination_response.json_data, "result", type_check=str) != "SUCCESS":
-        raise CrawlerException("返回信息%s中'result'字段取值不正确" % album_pagination_response.json_data)
+        raise CrawlerException(f"返回信息 {album_pagination_response.json_data} 中'result'字段取值不正确")
     for album_info in crawler.get_json_value(album_pagination_response.json_data, "posts", type_check=list):
         result_photo_info = {
             "album_id": 0,  # 相册id
@@ -68,7 +68,7 @@ def get_one_page_album(account_id, post_time):
         # 获取图片地址
         for photo_info in crawler.get_json_value(album_info, "images", type_check=list):
             photo_id = crawler.get_json_value(photo_info, "img_id", type_check=str)
-            result_photo_info["photo_url_list"].append("https://photo.tuchong.com/%s/f/%s.jpg" % (account_id, photo_id))
+            result_photo_info["photo_url_list"].append(f"https://photo.tuchong.com/{account_id}/f/{photo_id}.jpg")
         # 获取相册创建时间
         result_photo_info["album_time"] = crawler.get_json_value(album_info, "published_at", type_check=str)
         result["album_info_list"].append(result_photo_info)
@@ -103,7 +103,7 @@ class CrawlerThread(crawler.CrawlerThread):
         is_over = False
         # 获取全部还未下载过需要解析的相册
         while not is_over:
-            album_pagination_description = "%s后一页相册" % post_time
+            album_pagination_description = f"{post_time}后一页相册"
             self.start_parse(album_pagination_description)
             try:
                 album_pagination_response = get_one_page_album(account_id, post_time)
@@ -130,20 +130,15 @@ class CrawlerThread(crawler.CrawlerThread):
 
     # 解析单个相册
     def crawl_album(self, album_info):
-        album_description = "相册%s" % album_info["album_id"]
+        album_description = f"相册{album_info['album_id']}"
         self.start_parse(album_description)
 
         photo_index = 1
-        # 过滤标题中不支持的字符
-        album_title = path.filter_text(album_info["album_title"])
-        if album_title:
-            post_path = os.path.join(self.main_thread.photo_download_path, self.index_key, "%08d %s" % (album_info["album_id"], album_title))
-        else:
-            post_path = os.path.join(self.main_thread.photo_download_path, self.index_key, "%08d" % album_info["album_id"])
+        post_path = os.path.join(self.main_thread.photo_download_path, self.index_key, "%08d %s" % (album_info["album_id"], album_info["album_title"]))
         self.temp_path_list.append(post_path)
         for photo_url in album_info["photo_url_list"]:
-            photo_path = os.path.join(post_path, "%s.jpg" % photo_index)
-            photo_description = "相册%s《%s》第%s张图片" % (album_info["album_id"], album_info["album_title"], photo_index)
+            photo_path = os.path.join(post_path, "%02d.jpg" % photo_index)
+            photo_description = f"相册{album_info['album_id']}《{album_info['album_title']}》第{photo_index}张图片"
             if self.download(photo_url, photo_path, photo_description):
                 self.total_photo_count += 1  # 计数累加
             photo_index += 1
@@ -161,7 +156,7 @@ class CrawlerThread(crawler.CrawlerThread):
 
             # 获取所有可下载相册
         album_info_list = self.get_crawl_list(account_index_response["account_id"])
-        self.info("需要下载的全部相册解析完毕，共%s个" % len(album_info_list))
+        self.info(f"需要下载的全部相册解析完毕，共{len(album_info_list)}个")
 
         # 从最早的相册开始下载
         while len(album_info_list) > 0:

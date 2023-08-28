@@ -43,7 +43,7 @@ def check_safe_search():
 
 # 获取账号相册首页
 def get_account_index_page(account_name):
-    account_index_url = "https://www.flickr.com/photos/%s" % account_name
+    account_index_url = f"https://www.flickr.com/photos/{account_name}"
     account_index_response = net.Request(account_index_url, method="GET", cookies=COOKIES)
     result = {
         "site_key": "",  # site key
@@ -77,8 +77,8 @@ def get_account_index_page(account_name):
     # 获取cookie_session
     if IS_LOGIN and "cookie_session" not in COOKIES:
         set_cookies = net.get_cookies_from_response_header(account_index_response.headers)
-        if not tool.check_dict_sub_key(("cookie_session",), set_cookies):
-            raise CrawlerException("请求返回cookie：%s匹配cookie_session失败" % account_index_response.headers)
+        if not tool.check_dict_sub_key(["cookie_session"], set_cookies):
+            raise CrawlerException(f"请求返回cookie：{account_index_response.headers}匹配cookie_session失败")
         COOKIES.update({"cookie_session": set_cookies["cookie_session"]})
     return result
 
@@ -157,22 +157,22 @@ def get_one_page_photo(user_id, page_count, api_key, csrf, request_id):
         max_resolution_photo_type = ""
         # 可获取图片尺寸中最大的那张
         for photo_type in ["c", "f", "h", "k", "l", "m", "n", "o", "q", "s", "sq", "t", "z"]:
-            if tool.check_dict_sub_key(("width_" + photo_type, "height_" + photo_type), photo_info):
+            if tool.check_dict_sub_key(["width_" + photo_type, "height_" + photo_type], photo_info):
                 resolution = int(photo_info["width_" + photo_type]) * int(photo_info["height_" + photo_type])
                 if resolution > max_resolution:
                     max_resolution = resolution
                     max_resolution_photo_type = photo_type
         if not max_resolution_photo_type:
-            raise CrawlerException("图片信息：%s匹配最高分辨率的图片尺寸失败" % photo_info)
-        if tool.check_dict_sub_key(("url_" + max_resolution_photo_type + "_cdn",), photo_info):
+            raise CrawlerException(f"图片信息：{photo_info}匹配最高分辨率的图片尺寸失败")
+        if tool.check_dict_sub_key(["url_" + max_resolution_photo_type + "_cdn"], photo_info):
             result_photo_info["photo_url"] = photo_info["url_" + max_resolution_photo_type + "_cdn"]
-        elif tool.check_dict_sub_key(("url_" + max_resolution_photo_type,), photo_info):
+        elif tool.check_dict_sub_key(["url_" + max_resolution_photo_type], photo_info):
             result_photo_info["photo_url"] = photo_info["url_" + max_resolution_photo_type]
         else:
-            raise CrawlerException("图片信息：%s中'url_%s_cdn'或者'url_%s_cdn'字段不存在" % (photo_info, max_resolution_photo_type, max_resolution_photo_type))
+            raise CrawlerException(f"图片信息：{photo_info}中'url_{max_resolution_photo_type}_cdn'或者'url_{max_resolution_photo_type}_cdn'字段不存在")
         result["photo_info_list"].append(result_photo_info)
     if len(result["photo_info_list"]) == 0:
-        raise CrawlerException("返回信息：%s获取图片信息失败" % photo_pagination_response.json_data)
+        raise CrawlerException(f"返回信息：{photo_pagination_response.json_data}获取图片信息失败")
     # 判断是不是最后一页
     if page_count >= crawler.get_json_value(photo_pagination_response.json_data, "photos", "pages", type_check=int):
         result["is_over"] = True
@@ -213,7 +213,7 @@ class Flickr(crawler.Crawler):
         else:
             console_string = "没有检测到账号登录状态"
         while console_string:
-            input_str = input(tool.convert_timestamp_to_formatted_time() + " %s，可能无法解析受限制的图片，继续程序(C)ontinue？或者退出程序(E)xit？:" % console_string)
+            input_str = input(f"{tool.convert_timestamp_to_formatted_time()} {console_string}，可能无法解析受限制的图片，继续程序(C)ontinue？或者退出程序(E)xit？:")
             input_str = input_str.lower()
             if input_str in ["e", "exit"]:
                 tool.process_exit()
@@ -237,7 +237,7 @@ class CrawlerThread(crawler.CrawlerThread):
         is_over = False
         # 获取全部还未下载过需要解析的图片
         while not is_over:
-            photo_pagination_description = "第%s页图片" % page_count
+            photo_pagination_description = f"第{page_count}页图片"
             self.start_parse(photo_pagination_description)
             try:
                 photo_pagination_response = get_one_page_photo(user_id, page_count, site_key, csrf, self.request_id)
@@ -267,10 +267,10 @@ class CrawlerThread(crawler.CrawlerThread):
     # 下载同一上传时间的所有图片
     def crawl_photo(self, photo_info_list):
         for photo_info in photo_info_list:
-            photo_name = "%011d.%s" % (photo_info["photo_id"], url.get_file_ext(photo_info["photo_url"]))
+            photo_name = f"%011d.{url.get_file_ext(photo_info['photo_url'])}" % photo_info["photo_id"]
             photo_path = os.path.join(self.main_thread.photo_download_path, self.index_key, photo_name)
             self.temp_path_list.append(photo_path)  # 设置临时目录
-            photo_description = "图片%s" % photo_info["photo_id"]
+            photo_description = f"图片{photo_info['photo_id']}"
             if self.download(photo_info["photo_url"], photo_path, photo_description):
                 self.total_photo_count += 1  # 计数累加
 
@@ -290,7 +290,7 @@ class CrawlerThread(crawler.CrawlerThread):
 
         # 获取所有可下载图片
         photo_info_list = self.get_crawl_list(account_index_response["user_id"], account_index_response["site_key"], account_index_response["csrf"])
-        self.info("需要下载的全部图片解析完毕，共%s张" % len(photo_info_list))
+        self.info(f"需要下载的全部图片解析完毕，共{len(photo_info_list)}张")
 
         # 从最早的图片开始下载
         deal_photo_info_list = []

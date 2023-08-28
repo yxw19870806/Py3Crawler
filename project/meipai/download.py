@@ -48,7 +48,7 @@ class MeiPaiDownload(meipai.MeiPai):
             log.info("错误的视频地址，正确的地址格式如：https://www.meipai.com/media/209045867")
             return
 
-        video_description = "视频%s" % video_id
+        video_description = f"视频{video_id}"
         # 获取下载地址
         try:
             video_response = meipai.get_video_play_page(video_id)
@@ -56,7 +56,7 @@ class MeiPaiDownload(meipai.MeiPai):
             log.error(e.http_error(video_description))
             return
         if video_response["is_delete"]:
-            log.info("%s 不存在，跳过" % video_description)
+            log.info(f"{video_description} 不存在，跳过")
             return
 
         # 选择下载目录
@@ -71,7 +71,7 @@ class MeiPaiDownload(meipai.MeiPai):
             return
 
         # 开始下载
-        log.info("\n视频地址：%s\n下载路径：%s" % (video_response["video_url"], video_path))
+        log.info(f"\n视频地址：{video_response['video_url']}\n下载路径：{video_path}")
         self.download(video_response["video_url"], video_path, video_description, auto_multipart_download=True)
 
 

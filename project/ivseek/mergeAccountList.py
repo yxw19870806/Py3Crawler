@@ -6,7 +6,6 @@ http://www.ivseek.com/
 email: hikaru870806@hotmail.com
 如有问题或建议请联系
 """
-import os
 from common import *
 from project.ivseek import ivseek
 from project.youtube import youtube
@@ -36,8 +35,10 @@ def main():
             continue
 
     # 获取niconico账号下的所有视频列表
-    niconico_mylist_cache_path = os.path.join(ivseek_class.cache_data_path, "niconico_mylist.json")
-    niconico_mylist_list = tool.json_decode(file.read_file(niconico_mylist_cache_path), {})
+    niconico_mylist_cache = ivseek_class.new_cache("niconico_mylist.json", const.FileType.JSON)
+    niconico_mylist_list = niconico_mylist_cache.read()
+    if isinstance(niconico_mylist_list, dict):
+        niconico_mylist_list = {}
     for account_id in account_id_list["niconico"]:
         if account_id in niconico_mylist_list:
             continue
@@ -46,24 +47,24 @@ def main():
         try:
             account_mylist_response = niconico.get_account_mylist(account_id)
         except CrawlerException as e:
-            print(e.http_error("niconico账号%s的视频列表" % account_id))
+            print(e.http_error(f"niconico账号{account_id}的视频列表"))
             continue
         niconico_mylist_list[account_id] = account_mylist_response["list_id_list"]
-        file.write_file(tool.json_encode(niconico_mylist_list), niconico_mylist_cache_path, const.WriteFileMode.REPLACE)
+        niconico_mylist_cache.write(niconico_mylist_list)
 
     # 更新youtube的存档文件
     for account_id in account_id_list["youtube"]:
         if account_id not in youtube_class.save_data:
-            youtube_class.save_data[account_id] = [account_id]
-    file.write_file(tool.dyadic_list_to_string(youtube_class.save_data.values()), youtube_class.save_data_path, const.WriteFileMode.REPLACE)
+            youtube_class.save_data.save(account_id, [account_id])
+    youtube_class.save_data.done()
 
     # 更新niconico的存档文件
     for account_id in niconico_mylist_list:
         for mylist_id in niconico_mylist_list[account_id]:
             mylist_id = str(mylist_id)
             if mylist_id not in niconico_class.save_data:
-                niconico_class.save_data[mylist_id] = [mylist_id]
-    file.write_file(tool.dyadic_list_to_string(niconico_class.save_data.values()), niconico_class.save_data_path, const.WriteFileMode.REPLACE)
+                niconico_class.save_data.save(mylist_id, [mylist_id])
+    niconico_class.save_data.done()
 
     file.write_file(tool.dyadic_list_to_string(save_data_list), ivseek_class.save_data_path, const.WriteFileMode.REPLACE)
 

@@ -32,7 +32,7 @@ def check_login():
 
 # 获取指定页数的全部日志
 def get_one_page_blog(account_name, page_count):
-    blog_pagination_url = "https://ameblo.jp/%s/page-%s.html" % (account_name, page_count)
+    blog_pagination_url = f"https://ameblo.jp/{account_name}/page-{page_count}.html"
     blog_pagination_response = net.Request(blog_pagination_url, method="GET")
     result = {
         "blog_id_list": [],  # 全部日志id
@@ -53,7 +53,7 @@ def get_one_page_blog(account_name, page_count):
             blog_url = blog_list_selector.eq(blog_url_index).attr("href")
             blog_id = tool.find_sub_string(blog_url, "entry-", ".html")
             if not tool.is_integer(blog_id):
-                raise CrawlerException("日志地址%s截取日志id失败" % blog_url)
+                raise CrawlerException(f"日志地址 {blog_url} 截取日志id失败")
             result["blog_id_list"].append(int(blog_id))
     if len(result["blog_id_list"]) == 0:
         if page_count == 1:
@@ -67,13 +67,13 @@ def get_one_page_blog(account_name, page_count):
         if pq(blog_pagination_response.content).find("div.pagingArea a.pagingNext").length == 0 and \
                 pq(blog_pagination_response.content).find("div.pagingArea a.pagingPrev").length == 0:
             raise CrawlerException("页面截取分页信息div.pagingArea失败\n" + blog_pagination_response.content)
-        result["is_over"] = True
+        result["is_over"] = pq(blog_pagination_response.content).find("div.pagingArea a.pagingNext").length == 0
     # https://ameblo.jp/1108ayanyan/
     elif pq(blog_pagination_response.content).find("ul.skin-paging").length > 0:
         if pq(blog_pagination_response.content).find("ul.skin-paging a.skin-pagingNext").length == 0 and \
                 pq(blog_pagination_response.content).find("ul.skin-paging a.skin-pagingPrev").length == 0:
             raise CrawlerException("页面截取分页信息ul.skin-paging失败\n" + blog_pagination_response.content)
-        result["is_over"] = True
+        result["is_over"] = pq(blog_pagination_response.content).find("ul.skin-paging a.skin-pagingNext").length == 0
     # https://ameblo.jp/48orii48/
     elif pq(blog_pagination_response.content).find("div.page").length > 0:
         pagination_selector = pq(blog_pagination_response.content).find("div.page").eq(0).find("a")
@@ -90,7 +90,7 @@ def get_one_page_blog(account_name, page_count):
 
 # 获取指定id的日志
 def get_blog_page(account_name, blog_id):
-    blog_url = "https://ameblo.jp/%s/entry-%s.html" % (account_name, blog_id)
+    blog_url = f"https://ameblo.jp/{account_name}/entry-{blog_id}.html"
     blog_response = net.Request(blog_url, method="GET", cookies=COOKIES)
     result = {
         "photo_url_list": [],  # 全部图片地址
@@ -102,7 +102,7 @@ def get_blog_page(account_name, blog_id):
     elif blog_response.status != const.ResponseCode.SUCCEED:
         raise CrawlerException(crawler.request_failre(blog_response.status))
     if blog_response.content.find("この記事はアメンバーさん限定です。") >= 0:
-        raise CrawlerException("需要关注后才能访问，请在 https://profile.ameba.jp/ameba/%s，选择'アメンバー申請'" % account_name)
+        raise CrawlerException(f"需要关注后才能访问，请在 https://profile.ameba.jp/ameba/{account_name}，选择'アメンバー申請'")
     # 截取日志正文部分（有多种页面模板）
     article_class_list = ["subContentsInner", "articleText", "skin-entryInner"]
     article_html_selector = None
@@ -135,7 +135,7 @@ def get_blog_page(account_name, blog_id):
         elif photo_url.startswith("data:image/gif;base64,") or photo_url.startswith("file://"):
             pass
         else:
-            log.warning("未知图片地址：%s (%s)" % (photo_url, blog_url))
+            log.warning(f"未知图片地址：{photo_url} ({blog_url})")
     # todo 含有视频
     # https://ameblo.jp/kawasaki-nozomi/entry-12111279076.html
     return result
@@ -167,7 +167,7 @@ def get_origin_photo_url(photo_url):
             elif tool.is_integer(photo_name.split(".")[0]):
                 pass
             else:
-                log.warning("无法解析的图片地址 %s" % photo_url)
+                log.warning(f"无法解析的图片地址 {photo_url}")
     elif photo_url.find("//stat100.ameba.jp/blog/img/") > 0:
         pass
     return photo_url
@@ -242,7 +242,7 @@ class CrawlerThread(crawler.CrawlerThread):
         start_page_count = 1
         while EACH_LOOP_MAX_PAGE_COUNT > 0:
             start_page_count += EACH_LOOP_MAX_PAGE_COUNT
-            blog_pagination_description = "第%s页日志" % start_page_count
+            blog_pagination_description = f"第{start_page_count}页日志"
             self.start_parse(blog_pagination_description)
             try:
                 blog_pagination_response = get_one_page_blog(self.index_key, start_page_count)
@@ -257,7 +257,7 @@ class CrawlerThread(crawler.CrawlerThread):
             if blog_pagination_response["blog_id_list"][-1] < int(self.single_save_data[1]):
                 start_page_count -= EACH_LOOP_MAX_PAGE_COUNT
                 break
-            self.info("前%s页日志全部符合条件，跳过%s页后继续查询" % (start_page_count, EACH_LOOP_MAX_PAGE_COUNT))
+            self.info(f"前{start_page_count}页日志全部符合条件，跳过{EACH_LOOP_MAX_PAGE_COUNT}页后继续查询")
         return start_page_count
 
     # 获取所有可下载日志
@@ -266,7 +266,7 @@ class CrawlerThread(crawler.CrawlerThread):
         is_over = False
         # 获取全部还未下载过需要解析的日志
         while not is_over:
-            blog_pagination_description = "第%s页日志" % page_count
+            blog_pagination_description = f"第{page_count}页日志"
             self.start_parse(blog_pagination_description)
             try:
                 blog_pagination_response = get_one_page_blog(self.index_key, page_count)
@@ -296,7 +296,7 @@ class CrawlerThread(crawler.CrawlerThread):
 
     # 解析单个日志
     def crawl_blog(self, blog_id):
-        album_description = "日志%s" % blog_id
+        album_description = f"日志{blog_id}"
         self.start_parse(album_description)
         try:
             blog_response = get_blog_page(self.index_key, blog_id)
@@ -305,7 +305,7 @@ class CrawlerThread(crawler.CrawlerThread):
             raise
         # 日志只对关注者可见
         if blog_response["is_delete"]:
-            self.error("%s 已被删除，跳过" % album_description)
+            self.error(f"{album_description} 已被删除，跳过")
             return
         self.parse_result(album_description, blog_response["photo_url_list"])
 
@@ -314,13 +314,13 @@ class CrawlerThread(crawler.CrawlerThread):
             # 获取原始图片下载地址
             photo_url = get_origin_photo_url(photo_url)
             if photo_url in self.duplicate_list:
-                self.info("%s的图片 %s 已存在" % (album_description, photo_url))
+                self.info(f"{album_description}的图片 {photo_url} 已存在")
                 continue
             self.duplicate_list[photo_url] = 1
 
-            photo_name = "%011d_%02d.%s" % (blog_id, photo_index, url.get_file_ext(photo_url, "jpg"))
+            photo_name = f"%011d_%02d.{url.get_file_ext(photo_url, 'jpg')}" % (blog_id, photo_index)
             photo_path = os.path.join(self.main_thread.photo_download_path, self.index_key, photo_name)
-            photo_description = "日志%s第%s张图片" % (blog_id, photo_index)
+            photo_description = f"日志{blog_id}第{photo_index}张图片"
             download_return = self.download(photo_url, photo_path, photo_description, success_callback=self.download_success_callback)
             if download_return and not download_return["is_invalid_photo"]:
                 self.temp_path_list.append(photo_path)  # 设置临时目录
@@ -335,7 +335,7 @@ class CrawlerThread(crawler.CrawlerThread):
     def download_success_callback(self, photo_url, photo_path, photo_description, download_return: net.Download):
         if check_photo_invalid(photo_path):
             path.delete_dir_or_file(photo_path)
-            self.info("%s %s 不符合规则，删除" % (photo_description, photo_url))
+            self.info(f"{photo_description} {photo_url} 不符合规则，删除")
             download_return["is_invalid_photo"] = True
             return False
         download_return["is_invalid_photo"] = False
@@ -348,7 +348,7 @@ class CrawlerThread(crawler.CrawlerThread):
         while start_page_count >= 1:
             # 获取所有可下载日志
             blog_id_list = self.get_crawl_list(start_page_count)
-            self.info("需要下载的全部日志解析完毕，共%s个" % len(blog_id_list))
+            self.info(f"需要下载的全部日志解析完毕，共{len(blog_id_list)}个")
 
             # 从最早的日志开始下载
             while len(blog_id_list) > 0:

@@ -166,7 +166,6 @@ def get_video_info(video_id):
         "is_delete": False,  # 是否已删除
         "is_private": False,  # 是否未公开
         "video_title": "",  # 视频标题
-        "video_url_list": [],  # 视频分段地址
     }
     if video_play_response.status == 403:
         log.info("视频%s访问异常，重试" % video_id)
@@ -282,16 +281,7 @@ def get_video_info(video_id):
     m3u8_file_find = re.findall(r"(\S*.m3u8\S*)", master_file_response.content)
     if len(m3u8_file_find) != 1:
         raise CrawlerException("m3u8文件截取失败\n" + master_file_response.content)
-
     result["m3u8_file_url"] = urllib.parse.urljoin(master_file_url, m3u8_file_find[0])
-    m3u8_file_response = net.Request(result["m3u8_file_url"], method="GET")
-    if m3u8_file_response.status != const.ResponseCode.SUCCEED:
-        raise CrawlerException("分集文件 %s，%s" % (result["m3u8_file_url"], crawler.request_failre(m3u8_file_response.status)))
-    ts_path_list = re.findall(r"(\S*.ts\S*)", m3u8_file_response.content)
-    if len(ts_path_list) == 0:
-        raise CrawlerException("分集文件匹配视频地址失败\n" + m3u8_file_response.content)
-    for ts_path in ts_path_list:
-        result["video_url_list"].append(urllib.parse.urljoin(result["m3u8_file_url"], ts_path))
     return result
 
 
@@ -392,9 +382,9 @@ class CrawlerThread(crawler.CrawlerThread):
             return
 
         self.info("开始下载 %s %s" % (video_description, video_info_response["m3u8_file_url"]))
-        video_file_path = os.path.join(self.main_thread.video_download_path, self.display_name, "%08d - %s.mp4" % (video_info["video_id"], path.filter_text(video_info["video_title"])))
-        download_return = net.download_from_list(video_info_response["video_url_list"], video_file_path, cookies=COOKIES)
-        if download_return:
+        video_file_path = os.path.join(self.main_thread.video_download_path, self.display_name, "%08d - %s.mp4" % (video_info["video_id"], video_info["video_title"]))
+        download_return = net.DownloadHls(video_info_response["m3u8_file_url"], video_file_path, cookies=COOKIES)
+        if download_return.status == const.DownloadStatus.SUCCEED:
             self.total_video_count += 1  # 计数累加
             self.info("%s 下载成功" % video_description)
         else:

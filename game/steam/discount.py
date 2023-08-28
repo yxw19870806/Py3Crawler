@@ -20,28 +20,23 @@ MAX_SELLING_PERCENT = 1  # 显示价格小等于这个数字的游戏
 EXTRA_CONFIG_FILE_PATH = os.path.join(os.path.dirname(__file__), "lib", "discount.ini")
 
 
-# 打折游戏列表保存到文件
-def save_discount_list(cache_file_path, discount_game_list):
-    file.write_file(tool.json_encode(discount_game_list), cache_file_path, const.WriteFileMode.REPLACE)
-
-
 # 获取文件中的打折列表
-def load_discount_list(cache_file_path):
-    discount_game_list = []
-    if not os.path.exists(cache_file_path):
-        return discount_game_list
-    cache_time = tool.convert_timestamp_to_formatted_time("%Y-%m-%d %H:%M", os.path.getmtime(cache_file_path))
+def load_discount_list(discount_cache: crawler.CrawlerCache):
+    default_discount_game_list = []
+    if not os.path.exists(discount_cache.cache_path):
+        return default_discount_game_list
+    cache_time = tool.convert_timestamp_to_formatted_time("%Y-%m-%d %H:%M", os.path.getmtime(discount_cache.cache_path))
     while True:
-        input_str = input(tool.convert_timestamp_to_formatted_time() + " 缓存文件时间：%s，是否使用？使用缓存数据(Y)es，删除缓存数据并重新获取(N)o，退出程序(E)xit：" % cache_time)
+        input_str = input(f"{tool.convert_timestamp_to_formatted_time()} 缓存文件时间：{cache_time}，是否使用？使用缓存数据(Y)es，删除缓存数据并重新获取(N)o，退出程序(E)xit：")
         input_str = input_str.lower()
         if input_str in ["y", "yes"]:
             break
         elif input_str in ["n", "no"]:
-            return discount_game_list
+            return default_discount_game_list
         elif input_str in ["e", "exit"]:
             tool.process_exit()
-    discount_game_list = tool.json_decode(file.read_file(cache_file_path), discount_game_list)
-    return discount_game_list
+    discount_game_list = discount_cache.read()
+    return discount_game_list if isinstance(discount_game_list, list) else default_discount_game_list
 
 
 # 给出给定大等于最低折扣或者小等于最低价格的还没有的打折游戏
@@ -63,14 +58,15 @@ def main():
 
     # 获取登录状态
     steam_class = steam.Steam(need_login=True)
-    cache_file_path = os.path.abspath(os.path.join(steam_class.cache_data_path, "discount.txt"))
+    # 缓存的打折信息
+    discount_cache = steam_class.new_cache("discount.txt", const.FileType.JSON)
     # 已资料受限制的游戏
-    restricted_app_list = steam_class.load_restricted_app_list()
+    restricted_app_list = steam_class.restricted_app_list_cache.read()
     # 游戏的DLC列表
-    game_dlc_list = steam_class.load_game_dlc_list()
+    game_dlc_list = steam_class.game_dlc_list_cache.read()
 
     # 从文件里获取打折列表
-    discount_game_list = load_discount_list(cache_file_path)
+    discount_game_list = load_discount_list(discount_cache)
     if not discount_game_list:
         # 调用API获取打折列表
         try:
@@ -79,7 +75,7 @@ def main():
             console.log(e.http_error("打折游戏"))
             raise
         # 将打折列表写入文件
-        save_discount_list(cache_file_path, discount_game_list)
+        discount_cache.write(discount_game_list)
         console.log("get discount game list from website")
     else:
         console.log("get discount game list from cache file")
@@ -117,16 +113,16 @@ def main():
                         # break
                 if not is_all:
                     if discount_info["type"] == "bundle":
-                        console.log("https://store.steampowered.com/bundle/%s/ , %s" % (discount_info["id"], discount_info_string), False)
+                        console.log(f"https://store.steampowered.com/bundle/{discount_info['id']}/ , {discount_info_string}", False)
                     else:
-                        console.log("https://store.steampowered.com/sub/%s/ , %s" % (discount_info["id"], discount_info_string), False)
+                        console.log(f"https://store.steampowered.com/sub/{discount_info['id']}/ , {discount_info_string}", False)
             else:
                 if not INCLUDE_GAME:
                     continue
                 if SKIP_RESTRICTED_GAME and discount_info["app_id"] in restricted_app_list:
                     continue
                 if discount_info["app_id"] not in owned_game_list and discount_info["app_id"] not in game_dlc_list:
-                    console.log("https://store.steampowered.com/app/%s/ , %s" % (discount_info["id"], discount_info_string), False)
+                    console.log(f"https://store.steampowered.com/app/{discount_info['id']}/ , {discount_info_string}", False)
 
 
 if __name__ == "__main__":

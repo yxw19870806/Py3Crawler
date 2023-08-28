@@ -27,11 +27,11 @@ def get_account_from_index():
         # 获取账号id
         account_id = tool.find_sub_string(member_info, "&ct=", '">')
         if not account_id:
-            raise CrawlerException("账号信息%s中截取账号id失败" % member_info)
+            raise CrawlerException(f"账号信息{member_info}中截取账号id失败")
         # 获取成员名字
         account_name = tool.find_sub_string(member_info, '<p class="name">', "</p>").strip().replace(" ", "")
         if not account_name:
-            raise CrawlerException("账号信息%s中截取成员名字失败" % member_info)
+            raise CrawlerException(f"账号信息{member_info}中截取成员名字失败")
         account_list[account_id] = account_name
     return account_list
 
@@ -45,9 +45,8 @@ def main():
     if len(account_list_from_api) > 0:
         for account_id in account_list_from_api:
             if account_id not in keyakizaka46diary_class.save_data:
-                keyakizaka46diary_class.save_data[account_id] = [account_id, "0", account_list_from_api[account_id]]
-        temp_list = [keyakizaka46diary_class.save_data[key] for key in sorted(keyakizaka46diary_class.save_data.keys())]
-        file.write_file(tool.dyadic_list_to_string(temp_list), keyakizaka46diary_class.save_data_path, const.WriteFileMode.REPLACE)
+                keyakizaka46diary_class.save_data.save(account_id, [account_id, "0", account_list_from_api[account_id]])
+        keyakizaka46diary_class.save_data.done()
 
 
 if __name__ == "__main__":

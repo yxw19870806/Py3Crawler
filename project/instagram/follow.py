@@ -15,7 +15,7 @@ IS_FOLLOW_PRIVATE_ACCOUNT = False  # 是否对私密账号发出关注请求
 
 # 获取账号首页
 def get_account_index_page(account_name):
-    account_index_url = "https://www.instagram.com/%s" % account_name
+    account_index_url = f"https://www.instagram.com/{account_name}"
     account_index_response = net.Request(account_index_url, method="GET", cookies=instagram.COOKIES)
     result = {
         "is_follow": False,  # 是否已经关注
@@ -41,27 +41,27 @@ def get_account_index_page(account_name):
 
 # 关注指定账号
 def follow_account(account_name, account_id):
-    follow_api_url = "https://www.instagram.com/web/friendships/%s/follow/" % account_id
+    follow_api_url = f"https://www.instagram.com/web/friendships/{account_id}/follow/"
     headers = {"Referer": "https://www.instagram.com/", "x-csrftoken": instagram.COOKIES["csrftoken"], "X-Instagram-AJAX": 1}
     follow_response = net.Request(follow_api_url, method="POST", headers=headers, cookies=instagram.COOKIES).enable_json_decode()
     if follow_response.status == const.ResponseCode.SUCCEED:
         follow_result = crawler.get_json_value(follow_response.json_data, "result", default_value="", type_check=str)
         if follow_result == "following":
-            log.info("关注%s成功" % account_name)
+            console.log(f"关注{account_name}成功")
             return True
         elif follow_result == "requested":
-            log.info("私密账号%s，已发送关注请求" % account_name)
+            console.log(f"私密账号{account_name}，已发送关注请求")
             return True
         elif not follow_result:
-            log.info("关注%s失败，返回内容不匹配\n%s" % (account_name, follow_response.json_data))
+            console.log(f"关注{account_name}失败，返回内容不匹配\n{follow_response.json_data}")
             tool.process_exit()
         else:
             return False
     elif follow_response.status == 403 and follow_response.data == "Please wait a few minutes before you try again.":
-        log.info(CrawlerException("关注%s失败，连续关注太多等待一会儿继续尝试" % account_name))
+        console.log(CrawlerException(f"关注{account_name}失败，连续关注太多等待一会儿继续尝试"))
         tool.process_exit()
     else:
-        log.info(CrawlerException("关注%s失败，请求返回结果：%s" % (account_name, crawler.request_failre(follow_response.status))))
+        console.log(CrawlerException(f"关注{account_name}失败，请求返回结果：{crawler.request_failre(follow_response.status)}"))
         tool.process_exit()
 
 
@@ -76,19 +76,19 @@ class InstagramFollow(instagram.Instagram):
             try:
                 account_index_response = get_account_index_page(account_name)
             except CrawlerException as e:
-                log.error(e.http_error("账号%s首页" % account_name))
+                log.error(e.http_error(f"账号{account_name}首页"))
                 continue
 
             if account_index_response["is_follow"]:
-                log.info("%s已经关注，跳过" % account_name)
+                console.log(f"{account_name}已经关注，跳过")
             elif account_index_response["is_private"] and not IS_FOLLOW_PRIVATE_ACCOUNT:
-                log.info("%s是私密账号，跳过" % account_name)
+                console.log(f"{account_name}是私密账号，跳过")
             else:
                 if follow_account(account_name, account_index_response["account_id"]):
                     count += 1
                 time.sleep(0.1)
 
-        log.info("关注完成，成功关注了%s个账号" % count)
+        console.log(f"关注完成，成功关注了{count}个账号")
 
 
 if __name__ == "__main__":

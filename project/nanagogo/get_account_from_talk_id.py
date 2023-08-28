@@ -16,7 +16,7 @@ ACCOUNT_ID_FILE_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), "
 
 # 根据talk id获取全部参与者
 def get_member_from_talk(talk_id):
-    talk_index_url = "https://7gogo.jp/%s" % talk_id
+    talk_index_url = f"https://7gogo.jp/{talk_id}"
     talk_index_response = net.Request(talk_index_url, method="GET")
     account_list = {}
     if talk_index_response.status != const.ResponseCode.SUCCEED:
@@ -44,12 +44,12 @@ def main():
         try:
             member_list = get_member_from_talk(talk_id)
         except CrawlerException as e:
-            log.info(e.http_error("talk %s" % talk_id))
+            console.log(e.http_error(f"talk {talk_id}"))
             continue
         for account_id in member_list:
             if account_id not in account_list:
-                log.info("%s %s" % (account_id, member_list[account_id]))
-                file.write_file("%s\t%s" % (account_id, member_list[account_id]), ACCOUNT_ID_FILE_PATH)
+                console.log(f"{account_id} {member_list[account_id]}")
+                file.write_file("\t".join([account_id, member_list[account_id]]), ACCOUNT_ID_FILE_PATH)
                 account_list.append(account_id)
 
 

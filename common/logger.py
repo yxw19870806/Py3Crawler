@@ -9,7 +9,7 @@ import os
 import logging
 from logging import LogRecord
 from typing import Any, Final
-from common import color_format, file, tool
+from common import color_format, file
 
 DEFAULT_LOG_CONFIG: Final[dict[str, Any]] = {
     "IS_CONSOLE_DEBUG": False,
@@ -25,7 +25,7 @@ DEFAULT_LOG_CONFIG: Final[dict[str, Any]] = {
     "LOG_WARNING_PATH": "../log/warningLog.txt",
     "LOG_ERROR_PATH": "../log/errorLog.txt",
 }
-LOG_CONFIG: Final[dict[str, Any]] = tool.json_decode(file.read_file(os.path.join(os.path.dirname(__file__), "log_config.json")), DEFAULT_LOG_CONFIG)
+LOG_CONFIG: Final[dict[str, Any]] = file.read_json_file(os.path.join(os.path.dirname(__file__), "log_config.json"), DEFAULT_LOG_CONFIG)
 for key in DEFAULT_LOG_CONFIG:
     if key not in LOG_CONFIG:
         LOG_CONFIG[key] = DEFAULT_LOG_CONFIG

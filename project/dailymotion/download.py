@@ -63,7 +63,7 @@ class DailyMotionDownload(dailymotion.DailyMotion):
         log.info("请选择下载目录")
         options = {
             "initialdir": self.video_download_path,
-            "initialfile": "%s - %s.mp4" % (video_id, path.filter_text(video_response["video_title"])),
+            "initialfile": f"{video_id} - {video_response['video_title']}.mp4",
             "filetypes": [("mp4", ".mp4")],
             "parent": self.gui,
         }
@@ -72,8 +72,8 @@ class DailyMotionDownload(dailymotion.DailyMotion):
             return
 
         # 开始下载
-        log.info("\n视频标题：%s\n视频地址：%s\n下载路径：%s" % (video_response["video_title"], video_response["video_url"], video_path))
-        video_description = "视频《%s》" % video_response["video_title"]
+        log.info(f"\n视频标题：{video_response['video_title']}\n视频地址：{video_response['video_url']}\n下载路径：{video_path}")
+        video_description = f"视频《{video_response['video_title']}》"
         self.download(video_response["video_url"], video_path, video_description, auto_multipart_download=True)
 
 

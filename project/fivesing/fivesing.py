@@ -15,7 +15,7 @@ from common import *
 # page_type 页面类型：yc - 原唱、fc - 翻唱
 def get_one_page_audio(account_id, page_type, page_count):
     # http://5sing.kugou.com/inory/yc/1.html
-    audio_pagination_url = "http://5sing.kugou.com/%s/%s/%s.html" % (account_id, page_type, page_count)
+    audio_pagination_url = f"http://5sing.kugou.com/{account_id}/{page_type}/{page_count}.html"
     audio_pagination_response = net.Request(audio_pagination_url, method="GET")
     result = {
         "audio_info_list": [],  # 全部歌曲信息
@@ -57,11 +57,11 @@ def get_audio_play_page(audio_id, song_type):
             return result
     response_data = crawler.get_json_value(audio_info_response.json_data, "data", type_check=dict)
     # 获取歌曲地址
-    if tool.check_dict_sub_key(("squrl",), response_data) and response_data["squrl"]:
+    if tool.check_dict_sub_key(["squrl"], response_data) and response_data["squrl"]:
         result["audio_url"] = response_data["squrl"]
-    elif tool.check_dict_sub_key(("lqurl",), response_data) and response_data["lqurl"]:
+    elif tool.check_dict_sub_key(["lqurl"], response_data) and response_data["lqurl"]:
         result["audio_url"] = response_data["lqurl"]
-    elif tool.check_dict_sub_key(("hqurl",), response_data) and response_data["hqurl"]:
+    elif tool.check_dict_sub_key(["hqurl"], response_data) and response_data["hqurl"]:
         result["audio_url"] = response_data["hqurl"]
     else:
         raise CrawlerException("歌曲信息'squrl'、'lqurl'、'hqurl'字段都不存在\n" + str(audio_info_response.json_data))
@@ -113,7 +113,7 @@ class CrawlerThread(crawler.CrawlerThread):
         is_over = False
         # 获取全部还未下载过需要解析的歌曲
         while not is_over:
-            audio_pagination_description = "第%s页%s歌曲" % (page_count, audio_type_name)
+            audio_pagination_description = f"第{page_count}页{audio_type_name}歌曲"
             self.start_parse(audio_pagination_description)
             try:
                 audio_pagination_response = get_one_page_audio(self.index_key, audio_type, page_count)
@@ -150,7 +150,7 @@ class CrawlerThread(crawler.CrawlerThread):
     def crawl_audio(self, audio_type, audio_info):
         audio_type_name = self.audio_type_name_dict[audio_type]
 
-        audio_description = "%s歌曲%s《%s》" % (audio_type_name, audio_info["audio_id"], audio_info["audio_title"])
+        audio_description = f"{audio_type_name}歌曲{audio_info['audio_id']}《{audio_info['audio_title']}》"
         self.start_parse(audio_description)
         try:
             audio_info_response = get_audio_play_page(audio_info["audio_id"], audio_type)
@@ -158,11 +158,11 @@ class CrawlerThread(crawler.CrawlerThread):
             self.error(e.http_error(audio_description))
             raise
         if audio_info_response["is_delete"]:
-            self.error("%s 已删除" % audio_description)
+            self.error(f"{audio_description} 已删除")
             return
 
         audio_extension = url.get_file_ext(audio_info_response["audio_url"])
-        audio_name = "%08d - %s.%s" % (audio_info["audio_id"], path.filter_text(audio_info["audio_title"]), audio_extension)
+        audio_name = f"%08d - %s.{audio_extension}" % (audio_info["audio_id"], audio_info["audio_title"])
         audio_path = os.path.join(self.main_thread.audio_download_path, self.display_name, audio_type_name, audio_name)
         if self.download(audio_info_response["audio_url"], audio_path, audio_description):
             self.total_audio_count += 1  # 计数累加
@@ -174,7 +174,7 @@ class CrawlerThread(crawler.CrawlerThread):
         for audio_type in list(self.audio_type_to_index_dict.keys()):
             # 获取所有可下载歌曲
             audio_info_list = self.get_crawl_list(audio_type)
-            self.info("需要下载的全部%s歌曲解析完毕，共%s首" % (self.audio_type_name_dict[audio_type], len(audio_info_list)))
+            self.info(f"需要下载的全部{self.audio_type_name_dict[audio_type]}歌曲解析完毕，共{len(audio_info_list)}首")
 
             # 从最早的歌曲开始下载
             while len(audio_info_list) > 0:

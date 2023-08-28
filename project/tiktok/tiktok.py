@@ -17,7 +17,7 @@ EACH_PAGE_VIDEO_COUNT = 48
 
 # 获取账号首页
 def get_account_index_page(account_id):
-    account_index_url = "https://www.tiktok.com/share/user/%s" % account_id
+    account_index_url = f"https://www.tiktok.com/share/user/{account_id}"
     result = {
         "signature": "",  # 加密串（请求参数）
     }
@@ -52,7 +52,7 @@ def get_one_page_video(account_id, cursor_id, signature):
         "_signature": signature,
     }
     headers = {
-        "Referer": "https://www.tiktok.com/share/user/%s" % account_id,
+        "Referer": f"https://www.tiktok.com/share/user/{account_id}",
     }
     video_pagination_response = net.Request(api_url, method="GET", fields=query_data, headers=headers).enable_json_decode()
     result = {
@@ -122,7 +122,7 @@ class CrawlerThread(crawler.CrawlerThread):
         is_over = False
         # 获取全部还未下载过需要解析的视频
         while not is_over:
-            video_pagination_description = "cursor %s后的一页视频" % cursor_id
+            video_pagination_description = f"cursor {cursor_id}后的一页视频"
             self.start_parse(video_pagination_description)
             try:
                 video_pagination_response = get_one_page_video(self.index_key, cursor_id, account_index_response["signature"])
@@ -150,7 +150,7 @@ class CrawlerThread(crawler.CrawlerThread):
     # 解析单个视频
     def crawl_video(self, video_info):
         video_path = os.path.join(self.main_thread.video_download_path, self.display_name, "%020d.mp4" % video_info["video_id"])
-        video_description = "视频%s" % video_info["video_id"]
+        video_description = f"视频{video_info['video_id']}"
         if self.download(video_info["video_url"], video_path, video_description, auto_multipart_download=True):
             self.total_video_count += 1  # 计数累加
 
@@ -160,7 +160,7 @@ class CrawlerThread(crawler.CrawlerThread):
     def _run(self):
         # 获取所有可下载视频
         video_id_list = self.get_crawl_list()
-        self.info("需要下载的全部视频解析完毕，共%s个" % len(video_id_list))
+        self.info(f"需要下载的全部视频解析完毕，共{len(video_id_list)}个")
 
         # 从最早的视频开始下载
         while len(video_id_list) > 0:

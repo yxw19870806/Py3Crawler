@@ -64,7 +64,7 @@ class NicoNicoDownload(niconico.NicoNico):
         log.info("请选择下载目录")
         options = {
             "initialdir": self.video_download_path,
-            "initialfile": "%08d - %s.mp4" % (int(video_id), path.filter_text(video_response["video_title"])),
+            "initialfile": "%08d - %s.mp4" % (int(video_id), video_response["video_title"]),
             "filetypes": [("mp4", ".mp4")],
             "parent": self.gui,
         }

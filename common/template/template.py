@@ -77,7 +77,7 @@ class CrawlerThread(crawler.CrawlerThread):
     def _run(self):
         # 获取所有可下载日志
         blog_id_list = self.get_crawl_list()
-        self.info("需要下载的全部日志解析完毕，共%s个" % len(blog_id_list))
+        self.info(f"需要下载的全部日志解析完毕，共{len(blog_id_list)}个")
 
         # 从最早的日志开始下载
         while len(blog_id_list) > 0:
@@ -92,7 +92,7 @@ class CrawlerThread(crawler.CrawlerThread):
         is_over = False
         # 获取全部还未下载过需要解析的日志
         while not is_over:
-            blog_pagination_description = "第%s页日志" % page_count
+            blog_pagination_description = f"第{page_count}页日志"
             self.start_parse(blog_pagination_description)
             try:
                 blog_pagination_response = get_one_page_blog(self.index_key, page_count)
@@ -114,7 +114,7 @@ class CrawlerThread(crawler.CrawlerThread):
 
     # 解析单个日志
     def crawl_blog(self, blog_id):
-        blog_description = "日志%s" % blog_id
+        blog_description = f"日志{blog_id}"
         self.start_parse(blog_description)
         # 获取指定日志
         try:
@@ -131,8 +131,8 @@ class CrawlerThread(crawler.CrawlerThread):
             photo_index = 1
             for photo_url in blog_response["photo_url_list"]:
                 file_extension = url.get_file_ext(photo_url)
-                photo_file_path = os.path.join(self.main_thread.photo_download_path, self.index_key, "%04d.%s" % (photo_index, file_extension))
-                photo_file_description = "第%s张图片" % photo_index
+                photo_file_path = os.path.join(self.main_thread.photo_download_path, self.index_key, f"%04d.{file_extension}" % photo_index)
+                photo_file_description = f"第{photo_index}张图片"
                 if self.download(photo_url, photo_file_path, photo_file_description):
                     self.temp_path_list.append(photo_file_path)  # 设置临时目录
                     self.total_photo_count += 1  # 计数累加
@@ -146,8 +146,8 @@ class CrawlerThread(crawler.CrawlerThread):
             video_index = 1
             for video_url in blog_response["video_url_list"]:
                 file_extension = url.get_file_ext(video_url)
-                video_file_path = os.path.join(self.main_thread.video_download_path, self.index_key, "%04d.%s" % (video_index, file_extension))
-                video_file_description = "第%s个视频" % video_index
+                video_file_path = os.path.join(self.main_thread.video_download_path, self.index_key, f"%04d.{file_extension}" % video_index)
+                video_file_description = f"第{video_index}个视频"
                 if self.download(video_url, video_file_path, video_file_description):
                     self.temp_path_list.append(video_file_path)  # 设置临时目录
                     self.total_video_count += 1  # 计数累加
@@ -161,8 +161,8 @@ class CrawlerThread(crawler.CrawlerThread):
             audio_index = 1
             for audio_url in blog_response["audio_url_list"]:
                 file_extension = url.get_file_ext(audio_url)
-                audio_file_path = os.path.join(self.main_thread.audio_download_path, self.index_key, "%04d.%s" % (audio_index, file_extension))
-                audio_file_description = "第%s个音频" % audio_index
+                audio_file_path = os.path.join(self.main_thread.audio_download_path, self.index_key, f"%04d.{file_extension}" % audio_index)
+                audio_file_description = f"第{audio_index}个音频"
                 if self.download(audio_url, audio_file_path, audio_file_description):
                     self.temp_path_list.append(audio_file_path)  # 设置临时目录
                     self.total_audio_count += 1  # 计数累加

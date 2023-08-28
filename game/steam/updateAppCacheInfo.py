@@ -6,7 +6,6 @@ https://store.steampowered.com/
 email: hikaru870806@hotmail.com
 如有问题或建议请联系
 """
-import os
 from common import *
 from game.steam.lib import steam
 
@@ -23,60 +22,56 @@ def main():
         raise
 
     # 已检测过的游戏列表
-    checked_apps_file_path = os.path.join(steam_class.cache_data_path, "checked.txt")
-    checked_apps_string = file.read_file(checked_apps_file_path)
-    if checked_apps_string:
-        checked_apps_list = checked_apps_string.split(",")
-    else:
-        checked_apps_list = []
+    app_checked_cache = steam_class.new_cache("checked.txt", const.FileType.COMMA_DELIMITED)
+    checked_apps_list = app_checked_cache.read()
     # 已删除的游戏
-    deleted_app_list = steam_class.load_deleted_app_list()
+    deleted_app_list = steam_class.deleted_app_list_cache.read()
     # 已资料受限制的游戏
-    restricted_app_list = steam_class.load_restricted_app_list()
+    restricted_app_list = steam_class.restricted_app_list_cache.read()
     # 游戏的DLC列表
-    game_dlc_list = steam_class.load_game_dlc_list()
+    game_dlc_list = steam_class.game_dlc_list_cache.read()
 
     while len(owned_game_list) > 0:
         game_id = owned_game_list.pop()
         if game_id in checked_apps_list:
             continue
 
-        console.log("游戏: %s，剩余数量: %s" % (game_id, len(owned_game_list)))
+        console.log(f"游戏{game_id}，剩余数量: {len(owned_game_list)}")
         # 获取游戏信息
         try:
             game_data = steam.get_game_store_index(game_id)
         except CrawlerException as e:
-            console.log(e.http_error("游戏 %s" % game_id))
+            console.log(e.http_error(f"游戏{game_id}"))
             raise
 
         # 已删除
         if game_data["deleted"]:
-            console.log("游戏 %s 已删除" % game_id)
+            console.log(f"游戏{game_id}已删除")
             if game_id not in deleted_app_list:
                 deleted_app_list.append(game_id)
                 # 保存数据
-                steam_class.save_deleted_app_list(deleted_app_list)
+                steam_class.deleted_app_list_cache.write(deleted_app_list)
         else:
             # 受限制
             if game_data["restricted"]:
-                console.log("游戏 %s 已受限制" % game_id)
+                console.log(f"游戏{game_id}已受限制")
                 if game_id not in restricted_app_list:
                     restricted_app_list.append(game_id)
                     # 保存数据
-                    steam_class.save_restricted_app_list(restricted_app_list)
+                    steam_class.restricted_app_list_cache.write(restricted_app_list)
             # 所有的DLC
             if len(game_data["dlc_list"]) > 0:
                 is_change = False
                 for dlc_id in game_data["dlc_list"]:
-                    console.log("游戏 %s，DLC %s" % (game_id, dlc_id))
+                    console.log(f"游戏{game_id}，DLC {dlc_id}")
                     if dlc_id not in game_dlc_list:
                         game_dlc_list[dlc_id] = game_id
                 # 保存数据
                 if is_change:
-                    steam_class.save_game_dlc_list(game_dlc_list)
+                    steam_class.game_dlc_list_cache.write(game_dlc_list)
 
         checked_apps_list.append(game_id)
-        file.write_file(",".join(checked_apps_list), checked_apps_file_path, const.WriteFileMode.REPLACE)
+        app_checked_cache.write(",".join(checked_apps_list))
 
 
 if __name__ == "__main__":

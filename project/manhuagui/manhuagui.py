@@ -23,7 +23,7 @@ from common import *
 # 获取指定一页的图集
 def get_comic_index_page(comic_id):
     # https://www.manhuagui.com/comic/21175/
-    index_url = "https://www.manhuagui.com/comic/%s/" % comic_id
+    index_url = f"https://www.manhuagui.com/comic/{comic_id}/"
     index_response = net.Request(index_url, method="GET")
     result = {
         "chapter_info_list": [],  # 漫画列表信息
@@ -61,14 +61,14 @@ def get_comic_index_page(comic_id):
             chapter_selector = chapter_list_selector.eq(page_index)
             # 获取章节ID
             chapter_url = chapter_selector.find("a").attr("href")
-            chapter_id = tool.find_sub_string(chapter_url, "/comic/%s/" % comic_id, ".html")
+            chapter_id = tool.find_sub_string(chapter_url, f"/comic/{comic_id}/", ".html")
             if not tool.is_integer(chapter_id):
-                raise CrawlerException("页面地址 %s 截取页面id失败" % chapter_url)
+                raise CrawlerException(f"页面地址 {chapter_url} 截取页面id失败")
             result_comic_info["chapter_id"] = int(chapter_id)
             # 获取章节名称
             chapter_name = chapter_selector.find("a").attr("title")
             if not chapter_name:
-                raise CrawlerException("页面地址 %s 截取章节名失败" % chapter_url)
+                raise CrawlerException(f"页面地址 {chapter_url} 截取章节名失败")
             result_comic_info["chapter_name"] = chapter_name.strip()
             result["chapter_info_list"].append(result_comic_info)
     return result
@@ -77,7 +77,7 @@ def get_comic_index_page(comic_id):
 # 获取漫画指定章节
 def get_chapter_page(comic_id, chapter_id):
     # https://www.manhuagui.com/comic/7580/562894.html
-    chapter_url = "https://www.manhuagui.com/comic/%s/%s.html" % (comic_id, chapter_id)
+    chapter_url = f"https://www.manhuagui.com/comic/{comic_id}/{chapter_id}html"
     chapter_response = net.Request(chapter_url, method="GET")
     result = {
         "photo_url_list": [],  # 全部漫画图片地址
@@ -166,7 +166,7 @@ class CrawlerThread(crawler.CrawlerThread):
 
     # 解析单章节漫画
     def crawl_comic(self, chapter_info):
-        comic_description = "漫画%s %s《%s》" % (chapter_info["chapter_id"], chapter_info["group_name"], chapter_info["chapter_name"])
+        comic_description = f"漫画{chapter_info['chapter_id']} {chapter_info['group_name']}《{chapter_info['chapter_name']}》"
         self.start_parse(comic_description)
         try:
             chapter_response = get_chapter_page(self.index_key, chapter_info["chapter_id"])
@@ -177,14 +177,14 @@ class CrawlerThread(crawler.CrawlerThread):
 
         # 图片下载
         photo_index = 1
-        chapter_name = "%06d %s" % (chapter_info["chapter_id"], path.filter_text(chapter_info["chapter_name"]))
+        chapter_name = "%06d %s" % (chapter_info["chapter_id"], chapter_info["chapter_name"])
         chapter_path = os.path.join(self.main_thread.photo_download_path, self.display_name, chapter_info["group_name"], chapter_name)
         # 设置临时目录
         self.temp_path_list.append(chapter_path)
         for photo_url in chapter_response["photo_url_list"]:
-            photo_path = os.path.join(chapter_path, "%03d.%s" % (photo_index, url.get_file_ext(photo_url)))
-            photo_description = "漫画%s %s《%s》第%s张图片" % (chapter_info["chapter_id"], chapter_info["group_name"], chapter_info["chapter_name"], photo_index)
-            headers = {"Referer": "https://www.manhuagui.com/comic/%s/%s.html" % (self.index_key, chapter_info["chapter_id"])}
+            photo_path = os.path.join(chapter_path, f"%03d.{url.get_file_ext(photo_url)}" % photo_index)
+            photo_description = f"漫画{chapter_info['chapter_id']} {chapter_info['group_name']}《{chapter_info['chapter_name']}》第{photo_index}张图片"
+            headers = {"Referer": f"https://www.manhuagui.com/comic/{self.index_key}/{chapter_info['chapter_id']}.html"}
             if self.download(photo_url, photo_path, photo_description, headers=headers):
                 self.total_photo_count += 1  # 计数累加
             photo_index += 1
@@ -196,7 +196,7 @@ class CrawlerThread(crawler.CrawlerThread):
     def _run(self):
         # 获取所有可下载章节
         chapter_info_list = self.get_crawl_list()
-        self.info("需要下载的全部漫画解析完毕，共%s个" % len(chapter_info_list))
+        self.info(f"需要下载的全部漫画解析完毕，共{len(chapter_info_list)}个")
 
         # 从最早的章节开始下载
         while len(chapter_info_list) > 0:

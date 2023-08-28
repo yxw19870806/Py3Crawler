@@ -36,7 +36,7 @@ class Chrome:
             - headless - chrome-headless模式，默认值：True
         """
         if not os.path.exists(CHROME_WEBDRIVER_PATH):
-            raise CrawlerException("CHROME_WEBDRIVER_PATH: %s不存在" % CHROME_WEBDRIVER_PATH)
+            raise CrawlerException(f"CHROME_WEBDRIVER_PATH: {CHROME_WEBDRIVER_PATH}不存在")
 
         self.url: str = url
         # 浏览器参数
@@ -88,7 +88,7 @@ def get_default_browser_application_path(browser_type: const.BrowserType) -> Opt
     elif browser_type == const.BrowserType.CHROME:
         return os.path.abspath(os.path.join(os.getenv("ProgramFiles"), "Google", "Chrome", "Application", "chrome.exe"))
     else:
-        log.error("不支持的浏览器类型：%s" % browser_type)
+        log.error(f"不支持的浏览器类型：{browser_type}")
     return None
 
 
@@ -119,7 +119,7 @@ def get_default_browser_cookie_path(browser_type: const.BrowserType) -> Optional
     elif browser_type == const.BrowserType.TEXT:
         return os.path.abspath(os.path.join(crawler.PROJECT_APP_PATH, "info", "cookies.data"))
     else:
-        log.error("不支持的浏览器类型：%s" % browser_type)
+        log.error(f"不支持的浏览器类型：{browser_type}")
     return None
 
 
@@ -191,6 +191,7 @@ def get_all_cookie_from_browser(browser_type: const.BrowserType, file_path: str)
         try:
             con = sqlite3.connect(os.path.join(file_path, "Network", "Cookies"))
         except sqlite3.OperationalError:
+            # https://stackoverflow.com/questions/76440733/unable-to-open-cookie-file
             raise CrawlerException("浏览器cookies读取失败，请关闭浏览器后重试")
         cur = con.cursor()
         cur.execute("SELECT host_key, path, name, value, encrypted_value FROM cookies")
@@ -219,6 +220,6 @@ def get_all_cookie_from_browser(browser_type: const.BrowserType, file_path: str)
     elif browser_type == const.BrowserType.TEXT:
         all_cookies["DEFAULT"] = net.split_cookies_from_cookie_string(file.read_file(file_path))
     else:
-        log.error("不支持的浏览器类型：%s" % browser_type)
+        log.error(f"不支持的浏览器类型：{browser_type}")
         return {}
     return all_cookies

@@ -28,27 +28,27 @@ def main():
         if single_save_list[4] == ivseek.DONE_SING:
             continue
 
-        log.info("开始解析视频%s" % single_save_list[2])
+        console.log(f"开始解析视频{single_save_list[2]}")
         video_id = tool.remove_string_prefix(url.get_basename(single_save_list[2]), "sm")
         if not tool.is_integer(video_id):
-            log.info("视频%s截取video id失败" % single_save_list[2])
+            console.log(f"视频{single_save_list[2]}截取video id失败")
             continue
 
         try:
             video_info_response = niconico.get_video_info(video_id)
         except CrawlerException as e:
-            log.error(e.http_error("视频%s" % single_save_list[2]))
+            log.error(e.http_error(f"视频{single_save_list[2]}"))
             continue
 
         if video_info_response["is_delete"]:
             continue
 
-        video_name = "%08d - %s.mp4" % (int(video_id), path.filter_text(video_info_response["video_title"]))
+        video_name = "%08d - %s.mp4" % (int(video_id), video_info_response["video_title"])
         video_path = os.path.join(NICONICO_VIDEO_DOWNLOAD_PATH, video_name)
         cookies = niconico.COOKIES
         if video_info_response["extra_cookie"]:
             cookies.update(video_info_response["extra_cookie"])
-        video_description = "视频%s《%s》 %s" % (video_id, video_info_response["video_title"], video_info_response["video_url"])
+        video_description = f"视频{video_id}《{video_info_response['video_title']}》 {video_info_response['video_url']}"
         if not ivseek_class.download(video_info_response["video_url"], video_path, video_description, cookies=cookies):
             continue
 

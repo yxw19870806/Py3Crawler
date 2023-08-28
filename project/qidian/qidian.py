@@ -15,7 +15,7 @@ from common import *
 # 获取指定一页的章节
 def get_book_index(book_id):
     # https://book.qidian.com/info/1016397637/
-    index_url = "https://book.qidian.com/info/%s/" % book_id
+    index_url = f"https://book.qidian.com/info/{book_id}/"
     index_response = net.Request(index_url, method="GET")
     result = {
         "chapter_info_list": [],  # 章节信息列表
@@ -44,9 +44,9 @@ def get_book_index(book_id):
             pass
         elif result_chapter_info["chapter_url"].find("//vipreader.qidian.com/") >= 0:
             if not tool.is_integer(chapter_id):
-                raise CrawlerException("章节地址 %s 截取章节id失败" % result_chapter_info["chapter_url"])
+                raise CrawlerException(f"章节地址 {result_chapter_info['chapter_url']} 截取章节id失败")
         else:
-            raise CrawlerException("未知的章节域名: %s" % result_chapter_info["chapter_url"])
+            raise CrawlerException(f"未知的章节域名: {result_chapter_info['chapter_url']}")
         # 获取章节id
         result_chapter_info["chapter_id"] = chapter_id
         # 获取章节标题
@@ -56,7 +56,7 @@ def get_book_index(book_id):
         try:
             result_chapter_info["chapter_time"] = tool.convert_formatted_time_to_timestamp(result_chapter_info["chapter_time_string"], "%Y-%m-%d %H:%M:%S")
         except ValueError:
-            raise CrawlerException("日志时间%s的格式不正确" % result_chapter_info["chapter_time_string"])
+            raise CrawlerException(f"日志时间{result_chapter_info['chapter_time_string']}的格式不正确")
         result["chapter_info_list"].insert(0, result_chapter_info)
     return result
 
@@ -97,7 +97,7 @@ class QiDian(crawler.Crawler):
         # 初始化参数
         sys_config = {
             const.SysConfigKey.DOWNLOAD_CONTENT: True,
-            const.SysConfigKey.SAVE_DATA_FORMATE: (0, ["", ""]),  # book_id  chapter_id
+            const.SysConfigKey.SAVE_DATA_FORMATE: (0, ["", ""]),  # book_id  last_chapter_id
         }
         crawler.Crawler.__init__(self, sys_config, **kwargs)
 
@@ -117,7 +117,7 @@ class CrawlerThread(crawler.CrawlerThread):
     def _run(self):
         # 获取所有可下载章节
         chapter_info_list = self.get_crawl_list()
-        self.info("需要下载的全部小说解析完毕，共%s个" % len(chapter_info_list))
+        self.info(f"需要下载的全部小说解析完毕，共{len(chapter_info_list)}个")
 
         # 从最早的章节开始下载
         while len(chapter_info_list) > 0:
@@ -150,7 +150,7 @@ class CrawlerThread(crawler.CrawlerThread):
 
     # 解析单章节小说
     def crawl_chapter(self, chapter_info):
-        chapter_description = "章节《%s》 %s" % (chapter_info["chapter_title"], chapter_info["chapter_url"])
+        chapter_description = f"章节《{chapter_info['chapter_title']}》 {chapter_info['chapter_url']}"
         self.start_parse(chapter_description)
 
         # 获取指定小说章节
@@ -161,12 +161,12 @@ class CrawlerThread(crawler.CrawlerThread):
             raise
 
         if chapter_response["is_vip"]:
-            raise CrawlerException("%s 需要vip才能解锁" % chapter_description)
+            raise CrawlerException(f"{chapter_description} 需要vip才能解锁")
 
-        content_file_name = "%s %s.txt" % (chapter_info["chapter_time_string"].replace(":", "_"), path.filter_text(chapter_info["chapter_title"]))
+        content_file_name = f"{chapter_info['chapter_time_string'].replace(':', '_')} {chapter_info['chapter_title']}.txt"
         content_file_path = os.path.join(self.main_thread.content_download_path, self.display_name, content_file_name)
         file.write_file(chapter_response["content"], content_file_path)
-        self.info("%s 下载成功" % chapter_description)
+        self.info(f"{chapter_description} 下载成功")
 
         # 章节内图片全部下载完毕
         self.total_content_count += 1  # 计数累加

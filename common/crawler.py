@@ -23,6 +23,190 @@ if platform.system() == "Windows":
 PROJECT_APP_PATH = os.getcwd()
 
 
+class CrawlerSingleValueSaveData:
+    def __init__(self, save_data_path: str, type_check: Optional[str] = None) -> None:
+        self._save_data_path: str = save_data_path
+        self._save_data: str = ""
+        if type_check == "int":
+            self._save_data = "0"
+        elif type_check.startswith("int_"):
+            default_value = tool.remove_string_prefix(type_check, "int_")
+            if tool.is_integer(default_value):
+                self._save_data = default_value
+            else:
+                raise CrawlerException(f"无效的type_check：{type_check}", True)
+        if os.path.exists(self._save_data_path):
+            self._save_data = file.read_file(self._save_data_path).strip()
+            if type_check is not None:
+                type_check_error = False
+                if type_check == "int" or (type_check.startswith("int_") and tool.is_integer(tool.remove_string_prefix(type_check, "int_"))):
+                    type_check_error = not tool.is_integer(self._save_data)
+                elif type_check == "date":
+                    type_check_error = not tool.is_date(self._save_data)
+                elif type_check == "datetime":
+                    type_check_error = not tool.is_datetime(self._save_data)
+                elif type_check == "url":
+                    type_check_error = not (self._save_data.startswith("http://") or self._save_data.startswith("https://"))
+                if type_check_error:
+                    raise CrawlerException("存档内数据格式不正确", True)
+
+    def value(self) -> str:
+        return self._save_data
+
+    def update(self, data: str) -> None:
+        self._save_data = data
+
+    def incr(self, step: int) -> None:
+        self._save_data = str(int(self._save_data) + step)
+
+    def save(self) -> None:
+        file.write_file(self._save_data, self._save_data_path, const.WriteFileMode.REPLACE)
+
+
+class CrawlerMultiValueSaveData:
+    def __init__(self, save_data_path: str, type_check_list: Optional[list[str]] = None) -> None:
+        self._save_data_path: str = save_data_path
+        if not isinstance(type_check_list, list):
+            raise CrawlerException("类型检测参数错误", True)
+        self._save_data: list[str] = []
+        if os.path.exists(self._save_data_path):
+            file_save_data = file.read_file(self._save_data_path).strip()
+            self._save_data = file_save_data.split("\t")
+        for index in range(len(type_check_list)):
+            type_check = type_check_list[index]
+            if len(self._save_data) > index:
+                self._save_data[index] = self._save_data[index].strip()
+                type_check_error = False
+                if type_check == "int" or (type_check.startswith("int_") and tool.is_integer(tool.remove_string_prefix(type_check, "int_"))):
+                    type_check_error = not tool.is_integer(self._save_data[index])
+                elif type_check == "date":
+                    type_check_error = not tool.is_date(self._save_data[index])
+                elif type_check == "datetime":
+                    type_check_error = not tool.is_datetime(self._save_data[index])
+                elif type_check == "url":
+                    type_check_error = not (self._save_data[index].startswith("http://") or self._save_data[index].startswith("https://"))
+                if type_check_error:
+                    raise CrawlerException("存档内数据格式不正确", True)
+            else:
+                defalut_value = ""
+                if type_check == "int":
+                    defalut_value = "0"
+                elif type_check == "int_1":
+                    defalut_value = "1"
+                self._save_data.append(defalut_value)
+
+    def get(self, index: int) -> str:
+        return self._save_data[index]
+
+    def set(self, index: int, data: str) -> None:
+        self._save_data[index] = data
+
+    def update(self, data: list[str]) -> None:
+        self._save_data = data
+
+    def save(self) -> None:
+        file.write_file("\t".join(self._save_data), self._save_data_path, const.WriteFileMode.REPLACE)
+
+
+class CrawlerSaveData:
+    def __init__(self, save_data_path: str, save_data_format: Optional[tuple[int, list[str]]] = None) -> None:
+        self._save_data_path: str = save_data_path
+        if not os.path.exists(self._save_data_path):
+            raise CrawlerException(f"存档文件 {self._save_data_path} 不存在！", True)
+        temp_file_name = tool.convert_timestamp_to_formatted_time("%m-%d_%H_%M_") + os.path.basename(self._save_data_path)
+        self._temp_save_data_path: str = os.path.join(os.path.dirname(self._save_data_path), temp_file_name)
+        if os.path.exists(self._temp_save_data_path):
+            raise CrawlerException(f"存档临时文件 {self._temp_save_data_path} 已存在！", True)
+        self._save_data: dict[str, list] = {}
+        if save_data_format is not None:
+            if isinstance(save_data_format, tuple) and len(save_data_format) == 2 and \
+                    tool.is_integer(save_data_format[0]) and isinstance(save_data_format[1], list):
+                self._save_data = read_save_data(self._save_data_path, save_data_format[0], save_data_format[1])
+            else:
+                raise CrawlerException(f"存档文件默认格式 {save_data_format} 不正确", True)
+        self._thread_lock: threading.Lock = threading.Lock()  # 线程锁，避免同时读写存档文件
+        self._completed_save_data: dict[str, list] = {}
+
+    def keys(self):
+        return self._save_data.keys()
+
+    def get(self, key: str) -> list:
+        return self._save_data[key]
+
+    def update(self, key: str, data: list) -> None:
+        self._save_data[key] = data
+
+    def save(self, key: str, data: list) -> None:
+        # 从待执行的记录里删除
+        self._save_data.pop(key)
+        self._completed_save_data[key] = data
+
+        # 写入临时存档
+        if data:
+            with self._thread_lock:
+                file.write_file("\t".join(data), self._temp_save_data_path)
+
+    def done(self) -> None:
+        # 将剩余未处理的存档数据写入临时存档文件
+        if len(self._save_data) > 0:
+            file.write_file(tool.dyadic_list_to_string(list(self._save_data.values())), self._temp_save_data_path)
+            self._completed_save_data.update(self._save_data)
+            self._save_data = {}
+
+        # 将临时存档文件按照主键排序后写入原始存档文件
+        # 只支持一行一条记录，每条记录格式相同的存档文件
+        save_data = read_save_data(self._temp_save_data_path, 0, [])
+        temp_list = [save_data[key] for key in sorted(save_data.keys())]
+        file.write_file(tool.dyadic_list_to_string(temp_list), self._save_data_path, const.WriteFileMode.REPLACE)
+        path.delete_dir_or_file(self._temp_save_data_path)
+
+
+class CrawlerCache:
+    def __init__(self, file_path: str, cache_type: const.FileType) -> None:
+        if not isinstance(cache_type, const.FileType):
+            raise ValueError("invalid cache_type")
+        self._cache_path = file_path
+        self._cache_type = cache_type
+
+    def read(self) -> Any:
+        if self._cache_type == const.FileType.LINES:
+            return file.read_file(self._cache_path, const.ReadFileMode.LINE)
+        elif self._cache_type == const.FileType.JSON:
+            return file.read_json_file(self._cache_path)
+        else:
+            file_string = file.read_file(self._cache_path, const.ReadFileMode.FULL).strip()
+            if self._cache_type == const.FileType.COMMA_DELIMITED:
+                return file_string.split(",")
+            else:
+                return file_string
+
+    def write(self, msg: Any) -> bool:
+        if self._cache_type == const.FileType.JSON:
+            return file.write_json_file(msg, self._cache_path)
+        else:
+            if self._cache_type in [const.FileType.LINES, const.FileType.COMMA_DELIMITED] and not isinstance(msg, list):
+                raise ValueError(f"type of msg must is list when cache_type = {self._cache_type}")
+            if self._cache_type == const.FileType.LINES:
+                write_string = "\n".join(msg)
+            elif self._cache_type == const.FileType.COMMA_DELIMITED:
+                write_string = ",".join(msg)
+            else:
+                write_string = str(msg)
+            return file.write_file(write_string, self._cache_path, const.WriteFileMode.REPLACE)
+
+    def append(self, msg: str) -> bool:
+        if self._cache_type != const.FileType.LINES:
+            raise ValueError(f"can't append msg when cache_type != {const.FileType.LINES}")
+        return file.write_file(msg, self._cache_path, const.WriteFileMode.APPEND)
+
+    def clear(self) -> bool:
+        return path.delete_dir_or_file(self._cache_path)
+
+    @property
+    def cache_path(self) -> str:
+        return self._cache_path
+
+
 class Crawler(object):
     # 程序全局变量的设置
     def __init__(self, sys_config: dict[const.SysConfigKey, Any], **kwargs) -> None:
@@ -52,14 +236,14 @@ class Crawler(object):
         # 额外初始化配置（直接通过实例化中传入，可覆盖子类__init__方法传递的sys_config参数）
         if "extra_sys_config" in kwargs and isinstance(kwargs["extra_sys_config"], dict):
             sys_config.update(kwargs["extra_sys_config"])
-        sys_download_photo = const.SysConfigKey.DOWNLOAD_PHOTO in sys_config and sys_config[const.SysConfigKey.DOWNLOAD_PHOTO]
-        sys_download_video = const.SysConfigKey.DOWNLOAD_VIDEO in sys_config and sys_config[const.SysConfigKey.DOWNLOAD_VIDEO]
-        sys_download_audio = const.SysConfigKey.DOWNLOAD_AUDIO in sys_config and sys_config[const.SysConfigKey.DOWNLOAD_AUDIO]
-        sys_download_content = const.SysConfigKey.DOWNLOAD_CONTENT in sys_config and sys_config[const.SysConfigKey.DOWNLOAD_CONTENT]
-        sys_set_proxy = const.SysConfigKey.SET_PROXY in sys_config and sys_config[const.SysConfigKey.SET_PROXY]
-        sys_get_cookie = const.SysConfigKey.GET_COOKIE in sys_config and sys_config[const.SysConfigKey.GET_COOKIE]
-        sys_not_check_save_data = const.SysConfigKey.NOT_CHECK_SAVE_DATA in sys_config and sys_config[const.SysConfigKey.NOT_CHECK_SAVE_DATA]
-        sys_not_download = const.SysConfigKey.NOT_DOWNLOAD in sys_config and sys_config[const.SysConfigKey.NOT_DOWNLOAD]
+        sys_download_photo = sys_config.get(const.SysConfigKey.DOWNLOAD_PHOTO, False)
+        sys_download_video = sys_config.get(const.SysConfigKey.DOWNLOAD_VIDEO, False)
+        sys_download_audio = sys_config.get(const.SysConfigKey.DOWNLOAD_AUDIO, False)
+        sys_download_content = sys_config.get(const.SysConfigKey.DOWNLOAD_CONTENT, False)
+        sys_set_proxy = sys_config.get(const.SysConfigKey.SET_PROXY, False)
+        sys_get_cookie = sys_config.get(const.SysConfigKey.GET_COOKIE, set())
+        sys_not_check_save_data = sys_config.get(const.SysConfigKey.NOT_CHECK_SAVE_DATA, False)
+        sys_not_download = sys_config.get(const.SysConfigKey.NOT_DOWNLOAD, False)
 
         if IS_EXECUTABLE:
             application_path = os.path.dirname(sys.executable)
@@ -71,10 +255,7 @@ class Crawler(object):
         # 程序配置
         config = read_config(config_path)
         # 应用配置
-        if const.SysConfigKey.APP_CONFIG_PATH in sys_config:
-            app_config_path = sys_config[const.SysConfigKey.APP_CONFIG_PATH]
-        else:
-            app_config_path = os.path.abspath(os.path.join(PROJECT_APP_PATH, "app.ini"))
+        app_config_path = sys_config.get(const.SysConfigKey.APP_CONFIG_PATH, os.path.abspath(os.path.join(PROJECT_APP_PATH, "app.ini")))
         if os.path.exists(app_config_path):
             config.update(read_config(app_config_path))
         # 额外应用配置（直接通过实例化中传入，可覆盖配置文件中参数）
@@ -83,11 +264,10 @@ class Crawler(object):
 
         # 应用配置
         self.app_config: dict[str, Any] = {}
-        if const.SysConfigKey.APP_CONFIG in sys_config and len(sys_config[const.SysConfigKey.APP_CONFIG]) > 0:
-            for app_config_temp in sys_config[const.SysConfigKey.APP_CONFIG]:
-                if len(app_config_temp) != 3:
-                    continue
-                self.app_config[app_config_temp[0]] = analysis_config(config, app_config_temp[0], app_config_temp[1], app_config_temp[2])
+        for app_config_temp in sys_config.get(const.SysConfigKey.APP_CONFIG, set()):
+            if len(app_config_temp) != 3:
+                continue
+            self.app_config[app_config_temp[0]] = analysis_config(config, app_config_temp[0], app_config_temp[1], app_config_temp[2])
 
         # 是否下载
         self.is_download_photo: bool = sys_download_photo and analysis_config(config, "IS_DOWNLOAD_PHOTO", True, const.ConfigAnalysisMode.BOOLEAN)
@@ -104,21 +284,10 @@ class Crawler(object):
 
         # 存档
         self.save_data_path: str = analysis_config(config, "SAVE_DATA_PATH", r"\\info/save.data", const.ConfigAnalysisMode.PATH)
-        self.temp_save_data_path: str = ""
-        self.save_data: dict[str, list] = {}
+        self.save_data: Optional[CrawlerSaveData] = None
         if not sys_not_check_save_data:
-            if not os.path.exists(self.save_data_path):
-                raise CrawlerException("存档文件%s不存在！" % self.save_data_path, True)
-            temp_file_name = tool.convert_timestamp_to_formatted_time("%m-%d_%H_%M_") + os.path.basename(self.save_data_path)
-            self.temp_save_data_path = os.path.join(os.path.dirname(self.save_data_path), temp_file_name)
-            if os.path.exists(self.temp_save_data_path):
-                raise CrawlerException("存档临时文件%s已存在！" % self.temp_save_data_path, True)
-            if const.SysConfigKey.SAVE_DATA_FORMATE in sys_config:
-                save_data_format = sys_config[const.SysConfigKey.SAVE_DATA_FORMATE]
-                if isinstance(save_data_format, tuple) and len(save_data_format) == 2:
-                    self.save_data = read_save_data(self.save_data_path, save_data_format[0], save_data_format[1])
-                else:
-                    log.warning("存档文件默认格式不正确%s" % save_data_format)
+            self.save_data = CrawlerSaveData(self.save_data_path, sys_config.get(const.SysConfigKey.SAVE_DATA_FORMATE, None))
+
         # cache
         self.cache_data_path: str = analysis_config(config, "CACHE_DATA_PATH", r"\\cache", const.ConfigAnalysisMode.PATH)
 
@@ -172,7 +341,7 @@ class Crawler(object):
                 if "DEFAULT" in all_cookie_from_browser:
                     self.cookie_value.update(all_cookie_from_browser["DEFAULT"])
             else:
-                for cookie_domain in sys_config[const.SysConfigKey.GET_COOKIE]:
+                for cookie_domain in sys_get_cookie:
                     check_domain_list = [cookie_domain]
                     if cookie_domain[0].startswith("."):
                         check_domain_list.append(cookie_domain[1:])
@@ -223,6 +392,7 @@ class Crawler(object):
         self.total_photo_count: int = 0
         self.total_video_count: int = 0
         self.total_audio_count: int = 0
+        self.total_content_count: int = 0
 
         self.download_thead_list: list["DownloadThread"] = []  # 下载线程
         self.crawler_thread: Optional[Type["CrawlerThread"]] = None  # 下载子线程
@@ -245,11 +415,8 @@ class Crawler(object):
             log.error("未知异常")
             log.error(str(e) + "\n" + traceback.format_exc())
 
-        # 未完成的数据保存
-        self.write_remaining_save_data()
-
-        # 重新排序保存存档文件
-        self.rewrite_save_file()
+        # 保存剩余未完成的数据，并重新排序保存存档文件
+        self.complete_save_data()
 
         # 其他结束操作
         self.done()
@@ -267,7 +434,7 @@ class Crawler(object):
                     break
 
                 # 开始下载
-                thread = self.crawler_thread(self, self.save_data[index_key])
+                thread = self.crawler_thread(self, self.save_data.get(index_key))
                 thread.start()
                 thread_list.append(thread)
 
@@ -320,23 +487,8 @@ class Crawler(object):
         if not self.is_running():
             tool.process_exit(const.ExitCode.NORMAL)
 
-    def write_remaining_save_data(self) -> None:
-        """
-        将剩余未处理的存档数据写入临时存档文件
-        """
-        if len(self.save_data) > 0 and self.temp_save_data_path:
-            file.write_file(tool.dyadic_list_to_string(list(self.save_data.values())), self.temp_save_data_path)
-
-    def rewrite_save_file(self) -> None:
-        """
-        将临时存档文件按照主键排序后写入原始存档文件
-        只支持一行一条记录，每条记录格式相同的存档文件
-        """
-        if self.temp_save_data_path:
-            save_data = read_save_data(self.temp_save_data_path, 0, [])
-            temp_list = [save_data[key] for key in sorted(save_data.keys())]
-            file.write_file(tool.dyadic_list_to_string(temp_list), self.save_data_path, const.WriteFileMode.REPLACE)
-            path.delete_dir_or_file(self.temp_save_data_path)
+    def complete_save_data(self) -> None:
+        self.save_data.done()
 
     def end_message(self) -> None:
         message = f"全部下载完毕，耗时{self.get_run_time()}秒"
@@ -347,6 +499,8 @@ class Crawler(object):
             download_result.append(f"视频{self.total_video_count}个")
         if self.is_download_audio:
             download_result.append(f"音频{self.total_audio_count}个")
+        if self.is_download_content:
+            download_result.append(f"文本{self.total_content_count}个")
         if download_result:
             message += "，共计下载" + "，".join(download_result)
         log.info(message)
@@ -357,8 +511,8 @@ class Crawler(object):
 
     @staticmethod
     def parse_result(description: str, parse_result_list: Union[list, dict]) -> None:
-        log.debug("%s 解析结果：%s" % (description, parse_result_list))
-        log.info("%s 解析数量：%s" % (description, len(parse_result_list)))
+        log.debug(f"{description} 解析结果：{parse_result_list}")
+        log.info(f"{description} 解析数量：{len(parse_result_list)}")
 
     def download(self, file_url: str, file_path: str, file_description: str, headers: Optional[dict[str, str]] = None, cookies: Optional[dict[str, str]] = None,
                  success_callback: Callable[[str, str, str, net.Download], bool] = None, failure_callback: Callable[[str, str, str, net.Download], bool] = None,
@@ -381,20 +535,20 @@ class Crawler(object):
                 False - 不需要
         """
         self.running_check()
-        log.info("开始下载 %s %s" % (file_description, file_url))
+        log.info(f"开始下载 {file_description} {file_url}")
         download_return = net.Download(file_url, file_path, headers=headers, cookies=cookies, auto_multipart_download=auto_multipart_download)
         if download_return.status == const.DownloadStatus.SUCCEED:
             if success_callback is None or success_callback(file_url, file_path, file_description, download_return):
-                log.info("%s 下载成功" % file_description)
+                log.info(f"{file_description} 下载成功")
         else:
             if failure_callback is None or failure_callback(file_url, file_path, file_description, download_return):
-                log.error("%s %s 下载失败，原因：%s" % (file_description, file_url, download_failre(download_return.code)))
+                log.error(f"{file_description} 下载失败，原因：{download_failre(download_return.code)}")
                 if self.exit_after_download_failure:
                     tool.process_exit(const.ExitCode.NORMAL)
         return download_return
 
     def multi_thread_download(self, thread_class: Type["DownloadThread"], file_url: str, file_path: str, file_description: str,
-                              headers: Optional[dict[str, str]] = None, cookies: Optional[dict[str, str]] = None):
+                              headers: Optional[dict[str, str]] = None, cookies: Optional[dict[str, str]] = None) -> None:
         """
         多线程下载
         """
@@ -407,7 +561,7 @@ class Crawler(object):
         thread.start()
         self.download_thead_list.append(thread)
 
-    def wait_multi_thead_complete(self):
+    def wait_multi_thead_complete(self) -> None:
         """
         等待通过multi_thread_download()方法提交的多线程下载全部完成
         """
@@ -419,6 +573,10 @@ class Crawler(object):
                 is_error = True
         if is_error and self.exit_after_download_failure:
             tool.process_exit(const.ExitCode.NORMAL)
+
+    def new_cache(self, file_name: str, cache_type: const.FileType) -> CrawlerCache:
+        cache_path = os.path.join(self.cache_data_path, file_name)
+        return CrawlerCache(cache_path, cache_type)
 
 
 class CrawlerThread(threading.Thread):
@@ -432,8 +590,8 @@ class CrawlerThread(threading.Thread):
         多线程下载
 
         :Args:
-        - single_save_data - 线程用到的数据
         - main_thread - 主线程对象
+        - single_save_data - 线程用到的数据
         """
         if not isinstance(main_thread, Crawler):
             raise CrawlerException("下载线程参数异常", True)
@@ -467,14 +625,9 @@ class CrawlerThread(threading.Thread):
             self.error("未知异常")
             self.error(str(e) + "\n" + traceback.format_exc(), False)
 
-        # 从住线程中移除主键对应的信息
+        # 更新存档
         if self.index_key:
-            self.main_thread.save_data.pop(self.index_key)
-
-        # 写入存档
-        if self.single_save_data and self.main_thread.temp_save_data_path:
-            with self.thread_lock:
-                file.write_file("\t".join(self.single_save_data), self.main_thread.temp_save_data_path)
+            self.main_thread.save_data.save(self.index_key, self.single_save_data)
 
         # 主线程计数累加
         if self.main_thread.is_download_photo:
@@ -483,6 +636,8 @@ class CrawlerThread(threading.Thread):
             self.main_thread.total_video_count += self.total_video_count
         if self.main_thread.is_download_audio:
             self.main_thread.total_audio_count += self.total_audio_count
+        if self.main_thread.is_download_content:
+            self.main_thread.total_content_count += self.total_content_count
 
         # 清理临时文件（未完整下载的内容）
         for temp_path in self.temp_path_list:
@@ -565,8 +720,8 @@ class CrawlerThread(threading.Thread):
         self.info("开始解析 " + description)
 
     def parse_result(self, description: str, parse_result_list: Union[list, dict]) -> None:
-        self.debug("%s 解析结果：%s" % (description, parse_result_list))
-        self.info("%s 解析数量：%s" % (description, len(parse_result_list)))
+        self.debug(f"{description} 解析结果：{parse_result_list}")
+        self.info(f"{description} 解析数量：{len(parse_result_list)}")
 
     def end_message(self) -> None:
         message = "下载完毕"
@@ -577,6 +732,8 @@ class CrawlerThread(threading.Thread):
             download_result.append(f"视频{self.total_video_count}个")
         if self.main_thread.is_download_audio:
             download_result.append(f"音频{self.total_audio_count}个")
+        if self.main_thread.is_download_content:
+            download_result.append(f"文本{self.total_content_count}个")
         if download_result:
             message += "，共计下载" + "，".join(download_result)
         self.info(message)
@@ -601,14 +758,14 @@ class CrawlerThread(threading.Thread):
                 False - 不需要
         """
         self.main_thread_check()
-        self.info("开始下载 %s %s" % (file_description, file_url))
+        self.info(f"开始下载 {file_description} {file_url}")
         download_return = net.Download(file_url, file_path, headers=headers, cookies=cookies, auto_multipart_download=auto_multipart_download, **kwargs)
         if download_return.status == const.DownloadStatus.SUCCEED:
             if success_callback is None or success_callback(file_url, file_path, file_description, download_return):
-                self.info("%s 下载成功" % file_description)
+                self.info(f"{file_description} 下载成功")
         else:
             if failure_callback is None or failure_callback(file_url, file_path, file_description, download_return):
-                self.error("%s %s 下载失败，原因：%s" % (file_description, file_url, download_failre(download_return.code)))
+                self.error(f"{file_description} {file_url} 下载失败，原因：{download_failre(download_return.code)}")
                 self.check_download_failure_exit(is_failure_exit)
         return download_return
 
@@ -730,7 +887,7 @@ def read_save_data(save_data_path: str, key_index: int = 0, default_value_list: 
         single_save_list = single_save_data.split("\t")
 
         if check_duplicate_index and single_save_list[key_index] in result_list:
-            raise CrawlerException("存档中存在重复行%s" % single_save_list[key_index], True)
+            raise CrawlerException(f"存档中存在重复行 {key_index} / {single_save_list[key_index]}", True)
 
         # 去除前后空格
         single_save_list = [value.strip() for value in single_save_list]
@@ -773,16 +930,16 @@ def get_json_value(json_data, *args, **kwargs) -> Any:
     for arg in args:
         if isinstance(arg, str):
             if not isinstance(json_data, dict):
-                exception_string = "'%s'字段不是字典\n%s" % (last_arg, original_data)
+                exception_string = f"'{last_arg}'字段不是字典\n{original_data}"
             elif arg not in json_data:
-                exception_string = "'%s'字段不存在\n%s" % (arg, original_data)
+                exception_string = f"'{arg}'字段不存在\n{original_data}"
         elif isinstance(arg, int):
             if not isinstance(json_data, list):
-                exception_string = "'%s'字段不是列表\n%s" % (last_arg, original_data)
+                exception_string = f"'{last_arg}'字段不是列表\n{original_data}"
             elif len(json_data) <= arg:
-                exception_string = "'%s'字段长度不正确\n%s" % (last_arg, original_data)
+                exception_string = f"'{last_arg}'字段长度不正确\n{original_data}"
         else:
-            exception_string = "arg: %s类型不正确" % arg
+            exception_string = f"arg: {arg}类型不正确"
         if exception_string:
             break
         last_arg = arg
@@ -809,9 +966,9 @@ def get_json_value(json_data, *args, **kwargs) -> Any:
         elif type_check is dict or type_check is list or type_check is bool:  # 标准数据类型
             type_error = type(json_data) is not type_check
         else:
-            exception_string = "type_check: %s类型不正确" % kwargs['type_check']
+            exception_string = f"type_check: {kwargs['type_check']}类型不正确"
         if type_error:
-            exception_string = "'%s'字段类型不正确\n%s" % (last_arg, original_data)
+            exception_string = f"'{last_arg}'字段类型不正确\n{original_data}"
 
     # 检测结果数值
     if not exception_string and "value_check" in kwargs:
@@ -823,7 +980,7 @@ def get_json_value(json_data, *args, **kwargs) -> Any:
             if not (json_data == kwargs["value_check"]):
                 value_error = True
         if value_error:
-            exception_string = "'%s'字段取值不正确\n%s" % (last_arg, original_data)
+            exception_string = f"'{last_arg}'字段取值不正确\n{original_data}"
 
     if exception_string:
         if "default_value" in kwargs:

@@ -35,9 +35,9 @@ def convert_to_bytes(value: Union[int, str], default_value: int) -> int:
             elif unit == "GB":
                 size = int(search_result[0][0]) * const.SIZE_GB
             else:
-                log.error("无效的字节单位'%s'，只支持B、KB、MB、GB" % unit)
+                log.error(f"无效的字节单位'{unit}'，只支持B、KB、MB、GB")
         else:
-            log.error("无效的字节数设置'%s'" % value)
+            log.error(f"无效的字节数设置'{value}'")
     return size
 
 
@@ -65,7 +65,7 @@ class NetConfig:
     ]
 
     def __init__(self) -> None:
-        config = tool.json_decode(file.read_file(os.path.join(PROJECT_LIB_PATH, "net_config.json")), {})
+        config = file.read_json_file(os.path.join(PROJECT_LIB_PATH, "net_config.json"), {})
         for config_key in self.CONFIG_KEYS:
             default_value = self.__getattribute__(config_key)
             config_value = default_value if (config_key not in config) else config[config_key]

@@ -13,7 +13,7 @@ from project.instagram import instagram
 
 # 获取账号首页
 def get_account_index_page(account_name):
-    account_index_url = "https://www.instagram.com/%s/" % account_name
+    account_index_url = f"https://www.instagram.com/{account_name}/"
     account_index_response = net.Request(account_index_url, method="GET")
     result = {
         "account_info": "",  # 自我介绍
@@ -28,7 +28,7 @@ def get_account_index_page(account_name):
             if not account_info:
                 raise CrawlerException("页面截取账号信息失败\n" + account_index_response.content)
             account_info = account_info.replace(r"\n", "").replace("'", chr(1))
-            result["account_info"] = eval("u'%s'" % account_info).replace(chr(1), "'")
+            result["account_info"] = eval(f"u'{account_info}'").replace(chr(1), "'")
         # 获取外部链接地址
         if account_index_response.content.find('"external_url": null,') >= 0:
             result["external_url"] = ""
@@ -50,9 +50,9 @@ def main():
         try:
             account_index_response = get_account_index_page(account)
         except CrawlerException as e:
-            log.info(e.http_error("账号%s首页" % account))
+            console.log(e.http_error(f"账号{account}首页"))
             continue
-        file.write_file("%s\t%s\t%s" % (account, account_index_response["account_info"], account_index_response["external_url"]), result_file_path)
+        file.write_file("\t".join([account, account_index_response["account_info"], account_index_response["external_url"]]), result_file_path)
 
 
 if __name__ == "__main__":

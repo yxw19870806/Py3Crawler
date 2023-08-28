@@ -66,13 +66,13 @@ class BiliBiliDownload(bilibili.BiliBili):
             log.info("视频需要登录才能访问，跳过")
             return
         if len(video_response["video_part_info_list"]) > 1:
-            log.info("视频共获取%s个分段" % len(video_response["video_part_info_list"]))
+            log.info(f"视频共获取{len(video_response['video_part_info_list'])}个分段")
 
         part_index = 1
         for video_part_info in video_response["video_part_info_list"]:
             if len(video_part_info["video_url_list"]) == 0:
                 if len(video_response["video_part_info_list"]) > 1:
-                    log.info("视频第%s个分段已删除" % part_index)
+                    log.info(f"视频第{part_index}个分段已删除")
                 else:
                     log.info("视频已删除")
                 return
@@ -83,7 +83,7 @@ class BiliBiliDownload(bilibili.BiliBili):
                     video_title += "_" + video_part_info["video_part_title"]
                 else:
                     video_title += "_" + str(part_index)
-            video_name = "%010d %s.%s" % (int(video_id), path.filter_text(video_title), url.get_file_ext(video_part_info["video_url_list"][0]))
+            video_name = f"%010d %s.{url.get_file_ext(video_part_info['video_url_list'][0])}" % (int(video_id), video_title)
 
             # 选择下载目录
             log.info("请选择下载目录")
@@ -98,23 +98,23 @@ class BiliBiliDownload(bilibili.BiliBili):
                 continue
 
             # 开始下载
-            log.info("\n视频标题：%s\n视频地址：%s\n下载路径：%s" % (video_title, video_part_info["video_url_list"], video_path))
+            log.info(f"\n视频标题：{video_title}\n视频地址：{video_part_info['video_url_list']}\n下载路径：{video_path}")
             video_index = 1
             for video_url in video_part_info["video_url_list"]:
                 if len(video_part_info["video_url_list"]) > 1:
                     temp_list = os.path.basename(video_path).split(".")
                     file_extension = temp_list[-1]
                     video_name = ".".join(temp_list[:-1])
-                    video_name += " (%s)" % video_index
-                    video_real_path = os.path.abspath(os.path.join(os.path.dirname(video_path), "%s.%s") % (video_name, file_extension))
+                    video_name += f" ({video_index})"
+                    video_real_path = os.path.abspath(os.path.join(os.path.dirname(video_path), f"{video_name}.{file_extension}"))
                 else:
                     video_real_path = video_path
 
-                headers = {"Referer": "https://www.bilibili.com/video/av%s" % video_id}
+                headers = {"Referer": f"https://www.bilibili.com/video/av{video_id}"}
                 if len(video_part_info["video_url_list"]) == 1:
-                    video_description = "视频《%s》" % video_title
+                    video_description = f"视频《{video_title}》"
                 else:
-                    video_description = "视频《%s》第%s段" % (video_title, video_index)
+                    video_description = f"视频《{video_title}》第{video_index}段"
                 self.download(video_url, video_real_path, video_description, headers=headers, auto_multipart_download=True)
                 video_index += 1
 

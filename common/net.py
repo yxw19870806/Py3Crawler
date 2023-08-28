@@ -47,7 +47,7 @@ FAKE_PROXY_IP: bool = True
 # 网络请求相关配置
 NET_CONFIG: net_config.NetConfig = net_config.NetConfig()
 # response header中Content-Type对应的Mime字典
-MIME_DICTIONARY: Optional[dict[str, str]] = tool.json_decode(file.read_file(os.path.join(os.path.dirname(__file__), "mime.json")), {})
+MIME_DICTIONARY: Optional[dict[str, str]] = file.read_json_file(os.path.join(os.path.dirname(__file__), "mime.json"), {})
 
 
 def init_http_connection_pool() -> None:
@@ -222,6 +222,19 @@ def resume_request() -> None:
     if not thread_event.is_set():
         log.info("resume process")
         thread_event.set()
+
+
+def format_path(file_path: str) -> str:
+    """
+        获取完整路径，并去除无效的文件名字符
+    """
+    file_path = os.path.realpath(file_path)
+    file_dir, file_name_and_ext = os.path.split(file_path)
+    split_result = file_name_and_ext.rsplit(".", 1)
+    new_file_name_and_ext = path.filter_text(split_result[0])
+    if len(split_result) == 2:
+        new_file_name_and_ext += f".{split_result[1]}"
+    return os.path.join(file_dir, new_file_name_and_ext)
 
 
 class ErrorResponse(object):
@@ -502,7 +515,7 @@ class Download:
             - file_path - finally local file path(when recheck_file_extension is True, will rename it)
         """
         self._file_url: str = file_url
-        self._file_path: str = file_path
+        self._file_path: str = format_path(file_path)
         # is auto rename file according to "Content-Type" in response headers
         self._recheck_file_extension: bool = False
         self._auto_multipart_download: bool = auto_multipart_download
@@ -547,7 +560,7 @@ class Download:
 
         # 同名文件已经存在，直接返回
         if not DOWNLOAD_REPLACE_IF_EXIST and os.path.exists(self._file_path) and os.path.getsize(self._file_path) > 0:
-            log.warning("文件%s（%s）已存在，跳过" % (self._file_path, self._file_url))
+            log.warning(f"文件{self._file_path}（{self._file_url}）已存在，跳过")
             self._status = const.DownloadStatus.SUCCEED
             return
 
@@ -588,7 +601,7 @@ class Download:
                 return
             else:
                 self._code = const.DownloadCode.FILE_SIZE_INVALID
-                log.warning(f"本地文件%s：{self._content_length}和网络文件%s：{file_size}不一致" % (self._file_path, self._file_url))
+                log.warning(f"本地文件{self._file_path}：{self._content_length}和网络文件{self._file_url}：{file_size}不一致")
                 time.sleep(NET_CONFIG.HTTP_REQUEST_RETRY_WAIT_TIME)
 
         # 删除可能出现的临时文件
@@ -728,7 +741,7 @@ class Download:
                         if multipart_response.status == 206:
                             # 下载的文件和请求的文件大小不一致
                             if len(multipart_response.data) != (end_pos - start_pos + 1):
-                                log.warning(f"网络文件%s：range {start_pos} - {end_pos}实际下载大小 {len(multipart_response.data)} 不一致" % self._file_url)
+                                log.warning(f"网络文件{self._file_url}：range {start_pos} - {end_pos}实际下载大小 {len(multipart_response.data)} 不一致")
                                 time.sleep(NET_CONFIG.HTTP_REQUEST_RETRY_WAIT_TIME)
                             else:
                                 # 写入本地文件后退出
@@ -771,7 +784,7 @@ def download_from_list(file_url_list: list[str], file_path: str, headers: Option
     """
     # 同名文件已经存在，直接返回
     if not DOWNLOAD_REPLACE_IF_EXIST and os.path.exists(file_path) and os.path.getsize(file_path) > 0:
-        log.warning("文件%s（%s）已存在，跳过" % (file_path, file_url_list))
+        log.warning(f"文件{file_path}（{file_url_list}）已存在，跳过")
         return True
 
     index = 1
@@ -779,7 +792,7 @@ def download_from_list(file_url_list: list[str], file_path: str, headers: Option
     is_succeed = False
     for file_url in file_url_list:
         # 临时文件路径
-        part_file_path = f"%s.part{index}" % file_path
+        part_file_path = f"{file_path}.part{index}"
         if os.path.exists(os.path.realpath(part_file_path)):
             break
         part_file_path_list.append(part_file_path)
@@ -818,7 +831,7 @@ class DownloadHls:
             - file_path - finally local file path(when recheck_file_extension is True, will rename it)
         """
         self._playlist_url: str = playlist_url
-        self._file_path: str = file_path
+        self._file_path: str = format_path(file_path)
         self._headers: dict[str, str] = headers if isinstance(headers, dict) else {}
         self._cookies: dict[str, str] = cookies if isinstance(cookies, dict) else {}
 
@@ -856,7 +869,7 @@ class DownloadHls:
 
         # 同名文件已经存在，直接返回
         if not DOWNLOAD_REPLACE_IF_EXIST and os.path.exists(self._file_path) and os.path.getsize(self._file_path) > 0:
-            log.warning("文件%s（%s）已存在，跳过" % (self._file_path, self._playlist_url))
+            log.warning(f"文件{self._file_path}（{self._playlist_url}）已存在，跳过")
             self._status = const.DownloadStatus.SUCCEED
             return
 
@@ -884,11 +897,11 @@ class DownloadHls:
                 break
 
             # 临时文件路径
-            part_file_path = f"%s.part{index}" % self._file_path
+            part_file_path = f"{self._file_path}.part{index}"
             part_file_path_list.append(part_file_path)
 
             # 下载
-            log.info("HLS: %s [%s/%s]" % (self._playlist_url, len(part_file_path_list), len(part_file_url_list)))
+            log.info(f"HLS: {self._playlist_url} [{len(part_file_path_list)}/{len(part_file_url_list)}]")
             part_download_return = Download(part_file_url, part_file_path, headers=self._headers, cookies=self._cookies)
             if part_download_return.status == const.DownloadStatus.FAILED:
                 if part_download_return.code == const.DownloadCode.PROCESS_EXIT:

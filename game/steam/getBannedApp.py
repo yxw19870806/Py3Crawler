@@ -16,14 +16,14 @@ def main():
     steamdb.SteamDb()
 
     # 已删除的游戏
-    deleted_app_list = steam_class.load_deleted_app_list()
+    deleted_app_list = steam_class.deleted_app_list_cache.read()
 
     try:
         banned_game_list = madjoki.get_banned_game_list()
     except CrawlerException as e:
         console.log(e.http_error("已下线游戏列表"))
         return
-    console.log("总共获取%s个已删除游戏" % len(banned_game_list))
+    console.log(f"总共获取{len(banned_game_list)}个已删除游戏")
 
     for game_info in banned_game_list:
         if str(game_info["game_id"]) not in deleted_app_list:
@@ -32,12 +32,12 @@ def main():
             try:
                 steamdb_info = steamdb.get_game_store_index(game_info["game_id"])
             except CrawlerException as e:
-                console.log(e.http_error("游戏%s" % game_info["game_id"]))
+                console.log(e.http_error(f"游戏{game_info['game_id']}"))
             else:
                 deleted_app_list.append(str(game_info["game_id"]))
                 console.log("\t".join(list(map(str, [game_info["game_id"], game_info["game_name"], steamdb_info["develop_name"]]))), False)
 
-    steam_class.save_deleted_app_list(deleted_app_list)
+    steam_class.deleted_app_list_cache.write(deleted_app_list)
 
 
 if __name__ == "__main__":

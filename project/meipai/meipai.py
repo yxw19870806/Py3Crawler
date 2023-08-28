@@ -33,7 +33,7 @@ def get_one_page_video(account_id, page_count):
         raise CrawlerException(crawler.request_failre(video_pagination_response.status))
     for media_info in crawler.get_json_value(video_pagination_response.json_data, "medias", type_check=list):
         # 历史直播，跳过
-        if tool.check_dict_sub_key(("lives",), media_info):
+        if tool.check_dict_sub_key(["lives"], media_info):
             continue
         result_video_info = {
             "video_id": 0,  # 视频id
@@ -45,7 +45,7 @@ def get_one_page_video(account_id, page_count):
         encrypted_video_url = crawler.get_json_value(media_info, "video", type_check=str)
         video_url = decrypt_video_url(encrypted_video_url)
         if video_url is None:
-            raise CrawlerException("加密视频地址 %s 解密失败" % encrypted_video_url)
+            raise CrawlerException(f"加密视频地址 {encrypted_video_url} 解密失败")
         result_video_info["video_url"] = video_url
         result["video_info_list"].append(result_video_info)
     return result
@@ -53,7 +53,7 @@ def get_one_page_video(account_id, page_count):
 
 # 获取指定视频播放页
 def get_video_play_page(video_id):
-    video_play_url = "https://www.meipai.com/media/%s" % video_id
+    video_play_url = f"https://www.meipai.com/media/{video_id}"
     video_play_response = net.Request(video_play_url, method="GET")
     result = {
         "is_delete": False,  # 是否已删除
@@ -74,7 +74,7 @@ def get_video_play_page(video_id):
         raise CrawlerException("页面截取加密视频地址失败\n" + video_play_response.content)
     video_url = decrypt_video_url(video_url_crypt_string)
     if not video_url:
-        raise CrawlerException("加密视频地址 %s 解密失败" % video_url_crypt_string)
+        raise CrawlerException(f"加密视频地址 {video_url_crypt_string} 解密失败")
     result["video_url"] = video_url
     return result
 
@@ -148,7 +148,7 @@ class CrawlerThread(crawler.CrawlerThread):
         is_over = False
         # 获取全部还未下载过需要解析的视频
         while not is_over:
-            video_pagination_description = "第%s页视频" % page_count
+            video_pagination_description = f"第{page_count}页视频"
             self.start_parse(video_pagination_description)
             try:
                 video_pagination_response = get_one_page_video(self.index_key, page_count)
@@ -184,7 +184,7 @@ class CrawlerThread(crawler.CrawlerThread):
     # 下载单个视频
     def crawl_video(self, video_info):
         video_path = os.path.join(self.main_thread.video_download_path, self.display_name, "%010d.mp4" % video_info["video_id"])
-        video_description = "视频%s" % video_info["video_id"]
+        video_description = f"视频{video_info['video_id']}"
         if self.download(video_info["video_url"], video_path, video_description):
             self.total_video_count += 1  # 计数累加
 
@@ -194,7 +194,7 @@ class CrawlerThread(crawler.CrawlerThread):
     def _run(self):
         # 获取所有可下载视频
         video_info_list = self.get_crawl_list()
-        self.info("需要下载的全部视频解析完毕，共%s个" % len(video_info_list))
+        self.info(f"需要下载的全部视频解析完毕，共{len(video_info_list)}个")
 
         # 从最早的视频开始下载
         while len(video_info_list) > 0:

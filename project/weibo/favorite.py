@@ -144,7 +144,7 @@ class Favorite(crawler.Crawler):
         page_count = 1
         is_over = False
         while not is_over:
-            favorite_pagination_description = "第%s页收藏" % page_count
+            favorite_pagination_description = f"第{page_count}页收藏"
             self.start_parse(favorite_pagination_description)
             try:
                 favorite_pagination_response = get_one_page_favorite(page_count)
@@ -154,27 +154,27 @@ class Favorite(crawler.Crawler):
             self.parse_result(favorite_pagination_description + "已删除微博", favorite_pagination_response["delete_blog_id_list"])
 
             for blog_id in favorite_pagination_response["delete_blog_id_list"]:
-                blog_description = "微博%s" % blog_id
-                log.info("开始删除 %s" % blog_description)
+                blog_description = f"微博{blog_id}"
+                log.info(f"开始删除 {blog_description}")
                 try:
                     delete_favorite(blog_id)
                 except CrawlerException as e:
                     log.error(e.http_error(blog_description))
                     raise
-                log.info("%s 删除成功" % blog_description)
+                log.info(f"{blog_description} 删除成功")
 
             self.parse_result(favorite_pagination_description, favorite_pagination_response["blog_info_list"])
 
             for blog_info in favorite_pagination_response["blog_info_list"]:
-                blog_description = "微博%s" % blog_info["blog_id"]
+                blog_description = f"微博{blog_info['blog_id']}"
                 self.start_parse(blog_description)
                 self.parse_result(blog_description, blog_info["photo_url_list"])
 
                 photo_count = 1
                 photo_path = os.path.join(self.photo_download_path, blog_info["blog_id"])
                 for photo_url in blog_info["photo_url_list"]:
-                    photo_path = os.path.join(photo_path, "%s.%s" % (photo_count, url.get_file_ext(photo_url)))
-                    photo_description = "微博%s第%s张图片" % (blog_info["blog_id"], photo_count)
+                    photo_path = os.path.join(photo_path, f"%02d.{url.get_file_ext(photo_url)}" % photo_count)
+                    photo_description = f"微博{blog_info['blog_id']}第{photo_count}张图片"
                     if self.download(photo_url, photo_path, photo_description, success_callback=self.download_success_callback):
                         self.total_photo_count += 1
                         photo_count += 1
@@ -189,7 +189,7 @@ class Favorite(crawler.Crawler):
     def download_success_callback(self, photo_url, photo_path, photo_description, download_return):
         if weibo.check_photo_invalid(photo_path):
             path.delete_dir_or_file(photo_path)
-            log.error("%s %s 已被屏蔽，删除" % (photo_description, photo_url))
+            log.error(f"{photo_description} {photo_url} 已被屏蔽，删除")
             return False
         return True
 

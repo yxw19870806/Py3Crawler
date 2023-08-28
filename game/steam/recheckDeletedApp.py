@@ -14,24 +14,24 @@ def main():
     steam_class = steam.Steam(need_login=False)
 
     # 已删除的游戏
-    deleted_app_list = steam_class.load_deleted_app_list()
+    deleted_app_list = steam_class.deleted_app_list_cache.read()
 
-    console.log("总共获取%s个已删除游戏" % len(deleted_app_list))
+    console.log(f"总共获取{len(deleted_app_list)}个已删除游戏")
 
     result_game_ids = []
     while len(deleted_app_list) > 0:
         game_id = deleted_app_list.pop()
 
-        console.log("游戏：%s，剩余数量：%s" % (game_id, len(deleted_app_list)))
+        console.log(f"游戏{game_id}，剩余数量：{len(deleted_app_list)}")
 
         # 获取游戏信息
         try:
             game_data = steam.get_game_store_index(game_id)
         except CrawlerException as e:
-            console.log(e.http_error("游戏%s" % game_id))
+            console.log(e.http_error(f"游戏{game_id}"))
             continue
         if game_data["deleted"] is False:
-            console.log("游戏 %s 不在已删除列表中" % game_id)
+            console.log(f"游戏{game_id}不在已删除列表中")
             result_game_ids.append(game_id)
 
     console.log(result_game_ids)
