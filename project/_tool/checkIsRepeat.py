@@ -15,7 +15,7 @@ def check_is_repeat():
     for line in file.read_file(SAVE_FILE_PATH, const.ReadFileMode.LINE):
         temp_list = line.strip("\n\r").split("\t")
         if temp_list[NAME_COLUMN] in history:
-            log.info(temp_list[NAME_COLUMN])
+            console.log(temp_list[NAME_COLUMN])
         else:
             history.append(temp_list[NAME_COLUMN])
     return history

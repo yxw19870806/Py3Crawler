@@ -30,8 +30,8 @@ def deal_one_group(file_list):
             record_file_path = file_path
     for file_path in delete_list:
         path.delete_dir_or_file(file_path)
-        log.info("delete " + file_path)
-    log.info("keep " + record_file_path)
+        console.log("delete " + file_path)
+    console.log("keep " + record_file_path)
     return delete_list
 
 

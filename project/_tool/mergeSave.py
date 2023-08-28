@@ -28,7 +28,7 @@ def main():
     if not save_data_file_path:
         return
     if save_data_file_path == temp_save_data_file_path:
-        log.info("存档文件相同，无需合并")
+        console.log("存档文件相同，无需合并")
         return
     # 临时存档文件所在路径
     save_data = crawler.read_save_data(save_data_file_path, PRIME_KEY_INDEX)
