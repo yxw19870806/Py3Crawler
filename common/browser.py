@@ -191,6 +191,7 @@ def get_all_cookie_from_browser(browser_type: const.BrowserType, file_path: str)
         try:
             con = sqlite3.connect(os.path.join(file_path, "Network", "Cookies"))
         except sqlite3.OperationalError:
+            # https://stackoverflow.com/questions/76440733/unable-to-open-cookie-file
             raise CrawlerException("浏览器cookies读取失败，请关闭浏览器后重试")
         cur = con.cursor()
         cur.execute("SELECT host_key, path, name, value, encrypted_value FROM cookies")
