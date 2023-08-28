@@ -532,3 +532,4 @@ class Steam(crawler.Crawler):
         self.user_review_cache.write(user_review_cache_data)
         self.deleted_app_list_cache.write(deleted_app_list)
         self.restricted_app_list_cache.write(restricted_app_list)
+        self.game_dlc_list_cache.write(game_dlc_list)
