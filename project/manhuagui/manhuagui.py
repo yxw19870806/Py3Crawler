@@ -77,7 +77,7 @@ def get_comic_index_page(comic_id):
 # 获取漫画指定章节
 def get_chapter_page(comic_id, chapter_id):
     # https://www.manhuagui.com/comic/7580/562894.html
-    chapter_url = f"https://www.manhuagui.com/comic/{comic_id}/{chapter_id}html"
+    chapter_url = f"https://www.manhuagui.com/comic/{comic_id}/{chapter_id}.html"
     chapter_response = net.Request(chapter_url, method="GET")
     result = {
         "photo_url_list": [],  # 全部漫画图片地址
