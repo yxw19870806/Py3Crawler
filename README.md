@@ -66,7 +66,6 @@ Visual Studio Installer安装完毕后，勾选"桌面应用和移动应用"标�
 * [乃木坂46公式Blog](https://www.nogizaka46.com/s/n46/diary/MEMBER/list) （最后更新日期：2022/11/02）
 * [起点](https://www.qidian.com/) （最后更新日期：2023/05/10）
 * [TikTok](https://www.tiktok.com/)
-* [听书宝](http://m.tingshubao.com/) （最后更新日期：2022/11/02）
 * [图虫](https://tuchong.com/) （最后更新日期：2022/11/02）
 * [Tumblr](https://www.tumblr.com/) （最后更新日期：2022/11/02）
 * [Twitter](https://twitter.com/) （最后更新日期：2022/07/20）
