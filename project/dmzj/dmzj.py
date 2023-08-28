@@ -9,6 +9,8 @@ email: hikaru870806@hotmail.com
 import os
 from common import *
 
+COOKIES = {}
+
 
 # 获取指定一页的图集
 def get_comic_index_page(comic_name):
@@ -51,7 +53,7 @@ def get_comic_index_page(comic_name):
 def get_chapter_page(comic_id, page_id):
     # https://m.dmzj.com/view/9949/19842.html
     chapter_url = f"https://m.dmzj.com/view/{comic_id}/{page_id}.html"
-    chapter_response = net.Request(chapter_url, method="GET")
+    chapter_response = net.Request(chapter_url, method="GET", cookies=COOKIES)
     result = {
         "photo_url_list": [],  # 全部漫画图片地址
     }
@@ -71,15 +73,20 @@ def get_chapter_page(comic_id, page_id):
 
 class DMZJ(crawler.Crawler):
     def __init__(self, **kwargs):
+        global COOKIES
+
         # 设置APP目录
         crawler.PROJECT_APP_PATH = os.path.abspath(os.path.dirname(__file__))
 
         # 初始化参数
         sys_config = {
             const.SysConfigKey.DOWNLOAD_PHOTO: True,
+            const.SysConfigKey.GET_COOKIE: ("manhua.dmzj.com", "dmzj.com"),
             const.SysConfigKey.SAVE_DATA_FORMATE: (0, ["", "0"]),  # comic_id  last_page_id
         }
         crawler.Crawler.__init__(self, sys_config, **kwargs)
+
+        COOKIES = self.cookie_value
 
         # 下载线程
         self.set_crawler_thread(CrawlerThread)
