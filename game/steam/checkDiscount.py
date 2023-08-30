@@ -75,7 +75,7 @@ def main():
 
         # 增加检测标记
         checked_apps_list.append(game_id)
-        discount_checked_app_cache.write(",".join(checked_apps_list))
+        discount_checked_app_cache.write(checked_apps_list)
 
 
 if __name__ == "__main__":
