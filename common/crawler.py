@@ -488,7 +488,8 @@ class Crawler(object):
             tool.process_exit(const.ExitCode.NORMAL)
 
     def complete_save_data(self) -> None:
-        self.save_data.done()
+        if isinstance(self.save_data, CrawlerSaveData):
+            self.save_data.done()
 
     def end_message(self) -> None:
         message = f"全部下载完毕，耗时{self.get_run_time()}秒"
