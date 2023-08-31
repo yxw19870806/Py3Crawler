@@ -27,6 +27,8 @@ def get_one_page_blog(account_id, page_count):
         raise CrawlerException("账号不存在")
     elif blog_pagination_response.status != const.ResponseCode.SUCCEED:
         raise CrawlerException(crawler.request_failre(blog_pagination_response.status))
+    if page_count == 1 and blog_pagination_response.content.find('<p class="bl--card__ttl">該当するデータがございません</p>') > 0:
+        raise CrawlerException("账号不存在")
     blog_info_select_list = pq(blog_pagination_response.content).find(".bl--card.js-pos")
     if blog_info_select_list.length == 0:
         raise CrawlerException("页面截取日志列表失败\n" + blog_pagination_response.content)
