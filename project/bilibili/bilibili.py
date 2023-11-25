@@ -135,15 +135,30 @@ def get_one_page_video(account_id, page_count):
         "ps": EACH_PAGE_COUNT,
         "tid": "0",
         "platform": "web",
+        "web_location": "1550101",
+        "order_avoided": "true",
+        "w_rid": tool.string_md5(str(time.time())),
+        "wts": time.time(),
+    }
+    header_list = {
+        "referer": f"https://space.bilibili.com/account_id/video"
     }
     calc_w_rid(query_data)
-    api_response = net.Request(api_url, method="GET", fields=query_data).enable_json_decode()
+    api_response = net.Request(api_url, method="GET", fields=query_data, headers=header_list).enable_json_decode()
     result = {
         "video_info_list": [],  # 全部视频信息
     }
     if api_response.status != const.ResponseCode.SUCCEED:
         raise CrawlerException(crawler.request_failre(api_response.status))
-    for video_info in crawler.get_json_value(api_response.json_data, "data", "list", "vlist", type_check=list):
+    try:
+        video_info_list = crawler.get_json_value(api_response.json_data, "data", "list", "vlist", type_check=list)
+    except CrawlerException:
+        if crawler.get_json_value(api_response.json_data, "code", type_check=int) == -401:
+            net.set_default_user_agent()
+            time.sleep(10)
+            return get_one_page_video(account_id, page_count)
+        raise
+    for video_info in video_info_list:
         result_video_info = {
             "video_id": 0,  # 视频id
             "video_time": 0,  # 视频上传时间
@@ -400,6 +415,8 @@ class BiliBili(crawler.Crawler):
         self.set_crawler_thread(CrawlerThread)
 
     def init(self):
+        net.set_default_user_agent()
+
         # 检测登录状态
         if self.is_download_video:
             if check_login():
