@@ -184,8 +184,8 @@ def _random_user_agent(browser_type: Optional[const.BrowserType] = None) -> str:
         "Windows 8.1": "Windows NT 6.3",
         "Windows 10": "Windows NT 10.0",
     }
-    firefox_version_max = 109
-    chrome_version_max = 111
+    firefox_version_max = 119
+    chrome_version_max = 118
     if browser_type is None:
         browser_type = random.choice([const.BrowserType.FIREFOX, const.BrowserType.CHROME])
     if browser_type == const.BrowserType.FIREFOX:
