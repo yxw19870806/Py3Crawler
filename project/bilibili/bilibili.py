@@ -339,8 +339,13 @@ def get_video_page(video_id):
             if crawler.get_json_value(video_info_response.json_data, "data", "message", default_value="", type_check=str) == "No video info.":
                 continue
             # https://www.bilibili.com/video/av44067
-            elif crawler.get_json_value(video_info_response.json_data, "message", default_value="", type_check=str) == "啥都木有":
-                continue
+            else:
+                error_message = crawler.get_json_value(video_info_response.json_data, "message", default_value="", type_check=str)
+                if error_message == "啥都木有":
+                    continue
+                elif crawler.get_json_value(video_info_response.json_data, "message", default_value="", type_check=str) == "87007":
+                    # 充电专属视频
+                    continue
             raise
         if IS_LOGIN:
             max_resolution = max(crawler.get_json_value(video_info_response.json_data, "data", "accept_quality", type_check=list))
