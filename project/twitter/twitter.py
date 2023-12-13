@@ -43,7 +43,7 @@ def check_login():
     if init_js_response.status != const.ResponseCode.SUCCEED:
         raise CrawlerException("初始化JS文件，" + crawler.request_failre(init_js_response.status))
     # 截取authorization
-    authorization_string = tool.find_sub_string(init_js_response.content, '="AAAAAAAAAA', '"')
+    authorization_string = tool.find_sub_string(init_js_response.content, 'return"Bearer ', '"')
     if not authorization_string:
         raise CrawlerException("初始化JS中截取authorization失败\n" + init_js_response.content)
     AUTHORIZATION = "AAAAAAAAAA" + authorization_string
