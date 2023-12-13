@@ -141,10 +141,10 @@ def get_one_page_video(account_id, page_count):
         "wts": time.time(),
     }
     header_list = {
-        "referer": f"https://space.bilibili.com/account_id/video"
+        "referer": f"https://space.bilibili.com/{account_id}/video"
     }
     calc_w_rid(query_data)
-    api_response = net.Request(api_url, method="GET", fields=query_data, headers=header_list).enable_json_decode()
+    api_response = net.Request(api_url, method="GET", fields=query_data, cookies=COOKIES, headers=header_list).enable_json_decode()
     result = {
         "video_info_list": [],  # 全部视频信息
     }
