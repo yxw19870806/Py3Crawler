@@ -9,6 +9,8 @@ email: hikaru870806@hotmail.com
 import math
 import os
 import time
+import urllib.parse
+
 from common import *
 
 COOKIES = {}
@@ -44,13 +46,13 @@ def bv_id_2_av_id(bv_id):
 
 
 def calc_w_rid(query_data: dict):
-    sign_string = []
     query_data["wts"] = int(time.time())
-    for key in sorted(query_data.keys()):
-        sign_string.append(f"{key}={query_data[key]}")
+    # 按KEY升序重新排列
+    query_data = dict(sorted(query_data.items(), key=lambda x: x[0]))
     if not SECRET_KEY:
         generate_sign_secret()
-    query_data["w_rid"] = tool.string_md5("&".join(sign_string) + SECRET_KEY)
+    query_data["w_rid"] = tool.string_md5(urllib.parse.urlencode(query_data) + SECRET_KEY)
+    return query_data
 
 
 # 检测是否已登录
@@ -137,13 +139,12 @@ def get_one_page_video(account_id, page_count):
         "platform": "web",
         "web_location": "1550101",
         "order_avoided": "true",
-        "w_rid": tool.string_md5(str(time.time())),
-        "wts": time.time(),
+        "dm_img_list": [],
     }
     header_list = {
         "referer": f"https://space.bilibili.com/{account_id}/video"
     }
-    calc_w_rid(query_data)
+    query_data = calc_w_rid(query_data)
     api_response = net.Request(api_url, method="GET", fields=query_data, cookies=COOKIES, headers=header_list).enable_json_decode()
     result = {
         "video_info_list": [],  # 全部视频信息
@@ -238,7 +239,7 @@ def get_one_page_album(account_id, page_count):
     return result
 
 
-# 获取指定页数的全部视频
+# 获取指定页数的全部音频
 def get_one_page_audio(account_id, page_count):
     # https://api.bilibili.com/audio/music-service/web/song/upper?uid=234782&pn=3&ps=30&order=1&jsonp=jsonp
     api_url = "https://api.bilibili.com/audio/music-service/web/song/upper"
@@ -250,7 +251,7 @@ def get_one_page_audio(account_id, page_count):
     }
     api_response = net.Request(api_url, method="GET", fields=query_data).enable_json_decode()
     result = {
-        "audio_info_list": [],  # 全部视频信息
+        "audio_info_list": [],  # 全部音频信息
     }
     if api_response.status != const.ResponseCode.SUCCEED:
         raise CrawlerException(crawler.request_failre(api_response.status))
