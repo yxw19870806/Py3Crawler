@@ -595,10 +595,10 @@ class CrawlerThread(crawler.CrawlerThread):
         video_part_index = 1
         for video_part_info in video_play_response["video_part_info_list"]:
             if len(video_play_response["video_part_info_list"]) == 1:
-                part_video_description = f"视频{video_info['video_id']}《{video_info['video_title']}》第{video_index}个视频《{video_part_info["video_part_title"]}》"
+                part_video_description = f"视频{video_info['video_id']}《{video_info['video_title']}》第{video_index}个视频《{video_part_info['video_part_title']}》"
             else:
                 if video_part_info["video_part_title"]:
-                    part_video_description = f"视频{video_info['video_id']}《{video_info['video_title']}》第{video_index}个视频《{video_part_info["video_part_title"]}》"
+                    part_video_description = f"视频{video_info['video_id']}《{video_info['video_title']}》第{video_index}个视频《{video_part_info['video_part_title']}》"
                 else:
                     part_video_description = f"视频{video_info['video_id']}《{video_info['video_title']}》第{video_index}个视频"
             self.start_parse(part_video_description)
