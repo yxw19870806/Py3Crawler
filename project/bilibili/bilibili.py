@@ -603,7 +603,8 @@ class CrawlerThread(crawler.CrawlerThread):
                     self.temp_path_list.append(video_path)  # 设置临时目录
                     self.total_video_count += 1  # 计数累加
                 else:
-                    return False
+                    if self.main_thread.exit_after_download_failure:
+                        return False
                 video_split_index += 1
                 video_index += 1
             video_part_index += 1
@@ -629,7 +630,8 @@ class CrawlerThread(crawler.CrawlerThread):
         if self.download(audio_info_response["audio_url"], audio_path, audio_description, is_failure_exit=False, headers={"Referer": "https://www.bilibili.com/"}):
             self.total_audio_count += 1  # 计数累加
         else:
-            return False
+            if self.main_thread.exit_after_download_failure:
+                return False
 
         # 音频下载完毕
         self.single_save_data[2] = str(audio_info["audio_id"])  # 设置存档记录
@@ -655,7 +657,8 @@ class CrawlerThread(crawler.CrawlerThread):
                 self.temp_path_list.append(photo_path)  # 设置临时目录
                 self.total_photo_count += 1  # 计数累加
             else:
-                return False
+                if self.main_thread.exit_after_download_failure:
+                    return False
             photo_index += 1
 
         # 相簿内图片全部下载完毕
