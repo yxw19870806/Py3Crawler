@@ -318,47 +318,56 @@ def get_video_page(video_id):
     # 分P https://www.bilibili.com/video/av33131459
     for video_part_info in video_part_info_list:
         result_video_info = {
-            "video_url_list": [],  # 视频地址
-            "video_part_title": "",  # 视频分P标题
+            "video_part_id": None,  # 分P视频id
+            "video_part_title": "",  # 分P视频标题
         }
-        # https://api.bilibili.com/x/player/playurl?avid=149236&cid=246864&qn=112&otype=json
-        video_info_url = "https://api.bilibili.com/x/player/playurl"
-        query_data = {
-            "avid": video_id,
-            "cid": crawler.get_json_value(video_part_info, "cid", type_check=int),
-            "qn": "116",  # 上限 高清 1080P+: 116, 高清 1080P: 80, 高清 720P: 64, 清晰 480P: 32, 流畅 360P: 16
-            "otype": "json",
-        }
-        headers = {"Referer": f"https://www.bilibili.com/video/av{video_id}"}
-        video_info_response = net.Request(video_info_url, method="GET", fields=query_data, cookies=COOKIES, headers=headers).enable_json_decode()
-        if video_info_response.status != const.ResponseCode.SUCCEED:
-            raise CrawlerException("视频信息，" + crawler.request_failre(video_info_response.status))
-        try:
-            video_info_list = crawler.get_json_value(video_info_response.json_data, "data", "durl", type_check=list)
-        except CrawlerException:
-            # https://www.bilibili.com/video/av116528/?p=2
-            if crawler.get_json_value(video_info_response.json_data, "data", "message", default_value="", type_check=str) == "No video info.":
-                continue
-            # https://www.bilibili.com/video/av44067
-            else:
-                error_message = crawler.get_json_value(video_info_response.json_data, "message", default_value="", type_check=str)
-                if error_message == "啥都木有":
-                    continue
-                elif crawler.get_json_value(video_info_response.json_data, "message", default_value="", type_check=str) == "87007":
-                    # 充电专属视频
-                    continue
-            raise
-        if IS_LOGIN:
-            max_resolution = max(crawler.get_json_value(video_info_response.json_data, "data", "accept_quality", type_check=list))
-            current_resolution = crawler.get_json_value(video_info_response.json_data, "data", "quality", type_check=int)
-            if max_resolution != current_resolution:
-                raise CrawlerException("返回的视频分辨率不是最高的\n" + str(video_info_response.json_data))
-        # 获取视频地址
-        for video_info in video_info_list:
-            result_video_info["video_url_list"].append(crawler.get_json_value(video_info, "backup_url", 0, type_check=str))
-        # 获取视频分P标题
+        # 分P视频id
+        result_video_info["video_part_id"] = crawler.get_json_value(video_part_info, "cid", type_check=int)
+        # 分P视频标题
         result_video_info["video_part_title"] = crawler.get_json_value(video_part_info, "part", type_check=str)
         result["video_part_info_list"].append(result_video_info)
+    return result
+
+
+def get_video_part_page(video_id, video_part_id):
+    result = {
+        "video_url_list": [],  # 视频地址
+    }
+    # https://api.bilibili.com/x/player/playurl?avid=149236&cid=246864&qn=112&otype=json
+    video_info_url = "https://api.bilibili.com/x/player/playurl"
+    query_data = {
+        "avid": video_id,
+        "cid": video_part_id,
+        "qn": "116",  # 上限 高清 1080P+: 116, 高清 1080P: 80, 高清 720P: 64, 清晰 480P: 32, 流畅 360P: 16
+        "otype": "json",
+    }
+    headers = {"Referer": f"https://www.bilibili.com/video/av{video_id}"}
+    video_info_response = net.Request(video_info_url, method="GET", fields=query_data, cookies=COOKIES, headers=headers).enable_json_decode()
+    if video_info_response.status != const.ResponseCode.SUCCEED:
+        raise CrawlerException("视频信息，" + crawler.request_failre(video_info_response.status))
+    try:
+        video_info_list = crawler.get_json_value(video_info_response.json_data, "data", "durl", type_check=list)
+    except CrawlerException:
+        # https://www.bilibili.com/video/av116528/?p=2
+        if crawler.get_json_value(video_info_response.json_data, "data", "message", default_value="", type_check=str) == "No video info.":
+            return result
+        # https://www.bilibili.com/video/av44067
+        else:
+            error_message = crawler.get_json_value(video_info_response.json_data, "message", default_value="", type_check=str)
+            if error_message == "啥都木有":
+                return result
+            elif crawler.get_json_value(video_info_response.json_data, "message", default_value="", type_check=str) == "87007":
+                # 充电专属视频
+                return result
+        raise
+    if IS_LOGIN:
+        max_resolution = max(crawler.get_json_value(video_info_response.json_data, "data", "accept_quality", type_check=list))
+        current_resolution = crawler.get_json_value(video_info_response.json_data, "data", "quality", type_check=int)
+        if max_resolution != current_resolution:
+            raise CrawlerException("返回的视频分辨率不是最高的\n" + str(video_info_response.json_data))
+    # 获取视频地址
+    for video_info in video_info_list:
+        result["video_url_list"].append(crawler.get_json_value(video_info, "backup_url", 0, type_check=str))
     return result
 
 
@@ -585,25 +594,39 @@ class CrawlerThread(crawler.CrawlerThread):
         video_index = 1
         video_part_index = 1
         for video_part_info in video_play_response["video_part_info_list"]:
+            if len(video_play_response["video_part_info_list"]) == 1:
+                part_video_description = f"视频{video_info['video_id']}《{video_info['video_title']}》第{video_index}个视频《{video_part_info["video_part_title"]}》"
+            else:
+                if video_part_info["video_part_title"]:
+                    part_video_description = f"视频{video_info['video_id']}《{video_info['video_title']}》第{video_index}个视频《{video_part_info["video_part_title"]}》"
+                else:
+                    part_video_description = f"视频{video_info['video_id']}《{video_info['video_title']}》第{video_index}个视频"
+            self.start_parse(part_video_description)
+            try:
+                video_part_response = get_video_part_page(video_info["video_id"], video_part_info["video_part_id"])
+            except CrawlerException as e:
+                self.error(e.http_error(part_video_description))
+                raise
+
             video_split_index = 1
-            for video_part_url in video_part_info["video_url_list"]:
+            for video_part_url in video_part_response["video_url_list"]:
                 video_name = "%010d %s" % (video_info["video_id"], video_info["video_title"])
                 if len(video_play_response["video_part_info_list"]) > 1:
                     if video_part_info["video_part_title"]:
                         video_name += "_" + video_part_info["video_part_title"]
                     else:
                         video_name += "_" + str(video_part_index)
-                if len(video_part_info["video_url_list"]) > 1:
+                if len(video_part_response["video_url_list"]) > 1:
                     video_name += f" ({video_split_index})"
                 video_name = f"{video_name}.{url.get_file_ext(video_part_url)}"
                 video_path = os.path.join(self.main_thread.video_download_path, self.display_name, video_name)
-                part_video_description = f"视频{video_info['video_id']}《{video_info['video_title']}》第{video_index}个视频"
                 headers = {"Referer": f"https://www.bilibili.com/video/av{video_info['video_id']}"}
                 if self.download(video_part_url, video_path, part_video_description, headers=headers, auto_multipart_download=True, is_failure_exit=False):
                     self.temp_path_list.append(video_path)  # 设置临时目录
                     self.total_video_count += 1  # 计数累加
                 else:
-                    return False
+                    if self.main_thread.exit_after_download_failure:
+                        return False
                 video_split_index += 1
                 video_index += 1
             video_part_index += 1
@@ -629,7 +652,8 @@ class CrawlerThread(crawler.CrawlerThread):
         if self.download(audio_info_response["audio_url"], audio_path, audio_description, is_failure_exit=False, headers={"Referer": "https://www.bilibili.com/"}):
             self.total_audio_count += 1  # 计数累加
         else:
-            return False
+            if self.main_thread.exit_after_download_failure:
+                return False
 
         # 音频下载完毕
         self.single_save_data[2] = str(audio_info["audio_id"])  # 设置存档记录
@@ -655,7 +679,8 @@ class CrawlerThread(crawler.CrawlerThread):
                 self.temp_path_list.append(photo_path)  # 设置临时目录
                 self.total_photo_count += 1  # 计数累加
             else:
-                return False
+                if self.main_thread.exit_after_download_failure:
+                    return False
             photo_index += 1
 
         # 相簿内图片全部下载完毕
