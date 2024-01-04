@@ -395,7 +395,7 @@ class CrawlerThread(crawler.CrawlerThread):
             for photo_url in media_response["photo_url_list"]:
                 photo_name = f"%019d_%02d.{url.get_file_ext(photo_url)}" % (media_info["page_id"], photo_index)
                 photo_path = os.path.join(self.main_thread.photo_download_path, self.index_key, photo_name)
-                photo_description = f"媒体{media_info['page_id']}/{media_info['page_code']}第{photo_index}张图片"
+                photo_description = f"媒体{media_info['page_id']}/{media_info['page_code']}第{photo_index}/{media_response['photo_url_list']}张图片"
                 if self.download(photo_url, photo_path, photo_description):
                     self.temp_path_list.append(photo_path)  # 设置临时目录
                     self.total_photo_count += 1  # 计数累加
@@ -409,7 +409,7 @@ class CrawlerThread(crawler.CrawlerThread):
             for video_url in media_response["video_url_list"]:
                 video_name = f"%019d_%02d.{url.get_file_ext(video_url)}" % (media_info["page_id"], video_index)
                 video_path = os.path.join(self.main_thread.video_download_path, self.index_key, video_name)
-                video_description = f"媒体{media_info['page_id']}/{media_info['page_code']}第{video_index}个视频"
+                video_description = f"媒体{media_info['page_id']}/{media_info['page_code']}第{video_index}/{len(media_response['video_url_list'])}个视频"
                 if self.download(video_url, video_path, video_description, auto_multipart_download=True):
                     self.temp_path_list.append(video_path)  # 设置临时目录
                     self.total_video_count += 1  # 计数累加
