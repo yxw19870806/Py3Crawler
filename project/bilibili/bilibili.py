@@ -595,12 +595,12 @@ class CrawlerThread(crawler.CrawlerThread):
         video_part_index = 1
         for video_part_info in video_play_response["video_part_info_list"]:
             if len(video_play_response["video_part_info_list"]) == 1:
-                part_video_description = f"视频{video_info['video_id']}《{video_info['video_title']}》第{video_index}个视频《{video_part_info['video_part_title']}》"
+                part_video_description = f"视频{video_info['video_id']}《{video_info['video_title']}》"
             else:
                 if video_part_info["video_part_title"]:
-                    part_video_description = f"视频{video_info['video_id']}《{video_info['video_title']}》第{video_index}个视频《{video_part_info['video_part_title']}》"
+                    part_video_description = f"视频{video_info['video_id']}《{video_info['video_title']}》第{video_index}/{len(video_play_response['video_part_info_list'])}个分段《{video_part_info['video_part_title']}》"
                 else:
-                    part_video_description = f"视频{video_info['video_id']}《{video_info['video_title']}》第{video_index}个视频"
+                    part_video_description = f"视频{video_info['video_id']}《{video_info['video_title']}》第{video_index}/{len(video_play_response['video_part_info_list'])}个分段"
             self.start_parse(part_video_description)
             try:
                 video_part_response = get_video_part_page(video_info["video_id"], video_part_info["video_part_id"])
@@ -674,7 +674,7 @@ class CrawlerThread(crawler.CrawlerThread):
         for photo_url in album_response["photo_url_list"]:
             photo_name = f"%09d_%02d.{url.get_file_ext(photo_url)}" % (album_id, photo_index)
             photo_path = os.path.join(self.main_thread.photo_download_path, self.display_name, photo_name)
-            photo_description = f"相簿{album_id}第{photo_index}张图片"
+            photo_description = f"相簿{album_id}第{photo_index}/{len(album_response['photo_url_list'])}张图片"
             if self.download(photo_url, photo_path, photo_description, failure_callback=self.photo_download_failure_callback, is_failure_exit=False):
                 self.temp_path_list.append(photo_path)  # 设置临时目录
                 self.total_photo_count += 1  # 计数累加
