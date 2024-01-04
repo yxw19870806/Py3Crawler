@@ -157,7 +157,7 @@ class CrawlerThread(crawler.CrawlerThread):
 
             file_name = f"%09d_%02d.{url.get_file_ext(photo_url)}" % (blog_id, photo_index)
             photo_path = os.path.join(self.main_thread.photo_download_path, self.index_key, file_name)
-            photo_description = f"日志{blog_id}({blog_url})第{photo_index}张图片"
+            photo_description = f"日志{blog_id}({blog_url})第{photo_index}/{blog_response['photo_url_list']}张图片"
             if self.download(photo_url, photo_path, photo_description, success_callback=self.download_success_callback):
                 self.temp_path_list.append(photo_path)  # 设置临时目录
                 self.total_photo_count += 1  # 计数累加
