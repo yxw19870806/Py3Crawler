@@ -314,13 +314,13 @@ class CrawlerThread(crawler.CrawlerThread):
             # 获取原始图片下载地址
             photo_url = get_origin_photo_url(photo_url)
             if photo_url in self.duplicate_list:
-                self.info(f"{album_description}的图片 {photo_url} 已存在")
+                self.info(f"{album_description}图片 {photo_url} 已存在")
                 continue
             self.duplicate_list[photo_url] = 1
 
             photo_name = f"%011d_%02d.{url.get_file_ext(photo_url, 'jpg')}" % (blog_id, photo_index)
             photo_path = os.path.join(self.main_thread.photo_download_path, self.index_key, photo_name)
-            photo_description = f"日志{blog_id}第{photo_index}/{blog_response['photo_url_list']}张图片"
+            photo_description = f"{album_description} 第{photo_index}/{blog_response['photo_url_list']}张图片"
             download_return = self.download(photo_url, photo_path, photo_description, success_callback=self.download_success_callback)
             if download_return and not download_return["is_invalid_photo"]:
                 self.temp_path_list.append(photo_path)  # 设置临时目录

@@ -179,7 +179,7 @@ class CrawlerThread(crawler.CrawlerThread):
         for photo_url in album_response["photo_url_list"]:
             photo_url = get_photo_url(photo_url)
             photo_path = os.path.join(album_path, f"%02d.{url.get_file_ext(photo_url)}" % photo_index)
-            photo_description = f"作品{album_info['album_id']}《{album_info['album_title']}》第{photo_index}/{len(album_response['photo_url_list'])}张图片"
+            photo_description = f"{album_description} 第{photo_index}/{len(album_response['photo_url_list'])}张图片"
             if self.download(photo_url, photo_path, photo_description):
                 self.total_photo_count += 1  # 计数累加
             photo_index += 1

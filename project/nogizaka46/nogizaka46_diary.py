@@ -197,7 +197,7 @@ class CrawlerThread(crawler.CrawlerThread):
         try:
             blog_response = get_blog_page(blog_id)
         except CrawlerException as e:
-            self.error(e.http_error(f"日志{blog_id}"))
+            self.error(e.http_error(blog_description))
             raise
         self.parse_result(blog_description, blog_response["photo_info_list"])
 
@@ -212,7 +212,7 @@ class CrawlerThread(crawler.CrawlerThread):
 
             photo_name = f"%06d_%02d.{url.get_file_ext(photo_url, 'jpg')}" % (blog_id, photo_index)
             photo_path = os.path.join(self.main_thread.photo_download_path, self.display_name, photo_name)
-            photo_description = f"日志{blog_id}第{photo_index}/{len(blog_response['photo_info_list'])}张图片"
+            photo_description = f"{blog_description} 第{photo_index}/{len(blog_response['photo_info_list'])}张图片"
             if self.download(photo_url, photo_path, photo_description, cookies=preview_photo_response["cookies"], success_callback=self.download_success_callback):
                 self.temp_path_list.append(photo_path)  # 设置临时目录
                 self.total_photo_count += 1  # 计数累加

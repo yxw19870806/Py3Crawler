@@ -100,6 +100,6 @@ for item_path, item_position in list(item_list.items()):
 
 path.create_dir("data")
 for item_path in item_attribute_list:
-    with open(os.path.join("data", f"{item_list[item_path]}s.txt"), "w", encoding="UTF-8") as file_handle:
+    with open(os.path.join("data", f"{item_list[item_path]}.txt"), "w", encoding="UTF-8") as file_handle:
         for item in item_attribute_list[item_path]:
             file_handle.write("\t".join(item) + "\n")
