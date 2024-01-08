@@ -183,7 +183,7 @@ class CrawlerThread(crawler.CrawlerThread):
         self.temp_path_list.append(chapter_path)
         for photo_url in chapter_response["photo_url_list"]:
             photo_path = os.path.join(chapter_path, f"%03d.{url.get_file_ext(photo_url)}" % photo_index)
-            photo_description = f"漫画{chapter_info['chapter_id']} {chapter_info['group_name']}《{chapter_info['chapter_name']}》第{photo_index}/{len(chapter_response['photo_url_list'])}张图片"
+            photo_description = f"{comic_description} 第{photo_index}/{len(chapter_response['photo_url_list'])}张图片"
             headers = {"Referer": f"https://www.manhuagui.com/comic/{self.index_key}/{chapter_info['chapter_id']}.html"}
             if self.download(photo_url, photo_path, photo_description, headers=headers):
                 self.total_photo_count += 1  # 计数累加
