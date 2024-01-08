@@ -130,15 +130,15 @@ class CrawlerThread(crawler.CrawlerThread):
 
     # 解析单个相册
     def crawl_album(self, album_info):
-        album_description = f"相册{album_info['album_id']}"
-        self.start_parse(album_description)
+        album_description = f"相册{album_info['album_id']}《{album_info['album_title']}》"
+        self.parse_result(album_description, album_info["photo_url_list"])
 
         photo_index = 1
         post_path = os.path.join(self.main_thread.photo_download_path, self.index_key, "%08d %s" % (album_info["album_id"], album_info["album_title"]))
         self.temp_path_list.append(post_path)
         for photo_url in album_info["photo_url_list"]:
             photo_path = os.path.join(post_path, "%02d.jpg" % photo_index)
-            photo_description = f"相册{album_info['album_id']}《{album_info['album_title']}》第{photo_index}/{len(album_info['photo_url_list'])}张图片"
+            photo_description = f"{album_description} 第{photo_index}/{len(album_info['photo_url_list'])}张图片"
             if self.download(photo_url, photo_path, photo_description):
                 self.total_photo_count += 1  # 计数累加
             photo_index += 1

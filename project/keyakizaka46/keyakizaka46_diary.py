@@ -137,7 +137,7 @@ class CrawlerThread(crawler.CrawlerThread):
         for photo_url in blog_info["photo_url_list"]:
             file_name = f"%05d_%02d.{url.get_file_ext(photo_url)}" % (blog_info["blog_id"], photo_index)
             photo_path = os.path.join(self.main_thread.photo_download_path, self.display_name, file_name)
-            photo_description = f"日志{blog_info['blog_id']}第{photo_index}/{blog_info['photo_url_list']}张图片"
+            photo_description = f"日志{blog_info['blog_id']} 第{photo_index}/{blog_info['photo_url_list']}张图片"
             if self.download(photo_url, photo_path, photo_description):
                 self.temp_path_list.append(photo_path)  # 设置临时目录
                 self.total_photo_count += 1  # 计数累加
