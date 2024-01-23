@@ -367,7 +367,11 @@ def get_video_part_page(video_id, video_part_id):
             raise CrawlerException("返回的视频分辨率不是最高的\n" + str(video_info_response.json_data))
     # 获取视频地址
     for video_info in video_info_list:
-        result["video_url_list"].append(crawler.get_json_value(video_info, "backup_url", 0, type_check=str))
+        try:
+            video_url = crawler.get_json_value(video_info, "url", type_check=str)
+        except CrawlerException:
+            video_url = crawler.get_json_value(video_info, "back_url", 0, type_check=str)
+        result["video_url_list"].append(video_url)
     return result
 
 
@@ -609,10 +613,10 @@ class CrawlerThread(crawler.CrawlerThread):
 
             video_split_index = 1
             for video_part_url in video_part_response["video_url_list"]:
-                video_name = "%010d %s" % (video_info["video_id"], video_info["video_title"])
+                video_name = "%010d %s" % (video_info["video_id"], path.filter_text(video_info["video_title"]))
                 if len(video_play_response["video_part_info_list"]) > 1:
                     if video_part_info["video_part_title"]:
-                        video_name += "_" + video_part_info["video_part_title"]
+                        video_name += "_" + path.filter_text(video_part_info["video_part_title"])
                     else:
                         video_name += "_" + str(video_part_index)
                 if len(video_part_response["video_url_list"]) > 1:

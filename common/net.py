@@ -746,7 +746,13 @@ class Download:
                             else:
                                 # 写入本地文件后退出
                                 fd_handle.seek(start_pos)
-                                fd_handle.write(multipart_response.data)
+                                try:
+                                    fd_handle.write(multipart_response.data)
+                                except OSError as ose:
+                                    if str(ose).find("No space left on device") != -1:
+                                        global EXIT_FLAG
+                                        EXIT_FLAG = True
+                                    raise
                                 break
                     else:
                         self._code = const.DownloadCode.RETRY_MAX_COUNT
