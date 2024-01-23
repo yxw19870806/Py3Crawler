@@ -613,10 +613,10 @@ class CrawlerThread(crawler.CrawlerThread):
 
             video_split_index = 1
             for video_part_url in video_part_response["video_url_list"]:
-                video_name = "%010d %s" % (video_info["video_id"], video_info["video_title"])
+                video_name = "%010d %s" % (video_info["video_id"], path.filter_text(video_info["video_title"]))
                 if len(video_play_response["video_part_info_list"]) > 1:
                     if video_part_info["video_part_title"]:
-                        video_name += "_" + video_part_info["video_part_title"]
+                        video_name += "_" + path.filter_text(video_part_info["video_part_title"])
                     else:
                         video_name += "_" + str(video_part_index)
                 if len(video_part_response["video_url_list"]) > 1:
