@@ -68,13 +68,32 @@ class BiliBiliDownload(bilibili.BiliBili):
         if len(video_response["video_part_info_list"]) > 1:
             log.info(f"视频共获取{len(video_response['video_part_info_list'])}个分段")
 
+        # 选择下载目录
+        log.info("请选择下载目录")
+        options = {
+            "initialdir": self.video_download_path,
+            "initialfile": f"{video_response['video_title']}.mp4",
+            "filetypes": [("all", "*")],
+            "parent": self.gui,
+        }
+        video_path = tkinter.filedialog.asksaveasfilename(**options)
+        if not video_path:
+            return
+
         part_index = 1
         for video_part_info in video_response["video_part_info_list"]:
-            if len(video_part_info["video_url_list"]) == 0:
+            video_description = f"视频{video_response['video_title']}"
+            try:
+                video_part_response = bilibili.get_video_part_page(video_id, video_part_info["video_part_id"])
+            except CrawlerException as e:
+                log.error(e.http_error(video_description))
+                raise
+
+            if len(video_part_response["video_url_list"]) == 0:
                 if len(video_response["video_part_info_list"]) > 1:
-                    log.info(f"视频第{part_index}个分段已删除")
+                    log.info(f"{video_description}第{part_index}个分段已删除")
                 else:
-                    log.info("视频已删除")
+                    log.info(f"{video_description}已删除")
                 return
 
             video_title = video_response["video_title"]
@@ -83,25 +102,12 @@ class BiliBiliDownload(bilibili.BiliBili):
                     video_title += "_" + video_part_info["video_part_title"]
                 else:
                     video_title += "_" + str(part_index)
-            video_name = f"%010d %s.{url.get_file_ext(video_part_info['video_url_list'][0])}" % (int(video_id), video_title)
-
-            # 选择下载目录
-            log.info("请选择下载目录")
-            options = {
-                "initialdir": self.video_download_path,
-                "initialfile": video_name,
-                "filetypes": [("all", "*")],
-                "parent": self.gui,
-            }
-            video_path = tkinter.filedialog.asksaveasfilename(**options)
-            if not video_path:
-                continue
 
             # 开始下载
-            log.info(f"\n视频标题：{video_title}\n视频地址：{video_part_info['video_url_list']}\n下载路径：{video_path}")
+            log.info(f"\n视频标题：{video_title}\n视频地址：{video_part_response['video_url_list']}\n下载路径：{video_path}")
             video_index = 1
-            for video_url in video_part_info["video_url_list"]:
-                if len(video_part_info["video_url_list"]) > 1:
+            for video_url in video_part_response["video_url_list"]:
+                if len(video_part_response["video_url_list"]) > 1:
                     temp_list = os.path.basename(video_path).split(".")
                     file_extension = temp_list[-1]
                     video_name = ".".join(temp_list[:-1])
@@ -111,7 +117,7 @@ class BiliBiliDownload(bilibili.BiliBili):
                     video_real_path = video_path
 
                 headers = {"Referer": f"https://www.bilibili.com/video/av{video_id}"}
-                if len(video_part_info["video_url_list"]) == 1:
+                if len(video_part_response["video_url_list"]) == 1:
                     video_description = f"视频《{video_title}》"
                 else:
                     video_description = f"视频《{video_title}》第{video_index}段"
