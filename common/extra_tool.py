@@ -10,6 +10,22 @@ import zipfile
 from common import const, path
 
 
+def file_is_image(file_path_or_name):
+    return check_file_extension(file_path_or_name, ["jpg", "jpeg", "webp", "png", "bmp", "gif"])
+
+
+def file_is_video(file_path_or_name):
+    return check_file_extension(file_path_or_name, ["mp4", "mkv", "avi", "wmv", "ts", "rm", "rmvb", "mpg"])
+
+
+def check_file_extension(file_path_or_name, valid_extensions):
+    file_name = os.path.basename(file_path_or_name)
+    split_result = file_name.rsplit(".", 1)
+    if len(split_result) != 2:
+        return False
+    return split_result[1].lower() in valid_extensions
+
+
 def zip_dir(source_dir: str, zip_file_path: str, need_source_dir=True) -> bool:
     """
     压缩文件夹
