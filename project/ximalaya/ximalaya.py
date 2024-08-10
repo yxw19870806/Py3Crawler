@@ -15,11 +15,9 @@ from typing import Optional
 from common import *
 
 COOKIES = {}
-MAX_DAILY_VIP_DOWNLOAD_COUNT = 600
-DAILY_VIP_DOWNLOAD_COUNT_CACHE: Optional[crawler.CrawlerCache] = None
-DAILY_VIP_DOWNLOAD_COUNT = {}
 EACH_PAGE_AUDIO_COUNT = 30  # 每次请求获取的视频数量
 IS_LOGIN = False
+IS_VIP = False
 
 
 # 判断是否已登录
@@ -29,6 +27,8 @@ def check_login():
     api_url = "https://www.ximalaya.com/revision/main/getCurrentUser"
     api_response = net.Request(api_url, method="GET", cookies=COOKIES).enable_json_decode()
     if api_response.status == const.ResponseCode.SUCCEED:
+        global IS_VIP
+        IS_VIP = crawler.get_json_value(api_response.json_data, "data", "isVip", type_check=bool)
         return crawler.get_json_value(api_response.json_data, "ret", type_check=int, default_value=0) == 200
     return False
 
@@ -128,87 +128,37 @@ def get_audio_info_page(audio_id):
         "is_delete": False,  # 是否已删除
         "is_video": False,  # 是否是视频
     }
-    audio_simple_info_url = "https://www.ximalaya.com/revision/track/simple"
-    query_data = {
-        "trackId": audio_id,
-    }
-    audio_simple_info_response = net.Request(audio_simple_info_url, method="GET", fields=query_data).enable_json_decode()
-    if audio_simple_info_response.status != const.ResponseCode.SUCCEED:
-        raise CrawlerException("音频简易信息 " + crawler.request_failre(audio_simple_info_response.status))
-    return_code = crawler.get_json_value(audio_simple_info_response.json_data, "ret", type_check=int)
-    if return_code == 200:
-        pass
-    elif return_code == 404:
-        result["is_delete"] = True
-        return result
-    elif return_code == 500:
-        time.sleep(3)
-        return get_audio_info_page(audio_id)
-    else:
-        raise CrawlerException(f"音频简易信息 {audio_simple_info_response.json_data} 中'ret'返回值不正确")
-    # 获取音频标题
-    result["audio_title"] = crawler.get_json_value(audio_simple_info_response.json_data, "data", "trackInfo", "title", type_check=str)
-    # 判断是否是视频
-    result["is_video"] = crawler.get_json_value(audio_simple_info_response.json_data, "data", "trackInfo", "isVideo", type_check=bool)
-    if result["is_video"]:
-        return result
 
-    audio_info_url = "https://www.ximalaya.com/revision/play/v1/audio"
-    query_data = {
-        "id": audio_id,
-        "ptype": 1,
-    }
-    while True:
-        audio_info_response = net.Request(audio_info_url, method="GET", fields=query_data).enable_json_decode()
-        if audio_info_response.status != const.ResponseCode.SUCCEED:
-            raise CrawlerException("音频详细信息" + crawler.request_failre(audio_info_response.status))
-        return_code = crawler.get_json_value(audio_info_response.json_data, "ret", type_check=int)
-        if return_code == 200:
-            break
-        elif return_code == 500:
-            time.sleep(3)
-        else:
-            raise CrawlerException("音频详细信息" + crawler.request_failre(audio_info_response.status))
-    # 获取音频地址
-    try:
-        result["audio_url"] = crawler.get_json_value(audio_info_response.json_data, "data", "src", type_check=str)
-        return result
-    except CrawlerException:
-        crawler.get_json_value(audio_info_response.json_data, "data", "hasBuy", type_check=bool)
-
-    if not COOKIES:
-        raise CrawlerException("非免费音频")
-
-    day = tool.convert_timestamp_to_formatted_time("%Y-%m-%d")
-    if day not in DAILY_VIP_DOWNLOAD_COUNT:
-        DAILY_VIP_DOWNLOAD_COUNT[day] = 0
-    if DAILY_VIP_DOWNLOAD_COUNT[day] >= MAX_DAILY_VIP_DOWNLOAD_COUNT:
-        raise CrawlerException("当日免费下载次数已达到限制")
-
-    # 需要购买或者vip才能解锁的音频
-    vip_audio_info_url = f"https://mobile.ximalaya.com/mobile-playpage/track/v3/baseInfo/{int(time.time() * 1000)}"
+    audio_info_url = f"https://mobile.ximalaya.com/mobile-playpage/track/v3/baseInfo/{int(time.time() * 1000)}"
     query_data = {
         "device": "web",
         "trackId": audio_id,
     }
-    vip_audio_info_response = net.Request(vip_audio_info_url, method="GET", fields=query_data, cookies=COOKIES).enable_json_decode()
-    if vip_audio_info_response.status != const.ResponseCode.SUCCEED:
-        raise CrawlerException("vip音频详细信息" + crawler.request_failre(vip_audio_info_response.status))
-    try:
-        decrypt_url = crawler.get_json_value(vip_audio_info_response.json_data, "trackInfo", "playUrlList", 0, "url", type_check=str)
-    except CrawlerException:
-        # 达到每日限制
-        if crawler.get_json_value(vip_audio_info_response.json_data, "ret", type_check=int, value_check=999, default_value=0) and \
-                crawler.get_json_value(vip_audio_info_response.json_data, "msg", type_check=str, value_check="今天操作太频繁啦，可以明天再试试哦~", default_value=""):
-            # 清除cookies
-            COOKIES = {}
-            raise CrawlerException("达到vip每日限制")
-        raise
+    audio_info_response = net.Request(audio_info_url, method="GET", fields=query_data, cookies=COOKIES).enable_json_decode()
+    if audio_info_response.status != const.ResponseCode.SUCCEED:
+        raise CrawlerException(crawler.request_failre(audio_info_response.status))
 
-    # 保存每日vip下载计数
-    DAILY_VIP_DOWNLOAD_COUNT[day] += 1
-    if DAILY_VIP_DOWNLOAD_COUNT_CACHE:
-        DAILY_VIP_DOWNLOAD_COUNT_CACHE.write(DAILY_VIP_DOWNLOAD_COUNT)
+    result["is_video"] = crawler.get_json_value(audio_info_response.json_data, "trackInfo", "isVideo", type_check=bool)
+    if result["is_video"]:
+        return result
+    # 获取音频标题
+    result["audio_title"] = crawler.get_json_value(audio_info_response.json_data, "trackInfo", "title", type_check=str)
+    # 加密后的音频地址
+    try:
+        decrypt_url = crawler.get_json_value(audio_info_response.json_data, "trackInfo", "playUrlList", 0, "url", type_check=str)
+    except CrawlerException:
+        is_free = crawler.get_json_value(audio_info_response.json_data, "trackInfo", "isFree", type_check=int)
+        if not is_free and not IS_VIP:
+            raise CrawlerException("非免费音频")
+
+        return_code = crawler.get_json_value(audio_info_response.json_data, "ret", type_check=int, default_value=0)
+        error_message = crawler.get_json_value(audio_info_response.json_data, "msg", type_check=str, default_value="")
+        # API请求限制
+        if return_code == 1001 and error_message == "系统繁忙，请稍后再试!":
+            log.info("达到请求限制，等待后重试")
+            time.sleep(600)
+            return get_audio_info_page(audio_id)
+        raise
 
     # 使用喜马拉雅的加密JS方法解密url地址
     js_code = file.read_file(os.path.join(crawler.PROJECT_APP_PATH, "js", "aes.js"))
@@ -240,7 +190,7 @@ class XiMaLaYa(crawler.Crawler):
     def __init__(self, sys_config=None, **kwargs):
         if sys_config is None:
             sys_config = {}
-        global COOKIES, DAILY_VIP_DOWNLOAD_COUNT, DAILY_VIP_DOWNLOAD_COUNT_CACHE
+        global COOKIES
         # 设置APP目录
         crawler.PROJECT_APP_PATH = os.path.abspath(os.path.dirname(__file__))
 
@@ -255,11 +205,6 @@ class XiMaLaYa(crawler.Crawler):
 
         # 设置全局变量，供子线程调用
         COOKIES = self.cookie_value
-
-        DAILY_VIP_DOWNLOAD_COUNT_CACHE = self.new_cache("daily_vip_count.json", const.FileType.JSON)
-        DAILY_VIP_DOWNLOAD_COUNT = DAILY_VIP_DOWNLOAD_COUNT_CACHE.read()
-        if not isinstance(DAILY_VIP_DOWNLOAD_COUNT, dict):
-            DAILY_VIP_DOWNLOAD_COUNT = {}
 
     def init(self):
         global COOKIES, IS_LOGIN
