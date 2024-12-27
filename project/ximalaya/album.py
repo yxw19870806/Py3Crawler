@@ -7,6 +7,8 @@ email: hikaru870806@hotmail.com
 如有问题或建议请联系
 """
 import os
+import random
+import time
 from common import *
 from project.ximalaya import ximalaya
 
@@ -97,6 +99,8 @@ class CrawlerThread(crawler.CrawlerThread):
 
         # 音频下载完毕
         self.single_save_data[1] = str(audio_info["audio_id"])  # 设置存档记录
+
+        time.sleep(random.randint(40, 45))
 
     def _run(self):
         # 获取所有可下载音频

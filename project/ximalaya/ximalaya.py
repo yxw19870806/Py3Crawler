@@ -41,7 +41,7 @@ def get_one_page_album(album_id, page_count):
         "pageNum": page_count,
         "sort": "1",
     }
-    album_pagination_response = net.Request(album_pagination_url, method="GET", fields=query_data).enable_json_decode()
+    album_pagination_response = net.Request(album_pagination_url, method="GET", fields=query_data, cookies=COOKIES).enable_json_decode()
     result = {
         "audio_info_list": [],  # 全部音频信息
         "is_over": False,  # 是否最后一页音频
@@ -129,28 +129,26 @@ def get_audio_info_page(audio_id):
         "is_video": False,  # 是否是视频
     }
 
-    audio_info_url = f"https://mobile.ximalaya.com/mobile-playpage/track/v3/baseInfo/{int(time.time() * 1000)}"
+    audio_info_url = f"https://www.ximalaya.com/mobile-playpage/track/v3/baseInfo/{int(time.time() * 1000)}"
     query_data = {
-        "device": "web",
+        "device": "www2",
         "trackId": audio_id,
+        "trackQualityLevel": 1,
     }
     audio_info_response = net.Request(audio_info_url, method="GET", fields=query_data, cookies=COOKIES).enable_json_decode()
     if audio_info_response.status != const.ResponseCode.SUCCEED:
         raise CrawlerException(crawler.request_failre(audio_info_response.status))
 
-    result["is_video"] = crawler.get_json_value(audio_info_response.json_data, "trackInfo", "isVideo", type_check=bool)
-    if result["is_video"]:
-        return result
-    # 获取音频标题
-    result["audio_title"] = crawler.get_json_value(audio_info_response.json_data, "trackInfo", "title", type_check=str)
     # 加密后的音频地址
     try:
+        result["is_video"] = crawler.get_json_value(audio_info_response.json_data, "trackInfo", "isVideo", type_check=bool)
+        if result["is_video"]:
+            return result
+        # 获取音频标题
+        result["audio_title"] = crawler.get_json_value(audio_info_response.json_data, "trackInfo", "title", type_check=str)
+
         decrypt_url = crawler.get_json_value(audio_info_response.json_data, "trackInfo", "playUrlList", 0, "url", type_check=str)
     except CrawlerException:
-        is_free = crawler.get_json_value(audio_info_response.json_data, "trackInfo", "isFree", type_check=int)
-        if not is_free and not IS_VIP:
-            raise CrawlerException("非免费音频")
-
         return_code = crawler.get_json_value(audio_info_response.json_data, "ret", type_check=int, default_value=0)
         error_message = crawler.get_json_value(audio_info_response.json_data, "msg", type_check=str, default_value="")
         # API请求限制
@@ -158,6 +156,10 @@ def get_audio_info_page(audio_id):
             log.info("达到请求限制，等待后重试")
             time.sleep(600)
             return get_audio_info_page(audio_id)
+
+        is_free = crawler.get_json_value(audio_info_response.json_data, "trackInfo", "isFree", type_check=int)
+        if not is_free and not IS_VIP:
+            raise CrawlerException("非免费音频")
         raise
 
     # 使用喜马拉雅的加密JS方法解密url地址
