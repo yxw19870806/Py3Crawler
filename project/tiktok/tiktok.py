@@ -21,10 +21,9 @@ def get_account_index_page(account_id):
     result = {
         "signature": "",  # 加密串（请求参数）
     }
-    desired_capabilities = DesiredCapabilities.CHROME
-    desired_capabilities['loggingPrefs'] = {'performance': 'ALL'}  # 记录所有日志
     chrome_options_argument = ["user-agent=" + net.DEFAULT_USER_AGENT]
-    with browser.Chrome(account_index_url, desired_capabilities=desired_capabilities, add_argument=chrome_options_argument) as chrome:
+    chrome_options_capabilities = {"goog:loggingPrefs": {"performance": "ALL"}}  # 记录所有日志
+    with browser.Chrome(account_index_url, add_argument=chrome_options_argument, set_capability=chrome_options_capabilities) as chrome:
         for log_info in chrome.get_log("performance"):
             log_message = tool.json_decode(crawler.get_json_value(log_info, "message", type_check=str))
             if crawler.get_json_value(log_message, "message", "method", type_check=str, default_value="") == "Network.requestWillBeSent":
