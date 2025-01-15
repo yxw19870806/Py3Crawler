@@ -16,24 +16,26 @@ from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
 from selenium import webdriver
 from selenium.common.exceptions import WebDriverException
 from selenium.webdriver.chrome.webdriver import WebDriver
+from selenium.webdriver.chrome.service import Service
 from typing import Optional
 if platform.system() == "Windows":
     import win32crypt
 from common import const, crawler, file, log, net, PROJECT_LIB_PATH, CrawlerException
 
 # webdriver文件路径
+# https://googlechromelabs.github.io/chrome-for-testing/#stable
 CHROME_WEBDRIVER_PATH: str = os.path.abspath(os.path.join(PROJECT_LIB_PATH, "chromedriver.exe"))
 
-
 class Chrome:
-    def __init__(self, url: str, **kwargs) -> None:
+    def __init__(self, url: str, headless: bool = True, **kwargs) -> None:
         """
         返回selenium.webdriver.Chrome()方法创建的chrome驱动对象
 
         :Args:
         - url - 访问的地址，需要携带访问协议，如https://, file://
         - kwargs
-            - headless - chrome-headless模式，默认值：True
+            - add_argument
+            - set_capability
         """
         if not os.path.exists(CHROME_WEBDRIVER_PATH):
             raise CrawlerException(f"CHROME_WEBDRIVER_PATH: {CHROME_WEBDRIVER_PATH}不存在")
@@ -41,19 +43,18 @@ class Chrome:
         self.url: str = url
         # 浏览器参数
         chrome_options = webdriver.ChromeOptions()
-        chrome_options.headless = False if ("headless" in kwargs and not kwargs["headless"]) else True  # 不打开浏览器
+        if headless:
+            chrome_options.add_argument("--headless")
         if "add_argument" in kwargs and isinstance(kwargs["add_argument"], list):
             for argument in kwargs["add_argument"]:
                 chrome_options.add_argument(argument)
-
-        if "desired_capabilities" in kwargs:
-            desired_capabilities = kwargs["desired_capabilities"]
-        else:
-            desired_capabilities = None
+        if "set_capability" in kwargs and isinstance(kwargs["set_capability"], dict):
+            for capability in kwargs["set_capability"]:
+                chrome_options.set_capability(capability, kwargs["set_capability"][capability])
 
         while True:
             try:
-                self.chrome: WebDriver = webdriver.Chrome(executable_path=CHROME_WEBDRIVER_PATH, options=chrome_options, desired_capabilities=desired_capabilities)
+                self.chrome: WebDriver = webdriver.Chrome(options=chrome_options, service=Service(executable_path=CHROME_WEBDRIVER_PATH))
             except WebDriverException as e:
                 message = str(e)
                 if message.find("chrome not reachable") >= 0:
