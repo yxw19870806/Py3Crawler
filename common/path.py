@@ -185,17 +185,29 @@ def move_file(source_path: str, destination_path: str) -> bool:
     return os.path.isdir(destination_path)
 
 
-def filter_text(text: str) -> str:
+def filter_text(text: str, replace_extra_char: bool = False) -> str:
     """
     过滤字符串中的无效字符（无效的操作系统文件名）
     """
-    filter_character_list = ["\n", "\r", "\t", "\v", "\b", "\f"]
+    filter_character_list = ["\n", "\r", "\t", "\v", "\b", "\f", "\xe3\x80\x80".encode('raw_unicode_escape').decode("UTF-8")]
+    extra_character_dict = {
+        "０": "0", "１": "1", "２": "2", "３": "3", "４": "4", "５": "5", "６": "6", "７": "7", "８": "8", "９": "9",
+        "Ａ": "A", "Ｂ": "B", "Ｃ": "C", "Ｄ": "D", "Ｅ": "E", "Ｆ": "F", "Ｇ": "G", "Ｈ": "H", "Ｉ": "I", "Ｊ": "J",
+        "Ｋ": "K", "Ｌ": "L", "Ｍ": "M", "Ｎ": "N", "Ｏ": "O", "Ｐ": "P", "Ｑ": "Q", "Ｒ": "R", "Ｓ": "S", "Ｔ": "T",
+        "Ｕ": "U", "Ｖ": "V", "Ｗ": "W", "Ｘ": "X", "Ｙ": "Y", "Ｚ": "Z", "ａ": "a", "ｂ": "b", "ｃ": "c", "ｄ": "d",
+        "ｅ": "e", "ｆ": "f", "ｇ": "g", "ｈ": "h", "ｉ": "i", "ｊ": "j", "ｋ": "k", "ｌ": "l", "ｍ": "m", "ｎ": "n",
+        "ｏ": "o", "ｐ": "p", "ｑ": "q", "ｒ": "r", "ｓ": "s", "ｔ": "t", "ｕ": "u", "ｖ": "v", "ｗ": "w", "ｘ": "x",
+        "ｙ": "y", "ｚ": "z",
+    }
     if platform.system() == "Windows":
         filter_character_list += ["\\", "/", ":", "*", "?", '"', "<", ">", "|"]
     else:
         filter_character_list += ["/"]
     for filter_character in filter_character_list:
         text = text.replace(filter_character, " ")  # 过滤一些windows文件名屏蔽的字符
+    if replace_extra_char:  # 过滤一些特殊字符（如全角转半角）
+        for old_char in extra_character_dict:
+            text = text.replace(old_char, extra_character_dict[old_char])
     # 去除前后空格以及点
     # 如果前后没有区别则直接返回
     while (new_text := text.strip().strip(".")) != text:
