@@ -39,6 +39,7 @@ def get_one_page_album(album_id, page_count):
     query_data = {
         "albumId": album_id,
         "pageNum": page_count,
+        "pageSize": 30,
         "sort": "1",
     }
     album_pagination_response = net.Request(album_pagination_url, method="GET", fields=query_data, cookies=COOKIES).enable_json_decode()
@@ -48,6 +49,8 @@ def get_one_page_album(album_id, page_count):
     }
     if album_pagination_response.status != const.ResponseCode.SUCCEED:
         raise CrawlerException(crawler.request_failre(album_pagination_response.status))
+    if crawler.get_json_value(album_pagination_response.json_data, "data", "riskLevel", type_check=int, default_value=0) > 0:
+        raise CrawlerException("加密参数丢失")
     # 获取音频信息
     try:
         audio_info_list = crawler.get_json_value(album_pagination_response.json_data, "data", "tracks", type_check=list)
@@ -73,7 +76,7 @@ def get_one_page_album(album_id, page_count):
     # 判断是不是最后一页
     total_audio_count = crawler.get_json_value(album_pagination_response.json_data, "data", "trackTotalCount", type_check=int)
     real_page_size = crawler.get_json_value(album_pagination_response.json_data, "data", "pageSize", type_check=int)
-    result["is_over"] = page_count >= math.ceil(total_audio_count / real_page_size)
+    result["is_over"] = page_count >= math.ceil(total_audio_count / real_page_size) if real_page_size > 0 else True
     return result
 
 
