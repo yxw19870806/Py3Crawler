@@ -11,14 +11,28 @@ import math
 import os
 import random
 import time
-from typing import Optional
 from common import *
+from common import browser
+from selenium.webdriver.common.by import By
 
 COOKIES = {}
 EACH_PAGE_AUDIO_COUNT = 30  # 每次请求获取的视频数量
 IS_LOGIN = False
 IS_VIP = False
+TEMPLATE_HTML_PATH = os.path.join(os.path.dirname(__file__), "html/template.html")
 
+
+def get_sign():
+    chrome_options_argument = ["user-agent=" + net.DEFAULT_USER_AGENT]
+    with browser.Chrome("file:///" + os.path.realpath(TEMPLATE_HTML_PATH), add_argument=chrome_options_argument) as chrome:
+        for i in range(30):
+            session_id = chrome.find_element(by=By.ID, value="result_SessionId").text
+            browser_id = chrome.find_element(by=By.ID, value="result_BrowserId").text
+            if session_id and browser_id:
+                break
+            else:
+                time.sleep(1)
+    return f"{browser_id}&&{session_id}" if session_id and browser_id else None
 
 # 判断是否已登录
 def check_login():
@@ -42,7 +56,12 @@ def get_one_page_album(album_id, page_count):
         "pageSize": 30,
         "sort": "1",
     }
-    album_pagination_response = net.Request(album_pagination_url, method="GET", fields=query_data, cookies=COOKIES).enable_json_decode()
+    headers = {
+        "Xm-sign": get_sign(),
+        "Referer": f"https://www.ximalaya.com/youshengshu/{album_id}/p{page_count}",
+        "Host": "www.ximalaya.com",
+    }
+    album_pagination_response = net.Request(album_pagination_url, method="GET", fields=query_data, cookies=COOKIES, headers=headers).enable_json_decode()
     result = {
         "audio_info_list": [],  # 全部音频信息
         "is_over": False,  # 是否最后一页音频
@@ -91,10 +110,8 @@ def get_one_page_audio(account_id, page_count):
         "uid": account_id,
         "orderType": "2",  # 降序
     }
-    now = int(time.time() * 1000)
-    # 加密方法解析来自 https://s1.xmcdn.com/yx/ximalaya-web-static/last/dist/scripts/b20b549ee.js
     headers = {
-        "xm-sign": "%s(%s)%s(%s)%s" % (tool.string_md5("himalaya-" + str(now)), random.randint(1, 100), now, random.randint(1, 100), now + random.randint(1, 100 * 60))
+        "xm-sign": get_sign(),
     }
     audit_pagination_response = net.Request(audio_pagination_url, method="GET", fields=query_data, headers=headers).enable_json_decode()
     result = {
@@ -195,7 +212,7 @@ class XiMaLaYa(crawler.Crawler):
     def __init__(self, sys_config=None, **kwargs):
         if sys_config is None:
             sys_config = {}
-        global COOKIES
+        global COOKIES, USER_AGENT
         # 设置APP目录
         crawler.PROJECT_APP_PATH = os.path.abspath(os.path.dirname(__file__))
 
@@ -204,12 +221,16 @@ class XiMaLaYa(crawler.Crawler):
             const.SysConfigKey.NOT_CHECK_SAVE_DATA: True,
             const.SysConfigKey.DOWNLOAD_AUDIO: True,
             const.SysConfigKey.GET_COOKIE: ("ximalaya.com",),
+            const.SysConfigKey.APP_CONFIG: (
+                ("USER_AGENT", "", const.ConfigAnalysisMode.RAW),
+            ),
         }
         default_sys_config.update(sys_config)
         crawler.Crawler.__init__(self, default_sys_config, **kwargs)
 
         # 设置全局变量，供子线程调用
         COOKIES = self.cookie_value
+        net.DEFAULT_USER_AGENT = self.app_config["USER_AGENT"]
 
     def init(self):
         global COOKIES, IS_LOGIN
