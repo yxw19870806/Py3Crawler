@@ -62,6 +62,23 @@ class TestTool(unittest.TestCase):
         self.assertEqual("false", tool.json_encode(False))
         self.assertEqual("null", tool.json_encode(None))
 
+    def test_sort_dict_list(self):
+        source_list = [{"a": "2"}, {"a": "3"}, {"a": "1"}]
+        self.assertEqual([{"a": "1"}, {"a": "2"}, {"a": "3"}], tool.sort_dict_list(source_list, "a"))
+        self.assertEqual([{"a": "3"}, {"a": "2"}, {"a": "1"}], tool.sort_dict_list(source_list, "a", True))
+        with self.assertRaises(KeyError):
+            tool.sort_dict_list(source_list, "b", True)
+        self.assertEqual([], tool.sort_dict_list([], "a"))
+
+    def test_dict_list_column(self):
+        source_list = [{"a": "x", "b": "1"}, {"a": "y", "b": "2"}]
+        self.assertEqual({"x": "1", "y": "2"}, tool.dict_list_column(source_list, "a", "b"))
+        with self.assertRaises(KeyError):
+            tool.dict_list_column(source_list, "a", "c")
+        with self.assertRaises(KeyError):
+            tool.dict_list_column(source_list, "c", "a")
+        self.assertEqual({}, tool.dict_list_column([], "a", "b"))
+
     def test_dyadic_list_to_string(self):
         self.assertEqual("a\tb\nc\td", tool.dyadic_list_to_string([["a", "b"], ["c", "d"]]))
 

@@ -127,6 +127,30 @@ def json_encode(json_obj: Any, default_value=None) -> str:
     return default_value
 
 
+def sort_dict_list(source_lists: list[dict], key: str, reverse: bool = False) -> list[dict]:
+    """
+    字典列表按照指定key进行排序
+
+    :Args:
+    - source_lists - 需要排列的列表
+    - key - 排序依据的键
+    - reverse - 是否降序
+    """
+    return sorted(source_lists, key=lambda x: x[key], reverse=reverse)
+
+
+def dict_list_column(source_lists: list[dict], as_key: string, as_value: string) -> dict:
+    """
+    从字典列表中提取指定字段生成映射字典
+
+    参数:
+    - source_lists - 需要提取的列表
+    - as_key - 用作键的字段
+    - as_value - 用作值的字段
+    """
+    return {item[as_key]: item[as_value] for item in source_lists}
+
+
 def dyadic_list_to_string(source_lists: list[list], first_sign: str = "\n", second_sign: str = "\t") -> str:
     """
     按照指定连接符，合并二维列表生成字符串
