@@ -394,7 +394,7 @@ class Crawler(object):
         self.total_audio_count: int = 0
         self.total_content_count: int = 0
 
-        self.download_thead_list: list["DownloadThread"] = []  # 下载线程
+        self.download_thread_list: list["DownloadThread"] = []  # 下载线程
         self.crawler_thread: Optional[Type["CrawlerThread"]] = None  # 下载子线程
         log.info("初始化完成")
 
@@ -560,15 +560,15 @@ class Crawler(object):
         if cookies is not None:
             thread.set_download_cookies(cookies)
         thread.start()
-        self.download_thead_list.append(thread)
+        self.download_thread_list.append(thread)
 
-    def wait_multi_thead_complete(self) -> None:
+    def wait_multi_thread_complete(self) -> None:
         """
         等待通过multi_thread_download()方法提交的多线程下载全部完成
         """
         is_error = False
-        while len(self.download_thead_list) > 0:
-            thread = self.download_thead_list.pop()
+        while len(self.download_thread_list) > 0:
+            thread = self.download_thread_list.pop()
             thread.join()
             if self.is_running() and not thread.get_result():
                 is_error = True
