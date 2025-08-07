@@ -250,7 +250,7 @@ class ErrorResponse(object):
 
 
 class Request:
-    def __init__(self, requst_url: str, method: str = "GET", fields: Optional[Union[dict, str]] = None, headers: Optional[dict[str, str]] = None, cookies: Optional[dict[str, str]] = None):
+    def __init__(self, request_url: str, method: str = "GET", fields: Optional[Union[dict, str]] = None, headers: Optional[dict[str, str]] = None, cookies: Optional[dict[str, str]] = None):
         """
         HTTP请求
         :Args:
@@ -261,7 +261,7 @@ class Request:
         - headers - customize header dictionary
         - cookies - customize cookies dictionary, will replace headers["Cookie"]
         """
-        self._url: str = str(requst_url).strip()
+        self._url: str = str(request_url).strip()
         self._method: str = str(method).upper()
         self._fields = fields
         self._headers: dict[str, str] = headers if isinstance(headers, dict) else {}
