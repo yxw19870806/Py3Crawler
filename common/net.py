@@ -890,6 +890,11 @@ class DownloadHls:
             if not file_line or file_line.startswith("#"):
                 continue
             part_file_url_list.append(urllib.parse.urljoin(self._playlist_url, file_line))
+
+        if len(part_file_url_list) == 1 and part_file_url_list[0].endswith(".m3u8"):
+            self._playlist_url = part_file_url_list[0]
+            return self._start_download()
+
         if len(part_file_url_list) == 0:
             self._code = const.DownloadCode.PLAYLIST_VISIT_FAILED
             return
