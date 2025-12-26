@@ -136,6 +136,8 @@ class DownloadCode(IntEnum):
     FILE_CREATE_FAILED: int = -11
     PLAYLIST_VISIT_FAILED: int = -20
     PART_FILE_DOWNLOAD_FAILED: int = -21
+    KEY_FILE_VISIT_FAILED: int = -22
+    DECODE_RESPONSE_FAILED: int = -23
 
 
 # 网络请求返回值

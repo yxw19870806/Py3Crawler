@@ -5,6 +5,7 @@
 email: hikaru870806@hotmail.com
 如有问题或建议请联系
 """
+import base64
 import json
 import os
 import random
@@ -15,7 +16,9 @@ import threading
 import urllib.parse
 import urllib3
 import urllib3.exceptions
-from typing import Optional, Union, Self, Any
+from Cryptodome.Cipher import AES
+from Cryptodome.Util.Padding import unpad
+from typing import Callable, Optional, Union, Self, Any
 from urllib3._collections import HTTPHeaderDict
 from common import const, file, log, net_config, path, tool, url
 
@@ -521,6 +524,7 @@ class Download:
         self._auto_multipart_download: bool = auto_multipart_download
         self._headers: dict[str, str] = headers if isinstance(headers, dict) else {}
         self._cookies: dict[str, str] = cookies if isinstance(cookies, dict) else {}
+        self._response_callback: Optional[Callable] = None
 
         # 返回长度
         self._content_length: int = 0
@@ -543,6 +547,16 @@ class Download:
     @property
     def code(self) -> const.DownloadCode:
         return self.start_download()._code
+
+    def set_response_callback(self, callback: Callable) -> Self:
+        if self._is_start:
+            raise Exception("下载已开始，无法设置下载数据回调处理")
+        if self._is_multipart_download:
+            raise Exception("分段下载已开启，无法设置下载数据回调处理")
+        # 禁止分段下载
+        self._auto_multipart_download = False
+        self._response_callback = callback
+        return self
 
     def start_download(self) -> Self:
         if not self._is_start:
@@ -594,15 +608,20 @@ class Download:
                 return
 
             # 判断文件下载后的大小和response中的Content-Length是否一致
-            file_size = os.path.getsize(self._file_path)
-            if self._content_length == file_size:
+            if self._response_callback is None:
+                file_size = os.path.getsize(self._file_path)
+                if self._content_length == file_size:
+                    self._status = const.DownloadStatus.SUCCEED
+                    self._code = 0
+                    return
+                else:
+                    self._code = const.DownloadCode.FILE_SIZE_INVALID
+                    log.warning(f"本地文件{self._file_path}：{self._content_length}和网络文件{self._file_url}：{file_size}不一致")
+                    time.sleep(NET_CONFIG.HTTP_REQUEST_RETRY_WAIT_TIME)
+            else:
                 self._status = const.DownloadStatus.SUCCEED
                 self._code = 0
                 return
-            else:
-                self._code = const.DownloadCode.FILE_SIZE_INVALID
-                log.warning(f"本地文件{self._file_path}：{self._content_length}和网络文件{self._file_url}：{file_size}不一致")
-                time.sleep(NET_CONFIG.HTTP_REQUEST_RETRY_WAIT_TIME)
 
         # 删除可能出现的临时文件
         path.delete_dir_or_file(self._file_path)
@@ -702,7 +721,15 @@ class Download:
         # 下载
         with open(self._file_path, "wb") as file_handle:
             try:
-                file_handle.write(file_response.data)
+                if self._response_callback:
+                    try:
+                        file_handle.write(self._response_callback(file_response.data))
+                    except:
+                        log.warning(f"网络文件{self._file_url}返回内容转化失败")
+                        self._code = const.DownloadCode.URL_INVALID
+                        return False
+                else:
+                    file_handle.write(file_response.data)
             except OSError as ose:
                 if str(ose).find("No space left on device") != -1:
                     global EXIT_FLAG
@@ -840,6 +867,7 @@ class DownloadHls:
         self._file_path: str = format_path(file_path)
         self._headers: dict[str, str] = headers if isinstance(headers, dict) else {}
         self._cookies: dict[str, str] = cookies if isinstance(cookies, dict) else {}
+        self._decode_method = None
 
         # 结果
         self._is_start: bool = False
@@ -887,7 +915,11 @@ class DownloadHls:
         part_file_url_list = []
         for file_line in playlist_response.content.split("\n"):
             file_line = file_line.strip()
-            if not file_line or file_line.startswith("#"):
+            if not file_line:
+                continue
+            if file_line.startswith("#"):
+                if file_line.startswith("#EXT-X-KEY:"):
+                    self.parse_decode_method(file_line)
                 continue
             part_file_url_list.append(urllib.parse.urljoin(self._playlist_url, file_line))
 
@@ -914,6 +946,8 @@ class DownloadHls:
             # 下载
             log.info(f"HLS: {self._playlist_url} [{len(part_file_path_list)}/{len(part_file_url_list)}]")
             part_download_return = Download(part_file_url, part_file_path, headers=self._headers, cookies=self._cookies)
+            if self._decode_method:
+                part_download_return.set_response_callback(self._decode_method)
             if part_download_return.status == const.DownloadStatus.FAILED:
                 if part_download_return.code == const.DownloadCode.PROCESS_EXIT:
                     self._code = const.DownloadCode.PROCESS_EXIT
@@ -925,12 +959,63 @@ class DownloadHls:
                     with open(part_file_path, "rb") as part_file_handle:
                         file_handle.write(part_file_handle.read())
             is_succeed = True
-        # 删除临时文件
-        for part_file_path in part_file_path_list:
-            path.delete_dir_or_file(part_file_path)
+            # 删除临时文件
+            for part_file_path in part_file_path_list:
+                path.delete_dir_or_file(part_file_path)
 
         if is_succeed:
             self._status = const.DownloadStatus.SUCCEED
             self._code = 0
         else:
             self._code = const.DownloadCode.PART_FILE_DOWNLOAD_FAILED
+
+    def parse_decode_method(self, file_line: str):
+        key_info = {}
+        for single_key_info in file_line[len("#EXT-X-KEY:"):].split(","):
+            single_key_info = single_key_info.strip()
+            if len(single_key_info) == 0:
+                continue
+            if single_key_info.find("=") == -1:
+                continue
+            key_info_name, key_info_value = single_key_info.strip().split("=", 1)
+            key_info[key_info_name] = key_info_value.strip('"')
+
+        if (decode_method := key_info.get("METHOD")) == "NONE":
+            return
+        elif decode_method != "AES-128":
+            raise ValueError(f"不支持的加密方法：{decode_method}")
+
+        if not (key_url := key_info.get("URI")):
+            raise ValueError(f"EXT-X-KEY的URI不存在：{file_line}")
+        key_url = urllib.parse.urljoin(self._playlist_url, key_url)
+        key_response = Request(key_url, method="GET", cookies=self._cookies, headers=self._headers)
+        if key_response.status != const.ResponseCode.SUCCEED:
+            self._code = const.DownloadCode.KEY_FILE_VISIT_FAILED
+            return
+
+        if not (iv := key_info.get("IV")):
+            raise ValueError(f"EXT-X-KEY的IV不存在：{file_line}")
+
+        self._decode_method = self.aes_128_cbc_decrypt(key_response.content, iv)
+
+    @staticmethod
+    def aes_128_cbc_decrypt(key: str, iv: str):
+        key = key.encode('utf-8')
+        iv = bytes.fromhex(iv[2:] if iv.startswith("0x") else iv)
+        if len(key) != 16:
+            raise ValueError("AES-128密钥长度必须为16字节（128位）")
+        if len(iv) != 16:
+            raise ValueError("AES-128 CBC模式初始向量（IV）长度必须为16字节")
+        cipher = AES.new(key, AES.MODE_CBC, iv)
+
+        def decrypt_video_data(encrypted_data):
+            try:
+                try:
+                    decrypted_data = unpad(cipher.decrypt(encrypted_data), AES.block_size)
+                except ValueError:
+                    decrypted_data = cipher.decrypt(encrypted_data)
+                return decrypted_data
+            except Exception as e:
+                raise Exception(f"AES-128解密失败：{str(e)}")
+
+        return decrypt_video_data
