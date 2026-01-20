@@ -10,6 +10,7 @@ import sqlite3
 from common import *
 
 DB_FILE_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), "videos.db"))
+unique_list = {}
 
 
 def create_video_database():
@@ -27,6 +28,7 @@ def create_video_database():
             video_title TEXT NOT NULL,     -- 视频标题，非空
             video_single_actress TEXT,     -- 单个女演员信息，允许为空
             video_all_actress TEXT,        -- 所有女演员信息，允许为空
+            is_vr INTEGER,                 -- 是否是VR
             PRIMARY KEY (video_id, video_title) 
         );
         """
@@ -42,7 +44,7 @@ def create_video_database():
 
 
 def batch_insert_videos(video_data_list=None):
-    if os.path.exists(DB_FILE_PATH):
+    if not os.path.exists(DB_FILE_PATH):
         raise Exception(f"DB {DB_FILE_PATH} not exist")
 
     conn = None
@@ -51,10 +53,10 @@ def batch_insert_videos(video_data_list=None):
         cursor = conn.cursor()
 
         batch_insert_sql = """
-        INSERT INTO videos (video_id, video_title, video_single_actress, video_all_actress)
-        VALUES (?, ?, ?, ?);
+        INSERT OR IGNORE INTO videos (video_id, video_title, video_single_actress, video_all_actress, is_vr)
+        VALUES (?, ?, ?, ?, ?);
         """
-
+        print(len(video_data_list))
         cursor.executemany(batch_insert_sql, video_data_list)
         conn.commit()
         print(f"insert {cursor.rowcount} records")
@@ -79,12 +81,20 @@ def split_name(p):
         return None
 
     if "A" <= video_number[-1] <= "Z" and video_number[-2] == "-":
+        video_number = video_number[:-2]
+    elif "A" <= video_number[-1] <= "Z" and "A" <= video_number[-2] <= "Z" and video_number[-3] == "-":
+        video_number = video_number[:-3]
+
+    unique_key = f"{video_number}|{video_title}"
+    if unique_key in unique_list:
         return None
+    unique_list[unique_key] = 1
 
     return [video_number, video_title]
 
 
-def get_video_from_path(base_path):
+def get_video_from_path(base_path, is_vr=False):
+    vr_state = "1" if is_vr else "0"
     result_video_list = []
     for first_name in path.get_dir_files_name(base_path):
         first_path = os.path.join(base_path, first_name)
@@ -99,6 +109,7 @@ def get_video_from_path(base_path):
                         continue
                     d.append(second_name)
                     d.append("")  # all actress
+                    d.append(vr_state)  # all actress
                     result_video_list.append(d)
             else:
                 d = split_name(second_path)
@@ -106,13 +117,28 @@ def get_video_from_path(base_path):
                     continue
                 d.append("")  # single actress
                 d.append("")  # all actress
+                d.append(vr_state)
                 result_video_list.append(d)
     return result_video_list
 
 
 if __name__ == "__main__":
     create_video_database()
+
     path_list = [r"Q:\视频", r"Y:\视频"]
+    is_vr = False
     for single_path in path_list:
-        video_list = get_video_from_path(single_path)
+        video_list = get_video_from_path(single_path, is_vr)
+        batch_insert_videos(video_list)
+
+    path_list = [r"I:\総集編", r"I:\着エロ", r"I:\BDSM", r"I:\milky-cat"]
+    is_vr = False
+    for single_path in path_list:
+        video_list = get_video_from_path(single_path, is_vr)
+        batch_insert_videos(video_list)
+
+    path_list = [r"S:\视频"]
+    is_vr=True
+    for single_path in path_list:
+        video_list = get_video_from_path(single_path, is_vr)
         batch_insert_videos(video_list)
