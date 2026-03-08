@@ -43,7 +43,7 @@ def create_video_database():
             conn.close()
 
 
-def batch_insert_videos(video_data_list=None):
+def batch_insert_videos(video_data_list=None, single_path=""):
     if not os.path.exists(DB_FILE_PATH):
         raise Exception(f"DB {DB_FILE_PATH} not exist")
 
@@ -56,10 +56,10 @@ def batch_insert_videos(video_data_list=None):
         INSERT OR IGNORE INTO videos (video_id, video_title, video_single_actress, video_all_actress, is_vr)
         VALUES (?, ?, ?, ?, ?);
         """
-        print(len(video_data_list))
+        print(f"{len(video_data_list)} for {single_path}")
         cursor.executemany(batch_insert_sql, video_data_list)
         conn.commit()
-        print(f"insert {cursor.rowcount} records")
+        print(f"insert {cursor.rowcount} records to {single_path}")
     except sqlite3.Error as e:
         print(f"execute sql failed：{e}")
         if conn:
@@ -129,16 +129,16 @@ if __name__ == "__main__":
     is_vr = False
     for single_path in path_list:
         video_list = get_video_from_path(single_path, is_vr)
-        batch_insert_videos(video_list)
+        batch_insert_videos(video_list, single_path)
 
     path_list = [r"I:\総集編", r"I:\着エロ", r"I:\BDSM", r"I:\milky-cat"]
     is_vr = False
     for single_path in path_list:
         video_list = get_video_from_path(single_path, is_vr)
-        batch_insert_videos(video_list)
+        batch_insert_videos(video_list, single_path)
 
-    path_list = [r"S:\视频"]
+    path_list = [r"S:\视频", r"S:\着エロ VR"]
     is_vr=True
     for single_path in path_list:
         video_list = get_video_from_path(single_path, is_vr)
-        batch_insert_videos(video_list)
+        batch_insert_videos(video_list, single_path)
