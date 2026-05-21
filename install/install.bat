@@ -25,6 +25,9 @@ pip.exe install selenium
 echo install cryptography
 pip.exe install cryptography
 
+echo install pycryptodome
+pip.exe install pycryptodomex
+
 echo install PyWin32
 pip.exe install pywin32
 FOR /F "delims=" %%i IN ('python.exe get_python_scripts_path.py') DO python.exe "%%i\pywin32_postinstall.py" -install
