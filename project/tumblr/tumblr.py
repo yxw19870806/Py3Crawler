@@ -227,12 +227,12 @@ def get_post_page(post_url, post_id):
                 post_selector = pq(post_response.content).find(f"article[id='{post_id}']")
         if post_selector.length <= 1:
             if post_selector.length == 0:
-                video_selector = pq(post_response.content).find("source")
+                video_info_selector = pq(post_response.content).find("source")
             else:
-                video_selector = post_selector.find("source")
-            if video_selector.length == 1:
-                result["video_url"] = video_selector.attr("src")
-            elif video_selector.length > 1:
+                video_info_selector = post_selector.find("source")
+            if video_info_selector.length == 1:
+                result["video_url"] = video_info_selector.attr("src")
+            elif video_info_selector.length > 1:
                 log.warning(f"{post_url}存在多个source标签")
     elif not og_type:
         script_json_html = tool.find_sub_string(post_page_head, '<script type="application/ld+json">', "</script>").strip()
