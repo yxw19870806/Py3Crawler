@@ -125,20 +125,16 @@ def get_video_from_path(base_path, is_vr=False):
 if __name__ == "__main__":
     create_video_database()
 
-    path_list = [r"Q:\视频", r"Y:\视频"]
-    is_vr = False
-    for single_path in path_list:
-        video_list = get_video_from_path(single_path, is_vr)
-        batch_insert_videos(video_list, single_path)
-
-    path_list = [r"I:\総集編", r"I:\着エロ", r"I:\BDSM", r"I:\milky-cat"]
-    is_vr = False
-    for single_path in path_list:
-        video_list = get_video_from_path(single_path, is_vr)
-        batch_insert_videos(video_list, single_path)
-
-    path_list = [r"S:\视频", r"S:\着エロ VR"]
-    is_vr=True
-    for single_path in path_list:
-        video_list = get_video_from_path(single_path, is_vr)
-        batch_insert_videos(video_list, single_path)
+    path_is_vr_dict = {
+        r"Q:\视频": False,
+        r"Y:\视频": False,
+        r"J:\総集編": False,
+        r"J:\着エロ": False,
+        r"J:\BDSM": False,
+        r"J:\milky-cat": False,
+        # r"S:\视频": True,
+        # r"S:\着エロ VR": True,
+    }
+    for p in path_is_vr_dict:
+        video_list = get_video_from_path(p, path_is_vr_dict[p])
+        batch_insert_videos(video_list, p)
