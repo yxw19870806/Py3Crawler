@@ -85,6 +85,11 @@ class TestTool(unittest.TestCase):
     def test_string_to_dyadic_list(self):
         self.assertEqual([["a", "b"], ["c", "d"]], tool.string_to_dyadic_list("a\tb\nc\td"))
 
+    def test_dyadic_list_get_column(self):
+        self.assertEqual(["a", "c"], tool.dyadic_list_get_column([["a", "b"], ["c", "d"]], 0))
+        self.assertEqual(["a", "c"], tool.dyadic_list_get_column([["a", "b"], ["c"]], 0))
+        self.assertEqual(["a"], tool.dyadic_list_get_column([["a", "b"], ["c"]], 1))
+
     def test_generate_random_string(self):
         self.assertEqual(10, len(tool.generate_random_string(10)))
         # 小写字母
