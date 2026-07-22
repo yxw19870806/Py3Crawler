@@ -6,7 +6,7 @@ from tkinter import filedialog
 from common import *
 
 
-class DownloadHls():
+class DownloadHls:
     def __init__(self):
         # GUI窗口
         self.gui = tkinter.Tk()
@@ -24,7 +24,8 @@ class DownloadHls():
         else:
             log.error(f"下载失败，{crawler.download_failre(download_return.code)}")
 
-    def get_video_url_from_console(self) -> str:
+    @staticmethod
+    def get_video_url_from_console() -> str:
         while True:
             video_url = input(tool.convert_timestamp_to_formatted_time() + " 请输入视频m3u8地址：")
             if video_url.endswith(".m3u8") and (video_url.startswith("http") or video_url.startswith("https")):

@@ -15,11 +15,8 @@ def reformat_save():
     for line in file.read_file(OLD_SAVE_FILE_PATH, const.ReadFileMode.LINE):
         temp_list = line.strip("\n\r").split("\t")
         new_list = list([])
-        # 新旧字段逻辑
+        # todo 新旧字段逻辑
         new_list.append(temp_list[0])
-        new_list.append("")
-        new_list.append("")
-        new_list.append(temp_list[5])
         new_lines.append("\t".join(new_list))
 
     file.write_file("\n".join(new_lines), NEW_SAVE_FILE_PATH, const.WriteFileMode.REPLACE)
