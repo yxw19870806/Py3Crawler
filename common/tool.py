@@ -182,6 +182,17 @@ def string_to_dyadic_list(source_string: str, first_split: str = "\n", second_sp
     return temp_list
 
 
+def dyadic_list_get_column(source_lists: list[list], index: int) -> list:
+    """
+    获取二维数组的指定下标元素的合集（数组长度安全）
+
+    :Args:
+    - source_lists - 需要提取的二维列表
+    - index - 第二维列表需要获取的下标
+    """
+    return [row[index] for row in source_lists if len(row) > index]
+
+
 def generate_random_string(string_length: int, char_lib_type: int = 7) -> str:
     """
     生成指定长度的随机字符串
