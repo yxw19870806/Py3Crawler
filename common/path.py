@@ -7,6 +7,7 @@ email: hikaru870806@hotmail.com
 """
 import os
 import platform
+import re
 import shutil
 import time
 from common import const
@@ -189,7 +190,6 @@ def filter_text(text: str, replace_extra_char: bool = False, str_max_length: int
     """
     过滤字符串中的无效字符（无效的操作系统文件名）
     """
-    filter_character_list = ["\n", "\r", "\t", "\v", "\b", "\f", "\xe3\x80\x80".encode('raw_unicode_escape').decode("UTF-8")]
     extra_character_dict = {
         "０": "0", "１": "1", "２": "2", "３": "3", "４": "4", "５": "5", "６": "6", "７": "7", "８": "8", "９": "9",
         "Ａ": "A", "Ｂ": "B", "Ｃ": "C", "Ｄ": "D", "Ｅ": "E", "Ｆ": "F", "Ｇ": "G", "Ｈ": "H", "Ｉ": "I", "Ｊ": "J",
@@ -199,15 +199,16 @@ def filter_text(text: str, replace_extra_char: bool = False, str_max_length: int
         "ｏ": "o", "ｐ": "p", "ｑ": "q", "ｒ": "r", "ｓ": "s", "ｔ": "t", "ｕ": "u", "ｖ": "v", "ｗ": "w", "ｘ": "x",
         "ｙ": "y", "ｚ": "z",
     }
-    if platform.system() == "Windows":
-        filter_character_list += ["\\", "/", ":", "*", "?", '"', "<", ">", "|"]
-    else:
-        filter_character_list += ["/"]
-    for filter_character in filter_character_list:
-        text = text.replace(filter_character, " ")  # 过滤一些windows文件名屏蔽的字符
     if replace_extra_char:  # 过滤一些特殊字符（如全角转半角）
         for old_char in extra_character_dict:
             text = text.replace(old_char, extra_character_dict[old_char])
+
+    # 清除所有 C0 控制字符 \x00-\x1F，包含换行、制表符等
+    text = re.sub(r'[\x00-\x1F]', '', text)
+
+    # 清除OS中不支持的字符，以windows平台为准，兼容跨平台
+    text = re.sub(r'[<>:"/\\|?*]', '_', text)
+
     # 去除前后空格以及点
     # 如果前后没有区别则直接返回
     while (new_text := text.strip().strip(".")) != text:
