@@ -185,7 +185,7 @@ def move_file(source_path: str, destination_path: str) -> bool:
     return os.path.isdir(destination_path)
 
 
-def filter_text(text: str, replace_extra_char: bool = False) -> str:
+def filter_text(text: str, replace_extra_char: bool = False, str_max_length: int = 220) -> str:
     """
     过滤字符串中的无效字符（无效的操作系统文件名）
     """
@@ -212,4 +212,4 @@ def filter_text(text: str, replace_extra_char: bool = False) -> str:
     # 如果前后没有区别则直接返回
     while (new_text := text.strip().strip(".")) != text:
         text = new_text
-    return text
+    return text[:str_max_length]
