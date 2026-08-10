@@ -11,13 +11,18 @@ class DownloadHls:
         # GUI窗口
         self.gui = tkinter.Tk()
         self.gui.withdraw()
+        self.headers = {}
+
+    def set_header(self, headers):
+        self.headers = headers
+        return self
 
     def main(self):
         video_url = self.get_video_url_from_console()
         video_path = self.get_video_title_from_console(video_url)
         if not video_path:
             return
-        download_return = net.DownloadHls(video_url, video_path)
+        download_return = net.DownloadHls(video_url, video_path, headers=self.headers)
         log.info(f"\n视频地址：{video_url}\n下载路径：{video_path}")
         if download_return.status == const.DownloadStatus.SUCCEED:
             log.info("下载成功")
